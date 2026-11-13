@@ -1,0 +1,120 @@
+# Runs account_retries_429 with reads through sdk-go scim/v1: the refresh GET gets one
+# 429 and is retried with the same request, and the update PUT, which stays on the
+# existing path, is retried as before. The GETs carry no attributes query, Accept or
+# Content-Type header, so the API returns the full object. API responses are inferred
+# from the SCIM API contract, not recorded. An empty header expectation matches only
+# requests without that header.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: account
+  cloud: AWS
+  account_id: replay-account
+steps:
+  - name: create
+    sdk_implementations:
+      databricks_service_principal: sdk_go
+    config: |
+      provider "databricks" {
+        account_id = "replay-account"
+      }
+
+      resource "databricks_service_principal" "this" {
+        display_name = "SPN account retries"
+      }
+    calls:
+      - request:
+          method: POST
+          path: /api/2.0/accounts/replay-account/scim/v2/ServicePrincipals
+          headers:
+            Content-Type: application/scim+json; charset=utf-8
+            X-Databricks-Workspace-Id: ""
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "displayName": "SPN account retries", "active": true,
+                   "entitlements": [{}]}
+        response:
+          status: 201
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "id": "201", "applicationId": "00000000-0000-4000-8000-000000000001",
+                   "displayName": "SPN account retries", "active": true}
+      - &read_created
+        request: &read_request
+          method: GET
+          path: /api/2.0/accounts/replay-account/scim/v2/ServicePrincipals/201
+          headers:
+            X-Databricks-Workspace-Id: ""
+            Accept: ""
+            Content-Type: ""
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "id": "201", "applicationId": "00000000-0000-4000-8000-000000000001",
+                   "displayName": "SPN account retries", "active": true}
+      - *read_created
+  - name: update_retries_refresh_get_and_put
+    sdk_implementations:
+      databricks_service_principal: sdk_go
+    config: |
+      provider "databricks" {
+        account_id = "replay-account"
+      }
+
+      resource "databricks_service_principal" "this" {
+        display_name = "SPN account retries renamed"
+      }
+    calls:
+      - request: *read_request
+        response: &too_many_requests
+          status: 429
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:api:messages:2.0:Error"],
+                   "detail": "Too many requests.", "status": "429"}
+      - *read_created
+      - *read_created
+      - request: &update_request
+          method: PUT
+          path: /api/2.0/accounts/replay-account/scim/v2/ServicePrincipals/201
+          headers:
+            Content-Type: application/scim+json; charset=utf-8
+            X-Databricks-Workspace-Id: ""
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "displayName": "SPN account retries renamed", "active": true,
+                   "entitlements": [{}]}
+        response: *too_many_requests
+      - request: *update_request
+        response:
+          status: 200
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "id": "201", "applicationId": "00000000-0000-4000-8000-000000000001",
+                   "displayName": "SPN account retries renamed", "active": true}
+      - &read_renamed
+        request: *read_request
+        response:
+          status: 200
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "id": "201", "applicationId": "00000000-0000-4000-8000-000000000001",
+                   "displayName": "SPN account retries renamed", "active": true}
+      - *read_renamed
+destroy:
+  calls:
+    - *read_renamed
+    - request:
+        method: PATCH
+        path: /api/2.0/accounts/replay-account/scim/v2/ServicePrincipals/201
+        headers:
+          Content-Type: application/scim+json; charset=utf-8
+          X-Databricks-Workspace-Id: ""
+        body:
+          json: {"schemas": ["urn:ietf:params:scim:api:messages:2.0:PatchOp"],
+                 "Operations": [{"op": "replace", "path": "active",
+                                 "value": [{"value": "false"}]}]}
+      response:
+        status: 200
+        body: null

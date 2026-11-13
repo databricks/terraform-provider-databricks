@@ -141,8 +141,7 @@ func MissingImportWorkspaceIDMessage(importID string) string {
 	return fmt.Sprintf("cannot import the resource with ID %q: the provider is configured for an account-level "+
 		"or unified host, so the import needs the ID of the workspace that contains the resource. "+
 		"Terraform does not pass provider_config to the provider during import. Use an import block "+
-		"with identity = { id = %q, workspace_id = \"<workspace ID>\" } instead of id (requires Terraform 1.12 or later), "+
-		"or import through a provider configured with workspace_id = \"<workspace ID>\"",
+		"with identity = { id = %q, workspace_id = \"<workspace ID>\" } instead of id (requires Terraform 1.12 or later)",
 		importID, importID)
 }
 

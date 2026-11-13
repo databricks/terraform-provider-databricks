@@ -27,15 +27,15 @@ steps:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
           body:
-            json: {"catalog_name": "main", "schema_name": "replay", "name": "owned_volume",
-                   "volume_type": "MANAGED"}
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "owned_volume", "volume_type": "MANAGED"}
         response:
           status: 200
           body:
-            json: {"catalog_name": "main", "schema_name": "replay", "name": "owned_volume",
-                   "full_name": "main.replay.owned_volume", "volume_type": "MANAGED",
-                   "owner": "replay-admin@example.com",
-                   "storage_location": "s3://replay-metastore/volumes/00000000-0000-4000-8000-000000000002",
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "owned_volume", "full_name": "main.replay.owned_volume",
+                   "volume_type": "MANAGED", "owner": "replay-admin@example.com",
+                   "storage_location": "s3://replay-metastore/volume-02",
                    "metastore_id": "11111111-1111-1111-1111-111111111111",
                    "volume_id": "00000000-0000-4000-8000-000000000002"}
       - request:
@@ -50,9 +50,10 @@ steps:
           status: 200
           body:
             json: &volume {"catalog_name": "main", "schema_name": "replay",
-                           "name": "owned_volume", "full_name": "main.replay.owned_volume",
+                           "name": "owned_volume",
+                           "full_name": "main.replay.owned_volume",
                            "volume_type": "MANAGED", "owner": "data-engineers",
-                           "storage_location": "s3://replay-metastore/volumes/00000000-0000-4000-8000-000000000002",
+                           "storage_location": "s3://replay-metastore/volume-02",
                            "metastore_id": "11111111-1111-1111-1111-111111111111",
                            "volume_id": "00000000-0000-4000-8000-000000000002"}
       - &read_volume

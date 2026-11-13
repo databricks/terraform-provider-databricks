@@ -34,7 +34,7 @@ steps:
                             "name": "read_errors_volume",
                             "full_name": "main.replay.read_errors_volume",
                             "volume_type": "MANAGED", "owner": "replay-admin@example.com",
-                            "storage_location": "s3://replay-metastore/volumes/00000000-0000-4000-8000-000000000003",
+                            "storage_location": "s3://replay-metastore/volume-03",
                             "metastore_id": "11111111-1111-1111-1111-111111111111",
                             "volume_id": "00000000-0000-4000-8000-000000000003"}
       - &read_created
@@ -67,7 +67,8 @@ steps:
           status: 403
           body:
             json: {"error_code": "PERMISSION_DENIED",
-                   "message": "User does not have READ VOLUME on Volume 'main.replay.read_errors_volume'."}
+                   "message": "User does not have READ VOLUME on Volume
+                     'main.replay.read_errors_volume'."}
   - name: state_kept_after_403
     plan_only: true
     config: *config
@@ -127,8 +128,9 @@ steps:
             json: &recreated {"catalog_name": "main", "schema_name": "replay",
                               "name": "read_errors_volume",
                               "full_name": "main.replay.read_errors_volume",
-                              "volume_type": "MANAGED", "owner": "replay-admin@example.com",
-                              "storage_location": "s3://replay-metastore/volumes/00000000-0000-4000-8000-000000000004",
+                              "volume_type": "MANAGED",
+                              "owner": "replay-admin@example.com",
+                              "storage_location": "s3://replay-metastore/volume-04",
                               "metastore_id": "11111111-1111-1111-1111-111111111111",
                               "volume_id": "00000000-0000-4000-8000-000000000004"}
       - &read_recreated
@@ -145,7 +147,7 @@ steps:
             - path: [id]
               equals: main.replay.read_errors_volume
             - path: [storage_location]
-              equals: s3://replay-metastore/volumes/00000000-0000-4000-8000-000000000004
+              equals: s3://replay-metastore/volume-04
   - name: plan_after_recreate_is_empty
     plan_only: true
     config: *config

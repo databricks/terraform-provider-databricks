@@ -28,15 +28,17 @@ steps:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
           body:
-            json: {"catalog_name": "main", "schema_name": "replay", "name": "rollback_volume",
-                   "volume_type": "MANAGED", "comment": "first comment"}
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "rollback_volume", "volume_type": "MANAGED",
+                   "comment": "first comment"}
         response:
           status: 200
           body:
-            json: {"catalog_name": "main", "schema_name": "replay", "name": "rollback_volume",
-                   "full_name": "main.replay.rollback_volume", "volume_type": "MANAGED",
-                   "comment": "first comment", "owner": "replay-admin@example.com",
-                   "storage_location": "s3://replay-metastore/volumes/00000000-0000-4000-8000-000000000006",
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "rollback_volume", "full_name": "main.replay.rollback_volume",
+                   "volume_type": "MANAGED", "comment": "first comment",
+                   "owner": "replay-admin@example.com",
+                   "storage_location": "s3://replay-metastore/volume-06",
                    "metastore_id": "11111111-1111-1111-1111-111111111111",
                    "volume_id": "00000000-0000-4000-8000-000000000006"}
       - request:
@@ -55,7 +57,7 @@ steps:
                             "full_name": "main.replay.rollback_volume",
                             "volume_type": "MANAGED", "comment": "first comment",
                             "owner": "data-engineers",
-                            "storage_location": "s3://replay-metastore/volumes/00000000-0000-4000-8000-000000000006",
+                            "storage_location": "s3://replay-metastore/volume-06",
                             "metastore_id": "11111111-1111-1111-1111-111111111111",
                             "volume_id": "00000000-0000-4000-8000-000000000006"}
       - &read_created
@@ -108,7 +110,7 @@ steps:
                                   "full_name": "main.replay.rollback_volume",
                                   "volume_type": "MANAGED", "comment": "first comment",
                                   "owner": "analysts",
-                                  "storage_location": "s3://replay-metastore/volumes/00000000-0000-4000-8000-000000000006",
+                                  "storage_location": "s3://replay-metastore/volume-06",
                                   "metastore_id": "11111111-1111-1111-1111-111111111111",
                                   "volume_id": "00000000-0000-4000-8000-000000000006"}
       - request: &comment_patch_request
@@ -175,13 +177,15 @@ steps:
           status: 403
           body:
             json: {"error_code": "PERMISSION_DENIED",
-                   "message": "User does not have MODIFY on Volume 'main.replay.rollback_volume'."}
+                   "message": "User does not have MODIFY on Volume
+                     'main.replay.rollback_volume'."}
       - request: *rollback_patch_request
         response:
           status: 403
           body:
             json: {"error_code": "PERMISSION_DENIED",
-                   "message": "User does not have MANAGE on Volume 'main.replay.rollback_volume'."}
+                   "message": "User does not have MANAGE on Volume
+                     'main.replay.rollback_volume'."}
   - name: plan_after_failed_rollback_shows_comment_update
     plan_only: true
     config: *config_updated

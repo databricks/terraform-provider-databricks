@@ -25,15 +25,16 @@ steps:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
           body:
-            json: {"catalog_name": "main", "schema_name": "replay", "name": "managed_volume",
-                   "volume_type": "MANAGED"}
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "managed_volume", "volume_type": "MANAGED"}
         response:
           status: 200
           body:
             json: &volume {"catalog_name": "main", "schema_name": "replay",
-                           "name": "managed_volume", "full_name": "main.replay.managed_volume",
+                           "name": "managed_volume",
+                           "full_name": "main.replay.managed_volume",
                            "volume_type": "MANAGED", "owner": "replay-admin@example.com",
-                           "storage_location": "s3://replay-metastore/volumes/00000000-0000-4000-8000-000000000001",
+                           "storage_location": "s3://replay-metastore/volume-01",
                            "metastore_id": "11111111-1111-1111-1111-111111111111",
                            "volume_id": "00000000-0000-4000-8000-000000000001"}
       - &read_volume
@@ -59,7 +60,7 @@ steps:
             - path: [owner]
               equals: replay-admin@example.com
             - path: [storage_location]
-              equals: s3://replay-metastore/volumes/00000000-0000-4000-8000-000000000001
+              equals: s3://replay-metastore/volume-01
   - name: plan_after_create_is_empty
     plan_only: true
     config: *config

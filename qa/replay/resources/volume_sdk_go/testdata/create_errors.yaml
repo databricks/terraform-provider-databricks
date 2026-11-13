@@ -1,0 +1,98 @@
+# Runs volume/testdata/create_errors.yaml with databricks_volume on sdk-go uc/volumes/v1
+# in every step, and expects the same behavior. The volume POST requests carry no Accept
+# header, which an empty header expectation pins. The original's description:
+#
+# Pins create failures. A POST answered 400 and one answered 404 each fail with their
+# exact diagnostic and leave nothing in state, so the next plan creates the volume
+# again without reading it. API responses are inferred from the Unity Catalog API
+# contract, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: create_answered_400_fails
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: &config_invalid |
+      resource "databricks_volume" "this" {
+        name             = "overlapping_volume"
+        catalog_name     = "main"
+        schema_name      = "replay"
+        volume_type      = "EXTERNAL"
+        storage_location = "s3://replay-bucket/tables/existing"
+      }
+    expect_error: 'Error: cannot create volume: Input path url
+      ''s3://replay-bucket/tables/existing'' overlaps with an existing external table\.'
+    calls:
+      - request:
+          method: POST
+          path: /api/2.1/unity-catalog/volumes
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+            Accept: ""
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "overlapping_volume", "volume_type": "EXTERNAL",
+                   "storage_location": "s3://replay-bucket/tables/existing"}
+        response:
+          status: 400
+          body:
+            json: {"error_code": "INVALID_PARAMETER_VALUE",
+                   "message": "Input path url 's3://replay-bucket/tables/existing'
+                     overlaps with an existing external table."}
+  - name: plan_after_400_creates_again
+    sdk_implementations:
+      databricks_volume: sdk_go
+    plan_only: true
+    config: *config_invalid
+    plan:
+      expect: non_empty
+      changes:
+        databricks_volume.this:
+          actions: [create]
+    calls: []
+  - name: create_answered_404_fails
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: &config_missing_schema |
+      resource "databricks_volume" "this" {
+        name         = "orphan_volume"
+        catalog_name = "main"
+        schema_name  = "missing_schema"
+        volume_type  = "MANAGED"
+      }
+    expect_error: 'Error: cannot create volume: Schema ''main\.missing_schema'' does not
+      exist\.'
+    calls:
+      - request:
+          method: POST
+          path: /api/2.1/unity-catalog/volumes
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+            Accept: ""
+          body:
+            json: {"catalog_name": "main", "schema_name": "missing_schema",
+                   "name": "orphan_volume", "volume_type": "MANAGED"}
+        response:
+          status: 404
+          body:
+            json: {"error_code": "SCHEMA_DOES_NOT_EXIST",
+                   "message": "Schema 'main.missing_schema' does not exist."}
+  - name: plan_after_404_creates_again
+    sdk_implementations:
+      databricks_volume: sdk_go
+    plan_only: true
+    config: *config_missing_schema
+    plan:
+      expect: non_empty
+      changes:
+        databricks_volume.this:
+          actions: [create]
+    calls: []
+destroy:
+  calls: []

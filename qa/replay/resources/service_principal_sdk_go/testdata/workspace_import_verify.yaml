@@ -1,0 +1,87 @@
+# Runs workspace_import_verify with reads and writes through sdk-go scim/v1: importing
+# into separate state reads the service principal twice and matches the created state. The
+# GETs carry no attributes query, Accept or Content-Type header. Writes send Content-Type
+# application/json and no Accept header. API responses are inferred from the SCIM API
+# contract, not recorded. An empty header expectation matches only requests without that
+# header.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: create
+    sdk_implementations:
+      databricks_service_principal: sdk_go
+    config: |
+      resource "databricks_service_principal" "this" {
+        display_name         = "SPN import"
+        external_id          = "external-201"
+        allow_cluster_create = true
+      }
+    calls:
+      - request:
+          method: POST
+          path: /api/2.0/preview/scim/v2/ServicePrincipals
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+            Accept: ""
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "displayName": "SPN import", "active": true,
+                   "externalId": "external-201",
+                   "entitlements": [{"value": "allow-cluster-create"}]}
+        response:
+          status: 201
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "id": "201", "applicationId": "00000000-0000-4000-8000-000000000001",
+                   "displayName": "SPN import", "active": true,
+                   "externalId": "external-201",
+                   "entitlements": [{"value": "allow-cluster-create"}]}
+      - &read_created
+        request:
+          method: GET
+          path: /api/2.0/preview/scim/v2/ServicePrincipals/201
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+            Accept: ""
+            Content-Type: ""
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "id": "201", "applicationId": "00000000-0000-4000-8000-000000000001",
+                   "displayName": "SPN import", "active": true,
+                   "externalId": "external-201",
+                   "entitlements": [{"value": "allow-cluster-create"}]}
+      - *read_created
+  - name: import_into_separate_state_matches_created_state
+    sdk_implementations:
+      databricks_service_principal: sdk_go
+    import:
+      resource: databricks_service_principal.this
+      persist: false
+      verify: true
+      # Import only sets entitlements present in the response; created state holds
+      # false for the others.
+      ignore: [allow_instance_pool_create, databricks_sql_access, workspace_access,
+               workspace_consume]
+    calls:
+      - *read_created
+      - *read_created
+destroy:
+  calls:
+    - *read_created
+    - request:
+        method: DELETE
+        path: /api/2.0/preview/scim/v2/ServicePrincipals/201
+        headers:
+          X-Databricks-Workspace-Id: "12345"
+        body: null
+      response:
+        status: 204
+        body: null

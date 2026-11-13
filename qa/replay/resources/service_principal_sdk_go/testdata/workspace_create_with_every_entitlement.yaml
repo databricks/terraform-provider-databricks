@@ -1,0 +1,123 @@
+# Runs workspace_create_with_every_entitlement with reads and writes through sdk-go
+# scim/v1. No sdk-go request carries an Accept header, and its GETs carry no Content-Type
+# header. Reads by ID send no attributes query. Writes send Content-Type application/json.
+# An empty header expectation matches only requests without that header.
+#
+# Pins the workspace-level create body on AWS with external_id, active = false and every
+# entitlement that can be combined with workspace_access. workspace_consume conflicts
+# with workspace_access and databricks_sql_access, so
+# workspace_create_with_workspace_consume covers it. API responses are inferred from the
+# SCIM API contract, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: create_with_every_entitlement_external_id_and_inactive
+    sdk_implementations:
+      databricks_service_principal: sdk_go
+    config: |
+      resource "databricks_service_principal" "this" {
+        display_name               = "SPN entitled"
+        external_id                = "external-201"
+        active                     = false
+        allow_cluster_create       = true
+        allow_instance_pool_create = true
+        databricks_sql_access      = true
+        workspace_access           = true
+      }
+    calls:
+      - request:
+          method: POST
+          path: /api/2.0/preview/scim/v2/ServicePrincipals
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+            Accept: ""
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "displayName": "SPN entitled", "active": false,
+                   "externalId": "external-201",
+                   "entitlements": [{"value": "allow-cluster-create"},
+                                    {"value": "allow-instance-pool-create"},
+                                    {"value": "databricks-sql-access"},
+                                    {"value": "workspace-access"}]}
+        response:
+          status: 201
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "id": "201", "applicationId": "00000000-0000-4000-8000-000000000001",
+                   "displayName": "SPN entitled", "active": false,
+                   "externalId": "external-201",
+                   "entitlements": [{"value": "allow-cluster-create"},
+                                    {"value": "allow-instance-pool-create"},
+                                    {"value": "databricks-sql-access"},
+                                    {"value": "workspace-access"}]}
+      - &read_created
+        request:
+          method: GET
+          path: /api/2.0/preview/scim/v2/ServicePrincipals/201
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+            Accept: ""
+            Content-Type: ""
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "id": "201", "applicationId": "00000000-0000-4000-8000-000000000001",
+                   "displayName": "SPN entitled", "active": false,
+                   "externalId": "external-201",
+                   "entitlements": [{"value": "allow-cluster-create"},
+                                    {"value": "allow-instance-pool-create"},
+                                    {"value": "databricks-sql-access"},
+                                    {"value": "workspace-access"}]}
+      - *read_created
+    state:
+      resources:
+        databricks_service_principal.this:
+          attributes:
+            - path: [id]
+              equals: "201"
+            - path: [application_id]
+              equals: 00000000-0000-4000-8000-000000000001
+            - path: [acl_principal_id]
+              equals: servicePrincipals/00000000-0000-4000-8000-000000000001
+            - path: [home]
+              equals: /Users/00000000-0000-4000-8000-000000000001
+            - path: [repos]
+              equals: /Repos/00000000-0000-4000-8000-000000000001
+  - name: plan_after_create_is_empty
+    sdk_implementations:
+      databricks_service_principal: sdk_go
+    plan_only: true
+    config: |
+      resource "databricks_service_principal" "this" {
+        display_name               = "SPN entitled"
+        external_id                = "external-201"
+        active                     = false
+        allow_cluster_create       = true
+        allow_instance_pool_create = true
+        databricks_sql_access      = true
+        workspace_access           = true
+      }
+    plan:
+      expect: empty
+      changes: {}
+    calls:
+      - *read_created
+destroy:
+  calls:
+    - *read_created
+    - request:
+        method: DELETE
+        path: /api/2.0/preview/scim/v2/ServicePrincipals/201
+        headers:
+          X-Databricks-Workspace-Id: "12345"
+        body: null
+      response:
+        status: 204
+        body: null

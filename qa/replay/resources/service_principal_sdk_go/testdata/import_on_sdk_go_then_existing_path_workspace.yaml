@@ -1,0 +1,158 @@
+# Imports a workspace-level service principal on AWS through sdk-go scim/v1, then plans,
+# updates and deletes it through the existing SCIM client. The imported state gives an
+# empty existing-path plan and keeps its ID, application ID and entitlement. The sdk-go
+# requests carry no Accept header, the GETs no attributes query or Content-Type header,
+# and the writes send Content-Type application/json. API responses are inferred from the
+# SCIM API contract, not recorded. An empty header expectation matches only requests
+# without that header.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: import_on_sdk_go
+    sdk_implementations:
+      databricks_service_principal: sdk_go
+    config: &config_imported |
+      resource "databricks_service_principal" "this" {
+        display_name     = "SPN existing"
+        workspace_access = true
+      }
+    import:
+      resource: databricks_service_principal.this
+      id: "201"
+      persist: true
+    calls:
+      - &sdk_go_read
+        request:
+          method: GET
+          path: /api/2.0/preview/scim/v2/ServicePrincipals/201
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+            Accept: ""
+            Content-Type: ""
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "id": "201", "applicationId": "00000000-0000-4000-8000-000000000001",
+                   "displayName": "SPN existing", "active": true,
+                   "entitlements": [{"value": "workspace-access"}],
+                   "groups": [{"display": "data-engineers", "type": "direct",
+                               "value": "301", "$ref": "Groups/301"}]}
+      - *sdk_go_read
+  - name: plan_on_existing_path_after_import_is_empty
+    sdk_implementations:
+      databricks_service_principal: classic
+    plan_only: true
+    config: *config_imported
+    plan:
+      expect: empty
+      changes: {}
+    state:
+      resources:
+        databricks_service_principal.this:
+          attributes:
+            - path: [id]
+              equals: "201"
+            - path: [application_id]
+              equals: 00000000-0000-4000-8000-000000000001
+            - path: [workspace_access]
+              equals: true
+    calls:
+      - &existing_read_existing
+        request: &existing_read_request
+          method: GET
+          path: /api/2.0/preview/scim/v2/ServicePrincipals/201
+          query:
+            attributes: ["userName,displayName,active,externalId,entitlements"]
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "id": "201", "applicationId": "00000000-0000-4000-8000-000000000001",
+                   "displayName": "SPN existing", "active": true,
+                   "entitlements": [{"value": "workspace-access"}]}
+  - name: update_on_existing_path
+    sdk_implementations:
+      databricks_service_principal: classic
+    config: &config_updated |
+      resource "databricks_service_principal" "this" {
+        display_name     = "SPN adopted"
+        workspace_access = true
+      }
+    plan:
+      expect: non_empty
+      changes:
+        databricks_service_principal.this:
+          actions: [update]
+    calls:
+      - *existing_read_existing
+      - request:
+          method: GET
+          path: /api/2.0/preview/scim/v2/ServicePrincipals/201
+          query:
+            attributes: ["groups,roles"]
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "id": "201",
+                   "groups": [{"display": "data-engineers", "type": "direct",
+                               "value": "301", "$ref": "Groups/301"}]}
+      - request:
+          method: PUT
+          path: /api/2.0/preview/scim/v2/ServicePrincipals/201
+          headers:
+            Content-Type: application/scim+json; charset=utf-8
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "displayName": "SPN adopted", "active": true,
+                   "entitlements": [{"value": "workspace-access"}],
+                   "groups": [{"display": "data-engineers", "type": "direct",
+                               "value": "301", "$ref": "Groups/301"}]}
+        response:
+          status: 200
+          body: null
+      - &existing_read_updated
+        request: *existing_read_request
+        response:
+          status: 200
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "id": "201", "applicationId": "00000000-0000-4000-8000-000000000001",
+                   "displayName": "SPN adopted", "active": true,
+                   "entitlements": [{"value": "workspace-access"}]}
+      - *existing_read_updated
+  - name: plan_on_existing_path_after_update_is_empty
+    sdk_implementations:
+      databricks_service_principal: classic
+    plan_only: true
+    config: *config_updated
+    plan:
+      expect: empty
+      changes: {}
+    calls:
+      - *existing_read_updated
+destroy:
+  calls:
+    - *existing_read_updated
+    - request:
+        method: DELETE
+        path: /api/2.0/preview/scim/v2/ServicePrincipals/201
+        headers:
+          X-Databricks-Workspace-Id: "12345"
+        body: null
+      response:
+        status: 204
+        body: null

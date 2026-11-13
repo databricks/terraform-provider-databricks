@@ -1,6 +1,7 @@
 # Supplies service principal calls for TestServicePrincipalSdkGoUserAgent, which checks
-# their User-Agent in Go with reads through sdk-go scim/v1. The GETs carry no attributes
-# query, Accept or Content-Type header. API responses are inferred from the SCIM API
+# their User-Agent in Go with reads and writes through sdk-go scim/v1. No request carries
+# an Accept header, the GETs carry no attributes query or Content-Type header, and the
+# POST sends Content-Type application/json. API responses are inferred from the SCIM API
 # contract, not recorded. An empty header expectation matches only requests without that
 # header.
 version: 1
@@ -20,8 +21,9 @@ steps:
           method: POST
           path: /api/2.0/preview/scim/v2/ServicePrincipals
           headers:
-            Content-Type: application/scim+json; charset=utf-8
+            Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
+            Accept: ""
           body:
             json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
                    "displayName": "SPN user agent", "active": true, "entitlements": [{}]}

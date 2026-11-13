@@ -1,0 +1,101 @@
+# Runs account_delete_with_disable_as_user_deletion_false with reads and writes through
+# sdk-go scim/v1. No sdk-go request carries an Accept header, and its GETs carry no
+# Content-Type header. Reads by ID send no attributes query. Writes send Content-Type
+# application/json. Account-level POST bodies have no schemas, entitlements or groups,
+# which the account-level scim/v1 model doesn't have. An empty header expectation matches
+# only requests without that header.
+#
+# Pins account-level deletion with disable_as_user_deletion = false on AWS: the provider
+# sends a DELETE instead of the default deactivating PATCH. API responses are inferred
+# from the SCIM API contract, not recorded. An empty X-Databricks-Workspace-Id
+# expectation matches only requests without that header.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: account
+  cloud: AWS
+  account_id: replay-account
+steps:
+  - name: create_with_disable_as_user_deletion_false
+    sdk_implementations:
+      databricks_service_principal: sdk_go
+    config: &config |
+      provider "databricks" {
+        account_id = "replay-account"
+      }
+
+      resource "databricks_service_principal" "this" {
+        display_name             = "SPN account delete"
+        disable_as_user_deletion = false
+      }
+    calls:
+      - request:
+          method: POST
+          path: /api/2.0/accounts/replay-account/scim/v2/ServicePrincipals
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: ""
+            Accept: ""
+          body:
+            json: {"displayName": "SPN account delete", "active": true}
+        response:
+          status: 201
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "id": "201", "applicationId": "00000000-0000-4000-8000-000000000001",
+                   "displayName": "SPN account delete", "active": true}
+      - &read_created
+        request:
+          method: GET
+          path: /api/2.0/accounts/replay-account/scim/v2/ServicePrincipals/201
+          headers:
+            X-Databricks-Workspace-Id: ""
+            Accept: ""
+            Content-Type: ""
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "id": "201", "applicationId": "00000000-0000-4000-8000-000000000001",
+                   "displayName": "SPN account delete", "active": true}
+      - *read_created
+  - name: plan_after_create_is_empty
+    sdk_implementations:
+      databricks_service_principal: sdk_go
+    plan_only: true
+    config: *config
+    plan:
+      expect: empty
+      changes: {}
+    calls:
+      - *read_created
+  - name: delete_with_disable_as_user_deletion_false_sends_delete
+    sdk_implementations:
+      databricks_service_principal: sdk_go
+    config: &removed_config |
+      provider "databricks" {
+        account_id = "replay-account"
+      }
+    calls:
+      - *read_created
+      - request:
+          method: DELETE
+          path: /api/2.0/accounts/replay-account/scim/v2/ServicePrincipals/201
+          headers:
+            X-Databricks-Workspace-Id: ""
+          body: null
+        response:
+          status: 204
+          body: null
+  - name: plan_after_delete_is_empty
+    sdk_implementations:
+      databricks_service_principal: sdk_go
+    plan_only: true
+    config: *removed_config
+    plan:
+      expect: empty
+      changes: {}
+    calls: []
+destroy:
+  calls: []

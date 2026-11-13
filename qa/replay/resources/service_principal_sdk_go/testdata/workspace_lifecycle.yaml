@@ -1,0 +1,269 @@
+# Runs TestAccServicePrincipalResourceOnAws with reads and writes through sdk-go scim/v1:
+# create, rename and the plans after them. The GETs carry no attributes query, Accept or
+# Content-Type header, so the API returns the full object. Writes send Content-Type
+# application/json and no Accept header, and PUT bodies also carry the ID. API responses
+# are inferred from the scenarios and API models, not recorded. An empty header
+# expectation matches only requests without that header.
+version: 1
+enforce_call_order: true
+host_metadata: # Dummy host metadata.
+  host_type: "workspace"
+  cloud: "AWS"
+  workspace_id: "12345"
+steps:
+  - name: "create"
+    sdk_implementations:
+      databricks_service_principal: sdk_go
+    config: |
+      resource "databricks_service_principal" "this" {
+        display_name = "SPN initial"
+      }
+    calls:
+      - request:
+          method: "POST"
+          path: "/api/2.0/preview/scim/v2/ServicePrincipals"
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+            Accept: ""
+          body:
+            json:
+              schemas: ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"]
+              displayName: "SPN initial"
+              active: true
+              entitlements:
+                - {}
+        response: # Inferred API response; not recorded.
+          status: 201
+          body:
+            json:
+              schemas: ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"]
+              id: "201"
+              displayName: "SPN initial"
+              active: true
+              entitlements: []
+              applicationId: "00000000-0000-4000-8000-000000000001"
+      - request:
+          method: "GET"
+          path: "/api/2.0/preview/scim/v2/ServicePrincipals/201"
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+            Accept: ""
+            Content-Type: ""
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              schemas: ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"]
+              id: "201"
+              displayName: "SPN initial"
+              active: true
+              entitlements: []
+              applicationId: "00000000-0000-4000-8000-000000000001"
+      - request:
+          method: "GET"
+          path: "/api/2.0/preview/scim/v2/ServicePrincipals/201"
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+            Accept: ""
+            Content-Type: ""
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              schemas: ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"]
+              id: "201"
+              displayName: "SPN initial"
+              active: true
+              entitlements: []
+              applicationId: "00000000-0000-4000-8000-000000000001"
+  - name: "plan_after_create_is_empty"
+    sdk_implementations:
+      databricks_service_principal: sdk_go
+    plan_only: true
+    config: |
+      resource "databricks_service_principal" "this" {
+        display_name = "SPN initial"
+      }
+    plan:
+      expect: empty
+      changes: {}
+    calls:
+      - request:
+          method: "GET"
+          path: "/api/2.0/preview/scim/v2/ServicePrincipals/201"
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+            Accept: ""
+            Content-Type: ""
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              schemas: ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"]
+              id: "201"
+              displayName: "SPN initial"
+              active: true
+              entitlements: []
+              applicationId: "00000000-0000-4000-8000-000000000001"
+  - name: "rename"
+    sdk_implementations:
+      databricks_service_principal: sdk_go
+    config: |
+      resource "databricks_service_principal" "this" {
+        display_name = "SPN Renamed updated"
+      }
+    calls:
+      - request:
+          method: "GET"
+          path: "/api/2.0/preview/scim/v2/ServicePrincipals/201"
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+            Accept: ""
+            Content-Type: ""
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              schemas: ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"]
+              id: "201"
+              displayName: "SPN initial"
+              active: true
+              entitlements: []
+              applicationId: "00000000-0000-4000-8000-000000000001"
+      - request:
+          method: "GET"
+          path: "/api/2.0/preview/scim/v2/ServicePrincipals/201"
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+            Accept: ""
+            Content-Type: ""
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              schemas: ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"]
+              id: "201"
+              displayName: "SPN initial"
+              active: true
+              entitlements: []
+              applicationId: "00000000-0000-4000-8000-000000000001"
+      - request:
+          method: "PUT"
+          path: "/api/2.0/preview/scim/v2/ServicePrincipals/201"
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+            Accept: ""
+          body:
+            json:
+              id: "201"
+              schemas: ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"]
+              displayName: "SPN Renamed updated"
+              active: true
+              entitlements:
+                - {}
+        response: # Inferred API response; not recorded.
+          status: 200
+          body: null
+      - request:
+          method: "GET"
+          path: "/api/2.0/preview/scim/v2/ServicePrincipals/201"
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+            Accept: ""
+            Content-Type: ""
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              schemas: ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"]
+              id: "201"
+              displayName: "SPN Renamed updated"
+              active: true
+              entitlements: []
+              applicationId: "00000000-0000-4000-8000-000000000001"
+      - request:
+          method: "GET"
+          path: "/api/2.0/preview/scim/v2/ServicePrincipals/201"
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+            Accept: ""
+            Content-Type: ""
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              schemas: ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"]
+              id: "201"
+              displayName: "SPN Renamed updated"
+              active: true
+              entitlements: []
+              applicationId: "00000000-0000-4000-8000-000000000001"
+  - name: "plan_after_rename_is_empty"
+    sdk_implementations:
+      databricks_service_principal: sdk_go
+    plan_only: true
+    config: |
+      resource "databricks_service_principal" "this" {
+        display_name = "SPN Renamed updated"
+      }
+    plan:
+      expect: empty
+      changes: {}
+    calls:
+      - request:
+          method: "GET"
+          path: "/api/2.0/preview/scim/v2/ServicePrincipals/201"
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+            Accept: ""
+            Content-Type: ""
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              schemas: ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"]
+              id: "201"
+              displayName: "SPN Renamed updated"
+              active: true
+              entitlements: []
+              applicationId: "00000000-0000-4000-8000-000000000001"
+# Destroy pins the workspace-level DELETE answered 204.
+destroy:
+  calls:
+    - request:
+        method: "GET"
+        path: "/api/2.0/preview/scim/v2/ServicePrincipals/201"
+        headers:
+          X-Databricks-Workspace-Id: "12345"
+          Accept: ""
+          Content-Type: ""
+        body: null
+      response: # Inferred API response; not recorded.
+        status: 200
+        body:
+          json:
+            schemas: ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"]
+            id: "201"
+            displayName: "SPN Renamed updated"
+            active: true
+            entitlements: []
+            applicationId: "00000000-0000-4000-8000-000000000001"
+    - request:
+        method: "DELETE"
+        path: "/api/2.0/preview/scim/v2/ServicePrincipals/201"
+        headers:
+          X-Databricks-Workspace-Id: "12345"
+        body: null
+      response: # Inferred API response; not recorded.
+        status: 204
+        body: null

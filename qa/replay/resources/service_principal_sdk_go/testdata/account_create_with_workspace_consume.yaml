@@ -1,0 +1,100 @@
+# Runs account_create_with_workspace_consume with reads and writes through sdk-go scim/v1.
+# No sdk-go request carries an Accept header, and its GETs carry no Content-Type header.
+# Reads by ID send no attributes query. Writes send Content-Type application/json. PATCH
+# bodies also carry the ID. Account-level POST bodies have no schemas, entitlements or
+# groups, which the account-level scim/v1 model doesn't have. An empty header expectation
+# matches only requests without that header.
+#
+# Pins the account-level create body on AWS with the workspace_consume entitlement, which
+# the body doesn't carry. API responses are inferred from the SCIM API contract, not
+# recorded. An empty X-Databricks-Workspace-Id expectation matches only requests without
+# that header.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: account
+  cloud: AWS
+  account_id: replay-account
+steps:
+  - name: create_with_workspace_consume
+    sdk_implementations:
+      databricks_service_principal: sdk_go
+    config: |
+      provider "databricks" {
+        account_id = "replay-account"
+      }
+
+      resource "databricks_service_principal" "this" {
+        display_name      = "SPN consumer"
+        workspace_consume = true
+      }
+    calls:
+      - request:
+          method: POST
+          path: /api/2.0/accounts/replay-account/scim/v2/ServicePrincipals
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: ""
+            Accept: ""
+          body:
+            json: {"displayName": "SPN consumer", "active": true}
+        response:
+          status: 201
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "id": "201", "applicationId": "00000000-0000-4000-8000-000000000001",
+                   "displayName": "SPN consumer", "active": true,
+                   "entitlements": [{"value": "workspace-consume"}]}
+      - &read_created
+        request:
+          method: GET
+          path: /api/2.0/accounts/replay-account/scim/v2/ServicePrincipals/201
+          headers:
+            X-Databricks-Workspace-Id: ""
+            Accept: ""
+            Content-Type: ""
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "id": "201", "applicationId": "00000000-0000-4000-8000-000000000001",
+                   "displayName": "SPN consumer", "active": true,
+                   "entitlements": [{"value": "workspace-consume"}]}
+      - *read_created
+  - name: plan_after_create_is_empty
+    sdk_implementations:
+      databricks_service_principal: sdk_go
+    plan_only: true
+    config: |
+      provider "databricks" {
+        account_id = "replay-account"
+      }
+
+      resource "databricks_service_principal" "this" {
+        display_name      = "SPN consumer"
+        workspace_consume = true
+      }
+    plan:
+      expect: empty
+      changes: {}
+    calls:
+      - *read_created
+destroy:
+  calls:
+    - *read_created
+    - request:
+        method: PATCH
+        path: /api/2.0/accounts/replay-account/scim/v2/ServicePrincipals/201
+        headers:
+          Content-Type: application/json
+          X-Databricks-Workspace-Id: ""
+          Accept: ""
+        body:
+          json: {"id": "201",
+                 "schemas": ["urn:ietf:params:scim:api:messages:2.0:PatchOp"],
+                 "Operations": [{"op": "replace", "path": "active",
+                                 "value": [{"value": "false"}]}]}
+      response:
+        status: 200
+        body: null

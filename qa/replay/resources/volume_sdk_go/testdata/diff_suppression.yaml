@@ -1,9 +1,11 @@
-# Runs diff_suppression with reads through sdk-go uc/volumes/v1. A different letter case
-# in name, catalog_name or schema_name, and a trailing slash in storage_location, each
-# plan no changes. The GETs carry no Accept header, which the existing client sends.
-# Writes stay on the existing path. API responses are inferred from the Unity Catalog API
-# contract, not recorded. An empty header expectation matches only requests without that
-# header.
+# Runs volume/testdata/diff_suppression.yaml with databricks_volume on sdk-go
+# uc/volumes/v1 in every step, and expects the same behavior. The volume POST and GET
+# requests carry no Accept header, which an empty header expectation pins. The original's
+# description:
+#
+# Pins diff suppression. A different letter case in name, catalog_name or schema_name,
+# and a trailing slash in storage_location, each plan no changes. API responses are
+# inferred from the Unity Catalog API contract, not recorded.
 version: 1
 enforce_call_order: true
 host_metadata:
@@ -29,6 +31,7 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
+            Accept: ""
           body:
             json: {"catalog_name": "main", "schema_name": "replay",
                    "name": "suppressed_volume", "volume_type": "EXTERNAL",
@@ -48,8 +51,8 @@ steps:
           method: GET
           path: /api/2.1/unity-catalog/volumes/main.replay.suppressed_volume
           headers:
-            Accept: ""
             X-Databricks-Workspace-Id: "12345"
+            Accept: ""
           body: null
         response:
           status: 200

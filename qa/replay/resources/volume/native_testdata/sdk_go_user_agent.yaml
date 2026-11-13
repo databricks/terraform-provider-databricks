@@ -1,7 +1,8 @@
 # Supplies volume calls for TestVolumeSdkGoUserAgent, which checks their User-Agent in Go
-# with reads through sdk-go uc/volumes/v1. The GETs carry no Accept header. API responses
-# are inferred from the Unity Catalog API contract, not recorded. An empty header
-# expectation matches only requests without that header.
+# with reads and writes through sdk-go uc/volumes/v1. The POST, PATCH and GETs carry no
+# Accept header, and the PATCH body also carries full_name_arg, the full name in its
+# path. API responses are inferred from the Unity Catalog API contract, not recorded. An
+# empty header expectation matches only requests without that header.
 version: 1
 enforce_call_order: true
 host_metadata:
@@ -25,6 +26,7 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
+            Accept: ""
           body:
             json: {"catalog_name": "main", "schema_name": "replay",
                    "name": "user_agent_volume", "volume_type": "MANAGED"}
@@ -44,8 +46,10 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
+            Accept: ""
           body:
-            json: {"owner": "data-engineers"}
+            json: {"full_name_arg": "main.replay.user_agent_volume",
+                   "owner": "data-engineers"}
         response:
           status: 200
           body:

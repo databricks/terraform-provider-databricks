@@ -1,9 +1,15 @@
-# Runs retry_503_on_every_call with reads through sdk-go uc/volumes/v1. A 503 is retried
-# once at every databricks_volume call site, with the refresh GET going through sdk-go and
-# the POST, PATCHes and DELETE through the existing client. The GETs carry no Accept
-# header, which the existing client sends. Writes stay on the existing path. API responses
-# are inferred from the Unity Catalog API contract, not recorded. An empty header
-# expectation matches only requests without that header.
+# Runs volume/testdata/retry_503_on_every_call.yaml with databricks_volume on sdk-go
+# uc/volumes/v1 in every step, and expects the same behavior. The volume POST, GET and
+# PATCH requests carry no Accept header, which an empty header expectation pins. Each
+# PATCH body also carries full_name_arg, the full name in its path, because sdk-go
+# serializes the path field into the body. The original's description:
+#
+# Pins that the classic SDK client retries a 503 once at every databricks_volume call
+# site: the create POST, the owner PATCH, the refresh GET, the update PATCH, the rollback
+# PATCH and the DELETE. Each 503 is followed by exactly one identical request that
+# succeeds. The error code is not one the SDK maps to a retried error, so only the
+# status triggers the retry. API responses are inferred from the Unity Catalog API
+# contract, not recorded.
 version: 1
 enforce_call_order: true
 host_metadata:
@@ -30,6 +36,7 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
+            Accept: ""
           body:
             json: {"catalog_name": "main", "schema_name": "replay", "name": "retry_volume",
                    "volume_type": "MANAGED", "comment": "first"}
@@ -54,8 +61,10 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
+            Accept: ""
           body:
-            json: {"comment": "first", "owner": "owner-a@example.com"}
+            json: {"full_name_arg": "main.replay.retry_volume",
+                   "comment": "first", "owner": "owner-a@example.com"}
         response: *retried_error
       - request: *owner_patch_on_create
         response: &volume_owner_a
@@ -71,8 +80,8 @@ steps:
           method: GET
           path: /api/2.1/unity-catalog/volumes/main.replay.retry_volume
           headers:
-            Accept: ""
             X-Databricks-Workspace-Id: "12345"
+            Accept: ""
           body: null
         response: *retried_error
       - request: *read
@@ -108,8 +117,10 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
+            Accept: ""
           body:
-            json: {"owner": "owner-b@example.com"}
+            json: {"full_name_arg": "main.replay.retry_volume",
+                   "owner": "owner-b@example.com"}
         response: &volume_owner_b_comment_first
           status: 200
           body:
@@ -125,8 +136,10 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
+            Accept: ""
           body:
-            json: {"comment": "second"}
+            json: {"full_name_arg": "main.replay.retry_volume",
+                   "comment": "second"}
         response: *retried_error
       - request: *update_patch
         response: &volume_owner_b
@@ -167,8 +180,10 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
+            Accept: ""
           body:
-            json: {"owner": "owner-c@example.com"}
+            json: {"full_name_arg": "main.replay.retry_volume",
+                   "owner": "owner-c@example.com"}
         response:
           status: 200
           body:
@@ -184,8 +199,10 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
+            Accept: ""
           body:
-            json: {"comment": "third"}
+            json: {"full_name_arg": "main.replay.retry_volume",
+                   "comment": "third"}
         response:
           status: 400
           body:
@@ -196,8 +213,10 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
+            Accept: ""
           body:
-            json: {"owner": "owner-b@example.com"}
+            json: {"full_name_arg": "main.replay.retry_volume",
+                   "owner": "owner-b@example.com"}
         response: *retried_error
       - request: *rollback_patch
         response: *volume_owner_b

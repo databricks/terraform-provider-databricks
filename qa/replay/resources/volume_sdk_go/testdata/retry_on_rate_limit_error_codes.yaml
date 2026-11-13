@@ -1,9 +1,13 @@
-# Runs retry_after_header_is_ignored with reads through sdk-go uc/volumes/v1. A 429 on the
-# refresh GET asks for an hour's wait, yet the identical retry follows after the existing
-# client's short backoff and succeeds. The GETs carry no Accept header, which the existing
-# client sends. Writes stay on the existing path. API responses are inferred from the
-# Unity Catalog API contract, not recorded. An empty header expectation matches only
-# requests without that header.
+# Runs volume/testdata/retry_on_rate_limit_error_codes.yaml with databricks_volume on sdk-
+# go uc/volumes/v1 in every step, and expects the same behavior. The volume POST and GET
+# requests carry no Accept header, which an empty header expectation pins. The original's
+# description:
+#
+# Pins that the classic SDK client retries the refresh GET once when a 400 carries an
+# error code that the SDK maps to "too many requests": REQUEST_LIMIT_EXCEEDED and
+# RESOURCE_EXHAUSTED. The messages match no transient pattern, so only the error code
+# triggers the retry. API responses are inferred from the Unity Catalog API contract, not
+# recorded.
 version: 1
 enforce_call_order: true
 host_metadata:
@@ -11,7 +15,7 @@ host_metadata:
   cloud: AWS
   workspace_id: "12345"
 steps:
-  - name: read_after_create_retries_429_without_waiting_for_retry_after
+  - name: read_retries_request_limit_exceeded_and_resource_exhausted_codes
     sdk_implementations:
       databricks_volume: sdk_go
     config: |
@@ -28,6 +32,7 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
+            Accept: ""
           body:
             json: {"catalog_name": "main", "schema_name": "replay", "name": "retry_volume",
                    "volume_type": "MANAGED"}
@@ -44,18 +49,20 @@ steps:
           method: GET
           path: /api/2.1/unity-catalog/volumes/main.replay.retry_volume
           headers:
-            Accept: ""
             X-Databricks-Workspace-Id: "12345"
+            Accept: ""
           body: null
         response:
-          status: 429
-          headers:
-            Retry-After: "3600"
+          status: 400
           body:
-            json: {"error_code": "TOO_MANY_REQUESTS",
-                   "message": "Too many requests. Please wait a moment and try again."}
+            json: {"error_code": "REQUEST_LIMIT_EXCEEDED", "message": "Rate limit hit in fixture"}
       - request: *read
         response: *volume
+      - request: *read
+        response:
+          status: 400
+          body:
+            json: {"error_code": "RESOURCE_EXHAUSTED", "message": "Quota used up in fixture"}
       - request: *read
         response: *volume
 destroy:

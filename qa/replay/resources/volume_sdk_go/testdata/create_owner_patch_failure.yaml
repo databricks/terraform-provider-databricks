@@ -1,0 +1,181 @@
+# Runs volume/testdata/create_owner_patch_failure.yaml with databricks_volume on sdk-go
+# uc/volumes/v1 in every step, and expects the same behavior. The volume POST, GET and
+# PATCH requests carry no Accept header, which an empty header expectation pins. Each
+# PATCH body also carries full_name_arg, the full name in its path, because sdk-go
+# serializes the path field into the body. The original's description:
+#
+# Pins an owner PATCH that fails after a successful POST. Apply fails with the PATCH's
+# error, but the volume stays in state under its full name and is planned for
+# replacement; the next apply deletes and creates it again. API responses are inferred
+# from the Unity Catalog API contract, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: owner_patch_failure_after_create_fails
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: &config_missing_owner |
+      resource "databricks_volume" "this" {
+        name         = "tainted_volume"
+        catalog_name = "main"
+        schema_name  = "replay"
+        volume_type  = "MANAGED"
+        owner        = "missing-group"
+      }
+    expect_error: 'Error: cannot create volume: Could not find principal with name
+      missing-group\.'
+    calls:
+      - request:
+          method: POST
+          path: /api/2.1/unity-catalog/volumes
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+            Accept: ""
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "tainted_volume", "volume_type": "MANAGED"}
+        response:
+          status: 200
+          body:
+            json: &created {"catalog_name": "main", "schema_name": "replay",
+                            "name": "tainted_volume",
+                            "full_name": "main.replay.tainted_volume",
+                            "volume_type": "MANAGED", "owner": "replay-admin@example.com",
+                            "storage_location": "s3://replay-metastore/volume-41",
+                            "metastore_id": "11111111-1111-1111-1111-111111111111",
+                            "volume_id": "00000000-0000-4000-8000-000000000041"}
+      - request:
+          method: PATCH
+          path: /api/2.1/unity-catalog/volumes/main.replay.tainted_volume
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+            Accept: ""
+          body:
+            json: {"full_name_arg": "main.replay.tainted_volume",
+                   "owner": "missing-group"}
+        response:
+          status: 400
+          body:
+            json: {"error_code": "INVALID_PARAMETER_VALUE",
+                   "message": "Could not find principal with name missing-group."}
+  - name: failed_owner_patch_leaves_volume_in_state_for_replacement
+    sdk_implementations:
+      databricks_volume: sdk_go
+    plan_only: true
+    config: &config |
+      resource "databricks_volume" "this" {
+        name         = "tainted_volume"
+        catalog_name = "main"
+        schema_name  = "replay"
+        volume_type  = "MANAGED"
+        owner        = "data-engineers"
+      }
+    plan:
+      expect: non_empty
+      changes:
+        databricks_volume.this:
+          actions: [delete, create]
+    state:
+      resources:
+        databricks_volume.this:
+          attributes:
+            - path: [id]
+              equals: main.replay.tainted_volume
+            - path: [owner]
+              equals: replay-admin@example.com
+    calls:
+      - &read_created
+        request: &read_request
+          method: GET
+          path: /api/2.1/unity-catalog/volumes/main.replay.tainted_volume
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+            Accept: ""
+          body: null
+        response:
+          status: 200
+          body:
+            json: *created
+  - name: apply_replaces_volume_left_by_failed_create
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: *config
+    calls:
+      - *read_created
+      - &delete
+        request:
+          method: DELETE
+          path: /api/2.1/unity-catalog/volumes/main.replay.tainted_volume
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 200
+          body:
+            json: {}
+      - request:
+          method: POST
+          path: /api/2.1/unity-catalog/volumes
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+            Accept: ""
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "tainted_volume", "volume_type": "MANAGED"}
+        response:
+          status: 200
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "tainted_volume", "full_name": "main.replay.tainted_volume",
+                   "volume_type": "MANAGED", "owner": "replay-admin@example.com",
+                   "storage_location": "s3://replay-metastore/volume-42",
+                   "metastore_id": "11111111-1111-1111-1111-111111111111",
+                   "volume_id": "00000000-0000-4000-8000-000000000042"}
+      - request:
+          method: PATCH
+          path: /api/2.1/unity-catalog/volumes/main.replay.tainted_volume
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+            Accept: ""
+          body:
+            json: {"full_name_arg": "main.replay.tainted_volume",
+                   "owner": "data-engineers"}
+        response:
+          status: 200
+          body:
+            json: &replaced {"catalog_name": "main", "schema_name": "replay",
+                             "name": "tainted_volume",
+                             "full_name": "main.replay.tainted_volume",
+                             "volume_type": "MANAGED", "owner": "data-engineers",
+                             "storage_location": "s3://replay-metastore/volume-42",
+                             "metastore_id": "11111111-1111-1111-1111-111111111111",
+                             "volume_id": "00000000-0000-4000-8000-000000000042"}
+      - &read_replaced
+        request: *read_request
+        response:
+          status: 200
+          body:
+            json: *replaced
+      - *read_replaced
+  - name: plan_after_replacement_is_empty
+    sdk_implementations:
+      databricks_volume: sdk_go
+    plan_only: true
+    config: *config
+    plan:
+      expect: empty
+      changes: {}
+    calls:
+      - *read_replaced
+destroy:
+  calls:
+    - *read_replaced
+    - *delete

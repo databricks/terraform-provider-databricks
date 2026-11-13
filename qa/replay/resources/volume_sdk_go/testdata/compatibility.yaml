@@ -1,0 +1,390 @@
+# Switches a volume between the existing client and sdk-go uc/volumes/v1: create on the
+# existing path, refresh and update comment, owner and name on sdk-go, then refresh and
+# update them on the existing path. Every plan without a configuration change is empty,
+# and each step checks that state keeps the ID, volume_path and configured fields. Each
+# update sends the owner PATCH first and then the comment and rename PATCH, and the ID
+# and volume_path follow the new full name on both paths. Existing-path requests carry
+# Accept application/json; sdk-go requests carry no Accept header, which an empty header
+# expectation pins, and their PATCH bodies also carry full_name_arg, the full name in
+# their path. API responses are inferred from the Unity Catalog API contract, not
+# recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: create_on_existing_path
+    sdk_implementations:
+      databricks_volume: classic
+    config: &config_created |
+      resource "databricks_volume" "this" {
+        name         = "compat_volume"
+        catalog_name = "main"
+        schema_name  = "replay"
+        volume_type  = "MANAGED"
+        comment      = "first comment"
+        owner        = "data-engineers"
+      }
+    calls:
+      - request:
+          method: POST
+          path: /api/2.1/unity-catalog/volumes
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+            Accept: application/json
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "compat_volume", "volume_type": "MANAGED",
+                   "comment": "first comment"}
+        response:
+          status: 200
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "compat_volume", "full_name": "main.replay.compat_volume",
+                   "volume_type": "MANAGED", "comment": "first comment",
+                   "owner": "replay-admin@example.com",
+                   "storage_location": "s3://replay-metastore/volume-91",
+                   "metastore_id": "11111111-1111-1111-1111-111111111111",
+                   "volume_id": "00000000-0000-4000-8000-000000000091"}
+      - request:
+          method: PATCH
+          path: /api/2.1/unity-catalog/volumes/main.replay.compat_volume
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+            Accept: application/json
+          body:
+            json: {"comment": "first comment", "owner": "data-engineers"}
+        response:
+          status: 200
+          body:
+            json: &created {"catalog_name": "main", "schema_name": "replay",
+                            "name": "compat_volume",
+                            "full_name": "main.replay.compat_volume",
+                            "volume_type": "MANAGED", "comment": "first comment",
+                            "owner": "data-engineers",
+                            "storage_location": "s3://replay-metastore/volume-91",
+                            "metastore_id": "11111111-1111-1111-1111-111111111111",
+                            "volume_id": "00000000-0000-4000-8000-000000000091"}
+      - &existing_read_created
+        request:
+          method: GET
+          path: /api/2.1/unity-catalog/volumes/main.replay.compat_volume
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+            Accept: application/json
+          body: null
+        response:
+          status: 200
+          body:
+            json: *created
+      - *existing_read_created
+    state: &state_created
+      resources:
+        databricks_volume.this:
+          attributes:
+            - path: [id]
+              equals: main.replay.compat_volume
+            - path: [volume_path]
+              equals: /Volumes/main/replay/compat_volume
+            - path: [name]
+              equals: compat_volume
+            - path: [comment]
+              equals: first comment
+            - path: [owner]
+              equals: data-engineers
+            - path: [storage_location]
+              equals: s3://replay-metastore/volume-91
+  - name: refresh_on_sdk_go_changes_nothing
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: *config_created
+    plan:
+      expect: empty
+      changes: {}
+    calls:
+      - &sdk_go_read_created
+        request:
+          method: GET
+          path: /api/2.1/unity-catalog/volumes/main.replay.compat_volume
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+            Accept: ""
+          body: null
+        response:
+          status: 200
+          body:
+            json: *created
+      - *sdk_go_read_created
+    state: *state_created
+  - name: plan_on_sdk_go_is_empty
+    sdk_implementations:
+      databricks_volume: sdk_go
+    plan_only: true
+    config: *config_created
+    plan:
+      expect: empty
+      changes: {}
+    calls:
+      - *sdk_go_read_created
+  - name: update_comment_owner_and_name_on_sdk_go
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: &config_renamed |
+      resource "databricks_volume" "this" {
+        name         = "renamed_volume"
+        catalog_name = "main"
+        schema_name  = "replay"
+        volume_type  = "MANAGED"
+        comment      = "second comment"
+        owner        = "analysts"
+      }
+    plan:
+      expect: non_empty
+      changes:
+        databricks_volume.this:
+          actions: [update]
+          before:
+            - path: [name]
+              equals: compat_volume
+            - path: [comment]
+              equals: first comment
+            - path: [owner]
+              equals: data-engineers
+          after:
+            - path: [name]
+              equals: renamed_volume
+            - path: [comment]
+              equals: second comment
+            - path: [owner]
+              equals: analysts
+    calls:
+      - *sdk_go_read_created
+      - request:
+          method: PATCH
+          path: /api/2.1/unity-catalog/volumes/main.replay.compat_volume
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+            Accept: ""
+          body:
+            json: {"full_name_arg": "main.replay.compat_volume", "owner": "analysts"}
+        response:
+          status: 200
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "compat_volume", "full_name": "main.replay.compat_volume",
+                   "volume_type": "MANAGED", "comment": "first comment",
+                   "owner": "analysts",
+                   "storage_location": "s3://replay-metastore/volume-91",
+                   "metastore_id": "11111111-1111-1111-1111-111111111111",
+                   "volume_id": "00000000-0000-4000-8000-000000000091"}
+      - request:
+          method: PATCH
+          path: /api/2.1/unity-catalog/volumes/main.replay.compat_volume
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+            Accept: ""
+          body:
+            json: {"full_name_arg": "main.replay.compat_volume",
+                   "comment": "second comment", "new_name": "renamed_volume"}
+        response:
+          status: 200
+          body:
+            json: &renamed {"catalog_name": "main", "schema_name": "replay",
+                            "name": "renamed_volume",
+                            "full_name": "main.replay.renamed_volume",
+                            "volume_type": "MANAGED", "comment": "second comment",
+                            "owner": "analysts",
+                            "storage_location": "s3://replay-metastore/volume-91",
+                            "metastore_id": "11111111-1111-1111-1111-111111111111",
+                            "volume_id": "00000000-0000-4000-8000-000000000091"}
+      - &sdk_go_read_renamed
+        request:
+          method: GET
+          path: /api/2.1/unity-catalog/volumes/main.replay.renamed_volume
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+            Accept: ""
+          body: null
+        response:
+          status: 200
+          body:
+            json: *renamed
+      - *sdk_go_read_renamed
+    state: &state_renamed
+      resources:
+        databricks_volume.this:
+          attributes:
+            - path: [id]
+              equals: main.replay.renamed_volume
+            - path: [volume_path]
+              equals: /Volumes/main/replay/renamed_volume
+            - path: [name]
+              equals: renamed_volume
+            - path: [comment]
+              equals: second comment
+            - path: [owner]
+              equals: analysts
+            - path: [storage_location]
+              equals: s3://replay-metastore/volume-91
+  - name: plan_on_sdk_go_after_update_is_empty
+    sdk_implementations:
+      databricks_volume: sdk_go
+    plan_only: true
+    config: *config_renamed
+    plan:
+      expect: empty
+      changes: {}
+    calls:
+      - *sdk_go_read_renamed
+  - name: refresh_on_existing_path_changes_nothing
+    sdk_implementations:
+      databricks_volume: classic
+    config: *config_renamed
+    plan:
+      expect: empty
+      changes: {}
+    calls:
+      - &existing_read_renamed
+        request:
+          method: GET
+          path: /api/2.1/unity-catalog/volumes/main.replay.renamed_volume
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+            Accept: application/json
+          body: null
+        response:
+          status: 200
+          body:
+            json: *renamed
+      - *existing_read_renamed
+    state: *state_renamed
+  - name: update_comment_owner_and_name_on_existing_path
+    sdk_implementations:
+      databricks_volume: classic
+    config: &config_final |
+      resource "databricks_volume" "this" {
+        name         = "final_volume"
+        catalog_name = "main"
+        schema_name  = "replay"
+        volume_type  = "MANAGED"
+        comment      = "third comment"
+        owner        = "data-engineers"
+      }
+    plan:
+      expect: non_empty
+      changes:
+        databricks_volume.this:
+          actions: [update]
+          before:
+            - path: [name]
+              equals: renamed_volume
+            - path: [comment]
+              equals: second comment
+            - path: [owner]
+              equals: analysts
+          after:
+            - path: [name]
+              equals: final_volume
+            - path: [comment]
+              equals: third comment
+            - path: [owner]
+              equals: data-engineers
+    calls:
+      - *existing_read_renamed
+      - request:
+          method: PATCH
+          path: /api/2.1/unity-catalog/volumes/main.replay.renamed_volume
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+            Accept: application/json
+          body:
+            json: {"owner": "data-engineers"}
+        response:
+          status: 200
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "renamed_volume", "full_name": "main.replay.renamed_volume",
+                   "volume_type": "MANAGED", "comment": "second comment",
+                   "owner": "data-engineers",
+                   "storage_location": "s3://replay-metastore/volume-91",
+                   "metastore_id": "11111111-1111-1111-1111-111111111111",
+                   "volume_id": "00000000-0000-4000-8000-000000000091"}
+      - request:
+          method: PATCH
+          path: /api/2.1/unity-catalog/volumes/main.replay.renamed_volume
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+            Accept: application/json
+          body:
+            json: {"comment": "third comment", "new_name": "final_volume"}
+        response:
+          status: 200
+          body:
+            json: &final {"catalog_name": "main", "schema_name": "replay",
+                          "name": "final_volume",
+                          "full_name": "main.replay.final_volume",
+                          "volume_type": "MANAGED", "comment": "third comment",
+                          "owner": "data-engineers",
+                          "storage_location": "s3://replay-metastore/volume-91",
+                          "metastore_id": "11111111-1111-1111-1111-111111111111",
+                          "volume_id": "00000000-0000-4000-8000-000000000091"}
+      - &existing_read_final
+        request:
+          method: GET
+          path: /api/2.1/unity-catalog/volumes/main.replay.final_volume
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+            Accept: application/json
+          body: null
+        response:
+          status: 200
+          body:
+            json: *final
+      - *existing_read_final
+    state:
+      resources:
+        databricks_volume.this:
+          attributes:
+            - path: [id]
+              equals: main.replay.final_volume
+            - path: [volume_path]
+              equals: /Volumes/main/replay/final_volume
+            - path: [name]
+              equals: final_volume
+            - path: [comment]
+              equals: third comment
+            - path: [owner]
+              equals: data-engineers
+            - path: [storage_location]
+              equals: s3://replay-metastore/volume-91
+  - name: plan_on_existing_path_after_update_is_empty
+    sdk_implementations:
+      databricks_volume: classic
+    plan_only: true
+    config: *config_final
+    plan:
+      expect: empty
+      changes: {}
+    calls:
+      - *existing_read_final
+destroy:
+  calls:
+    - *existing_read_final
+    - request:
+        method: DELETE
+        path: /api/2.1/unity-catalog/volumes/main.replay.final_volume
+        headers:
+          X-Databricks-Workspace-Id: "12345"
+        body: null
+      response:
+        status: 200
+        body:
+          json: {}

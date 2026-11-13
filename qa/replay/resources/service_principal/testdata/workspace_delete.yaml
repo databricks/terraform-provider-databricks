@@ -139,7 +139,7 @@ steps:
           body: null
         response:
           status: 404
-          body: 
+          body:
             json: {"schemas": ["urn:ietf:params:scim:api:messages:2.0:Error"],
                    "detail": "Service Principal with id 202 not found.", "status": "404"}
   - name: plan_after_delete_answered_404_is_empty

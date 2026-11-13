@@ -24,6 +24,7 @@ const useSdkGoResourcesEnv = "USE_SDK_GO_RESOURCES"
 // Resource types that have an sdk-go implementation. Keep this list sorted.
 var sdkGoResources = []string{
 	"databricks_service_principal",
+	"databricks_volume",
 }
 
 // The selection is read once, so it stays fixed for the life of the provider process.

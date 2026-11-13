@@ -19,6 +19,9 @@ func TestParseSdkGoResources(t *testing.T) {
 		" , ":                               nil,
 		"databricks_service_principal":      {"databricks_service_principal"},
 		" databricks_service_principal , ,": {"databricks_service_principal"},
+		"databricks_volume":                 {"databricks_volume"},
+		"databricks_service_principal databricks_volume": {
+			"databricks_service_principal", "databricks_volume"},
 	} {
 		got, err := parseSdkGoResources(value)
 		require.NoError(t, err, value)
@@ -29,7 +32,8 @@ func TestParseSdkGoResources(t *testing.T) {
 func TestParseSdkGoResourcesRejectsUnknownResources(t *testing.T) {
 	_, err := parseSdkGoResources("databricks_service_principal,databricks_user")
 	assert.EqualError(t, err, `USE_SDK_GO_RESOURCES: resource "databricks_user" has no `+
-		`sdk-go implementation; supported resources: databricks_service_principal`)
+		`sdk-go implementation; supported resources: databricks_service_principal, `+
+		`databricks_volume`)
 }
 
 func TestSdkGoResourcesOptionReplacesEnvironment(t *testing.T) {

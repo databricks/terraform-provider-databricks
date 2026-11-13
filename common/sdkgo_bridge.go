@@ -7,11 +7,13 @@ import (
 	"io"
 	"net"
 	"net/http"
+	"reflect"
 	"runtime"
 	"strings"
 	"sync/atomic"
 	"time"
 
+	"github.com/databricks/databricks-sdk-go/client"
 	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/databricks-sdk-go/httpclient"
 	"github.com/databricks/databricks-sdk-go/httpclient/traceparent"
@@ -25,22 +27,26 @@ import (
 const (
 	classicDefaultHTTPTimeout  = 60 * time.Second
 	classicDefaultRetryTimeout = 5 * time.Minute
-	classicDefaultRateLimit    = 15
 )
 
 // sdkGoBridge holds the classic client settings that sdk-go clients reuse.
 type sdkGoBridge struct {
-	httpConfig httpclient.ClientConfig
-	retry      retries.RetryConfig
-	limiter    *rate.Limiter
-	httpClient *http.Client
+	httpConfig  httpclient.ClientConfig
+	retry       retries.RetryConfig
+	httpTimeout time.Duration
+	limiter     *rate.Limiter
+	httpClient  *http.Client
 }
 
-// newSdkGoBridge reads the settings the classic client derives from cfg, so both clients
-// follow retry_timeout_seconds, rate_limit, http_timeout_seconds and the TLS and proxy
-// settings.
-func newSdkGoBridge(cfg *config.Config) (*sdkGoBridge, error) {
-	httpConfig, err := config.HTTPClientConfigFromConfig(cfg)
+// newSdkGoBridge reads the settings the classic client derives from its config, so both
+// clients follow retry_timeout_seconds, rate_limit, http_timeout_seconds and the TLS and
+// proxy settings, and share the classic client's rate limiter.
+func newSdkGoBridge(classic *client.DatabricksClient) (*sdkGoBridge, error) {
+	httpConfig, err := config.HTTPClientConfigFromConfig(classic.Config)
+	if err != nil {
+		return nil, err
+	}
+	limiter, err := classicRateLimiter(classic.ApiClient())
 	if err != nil {
 		return nil, err
 	}
@@ -52,21 +58,16 @@ func newSdkGoBridge(cfg *config.Config) (*sdkGoBridge, error) {
 	if retryTimeout == 0 {
 		retryTimeout = classicDefaultRetryTimeout
 	}
-	rateLimit := httpConfig.RateLimitPerSecond
-	if rateLimit == 0 {
-		rateLimit = classicDefaultRateLimit
-	}
-	limit := rate.Limit(rateLimit)
 	base := classicTransport(httpConfig)
 	// httpclient.NewApiClient makes the same exception for test fixture transports.
 	skippable, ok := base.(interface{ SkipRetryOnIO() bool })
 	if ok && skippable.SkipRetryOnIO() {
-		limit = rate.Inf
 		retryTimeout = 0
 	}
 	b := &sdkGoBridge{
-		httpConfig: httpConfig,
-		limiter:    rate.NewLimiter(limit, rateLimit),
+		httpConfig:  httpConfig,
+		httpTimeout: httpTimeout,
+		limiter:     limiter,
 		httpClient: &http.Client{Transport: &sdkGoTransport{
 			base:        base,
 			visitors:    httpConfig.Visitors,
@@ -75,6 +76,18 @@ func newSdkGoBridge(cfg *config.Config) (*sdkGoBridge, error) {
 	}
 	retries.WithTimeout(retryTimeout)(&b.retry)
 	return b, nil
+}
+
+// classicRateLimiter returns the rate limiter of api. httpclient.ApiClient doesn't
+// export it, but sharing it is the only way to keep sdk-go and classic calls within one
+// rate_limit budget.
+func classicRateLimiter(api *httpclient.ApiClient) (*rate.Limiter, error) {
+	field := reflect.ValueOf(api).Elem().FieldByName("rateLimiter")
+	if !field.IsValid() || field.Type() != reflect.TypeFor[*rate.Limiter]() {
+		return nil, fmt.Errorf("cannot share the rate limiter of %T: "+
+			"its rateLimiter field is missing or has another type", api)
+	}
+	return (*rate.Limiter)(field.UnsafePointer()), nil
 }
 
 var (
@@ -115,9 +128,11 @@ func newClassicTransport(insecureSkipVerify bool) *http.Transport {
 }
 
 // classicCredentials asks the classic config to authenticate every request, so token
-// refresh and extra authentication headers keep working.
+// refresh and extra authentication headers keep working. Like the classic client, it
+// authenticates under the attempt's timeout, which it hands to sdkGoTransport.
 type classicCredentials struct {
-	cfg *config.Config
+	cfg         *config.Config
+	httpTimeout time.Duration
 }
 
 // Name is only used by sdk-go's own User-Agent, which sdkGoTransport replaces.
@@ -126,12 +141,21 @@ func (classicCredentials) Name() string {
 }
 
 func (c classicCredentials) AuthHeaders(ctx context.Context) ([]auth.Header, error) {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.cfg.Host, nil)
-	if err != nil {
-		return nil, err
+	timeout := startAttemptTimeout(ctx, c.httpTimeout)
+	req, err := http.NewRequestWithContext(timeout.ctx, http.MethodGet, c.cfg.Host, nil)
+	if err == nil {
+		if authErr := c.cfg.Authenticate(req); authErr != nil {
+			err = fmt.Errorf("failed during request visitor: %w", authErr)
+		}
 	}
-	if err := c.cfg.Authenticate(req); err != nil {
-		return nil, fmt.Errorf("failed during request visitor: %w", err)
+	attempt, ok := ctx.Value(sdkGoAttemptKey{}).(*sdkGoAttempt)
+	if err != nil || !ok {
+		timeout.end()
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		attempt.keepTimeout(timeout)
 	}
 	var headers []auth.Header
 	for key, values := range req.Header {
@@ -159,10 +183,15 @@ func (t *sdkGoTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	}
 	traceparent.AddTraceparent(r)
 	r.Header.Set("User-Agent", sdkGoUserAgent(r.Context(), req.Header.Get("User-Agent")))
+	var timeout *attemptTimeout
 	if attempt, ok := r.Context().Value(sdkGoAttemptKey{}).(*sdkGoAttempt); ok {
 		attempt.request = r
+		timeout = attempt.takeTimeout()
 	}
-	return t.roundTripWithTimeout(r)
+	if timeout == nil {
+		timeout = startAttemptTimeout(req.Context(), t.httpTimeout)
+	}
+	return t.send(r, timeout)
 }
 
 // sdkGoUserAgent keeps the classic User-Agent, which usage analytics parse, and appends
@@ -177,27 +206,45 @@ func sdkGoUserAgent(ctx context.Context, sdkGoUserAgent string) string {
 	return strings.Join(segments, " ")
 }
 
-// roundTripWithTimeout cancels an attempt after httpTimeout without progress, like the
-// classic client, and reports it with the classic client's message.
-func (t *sdkGoTransport) roundTripWithTimeout(r *http.Request) (*http.Response, error) {
-	ctx, cancel := context.WithCancel(r.Context())
-	timer := newInactivityTimer(t.httpTimeout, cancel)
-	attempt := r.WithContext(ctx)
+// send cancels the attempt after httpTimeout without progress, like the classic
+// client, and reports it with the classic client's message.
+func (t *sdkGoTransport) send(r *http.Request,
+	timeout *attemptTimeout) (*http.Response, error) {
+	attempt := r.WithContext(timeout.ctx)
 	if attempt.Body != nil && attempt.Body != http.NoBody {
-		attempt.Body = &inactivityBody{ReadCloser: attempt.Body, timer: timer}
+		attempt.Body = &inactivityBody{ReadCloser: attempt.Body, timer: timeout.timer}
 	}
 	resp, err := t.base.RoundTrip(attempt)
 	if err != nil {
-		timer.stop()
-		cancel()
-		if timer.expired() && r.Context().Err() == nil {
+		timeout.end()
+		if timeout.timer.expired() && r.Context().Err() == nil {
 			return nil, fmt.Errorf("request timed out after %s of inactivity",
 				t.httpTimeout)
 		}
 		return nil, err
 	}
-	resp.Body = &inactivityBody{ReadCloser: resp.Body, timer: timer, cancel: cancel}
+	resp.Body = &inactivityBody{ReadCloser: resp.Body, timer: timeout.timer,
+		cancel: timeout.cancel}
 	return resp, nil
+}
+
+// attemptTimeout cancels one attempt after its timeout passes without progress. It
+// starts before authentication and lasts until the response body is closed.
+type attemptTimeout struct {
+	ctx    context.Context
+	cancel context.CancelFunc
+	timer  *inactivityTimer
+}
+
+func startAttemptTimeout(parent context.Context, timeout time.Duration) *attemptTimeout {
+	ctx, cancel := context.WithCancel(parent)
+	timer := newInactivityTimer(timeout, cancel)
+	return &attemptTimeout{ctx: ctx, cancel: cancel, timer: timer}
+}
+
+func (t *attemptTimeout) end() {
+	t.timer.stop()
+	t.cancel()
 }
 
 type inactivityTimer struct {

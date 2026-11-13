@@ -1,0 +1,219 @@
+# Runs retry_503_on_every_call with reads through sdk-go uc/volumes/v1. A 503 is retried
+# once at every databricks_volume call site, with the refresh GET going through sdk-go and
+# the POST, PATCHes and DELETE through the existing client. The GETs carry no Accept
+# header, which the existing client sends. Writes stay on the existing path. API responses
+# are inferred from the Unity Catalog API contract, not recorded. An empty header
+# expectation matches only requests without that header.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: create_with_owner_retries_post_owner_patch_and_read
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: &config_owner_a |
+      resource "databricks_volume" "this" {
+        name         = "retry_volume"
+        catalog_name = "main"
+        schema_name  = "replay"
+        volume_type  = "MANAGED"
+        comment      = "first"
+        owner        = "owner-a@example.com"
+      }
+    calls:
+      - request: &create
+          method: POST
+          path: /api/2.1/unity-catalog/volumes
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay", "name": "retry_volume",
+                   "volume_type": "MANAGED", "comment": "first"}
+        response: &retried_error
+          status: 503
+          body:
+            json: {"error_code": "TEMPORARILY_UNAVAILABLE",
+                   "message": "The service is temporarily unavailable."}
+      - request: *create
+        response:
+          status: 200
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay", "name": "retry_volume",
+                   "full_name": "main.replay.retry_volume", "volume_type": "MANAGED",
+                   "comment": "first", "owner": "replay-admin@example.com",
+                   "storage_location": "s3://replay-metastore/volumes/00000000-0000-4000-8000-000000000002",
+                   "metastore_id": "11111111-1111-1111-1111-111111111111",
+                   "volume_id": "00000000-0000-4000-8000-000000000002"}
+      - request: &owner_patch_on_create
+          method: PATCH
+          path: /api/2.1/unity-catalog/volumes/main.replay.retry_volume
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"comment": "first", "owner": "owner-a@example.com"}
+        response: *retried_error
+      - request: *owner_patch_on_create
+        response: &volume_owner_a
+          status: 200
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay", "name": "retry_volume",
+                   "full_name": "main.replay.retry_volume", "volume_type": "MANAGED",
+                   "comment": "first", "owner": "owner-a@example.com",
+                   "storage_location": "s3://replay-metastore/volumes/00000000-0000-4000-8000-000000000002",
+                   "metastore_id": "11111111-1111-1111-1111-111111111111",
+                   "volume_id": "00000000-0000-4000-8000-000000000002"}
+      - request: &read
+          method: GET
+          path: /api/2.1/unity-catalog/volumes/main.replay.retry_volume
+          headers:
+            Accept: ""
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response: *retried_error
+      - request: *read
+        response: *volume_owner_a
+      - request: *read
+        response: *volume_owner_a
+    state:
+      resources:
+        databricks_volume.this:
+          attributes:
+            - path: [id]
+              equals: main.replay.retry_volume
+            - path: [owner]
+              equals: owner-a@example.com
+  - name: update_owner_and_comment_retries_update_patch
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: &config_owner_b |
+      resource "databricks_volume" "this" {
+        name         = "retry_volume"
+        catalog_name = "main"
+        schema_name  = "replay"
+        volume_type  = "MANAGED"
+        comment      = "second"
+        owner        = "owner-b@example.com"
+      }
+    calls:
+      - request: *read
+        response: *volume_owner_a
+      - request:
+          method: PATCH
+          path: /api/2.1/unity-catalog/volumes/main.replay.retry_volume
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"owner": "owner-b@example.com"}
+        response: &volume_owner_b_comment_first
+          status: 200
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay", "name": "retry_volume",
+                   "full_name": "main.replay.retry_volume", "volume_type": "MANAGED",
+                   "comment": "first", "owner": "owner-b@example.com",
+                   "storage_location": "s3://replay-metastore/volumes/00000000-0000-4000-8000-000000000002",
+                   "metastore_id": "11111111-1111-1111-1111-111111111111",
+                   "volume_id": "00000000-0000-4000-8000-000000000002"}
+      - request: &update_patch
+          method: PATCH
+          path: /api/2.1/unity-catalog/volumes/main.replay.retry_volume
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"comment": "second"}
+        response: *retried_error
+      - request: *update_patch
+        response: &volume_owner_b
+          status: 200
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay", "name": "retry_volume",
+                   "full_name": "main.replay.retry_volume", "volume_type": "MANAGED",
+                   "comment": "second", "owner": "owner-b@example.com",
+                   "storage_location": "s3://replay-metastore/volumes/00000000-0000-4000-8000-000000000002",
+                   "metastore_id": "11111111-1111-1111-1111-111111111111",
+                   "volume_id": "00000000-0000-4000-8000-000000000002"}
+      - request: *read
+        response: *volume_owner_b
+      - request: *read
+        response: *volume_owner_b
+  # A rejected update PATCH after an owner change makes the provider restore the previous
+  # owner. The rollback PATCH is retried like any other call, and the update's own error
+  # is reported.
+  - name: rejected_update_retries_rollback_patch
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: |
+      resource "databricks_volume" "this" {
+        name         = "retry_volume"
+        catalog_name = "main"
+        schema_name  = "replay"
+        volume_type  = "MANAGED"
+        comment      = "third"
+        owner        = "owner-c@example.com"
+      }
+    expect_error: '(?s)cannot\s+update\s+volume:\s+Comment\s+rejected\s+by\s+fixture'
+    calls:
+      - request: *read
+        response: *volume_owner_b
+      - request:
+          method: PATCH
+          path: /api/2.1/unity-catalog/volumes/main.replay.retry_volume
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"owner": "owner-c@example.com"}
+        response:
+          status: 200
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay", "name": "retry_volume",
+                   "full_name": "main.replay.retry_volume", "volume_type": "MANAGED",
+                   "comment": "second", "owner": "owner-c@example.com",
+                   "storage_location": "s3://replay-metastore/volumes/00000000-0000-4000-8000-000000000002",
+                   "metastore_id": "11111111-1111-1111-1111-111111111111",
+                   "volume_id": "00000000-0000-4000-8000-000000000002"}
+      - request:
+          method: PATCH
+          path: /api/2.1/unity-catalog/volumes/main.replay.retry_volume
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"comment": "third"}
+        response:
+          status: 400
+          body:
+            json: {"error_code": "INVALID_PARAMETER_VALUE", "message": "Comment rejected by fixture"}
+      - request: &rollback_patch
+          method: PATCH
+          path: /api/2.1/unity-catalog/volumes/main.replay.retry_volume
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"owner": "owner-b@example.com"}
+        response: *retried_error
+      - request: *rollback_patch
+        response: *volume_owner_b
+destroy:
+  calls:
+    - request: *read
+      response: *volume_owner_b
+    - request: &delete
+        method: DELETE
+        path: /api/2.1/unity-catalog/volumes/main.replay.retry_volume
+        headers:
+          X-Databricks-Workspace-Id: "12345"
+        body: null
+      response: *retried_error
+    - request: *delete
+      response:
+        status: 200
+        body:
+          json: {}

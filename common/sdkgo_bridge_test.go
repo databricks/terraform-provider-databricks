@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/client"
 	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/databricks-sdk-go/config/credentials"
@@ -108,13 +109,21 @@ func newBridgeTestClient(t *testing.T, cfg *config.Config) *client.DatabricksCli
 	return c
 }
 
+// newTestBridge returns a new bridge for a classic client built from cfg.
+func newTestBridge(t *testing.T, cfg *config.Config) *sdkGoBridge {
+	t.Helper()
+	classic := newBridgeTestClient(t, cfg)
+	b, err := newSdkGoBridge(classic.Config, classic.ApiClient())
+	require.NoError(t, err)
+	return b
+}
+
 func TestSdkGoBridgeFollowsRateLimitAndTimeouts(t *testing.T) {
 	cfg := newCredentialsTestConfig(t, &countingCredentials{})
 	cfg.RateLimitPerSecond = 3
 	cfg.RetryTimeoutSeconds = 7
 	cfg.HTTPTimeoutSeconds = 11
-	b, err := newSdkGoBridge(newBridgeTestClient(t, cfg))
-	require.NoError(t, err)
+	b := newTestBridge(t, cfg)
 	assert.Equal(t, rate.Limit(3), b.limiter.Limit())
 	assert.Equal(t, 3, b.limiter.Burst())
 	assert.Equal(t, "7s", b.retry.Timeout().String())
@@ -124,8 +133,7 @@ func TestSdkGoBridgeFollowsRateLimitAndTimeouts(t *testing.T) {
 
 func TestSdkGoBridgeDefaultsMatchClassicClient(t *testing.T) {
 	cfg := newCredentialsTestConfig(t, &countingCredentials{})
-	b, err := newSdkGoBridge(newBridgeTestClient(t, cfg))
-	require.NoError(t, err)
+	b := newTestBridge(t, cfg)
 	assert.Equal(t, rate.Limit(15), b.limiter.Limit())
 	assert.Equal(t, "5m0s", b.retry.Timeout().String())
 	assert.Equal(t, "1m0s", b.httpTimeout.String())
@@ -134,8 +142,7 @@ func TestSdkGoBridgeDefaultsMatchClassicClient(t *testing.T) {
 func TestSdkGoBridgeSkipsRateLimitForTestFixtures(t *testing.T) {
 	cfg := newCredentialsTestConfig(t, &countingCredentials{})
 	cfg.HTTPTransport = skipRetryTransport{}
-	b, err := newSdkGoBridge(newBridgeTestClient(t, cfg))
-	require.NoError(t, err)
+	b := newTestBridge(t, cfg)
 	assert.Equal(t, rate.Inf, b.limiter.Limit())
 }
 
@@ -153,24 +160,48 @@ func TestClassicRateLimiterReadsTheClassicClientsLimiter(t *testing.T) {
 	assert.Same(t, limiter, again)
 }
 
-func TestSdkGoBridgeIsSharedPerClassicClient(t *testing.T) {
+func TestSdkGoBridgeIsSharedPerApiClient(t *testing.T) {
 	classic := newBridgeTestClient(t, newCredentialsTestConfig(t, &countingCredentials{}))
-	first, err := sdkGoBridgeFor(classic)
+	first, err := sdkGoBridgeFor(classic.Config, classic.ApiClient())
 	require.NoError(t, err)
-	second, err := sdkGoBridgeFor(classic)
+	second, err := sdkGoBridgeFor(classic.Config, classic.ApiClient())
 	require.NoError(t, err)
 	assert.Same(t, first, second)
-	otherClassic := newBridgeTestClient(t,
-		newCredentialsTestConfig(t, &countingCredentials{}))
-	other, err := sdkGoBridgeFor(otherClassic)
+	// A workspace client built from the same config has its own API client.
+	w, err := databricks.NewWorkspaceClient((*databricks.Config)(classic.Config))
+	require.NoError(t, err)
+	api, err := workspaceApiClient(w)
+	require.NoError(t, err)
+	other, err := sdkGoBridgeFor(w.Config, api)
 	require.NoError(t, err)
 	assert.NotSame(t, first, other)
 }
 
+// The API client is read from an unexported field, so this test fails if a
+// databricks-sdk-go upgrade moves it.
+func TestWorkspaceApiClientReadsTheWorkspaceClientsApiClient(t *testing.T) {
+	cfg := newCredentialsTestConfig(t, &countingCredentials{})
+	cfg.RateLimitPerSecond = 4
+	w, err := databricks.NewWorkspaceClient((*databricks.Config)(cfg))
+	require.NoError(t, err)
+	api, err := workspaceApiClient(w)
+	require.NoError(t, err)
+	again, err := workspaceApiClient(w)
+	require.NoError(t, err)
+	assert.Same(t, api, again)
+	limiter, err := classicRateLimiter(api)
+	require.NoError(t, err)
+	assert.Equal(t, rate.Limit(4), limiter.Limit())
+}
+
+func TestWorkspaceApiClientRejectsMockWorkspaceClients(t *testing.T) {
+	_, err := workspaceApiClient(&databricks.WorkspaceClient{})
+	assert.EqualError(t, err, "*databricks.WorkspaceClient has no API client to share")
+}
+
 func TestClassicErrorKeepsTransportErrors(t *testing.T) {
 	cfg := newCredentialsTestConfig(t, &countingCredentials{})
-	b, err := newSdkGoBridge(newBridgeTestClient(t, cfg))
-	require.NoError(t, err)
+	b := newTestBridge(t, cfg)
 	transportErr := errors.New("dial tcp: connection refused")
 	assert.Same(t, transportErr, b.classicError(context.Background(), transportErr, nil))
 }

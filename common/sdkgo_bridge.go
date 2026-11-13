@@ -10,7 +10,7 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/databricks/databricks-sdk-go/client"
+	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/databricks-sdk-go/httpclient"
 	"github.com/databricks/databricks-sdk-go/retries"
@@ -33,15 +33,15 @@ type sdkGoBridge struct {
 	httpClient  *http.Client
 }
 
-// newSdkGoBridge reads the settings the classic client derives from its config, so both
-// clients follow retry_timeout_seconds, rate_limit, http_timeout_seconds and the TLS and
-// proxy settings, and share the classic client's rate limiter.
-func newSdkGoBridge(classic *client.DatabricksClient) (*sdkGoBridge, error) {
-	httpConfig, err := config.HTTPClientConfigFromConfig(classic.Config)
+// newSdkGoBridge reads the settings that api, the classic API client built from cfg,
+// derives from cfg, so both clients follow retry_timeout_seconds, rate_limit,
+// http_timeout_seconds and the TLS and proxy settings, and share api's rate limiter.
+func newSdkGoBridge(cfg *config.Config, api *httpclient.ApiClient) (*sdkGoBridge, error) {
+	httpConfig, err := config.HTTPClientConfigFromConfig(cfg)
 	if err != nil {
 		return nil, err
 	}
-	limiter, err := classicRateLimiter(classic.ApiClient())
+	limiter, err := classicRateLimiter(api)
 	if err != nil {
 		return nil, err
 	}
@@ -85,6 +85,22 @@ func classicRateLimiter(api *httpclient.ApiClient) (*rate.Limiter, error) {
 			"its rateLimiter field is missing or has another type", api)
 	}
 	return (*rate.Limiter)(field.UnsafePointer()), nil
+}
+
+// workspaceApiClient returns the API client of w. databricks.WorkspaceClient doesn't
+// export it, but sdk-go calls must share its rate limiter, as w's own calls do.
+func workspaceApiClient(w *databricks.WorkspaceClient) (*httpclient.ApiClient, error) {
+	field := reflect.ValueOf(w).Elem().FieldByName("apiClient")
+	if !field.IsValid() || field.Type() != reflect.TypeFor[*httpclient.ApiClient]() {
+		return nil, fmt.Errorf("cannot share the API client of %T: "+
+			"its apiClient field is missing or has another type", w)
+	}
+	api := (*httpclient.ApiClient)(field.UnsafePointer())
+	if api == nil {
+		// Mock workspace clients have no API client.
+		return nil, fmt.Errorf("%T has no API client to share", w)
+	}
+	return api, nil
 }
 
 var (

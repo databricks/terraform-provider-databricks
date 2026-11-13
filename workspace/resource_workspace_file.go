@@ -59,11 +59,16 @@ func ResourceWorkspaceFile() common.Resource {
 				// If upload failed, check if the parent folder is missing and create it.
 				parent := filepath.ToSlash(filepath.Dir(path))
 				_, errStatus := client.Workspace.GetStatusByPath(ctx, parent)
-				if errStatus != nil && apierr.IsMissing(errStatus) {
+				parentMissing := errStatus != nil && apierr.IsMissing(errStatus)
+				if parentMissing {
 					log.Printf("[DEBUG] Parent folder '%s' doesn't exist, creating...", parent)
 					if errStatus = client.Workspace.MkdirsByPath(ctx, parent); errStatus != nil {
 						return errStatus
 					}
+				}
+				// Also retry if the parent folder was missing during the upload but exists now:
+				// another resource may have created it concurrently, e.g. for a file in a subfolder.
+				if parentMissing || apierr.IsMissing(err) {
 					err = client.Workspace.Upload(ctx, path, bytes.NewReader(content), workspaceFileUploadOptionFunc)
 				}
 				if err != nil {

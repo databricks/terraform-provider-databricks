@@ -23,6 +23,7 @@
 ### Bug Fixes
 * Keep the configured values of the `pem_key_passphrase`, `ssl_keystore_key`, `ssl_key_password` and `schema_registry_api_secret` options of `databricks_connection`, which the API doesn't return, to avoid a perpetual diff ([#6088](https://github.com/databricks/terraform-provider-databricks/pull/6088)).
 * Ignore whitespace-only differences in PEM-encoded options of `databricks_connection`, such as `userProvidedServerCertificate`, to avoid a perpetual diff ([#6088](https://github.com/databricks/terraform-provider-databricks/pull/6088)).
+* Fix `databricks_workspace_file` and `databricks_notebook` creation failing with `The parent folder (...) does not exist.` when other resources create the same parent folder concurrently ([#6145](https://github.com/databricks/terraform-provider-databricks/issues/6145)).
 
 ### Documentation
 

@@ -28,7 +28,7 @@ func TestConnectionsCreate(t *testing.T) {
 				Resource: "/api/2.1/unity-catalog/connections",
 				ExpectedRequest: catalog.CreateConnection{
 					Name:           "testConnectionName",
-					ConnectionType: catalog.ConnectionType("testConnectionType"),
+					ConnectionType: catalog.ConnectionType("SHAREPOINT"),
 					Comment:        "This is a test comment.",
 					Options: map[string]string{
 						"host": "test.com",
@@ -39,7 +39,7 @@ func TestConnectionsCreate(t *testing.T) {
 				},
 				Response: catalog.ConnectionInfo{
 					Name:           "testConnectionName",
-					ConnectionType: catalog.ConnectionType("testConnectionType"),
+					ConnectionType: catalog.ConnectionType("SHAREPOINT"),
 					Comment:        "This is a test comment.",
 					FullName:       "testConnectionName",
 					MetastoreId:    "abc",
@@ -57,7 +57,7 @@ func TestConnectionsCreate(t *testing.T) {
 				Resource: "/api/2.1/unity-catalog/connections/testConnectionName?",
 				Response: catalog.ConnectionInfo{
 					Name:           "testConnectionName",
-					ConnectionType: catalog.ConnectionType("testConnectionType"),
+					ConnectionType: catalog.ConnectionType("SHAREPOINT"),
 					Comment:        "This is a test comment.",
 					FullName:       "testConnectionName",
 					Owner:          "InitialOwner",
@@ -82,7 +82,7 @@ func TestConnectionsCreate(t *testing.T) {
 				},
 				Response: catalog.ConnectionInfo{
 					Name:           "testConnectionName",
-					ConnectionType: catalog.ConnectionType("testConnectionType"),
+					ConnectionType: catalog.ConnectionType("SHAREPOINT"),
 					Comment:        "This is a test comment.",
 					FullName:       "testConnectionName",
 					MetastoreId:    "abc",
@@ -100,7 +100,7 @@ func TestConnectionsCreate(t *testing.T) {
 				Resource: "/api/2.1/unity-catalog/connections/testConnectionName?",
 				Response: catalog.ConnectionInfo{
 					Name:           "testConnectionName",
-					ConnectionType: catalog.ConnectionType("testConnectionType"),
+					ConnectionType: catalog.ConnectionType("SHAREPOINT"),
 					Comment:        "This is a test comment.",
 					FullName:       "testConnectionName",
 					Owner:          "InitialOwner",
@@ -118,7 +118,7 @@ func TestConnectionsCreate(t *testing.T) {
 		Create:   true,
 		HCL: `
 		name = "testConnectionName"
-		connection_type = "testConnectionType"
+		connection_type = "SHAREPOINT"
 		options = {
 			host     = "test.com"
 		}
@@ -131,7 +131,7 @@ func TestConnectionsCreate(t *testing.T) {
 	}.Apply(t)
 	assert.NoError(t, err)
 	assert.Equal(t, "testConnectionName", d.Get("name"))
-	assert.Equal(t, "testConnectionType", d.Get("connection_type"))
+	assert.Equal(t, "SHAREPOINT", d.Get("connection_type"))
 	assert.Equal(t, "This is a test comment.", d.Get("comment"))
 	assert.Equal(t, map[string]interface{}{"host": "test.com"}, d.Get("options"))
 	assert.Equal(t, map[string]interface{}{"purpose": "testing"}, d.Get("properties"))
@@ -201,7 +201,7 @@ func TestConnectionsCreate_Error(t *testing.T) {
 				Resource: "/api/2.1/unity-catalog/connections",
 				ExpectedRequest: catalog.CreateConnection{
 					Name:           "testConnectionName",
-					ConnectionType: catalog.ConnectionType("testConnectionType"),
+					ConnectionType: catalog.ConnectionType("SHAREPOINT"),
 					Comment:        "This is a test comment.",
 					Options: map[string]string{
 						"host": "test.com",
@@ -219,7 +219,7 @@ func TestConnectionsCreate_Error(t *testing.T) {
 		HCL: `
 		name = "testConnectionName"
 		owner = "testOwner"
-		connection_type = "testConnectionType"
+		connection_type = "SHAREPOINT"
 		options = {
 			host     = "test.com"
 		}
@@ -237,7 +237,7 @@ func TestConnectionsRead(t *testing.T) {
 				Resource: "/api/2.1/unity-catalog/connections/testConnectionName?",
 				Response: catalog.ConnectionInfo{
 					Name:           "testConnectionName",
-					ConnectionType: catalog.ConnectionType("testConnectionType"),
+					ConnectionType: catalog.ConnectionType("SHAREPOINT"),
 					Comment:        "This is a test comment.",
 					FullName:       "testConnectionName",
 					MetastoreId:    "abc",
@@ -252,7 +252,7 @@ func TestConnectionsRead(t *testing.T) {
 		ID:       "abc|testConnectionName",
 		HCL: `
 		name = "testConnectionName"
-		connection_type = "testConnectionType"
+		connection_type = "SHAREPOINT"
 		options = {
 			host     = "test.com"
 		}
@@ -261,7 +261,7 @@ func TestConnectionsRead(t *testing.T) {
 	}.Apply(t)
 	assert.NoError(t, err)
 	assert.Equal(t, "testConnectionName", d.Get("name"))
-	assert.Equal(t, "testConnectionType", d.Get("connection_type"))
+	assert.Equal(t, "SHAREPOINT", d.Get("connection_type"))
 	assert.Equal(t, "This is a test comment.", d.Get("comment"))
 	assert.Equal(t, map[string]interface{}{"host": "test.com"}, d.Get("options"))
 }
@@ -295,7 +295,7 @@ func TestConnectionsUpdate(t *testing.T) {
 				Resource: "/api/2.1/unity-catalog/connections/testConnectionName?",
 				Response: catalog.ConnectionInfo{
 					Name:           "testConnectionName",
-					ConnectionType: catalog.ConnectionType("testConnectionType"),
+					ConnectionType: catalog.ConnectionType("SHAREPOINT"),
 					MetastoreId:    "abc",
 					Comment:        "testComment",
 				},
@@ -311,7 +311,7 @@ func TestConnectionsUpdate(t *testing.T) {
 				},
 				Response: catalog.ConnectionInfo{
 					Name:           "testConnectionName",
-					ConnectionType: catalog.ConnectionType("testConnectionType"),
+					ConnectionType: catalog.ConnectionType("SHAREPOINT"),
 					Comment:        "testComment",
 					MetastoreId:    "abc",
 					Options: map[string]string{
@@ -324,7 +324,7 @@ func TestConnectionsUpdate(t *testing.T) {
 				Resource: "/api/2.1/unity-catalog/connections/testConnectionName?",
 				Response: catalog.ConnectionInfo{
 					Name:           "testConnectionName",
-					ConnectionType: catalog.ConnectionType("testConnectionType"),
+					ConnectionType: catalog.ConnectionType("SHAREPOINT"),
 					Comment:        "testComment",
 					MetastoreId:    "abc",
 					Options: map[string]string{
@@ -342,7 +342,7 @@ func TestConnectionsUpdate(t *testing.T) {
 		},
 		HCL: `
 		name = "testConnectionName"
-		connection_type = "testConnectionType"
+		connection_type = "SHAREPOINT"
 		comment = "testComment"
 		options = {
 			host     = "test.com"
@@ -363,7 +363,7 @@ func TestConnectionsUpdateOwnerAndOtherFields(t *testing.T) {
 				Resource: "/api/2.1/unity-catalog/connections/testConnectionName?",
 				Response: catalog.ConnectionInfo{
 					Name:           "testConnectionName",
-					ConnectionType: catalog.ConnectionType("testConnectionType"),
+					ConnectionType: catalog.ConnectionType("SHAREPOINT"),
 					MetastoreId:    "abc",
 					Comment:        "testComment",
 				},
@@ -377,7 +377,7 @@ func TestConnectionsUpdateOwnerAndOtherFields(t *testing.T) {
 				},
 				Response: catalog.ConnectionInfo{
 					Name:           "testConnectionName",
-					ConnectionType: catalog.ConnectionType("testConnectionType"),
+					ConnectionType: catalog.ConnectionType("SHAREPOINT"),
 					Comment:        "testComment",
 					MetastoreId:    "abc",
 					Options: map[string]string{
@@ -397,7 +397,7 @@ func TestConnectionsUpdateOwnerAndOtherFields(t *testing.T) {
 				},
 				Response: catalog.ConnectionInfo{
 					Name:           "testConnectionName",
-					ConnectionType: catalog.ConnectionType("testConnectionType"),
+					ConnectionType: catalog.ConnectionType("SHAREPOINT"),
 					Comment:        "testComment",
 					MetastoreId:    "abc",
 					Options: map[string]string{
@@ -411,7 +411,7 @@ func TestConnectionsUpdateOwnerAndOtherFields(t *testing.T) {
 				Resource: "/api/2.1/unity-catalog/connections/testConnectionName?",
 				Response: catalog.ConnectionInfo{
 					Name:           "testConnectionName",
-					ConnectionType: catalog.ConnectionType("testConnectionType"),
+					ConnectionType: catalog.ConnectionType("SHAREPOINT"),
 					Comment:        "testComment",
 					MetastoreId:    "abc",
 					Options: map[string]string{
@@ -430,7 +430,7 @@ func TestConnectionsUpdateOwnerAndOtherFields(t *testing.T) {
 		},
 		HCL: `
 		name = "testConnectionName"
-		connection_type = "testConnectionType"
+		connection_type = "SHAREPOINT"
 		comment = "testComment"
 		options = {
 			host     = "test.com"
@@ -473,7 +473,7 @@ func TestConnectionUpdate_Error(t *testing.T) {
 		},
 		HCL: `
 		name = "testConnectionName"
-		connection_type = "testConnectionType"
+		connection_type = "SHAREPOINT"
 		options = {
 			host     = "test.com"
 		}

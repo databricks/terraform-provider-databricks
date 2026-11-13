@@ -14,6 +14,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/client"
 	"github.com/databricks/databricks-sdk-go/config"
+	"github.com/databricks/databricks-sdk-go/config/credentials"
 	"github.com/databricks/databricks-sdk-go/useragent"
 	"github.com/databricks/sdk-go/options/call"
 	sdkscim "github.com/databricks/sdk-go/scim/v1"
@@ -362,4 +363,50 @@ func TestSdkGoScimClientReportsRefusedConnectionsLikeClassicClient(t *testing.T)
 	assert.Contains(t, err.Error(), "connection refused")
 	classicClient := newSdkGoTestClient(t, server, customize)
 	assert.EqualError(t, classicGetServicePrincipal(ctx, classicClient), err.Error())
+}
+
+func TestSdkGoScimClientSharesClassicRateLimit(t *testing.T) {
+	server, calls := serveSequence(t, respond(http.StatusOK, sdkGoTestServicePrincipal),
+		respond(http.StatusOK, sdkGoTestServicePrincipal))
+	// One request per second with a burst of one: a classic read uses the only token,
+	// so the sdk-go read that follows waits for the next one.
+	c := newSdkGoTestClient(t, server,
+		func(cfg *config.Config) { cfg.RateLimitPerSecond = 1 })
+	ctx := context.Background()
+	require.NoError(t, classicGetServicePrincipal(ctx, c))
+	start := time.Now()
+	_, err := getServicePrincipal(ctx, t, c, "")
+	require.NoError(t, err)
+	assert.GreaterOrEqual(t, time.Since(start), 800*time.Millisecond)
+	assert.EqualValues(t, 2, calls.Load())
+}
+
+// blockingCredentials authenticate only when the request's context ends, like a token
+// endpoint that doesn't answer.
+type blockingCredentials struct{}
+
+func (blockingCredentials) Name() string { return "blocking" }
+
+func (blockingCredentials) Configure(context.Context,
+	*config.Config) (credentials.CredentialsProvider, error) {
+	return credentials.CredentialsProviderFn(func(r *http.Request) error {
+		<-r.Context().Done()
+		return r.Context().Err()
+	}), nil
+}
+
+func TestSdkGoScimClientTimesOutAuthenticationLikeClassicClient(t *testing.T) {
+	customize := func(cfg *config.Config) {
+		cfg.HTTPTimeoutSeconds = 1
+		cfg.Credentials = blockingCredentials{}
+		cfg.AuthType = "blocking"
+	}
+	start := time.Now()
+	r := readBothWays(t, context.Background, customize)
+	assert.EqualError(t, r.err, "failed during request visitor: context canceled")
+	assert.EqualError(t, r.classicErr, r.err.Error())
+	assert.EqualValues(t, 0, r.calls)
+	assert.Equal(t, r.classicCalls, r.calls)
+	// Each client gives up on authentication after the one-second HTTP timeout.
+	assert.Less(t, time.Since(start), 10*time.Second)
 }

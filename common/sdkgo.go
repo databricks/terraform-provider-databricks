@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"sync"
 
-	"github.com/databricks/databricks-sdk-go/config"
+	classicclient "github.com/databricks/databricks-sdk-go/client"
 	"github.com/databricks/sdk-go/core/ops"
 	"github.com/databricks/sdk-go/options/call"
 	"github.com/databricks/sdk-go/options/client"
@@ -64,14 +64,14 @@ type SdkGoScim struct {
 // resolved for the resource, for example by DatabricksClientForDualResource.
 func (c *DatabricksClient) SdkGoScimClient(ctx context.Context,
 	apiLevel string) (*SdkGoScim, error) {
-	b, err := sdkGoBridgeFor(c.Config)
+	b, err := sdkGoBridgeFor(c.DatabricksClient)
 	if err != nil {
 		return nil, err
 	}
 	isAccount := isAccountLevelFromApiLevel(apiLevel, c)
 	opts := []client.Option{
 		client.WithHost(c.Config.Host),
-		client.WithCredentials(classicCredentials{c.Config}),
+		client.WithCredentials(classicCredentials{c.Config, b.httpTimeout}),
 		client.WithHTTPClient(b.httpClient),
 		// retry_timeout_seconds and http_timeout_seconds bound calls instead.
 		client.WithTimeout(0),
@@ -105,6 +105,7 @@ func callSdkGo[T any](ctx context.Context, b *sdkGoBridge,
 	result, err := method(ctx,
 		call.WithRetrier(func() ops.Retrier { return retrier }),
 		call.WithLimiter(classicLimiter{b.limiter}))
+	attempt.endTimeout()
 	if err == nil {
 		return result, nil
 	}
@@ -119,24 +120,44 @@ func callSdkGo[T any](ctx context.Context, b *sdkGoBridge,
 
 type sdkGoAttemptKey struct{}
 
-// sdkGoAttempt records the last request sent for a call, which classic error parsing
-// needs.
+// sdkGoAttempt carries state between the stages of one call: the last request sent,
+// which classic error parsing needs, and the timeout of the attempt being sent.
 type sdkGoAttempt struct {
 	request *http.Request
+	timeout *attemptTimeout
 }
 
-// Bridges hold the rate limiter, so all sdk-go calls through one classic client share
-// it.
+// keepTimeout stores the timeout started by authentication for the transport.
+func (a *sdkGoAttempt) keepTimeout(t *attemptTimeout) {
+	a.endTimeout()
+	a.timeout = t
+}
+
+func (a *sdkGoAttempt) takeTimeout() *attemptTimeout {
+	t := a.timeout
+	a.timeout = nil
+	return t
+}
+
+// endTimeout ends a timeout that no request took, such as after a failed request
+// visitor.
+func (a *sdkGoAttempt) endTimeout() {
+	if t := a.takeTimeout(); t != nil {
+		t.end()
+	}
+}
+
+// Bridges are kept per classic client, whose settings and rate limiter they use.
 var sdkGoBridges sync.Map
 
-func sdkGoBridgeFor(cfg *config.Config) (*sdkGoBridge, error) {
-	if b, ok := sdkGoBridges.Load(cfg); ok {
+func sdkGoBridgeFor(classic *classicclient.DatabricksClient) (*sdkGoBridge, error) {
+	if b, ok := sdkGoBridges.Load(classic); ok {
 		return b.(*sdkGoBridge), nil
 	}
-	b, err := newSdkGoBridge(cfg)
+	b, err := newSdkGoBridge(classic)
 	if err != nil {
 		return nil, err
 	}
-	actual, _ := sdkGoBridges.LoadOrStore(cfg, b)
+	actual, _ := sdkGoBridges.LoadOrStore(classic, b)
 	return actual.(*sdkGoBridge), nil
 }

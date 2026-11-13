@@ -1,0 +1,182 @@
+# Pins workspace-level deletion with force_delete_repos = true on AWS: after the DELETE,
+# the provider recursively deletes /Repos/<application_id> and ignores a 404 for that
+# path. API responses are inferred from the SCIM API contract, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: create_with_force_delete_repos
+    config: |
+      resource "databricks_service_principal" "this" {
+        display_name       = "SPN cleanup"
+        force_delete_repos = true
+      }
+    calls:
+      - request:
+          method: POST
+          path: /api/2.0/preview/scim/v2/ServicePrincipals
+          headers:
+            Content-Type: application/scim+json; charset=utf-8
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "displayName": "SPN cleanup", "active": true, "entitlements": [{}]}
+        response:
+          status: 201
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "id": "201", "applicationId": "00000000-0000-4000-8000-000000000001",
+                   "displayName": "SPN cleanup", "active": true}
+      - &read_first
+        request:
+          method: GET
+          path: /api/2.0/preview/scim/v2/ServicePrincipals/201
+          query:
+            attributes: ["userName,displayName,active,externalId,entitlements"]
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "id": "201", "applicationId": "00000000-0000-4000-8000-000000000001",
+                   "displayName": "SPN cleanup", "active": true}
+      - *read_first
+  - name: plan_after_create_with_force_delete_repos_is_empty
+    plan_only: true
+    config: |
+      resource "databricks_service_principal" "this" {
+        display_name       = "SPN cleanup"
+        force_delete_repos = true
+      }
+    plan:
+      expect: empty
+      changes: {}
+    calls:
+      - *read_first
+  - name: delete_removes_repos_answered_200
+    config: |
+      provider "databricks" {}
+    calls:
+      - *read_first
+      - request:
+          method: DELETE
+          path: /api/2.0/preview/scim/v2/ServicePrincipals/201
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 204
+          body: null
+      - request:
+          method: POST
+          path: /api/2.0/workspace/delete
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"path": "/Repos/00000000-0000-4000-8000-000000000001",
+                   "recursive": true}
+        response:
+          status: 200
+          body:
+            json: {}
+  - name: plan_after_delete_removes_repos_is_empty
+    plan_only: true
+    config: |
+      provider "databricks" {}
+    plan:
+      expect: empty
+      changes: {}
+    calls: []
+  - name: create_again_with_force_delete_repos
+    config: |
+      resource "databricks_service_principal" "this" {
+        display_name       = "SPN cleanup"
+        force_delete_repos = true
+      }
+    calls:
+      - request:
+          method: POST
+          path: /api/2.0/preview/scim/v2/ServicePrincipals
+          headers:
+            Content-Type: application/scim+json; charset=utf-8
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "displayName": "SPN cleanup", "active": true, "entitlements": [{}]}
+        response:
+          status: 201
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "id": "202", "applicationId": "00000000-0000-4000-8000-000000000002",
+                   "displayName": "SPN cleanup", "active": true}
+      - &read_second
+        request:
+          method: GET
+          path: /api/2.0/preview/scim/v2/ServicePrincipals/202
+          query:
+            attributes: ["userName,displayName,active,externalId,entitlements"]
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "id": "202", "applicationId": "00000000-0000-4000-8000-000000000002",
+                   "displayName": "SPN cleanup", "active": true}
+      - *read_second
+  - name: plan_after_create_again_with_force_delete_repos_is_empty
+    plan_only: true
+    config: |
+      resource "databricks_service_principal" "this" {
+        display_name       = "SPN cleanup"
+        force_delete_repos = true
+      }
+    plan:
+      expect: empty
+      changes: {}
+    calls:
+      - *read_second
+  - name: delete_ignores_missing_repos_answered_404
+    config: |
+      provider "databricks" {}
+    calls:
+      - *read_second
+      - request:
+          method: DELETE
+          path: /api/2.0/preview/scim/v2/ServicePrincipals/202
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 204
+          body: null
+      - request:
+          method: POST
+          path: /api/2.0/workspace/delete
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"path": "/Repos/00000000-0000-4000-8000-000000000002",
+                   "recursive": true}
+        response:
+          status: 404
+          body:
+            json: {"error_code": "RESOURCE_DOES_NOT_EXIST",
+                   "message": "Path (/Repos/00000000-0000-4000-8000-000000000002)
+                               doesn't exist."}
+  - name: plan_after_delete_ignores_missing_repos_is_empty
+    plan_only: true
+    config: |
+      provider "databricks" {}
+    plan:
+      expect: empty
+      changes: {}
+    calls: []
+destroy:
+  calls: []

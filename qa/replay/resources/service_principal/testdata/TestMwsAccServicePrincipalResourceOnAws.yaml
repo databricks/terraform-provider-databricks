@@ -1,5 +1,7 @@
 # API responses are inferred from the scenarios and API models, not recorded.
+# An empty X-Databricks-Workspace-Id expectation matches only requests without it.
 version: 1
+enforce_call_order: true
 host_metadata: # Dummy host metadata.
   host_type: "account"
   cloud: "AWS"
@@ -18,6 +20,9 @@ steps:
       - request:
           method: "POST"
           path: "/api/2.0/accounts/replay-account/scim/v2/ServicePrincipals"
+          headers:
+            Content-Type: application/scim+json; charset=utf-8
+            X-Databricks-Workspace-Id: ""
           body:
             json:
               schemas: ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"]
@@ -38,6 +43,8 @@ steps:
       - request:
           method: "GET"
           path: "/api/2.0/accounts/replay-account/scim/v2/ServicePrincipals/201"
+          headers:
+            X-Databricks-Workspace-Id: ""
           query:
             attributes: ["userName,displayName,active,externalId,entitlements"]
           body: null
@@ -54,6 +61,40 @@ steps:
       - request:
           method: "GET"
           path: "/api/2.0/accounts/replay-account/scim/v2/ServicePrincipals/201"
+          headers:
+            X-Databricks-Workspace-Id: ""
+          query:
+            attributes: ["userName,displayName,active,externalId,entitlements"]
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              schemas: ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"]
+              id: "201"
+              displayName: "SPN initial"
+              active: true
+              entitlements: []
+              applicationId: "00000000-0000-4000-8000-000000000001"
+  - name: "plan_after_create_is_empty"
+    plan_only: true
+    config: |
+      provider "databricks" {
+        account_id = "replay-account"
+      }
+
+      resource "databricks_service_principal" "this" {
+        display_name = "SPN initial"
+      }
+    plan:
+      expect: empty
+      changes: {}
+    calls:
+      - request:
+          method: "GET"
+          path: "/api/2.0/accounts/replay-account/scim/v2/ServicePrincipals/201"
+          headers:
+            X-Databricks-Workspace-Id: ""
           query:
             attributes: ["userName,displayName,active,externalId,entitlements"]
           body: null
@@ -80,6 +121,8 @@ steps:
       - request:
           method: "GET"
           path: "/api/2.0/accounts/replay-account/scim/v2/ServicePrincipals/201"
+          headers:
+            X-Databricks-Workspace-Id: ""
           query:
             attributes: ["userName,displayName,active,externalId,entitlements"]
           body: null
@@ -96,6 +139,8 @@ steps:
       - request:
           method: "GET"
           path: "/api/2.0/accounts/replay-account/scim/v2/ServicePrincipals/201"
+          headers:
+            X-Databricks-Workspace-Id: ""
           query:
             attributes: ["groups,roles"]
           body: null
@@ -112,6 +157,9 @@ steps:
       - request:
           method: "PUT"
           path: "/api/2.0/accounts/replay-account/scim/v2/ServicePrincipals/201"
+          headers:
+            Content-Type: application/scim+json; charset=utf-8
+            X-Databricks-Workspace-Id: ""
           body:
             json:
               schemas: ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"]
@@ -125,6 +173,8 @@ steps:
       - request:
           method: "GET"
           path: "/api/2.0/accounts/replay-account/scim/v2/ServicePrincipals/201"
+          headers:
+            X-Databricks-Workspace-Id: ""
           query:
             attributes: ["userName,displayName,active,externalId,entitlements"]
           body: null
@@ -141,6 +191,8 @@ steps:
       - request:
           method: "GET"
           path: "/api/2.0/accounts/replay-account/scim/v2/ServicePrincipals/201"
+          headers:
+            X-Databricks-Workspace-Id: ""
           query:
             attributes: ["userName,displayName,active,externalId,entitlements"]
           body: null
@@ -154,11 +206,46 @@ steps:
               active: true
               entitlements: []
               applicationId: "00000000-0000-4000-8000-000000000001"
+  - name: "plan_after_rename_is_empty"
+    plan_only: true
+    config: |
+      provider "databricks" {
+        account_id = "replay-account"
+      }
+
+      resource "databricks_service_principal" "this" {
+        display_name = "SPN Renamed updated"
+      }
+    plan:
+      expect: empty
+      changes: {}
+    calls:
+      - request:
+          method: "GET"
+          path: "/api/2.0/accounts/replay-account/scim/v2/ServicePrincipals/201"
+          headers:
+            X-Databricks-Workspace-Id: ""
+          query:
+            attributes: ["userName,displayName,active,externalId,entitlements"]
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              schemas: ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"]
+              id: "201"
+              displayName: "SPN Renamed updated"
+              active: true
+              entitlements: []
+              applicationId: "00000000-0000-4000-8000-000000000001"
+# Destroy pins the account-level default: a PATCH that deactivates the service principal.
 destroy:
   calls:
     - request:
         method: "GET"
         path: "/api/2.0/accounts/replay-account/scim/v2/ServicePrincipals/201"
+        headers:
+          X-Databricks-Workspace-Id: ""
         query:
           attributes: ["userName,displayName,active,externalId,entitlements"]
         body: null
@@ -175,6 +262,9 @@ destroy:
     - request:
         method: "PATCH"
         path: "/api/2.0/accounts/replay-account/scim/v2/ServicePrincipals/201"
+        headers:
+          Content-Type: application/scim+json; charset=utf-8
+          X-Databricks-Workspace-Id: ""
         body:
           json:
             schemas: ["urn:ietf:params:scim:api:messages:2.0:PatchOp"]

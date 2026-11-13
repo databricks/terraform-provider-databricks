@@ -55,7 +55,8 @@ func parseSdkGoResources(value string) ([]string, error) {
 func validateSdkGoResources(names []string) error {
 	for _, name := range names {
 		if !slices.Contains(sdkGoResources, name) {
-			return fmt.Errorf("%s: resource %q has no sdk-go implementation; supported resources: %s",
+			return fmt.Errorf("%s: resource %q has no sdk-go implementation; "+
+				"supported resources: %s",
 				useSdkGoResourcesEnv, name, strings.Join(sdkGoResources, ", "))
 		}
 	}

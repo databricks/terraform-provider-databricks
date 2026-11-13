@@ -26,6 +26,8 @@
 
 ### Documentation
 
+* Update the AWS availability note for `databricks_mws_ncc_private_endpoint_rule`: private connectivity from serverless compute to AWS-managed resources is generally available.
+
 ### Exporter
 
 ### Internal Changes

@@ -25,8 +25,12 @@ func servicePrincipalWithEveryField() User {
 		ExternalID:    "external",
 		Schemas:       []URN{ServicePrincipalSchema},
 		Entitlements:  entitlements{{Value: "allow-cluster-create"}},
-		Groups:        []ComplexValue{{Value: "301", Display: "data-engineers", Ref: "Groups/301", Type: "direct"}},
-		Roles:         []ComplexValue{{Value: "arn:aws:iam::123456789012:instance-profile/sp", Type: "direct"}},
+		Groups: []ComplexValue{{
+			Value: "301", Display: "data-engineers", Ref: "Groups/301", Type: "direct",
+		}},
+		Roles: []ComplexValue{{
+			Value: "arn:aws:iam::123456789012:instance-profile/sp", Type: "direct",
+		}},
 	}
 }
 
@@ -101,26 +105,44 @@ func sdkGoAPIError(body string) error {
 }
 
 func TestIsKnownScimError(t *testing.T) {
-	known := []string{"Service principal with application ID abc already exists."}
+	known := "Service principal with application ID abc already exists."
 	for name, tc := range map[string]struct {
 		body     string
 		expected bool
 	}{
-		"known_detail":                {`{"detail": "` + known[0] + `", "status": "409"}`, true},
-		"known_detail_with_scim_type": {`{"detail": "` + known[0] + `", "scimType": "uniqueness"}`, false},
-		"other_detail":                {`{"detail": "Service principal is locked.", "status": "409"}`, false},
-		"known_message":               {`{"message": "` + known[0] + `"}`, true},
-		"message_before_detail":       {`{"message": "Conflict.", "detail": "` + known[0] + `"}`, false},
-		"known_api_1_2_error":         {`{"error": "` + known[0] + `", "message": "Conflict."}`, true},
-		"not_json":                    {`<html>` + known[0] + `</html>`, false},
+		"known_detail": {
+			body: `{"detail": "` + known + `", "status": "409"}`, expected: true,
+		},
+		"known_detail_with_scim_type": {
+			body:     `{"detail": "` + known + `", "scimType": "uniqueness"}`,
+			expected: false,
+		},
+		"other_detail": {
+			body:     `{"detail": "Service principal is locked.", "status": "409"}`,
+			expected: false,
+		},
+		"known_message": {
+			body: `{"message": "` + known + `"}`, expected: true,
+		},
+		"message_before_detail": {
+			body: `{"message": "Conflict.", "detail": "` + known + `"}`, expected: false,
+		},
+		"known_api_1_2_error": {
+			body: `{"error": "` + known + `", "message": "Conflict."}`, expected: true,
+		},
+		"not_json": {
+			body: `<html>` + known + `</html>`, expected: false,
+		},
 	} {
 		t.Run(name, func(t *testing.T) {
 			classic := classicAPIError(t, tc.body)
-			assert.Equal(t, tc.expected, isKnownScimError(classic, known), "classic error %q", classic)
+			assert.Equal(t, tc.expected, isKnownScimError(classic, []string{known}),
+				"classic error %q", classic)
 			sdkGo := fmt.Errorf("cannot create: %w", sdkGoAPIError(tc.body))
-			assert.Equal(t, tc.expected, isKnownScimError(sdkGo, known), "sdk-go error %q", sdkGo)
+			assert.Equal(t, tc.expected, isKnownScimError(sdkGo, []string{known}),
+				"sdk-go error %q", sdkGo)
 		})
 	}
-	assert.True(t, isKnownScimError(fmt.Errorf("%s", known[0]), known))
-	assert.False(t, isKnownScimError(fmt.Errorf("uniqueness %s", known[0]), known))
+	assert.True(t, isKnownScimError(fmt.Errorf("%s", known), []string{known}))
+	assert.False(t, isKnownScimError(fmt.Errorf("uniqueness %s", known), []string{known}))
 }

@@ -47,19 +47,21 @@ func (a ServicePrincipalsAPI) createWithSdkGo(u User) (User, error) {
 		return User{}, err
 	}
 	if sc.IsAccount {
-		sp, err := common.CallSdkGoScim(a.context, sc,
-			func(ctx context.Context, opts ...call.Option) (*sdkscim.AccountServicePrincipal, error) {
-				return sc.CreateAccountServicePrincipal(ctx, createAccountServicePrincipalRequest(u), opts...)
-			})
+		req := createAccountServicePrincipalRequest(u)
+		sp, err := common.CallSdkGoScim(a.context, sc, func(ctx context.Context,
+			opts ...call.Option) (*sdkscim.AccountServicePrincipal, error) {
+			return sc.CreateAccountServicePrincipal(ctx, req, opts...)
+		})
 		if err != nil {
 			return User{}, err
 		}
 		return userFromSdkGoAccountServicePrincipal(sp), nil
 	}
-	sp, err := common.CallSdkGoScim(a.context, sc,
-		func(ctx context.Context, opts ...call.Option) (*sdkscim.ServicePrincipal, error) {
-			return sc.CreateServicePrincipal(ctx, createServicePrincipalRequest(u), opts...)
-		})
+	req := createServicePrincipalRequest(u)
+	sp, err := common.CallSdkGoScim(a.context, sc, func(ctx context.Context,
+		opts ...call.Option) (*sdkscim.ServicePrincipal, error) {
+		return sc.CreateServicePrincipal(ctx, req, opts...)
+	})
 	if err != nil {
 		return User{}, err
 	}
@@ -67,7 +69,8 @@ func (a ServicePrincipalsAPI) createWithSdkGo(u User) (User, error) {
 }
 
 // filterWithSdkGo returns the first page of matches, like the existing client.
-func (a ServicePrincipalsAPI) filterWithSdkGo(filter string, excludeRoles bool) ([]User, error) {
+func (a ServicePrincipalsAPI) filterWithSdkGo(filter string,
+	excludeRoles bool) ([]User, error) {
 	sc, err := a.client.SdkGoScimClient(a.context, a.ApiLevel)
 	if err != nil {
 		return nil, err
@@ -80,25 +83,25 @@ func (a ServicePrincipalsAPI) filterWithSdkGo(filter string, excludeRoles bool) 
 		excludedAttributes = new("roles")
 	}
 	if sc.IsAccount {
-		list, err := common.CallSdkGoScim(a.context, sc,
-			func(ctx context.Context, opts ...call.Option) (*sdkscim.ListAccountServicePrincipalsResponse, error) {
-				req := sdkscim.ListAccountServicePrincipalsRequest{
-					Filter: filterParam, ExcludedAttributes: excludedAttributes,
-				}
-				return sc.ListAccountServicePrincipals(ctx, req, opts...)
-			})
+		req := sdkscim.ListAccountServicePrincipalsRequest{
+			Filter: filterParam, ExcludedAttributes: excludedAttributes,
+		}
+		list, err := common.CallSdkGoScim(a.context, sc, func(ctx context.Context,
+			opts ...call.Option) (*sdkscim.ListAccountServicePrincipalsResponse, error) {
+			return sc.ListAccountServicePrincipals(ctx, req, opts...)
+		})
 		if err != nil {
 			return nil, err
 		}
 		return usersFromSdkGo(list.Resources, userFromSdkGoAccountServicePrincipal), nil
 	}
-	list, err := common.CallSdkGoScim(a.context, sc,
-		func(ctx context.Context, opts ...call.Option) (*sdkscim.ListServicePrincipalResponse, error) {
-			req := sdkscim.ListServicePrincipalsRequest{
-				Filter: filterParam, ExcludedAttributes: excludedAttributes,
-			}
-			return sc.ListServicePrincipals(ctx, req, opts...)
-		})
+	req := sdkscim.ListServicePrincipalsRequest{
+		Filter: filterParam, ExcludedAttributes: excludedAttributes,
+	}
+	list, err := common.CallSdkGoScim(a.context, sc, func(ctx context.Context,
+		opts ...call.Option) (*sdkscim.ListServicePrincipalResponse, error) {
+		return sc.ListServicePrincipals(ctx, req, opts...)
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -124,7 +127,8 @@ func (a ServicePrincipalsAPI) updateWithSdkGo(servicePrincipalID string, u User)
 		})
 }
 
-func (a ServicePrincipalsAPI) patchWithSdkGo(servicePrincipalID string, r patchRequest) error {
+func (a ServicePrincipalsAPI) patchWithSdkGo(servicePrincipalID string,
+	r patchRequest) error {
 	sc, err := a.client.SdkGoScimClient(a.context, a.ApiLevel)
 	if err != nil {
 		return err
@@ -194,7 +198,8 @@ func createServicePrincipalRequest(u User) sdkscim.CreateServicePrincipalRequest
 
 // createAccountServicePrincipalRequest drops schemas, entitlements and groups, which
 // the account-level API model doesn't have.
-func createAccountServicePrincipalRequest(u User) sdkscim.CreateAccountServicePrincipalRequest {
+func createAccountServicePrincipalRequest(
+	u User) sdkscim.CreateAccountServicePrincipalRequest {
 	return sdkscim.CreateAccountServicePrincipalRequest{
 		Active:        &u.Active,
 		ApplicationId: nonEmpty(u.ApplicationID),
@@ -206,7 +211,8 @@ func createAccountServicePrincipalRequest(u User) sdkscim.CreateAccountServicePr
 
 // updateServicePrincipalRequest also sends the ID in the body, because sdk-go
 // serializes its path field.
-func updateServicePrincipalRequest(servicePrincipalID string, u User) sdkscim.UpdateServicePrincipalRequest {
+func updateServicePrincipalRequest(servicePrincipalID string,
+	u User) sdkscim.UpdateServicePrincipalRequest {
 	return sdkscim.UpdateServicePrincipalRequest{
 		Id:            &servicePrincipalID,
 		Active:        &u.Active,
@@ -266,7 +272,9 @@ func patchAccountServicePrincipalRequest(servicePrincipalID string,
 			return req, err
 		}
 		req.Operations = append(req.Operations, sdkscim.AccountPatch{
-			Op: sdkscim.AccountPatchOp_PatchOp(o.Op), Path: nonEmpty(o.Path), Value: value,
+			Op:    sdkscim.AccountPatchOp_PatchOp(o.Op),
+			Path:  nonEmpty(o.Path),
+			Value: value,
 		})
 	}
 	return req, nil
@@ -288,7 +296,8 @@ func servicePrincipalSchemasToSdkGo(schemas []URN) []sdkscim.ServicePrincipalSch
 	return out
 }
 
-func complexValuesToSdkGo[V sdkscim.ComplexValue | sdkscim.AccountComplexValue](values []ComplexValue) []V {
+func complexValuesToSdkGo[V sdkscim.ComplexValue | sdkscim.AccountComplexValue](
+	values []ComplexValue) []V {
 	if values == nil {
 		return nil
 	}

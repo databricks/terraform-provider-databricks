@@ -43,7 +43,8 @@ func apiErrorBody(err error) ([]byte, bool) {
 	if apiErr, ok := errors.AsType[*sdkapierr.APIError](err); ok {
 		return apiErr.HTTPBody(), true
 	}
-	if apiErr, ok := errors.AsType[*apierr.APIError](err); ok && apiErr.ResponseWrapper != nil {
+	apiErr, ok := errors.AsType[*apierr.APIError](err)
+	if ok && apiErr.ResponseWrapper != nil {
 		return apiErr.ResponseWrapper.DebugBytes, true
 	}
 	return nil, false

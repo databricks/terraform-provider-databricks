@@ -3,23 +3,23 @@ package common
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
-	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 // Terraform passes only the import ID (or a resource identity) to the
 // provider during import, never the resource configuration. A workspace-level
 // resource imported through an account-level or unified-host provider
-// therefore needs its workspace ID in the identity.
+// therefore needs its workspace ID in the import identity.
 // See https://developer.hashicorp.com/terraform/plugin/sdkv2/resources/identity.
 const (
 	identityIDKey          = "id"
 	identityWorkspaceIDKey = "workspace_id"
 )
 
+// workspace_id is an import input only. The stored identity leaves it null,
+// so provider_config.workspace_id is the only copy of the workspace ID in state.
 func workspaceResourceIdentity() *schema.ResourceIdentity {
 	return &schema.ResourceIdentity{
 		SchemaFunc: func() map[string]*schema.Schema {
@@ -32,7 +32,8 @@ func workspaceResourceIdentity() *schema.ResourceIdentity {
 				identityWorkspaceIDKey: {
 					Type:              schema.TypeString,
 					OptionalForImport: true,
-					Description:       "The ID of the workspace that contains the resource.",
+					Description: "The ID of the workspace that contains the resource. Used only on import, " +
+						"to set provider_config.workspace_id.",
 				},
 			}
 		},
@@ -42,24 +43,18 @@ func workspaceResourceIdentity() *schema.ResourceIdentity {
 // importerWithIdentity wraps an importer so that the import identity is copied
 // into the resource data before the wrapped importer runs. The wrapped importer
 // then parses d.Id() as usual.
-func importerWithIdentity(inner *schema.ResourceImporter, isDual bool) *schema.ResourceImporter {
+func importerWithIdentity(inner *schema.ResourceImporter) *schema.ResourceImporter {
 	return &schema.ResourceImporter{
 		StateContext: func(ctx context.Context, d *schema.ResourceData, m any) ([]*schema.ResourceData, error) {
-			c := m.(*DatabricksClient)
 			if err := applyImportIdentity(d); err != nil {
 				return nil, err
-			}
-			if !(isDual && IsAccountLevel(d, c)) {
-				if err := requireImportWorkspaceID(d, c); err != nil {
-					return nil, err
-				}
 			}
 			imported, err := runImporter(ctx, inner, d, m)
 			if err != nil {
 				return nil, err
 			}
 			for _, r := range imported {
-				if err := syncImportedIdentityID(r); err != nil {
+				if err := setResourceIdentity(r); err != nil {
 					return nil, err
 				}
 			}
@@ -76,22 +71,6 @@ func runImporter(ctx context.Context, inner *schema.ResourceImporter, d *schema.
 		return inner.State(d, m)
 	}
 	return []*schema.ResourceData{d}, nil
-}
-
-// syncImportedIdentityID sets identity.id to the final resource ID when the
-// import identity set one and the wrapped importer rewrote d.Id(). The SDK
-// returns the imported identity before Read runs, so it must match the ID.
-// It mutates d.
-func syncImportedIdentityID(d *schema.ResourceData) error {
-	identity, err := d.Identity()
-	if err != nil {
-		// No identity schema on d, as in applyImportIdentity.
-		return nil
-	}
-	if id, _ := identity.Get(identityIDKey).(string); id == "" || id == d.Id() {
-		return nil
-	}
-	return identity.Set(identityIDKey, d.Id())
 }
 
 // applyImportIdentity sets the resource ID from the identity when importing by
@@ -118,36 +97,9 @@ func applyImportIdentity(d *schema.ResourceData) error {
 	return d.Set("provider_config", []map[string]any{{"workspace_id": workspaceID}})
 }
 
-// requireImportWorkspaceID fails the import when the provider cannot resolve a
-// workspace by itself and the import did not supply one. Without this check,
-// Read would fall back to the account client and read from the wrong API.
-func requireImportWorkspaceID(d *schema.ResourceData, c *DatabricksClient) error {
-	if workspaceID, _ := d.Get(workspaceIDSchemaKey).(string); workspaceID != "" {
-		return nil
-	}
-	if c.DatabricksClient == nil || c.Config == nil {
-		return nil
-	}
-	if c.Config.WorkspaceID != "" || c.HostTypeForTerraform() == config.WorkspaceHost {
-		return nil
-	}
-	return errors.New(MissingImportWorkspaceIDMessage(d.Id()))
-}
-
-// MissingImportWorkspaceIDMessage explains how to import a workspace-level
-// resource through an account-level or unified-host provider. SDKv2 and Plugin
-// Framework resources share it so both give the same advice.
-func MissingImportWorkspaceIDMessage(importID string) string {
-	return fmt.Sprintf("cannot import the resource with ID %q: the provider is configured for an account-level "+
-		"or unified host, so the import needs the ID of the workspace that contains the resource. "+
-		"Terraform does not pass provider_config to the provider during import. Use an import block "+
-		"with identity = { id = %q, workspace_id = \"<workspace ID>\" } instead of id (requires Terraform 1.12 or later)",
-		importID, importID)
-}
-
-// setWorkspaceResourceIdentity sets the identity from the resource ID and
-// provider_config.workspace_id. It mutates d.
-func setWorkspaceResourceIdentity(d *schema.ResourceData) error {
+// setResourceIdentity sets the identity id to the resource ID and clears the
+// import-only workspace_id. It mutates d.
+func setResourceIdentity(d *schema.ResourceData) error {
 	identity, err := d.Identity()
 	if err != nil {
 		// No identity schema on d, as in applyImportIdentity. In Terraform runs the
@@ -157,6 +109,5 @@ func setWorkspaceResourceIdentity(d *schema.ResourceData) error {
 	if err := identity.Set(identityIDKey, d.Id()); err != nil {
 		return err
 	}
-	workspaceID, _ := d.Get(workspaceIDSchemaKey).(string)
-	return identity.Set(identityWorkspaceIDKey, workspaceID)
+	return identity.Set(identityWorkspaceIDKey, nil)
 }

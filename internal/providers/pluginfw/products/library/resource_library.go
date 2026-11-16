@@ -103,8 +103,8 @@ type LibraryResource struct {
 
 func (r *LibraryResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = pluginfwcommon.GetDatabricksProductionName(resourceName)
-	// The SDKv2 implementation uses a different id format and records the
-	// resolved workspace ID, so the identity can change when state moves over.
+	// The SDKv2 implementation uses a different id format, so the identity can
+	// change when state moves over.
 	// MutableIdentity turns off the framework check that the identity never
 	// changes, see
 	// https://developer.hashicorp.com/terraform/plugin/framework/resources/identity#mutable-identities
@@ -231,7 +231,7 @@ func (r *LibraryResource) Create(ctx context.Context, req resource.CreateRequest
 	installedLib.ID = types.StringValue(libGoSDK.String())
 	installedLib.ProviderConfig = libraryTfSDK.ProviderConfig
 	resp.Diagnostics.Append(resp.State.Set(ctx, installedLib)...)
-	resp.Diagnostics.Append(tfschema.SetResourceIdentity(ctx, resp.Identity, installedLib.ID.ValueString(), workspaceID)...)
+	resp.Diagnostics.Append(tfschema.SetResourceIdentity(ctx, resp.Identity, installedLib.ID.ValueString())...)
 }
 
 func (r *LibraryResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -275,14 +275,14 @@ func (r *LibraryResource) Read(ctx context.Context, req resource.ReadRequest, re
 		resp.Diagnostics.AddWarning("library not found", fmt.Sprintf("library %s not found on cluster %s, marking as deleted", libraryRep, clusterId))
 		// Terraform requires an identity even when the resource is gone, and
 		// state written before identity support has none.
-		resp.Diagnostics.Append(tfschema.SetResourceIdentity(ctx, resp.Identity, libraryRep, workspaceID)...)
+		resp.Diagnostics.Append(tfschema.SetResourceIdentity(ctx, resp.Identity, libraryRep)...)
 		resp.State.RemoveResource(ctx)
 		return
 	}
 
 	installedLib.ProviderConfig = libraryTfSDK.ProviderConfig
 	resp.Diagnostics.Append(resp.State.Set(ctx, installedLib)...)
-	resp.Diagnostics.Append(tfschema.SetResourceIdentity(ctx, resp.Identity, libraryRep, workspaceID)...)
+	resp.Diagnostics.Append(tfschema.SetResourceIdentity(ctx, resp.Identity, libraryRep)...)
 }
 
 func (r *LibraryResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {

@@ -121,11 +121,6 @@ type resourceApp struct {
 
 func (a resourceApp) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = pluginfwcommon.GetDatabricksProductionName(resourceName)
-	// State without provider_config can store an identity with an empty
-	// workspace_id that a later Read resolves, so the identity can change in
-	// place. MutableIdentity turns off the framework check that it never changes, see
-	// https://developer.hashicorp.com/terraform/plugin/framework/resources/identity#mutable-identities
-	resp.ResourceBehavior.MutableIdentity = true
 }
 
 func (a resourceApp) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -276,7 +271,7 @@ func (a *resourceApp) Create(ctx context.Context, req resource.CreateRequest, re
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	resp.Diagnostics.Append(tfschema.SetWorkspaceResourceIdentity(ctx, resp.Identity, app.Name.ValueString(), resp.State)...)
+	resp.Diagnostics.Append(tfschema.SetResourceIdentity(ctx, resp.Identity, app.Name.ValueString())...)
 }
 
 // This is copied from the retries package of the databricks-sdk-go. It should be made public,
@@ -342,7 +337,7 @@ func (a *resourceApp) Read(ctx context.Context, req resource.ReadRequest, resp *
 		if apierr.IsMissing(err) {
 			// Terraform requires an identity even when the resource is gone, and
 			// state written before identity support has none.
-			resp.Diagnostics.Append(tfschema.SetWorkspaceResourceIdentity(ctx, resp.Identity, app.Name.ValueString(), req.State)...)
+			resp.Diagnostics.Append(tfschema.SetResourceIdentity(ctx, resp.Identity, app.Name.ValueString())...)
 			resp.State.RemoveResource(ctx)
 			return
 		}
@@ -372,7 +367,7 @@ func (a *resourceApp) Read(ctx context.Context, req resource.ReadRequest, resp *
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	resp.Diagnostics.Append(tfschema.SetWorkspaceResourceIdentity(ctx, resp.Identity, app.Name.ValueString(), resp.State)...)
+	resp.Diagnostics.Append(tfschema.SetResourceIdentity(ctx, resp.Identity, app.Name.ValueString())...)
 }
 
 func (a *resourceApp) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -428,7 +423,7 @@ func (a *resourceApp) Update(ctx context.Context, req resource.UpdateRequest, re
 	}
 	// State written before identity support has no identity, and Terraform
 	// rejects an update that returns none.
-	resp.Diagnostics.Append(tfschema.SetWorkspaceResourceIdentity(ctx, resp.Identity, app.Name.ValueString(), resp.State)...)
+	resp.Diagnostics.Append(tfschema.SetResourceIdentity(ctx, resp.Identity, app.Name.ValueString())...)
 }
 
 func (a *resourceApp) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -461,7 +456,7 @@ func (a *resourceApp) Delete(ctx context.Context, req resource.DeleteRequest, re
 }
 
 func (a *resourceApp) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	importID, workspaceID, diags := tfschema.ResolveImportIdentity(ctx, a.client, req)
+	importID, workspaceID, diags := tfschema.ResolveImportIdentity(ctx, req)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return

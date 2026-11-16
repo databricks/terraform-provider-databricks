@@ -85,8 +85,8 @@ type QualityMonitorResource struct {
 
 func (r *QualityMonitorResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = pluginfwcommon.GetDatabricksProductionName(resourceName)
-	// The SDKv2 implementation records the resolved workspace ID in the identity
-	// and this one may not, so the identity can change when state moves over.
+	// The SDKv2 implementation takes the identity id from d.Id() and this one
+	// from table_name, so the identity can change when state moves over.
 	// MutableIdentity turns off the framework check that the identity never
 	// changes, see
 	// https://developer.hashicorp.com/terraform/plugin/framework/resources/identity#mutable-identities
@@ -128,7 +128,7 @@ func (d *QualityMonitorResource) Configure(ctx context.Context, req resource.Con
 }
 
 func (d *QualityMonitorResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	importID, workspaceID, diags := tfschema.ResolveImportIdentity(ctx, d.Client, req)
+	importID, workspaceID, diags := tfschema.ResolveImportIdentity(ctx, req)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -207,7 +207,7 @@ func (r *QualityMonitorResource) Create(ctx context.Context, req resource.Create
 	newMonitorInfoTfSDK.ProviderConfig = monitorInfoTfSDK.ProviderConfig
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newMonitorInfoTfSDK)...)
-	resp.Diagnostics.Append(tfschema.SetResourceIdentity(ctx, resp.Identity, newMonitorInfoTfSDK.TableName.ValueString(), workspaceID)...)
+	resp.Diagnostics.Append(tfschema.SetResourceIdentity(ctx, resp.Identity, newMonitorInfoTfSDK.TableName.ValueString())...)
 }
 
 func (r *QualityMonitorResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -238,7 +238,7 @@ func (r *QualityMonitorResource) Read(ctx context.Context, req resource.ReadRequ
 		if apierr.IsMissing(err) {
 			// Terraform requires an identity even when the resource is gone, and
 			// state written before identity support has none.
-			resp.Diagnostics.Append(tfschema.SetResourceIdentity(ctx, resp.Identity, monitorInfoTfSDK.TableName.ValueString(), workspaceID)...)
+			resp.Diagnostics.Append(tfschema.SetResourceIdentity(ctx, resp.Identity, monitorInfoTfSDK.TableName.ValueString())...)
 			resp.State.RemoveResource(ctx)
 			return
 		}
@@ -261,7 +261,7 @@ func (r *QualityMonitorResource) Read(ctx context.Context, req resource.ReadRequ
 
 	newMonitorInfoTfSDK.ProviderConfig = monitorInfoTfSDK.ProviderConfig
 	resp.Diagnostics.Append(resp.State.Set(ctx, newMonitorInfoTfSDK)...)
-	resp.Diagnostics.Append(tfschema.SetResourceIdentity(ctx, resp.Identity, newMonitorInfoTfSDK.TableName.ValueString(), workspaceID)...)
+	resp.Diagnostics.Append(tfschema.SetResourceIdentity(ctx, resp.Identity, newMonitorInfoTfSDK.TableName.ValueString())...)
 }
 
 func (r *QualityMonitorResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -323,7 +323,7 @@ func (r *QualityMonitorResource) Update(ctx context.Context, req resource.Update
 
 	newMonitorInfoTfSDK.ProviderConfig = monitorInfoTfSDK.ProviderConfig
 	resp.Diagnostics.Append(resp.State.Set(ctx, newMonitorInfoTfSDK)...)
-	resp.Diagnostics.Append(tfschema.SetResourceIdentity(ctx, resp.Identity, newMonitorInfoTfSDK.TableName.ValueString(), workspaceID)...)
+	resp.Diagnostics.Append(tfschema.SetResourceIdentity(ctx, resp.Identity, newMonitorInfoTfSDK.TableName.ValueString())...)
 }
 
 func (r *QualityMonitorResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {

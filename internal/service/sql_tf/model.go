@@ -3093,7 +3093,7 @@ type CreateQueryRequest struct {
 	// fail the request if the query's display name conflicts with an existing
 	// query's display name.
 	AutoResolveDisplayName types.Bool `tfsdk:"auto_resolve_display_name"`
-
+	// The query to create. A display name and query text are required.
 	Query types.Object `tfsdk:"query"`
 }
 
@@ -3187,6 +3187,9 @@ func (m *CreateQueryRequest) SetQuery(ctx context.Context, v CreateQueryRequestQ
 	m.Query = vs
 }
 
+// A saved Databricks SQL query. A query stores the SQL text, the SQL warehouse
+// it runs on, its parameters, and metadata such as the display name,
+// description, owner, and tags.
 type CreateQueryRequestQuery struct {
 	// Whether to apply a 1000 row limit to the query result.
 	ApplyAutoLimit types.Bool `tfsdk:"apply_auto_limit"`
@@ -3204,11 +3207,16 @@ type CreateQueryRequestQuery struct {
 	ParentPath types.String `tfsdk:"parent_path"`
 	// Text of the query to be run.
 	QueryText types.String `tfsdk:"query_text"`
-	// Sets the "Run as" role for the object.
+	// Whose credentials the query runs with when it is shared. `VIEWER` uses
+	// the credentials of the user running the query. `OWNER` uses the owner's
+	// credentials where the product supports that, such as for legacy alerts
+	// and jobs. When omitted on create, the workspace default applies. A
+	// workspace admin can disallow `OWNER`.
 	RunAsMode types.String `tfsdk:"run_as_mode"`
 	// Name of the schema where this query will be executed.
 	Schema types.String `tfsdk:"schema"`
-
+	// Tags attached to the query. Tags appear in the query list and can be used
+	// to filter it.
 	Tags types.List `tfsdk:"tags"`
 	// ID of the SQL warehouse attached to the query.
 	WarehouseId types.String `tfsdk:"warehouse_id"`
@@ -4705,8 +4713,10 @@ func (m DataSource) Type(ctx context.Context) attr.Type {
 }
 
 type DateRange struct {
+	// End of the range, in the same format as `start`.
 	End types.String `tfsdk:"end"`
-
+	// Start of the range in the format `yyyy-MM-dd`, optionally followed by a
+	// time as ` HH:mm` or ` HH:mm:ss`.
 	Start types.String `tfsdk:"start"`
 }
 
@@ -4764,7 +4774,8 @@ type DateRangeValue struct {
 	// Date-time precision to format the value into when the query is run.
 	// Defaults to DAY_PRECISION (YYYY-MM-DD).
 	Precision types.String `tfsdk:"precision"`
-
+	// Day the week starts on for week-based dynamic ranges such as `THIS_WEEK`
+	// and `LAST_WEEK`, from 0 (Sunday) to 6 (Saturday). Defaults to 0.
 	StartDayOfWeek types.Int64 `tfsdk:"start_day_of_week"`
 }
 
@@ -4865,7 +4876,8 @@ func (m *DateRangeValue) SetDateRangeValue(ctx context.Context, v DateRange) {
 }
 
 type DateValue struct {
-	// Manually specified date-time value.
+	// Manually specified date-time value in the format `yyyy-MM-dd`, optionally
+	// followed by a time as ` HH:mm` or ` HH:mm:ss`.
 	DateValue types.String `tfsdk:"date_value"`
 	// Dynamic date-time value based on current date-time.
 	DynamicDateValue types.String `tfsdk:"dynamic_date_value"`
@@ -7848,6 +7860,7 @@ func (m GetQueriesLegacyRequest) Type(ctx context.Context) attr.Type {
 }
 
 type GetQueryRequest struct {
+	// UUID of the query to fetch.
 	Id types.String `tfsdk:"-"`
 }
 
@@ -10833,8 +10846,11 @@ func (m ListQueriesLegacyRequest) Type(ctx context.Context) attr.Type {
 }
 
 type ListQueriesRequest struct {
+	// Maximum number of queries to return per page. Values above 100 are
+	// coerced to 100.
 	PageSize types.Int64 `tfsdk:"-"`
-
+	// Token from the `next_page_token` of a previous response. Omit it to fetch
+	// the first page.
 	PageToken types.String `tfsdk:"-"`
 }
 
@@ -11125,8 +11141,10 @@ func (m *ListQueryHistoryRequest) SetFilterBy(ctx context.Context, v QueryFilter
 }
 
 type ListQueryObjectsResponse struct {
+	// Token to pass as `page_token` to fetch the next page. Omitted when there
+	// are no more pages.
 	NextPageToken types.String `tfsdk:"next_page_token"`
-
+	// Queries on this page.
 	Results types.List `tfsdk:"results"`
 }
 
@@ -11243,6 +11261,9 @@ func (m *ListQueryObjectsResponse) SetResults(ctx context.Context, v []ListQuery
 	m.Results = types.ListValueMust(t, vs)
 }
 
+// A saved Databricks SQL query. A query stores the SQL text, the SQL warehouse
+// it runs on, its parameters, and metadata such as the display name,
+// description, owner, and tags.
 type ListQueryObjectsResponseQuery struct {
 	// Whether to apply a 1000 row limit to the query result.
 	ApplyAutoLimit types.Bool `tfsdk:"apply_auto_limit"`
@@ -11268,11 +11289,16 @@ type ListQueryObjectsResponseQuery struct {
 	Parameters types.List `tfsdk:"parameters"`
 	// Text of the query to be run.
 	QueryText types.String `tfsdk:"query_text"`
-	// Sets the "Run as" role for the object.
+	// Whose credentials the query runs with when it is shared. `VIEWER` uses
+	// the credentials of the user running the query. `OWNER` uses the owner's
+	// credentials where the product supports that, such as for legacy alerts
+	// and jobs. When omitted on create, the workspace default applies. A
+	// workspace admin can disallow `OWNER`.
 	RunAsMode types.String `tfsdk:"run_as_mode"`
 	// Name of the schema where this query will be executed.
 	Schema types.String `tfsdk:"schema"`
-
+	// Tags attached to the query. Tags appear in the query list and can be used
+	// to filter it.
 	Tags types.List `tfsdk:"tags"`
 	// Timestamp when this query was last updated.
 	UpdateTime types.String `tfsdk:"update_time"`
@@ -12069,6 +12095,7 @@ func (m MultiValuesOptions) Type(ctx context.Context) attr.Type {
 }
 
 type NumericValue struct {
+	// Number substituted for the parameter marker when the query runs.
 	Value types.Float64 `tfsdk:"value"`
 }
 
@@ -12303,6 +12330,9 @@ func (m *Parameter) SetMultiValuesOptions(ctx context.Context, v MultiValuesOpti
 	m.MultiValuesOptions = vs
 }
 
+// A saved Databricks SQL query. A query stores the SQL text, the SQL warehouse
+// it runs on, its parameters, and metadata such as the display name,
+// description, owner, and tags.
 type Query struct {
 	// Whether to apply a 1000 row limit to the query result.
 	ApplyAutoLimit types.Bool `tfsdk:"apply_auto_limit"`
@@ -12330,11 +12360,16 @@ type Query struct {
 	ParentPath types.String `tfsdk:"parent_path"`
 	// Text of the query to be run.
 	QueryText types.String `tfsdk:"query_text"`
-	// Sets the "Run as" role for the object.
+	// Whose credentials the query runs with when it is shared. `VIEWER` uses
+	// the credentials of the user running the query. `OWNER` uses the owner's
+	// credentials where the product supports that, such as for legacy alerts
+	// and jobs. When omitted on create, the workspace default applies. A
+	// workspace admin can disallow `OWNER`.
 	RunAsMode types.String `tfsdk:"run_as_mode"`
 	// Name of the schema where this query will be executed.
 	Schema types.String `tfsdk:"schema"`
-
+	// Tags attached to the query. Tags appear in the query list and can be used
+	// to filter it.
 	Tags types.List `tfsdk:"tags"`
 	// Timestamp when this query was last updated.
 	UpdateTime types.String `tfsdk:"update_time"`
@@ -16283,6 +16318,10 @@ func (m StatementParameterListItem) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// Statement Execution works with all SQL warehouse types, including
+// Lakehouse//RT. Statement Execution (Lakehouse//RT) is optimized for
+// Lakehouse//RT warehouses, with lower latency and higher concurrency, and
+// takes `warehouse_id` as a path parameter.
 type StatementResponse struct {
 	Manifest types.Object `tfsdk:"manifest"`
 
@@ -16983,6 +17022,8 @@ func (m *TerminationReason) SetParameters(ctx context.Context, v map[string]type
 }
 
 type TextValue struct {
+	// Text substituted for the parameter marker when the query runs. Quotation
+	// marks are added around the value automatically.
 	Value types.String `tfsdk:"value"`
 }
 
@@ -17334,6 +17375,7 @@ func (m TrashAlertV2Request) Type(ctx context.Context) attr.Type {
 }
 
 type TrashQueryRequest struct {
+	// UUID of the query to move to the trash.
 	Id types.String `tfsdk:"-"`
 }
 
@@ -17856,14 +17898,18 @@ func (m *UpdateDefaultWarehouseOverrideRequest) SetDefaultWarehouseOverride(ctx 
 }
 
 type UpdateQueryRequest struct {
-	// If true, automatically resolve alert display name conflicts. Otherwise,
-	// fail the request if the alert's display name conflicts with an existing
-	// alert's display name.
+	// If true, automatically resolve query display name conflicts. Otherwise,
+	// fail the request if the query's display name conflicts with an existing
+	// query's display name.
 	AutoResolveDisplayName types.Bool `tfsdk:"auto_resolve_display_name"`
-
+	// UUID of the query to update.
 	Id types.String `tfsdk:"-"`
-
+	// Query fields to update. Only the fields named in `update_mask` are
+	// changed.
 	Query types.Object `tfsdk:"query"`
+	// Comma-separated list of the query fields to update, such as the display
+	// name or query text. Fields not listed keep their current values.
+	//
 	// The field mask must be a single string, with multiple fields separated by
 	// commas (no spaces). The field path is relative to the resource object,
 	// using a dot (`.`) to navigate sub-fields (e.g., `author.given_name`).
@@ -17974,6 +18020,9 @@ func (m *UpdateQueryRequest) SetQuery(ctx context.Context, v UpdateQueryRequestQ
 	m.Query = vs
 }
 
+// A saved Databricks SQL query. A query stores the SQL text, the SQL warehouse
+// it runs on, its parameters, and metadata such as the display name,
+// description, owner, and tags.
 type UpdateQueryRequestQuery struct {
 	// Whether to apply a 1000 row limit to the query result.
 	ApplyAutoLimit types.Bool `tfsdk:"apply_auto_limit"`
@@ -17991,11 +18040,16 @@ type UpdateQueryRequestQuery struct {
 	Parameters types.List `tfsdk:"parameters"`
 	// Text of the query to be run.
 	QueryText types.String `tfsdk:"query_text"`
-	// Sets the "Run as" role for the object.
+	// Whose credentials the query runs with when it is shared. `VIEWER` uses
+	// the credentials of the user running the query. `OWNER` uses the owner's
+	// credentials where the product supports that, such as for legacy alerts
+	// and jobs. When omitted on create, the workspace default applies. A
+	// workspace admin can disallow `OWNER`.
 	RunAsMode types.String `tfsdk:"run_as_mode"`
 	// Name of the schema where this query will be executed.
 	Schema types.String `tfsdk:"schema"`
-
+	// Tags attached to the query. Tags appear in the query list and can be used
+	// to filter it.
 	Tags types.List `tfsdk:"tags"`
 	// ID of the SQL warehouse attached to the query.
 	WarehouseId types.String `tfsdk:"warehouse_id"`

@@ -48,7 +48,11 @@ The following attributes are exported:
 * `parent` (string) - The Branch where this Role exists.
   Format: projects/{project_id}/branches/{branch_id}
 * `role_id` (string) - The part of the name, chosen by the user when the resource was created
-* `spec` (RoleRoleSpec) - The spec contains the role configuration, including identity type, authentication method, and role attributes
+* `spec` (RoleRoleSpec) - The spec contains the role configuration, including identity type, authentication method, and role attributes.
+  
+  Read the resource's current values from `status`, rather than `spec`.
+  `spec` tracks field ownership for infrastructure-as-code tools and may omit
+  unmanaged fields
 * `status` (RoleRoleStatus) - Current status of the role, including its identity type, authentication method, and role attributes
 * `update_time` (string)
 

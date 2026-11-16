@@ -76,8 +76,8 @@ In addition to the above arguments, the following attributes are exported:
   This value is true if the caller does not have permission to see all destinations
 * `destination_source_securable` (Securable) - The source securable from which the destinations are inherited. Either the same value as securable (if destination
   is set directly on the securable) or the nearest parent securable with destinations set
-* `full_name` (string) - The full name of the securable. Redundant with the name in the securable object, but necessary for Terraform integration
-* `securable_type` (string) - The type of the securable. Redundant with the type in the securable object, but necessary for Terraform integration
+* `full_name` (string) - The full name of the securable, repeated from **securable**
+* `securable_type` (string) - The type of the securable, repeated from **securable** as a plain string
 
 ## Import
 As of Terraform v1.5, resources can be imported through configuration.

@@ -2,6 +2,7 @@ package settings
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
@@ -341,4 +342,43 @@ func TestQueryDeleteDefaultNameSettingWithConflict(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.Equal(t, "etag3", d.Get(etagAttrName).(string))
+}
+
+func TestIsIrreversibleSettingError(t *testing.T) {
+	refused := &apierr.APIError{
+		ErrorCode:  "PERMISSION_DENIED",
+		StatusCode: 403,
+		Message:    "This setting cannot be modified or deleted for this workspace.",
+	}
+	assert.True(t, isIrreversibleSettingError(refused))
+	assert.True(t, isIrreversibleSettingError(fmt.Errorf("delete failed: %w", refused)))
+
+	assert.False(t, isIrreversibleSettingError(nil))
+	assert.False(t, isIrreversibleSettingError(&apierr.APIError{
+		ErrorCode:  "PERMISSION_DENIED",
+		StatusCode: 403,
+		Message:    "Only workspace admins can modify this setting.",
+	}))
+	assert.False(t, isIrreversibleSettingError(&apierr.APIError{
+		ErrorCode:  "INVALID_PARAMETER_VALUE",
+		StatusCode: 400,
+		Message:    "This setting cannot be modified or deleted for this workspace.",
+	}))
+	assert.False(t, isIrreversibleSettingError(fmt.Errorf("This setting cannot be modified or deleted for this workspace.")))
+}
+
+func TestIgnoreIrreversibleSettingDelete(t *testing.T) {
+	ctx := context.Background()
+	etag, err := ignoreIrreversibleSettingDelete(ctx, "databricks_disable_legacy_dbfs_setting", "etag1", &apierr.APIError{
+		ErrorCode:  "PERMISSION_DENIED",
+		StatusCode: 403,
+		Message:    "This setting cannot be modified or deleted for this workspace.",
+	})
+	assert.NoError(t, err)
+	assert.Equal(t, "etag1", etag)
+
+	other := &apierr.APIError{ErrorCode: "INTERNAL_ERROR", StatusCode: 500, Message: "boom"}
+	etag, err = ignoreIrreversibleSettingDelete(ctx, "databricks_disable_legacy_dbfs_setting", "etag1", other)
+	assert.Equal(t, other, err)
+	assert.Equal(t, "", etag)
 }

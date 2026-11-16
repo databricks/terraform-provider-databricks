@@ -38,8 +38,8 @@ var disableLegacyDbfs = workspaceSetting[settings.DisableLegacyDbfs]{
 			Etag: etag,
 		})
 		if err != nil {
-			return "", err
+			return ignoreIrreversibleSettingDelete(ctx, "databricks_disable_legacy_dbfs_setting", etag, err)
 		}
-		return res.Etag, err
+		return res.Etag, nil
 	},
 }

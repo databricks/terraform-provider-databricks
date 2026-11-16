@@ -351,3 +351,52 @@ func TestDeleteDisableLegacyDbfsWithConflict(t *testing.T) {
 		etagAttrName: "etag3",
 	})
 }
+
+func TestDeleteDisableLegacyDbfsIrreversible(t *testing.T) {
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockDisableLegacyDbfsAPI().EXPECT().Delete(mock.Anything, settings.DeleteDisableLegacyDbfsRequest{
+				Etag: "etag1",
+			}).Return(nil, &apierr.APIError{
+				ErrorCode:  "PERMISSION_DENIED",
+				StatusCode: 403,
+				Message:    "This setting cannot be modified or deleted for this workspace.",
+			})
+		},
+		Resource: testDisableLegacyDbfs,
+		HCL: `
+			disable_legacy_dbfs {
+				value = "true"
+			}
+			etag = "etag1"
+		`,
+		Delete: true,
+		ID:     defaultSettingId,
+	}.ApplyAndExpectData(t, map[string]any{
+		"id":         defaultSettingId,
+		etagAttrName: "etag1",
+	})
+}
+
+func TestDeleteDisableLegacyDbfsPermissionDenied(t *testing.T) {
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockDisableLegacyDbfsAPI().EXPECT().Delete(mock.Anything, settings.DeleteDisableLegacyDbfsRequest{
+				Etag: "etag1",
+			}).Return(nil, &apierr.APIError{
+				ErrorCode:  "PERMISSION_DENIED",
+				StatusCode: 403,
+				Message:    "Only workspace admins can modify this setting.",
+			})
+		},
+		Resource: testDisableLegacyDbfs,
+		HCL: `
+			disable_legacy_dbfs {
+				value = "true"
+			}
+			etag = "etag1"
+		`,
+		Delete: true,
+		ID:     defaultSettingId,
+	}.ExpectError(t, "Only workspace admins can modify this setting.")
+}

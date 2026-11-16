@@ -2,8 +2,9 @@
 # names may contain. Each GET puts them in the URL as "%23", "%3F" and "%25". Unescaped,
 # "#2" becomes a fragment and "?2" a query, so both reads would go to main.replay.raw,
 # and "%41" is decoded to "A", so that read would go to main.replay.rawA. The ID and
-# volume_info keep the unescaped name. API responses are inferred from the Unity Catalog
-# API contract, not recorded.
+# volume_info keep the unescaped name. Terraform reads each data source three times in the
+# step and once more on destroy. API responses are inferred from the Unity Catalog API
+# contract, not recorded.
 version: 1
 host_metadata:
   host_type: workspace

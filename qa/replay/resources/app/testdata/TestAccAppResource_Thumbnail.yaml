@@ -1,0 +1,178 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+# The thumbnail image can't be read back, so the provider keeps the file's MD5 in state and
+# compares it at plan time: a changed file updates only the thumbnail, not the app.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: "workspace"
+  cloud: "AWS"
+  workspace_id: "12345"
+steps:
+  - name: "create_with_thumbnail"
+    files:
+      thumbnail.png: assets/thumbnail.png
+    config: |
+      resource "databricks_app" "this" {
+        no_compute     = true
+        name           = "tf-replay"
+        description    = "thumbnail app"
+        thumbnail_path = abspath("${path.module}/thumbnail.png")
+      }
+    calls:
+      - request:
+          method: "POST"
+          path: "/api/2.0/apps"
+          query:
+            no_compute: ["true"]
+          body:
+            json:
+              description: "thumbnail app"
+              name: "tf-replay"
+        response: &app_without_thumbnail # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              compute_status:
+                state: "STOPPED"
+              create_time: "2026-01-01T00:00:00Z"
+              description: "thumbnail app"
+              id: "app-id"
+              name: "tf-replay"
+              update_time: "2026-01-01T00:00:00Z"
+      - request:
+          method: "GET"
+          path: "/api/2.0/apps/tf-replay"
+          body: null
+        response: *app_without_thumbnail
+      - request:
+          method: "PATCH"
+          path: "/api/2.0/apps/tf-replay/thumbnail"
+          body:
+            json:
+              app_thumbnail:
+                thumbnail: "iVBORw0KGgoAAAANSUhEUgAAAKAAAABaCAIAAACwpMoFAAAAoklEQVR42u3RAQ0AAAjDsFvBBP6dgQ9oMgVrpkuHiwWABViABViABViAAQuwAAuwAAuwAAMWYAEWYAEWYAEWYMACLMACLMACLMCABViABViABViAAQuwAAuwAAuwAAswYAEWYAEWYAEWYMACLMACLMACLMCAXQAswAIswAIswAIMWIAFWIAFWIAFGLAAC7AAC7AAC7AAAxZgARZgARZgAf7VAnozKeaB+S5rAAAAAElFTkSuQmCC"
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json: {}
+      - &get_with_thumbnail
+        request:
+          method: "GET"
+          path: "/api/2.0/apps/tf-replay"
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              compute_status:
+                state: "STOPPED"
+              create_time: "2026-01-01T00:00:00Z"
+              description: "thumbnail app"
+              id: "app-id"
+              name: "tf-replay"
+              thumbnail_url: "/ajax-api/2.0/thumbnails/raw/apps/app-id/SMALL_DEFAULT.png"
+              update_time: "2026-01-01T00:00:00Z"
+      - *get_with_thumbnail
+    state:
+      resources:
+        databricks_app.this:
+          attributes:
+            - path: ["thumbnail_md5"]
+              equals: "4361d2023760b7381afe701273e67dcc"
+            - path: ["thumbnail_url"]
+              equals: "/ajax-api/2.0/thumbnails/raw/apps/app-id/SMALL_DEFAULT.png"
+  # Same path, new content: only the thumbnail is uploaded, without an app update.
+  - name: "change_thumbnail_file"
+    files:
+      thumbnail.png: assets/thumbnail_updated.png
+    config: |
+      resource "databricks_app" "this" {
+        no_compute     = true
+        name           = "tf-replay"
+        description    = "thumbnail app"
+        thumbnail_path = abspath("${path.module}/thumbnail.png")
+      }
+    plan:
+      changes:
+        databricks_app.this:
+          actions: [update]
+          before:
+            - path: ["thumbnail_md5"]
+              equals: "4361d2023760b7381afe701273e67dcc"
+          after:
+            - path: ["thumbnail_md5"]
+              equals: "2a54c42537cf5b01c71c4d56ac2245ea"
+    calls:
+      - *get_with_thumbnail
+      - request:
+          method: "PATCH"
+          path: "/api/2.0/apps/tf-replay/thumbnail"
+          body:
+            json:
+              app_thumbnail:
+                thumbnail: "iVBORw0KGgoAAAANSUhEUgAAAKAAAABaCAIAAACwpMoFAAAAoElEQVR42u3RAQ0AAAjDsMtGKILuA5pMwZrM6nIWABZgARZgARZgAQYswAIswAIswAIMWIAFWIAFWIAFWIABC7AAC7AAC7AAAxZgARZgARZgAQYswAIswAIswAIswIAFWIAFWIAFWIABC7AAC7AAC7AAA7YAsAALsAALsAALMGABFmABFmABFmDAAizAAizAAizAAgxYgAVYgAVYgAX4VwVkRfc5jRnibwAAAABJRU5ErkJggg=="
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json: {}
+      - *get_with_thumbnail
+      - *get_with_thumbnail
+    state:
+      resources:
+        databricks_app.this:
+          attributes:
+            - path: ["thumbnail_md5"]
+              equals: "2a54c42537cf5b01c71c4d56ac2245ea"
+  # The type is checked at plan time, before any change is made.
+  - name: "reject_gif"
+    files:
+      thumbnail.gif: assets/thumbnail.gif
+    config: |
+      resource "databricks_app" "this" {
+        no_compute     = true
+        name           = "tf-replay"
+        description    = "thumbnail app"
+        thumbnail_path = abspath("${path.module}/thumbnail.gif")
+      }
+    expect_error: 'must be a PNG or JPEG\s+image, but its content is image/gif'
+    calls:
+      - *get_with_thumbnail
+  - name: "remove_thumbnail"
+    config: |
+      resource "databricks_app" "this" {
+        no_compute  = true
+        name        = "tf-replay"
+        description = "thumbnail app"
+      }
+    calls:
+      - *get_with_thumbnail
+      - request:
+          method: "DELETE"
+          path: "/api/2.0/apps/tf-replay/thumbnail"
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json: {}
+      - &get_without_thumbnail
+        request:
+          method: "GET"
+          path: "/api/2.0/apps/tf-replay"
+          body: null
+        response: *app_without_thumbnail
+      - *get_without_thumbnail
+    state:
+      resources:
+        databricks_app.this:
+          attributes:
+            - path: ["thumbnail_md5"]
+              equals: null
+            - path: ["thumbnail_path"]
+              equals: null
+destroy:
+  calls:
+    - *get_without_thumbnail
+    - request:
+        method: "DELETE"
+        path: "/api/2.0/apps/tf-replay"
+        body: null
+      response: *app_without_thumbnail

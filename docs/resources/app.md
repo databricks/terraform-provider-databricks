@@ -40,6 +40,18 @@ resource "databricks_app" "this" {
 }
 ```
 
+### Setting a thumbnail
+
+The image shown for the app in the Apps UI can be set from a local file:
+
+```hcl
+resource "databricks_app" "this" {
+  name           = "my-custom-app"
+  description    = "My app"
+  thumbnail_path = "${path.module}/thumbnail.png"
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
@@ -57,6 +69,7 @@ The following arguments are required:
 * `git_source` - (Optional) The Git source to deploy from, specifying the reference to check out and an optional path to the app source code within the repository configured in `git_repository` (see [below](#git_source-configuration-attribute)).
 * `source_code_path` - (Optional) Workspace filesystem path of the source code to deploy from, as an alternative to Git-based deployment (`git_repository`/`git_source`). This value is not returned by the service; the workspace path of the last active deployment is exported as `default_source_code_path`.
 * `telemetry_export_destinations` - (Optional) A list of destinations to which the app's telemetry (logs, metrics, traces) is exported (see [below](#telemetry_export_destinations-configuration-attribute)).
+* `thumbnail_path` - (Optional) Path to a local PNG or JPEG file of at most 250 KB to show as the app's thumbnail in the Apps UI. Other images are rejected at plan time. Images that aren't 16:9 are center-cropped to 16:9. The image can't be read back from the service, so the provider keeps the file's MD5 hash in `thumbnail_md5` and uploads the file again when its content changes; changes made to the thumbnail outside of Terraform aren't detected. Removing the argument deletes the thumbnail.
 
 -> Updates apply the whole configuration: an argument removed from the configuration is cleared or reset to its default, even if it was set outside Terraform. Enabling or disabling horizontal scaling (`compute_min_instances`/`compute_max_instances`) cannot be combined with a change to `compute_size` or `git_repository` in the same apply.
 
@@ -158,6 +171,7 @@ In addition to all arguments above, the following attributes are exported:
 * `oauth2_app_client_id` - The OAuth2 client ID of the app's integration, set when the app uses user authorization.
 * `oauth2_app_integration_id` - The unique ID of the OAuth2 integration associated with the app.
 * `thumbnail_url` - The URL of the thumbnail image for the app.
+* `thumbnail_md5` - The MD5 hash of the file in `thumbnail_path` that was last uploaded as the app's thumbnail.
 * `active_deployment` attribute - the active deployment of the app. A deployment is considered active when it has been deployed to the app compute.
   * `deployment_id` - The unique ID of the deployment.
   * `source_code_path` - The workspace file system path of the source code used to create the deployment.
@@ -188,6 +202,8 @@ Alternatively, when using `terraform` version 1.4 or earlier, import using the `
 ```bash
 terraform import databricks_app.this <app_name>
 ```
+
+An imported app has no `thumbnail_md5`, so the next apply uploads the image in `thumbnail_path`, if it is set.
 
 ## Related Resources
 

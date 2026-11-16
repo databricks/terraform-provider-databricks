@@ -1,8 +1,16 @@
 package app_test
 
 import (
+	"bytes"
 	"context"
+	"crypto/md5"
 	"fmt"
+	"image"
+	"image/color"
+	"image/draw"
+	"image/png"
+	"os"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"testing"
@@ -234,6 +242,62 @@ func TestAccAppResource_ComputeSize(t *testing.T) {
 	}, acceptance.Step{
 		Template: makeComputeSizeTemplate("compute size app reset", ""),
 		Check:    checkAppComputeSize(t, "MEDIUM"),
+	})
+}
+
+func makeThumbnailTemplate(thumbnailPath string) string {
+	thumbnailLine := ""
+	if thumbnailPath != "" {
+		thumbnailLine = fmt.Sprintf("thumbnail_path = %q", thumbnailPath)
+	}
+	return fmt.Sprintf(`
+	resource "databricks_app" "this" {
+		no_compute = true
+		name = "tf-{var.STICKY_RANDOM}"
+		description = "thumbnail app"
+		%s
+	}`, thumbnailLine)
+}
+
+// writeThumbnailPng writes a 16:9 PNG of a single color and returns its MD5 hash.
+func writeThumbnailPng(t *testing.T, thumbnailPath string, c color.Color) string {
+	img := image.NewRGBA(image.Rect(0, 0, 160, 90))
+	draw.Draw(img, img.Bounds(), &image.Uniform{C: c}, image.Point{}, draw.Src)
+	var buf bytes.Buffer
+	require.NoError(t, png.Encode(&buf, img))
+	require.NoError(t, os.WriteFile(thumbnailPath, buf.Bytes(), 0o600))
+	return fmt.Sprintf("%x", md5.Sum(buf.Bytes()))
+}
+
+func checkAppThumbnail(t *testing.T, wantMd5 *string) func(s *terraform.State) error {
+	return func(s *terraform.State) error {
+		attrs := s.RootModule().Resources["databricks_app.this"].Primary.Attributes
+		assert.Equal(t, *wantMd5, attrs["thumbnail_md5"])
+		// Not checked after a delete: the API keeps returning the old URL for some seconds.
+		if *wantMd5 != "" {
+			assert.NotEmpty(t, attrs["thumbnail_url"])
+		}
+		return nil
+	}
+}
+
+// Setting, changing and removing the thumbnail; each step's post-apply plan must be empty.
+func TestAccAppResource_Thumbnail(t *testing.T) {
+	acceptance.LoadWorkspaceEnv(t)
+	thumbnailPath := filepath.Join(t.TempDir(), "thumbnail.png")
+	var wantMd5 string
+	acceptance.WorkspaceLevel(t, acceptance.Step{
+		PreConfig: func() { wantMd5 = writeThumbnailPng(t, thumbnailPath, color.RGBA{R: 255, G: 54, B: 33, A: 255}) },
+		Template:  makeThumbnailTemplate(thumbnailPath),
+		Check:     checkAppThumbnail(t, &wantMd5),
+	}, acceptance.Step{
+		PreConfig: func() { wantMd5 = writeThumbnailPng(t, thumbnailPath, color.RGBA{B: 212, G: 120, A: 255}) },
+		Template:  makeThumbnailTemplate(thumbnailPath),
+		Check:     checkAppThumbnail(t, &wantMd5),
+	}, acceptance.Step{
+		PreConfig: func() { wantMd5 = "" },
+		Template:  makeThumbnailTemplate(""),
+		Check:     checkAppThumbnail(t, &wantMd5),
 	})
 }
 

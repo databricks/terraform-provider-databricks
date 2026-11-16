@@ -11,6 +11,7 @@
 * Support `statement_timeout` for all SQL warehouse types; omitting or removing the argument preserves the existing warehouse timeout, while explicit `0` clears the override ([#6144](https://github.com/databricks/terraform-provider-databricks/pull/6144)).
 
 ### Bug Fixes
+* Preserve configured privileges when revoking `ALL_PRIVILEGES` in `databricks_grants` and `databricks_grant` ([#6198](https://github.com/databricks/terraform-provider-databricks/pull/6198)).
 
 ### Documentation
 

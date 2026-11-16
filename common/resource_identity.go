@@ -18,8 +18,9 @@ const (
 	identityWorkspaceIDKey = "workspace_id"
 )
 
-// workspace_id is an import input only. The stored identity leaves it null,
-// so provider_config.workspace_id is the only copy of the workspace ID in state.
+// workspace_id is an import input only. The stored identity leaves it empty
+// (the SDK stores an empty string), so provider_config.workspace_id is the only
+// copy of the workspace ID in state.
 func workspaceResourceIdentity() *schema.ResourceIdentity {
 	return &schema.ResourceIdentity{
 		SchemaFunc: func() map[string]*schema.Schema {

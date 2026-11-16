@@ -85,8 +85,8 @@ type QualityMonitorResource struct {
 
 func (r *QualityMonitorResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = pluginfwcommon.GetDatabricksProductionName(resourceName)
-	// The SDKv2 implementation takes the identity id from d.Id() and this one
-	// from table_name, so the identity can change when state moves over.
+	// The SDKv2 implementation stores the empty workspace_id as "" instead of
+	// null, so the identity changes when state moves over.
 	// MutableIdentity turns off the framework check that the identity never
 	// changes, see
 	// https://developer.hashicorp.com/terraform/plugin/framework/resources/identity#mutable-identities

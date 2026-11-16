@@ -44,7 +44,11 @@ The following attributes are exported:
   Format: projects/{project_id}/branches/{branch_id}/databases/{database_id}
 * `parent` (string) - The branch containing this database.
   Format: projects/{project_id}/branches/{branch_id}
-* `spec` (DatabaseDatabaseSpec) - The desired state of the Database
+* `spec` (DatabaseDatabaseSpec) - The desired state of the Database.
+  
+  Read the resource's current values from `status`, rather than `spec`.
+  `spec` tracks field ownership for infrastructure-as-code tools and may omit
+  unmanaged fields
 * `status` (DatabaseDatabaseStatus) - The observed state of the Database
 * `update_time` (string) - A timestamp indicating when the database was last updated
 

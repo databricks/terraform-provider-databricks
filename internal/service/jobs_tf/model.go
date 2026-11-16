@@ -1004,7 +1004,7 @@ type AiRuntimeTask struct {
 	// omitted, MLflow generates a default name.
 	MlflowRun types.String `tfsdk:"mlflow_run"`
 	// Scheduling priority class for the workload. May only be set together with
-	// a pre-provisioned capacity reservation (a deployment's
+	// a GPU Pool (a deployment's `compute.accelerator_pool_id` or legacy
 	// `compute.provisioned_capacity_id`); it is rejected on a workload that
 	// runs on on-demand capacity.
 	PriorityClass types.String `tfsdk:"priority_class"`
@@ -3607,10 +3607,8 @@ type ComputeSpec struct {
 	// number of accelerators per node is encoded in the enum value —
 	// `GPU_8xH100` means 8 H100 GPUs per node.
 	AcceleratorType types.String `tfsdk:"accelerator_type"`
-	// Optional ID of a pre-provisioned accelerator capacity reservation to run
-	// this AI Runtime workload on. When set, the workload is scheduled onto the
-	// referenced reserved capacity instead of the on-demand capacity shared
-	// among all Databricks customers.
+	// Legacy alias for `accelerator_pool_id`. Use `accelerator_pool_id` for new
+	// configurations. If both fields are set, they must contain the same ID.
 	ProvisionedCapacityId types.String `tfsdk:"provisioned_capacity_id"`
 }
 

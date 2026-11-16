@@ -99,6 +99,7 @@ func (r ProviderConfigData) Type(ctx context.Context) attr.Type {
 // DatabaseInstanceData extends the main model with additional fields.
 type DatabaseInstanceData struct {
 	// The sku of the instance. Valid values are "CU_1", "CU_2", "CU_4", "CU_8".
+	// Must be set when creating an instance.
 	Capacity types.String `tfsdk:"capacity"`
 	// The refs of the child instances. This is only available if the instance
 	// is parent instance.
@@ -108,10 +109,11 @@ type DatabaseInstanceData struct {
 	// The email of the creator of the instance.
 	Creator types.String `tfsdk:"creator"`
 	// Custom tags associated with the instance. This field is only included on
-	// create and update responses.
+	// create and update responses. An instance can have at most 10 tags; keys
+	// must be unique ignoring case.
 	CustomTags types.List `tfsdk:"custom_tags"`
-	// Deprecated. The sku of the instance; this field will always match the
-	// value of capacity. This is an output only field that contains the value
+	// Deprecated: this field always matches the value of capacity; read
+	// capacity instead. This is an output only field that contains the value
 	// computed from the input field combined with server side defaults. Use the
 	// field without the effective_ prefix to set the value.
 	EffectiveCapacity types.String `tfsdk:"effective_capacity"`
@@ -156,18 +158,21 @@ type DatabaseInstanceData struct {
 	// false.
 	EnablePgNativeLogin types.Bool `tfsdk:"enable_pg_native_login"`
 	// Whether to enable secondaries to serve read-only traffic. Defaults to
-	// false.
+	// false. Requires a node_count greater than 1.
 	EnableReadableSecondaries types.Bool `tfsdk:"enable_readable_secondaries"`
 	// The name of the instance. This is the unique identifier for the instance.
+	// Must be 1 to 63 characters long, contain only letters, digits and
+	// hyphens, start with a letter, and not contain consecutive hyphens.
 	Name types.String `tfsdk:"name"`
 	// The number of nodes in the instance, composed of 1 primary and 0 or more
 	// secondaries. Defaults to 1 primary and 0 secondaries. This field is input
 	// only, see effective_node_count for the output.
 	NodeCount types.Int64 `tfsdk:"node_count"`
 	// The ref of the parent instance. This is only available if the instance is
-	// child instance. Input: For specifying the parent instance to create a
-	// child instance. Optional. Output: Only populated if provided as input to
-	// create a child instance.
+	// a child instance. A child instance inherits custom_tags and
+	// usage_policy_id from its parent and cannot set them. Input: For
+	// specifying the parent instance to create a child instance. Optional.
+	// Output: Only populated if provided as input to create a child instance.
 	ParentInstanceRef types.Object `tfsdk:"parent_instance_ref"`
 	// The version of Postgres running on the instance.
 	PgVersion types.String `tfsdk:"pg_version"`
@@ -183,7 +188,8 @@ type DatabaseInstanceData struct {
 	// The current state of the instance.
 	State types.String `tfsdk:"state"`
 	// Whether to stop the instance. An input only param, see effective_stopped
-	// for the output.
+	// for the output. An instance cannot be created in the stopped state; set
+	// this field on update to stop or start the instance.
 	Stopped types.Bool `tfsdk:"stopped"`
 	// An immutable UUID identifier for the instance.
 	Uid types.String `tfsdk:"uid"`

@@ -15,7 +15,7 @@ func DataSourceVolume() common.Resource {
 		Name   string              `json:"name"`
 		Volume *catalog.VolumeInfo `json:"volume_info,omitempty" tf:"computed"`
 	}, w *databricks.WorkspaceClient) error {
-		volume, err := w.Volumes.ReadByName(ctx, data.Name)
+		volume, err := w.Volumes.ReadByName(ctx, volumeFullNameInPath(data.Name))
 		if err != nil {
 			return err
 		}

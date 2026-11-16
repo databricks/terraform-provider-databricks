@@ -171,6 +171,10 @@ type Setting struct {
 	// Effective setting value for string type setting. This is the final
 	// effective value of setting. To set a value use string_val.
 	EffectiveStringVal types.Object `tfsdk:"effective_string_val"`
+	// Effective setting value for the workspace_dashboard_theme setting. This
+	// is the final effective value of the setting. To set a value, use
+	// workspace_dashboard_theme.
+	EffectiveWorkspaceDashboardTheme types.Object `tfsdk:"effective_workspace_dashboard_theme"`
 	// Effective setting value for workspace_label setting. This is the final
 	// effective value of setting. To set a value use workspace_label.
 	EffectiveWorkspaceLabel types.Object `tfsdk:"effective_workspace_label"`
@@ -193,6 +197,10 @@ type Setting struct {
 	// Setting value for string type setting. This is the setting value set by
 	// consumers, check effective_string_val for final setting value.
 	StringVal types.Object `tfsdk:"string_val"`
+	// Setting value for the workspace_dashboard_theme setting. This is the
+	// setting value set by consumers. Check effective_workspace_dashboard_theme
+	// for the final setting value.
+	WorkspaceDashboardTheme types.Object `tfsdk:"workspace_dashboard_theme"`
 	// Setting value for workspace_label setting. This is the setting value set
 	// by consumers, check effective_workspace_label for final setting value.
 	WorkspaceLabel types.Object `tfsdk:"workspace_label"`
@@ -225,12 +233,14 @@ func (m Setting) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Ty
 		"effective_personal_compute":                          reflect.TypeOf(settingsv2_tf.PersonalComputeMessage{}),
 		"effective_restrict_workspace_admins":                 reflect.TypeOf(settingsv2_tf.RestrictWorkspaceAdminsMessage{}),
 		"effective_string_val":                                reflect.TypeOf(settingsv2_tf.StringMessage{}),
+		"effective_workspace_dashboard_theme":                 reflect.TypeOf(settingsv2_tf.DashboardTheme{}),
 		"effective_workspace_label":                           reflect.TypeOf(settingsv2_tf.WorkspaceLabelMessage{}),
 		"integer_val":                                         reflect.TypeOf(settingsv2_tf.IntegerMessage{}),
 		"operational_email_custom_recipient":                  reflect.TypeOf(settingsv2_tf.OperationalEmailCustomRecipientMessage{}),
 		"personal_compute":                                    reflect.TypeOf(settingsv2_tf.PersonalComputeMessage{}),
 		"restrict_workspace_admins":                           reflect.TypeOf(settingsv2_tf.RestrictWorkspaceAdminsMessage{}),
 		"string_val":                                          reflect.TypeOf(settingsv2_tf.StringMessage{}),
+		"workspace_dashboard_theme":                           reflect.TypeOf(settingsv2_tf.DashboardTheme{}),
 		"workspace_label":                                     reflect.TypeOf(settingsv2_tf.WorkspaceLabelMessage{}),
 		"provider_config":                                     reflect.TypeOf(ProviderConfig{}),
 	}
@@ -262,6 +272,7 @@ func (m Setting) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"effective_personal_compute":                          m.EffectivePersonalCompute,
 			"effective_restrict_workspace_admins":                 m.EffectiveRestrictWorkspaceAdmins,
 			"effective_string_val":                                m.EffectiveStringVal,
+			"effective_workspace_dashboard_theme":                 m.EffectiveWorkspaceDashboardTheme,
 			"effective_workspace_label":                           m.EffectiveWorkspaceLabel,
 			"integer_val":                                         m.IntegerVal,
 			"name":                                                m.Name,
@@ -269,6 +280,7 @@ func (m Setting) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"personal_compute":                                    m.PersonalCompute,
 			"restrict_workspace_admins":                           m.RestrictWorkspaceAdmins,
 			"string_val":                                          m.StringVal,
+			"workspace_dashboard_theme":                           m.WorkspaceDashboardTheme,
 			"workspace_label":                                     m.WorkspaceLabel,
 
 			"provider_config": m.ProviderConfig,
@@ -297,6 +309,7 @@ func (m Setting) Type(ctx context.Context) attr.Type {
 			"effective_personal_compute":                          settingsv2_tf.PersonalComputeMessage{}.Type(ctx),
 			"effective_restrict_workspace_admins":                 settingsv2_tf.RestrictWorkspaceAdminsMessage{}.Type(ctx),
 			"effective_string_val":                                settingsv2_tf.StringMessage{}.Type(ctx),
+			"effective_workspace_dashboard_theme":                 settingsv2_tf.DashboardTheme{}.Type(ctx),
 			"effective_workspace_label":                           settingsv2_tf.WorkspaceLabelMessage{}.Type(ctx),
 			"integer_val":                                         settingsv2_tf.IntegerMessage{}.Type(ctx),
 			"name":                                                types.StringType,
@@ -304,6 +317,7 @@ func (m Setting) Type(ctx context.Context) attr.Type {
 			"personal_compute":                                    settingsv2_tf.PersonalComputeMessage{}.Type(ctx),
 			"restrict_workspace_admins":                           settingsv2_tf.RestrictWorkspaceAdminsMessage{}.Type(ctx),
 			"string_val":                                          settingsv2_tf.StringMessage{}.Type(ctx),
+			"workspace_dashboard_theme":                           settingsv2_tf.DashboardTheme{}.Type(ctx),
 			"workspace_label":                                     settingsv2_tf.WorkspaceLabelMessage{}.Type(ctx),
 
 			"provider_config": ProviderConfig{}.Type(ctx),
@@ -468,6 +482,15 @@ func (to *Setting) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Sett
 			}
 		}
 	}
+	if !from.EffectiveWorkspaceDashboardTheme.IsNull() && !from.EffectiveWorkspaceDashboardTheme.IsUnknown() {
+		if toEffectiveWorkspaceDashboardTheme, ok := to.GetEffectiveWorkspaceDashboardTheme(ctx); ok {
+			if fromEffectiveWorkspaceDashboardTheme, ok := from.GetEffectiveWorkspaceDashboardTheme(ctx); ok {
+				// Recursively sync the fields of EffectiveWorkspaceDashboardTheme
+				toEffectiveWorkspaceDashboardTheme.SyncFieldsDuringCreateOrUpdate(ctx, fromEffectiveWorkspaceDashboardTheme)
+				to.SetEffectiveWorkspaceDashboardTheme(ctx, toEffectiveWorkspaceDashboardTheme)
+			}
+		}
+	}
 	if !from.EffectiveWorkspaceLabel.IsNull() && !from.EffectiveWorkspaceLabel.IsUnknown() {
 		if toEffectiveWorkspaceLabel, ok := to.GetEffectiveWorkspaceLabel(ctx); ok {
 			if fromEffectiveWorkspaceLabel, ok := from.GetEffectiveWorkspaceLabel(ctx); ok {
@@ -519,6 +542,15 @@ func (to *Setting) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Sett
 				// Recursively sync the fields of StringVal
 				toStringVal.SyncFieldsDuringCreateOrUpdate(ctx, fromStringVal)
 				to.SetStringVal(ctx, toStringVal)
+			}
+		}
+	}
+	if !from.WorkspaceDashboardTheme.IsNull() && !from.WorkspaceDashboardTheme.IsUnknown() {
+		if toWorkspaceDashboardTheme, ok := to.GetWorkspaceDashboardTheme(ctx); ok {
+			if fromWorkspaceDashboardTheme, ok := from.GetWorkspaceDashboardTheme(ctx); ok {
+				// Recursively sync the fields of WorkspaceDashboardTheme
+				toWorkspaceDashboardTheme.SyncFieldsDuringCreateOrUpdate(ctx, fromWorkspaceDashboardTheme)
+				to.SetWorkspaceDashboardTheme(ctx, toWorkspaceDashboardTheme)
 			}
 		}
 	}
@@ -675,6 +707,14 @@ func (to *Setting) SyncFieldsDuringRead(ctx context.Context, from Setting) {
 			}
 		}
 	}
+	if !from.EffectiveWorkspaceDashboardTheme.IsNull() && !from.EffectiveWorkspaceDashboardTheme.IsUnknown() {
+		if toEffectiveWorkspaceDashboardTheme, ok := to.GetEffectiveWorkspaceDashboardTheme(ctx); ok {
+			if fromEffectiveWorkspaceDashboardTheme, ok := from.GetEffectiveWorkspaceDashboardTheme(ctx); ok {
+				toEffectiveWorkspaceDashboardTheme.SyncFieldsDuringRead(ctx, fromEffectiveWorkspaceDashboardTheme)
+				to.SetEffectiveWorkspaceDashboardTheme(ctx, toEffectiveWorkspaceDashboardTheme)
+			}
+		}
+	}
 	if !from.EffectiveWorkspaceLabel.IsNull() && !from.EffectiveWorkspaceLabel.IsUnknown() {
 		if toEffectiveWorkspaceLabel, ok := to.GetEffectiveWorkspaceLabel(ctx); ok {
 			if fromEffectiveWorkspaceLabel, ok := from.GetEffectiveWorkspaceLabel(ctx); ok {
@@ -723,6 +763,14 @@ func (to *Setting) SyncFieldsDuringRead(ctx context.Context, from Setting) {
 			}
 		}
 	}
+	if !from.WorkspaceDashboardTheme.IsNull() && !from.WorkspaceDashboardTheme.IsUnknown() {
+		if toWorkspaceDashboardTheme, ok := to.GetWorkspaceDashboardTheme(ctx); ok {
+			if fromWorkspaceDashboardTheme, ok := from.GetWorkspaceDashboardTheme(ctx); ok {
+				toWorkspaceDashboardTheme.SyncFieldsDuringRead(ctx, fromWorkspaceDashboardTheme)
+				to.SetWorkspaceDashboardTheme(ctx, toWorkspaceDashboardTheme)
+			}
+		}
+	}
 	if !from.WorkspaceLabel.IsNull() && !from.WorkspaceLabel.IsUnknown() {
 		if toWorkspaceLabel, ok := to.GetWorkspaceLabel(ctx); ok {
 			if fromWorkspaceLabel, ok := from.GetWorkspaceLabel(ctx); ok {
@@ -753,6 +801,7 @@ func (m Setting) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBu
 	attrs["effective_personal_compute"] = attrs["effective_personal_compute"].SetOptional()
 	attrs["effective_restrict_workspace_admins"] = attrs["effective_restrict_workspace_admins"].SetOptional()
 	attrs["effective_string_val"] = attrs["effective_string_val"].SetComputed()
+	attrs["effective_workspace_dashboard_theme"] = attrs["effective_workspace_dashboard_theme"].SetComputed()
 	attrs["effective_workspace_label"] = attrs["effective_workspace_label"].SetOptional()
 	attrs["integer_val"] = attrs["integer_val"].SetOptional()
 	attrs["name"] = attrs["name"].SetOptional()
@@ -760,6 +809,7 @@ func (m Setting) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBu
 	attrs["personal_compute"] = attrs["personal_compute"].SetOptional()
 	attrs["restrict_workspace_admins"] = attrs["restrict_workspace_admins"].SetOptional()
 	attrs["string_val"] = attrs["string_val"].SetOptional()
+	attrs["workspace_dashboard_theme"] = attrs["workspace_dashboard_theme"].SetOptional()
 	attrs["workspace_label"] = attrs["workspace_label"].SetOptional()
 
 	attrs["name"] = attrs["name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
@@ -1195,6 +1245,31 @@ func (m *Setting) SetEffectiveStringVal(ctx context.Context, v settingsv2_tf.Str
 	m.EffectiveStringVal = vs
 }
 
+// GetEffectiveWorkspaceDashboardTheme returns the value of the EffectiveWorkspaceDashboardTheme field in Setting as
+// a settingsv2_tf.DashboardTheme value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *Setting) GetEffectiveWorkspaceDashboardTheme(ctx context.Context) (settingsv2_tf.DashboardTheme, bool) {
+	var e settingsv2_tf.DashboardTheme
+	if m.EffectiveWorkspaceDashboardTheme.IsNull() || m.EffectiveWorkspaceDashboardTheme.IsUnknown() {
+		return e, false
+	}
+	var v settingsv2_tf.DashboardTheme
+	d := m.EffectiveWorkspaceDashboardTheme.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetEffectiveWorkspaceDashboardTheme sets the value of the EffectiveWorkspaceDashboardTheme field in Setting.
+func (m *Setting) SetEffectiveWorkspaceDashboardTheme(ctx context.Context, v settingsv2_tf.DashboardTheme) {
+	vs := v.ToObjectValue(ctx)
+	m.EffectiveWorkspaceDashboardTheme = vs
+}
+
 // GetEffectiveWorkspaceLabel returns the value of the EffectiveWorkspaceLabel field in Setting as
 // a settingsv2_tf.WorkspaceLabelMessage value.
 // If the field is unknown or null, the boolean return value is false.
@@ -1343,6 +1418,31 @@ func (m *Setting) GetStringVal(ctx context.Context) (settingsv2_tf.StringMessage
 func (m *Setting) SetStringVal(ctx context.Context, v settingsv2_tf.StringMessage) {
 	vs := v.ToObjectValue(ctx)
 	m.StringVal = vs
+}
+
+// GetWorkspaceDashboardTheme returns the value of the WorkspaceDashboardTheme field in Setting as
+// a settingsv2_tf.DashboardTheme value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *Setting) GetWorkspaceDashboardTheme(ctx context.Context) (settingsv2_tf.DashboardTheme, bool) {
+	var e settingsv2_tf.DashboardTheme
+	if m.WorkspaceDashboardTheme.IsNull() || m.WorkspaceDashboardTheme.IsUnknown() {
+		return e, false
+	}
+	var v settingsv2_tf.DashboardTheme
+	d := m.WorkspaceDashboardTheme.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetWorkspaceDashboardTheme sets the value of the WorkspaceDashboardTheme field in Setting.
+func (m *Setting) SetWorkspaceDashboardTheme(ctx context.Context, v settingsv2_tf.DashboardTheme) {
+	vs := v.ToObjectValue(ctx)
+	m.WorkspaceDashboardTheme = vs
 }
 
 // GetWorkspaceLabel returns the value of the WorkspaceLabel field in Setting as

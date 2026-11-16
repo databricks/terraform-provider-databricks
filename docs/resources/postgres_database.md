@@ -8,7 +8,49 @@ subcategory: "Postgres"
 
 ### Lakebase Autoscaling Terraform Behavior
 
-This resource uses Lakebase Autoscaling Terraform semantics. For complete details on how spec/status fields work, drift detection behavior, and state management requirements, see the `databricks_postgres_project` resource documentation.
+These resources use a spec/status model: the `spec` field defines the resource configuration Terraform manages, and `status` reports the resource's current state.
+
+Provider versions without drift detection do not detect changes made through the UI, CLI, or API. They apply updates based on changes to your Terraform configuration.
+
+With a provider version that supports drift detection, `terraform plan` detects changes to managed `spec` fields made outside Terraform.
+
+For help resolving provider inconsistency errors or recovering from a partially completed apply, see [Terraform state and drift detection for Lakebase](https://docs.databricks.com/aws/en/oltp/projects/terraform-state-and-drift). Use shared Terraform state storage when collaborating on the same resources.
+
+### Upgrading to a Provider with Drift Detection
+
+When upgrading from a provider version without drift detection to one that supports it, follow the steps below to resolve initial or persistent diffs.
+
+Prefer a complete `spec` that describes the resource's full desired configuration. The examples below show the minimal valid specs for an existing resource, not the recommended end state.
+
+#### Replace a Null Spec
+
+Null specs can produce persistent differences against the object returned during refresh; repeated applies do not resolve those differences.
+
+For an existing Database, replace `spec = null` with a spec containing its current owner Role:
+
+```hcl
+spec = {
+  role = "projects/my-project/branches/dev/roles/app-owner"
+}
+```
+
+Use the current owner's full Role resource name from the same Branch to preserve ownership. The Terraform schema requires `role` inside a non-null Database spec, so an empty object is insufficient. Specifying another Role transfers ownership.
+
+Include `postgres_database` if you intend Terraform to manage the Postgres name; otherwise the existing name is preserved. Review and apply the plan, then run `terraform plan` again.
+
+#### Reconcile an Initial Diff with an Existing Spec
+
+A Database created before Lakebase supported drift detection can show an initial in-place update even when its current values already match your configured spec. Review the plan against your intended configuration. Apply the reviewed plan, then run `terraform plan` again.
+
+#### Resolve a Persistent Diff
+
+If differences remain after applying, follow the [shared reconciliation steps](https://docs.databricks.com/aws/en/oltp/projects/terraform-state-and-drift#reconcile-existing-resources-after-rollout) to choose between the values in your configuration and the current values returned by Lakebase, then review the resulting plan.
+
+### Import limitations
+
+See [Import](#import) for import commands.
+
+Include `role` in the imported Database's spec. Use the current owner's full Role resource name to preserve ownership.
 
 ### Overview
 
@@ -33,16 +75,20 @@ Databases exist within the Lakebase Autoscaling resource hierarchy:
 
 A database named `databricks-postgres` (Postgres name `databricks_postgres`) is implicitly created on every branch. Since Terraform is declarative, managing an already-existing resource requires `replace_existing = true`: it lets Terraform represent the implicitly created database in Terraform state and immediately apply the provided configuration to it.
 
-`replace_existing = true` only affects the initial adoption. Once the database is in Terraform state, it is managed like any other resource: removing it from your configuration and applying **deletes the actual database** (and its data), not just the state entry. This is unlike `databricks_postgres_branch`, whose deletion is instead controlled by its parent project. To stop managing the database without deleting it, remove it from state with `terraform state rm` before removing it from your configuration.
+`replace_existing = true` only affects the initial adoption. After the database is in Terraform state, it is managed like any other resource: removing it from your configuration and running `terraform apply` **deletes the actual database** (and its data), not just the state entry. This is unlike the implicitly created root Branch, whose deletion is controlled by its parent Project. To stop managing the database without deleting it, remove it from state with `terraform state rm` before removing it from your configuration.
 
-`spec.role` is optional: omit it to keep the database's existing owner (as shown below). When you do set it — to change ownership — it must reference a role in the same branch, written as `<branch-name>/roles/<role_id>`.
+Include `spec.role` in a non-null Terraform spec. To preserve ownership, use the current owner's full Role resource name from the same branch, written as `<branch-name>/roles/<role_id>`.
 
 ```hcl
 resource "databricks_postgres_project" "this" {
-  project_id = "my-project"
+  project_id      = "my-project"
   spec = {
     pg_version   = 17
     display_name = "My Project"
+  }
+
+  lifecycle {
+    prevent_destroy = true
   }
 }
 
@@ -60,7 +106,7 @@ resource "databricks_postgres_database" "databricks_postgres" {
   parent      = databricks_postgres_branch.production.name
   spec = {
     postgres_database = "databricks_postgres"
-    # spec.role is omitted, so the database keeps its existing owner. Set it only to change ownership.
+    role              = "projects/my-project/branches/production/roles/jane-doe" # Current owner.
   }
   replace_existing = true
 }
@@ -87,7 +133,7 @@ resource "databricks_postgres_database" "inherited" {
   parent      = databricks_postgres_branch.child.name
   spec = {
     postgres_database = "databricks_postgres"
-    # spec.role is omitted, so the database keeps the owner inherited from the source branch.
+    role              = "${databricks_postgres_branch.child.name}/roles/jane-doe" # Current owner on the child branch.
   }
   replace_existing = true
 }
@@ -95,7 +141,7 @@ resource "databricks_postgres_database" "inherited" {
 
 ### Database Owned by a Specific Role
 
-Assign ownership to a role you manage alongside the database. The Postgres database will be created with the specified role as its owner.
+`spec.role` is required when creating a database and must reference a role in the same branch.
 
 ```hcl
 resource "databricks_postgres_role" "app_owner" {
@@ -127,6 +173,7 @@ resource "databricks_postgres_database" "analytics" {
   spec = {
     # Rename from "analytics_v1" to "analytics_v2" in Postgres by updating this field
     postgres_database = "analytics_v2"
+    role              = "projects/my-project/branches/main/roles/app-owner" # Current owner.
   }
 }
 ```
@@ -155,9 +202,9 @@ For example:
 ```hcl
 resource "databricks_postgres_role" "schema_owner" {
   role_id = "schemamigrator"
-  parent  = databricks_postgres_branch.test.name  # previously created branch, omitted for compactness
+  parent  = databricks_postgres_branch.test.name # previously created branch, omitted for compactness
   spec = {
-    postgres_role = "schemamigrator"
+    postgres_role    = "schemamigrator"
     membership_roles = ["DATABRICKS_SUPERUSER"]
   }
 }
@@ -178,8 +225,8 @@ resource "databricks_postgres_database" "application2" {
     postgres_database = "application2"
     role              = databricks_postgres_role.schema_owner.name
   }
-  
-  depends_on = [ databricks_postgres_database.application1 ]
+
+  depends_on = [databricks_postgres_database.application1]
 }
 ```
 
@@ -190,7 +237,11 @@ The following arguments are supported:
   Format: projects/{project_id}/branches/{branch_id}
 * `replace_existing` (boolean, optional) - If true, update the database if it already exists instead of returning an
   error
-* `spec` (DatabaseDatabaseSpec, optional) - The desired state of the Database
+* `spec` (DatabaseDatabaseSpec, optional) - The desired state of the Database.
+  
+  Read the resource's current values from `status`, rather than `spec`.
+  `spec` tracks field ownership for infrastructure-as-code tools and may omit
+  unmanaged fields
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 
 ### ProviderConfig
@@ -202,7 +253,7 @@ The following arguments are supported:
   
   To change the owner, pass valid existing Role name when updating the Database
   
-  A database always has an owner
+  Required when creating the Database
 * `postgres_database` (string, optional) - The name of the Postgres database.
   
   This expects a valid Postgres identifier as specified in the link below.

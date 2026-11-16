@@ -22,11 +22,9 @@ This example creates a secret in Unity Catalog:
 resource "databricks_secret_uc" "example" {
   catalog_name = "my_catalog"
   schema_name  = "my_schema"
-  secret {
-    name    = "my_secret"
-    value   = "secret_value"
-    comment = "My secret for external service authentication"
-  }
+  name         = "my_secret"
+  value        = "secret_value"
+  comment      = "My secret for external service authentication"
 }
 ```
 

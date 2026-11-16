@@ -1237,7 +1237,7 @@ func (m CleanRoomAssetNotebook) ApplySchemaCustomizations(attrs map[string]tfsch
 	attrs["description"] = attrs["description"].SetOptional()
 	attrs["environment_version"] = attrs["environment_version"].SetOptional()
 	attrs["etag"] = attrs["etag"].SetComputed()
-	attrs["notebook_content"] = attrs["notebook_content"].SetRequired()
+	attrs["notebook_content"] = attrs["notebook_content"].SetOptional()
 	attrs["review_state"] = attrs["review_state"].SetComputed()
 	attrs["reviews"] = attrs["reviews"].SetComputed()
 	attrs["runner_collaborator_aliases"] = attrs["runner_collaborator_aliases"].SetOptional()

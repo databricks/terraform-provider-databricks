@@ -317,6 +317,8 @@ func ResourcePipeline() common.Resource {
 				LatestUpdates:   readPipeline.LatestUpdates,
 				RunAsUserName:   readPipeline.RunAsUserName,
 				State:           readPipeline.State,
+				// This update precondition is input-only; GET does not return it.
+				ExpectedLastModified: int64(d.Get("expected_last_modified").(int)),
 				// Provides the URL to the pipeline in the Databricks UI.
 				URL: c.FormatURL("#joblist/pipelines/", d.Id()),
 			}

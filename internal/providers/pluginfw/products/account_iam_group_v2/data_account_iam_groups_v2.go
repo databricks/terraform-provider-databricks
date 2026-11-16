@@ -28,14 +28,14 @@ func DataSourceGroups() datasource.DataSource {
 // GroupsData extends the main model with additional fields.
 type GroupsData struct {
 	AccountIamV2 types.List `tfsdk:"groups"`
-	// Optional. Allows filtering groups by group name or external id.
+	// Filters groups by `group_name` or `external_id`, for example `group_name
+	// eq "Data engineers"`. Put the value in quotes.
 	Filter types.String `tfsdk:"filter"`
-	// The maximum number of groups to return. The service may return fewer than
-	// this value. If not provided, defaults to 1000, which is also the maximum
-	// allowed. Requests for more than the maximum are clamped to 1000.
+	// The maximum number of groups to return, up to 1000. The default is 1000.
+	// A page can contain fewer groups.
 	PageSize types.Int64 `tfsdk:"page_size"`
-	// The parent resource name of the account whose groups to list. Format:
-	// accounts/{account_id}
+	// The resource name of the account to list groups in, in the format
+	// `accounts/{account_id}`.
 	Parent types.String `tfsdk:"parent"`
 }
 

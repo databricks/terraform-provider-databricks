@@ -35,18 +35,21 @@ The following arguments are supported:
 
 ## Attributes
 The following attributes are exported:
-* `catalog_id` (string) - The part of the name, chosen by the user when the resource was created
+* `catalog_id` (string) - The ID chosen when the catalog was created, which is also its name in Unity Catalog. It is the
+  last segment of the name field
 * `create_time` (string) - A timestamp indicating when the catalog was created
 * `name` (string) - Output only. The full resource path of the catalog.
   
   Format: "catalogs/{catalog_id}"
-* `spec` (CatalogCatalogSpec) - The desired state of the Catalog
+* `spec` (CatalogCatalogSpec) - The desired state of the Catalog. The catalog has no update method, so the spec is fixed when
+  the catalog is created
 * `status` (CatalogCatalogStatus) - The observed state of the Catalog
-* `uid` (string) - System-generated unique identifier for the catalog
+* `uid` (string) - The immutable UUID that identifies the catalog, assigned when the catalog is created
 * `update_time` (string) - A timestamp indicating when the catalog was last updated
 
 ### CatalogCatalogSpec
-* `branch` (string) - The resource path of the branch associated with the catalog.
+* `branch` (string) - The resource path of the branch that holds the Postgres database. The branch must have a
+  read-write compute endpoint.
   
   Format: projects/{project_id}/branches/{branch_id}
 * `create_database_if_missing` (boolean) - If set to true, the specified postgres_database is created on behalf of the calling user
@@ -56,6 +59,7 @@ The following attributes are exported:
   Defaults to false, meaning that the request fails if the specified postgres_database does not already exist
 * `postgres_database` (string) - The name of the Postgres database inside the specified Lakebase project and branch to be associated with the UC catalog.
   This database must already exist, unless create_database_if_missing is set to true on creation.
+  The system databases postgres, databricks_system, template0 and template1 cannot be registered.
   
   A database can only be registered with one UC catalog at a time.
   To re-register a database with a different catalog, the existing catalog must be deleted first.

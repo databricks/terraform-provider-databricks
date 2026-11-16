@@ -28,8 +28,9 @@ The following arguments are supported:
 * `name` (string, required) - Resource name of the model service.
   Format: `model-services/{catalog}.{schema}.{model_service}`.
   Each `{...}` component is capped at 255 characters individually.
-  Server-derived on Create from `parent` +
-  `model_service_id`; required and immutable on Update/Get/Delete
+  The server derives the name on Create from
+  `parent` and `model_service_id`; it is required and immutable on Update,
+  Get, and Delete
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 
 ### ProviderConfig
@@ -42,24 +43,25 @@ The following attributes are exported:
   Required on Create. On Update, provide this field when `update_mask`
   contains `config` or one of its subpaths
 * `create_time` (string) - Time the model service was created
-* `created_by` (string) - Creator identity
-* `effective_owner` (string) - Owner of the model service
+* `created_by` (string) - Username of the user who created the model service
+* `effective_owner` (string) - Username or group name of the model service owner
 * `etag` (string) - Optimistic concurrency token returned on every read. To make an Update or
   Delete conditional, pass the last-read value in that request's `etag`
   field. In REST responses, this value is a base64 string; URL-encode it when
   setting the `etag` query parameter
-* `metastore_id` (string) - Metastore hosting the model service
+* `metastore_id` (string) - Unique identifier of the metastore that contains the model service
 * `name` (string) - Resource name of the model service.
   Format: `model-services/{catalog}.{schema}.{model_service}`.
   Each `{...}` component is capped at 255 characters individually.
-  Server-derived on Create from `parent` +
-  `model_service_id`; required and immutable on Update/Get/Delete
+  The server derives the name on Create from
+  `parent` and `model_service_id`; it is required and immutable on Update,
+  Get, and Delete
 * `supported_api_types` (list of string) - API types supported across this service's destinations, such as
   `openai/v1/chat/completions`, `openai/v1/embeddings`, and
   `mlflow/v1/chat/completions`. Derived from the backing models and providers
   at read time
 * `update_time` (string) - Time the model service was last modified
-* `updated_by` (string) - Identity of the last updater
+* `updated_by` (string) - Username of the user who last updated the model service
 
 ### InferenceTableConfig
 * `is_deleted` (boolean) - Whether the referenced inference table has been deleted. The configuration
@@ -68,7 +70,7 @@ The following attributes are exported:
 * `parent` (string) - Parent Unity Catalog schema where the inference table is created, in the
   form `schemas/{catalog}.{schema}`. Required when configuring an inference
   table. After the inference table is created, this field cannot be changed
-* `table` (string) - Resolved UC table for payload logs.
+* `table` (string) - Resource name of the Unity Catalog table that receives the payload logs.
   Format: `tables/{catalog}.{schema}.{table}`
 * `table_name_prefix` (string) - Prefix used to form the inference table's registered name. AI Gateway
   appends `_payload`; for example, `table_name_prefix = "orders"` creates
@@ -93,9 +95,11 @@ The following attributes are exported:
   each are allowed
 
 ### ModelServiceConfig
-* `inference_table` (InferenceTableConfig) - Inference table configuration for payload logging
+* `inference_table` (InferenceTableConfig) - Configuration for logging request and response payloads to a Unity
+  Catalog inference table. Omit this field to leave payload logging off
 * `rate_limits` (list of RateLimit) - Rate limits applied to requests routed through this model service
-* `routing` (ModelServiceConfigRoutingConfig) - Routing configuration: destinations and fallback
+* `routing` (ModelServiceConfigRoutingConfig) - Routing configuration: the primary destinations that receive traffic and
+  the fallback destinations tried when a primary destination fails
 
 ### ModelServiceConfigDestinationConfig
 * `destination_type` (string) - Backing-model category. Provide the matching type-specific configuration
@@ -105,7 +109,9 @@ The following attributes are exported:
   been deleted. The destination remains visible so you can identify the
   broken dependency. Requests cannot use this destination until the backing
   resource is restored or the destination is replaced
-* `name` (string) - User-facing label for this destination, used in routing references
+* `name` (string) - Label that identifies this destination. Names are compared
+  case-insensitively and must be unique within the primary destinations and
+  within the fallback destinations
 * `pay_per_token_config` (ModelServiceConfigPayPerTokenConfig) - Configuration for a pay-per-token Databricks foundation model
 * `provisioned_throughput_config` (ModelServiceConfigProvisionedThroughputConfig) - Configuration for a provisioned-throughput Databricks foundation model
 * `traffic_percentage` (integer) - Percentage of primary traffic sent to this destination, from 0 to 100.
@@ -115,9 +121,7 @@ The following attributes are exported:
 
 ### ModelServiceConfigExternalModelConfig
 * `model_provider_service` (string) - Resource name of the governed ModelProviderService that owns provider
-  auth and provider-specific configuration. The referenced
-  ModelProviderService also carries the provider type, so this message
-  does not surface it directly.
+  auth and provider-specific configuration.
   Format: `model-provider-services/{catalog}.{schema}.{model_provider_service}`.
   Each `{...}` component is capped at 255 characters individually
 * `target` (ModelProviderServiceConfigModelTargetConfig) - Routing target for the destination: the provider-side model selected from
@@ -128,13 +132,14 @@ The following attributes are exported:
 * `destinations` (list of ModelServiceConfigDestinationConfig) - Fallback destinations, tried in the listed order. At most 5 are allowed
 
 ### ModelServiceConfigPayPerTokenConfig
-* `model` (string) - Resource name of the Unity Catalog model.
-  Format: `models/{catalog}.{schema}.{model}`
+* `model` (string) - Resource name of the Unity Catalog foundation model. Pay-per-token
+  foundation models live in the `system.ai` schema, so the name has the
+  form `models/system.ai.{model}`
 
 ### ModelServiceConfigProvisionedThroughputConfig
-* `model` (string) - UC model FQN of the model served by the backing endpoint (e.g.,
-  `system.ai.databricks-claude-opus-4-6`). Resolved from Model Serving at
-  Create/Update time
+* `model` (string) - Resource name of the Unity Catalog model served by the backing endpoint,
+  in the form `models/{catalog}.{schema}.{model}`. Resolved from Model
+  Serving when the model service is created or updated
 * `model_serving_endpoint` (string) - Name of the backing Model Serving endpoint serving the provisioned-
   throughput foundation model, in the form `serving-endpoints/{name}`. The
   same Unity Catalog model can be served on multiple Model Serving endpoints
@@ -157,7 +162,7 @@ The following attributes are exported:
 * `principal` (string) - Principal this limit applies to: user email, group name, or service
   principal application ID. Required when `key` applies to a user, group, or
   service principal; otherwise it must be unset
-* `renewal_period` (string) - Renewal period. Possible values are: `RATE_LIMIT_RENEWAL_PERIOD_HOUR`, `RATE_LIMIT_RENEWAL_PERIOD_MINUTE`
+* `renewal_period` (string) - Interval after which the request and token counters reset. Possible values are: `RATE_LIMIT_RENEWAL_PERIOD_HOUR`, `RATE_LIMIT_RENEWAL_PERIOD_MINUTE`
 * `requests` (integer) - Maximum requests allowed in one renewal period. Leave unset for no request
   limit. Set to `0` to deny all requests
 * `tokens` (integer) - Maximum tokens allowed in one renewal period. Leave unset for no token

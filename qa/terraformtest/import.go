@@ -6,8 +6,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
-
-	"github.com/databricks/terraform-provider-databricks/qa/httpfixture"
 )
 
 // importStep makes state ownership explicit: persistent imports adopt resources
@@ -58,7 +56,7 @@ func (s step) validateImport(hasPriorState bool) error {
 // configureImport delegates CLI execution to HashiCorp. Persist selects the
 // journey's working directory; false selects a separate directory whose imported
 // state is discarded without replacing the journey's state.
-func configureImport(native *resource.TestStep, definition importStep, handler *httpfixture.Handler) error {
+func configureImport(native *resource.TestStep, definition importStep, handler stepHTTP) error {
 	// Native import installs raw configuration without the normal apply-time
 	// provider-requirements injection, so supply the canonical provider address.
 	hcl, err := checkpointConfig(native.Config)

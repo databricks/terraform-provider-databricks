@@ -29,10 +29,8 @@ func DataSourceIndexes() datasource.DataSource {
 // IndexesData extends the main model with additional fields.
 type IndexesData struct {
 	AiSearch types.List `tfsdk:"indexes"`
-	// Best-effort upper bound on the number of results to return. Honored as an
-	// upper bound by the shim: `page_size` only narrows the legacy backend's
-	// response, never widens it, so the practical cap is `min(page_size,
-	// legacy_fixed_page_size)`.
+	// Maximum number of indexes to return. When unset, every index on the
+	// endpoint is returned.
 	PageSize types.Int64 `tfsdk:"page_size"`
 	// The Endpoint that owns this collection of indexes. Format:
 	// `workspaces/{workspace_id}/endpoints/{endpoint_id}`

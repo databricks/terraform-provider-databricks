@@ -29,16 +29,15 @@ func DataSourceServicePrincipals() datasource.DataSource {
 // ServicePrincipalsData extends the main model with additional fields.
 type ServicePrincipalsData struct {
 	WorkspaceIamV2 types.List `tfsdk:"service_principals"`
-	// Optional. Allows filtering service principals by application id or
-	// external id.
+	// Filters service principals by `application_id` or `external_id`, for
+	// example `application_id eq "<application-id>"`. Put the value in quotes.
 	Filter types.String `tfsdk:"filter"`
-	// The maximum number of SPs to return. The service may return fewer than
-	// this value. If not provided, defaults to 1000, which is also the maximum
-	// allowed. Requests for more than the maximum are clamped to 1000.
+	// The maximum number of service principals to return, up to 1000. The
+	// default is 1000. A page can contain fewer service principals.
 	PageSize types.Int64 `tfsdk:"page_size"`
-	// The resource name of the account to list service principals in,
-	// `accounts/{account_id}`. Optional: defaults to the account of the calling
-	// workspace, and any other account is rejected.
+	// The resource name of the account to list service principals in, in the
+	// format `accounts/{account_id}`. Defaults to the account that contains
+	// this workspace. Any other account is rejected.
 	Parent             types.String `tfsdk:"parent"`
 	ProviderConfigData types.Object `tfsdk:"provider_config"`
 }

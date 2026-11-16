@@ -29,15 +29,15 @@ func DataSourceUsers() datasource.DataSource {
 // UsersData extends the main model with additional fields.
 type UsersData struct {
 	WorkspaceIamV2 types.List `tfsdk:"users"`
-	// Optional. Allows filtering users by username or external id.
+	// Filters users by `username` or `external_id`, for example `username eq
+	// "someone@example.com"`. Put the value in quotes.
 	Filter types.String `tfsdk:"filter"`
-	// The maximum number of users to return. The service may return fewer than
-	// this value. If not provided, defaults to 1000, which is also the maximum
-	// allowed. Requests for more than the maximum are clamped to 1000.
+	// The maximum number of users to return, up to 1000. The default is 1000. A
+	// page can contain fewer users.
 	PageSize types.Int64 `tfsdk:"page_size"`
-	// The resource name of the account to list users in,
-	// `accounts/{account_id}`. Optional: defaults to the account of the calling
-	// workspace, and any other account is rejected.
+	// The resource name of the account to list users in, in the format
+	// `accounts/{account_id}`. Defaults to the account that contains this
+	// workspace. Any other account is rejected.
 	Parent             types.String `tfsdk:"parent"`
 	ProviderConfigData types.Object `tfsdk:"provider_config"`
 }

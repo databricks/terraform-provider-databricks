@@ -1,35 +1,58 @@
+# HTTP responses recorded from Databricks; checkpoint generated from replay.
 version: 1
 host_metadata:
-  workspace_id: "12345"
+    account_id: replay-account
+    cloud_provider: aws
+    host_type: workspace
+    oidc_endpoint: https://example.databricks.com/oidc
+    token_federation_default_oidc_audiences:
+        - https://example.databricks.com/oidc/v1/token
+    workspace_id: "12345"
 initial_state:
-  checkpoint: checkpoints/group.tfstate
+    checkpoint: checkpoints/rejected_update.tfstate
+recording:
+    initial_state_template: |
+        resource "databricks_group" "this" {
+          display_name = "terraform-recorder-initial-state-example"
+        }
 steps:
-  - name: reject_reserved_name
-    config: |
-      provider "databricks" {}
-      resource "databricks_group" "this" {
-        display_name = "admins"
-      }
-    expect_error: 'expected display_name to not be any of'
-    calls: []
+    - name: reject_reserved_name
+      config: |
+        provider "databricks" {}
+        resource "databricks_group" "this" {
+          display_name = "admins"
+        }
+      expect_error: 'expected display_name to not be any of'
+      calls: []
 destroy:
-  calls:
-    - request:
-        method: GET
-        path: /api/2.0/preview/scim/v2/Groups/group-id
-        query:
-          attributes: ["displayName,externalId,entitlements"]
-        body: null
-      response:
-        status: 200
-        body:
-          json:
-            id: group-id
-            displayName: Example group
-    - request:
-        method: DELETE
-        path: /api/2.0/preview/scim/v2/Groups/group-id
-        body: null
-      response:
-        status: 204
-        body: null
+    calls:
+        - request:
+            method: GET
+            path: /api/2.0/preview/scim/v2/Groups/2121049210112083
+            query:
+                attributes:
+                    - displayName,externalId,entitlements
+            headers:
+                Content-Type: application/scim+json; charset=utf-8
+            body: null
+          response:
+            status: 200
+            headers:
+                Content-Type: application/json
+            body:
+                json:
+                    displayName: terraform-recorder-initial-state-example
+                    id: "2121049210112083"
+                    schemas:
+                        - urn:ietf:params:scim:schemas:core:2.0:Group
+        - request:
+            method: DELETE
+            path: /api/2.0/preview/scim/v2/Groups/2121049210112083
+            headers:
+                Content-Type: application/scim+json; charset=utf-8
+            body: null
+          response:
+            status: 204
+            headers:
+                Content-Type: application/json
+            body: null

@@ -25,6 +25,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
+// The notification destinations that receive access requests for a Unity
+// Catalog securable. A securable without destinations of its own uses its
+// owner's email when default owner email destinations are on; otherwise it
+// inherits the destinations of its nearest parent that has any.
 type AccessRequestDestinations_SdkV2 struct {
 	// Indicates whether any destinations are hidden from the caller due to a
 	// lack of permissions. This value is true if the caller does not have
@@ -36,14 +40,12 @@ type AccessRequestDestinations_SdkV2 struct {
 	DestinationSourceSecurable types.List `tfsdk:"destination_source_securable"`
 	// The access request destinations for the securable.
 	Destinations types.Set `tfsdk:"destinations"`
-	// The full name of the securable. Redundant with the name in the securable
-	// object, but necessary for Terraform integration
+	// The full name of the securable, repeated from **securable**.
 	FullName types.String `tfsdk:"full_name"`
 	// The securable for which the access request destinations are being
 	// modified or read.
 	Securable types.List `tfsdk:"securable"`
-	// The type of the securable. Redundant with the type in the securable
-	// object, but necessary for Terraform integration
+	// The type of the securable, repeated from **securable** as a plain string.
 	SecurableType types.String `tfsdk:"securable_type"`
 }
 
@@ -2340,8 +2342,8 @@ type AwsSqsQueue_SdkV2 struct {
 	// Unique identifier included in the name of file events managed cloud
 	// resources.
 	ManagedResourceId types.String `tfsdk:"managed_resource_id"`
-	// The AQS queue url in the format
-	// https://sqs.{region}.amazonaws.com/{account id}/{queue name}. Only
+	// The SQS queue URL in the format
+	// `https://sqs.{region}.amazonaws.com/{account id}/{queue name}`. Only
 	// required for provided_sqs.
 	QueueUrl types.String `tfsdk:"queue_url"`
 }
@@ -2698,8 +2700,8 @@ type AzureQueueStorage_SdkV2 struct {
 	// Unique identifier included in the name of file events managed cloud
 	// resources.
 	ManagedResourceId types.String `tfsdk:"managed_resource_id"`
-	// The AQS queue url in the format https://{storage
-	// account}.queue.core.windows.net/{queue name} Only required for
+	// The AQS queue URL in the format `https://{storage
+	// account}.queue.core.windows.net/{queue name}`. Only required for
 	// provided_aqs.
 	QueueUrl types.String `tfsdk:"queue_url"`
 	// Optional resource group for the queue, event grid subscription, and
@@ -2995,6 +2997,8 @@ func (m *BatchCreateAccessRequestsRequest_SdkV2) SetRequests(ctx context.Context
 	m.Requests = types.ListValueMust(t, vs)
 }
 
+// The access request destinations resolved for each principal and securable in
+// the batch.
 type BatchCreateAccessRequestsResponse_SdkV2 struct {
 	// The access request destinations for each securable object the principal
 	// requested.
@@ -3205,38 +3209,66 @@ func (m CancelRefreshResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// A catalog is the first layer of Unity Catalog's three-level namespace and
+// groups the schemas, tables, volumes, and other data assets under it. Catalogs
+// created through this API are standard catalogs, Delta Sharing catalogs
+// created from a share, or foreign catalogs that mirror a database behind a
+// connection to an external data source.
 type CatalogInfo_SdkV2 struct {
 	// Indicates whether the principal is limited to retrieving metadata for the
 	// associated object through the BROWSE privilege when include_browse is
 	// enabled in the request.
 	BrowseOnly types.Bool `tfsdk:"browse_only"`
-
+	// The server sets the catalog type from the create request. Catalogs
+	// created through this API are MANAGED_CATALOG (standard catalogs),
+	// DELTASHARING_CATALOG when created from a share with provider_name and
+	// share_name, or FOREIGN_CATALOG when created from a connection with
+	// connection_name. The remaining types are provisioned by Databricks.
 	CatalogType types.String `tfsdk:"catalog_type"`
 	// User-provided free-form text description.
 	Comment types.String `tfsdk:"comment"`
-	// The name of the connection to an external data source.
+	// Naming a connection to an external data source creates a foreign catalog
+	// that mirrors a database in that source, which requires ownership of or
+	// the CREATE FOREIGN CATALOG privilege on the connection.
+	// Connection-specific settings, such as the database to mirror, go in
+	// options. The connection cannot be changed after creation.
 	ConnectionName types.String `tfsdk:"connection_name"`
 	// Time at which this catalog was created, in epoch milliseconds.
 	CreatedAt types.Int64 `tfsdk:"created_at"`
 	// Username of catalog creator.
 	CreatedBy types.String `tfsdk:"created_by"`
-	// Custom maximum retention period in hours for the catalog
+	// Dropped objects in the catalog remain recoverable for this number of
+	// hours before they are permanently purged. The value applies to standard
+	// catalogs only, must be 0 or within the range allowed for the metastore,
+	// and is inherited by schemas and tables that do not set their own value.
 	CustomMaxRetentionHours types.Int64 `tfsdk:"custom_max_retention_hours"`
-
+	// Indicates the predictive optimization setting that is in effect for the
+	// catalog once inherited values are resolved.
 	EffectivePredictiveOptimizationFlag types.List `tfsdk:"effective_predictive_optimization_flag"`
-	// Whether predictive optimization should be enabled for this object and
-	// objects under it.
+	// Whether predictive optimization is enabled for this catalog and the
+	// objects under it. Valid values are ENABLE, DISABLE, and INHERIT, where
+	// INHERIT applies the account-level setting. Standard catalogs start as
+	// INHERIT and other catalog types as DISABLE. It cannot be set when
+	// creating a catalog; use the update method instead.
 	EnablePredictiveOptimization types.String `tfsdk:"enable_predictive_optimization"`
 	// The full name of the catalog. Corresponds with the name field.
 	FullName types.String `tfsdk:"full_name"`
-	// Whether the current securable is accessible from all workspaces or a
-	// specific set of workspaces.
+	// Whether the catalog is accessible from all workspaces attached to the
+	// metastore (OPEN) or only from the workspaces bound to it (ISOLATED). It
+	// cannot be set when creating a catalog; change it with the update method
+	// and manage the bound workspaces with the workspace bindings API. See
+	// [Workspace-catalog binding].
+	//
+	// [Workspace-catalog binding]: https://docs.databricks.com/aws/en/catalogs/binding
 	IsolationMode types.String `tfsdk:"isolation_mode"`
-	// Control CMK encryption for managed catalog data
+	// Customer-managed key (CMK) settings control the encryption at rest of the
+	// catalog's managed data.
 	ManagedEncryptionSettings types.List `tfsdk:"managed_encryption_settings"`
 	// Unique identifier of parent metastore.
 	MetastoreId types.String `tfsdk:"metastore_id"`
-	// Name of catalog.
+	// The name of the catalog is stored in lowercase, can be at most 255
+	// characters long, and cannot contain periods, spaces, forward slashes, or
+	// control characters.
 	Name types.String `tfsdk:"name"`
 	// A map of key-value properties attached to the securable.
 	Options types.Map `tfsdk:"options"`
@@ -3244,20 +3276,28 @@ type CatalogInfo_SdkV2 struct {
 	Owner types.String `tfsdk:"owner"`
 	// A map of key-value properties attached to the securable.
 	Properties types.Map `tfsdk:"properties"`
-	// The name of delta sharing provider.
-	//
-	// A Delta Sharing catalog is a catalog that is based on a Delta share on a
-	// remote sharing server.
+	// The Delta Sharing provider that owns the share must be named here,
+	// together with share_name, to create a Delta Sharing catalog that exposes
+	// the data of the share on a remote sharing server. The provider cannot be
+	// changed after creation.
 	ProviderName types.String `tfsdk:"provider_name"`
-
+	// Indicates the provisioning status of the catalog. It is present only for
+	// catalogs that are provisioned asynchronously.
 	ProvisioningInfo types.List `tfsdk:"provisioning_info"`
-
+	// The securable type is always CATALOG for a catalog.
 	SecurableType types.String `tfsdk:"securable_type"`
-	// The name of the share under the share provider.
+	// The share under the Delta Sharing provider must be named here, together
+	// with provider_name, to create a Delta Sharing catalog. The share cannot
+	// be changed after creation.
 	ShareName types.String `tfsdk:"share_name"`
-	// Storage Location URL (full path) for managed tables within catalog.
+	// The server derives this full storage location URL for managed tables and
+	// volumes within the catalog from storage_root and the catalog ID.
 	StorageLocation types.String `tfsdk:"storage_location"`
-	// Storage root URL for managed tables within catalog.
+	// Managed tables and volumes in the catalog are stored under this storage
+	// root URL. The path must be inside an external location on which the
+	// caller has the CREATE MANAGED STORAGE privilege. If omitted, managed data
+	// is stored under the metastore's root storage location, which must then be
+	// configured. Delta Sharing catalogs cannot have a storage root.
 	StorageRoot types.String `tfsdk:"storage_root"`
 	// Time at which this catalog was last modified, in epoch milliseconds.
 	UpdatedAt types.Int64 `tfsdk:"updated_at"`
@@ -4095,9 +4135,11 @@ func (m *ColumnMaskOptions_SdkV2) SetUsing(ctx context.Context, v []FunctionArgu
 	m.Using = types.ListValueMust(t, vs)
 }
 
+// Mapping from a column of the source object to a column of the target object.
 type ColumnRelationship_SdkV2 struct {
+	// Name of the column in the source object.
 	Source types.String `tfsdk:"source"`
-
+	// Name of the column in the target object.
 	Target types.String `tfsdk:"target"`
 }
 
@@ -5104,6 +5146,11 @@ func (m CreateAccountsMetastore_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// A storage credential represents an authentication and authorization mechanism
+// for accessing data stored on your cloud tenant. It holds exactly one cloud
+// credential, for example an AWS IAM role, an Azure managed identity or service
+// principal, or a GCP service account. Only the field for the selected
+// credential type is set in requests and responses.
 type CreateAccountsStorageCredential_SdkV2 struct {
 	// The AWS IAM role configuration.
 	AwsIamRole types.List `tfsdk:"aws_iam_role"`
@@ -5428,26 +5475,42 @@ func (m *CreateAccountsStorageCredential_SdkV2) SetDatabricksGcpServiceAccount(c
 type CreateCatalog_SdkV2 struct {
 	// User-provided free-form text description.
 	Comment types.String `tfsdk:"comment"`
-	// The name of the connection to an external data source.
+	// Naming a connection to an external data source creates a foreign catalog
+	// that mirrors a database in that source, which requires ownership of or
+	// the CREATE FOREIGN CATALOG privilege on the connection.
+	// Connection-specific settings, such as the database to mirror, go in
+	// options. The connection cannot be changed after creation.
 	ConnectionName types.String `tfsdk:"connection_name"`
-	// Custom maximum retention period in hours for the catalog
+	// Dropped objects in the catalog remain recoverable for this number of
+	// hours before they are permanently purged. The value applies to standard
+	// catalogs only, must be 0 or within the range allowed for the metastore,
+	// and is inherited by schemas and tables that do not set their own value.
 	CustomMaxRetentionHours types.Int64 `tfsdk:"custom_max_retention_hours"`
-	// Control CMK encryption for managed catalog data
+	// Customer-managed key (CMK) settings control the encryption at rest of the
+	// catalog's managed data.
 	ManagedEncryptionSettings types.List `tfsdk:"managed_encryption_settings"`
-	// Name of catalog.
+	// The name of the catalog is stored in lowercase, can be at most 255
+	// characters long, and cannot contain periods, spaces, forward slashes, or
+	// control characters.
 	Name types.String `tfsdk:"name"`
 	// A map of key-value properties attached to the securable.
 	Options types.Map `tfsdk:"options"`
 	// A map of key-value properties attached to the securable.
 	Properties types.Map `tfsdk:"properties"`
-	// The name of delta sharing provider.
-	//
-	// A Delta Sharing catalog is a catalog that is based on a Delta share on a
-	// remote sharing server.
+	// The Delta Sharing provider that owns the share must be named here,
+	// together with share_name, to create a Delta Sharing catalog that exposes
+	// the data of the share on a remote sharing server. The provider cannot be
+	// changed after creation.
 	ProviderName types.String `tfsdk:"provider_name"`
-	// The name of the share under the share provider.
+	// The share under the Delta Sharing provider must be named here, together
+	// with provider_name, to create a Delta Sharing catalog. The share cannot
+	// be changed after creation.
 	ShareName types.String `tfsdk:"share_name"`
-	// Storage root URL for managed tables within catalog.
+	// Managed tables and volumes in the catalog are stored under this storage
+	// root URL. The path must be inside an external location on which the
+	// caller has the CREATE MANAGED STORAGE privilege. If omitted, managed data
+	// is stored under the metastore's root storage location, which must then be
+	// configured. Delta Sharing catalogs cannot have a storage root.
 	StorageRoot types.String `tfsdk:"storage_root"`
 }
 
@@ -6338,19 +6401,20 @@ type CreateExternalLocation_SdkV2 struct {
 	// whether the user explicitly set `enable_file_events`. Use this field
 	// instead of `file_event_queue` for reading the actual queue state.
 	EffectiveFileEventQueue types.List `tfsdk:"effective_file_event_queue"`
-	// Whether to enable file events on this external location. Default to
+	// Whether to enable file events on this external location. Defaults to
 	// `true`. Set to `false` to disable file events. The actual applied value
 	// may differ due to server-side defaults; check
 	// `effective_enable_file_events` for the effective state.
 	EnableFileEvents types.Bool `tfsdk:"enable_file_events"`
-
+	// Encryption options that apply to clients connecting to cloud storage.
 	EncryptionDetails types.List `tfsdk:"encryption_details"`
 	// Indicates whether fallback mode is enabled for this external location.
 	// When fallback mode is enabled, the access to the location falls back to
 	// cluster credentials if UC credentials are not sufficient.
 	Fallback types.Bool `tfsdk:"fallback"`
-	// File event queue settings. If `enable_file_events` is not `false`, must
-	// be defined and have exactly one of the documented properties.
+	// File event queue settings. When `enable_file_events` is `true`, exactly
+	// one of the queue options must be set. Must be omitted when
+	// `enable_file_events` is `false`.
 	FileEventQueue types.List `tfsdk:"file_event_queue"`
 	// Name of the external location.
 	Name types.String `tfsdk:"name"`
@@ -6359,7 +6423,8 @@ type CreateExternalLocation_SdkV2 struct {
 	// Skips validation of the storage credential associated with the external
 	// location.
 	SkipValidation types.Bool `tfsdk:"skip_validation"`
-	// Path URL of the external location.
+	// URL of the cloud storage path that the external location points to,
+	// including the scheme (for example `s3://`, `abfss://`, or `gs://`).
 	Url types.String `tfsdk:"url"`
 }
 
@@ -7512,7 +7577,9 @@ type CreateModelServiceRequest_SdkV2 struct {
 	// The model service to create. Do not set `name`; the server derives it
 	// from `parent` and `model_service_id`.
 	ModelService types.List `tfsdk:"model_service"`
-	// Name for the model service, e.g. "my_model_service".
+	// Name of the model service within the parent schema. The name must not
+	// contain periods, spaces, forward slashes, percent signs, or control
+	// characters, and it is stored in lowercase.
 	ModelServiceId types.String `tfsdk:"-"`
 	// Name of the parent schema. Format: `schemas/{catalog}.{schema}`. Each
 	// `{...}` component is capped at 255 characters individually.
@@ -8515,12 +8582,21 @@ func (m *CreateRegisteredModelRequest_SdkV2) SetAliases(ctx context.Context, v [
 	m.Aliases = types.ListValueMust(t, vs)
 }
 
+// A lineage relationship between a source object and a target object, where at
+// least one of the two is an external metadata object. The other object can be
+// a Unity Catalog table, a cloud storage path, a model version, or another
+// external metadata object. A relationship is identified by its source and
+// target; optional column mappings and key-value properties describe the data
+// flow between them.
 type CreateRequestExternalLineage_SdkV2 struct {
-	// List of column relationships between source and target objects.
+	// List of column relationships between source and target objects. The
+	// combined size of all source and target column names is limited.
 	Columns types.List `tfsdk:"columns"`
 	// Unique identifier of the external lineage relationship.
 	Id types.String `tfsdk:"id"`
 	// Key-value properties associated with the external lineage relationship.
+	// The combined length of all keys and values must not exceed 5000
+	// characters.
 	Properties types.Map `tfsdk:"properties"`
 	// Source object of the external lineage relationship.
 	Source types.List `tfsdk:"source"`
@@ -9699,7 +9775,12 @@ type CreateVolumeRequestContent_SdkV2 struct {
 	Name types.String `tfsdk:"name"`
 	// The name of the schema where the volume is
 	SchemaName types.String `tfsdk:"schema_name"`
-	// The storage location on the cloud
+	// The cloud storage URL where the files of the volume are stored. For an
+	// external volume, it must be set on creation to a path within an existing
+	// external location. For a managed volume, it must be omitted on creation;
+	// the volume is placed under the managed storage location of the parent
+	// schema, catalog, or metastore, and the assigned path is returned in this
+	// field.
 	StorageLocation types.String `tfsdk:"storage_location"`
 	// The type of the volume. An external volume is located in the specified
 	// external location. A managed volume is located in the default location
@@ -9818,6 +9899,11 @@ func (m CredentialDependency_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// A storage credential represents an authentication and authorization mechanism
+// for accessing data stored on your cloud tenant. It holds exactly one cloud
+// credential, for example an AWS IAM role, an Azure managed identity or service
+// principal, or a GCP service account. Only the field for the selected
+// credential type is set in requests and responses.
 type CredentialInfo_SdkV2 struct {
 	// The AWS IAM role configuration.
 	AwsIamRole types.List `tfsdk:"aws_iam_role"`
@@ -10719,7 +10805,7 @@ func (m DeleteConnectionRequest_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type DeleteCredentialRequest_SdkV2 struct {
-	// Force an update even if there are dependent services (when purpose is
+	// Force deletion even if there are dependent services (when purpose is
 	// **SERVICE**) or dependent external locations and external tables (when
 	// purpose is **STORAGE**).
 	Force types.Bool `tfsdk:"-"`
@@ -10873,6 +10959,10 @@ func (m DeleteEntityTagAssignmentRequest_SdkV2) Type(ctx context.Context) attr.T
 }
 
 type DeleteExternalLineageRelationshipRequest_SdkV2 struct {
+	// The relationship to delete, identified by its `source` and `target`
+	// objects. Since this field is a query parameter, flatten the nested
+	// fields, for example
+	// `external_lineage_relationship.source.table.name=main.sales.orders`.
 	ExternalLineageRelationship types.List `tfsdk:"-"`
 }
 
@@ -11779,6 +11869,12 @@ func (m DeleteRegisteredModelRequest_SdkV2) Type(ctx context.Context) attr.Type 
 	}
 }
 
+// A lineage relationship between a source object and a target object, where at
+// least one of the two is an external metadata object. The other object can be
+// a Unity Catalog table, a cloud storage path, a model version, or another
+// external metadata object. A relationship is identified by its source and
+// target; optional column mappings and key-value properties describe the data
+// flow between them.
 type DeleteRequestExternalLineage_SdkV2 struct {
 	// Unique identifier of the external lineage relationship.
 	Id types.String `tfsdk:"id"`
@@ -12134,9 +12230,8 @@ func (m DeleteSkillRequest_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type DeleteStorageCredentialRequest_SdkV2 struct {
-	// Force an update even if there are dependent external locations or
-	// external tables (when purpose is **STORAGE**) or dependent services (when
-	// purpose is **SERVICE**).
+	// Force deletion even if there are dependent external locations or external
+	// tables.
 	Force types.Bool `tfsdk:"-"`
 	// Name of the storage credential.
 	Name types.String `tfsdk:"-"`
@@ -13907,7 +14002,9 @@ func (m ExistsRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// An external metadata object at one end of an external lineage relationship.
 type ExternalLineageExternalMetadata_SdkV2 struct {
+	// Name of the external metadata object.
 	Name types.String `tfsdk:"name"`
 }
 
@@ -14392,9 +14489,12 @@ func (m *ExternalLineageInfo_SdkV2) SetTableInfo(ctx context.Context, v External
 	m.TableInfo = types.ListValueMust(t, vs)
 }
 
+// A version of a Unity Catalog registered model at one end of an external
+// lineage relationship.
 type ExternalLineageModelVersion_SdkV2 struct {
+	// Full name of the registered model, in the form `catalog.schema.model`.
 	Name types.String `tfsdk:"name"`
-
+	// Version number of the model, as a string.
 	Version types.String `tfsdk:"version"`
 }
 
@@ -14503,13 +14603,17 @@ func (m ExternalLineageModelVersionInfo_SdkV2) Type(ctx context.Context) attr.Ty
 	}
 }
 
+// An object at one end of an external lineage relationship. Exactly one of the
+// fields is set.
 type ExternalLineageObject_SdkV2 struct {
+	// An external metadata object registered in Unity Catalog.
 	ExternalMetadata types.List `tfsdk:"external_metadata"`
-
+	// A version of a Unity Catalog registered model.
 	ModelVersion types.List `tfsdk:"model_version"`
-
+	// A cloud storage path registered in Unity Catalog, i.e. under a table,
+	// volume, or external location.
 	Path types.List `tfsdk:"path"`
-
+	// A Unity Catalog table.
 	Table types.List `tfsdk:"table"`
 }
 
@@ -14754,7 +14858,10 @@ func (m *ExternalLineageObject_SdkV2) SetTable(ctx context.Context, v ExternalLi
 	m.Table = types.ListValueMust(t, vs)
 }
 
+// A cloud storage path at one end of an external lineage relationship.
 type ExternalLineagePath_SdkV2 struct {
+	// URL of the cloud storage path. The path must be registered in Unity
+	// Catalog, i.e. under a table, volume, or external location.
 	Url types.String `tfsdk:"url"`
 }
 
@@ -14801,12 +14908,21 @@ func (m ExternalLineagePath_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// A lineage relationship between a source object and a target object, where at
+// least one of the two is an external metadata object. The other object can be
+// a Unity Catalog table, a cloud storage path, a model version, or another
+// external metadata object. A relationship is identified by its source and
+// target; optional column mappings and key-value properties describe the data
+// flow between them.
 type ExternalLineageRelationship_SdkV2 struct {
-	// List of column relationships between source and target objects.
+	// List of column relationships between source and target objects. The
+	// combined size of all source and target column names is limited.
 	Columns types.List `tfsdk:"columns"`
 	// Unique identifier of the external lineage relationship.
 	Id types.String `tfsdk:"id"`
 	// Key-value properties associated with the external lineage relationship.
+	// The combined length of all keys and values must not exceed 5000
+	// characters.
 	Properties types.Map `tfsdk:"properties"`
 	// Source object of the external lineage relationship.
 	Source types.List `tfsdk:"source"`
@@ -15059,12 +15175,21 @@ func (m *ExternalLineageRelationship_SdkV2) SetTarget(ctx context.Context, v Ext
 	m.Target = types.ListValueMust(t, vs)
 }
 
+// A lineage relationship between a source object and a target object, where at
+// least one of the two is an external metadata object. The other object can be
+// a Unity Catalog table, a cloud storage path, a model version, or another
+// external metadata object. A relationship is identified by its source and
+// target; optional column mappings and key-value properties describe the data
+// flow between them.
 type ExternalLineageRelationshipInfo_SdkV2 struct {
-	// List of column relationships between source and target objects.
+	// List of column relationships between source and target objects. The
+	// combined size of all source and target column names is limited.
 	Columns types.List `tfsdk:"columns"`
 	// Unique identifier of the external lineage relationship.
 	Id types.String `tfsdk:"id"`
 	// Key-value properties associated with the external lineage relationship.
+	// The combined length of all keys and values must not exceed 5000
+	// characters.
 	Properties types.Map `tfsdk:"properties"`
 	// Source object of the external lineage relationship.
 	Source types.List `tfsdk:"source"`
@@ -15317,7 +15442,9 @@ func (m *ExternalLineageRelationshipInfo_SdkV2) SetTarget(ctx context.Context, v
 	m.Target = types.ListValueMust(t, vs)
 }
 
+// A Unity Catalog table at one end of an external lineage relationship.
 type ExternalLineageTable_SdkV2 struct {
+	// Full name of the table, in the form `catalog.schema.table`.
 	Name types.String `tfsdk:"name"`
 }
 
@@ -15428,6 +15555,11 @@ func (m ExternalLineageTableInfo_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// An external location combines a cloud storage path with a storage credential
+// that authorizes access to that path. Privileges granted on the external
+// location control which users and groups can access the cloud storage path,
+// for example to create external tables, external volumes, or managed storage
+// locations under it.
 type ExternalLocationInfo_SdkV2 struct {
 	// Indicates whether the principal is limited to retrieving metadata for the
 	// associated object through the BROWSE privilege when include_browse is
@@ -15451,21 +15583,24 @@ type ExternalLocationInfo_SdkV2 struct {
 	// whether the user explicitly set `enable_file_events`. Use this field
 	// instead of `file_event_queue` for reading the actual queue state.
 	EffectiveFileEventQueue types.List `tfsdk:"effective_file_event_queue"`
-	// Whether to enable file events on this external location. Default to
+	// Whether to enable file events on this external location. Defaults to
 	// `true`. Set to `false` to disable file events. The actual applied value
 	// may differ due to server-side defaults; check
 	// `effective_enable_file_events` for the effective state.
 	EnableFileEvents types.Bool `tfsdk:"enable_file_events"`
-
+	// Encryption options that apply to clients connecting to cloud storage.
 	EncryptionDetails types.List `tfsdk:"encryption_details"`
 	// Indicates whether fallback mode is enabled for this external location.
 	// When fallback mode is enabled, the access to the location falls back to
 	// cluster credentials if UC credentials are not sufficient.
 	Fallback types.Bool `tfsdk:"fallback"`
-	// File event queue settings. If `enable_file_events` is not `false`, must
-	// be defined and have exactly one of the documented properties.
+	// File event queue settings. When `enable_file_events` is `true`, exactly
+	// one of the queue options must be set. Must be omitted when
+	// `enable_file_events` is `false`.
 	FileEventQueue types.List `tfsdk:"file_event_queue"`
-
+	// Whether the current securable is accessible from all workspaces or a
+	// specific set of workspaces. Cannot be set when creating an external
+	// location.
 	IsolationMode types.String `tfsdk:"isolation_mode"`
 	// Unique identifier of metastore hosting the external location.
 	MetastoreId types.String `tfsdk:"metastore_id"`
@@ -15475,12 +15610,13 @@ type ExternalLocationInfo_SdkV2 struct {
 	Owner types.String `tfsdk:"owner"`
 	// Indicates whether the external location is read-only.
 	ReadOnly types.Bool `tfsdk:"read_only"`
-	// Time at which external location this was last modified, in epoch
+	// Time at which this external location was last modified, in epoch
 	// milliseconds.
 	UpdatedAt types.Int64 `tfsdk:"updated_at"`
 	// Username of user who last modified the external location.
 	UpdatedBy types.String `tfsdk:"updated_by"`
-	// Path URL of the external location.
+	// URL of the cloud storage path that the external location points to,
+	// including the scheme (for example `s3://`, `abfss://`, or `gs://`).
 	Url types.String `tfsdk:"url"`
 }
 
@@ -17372,7 +17508,7 @@ type GcpPubsub_SdkV2 struct {
 	// resources.
 	ManagedResourceId types.String `tfsdk:"managed_resource_id"`
 	// The Pub/Sub subscription name in the format
-	// projects/{project}/subscriptions/{subscription name}. Only required for
+	// `projects/{project}/subscriptions/{subscription name}`. Only required for
 	// provided_pubsub.
 	SubscriptionName types.String `tfsdk:"subscription_name"`
 }
@@ -18877,9 +19013,11 @@ func (m *GenerateTemporaryVolumeCredentialResponse_SdkV2) SetR2TempCredentials(c
 }
 
 type GetAccessRequestDestinationsRequest_SdkV2 struct {
-	// The full name of the securable.
+	// The full name of the securable: the names of its parents followed by its
+	// own name, separated by dots, for example `main.sales.orders` for a table.
 	FullName types.String `tfsdk:"-"`
-	// The type of the securable.
+	// The type of the securable. Matching is case-insensitive, and hyphens may
+	// replace underscores in multi-word types.
 	SecurableType types.String `tfsdk:"-"`
 }
 
@@ -19258,8 +19396,9 @@ func (m GetByAliasRequest_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type GetCatalogRequest_SdkV2 struct {
-	// Whether to include catalogs in the response for which the principal can
-	// only access selective metadata for
+	// Whether to return the catalog when the principal can only access
+	// selective metadata for it through the BROWSE privilege. The response then
+	// has browse_only set to true.
 	IncludeBrowse types.Bool `tfsdk:"-"`
 	// The name of the catalog.
 	Name types.String `tfsdk:"-"`
@@ -19637,7 +19776,7 @@ func (m GetEntityTagAssignmentRequest_SdkV2) Type(ctx context.Context) attr.Type
 
 type GetExternalLocationRequest_SdkV2 struct {
 	// Whether to include external locations in the response for which the
-	// principal can only access selective metadata for
+	// principal can only access selective metadata.
 	IncludeBrowse types.Bool `tfsdk:"-"`
 	// Name of the external location.
 	Name types.String `tfsdk:"-"`
@@ -21460,8 +21599,8 @@ type InferenceTableConfig_SdkV2 struct {
 	// table. After the inference table is created, this field cannot be
 	// changed.
 	Parent types.String `tfsdk:"parent"`
-	// Resolved UC table for payload logs. Format:
-	// `tables/{catalog}.{schema}.{table}`.
+	// Resource name of the Unity Catalog table that receives the payload logs.
+	// Format: `tables/{catalog}.{schema}.{table}`.
 	Table types.String `tfsdk:"table"`
 	// Prefix used to form the inference table's registered name. AI Gateway
 	// appends `_payload`; for example, `table_name_prefix = "orders"` creates
@@ -21870,8 +22009,9 @@ func (m *ListAccountStorageCredentialsResponse_SdkV2) SetStorageCredentials(ctx 
 }
 
 type ListCatalogsRequest_SdkV2 struct {
-	// Whether to include catalogs in the response for which the principal can
-	// only access selective metadata for
+	// Whether to include catalogs for which the principal can only access
+	// selective metadata through the BROWSE privilege. Such catalogs are
+	// returned with browse_only set to true.
 	IncludeBrowse types.Bool `tfsdk:"-"`
 	// Whether to include catalogs not bound to the workspace. Effective only if
 	// the user has permission to update the catalog–workspace binding.
@@ -22826,7 +22966,10 @@ func (m *ListEntityTagAssignmentsResponse_SdkV2) SetTagAssignments(ctx context.C
 }
 
 type ListExternalLineageRelationshipsRequest_SdkV2 struct {
-	// The lineage direction to filter on.
+	// Direction of the relationships to return, relative to `object_info`.
+	// `UPSTREAM` returns the relationships in which the object is the target,
+	// so each result describes a source; `DOWNSTREAM` returns the relationships
+	// in which the object is the source, so each result describes a target.
 	LineageDirection types.String `tfsdk:"-"`
 	// The object to query external lineage relationships for. Since this field
 	// is a query parameter, please flatten the nested fields. For example, if
@@ -22941,8 +23084,13 @@ func (m *ListExternalLineageRelationshipsRequest_SdkV2) SetObjectInfo(ctx contex
 }
 
 type ListExternalLineageRelationshipsResponse_SdkV2 struct {
+	// Relationships that match the query. Each entry describes the object at
+	// the other end of the relationship in one of `table_info`, `file_info`,
+	// `model_info`, or `external_metadata_info`, together with the relationship
+	// itself in `external_lineage_info`.
 	ExternalLineageRelationships types.List `tfsdk:"external_lineage_relationships"`
-
+	// Opaque token to retrieve the next page of results. Omitted when there are
+	// no more results.
 	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
@@ -23061,7 +23209,7 @@ func (m *ListExternalLineageRelationshipsResponse_SdkV2) SetExternalLineageRelat
 
 type ListExternalLocationsRequest_SdkV2 struct {
 	// Whether to include external locations in the response for which the
-	// principal can only access selective metadata for
+	// principal can only access selective metadata.
 	IncludeBrowse types.Bool `tfsdk:"-"`
 	// Whether to include external locations not bound to the workspace.
 	// Effective only if the user has permission to update the
@@ -26764,10 +26912,10 @@ func (m *ListTablesResponse_SdkV2) SetTables(ctx context.Context, v []TableInfo_
 }
 
 type ListVolumesRequest_SdkV2 struct {
-	// The identifier of the catalog
+	// The name of the catalog that contains the schema.
 	CatalogName types.String `tfsdk:"-"`
-	// Whether to include volumes in the response for which the principal can
-	// only access selective metadata for
+	// Whether to include volumes for which the principal can only access
+	// selective metadata through the BROWSE privilege.
 	IncludeBrowse types.Bool `tfsdk:"-"`
 	// Maximum number of volumes to return (page length).
 	//
@@ -26785,7 +26933,7 @@ type ListVolumesRequest_SdkV2 struct {
 	// Opaque token returned by a previous request. It must be included in the
 	// request to retrieve the next page of results (pagination).
 	PageToken types.String `tfsdk:"-"`
-	// The identifier of the schema
+	// The name of the schema whose volumes are listed.
 	SchemaName types.String `tfsdk:"-"`
 }
 
@@ -31505,22 +31653,22 @@ type ModelService_SdkV2 struct {
 	Config types.List `tfsdk:"config"`
 	// Time the model service was created.
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
-	// Creator identity.
+	// Username of the user who created the model service.
 	CreatedBy types.String `tfsdk:"created_by"`
-	// Owner of the model service.
+	// Username or group name of the model service owner.
 	EffectiveOwner types.String `tfsdk:"effective_owner"`
 	// Optimistic concurrency token returned on every read. To make an Update or
 	// Delete conditional, pass the last-read value in that request's `etag`
 	// field. In REST responses, this value is a base64 string; URL-encode it
 	// when setting the `etag` query parameter.
 	Etag types.String `tfsdk:"etag"`
-	// Metastore hosting the model service.
+	// Unique identifier of the metastore that contains the model service.
 	MetastoreId types.String `tfsdk:"metastore_id"`
 	// Resource name of the model service. Format:
 	// `model-services/{catalog}.{schema}.{model_service}`. Each `{...}`
-	// component is capped at 255 characters individually. Server-derived on
-	// Create from `parent` + `model_service_id`; required and immutable on
-	// Update/Get/Delete.
+	// component is capped at 255 characters individually. The server derives
+	// the name on Create from `parent` and `model_service_id`; it is required
+	// and immutable on Update, Get, and Delete.
 	Name types.String `tfsdk:"name"`
 	// API types supported across this service's destinations, such as
 	// `openai/v1/chat/completions`, `openai/v1/embeddings`, and
@@ -31529,7 +31677,7 @@ type ModelService_SdkV2 struct {
 	SupportedApiTypes types.Set `tfsdk:"supported_api_types"`
 	// Time the model service was last modified.
 	UpdateTime timetypes.RFC3339 `tfsdk:"update_time"`
-	// Identity of the last updater.
+	// Username of the user who last updated the model service.
 	UpdatedBy types.String `tfsdk:"updated_by"`
 }
 
@@ -31698,11 +31846,13 @@ func (m *ModelService_SdkV2) SetSupportedApiTypes(ctx context.Context, v []types
 
 // Operational configuration wrapped around the ModelService resource.
 type ModelServiceConfig_SdkV2 struct {
-	// Inference table configuration for payload logging.
+	// Configuration for logging request and response payloads to a Unity
+	// Catalog inference table. Omit this field to leave payload logging off.
 	InferenceTable types.List `tfsdk:"inference_table"`
 	// Rate limits applied to requests routed through this model service.
 	RateLimits types.List `tfsdk:"rate_limits"`
-	// Routing configuration: destinations and fallback.
+	// Routing configuration: the primary destinations that receive traffic and
+	// the fallback destinations tried when a primary destination fails.
 	Routing types.List `tfsdk:"routing"`
 }
 
@@ -31931,7 +32081,9 @@ type ModelServiceConfigDestinationConfig_SdkV2 struct {
 	// broken dependency. Requests cannot use this destination until the backing
 	// resource is restored or the destination is replaced.
 	IsDeleted types.Bool `tfsdk:"is_deleted"`
-	// User-facing label for this destination, used in routing references.
+	// Label that identifies this destination. Names are compared
+	// case-insensitively and must be unique within the primary destinations and
+	// within the fallback destinations.
 	Name types.String `tfsdk:"name"`
 	// Configuration for a pay-per-token Databricks foundation model.
 	PayPerTokenConfig types.List `tfsdk:"pay_per_token_config"`
@@ -32154,9 +32306,7 @@ func (m *ModelServiceConfigDestinationConfig_SdkV2) SetProvisionedThroughputConf
 // platform resolves the provider at invocation time.
 type ModelServiceConfigExternalModelConfig_SdkV2 struct {
 	// Resource name of the governed ModelProviderService that owns provider
-	// auth and provider-specific configuration. The referenced
-	// ModelProviderService also carries the provider type, so this message does
-	// not surface it directly. Format:
+	// auth and provider-specific configuration. Format:
 	// `model-provider-services/{catalog}.{schema}.{model_provider_service}`.
 	// Each `{...}` component is capped at 255 characters individually.
 	ModelProviderService types.String `tfsdk:"model_provider_service"`
@@ -32381,8 +32531,9 @@ func (m *ModelServiceConfigFallbackConfig_SdkV2) SetDestinations(ctx context.Con
 // the foundation model by its UC resource name; the platform resolves it to a
 // Model Serving endpoint at request time.
 type ModelServiceConfigPayPerTokenConfig_SdkV2 struct {
-	// Resource name of the Unity Catalog model. Format:
-	// `models/{catalog}.{schema}.{model}`.
+	// Resource name of the Unity Catalog foundation model. Pay-per-token
+	// foundation models live in the `system.ai` schema, so the name has the
+	// form `models/system.ai.{model}`.
 	Model types.String `tfsdk:"model"`
 }
 
@@ -32434,9 +32585,9 @@ func (m ModelServiceConfigPayPerTokenConfig_SdkV2) Type(ctx context.Context) att
 // sizing (provisioned throughput, burst scaling, model version) is owned by the
 // Model Serving endpoint itself, not by this message.
 type ModelServiceConfigProvisionedThroughputConfig_SdkV2 struct {
-	// UC model FQN of the model served by the backing endpoint (e.g.,
-	// `system.ai.databricks-claude-opus-4-6`). Resolved from Model Serving at
-	// Create/Update time.
+	// Resource name of the Unity Catalog model served by the backing endpoint,
+	// in the form `models/{catalog}.{schema}.{model}`. Resolved from Model
+	// Serving when the model service is created or updated.
 	Model types.String `tfsdk:"model"`
 	// Name of the backing Model Serving endpoint serving the provisioned-
 	// throughput foundation model, in the form `serving-endpoints/{name}`. The
@@ -36335,7 +36486,8 @@ func (m *PrimaryKeyConstraint_SdkV2) SetTimeseriesColumns(ctx context.Context, v
 type Principal_SdkV2 struct {
 	// Databricks user, group or service principal ID.
 	Id types.String `tfsdk:"id"`
-
+	// The type of principal that **id** identifies: a user, a group, or a
+	// service principal.
 	PrincipalType types.String `tfsdk:"principal_type"`
 }
 
@@ -36774,7 +36926,7 @@ type RateLimit_SdkV2 struct {
 	// principal application ID. Required when `key` applies to a user, group,
 	// or service principal; otherwise it must be unset.
 	Principal types.String `tfsdk:"principal"`
-	// Renewal period.
+	// Interval after which the request and token counters reset.
 	RenewalPeriod types.String `tfsdk:"renewal_period"`
 	// Maximum requests allowed in one renewal period. Leave unset for no
 	// request limit. Set to `0` to deny all requests.
@@ -36840,8 +36992,8 @@ func (m RateLimit_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type ReadVolumeRequest_SdkV2 struct {
-	// Whether to include volumes in the response for which the principal can
-	// only access selective metadata for
+	// Whether to include volumes for which the principal can only access
+	// selective metadata through the BROWSE privilege.
 	IncludeBrowse types.Bool `tfsdk:"-"`
 	// The fully qualified name of the volume.
 	Name types.String `tfsdk:"-"`
@@ -37869,7 +38021,8 @@ func (m Securable_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Manifest of a specific securable kind.
+// Manifest of a specific securable kind, or of an Atlas-native securable type,
+// which has no kinds.
 type SecurableKindManifest_SdkV2 struct {
 	// Privileges that can be assigned to the securable.
 	AssignablePrivileges types.List `tfsdk:"assignable_privileges"`
@@ -37877,7 +38030,8 @@ type SecurableKindManifest_SdkV2 struct {
 	Capabilities types.List `tfsdk:"capabilities"`
 	// Detailed specs of allowed options.
 	Options types.List `tfsdk:"options"`
-	// Securable kind to get manifest of.
+	// Securable kind to get manifest of. Unset for Atlas-native securable
+	// types.
 	SecurableKind types.String `tfsdk:"securable_kind"`
 	// Securable Type of the kind.
 	SecurableType types.String `tfsdk:"securable_type"`
@@ -38090,8 +38244,7 @@ func (m *SecurableKindManifest_SdkV2) SetOptions(ctx context.Context, v []Option
 type SecurablePermissions_SdkV2 struct {
 	// List of requested Unity Catalog permissions.
 	Permissions types.List `tfsdk:"permissions"`
-	// The securable for which the access request destinations are being
-	// requested.
+	// The securable on which the permissions are requested.
 	Securable types.List `tfsdk:"securable"`
 }
 
@@ -38591,6 +38744,11 @@ func (m SseEncryptionDetails_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// A storage credential represents an authentication and authorization mechanism
+// for accessing data stored on your cloud tenant. It holds exactly one cloud
+// credential, for example an AWS IAM role, an Azure managed identity or service
+// principal, or a GCP service account. Only the field for the selected
+// credential type is set in requests and responses.
 type StorageCredentialInfo_SdkV2 struct {
 	// The AWS IAM role configuration.
 	AwsIamRole types.List `tfsdk:"aws_iam_role"`
@@ -41004,22 +41162,62 @@ func (m UnassignResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// Request to restore a soft-deleted metastore by ID.
+type UndropMetastoreByIdRequest_SdkV2 struct {
+	// Required. Id of the metastore to undrop.
+	Id types.String `tfsdk:"id"`
+}
+
+func (to *UndropMetastoreByIdRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from UndropMetastoreByIdRequest_SdkV2) {
+}
+
+func (to *UndropMetastoreByIdRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from UndropMetastoreByIdRequest_SdkV2) {
+}
+
+func (m UndropMetastoreByIdRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["id"] = attrs["id"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in UndropMetastoreByIdRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m UndropMetastoreByIdRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, UndropMetastoreByIdRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (m UndropMetastoreByIdRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"id": m.Id,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m UndropMetastoreByIdRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"id": types.StringType,
+		},
+	}
+}
+
 type UpdateAccessRequestDestinationsRequest_SdkV2 struct {
 	// The access request destinations to assign to the securable. For each
 	// destination, a **destination_id** and **destination_type** must be
 	// defined.
 	AccessRequestDestinations types.List `tfsdk:"access_request_destinations"`
-	// The field mask must be a single string, with multiple fields separated by
-	// commas (no spaces). The field path is relative to the resource object,
-	// using a dot (`.`) to navigate sub-fields (e.g., `author.given_name`).
-	// Specification of elements in sequence or map fields is not allowed, as
-	// only the entire collection field can be specified. Field names must
-	// exactly match the resource field names.
-	//
-	// A field mask of `*` indicates full replacement. It’s recommended to
-	// always explicitly list the fields being updated and avoid using `*`
-	// wildcards, as it can lead to unintended results if the API changes in the
-	// future.
+	// The paths of the field mask are not evaluated, because an update always
+	// replaces the full list of destinations.
 	UpdateMask types.String `tfsdk:"-"`
 }
 
@@ -41198,6 +41396,11 @@ func (m UpdateAccountsMetastore_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// A storage credential represents an authentication and authorization mechanism
+// for accessing data stored on your cloud tenant. It holds exactly one cloud
+// credential, for example an AWS IAM role, an Azure managed identity or service
+// principal, or a GCP service account. Only the field for the selected
+// credential type is set in requests and responses.
 type UpdateAccountsStorageCredential_SdkV2 struct {
 	// The AWS IAM role configuration.
 	AwsIamRole types.List `tfsdk:"aws_iam_role"`
@@ -41568,15 +41771,27 @@ func (m UpdateAssignmentResponse_SdkV2) Type(ctx context.Context) attr.Type {
 type UpdateCatalog_SdkV2 struct {
 	// User-provided free-form text description.
 	Comment types.String `tfsdk:"comment"`
-	// Custom maximum retention period in hours for the catalog
+	// Dropped objects in the catalog remain recoverable for this number of
+	// hours before they are permanently purged. The value applies to standard
+	// catalogs only, must be 0 or within the range allowed for the metastore,
+	// and is inherited by schemas and tables that do not set their own value.
 	CustomMaxRetentionHours types.Int64 `tfsdk:"custom_max_retention_hours"`
-	// Whether predictive optimization should be enabled for this object and
-	// objects under it.
+	// Whether predictive optimization is enabled for this catalog and the
+	// objects under it. Valid values are ENABLE, DISABLE, and INHERIT, where
+	// INHERIT applies the account-level setting. Standard catalogs start as
+	// INHERIT and other catalog types as DISABLE. It cannot be set when
+	// creating a catalog; use the update method instead.
 	EnablePredictiveOptimization types.String `tfsdk:"enable_predictive_optimization"`
-	// Whether the current securable is accessible from all workspaces or a
-	// specific set of workspaces.
+	// Whether the catalog is accessible from all workspaces attached to the
+	// metastore (OPEN) or only from the workspaces bound to it (ISOLATED). It
+	// cannot be set when creating a catalog; change it with the update method
+	// and manage the bound workspaces with the workspace bindings API. See
+	// [Workspace-catalog binding].
+	//
+	// [Workspace-catalog binding]: https://docs.databricks.com/aws/en/catalogs/binding
 	IsolationMode types.String `tfsdk:"isolation_mode"`
-	// Control CMK encryption for managed catalog data
+	// Customer-managed key (CMK) settings control the encryption at rest of the
+	// catalog's managed data.
 	ManagedEncryptionSettings types.List `tfsdk:"managed_encryption_settings"`
 	// The name of the catalog.
 	Name types.String `tfsdk:"-"`
@@ -42466,17 +42681,10 @@ func (m *UpdateEntityTagAssignmentRequest_SdkV2) SetTagAssignment(ctx context.Co
 
 type UpdateExternalLineageRelationshipRequest_SdkV2 struct {
 	ExternalLineageRelationship types.List `tfsdk:"external_lineage_relationship"`
-	// The field mask must be a single string, with multiple fields separated by
-	// commas (no spaces). The field path is relative to the resource object,
-	// using a dot (`.`) to navigate sub-fields (e.g., `author.given_name`).
-	// Specification of elements in sequence or map fields is not allowed, as
-	// only the entire collection field can be specified. Field names must
-	// exactly match the resource field names.
-	//
-	// A field mask of `*` indicates full replacement. It’s recommended to
-	// always explicitly list the fields being updated and avoid using `*`
-	// wildcards, as it can lead to unintended results if the API changes in the
-	// future.
+	// The fields of the relationship to update. The field mask must be a single
+	// string, with multiple fields separated by commas (no spaces), for example
+	// `columns,properties`. The `source` and `target` identify the relationship
+	// and cannot be changed.
 	UpdateMask types.String `tfsdk:"-"`
 }
 
@@ -42587,24 +42795,27 @@ type UpdateExternalLocation_SdkV2 struct {
 	// whether the user explicitly set `enable_file_events`. Use this field
 	// instead of `file_event_queue` for reading the actual queue state.
 	EffectiveFileEventQueue types.List `tfsdk:"effective_file_event_queue"`
-	// Whether to enable file events on this external location. Default to
+	// Whether to enable file events on this external location. Defaults to
 	// `true`. Set to `false` to disable file events. The actual applied value
 	// may differ due to server-side defaults; check
 	// `effective_enable_file_events` for the effective state.
 	EnableFileEvents types.Bool `tfsdk:"enable_file_events"`
-
+	// Encryption options that apply to clients connecting to cloud storage.
 	EncryptionDetails types.List `tfsdk:"encryption_details"`
 	// Indicates whether fallback mode is enabled for this external location.
 	// When fallback mode is enabled, the access to the location falls back to
 	// cluster credentials if UC credentials are not sufficient.
 	Fallback types.Bool `tfsdk:"fallback"`
-	// File event queue settings. If `enable_file_events` is not `false`, must
-	// be defined and have exactly one of the documented properties.
+	// File event queue settings. When `enable_file_events` is `true`, exactly
+	// one of the queue options must be set. Must be omitted when
+	// `enable_file_events` is `false`.
 	FileEventQueue types.List `tfsdk:"file_event_queue"`
 	// Force update even if changing url invalidates dependent external tables
 	// or mounts.
 	Force types.Bool `tfsdk:"force"`
-
+	// Whether the current securable is accessible from all workspaces or a
+	// specific set of workspaces. Cannot be set when creating an external
+	// location.
 	IsolationMode types.String `tfsdk:"isolation_mode"`
 	// Name of the external location.
 	Name types.String `tfsdk:"-"`
@@ -42617,7 +42828,8 @@ type UpdateExternalLocation_SdkV2 struct {
 	// Skips validation of the storage credential associated with the external
 	// location.
 	SkipValidation types.Bool `tfsdk:"skip_validation"`
-	// Path URL of the external location.
+	// URL of the cloud storage path that the external location points to,
+	// including the scheme (for example `s3://`, `abfss://`, or `gs://`).
 	Url types.String `tfsdk:"url"`
 }
 
@@ -43444,9 +43656,9 @@ type UpdateModelServiceRequest_SdkV2 struct {
 	ModelService types.List `tfsdk:"model_service"`
 	// Resource name of the model service. Format:
 	// `model-services/{catalog}.{schema}.{model_service}`. Each `{...}`
-	// component is capped at 255 characters individually. Server-derived on
-	// Create from `parent` + `model_service_id`; required and immutable on
-	// Update/Get/Delete.
+	// component is capped at 255 characters individually. The server derives
+	// the name on Create from `parent` and `model_service_id`; it is required
+	// and immutable on Update, Get, and Delete.
 	Name types.String `tfsdk:"-"`
 	// Fields to update. Use `config` to replace the entire configuration. The
 	// replacement must include every required field; any optional field you
@@ -44890,12 +45102,21 @@ func (m *UpdateRegisteredModelRequest_SdkV2) SetAliases(ctx context.Context, v [
 	m.Aliases = types.ListValueMust(t, vs)
 }
 
+// A lineage relationship between a source object and a target object, where at
+// least one of the two is an external metadata object. The other object can be
+// a Unity Catalog table, a cloud storage path, a model version, or another
+// external metadata object. A relationship is identified by its source and
+// target; optional column mappings and key-value properties describe the data
+// flow between them.
 type UpdateRequestExternalLineage_SdkV2 struct {
-	// List of column relationships between source and target objects.
+	// List of column relationships between source and target objects. The
+	// combined size of all source and target column names is limited.
 	Columns types.List `tfsdk:"columns"`
 	// Unique identifier of the external lineage relationship.
 	Id types.String `tfsdk:"id"`
 	// Key-value properties associated with the external lineage relationship.
+	// The combined length of all keys and values must not exceed 5000
+	// characters.
 	Properties types.Map `tfsdk:"properties"`
 	// Source object of the external lineage relationship.
 	Source types.List `tfsdk:"source"`
@@ -45938,9 +46159,10 @@ type UpdateVolumeRequestContent_SdkV2 struct {
 	Comment types.String `tfsdk:"comment"`
 	// The three-level (fully qualified) name of the volume
 	Name types.String `tfsdk:"-"`
-	// New name for the volume.
+	// The new name for the volume. Set it to rename the volume.
 	NewName types.String `tfsdk:"new_name"`
-	// The identifier of the user who owns the volume
+	// The user or group that owns the volume. The user who creates a volume
+	// becomes its owner; the owner can be changed afterwards with an update.
 	Owner types.String `tfsdk:"owner"`
 }
 
@@ -47316,7 +47538,8 @@ func (m ValidationResult_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type VolumeInfo_SdkV2 struct {
-	// The AWS access point to use when accesing s3 for this external location.
+	// The AWS access point to use when accessing S3 for the storage location of
+	// this volume.
 	AccessPoint types.String `tfsdk:"access_point"`
 	// Indicates whether the principal is limited to retrieving metadata for the
 	// associated object through the BROWSE privilege when include_browse is
@@ -47326,25 +47549,32 @@ type VolumeInfo_SdkV2 struct {
 	CatalogName types.String `tfsdk:"catalog_name"`
 	// The comment attached to the volume
 	Comment types.String `tfsdk:"comment"`
-
+	// Time at which the volume was created, in epoch milliseconds.
 	CreatedAt types.Int64 `tfsdk:"created_at"`
 	// The identifier of the user who created the volume
 	CreatedBy types.String `tfsdk:"created_by"`
 
 	EncryptionDetails types.List `tfsdk:"encryption_details"`
-	// The three-level (fully qualified) name of the volume
+	// The three-level (fully qualified) name of the volume, in the form
+	// catalog_name.schema_name.name.
 	FullName types.String `tfsdk:"full_name"`
 	// The unique identifier of the metastore
 	MetastoreId types.String `tfsdk:"metastore_id"`
 	// The name of the volume
 	Name types.String `tfsdk:"name"`
-	// The identifier of the user who owns the volume
+	// The user or group that owns the volume. The user who creates a volume
+	// becomes its owner; the owner can be changed afterwards with an update.
 	Owner types.String `tfsdk:"owner"`
 	// The name of the schema where the volume is
 	SchemaName types.String `tfsdk:"schema_name"`
-	// The storage location on the cloud
+	// The cloud storage URL where the files of the volume are stored. For an
+	// external volume, it must be set on creation to a path within an existing
+	// external location. For a managed volume, it must be omitted on creation;
+	// the volume is placed under the managed storage location of the parent
+	// schema, catalog, or metastore, and the assigned path is returned in this
+	// field.
 	StorageLocation types.String `tfsdk:"storage_location"`
-
+	// Time at which the volume was last updated, in epoch milliseconds.
 	UpdatedAt types.Int64 `tfsdk:"updated_at"`
 	// The identifier of the user who updated the volume last time
 	UpdatedBy types.String `tfsdk:"updated_by"`

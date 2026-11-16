@@ -110,6 +110,10 @@ type DatabaseData struct {
 	// projects/{project_id}/branches/{branch_id}
 	Parent types.String `tfsdk:"parent"`
 	// The desired state of the Database.
+	//
+	// Read the resource's current values from `status`, rather than `spec`.
+	// `spec` tracks field ownership for infrastructure-as-code tools and may
+	// omit unmanaged fields.
 	Spec types.Object `tfsdk:"spec"`
 	// The observed state of the Database.
 	Status types.Object `tfsdk:"status"`

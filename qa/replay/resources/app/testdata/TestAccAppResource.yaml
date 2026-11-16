@@ -450,35 +450,59 @@ steps:
       - *get_tf_replay_2
       - *get_tf_replay_7
       - request:
-          method: PATCH
-          path: /api/2.0/apps/tf-replay
+          method: POST
+          path: /api/2.0/apps/tf-replay/update
           body:
             json:
-              name: tf-replay
-              description: My new app
-              resources:
-                - name: secret
-                  description: secret for app
-                  secret:
-                    scope: tf-replay
-                    key: tf-replay
-                    permission: MANAGE
-                - name: warehouse
-                  description: warehouse for app
-                  job:
-                    id: '123'
-                    permission: CAN_MANAGE
-                - name: serving endpoint
-                  description: serving endpoint for app
-                  serving_endpoint:
-                    name: tf-replay
-                    permission: CAN_MANAGE
-                - name: sql warehouse
-                  description: sql warehouse for app
-                  sql_warehouse:
-                    id: warehouse-1
-                    permission: CAN_MANAGE
-              create_time: '2026-01-01T00:00:00Z'
+              app:
+                name: tf-replay
+                description: My new app
+                resources:
+                  - name: secret
+                    description: secret for app
+                    secret:
+                      scope: tf-replay
+                      key: tf-replay
+                      permission: MANAGE
+                  - name: warehouse
+                    description: warehouse for app
+                    job:
+                      id: '123'
+                      permission: CAN_MANAGE
+                  - name: serving endpoint
+                    description: serving endpoint for app
+                    serving_endpoint:
+                      name: tf-replay
+                      permission: CAN_MANAGE
+                  - name: sql warehouse
+                    description: sql warehouse for app
+                    sql_warehouse:
+                      id: warehouse-1
+                      permission: CAN_MANAGE
+                create_time: '2026-01-01T00:00:00Z'
+              update_mask: '*'
+        response:
+          status: 200
+          body:
+            json:
+              status:
+                state: IN_PROGRESS
+                message: App is updating.
+      - request:
+          method: GET
+          path: /api/2.0/apps/tf-replay/update
+          body: null
+        response:
+          status: 200
+          body:
+            json:
+              status:
+                state: SUCCEEDED
+                message: App update succeeded.
+      - request:
+          method: GET
+          path: /api/2.0/apps/tf-replay
+          body: null
         response: &updated_app
           status: 200
           body:

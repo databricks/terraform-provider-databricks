@@ -1,8 +1,7 @@
 // Shared inert-path classifier: the single source of truth for which changed
 // files are "inert" (docs and repo metadata that can't affect an integration
-// test). Imported by integration-tests.yml's `detect-changes` and
-// `carry-forward` jobs and by the internal fork/manual integration-test
-// workflow (which checks this file out of `main`), so the allowlist lives in
+// test). Imported by the internal fork/manual integration-test workflow
+// (which checks this file out of `main`), so the allowlist lives in
 // one place. Dependency-free so every caller can import it without an install.
 
 // A PR is inert-only when every changed file matches one of these globs.

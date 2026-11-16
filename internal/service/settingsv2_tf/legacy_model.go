@@ -823,6 +823,2091 @@ func (m CollaborationPlatformConnectivityMessage_SdkV2) Type(ctx context.Context
 	}
 }
 
+// Theme settings for customizing AI/BI dashboard UI, including visualization
+// colors, font colors, background colors, and more.
+type DashboardTheme_SdkV2 struct {
+	// Color of the zero-value grid line, making it visually distinct from other
+	// grid lines.
+	AxisLineColor types.List `tfsdk:"axis_line_color"`
+	// The background color of the dashboard canvas.
+	CanvasBackgroundColor types.List `tfsdk:"canvas_background_color"`
+	// The continuous gradient configuration for the dashboard.
+	ContinuousGradient types.List `tfsdk:"continuous_gradient"`
+	// The default font color applied to all text in the dashboard. Superseded
+	// by font_settings.base.font_color when font_settings is set. More specific
+	// font settings in turn override base.
+	FontColor types.List `tfsdk:"font_color"`
+	// Font family to customize all text within the dashboard. Unsupported font
+	// names fall back to the default font. Superseded by
+	// font_settings.base.font_family when font_settings is set.
+	FontFamily types.String `tfsdk:"font_family"`
+	// The per-category typography overrides for the dashboard.
+	FontSettings types.List `tfsdk:"font_settings"`
+	// Color of chart grid lines in visualizations (horizontal and vertical
+	// guide lines).
+	GridLineColor types.List `tfsdk:"grid_line_color"`
+	// The corner radius in pixels for rectangular marks in visualizations
+	// (bars, columns, histogram bins, etc.).
+	MarkCornerRadius types.Int64 `tfsdk:"mark_corner_radius"`
+	// The highlight color for selected elements in widgets.
+	SelectionColor types.List `tfsdk:"selection_color"`
+	// The sentiment color palette for the dashboard.
+	SentimentColors types.List `tfsdk:"sentiment_colors"`
+	// The default vertical alignment for all text box widgets in the dashboard.
+	// Individual text box widgets can override this.
+	TextBoxVerticalAlign types.String `tfsdk:"text_box_vertical_align"`
+	// Color palette for visualizations. Colors are applied in order
+	// (visualization_color_01, visualization_color_02, etc.). Invalid color
+	// values are preserved but ignored during rendering.
+	VisualizationColor01 types.String `tfsdk:"visualization_color_01"`
+	// The color at position 2 in the visualization color palette.
+	VisualizationColor02 types.String `tfsdk:"visualization_color_02"`
+	// The color at position 3 in the visualization color palette.
+	VisualizationColor03 types.String `tfsdk:"visualization_color_03"`
+	// The color at position 4 in the visualization color palette.
+	VisualizationColor04 types.String `tfsdk:"visualization_color_04"`
+	// The color at position 5 in the visualization color palette.
+	VisualizationColor05 types.String `tfsdk:"visualization_color_05"`
+	// The color at position 6 in the visualization color palette.
+	VisualizationColor06 types.String `tfsdk:"visualization_color_06"`
+	// The color at position 7 in the visualization color palette.
+	VisualizationColor07 types.String `tfsdk:"visualization_color_07"`
+	// The color at position 8 in the visualization color palette.
+	VisualizationColor08 types.String `tfsdk:"visualization_color_08"`
+	// The color at position 9 in the visualization color palette.
+	VisualizationColor09 types.String `tfsdk:"visualization_color_09"`
+	// The color at position 10 in the visualization color palette.
+	VisualizationColor10 types.String `tfsdk:"visualization_color_10"`
+	// The color at position 11 in the visualization color palette.
+	VisualizationColor11 types.String `tfsdk:"visualization_color_11"`
+	// The color at position 12 in the visualization color palette.
+	VisualizationColor12 types.String `tfsdk:"visualization_color_12"`
+	// The color at position 13 in the visualization color palette.
+	VisualizationColor13 types.String `tfsdk:"visualization_color_13"`
+	// The color at position 14 in the visualization color palette.
+	VisualizationColor14 types.String `tfsdk:"visualization_color_14"`
+	// The color at position 15 in the visualization color palette.
+	VisualizationColor15 types.String `tfsdk:"visualization_color_15"`
+	// The color at position 16 in the visualization color palette.
+	VisualizationColor16 types.String `tfsdk:"visualization_color_16"`
+	// The color at position 17 in the visualization color palette.
+	VisualizationColor17 types.String `tfsdk:"visualization_color_17"`
+	// The color at position 18 in the visualization color palette.
+	VisualizationColor18 types.String `tfsdk:"visualization_color_18"`
+	// The color at position 19 in the visualization color palette.
+	VisualizationColor19 types.String `tfsdk:"visualization_color_19"`
+	// The color at position 20 in the visualization color palette.
+	VisualizationColor20 types.String `tfsdk:"visualization_color_20"`
+	// The background color of widgets.
+	WidgetBackgroundColor types.List `tfsdk:"widget_background_color"`
+	// The border color of widgets.
+	WidgetBorderColor types.List `tfsdk:"widget_border_color"`
+	// The widget border radius in pixels.
+	WidgetCornerRadius types.Int64 `tfsdk:"widget_corner_radius"`
+	// Alignment setting for all widget titles and descriptions at the dashboard
+	// level.
+	WidgetHeaderAlignment types.String `tfsdk:"widget_header_alignment"`
+	// The gap between widgets in pixels.
+	WidgetMargin types.Int64 `tfsdk:"widget_margin"`
+	// The content padding inside each widget in pixels.
+	WidgetPadding types.Int64 `tfsdk:"widget_padding"`
+	// The shadow intensity level applied to widgets (0 = no shadow, 100 =
+	// maximum). The actual CSS box-shadow is computed at render time from this
+	// value, factoring in background colors and color mode.
+	WidgetShadow types.Int64 `tfsdk:"widget_shadow"`
+}
+
+func (to *DashboardTheme_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DashboardTheme_SdkV2) {
+	if !from.AxisLineColor.IsNull() && !from.AxisLineColor.IsUnknown() {
+		if toAxisLineColor, ok := to.GetAxisLineColor(ctx); ok {
+			if fromAxisLineColor, ok := from.GetAxisLineColor(ctx); ok {
+				// Recursively sync the fields of AxisLineColor
+				toAxisLineColor.SyncFieldsDuringCreateOrUpdate(ctx, fromAxisLineColor)
+				to.SetAxisLineColor(ctx, toAxisLineColor)
+			}
+		}
+	}
+	if !from.CanvasBackgroundColor.IsNull() && !from.CanvasBackgroundColor.IsUnknown() {
+		if toCanvasBackgroundColor, ok := to.GetCanvasBackgroundColor(ctx); ok {
+			if fromCanvasBackgroundColor, ok := from.GetCanvasBackgroundColor(ctx); ok {
+				// Recursively sync the fields of CanvasBackgroundColor
+				toCanvasBackgroundColor.SyncFieldsDuringCreateOrUpdate(ctx, fromCanvasBackgroundColor)
+				to.SetCanvasBackgroundColor(ctx, toCanvasBackgroundColor)
+			}
+		}
+	}
+	if !from.ContinuousGradient.IsNull() && !from.ContinuousGradient.IsUnknown() {
+		if toContinuousGradient, ok := to.GetContinuousGradient(ctx); ok {
+			if fromContinuousGradient, ok := from.GetContinuousGradient(ctx); ok {
+				// Recursively sync the fields of ContinuousGradient
+				toContinuousGradient.SyncFieldsDuringCreateOrUpdate(ctx, fromContinuousGradient)
+				to.SetContinuousGradient(ctx, toContinuousGradient)
+			}
+		}
+	}
+	if !from.FontColor.IsNull() && !from.FontColor.IsUnknown() {
+		if toFontColor, ok := to.GetFontColor(ctx); ok {
+			if fromFontColor, ok := from.GetFontColor(ctx); ok {
+				// Recursively sync the fields of FontColor
+				toFontColor.SyncFieldsDuringCreateOrUpdate(ctx, fromFontColor)
+				to.SetFontColor(ctx, toFontColor)
+			}
+		}
+	}
+	if !from.FontSettings.IsNull() && !from.FontSettings.IsUnknown() {
+		if toFontSettings, ok := to.GetFontSettings(ctx); ok {
+			if fromFontSettings, ok := from.GetFontSettings(ctx); ok {
+				// Recursively sync the fields of FontSettings
+				toFontSettings.SyncFieldsDuringCreateOrUpdate(ctx, fromFontSettings)
+				to.SetFontSettings(ctx, toFontSettings)
+			}
+		}
+	}
+	if !from.GridLineColor.IsNull() && !from.GridLineColor.IsUnknown() {
+		if toGridLineColor, ok := to.GetGridLineColor(ctx); ok {
+			if fromGridLineColor, ok := from.GetGridLineColor(ctx); ok {
+				// Recursively sync the fields of GridLineColor
+				toGridLineColor.SyncFieldsDuringCreateOrUpdate(ctx, fromGridLineColor)
+				to.SetGridLineColor(ctx, toGridLineColor)
+			}
+		}
+	}
+	if !from.SelectionColor.IsNull() && !from.SelectionColor.IsUnknown() {
+		if toSelectionColor, ok := to.GetSelectionColor(ctx); ok {
+			if fromSelectionColor, ok := from.GetSelectionColor(ctx); ok {
+				// Recursively sync the fields of SelectionColor
+				toSelectionColor.SyncFieldsDuringCreateOrUpdate(ctx, fromSelectionColor)
+				to.SetSelectionColor(ctx, toSelectionColor)
+			}
+		}
+	}
+	if !from.SentimentColors.IsNull() && !from.SentimentColors.IsUnknown() {
+		if toSentimentColors, ok := to.GetSentimentColors(ctx); ok {
+			if fromSentimentColors, ok := from.GetSentimentColors(ctx); ok {
+				// Recursively sync the fields of SentimentColors
+				toSentimentColors.SyncFieldsDuringCreateOrUpdate(ctx, fromSentimentColors)
+				to.SetSentimentColors(ctx, toSentimentColors)
+			}
+		}
+	}
+	if !from.WidgetBackgroundColor.IsNull() && !from.WidgetBackgroundColor.IsUnknown() {
+		if toWidgetBackgroundColor, ok := to.GetWidgetBackgroundColor(ctx); ok {
+			if fromWidgetBackgroundColor, ok := from.GetWidgetBackgroundColor(ctx); ok {
+				// Recursively sync the fields of WidgetBackgroundColor
+				toWidgetBackgroundColor.SyncFieldsDuringCreateOrUpdate(ctx, fromWidgetBackgroundColor)
+				to.SetWidgetBackgroundColor(ctx, toWidgetBackgroundColor)
+			}
+		}
+	}
+	if !from.WidgetBorderColor.IsNull() && !from.WidgetBorderColor.IsUnknown() {
+		if toWidgetBorderColor, ok := to.GetWidgetBorderColor(ctx); ok {
+			if fromWidgetBorderColor, ok := from.GetWidgetBorderColor(ctx); ok {
+				// Recursively sync the fields of WidgetBorderColor
+				toWidgetBorderColor.SyncFieldsDuringCreateOrUpdate(ctx, fromWidgetBorderColor)
+				to.SetWidgetBorderColor(ctx, toWidgetBorderColor)
+			}
+		}
+	}
+}
+
+func (to *DashboardTheme_SdkV2) SyncFieldsDuringRead(ctx context.Context, from DashboardTheme_SdkV2) {
+	if !from.AxisLineColor.IsNull() && !from.AxisLineColor.IsUnknown() {
+		if toAxisLineColor, ok := to.GetAxisLineColor(ctx); ok {
+			if fromAxisLineColor, ok := from.GetAxisLineColor(ctx); ok {
+				toAxisLineColor.SyncFieldsDuringRead(ctx, fromAxisLineColor)
+				to.SetAxisLineColor(ctx, toAxisLineColor)
+			}
+		}
+	}
+	if !from.CanvasBackgroundColor.IsNull() && !from.CanvasBackgroundColor.IsUnknown() {
+		if toCanvasBackgroundColor, ok := to.GetCanvasBackgroundColor(ctx); ok {
+			if fromCanvasBackgroundColor, ok := from.GetCanvasBackgroundColor(ctx); ok {
+				toCanvasBackgroundColor.SyncFieldsDuringRead(ctx, fromCanvasBackgroundColor)
+				to.SetCanvasBackgroundColor(ctx, toCanvasBackgroundColor)
+			}
+		}
+	}
+	if !from.ContinuousGradient.IsNull() && !from.ContinuousGradient.IsUnknown() {
+		if toContinuousGradient, ok := to.GetContinuousGradient(ctx); ok {
+			if fromContinuousGradient, ok := from.GetContinuousGradient(ctx); ok {
+				toContinuousGradient.SyncFieldsDuringRead(ctx, fromContinuousGradient)
+				to.SetContinuousGradient(ctx, toContinuousGradient)
+			}
+		}
+	}
+	if !from.FontColor.IsNull() && !from.FontColor.IsUnknown() {
+		if toFontColor, ok := to.GetFontColor(ctx); ok {
+			if fromFontColor, ok := from.GetFontColor(ctx); ok {
+				toFontColor.SyncFieldsDuringRead(ctx, fromFontColor)
+				to.SetFontColor(ctx, toFontColor)
+			}
+		}
+	}
+	if !from.FontSettings.IsNull() && !from.FontSettings.IsUnknown() {
+		if toFontSettings, ok := to.GetFontSettings(ctx); ok {
+			if fromFontSettings, ok := from.GetFontSettings(ctx); ok {
+				toFontSettings.SyncFieldsDuringRead(ctx, fromFontSettings)
+				to.SetFontSettings(ctx, toFontSettings)
+			}
+		}
+	}
+	if !from.GridLineColor.IsNull() && !from.GridLineColor.IsUnknown() {
+		if toGridLineColor, ok := to.GetGridLineColor(ctx); ok {
+			if fromGridLineColor, ok := from.GetGridLineColor(ctx); ok {
+				toGridLineColor.SyncFieldsDuringRead(ctx, fromGridLineColor)
+				to.SetGridLineColor(ctx, toGridLineColor)
+			}
+		}
+	}
+	if !from.SelectionColor.IsNull() && !from.SelectionColor.IsUnknown() {
+		if toSelectionColor, ok := to.GetSelectionColor(ctx); ok {
+			if fromSelectionColor, ok := from.GetSelectionColor(ctx); ok {
+				toSelectionColor.SyncFieldsDuringRead(ctx, fromSelectionColor)
+				to.SetSelectionColor(ctx, toSelectionColor)
+			}
+		}
+	}
+	if !from.SentimentColors.IsNull() && !from.SentimentColors.IsUnknown() {
+		if toSentimentColors, ok := to.GetSentimentColors(ctx); ok {
+			if fromSentimentColors, ok := from.GetSentimentColors(ctx); ok {
+				toSentimentColors.SyncFieldsDuringRead(ctx, fromSentimentColors)
+				to.SetSentimentColors(ctx, toSentimentColors)
+			}
+		}
+	}
+	if !from.WidgetBackgroundColor.IsNull() && !from.WidgetBackgroundColor.IsUnknown() {
+		if toWidgetBackgroundColor, ok := to.GetWidgetBackgroundColor(ctx); ok {
+			if fromWidgetBackgroundColor, ok := from.GetWidgetBackgroundColor(ctx); ok {
+				toWidgetBackgroundColor.SyncFieldsDuringRead(ctx, fromWidgetBackgroundColor)
+				to.SetWidgetBackgroundColor(ctx, toWidgetBackgroundColor)
+			}
+		}
+	}
+	if !from.WidgetBorderColor.IsNull() && !from.WidgetBorderColor.IsUnknown() {
+		if toWidgetBorderColor, ok := to.GetWidgetBorderColor(ctx); ok {
+			if fromWidgetBorderColor, ok := from.GetWidgetBorderColor(ctx); ok {
+				toWidgetBorderColor.SyncFieldsDuringRead(ctx, fromWidgetBorderColor)
+				to.SetWidgetBorderColor(ctx, toWidgetBorderColor)
+			}
+		}
+	}
+}
+
+func (m DashboardTheme_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["axis_line_color"] = attrs["axis_line_color"].SetOptional()
+	attrs["axis_line_color"] = attrs["axis_line_color"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["canvas_background_color"] = attrs["canvas_background_color"].SetOptional()
+	attrs["canvas_background_color"] = attrs["canvas_background_color"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["continuous_gradient"] = attrs["continuous_gradient"].SetOptional()
+	attrs["continuous_gradient"] = attrs["continuous_gradient"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["font_color"] = attrs["font_color"].SetOptional()
+	attrs["font_color"] = attrs["font_color"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["font_family"] = attrs["font_family"].SetOptional()
+	attrs["font_settings"] = attrs["font_settings"].SetOptional()
+	attrs["font_settings"] = attrs["font_settings"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["grid_line_color"] = attrs["grid_line_color"].SetOptional()
+	attrs["grid_line_color"] = attrs["grid_line_color"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["mark_corner_radius"] = attrs["mark_corner_radius"].SetOptional()
+	attrs["selection_color"] = attrs["selection_color"].SetOptional()
+	attrs["selection_color"] = attrs["selection_color"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["sentiment_colors"] = attrs["sentiment_colors"].SetOptional()
+	attrs["sentiment_colors"] = attrs["sentiment_colors"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["text_box_vertical_align"] = attrs["text_box_vertical_align"].SetOptional()
+	attrs["visualization_color_01"] = attrs["visualization_color_01"].SetOptional()
+	attrs["visualization_color_02"] = attrs["visualization_color_02"].SetOptional()
+	attrs["visualization_color_03"] = attrs["visualization_color_03"].SetOptional()
+	attrs["visualization_color_04"] = attrs["visualization_color_04"].SetOptional()
+	attrs["visualization_color_05"] = attrs["visualization_color_05"].SetOptional()
+	attrs["visualization_color_06"] = attrs["visualization_color_06"].SetOptional()
+	attrs["visualization_color_07"] = attrs["visualization_color_07"].SetOptional()
+	attrs["visualization_color_08"] = attrs["visualization_color_08"].SetOptional()
+	attrs["visualization_color_09"] = attrs["visualization_color_09"].SetOptional()
+	attrs["visualization_color_10"] = attrs["visualization_color_10"].SetOptional()
+	attrs["visualization_color_11"] = attrs["visualization_color_11"].SetOptional()
+	attrs["visualization_color_12"] = attrs["visualization_color_12"].SetOptional()
+	attrs["visualization_color_13"] = attrs["visualization_color_13"].SetOptional()
+	attrs["visualization_color_14"] = attrs["visualization_color_14"].SetOptional()
+	attrs["visualization_color_15"] = attrs["visualization_color_15"].SetOptional()
+	attrs["visualization_color_16"] = attrs["visualization_color_16"].SetOptional()
+	attrs["visualization_color_17"] = attrs["visualization_color_17"].SetOptional()
+	attrs["visualization_color_18"] = attrs["visualization_color_18"].SetOptional()
+	attrs["visualization_color_19"] = attrs["visualization_color_19"].SetOptional()
+	attrs["visualization_color_20"] = attrs["visualization_color_20"].SetOptional()
+	attrs["widget_background_color"] = attrs["widget_background_color"].SetOptional()
+	attrs["widget_background_color"] = attrs["widget_background_color"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["widget_border_color"] = attrs["widget_border_color"].SetOptional()
+	attrs["widget_border_color"] = attrs["widget_border_color"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["widget_corner_radius"] = attrs["widget_corner_radius"].SetOptional()
+	attrs["widget_header_alignment"] = attrs["widget_header_alignment"].SetOptional()
+	attrs["widget_margin"] = attrs["widget_margin"].SetOptional()
+	attrs["widget_padding"] = attrs["widget_padding"].SetOptional()
+	attrs["widget_shadow"] = attrs["widget_shadow"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DashboardTheme.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m DashboardTheme_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"axis_line_color":         reflect.TypeOf(DashboardThemeDashboardThemeColor_SdkV2{}),
+		"canvas_background_color": reflect.TypeOf(DashboardThemeDashboardThemeColor_SdkV2{}),
+		"continuous_gradient":     reflect.TypeOf(DashboardThemeContinuousGradient_SdkV2{}),
+		"font_color":              reflect.TypeOf(DashboardThemeDashboardThemeColor_SdkV2{}),
+		"font_settings":           reflect.TypeOf(DashboardThemeFontSettings_SdkV2{}),
+		"grid_line_color":         reflect.TypeOf(DashboardThemeDashboardThemeColor_SdkV2{}),
+		"selection_color":         reflect.TypeOf(DashboardThemeDashboardThemeColor_SdkV2{}),
+		"sentiment_colors":        reflect.TypeOf(DashboardThemeSentimentColors_SdkV2{}),
+		"widget_background_color": reflect.TypeOf(DashboardThemeDashboardThemeColor_SdkV2{}),
+		"widget_border_color":     reflect.TypeOf(DashboardThemeDashboardThemeColor_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DashboardTheme_SdkV2
+// only implements ToObjectValue() and Type().
+func (m DashboardTheme_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"axis_line_color":         m.AxisLineColor,
+			"canvas_background_color": m.CanvasBackgroundColor,
+			"continuous_gradient":     m.ContinuousGradient,
+			"font_color":              m.FontColor,
+			"font_family":             m.FontFamily,
+			"font_settings":           m.FontSettings,
+			"grid_line_color":         m.GridLineColor,
+			"mark_corner_radius":      m.MarkCornerRadius,
+			"selection_color":         m.SelectionColor,
+			"sentiment_colors":        m.SentimentColors,
+			"text_box_vertical_align": m.TextBoxVerticalAlign,
+			"visualization_color_01":  m.VisualizationColor01,
+			"visualization_color_02":  m.VisualizationColor02,
+			"visualization_color_03":  m.VisualizationColor03,
+			"visualization_color_04":  m.VisualizationColor04,
+			"visualization_color_05":  m.VisualizationColor05,
+			"visualization_color_06":  m.VisualizationColor06,
+			"visualization_color_07":  m.VisualizationColor07,
+			"visualization_color_08":  m.VisualizationColor08,
+			"visualization_color_09":  m.VisualizationColor09,
+			"visualization_color_10":  m.VisualizationColor10,
+			"visualization_color_11":  m.VisualizationColor11,
+			"visualization_color_12":  m.VisualizationColor12,
+			"visualization_color_13":  m.VisualizationColor13,
+			"visualization_color_14":  m.VisualizationColor14,
+			"visualization_color_15":  m.VisualizationColor15,
+			"visualization_color_16":  m.VisualizationColor16,
+			"visualization_color_17":  m.VisualizationColor17,
+			"visualization_color_18":  m.VisualizationColor18,
+			"visualization_color_19":  m.VisualizationColor19,
+			"visualization_color_20":  m.VisualizationColor20,
+			"widget_background_color": m.WidgetBackgroundColor,
+			"widget_border_color":     m.WidgetBorderColor,
+			"widget_corner_radius":    m.WidgetCornerRadius,
+			"widget_header_alignment": m.WidgetHeaderAlignment,
+			"widget_margin":           m.WidgetMargin,
+			"widget_padding":          m.WidgetPadding,
+			"widget_shadow":           m.WidgetShadow,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m DashboardTheme_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"axis_line_color": basetypes.ListType{
+				ElemType: DashboardThemeDashboardThemeColor_SdkV2{}.Type(ctx),
+			},
+			"canvas_background_color": basetypes.ListType{
+				ElemType: DashboardThemeDashboardThemeColor_SdkV2{}.Type(ctx),
+			},
+			"continuous_gradient": basetypes.ListType{
+				ElemType: DashboardThemeContinuousGradient_SdkV2{}.Type(ctx),
+			},
+			"font_color": basetypes.ListType{
+				ElemType: DashboardThemeDashboardThemeColor_SdkV2{}.Type(ctx),
+			},
+			"font_family": types.StringType,
+			"font_settings": basetypes.ListType{
+				ElemType: DashboardThemeFontSettings_SdkV2{}.Type(ctx),
+			},
+			"grid_line_color": basetypes.ListType{
+				ElemType: DashboardThemeDashboardThemeColor_SdkV2{}.Type(ctx),
+			},
+			"mark_corner_radius": types.Int64Type,
+			"selection_color": basetypes.ListType{
+				ElemType: DashboardThemeDashboardThemeColor_SdkV2{}.Type(ctx),
+			},
+			"sentiment_colors": basetypes.ListType{
+				ElemType: DashboardThemeSentimentColors_SdkV2{}.Type(ctx),
+			},
+			"text_box_vertical_align": types.StringType,
+			"visualization_color_01":  types.StringType,
+			"visualization_color_02":  types.StringType,
+			"visualization_color_03":  types.StringType,
+			"visualization_color_04":  types.StringType,
+			"visualization_color_05":  types.StringType,
+			"visualization_color_06":  types.StringType,
+			"visualization_color_07":  types.StringType,
+			"visualization_color_08":  types.StringType,
+			"visualization_color_09":  types.StringType,
+			"visualization_color_10":  types.StringType,
+			"visualization_color_11":  types.StringType,
+			"visualization_color_12":  types.StringType,
+			"visualization_color_13":  types.StringType,
+			"visualization_color_14":  types.StringType,
+			"visualization_color_15":  types.StringType,
+			"visualization_color_16":  types.StringType,
+			"visualization_color_17":  types.StringType,
+			"visualization_color_18":  types.StringType,
+			"visualization_color_19":  types.StringType,
+			"visualization_color_20":  types.StringType,
+			"widget_background_color": basetypes.ListType{
+				ElemType: DashboardThemeDashboardThemeColor_SdkV2{}.Type(ctx),
+			},
+			"widget_border_color": basetypes.ListType{
+				ElemType: DashboardThemeDashboardThemeColor_SdkV2{}.Type(ctx),
+			},
+			"widget_corner_radius":    types.Int64Type,
+			"widget_header_alignment": types.StringType,
+			"widget_margin":           types.Int64Type,
+			"widget_padding":          types.Int64Type,
+			"widget_shadow":           types.Int64Type,
+		},
+	}
+}
+
+// GetAxisLineColor returns the value of the AxisLineColor field in DashboardTheme_SdkV2 as
+// a DashboardThemeDashboardThemeColor_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *DashboardTheme_SdkV2) GetAxisLineColor(ctx context.Context) (DashboardThemeDashboardThemeColor_SdkV2, bool) {
+	var e DashboardThemeDashboardThemeColor_SdkV2
+	if m.AxisLineColor.IsNull() || m.AxisLineColor.IsUnknown() {
+		return e, false
+	}
+	var v []DashboardThemeDashboardThemeColor_SdkV2
+	d := m.AxisLineColor.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAxisLineColor sets the value of the AxisLineColor field in DashboardTheme_SdkV2.
+func (m *DashboardTheme_SdkV2) SetAxisLineColor(ctx context.Context, v DashboardThemeDashboardThemeColor_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["axis_line_color"]
+	m.AxisLineColor = types.ListValueMust(t, vs)
+}
+
+// GetCanvasBackgroundColor returns the value of the CanvasBackgroundColor field in DashboardTheme_SdkV2 as
+// a DashboardThemeDashboardThemeColor_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *DashboardTheme_SdkV2) GetCanvasBackgroundColor(ctx context.Context) (DashboardThemeDashboardThemeColor_SdkV2, bool) {
+	var e DashboardThemeDashboardThemeColor_SdkV2
+	if m.CanvasBackgroundColor.IsNull() || m.CanvasBackgroundColor.IsUnknown() {
+		return e, false
+	}
+	var v []DashboardThemeDashboardThemeColor_SdkV2
+	d := m.CanvasBackgroundColor.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetCanvasBackgroundColor sets the value of the CanvasBackgroundColor field in DashboardTheme_SdkV2.
+func (m *DashboardTheme_SdkV2) SetCanvasBackgroundColor(ctx context.Context, v DashboardThemeDashboardThemeColor_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["canvas_background_color"]
+	m.CanvasBackgroundColor = types.ListValueMust(t, vs)
+}
+
+// GetContinuousGradient returns the value of the ContinuousGradient field in DashboardTheme_SdkV2 as
+// a DashboardThemeContinuousGradient_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *DashboardTheme_SdkV2) GetContinuousGradient(ctx context.Context) (DashboardThemeContinuousGradient_SdkV2, bool) {
+	var e DashboardThemeContinuousGradient_SdkV2
+	if m.ContinuousGradient.IsNull() || m.ContinuousGradient.IsUnknown() {
+		return e, false
+	}
+	var v []DashboardThemeContinuousGradient_SdkV2
+	d := m.ContinuousGradient.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetContinuousGradient sets the value of the ContinuousGradient field in DashboardTheme_SdkV2.
+func (m *DashboardTheme_SdkV2) SetContinuousGradient(ctx context.Context, v DashboardThemeContinuousGradient_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["continuous_gradient"]
+	m.ContinuousGradient = types.ListValueMust(t, vs)
+}
+
+// GetFontColor returns the value of the FontColor field in DashboardTheme_SdkV2 as
+// a DashboardThemeDashboardThemeColor_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *DashboardTheme_SdkV2) GetFontColor(ctx context.Context) (DashboardThemeDashboardThemeColor_SdkV2, bool) {
+	var e DashboardThemeDashboardThemeColor_SdkV2
+	if m.FontColor.IsNull() || m.FontColor.IsUnknown() {
+		return e, false
+	}
+	var v []DashboardThemeDashboardThemeColor_SdkV2
+	d := m.FontColor.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetFontColor sets the value of the FontColor field in DashboardTheme_SdkV2.
+func (m *DashboardTheme_SdkV2) SetFontColor(ctx context.Context, v DashboardThemeDashboardThemeColor_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["font_color"]
+	m.FontColor = types.ListValueMust(t, vs)
+}
+
+// GetFontSettings returns the value of the FontSettings field in DashboardTheme_SdkV2 as
+// a DashboardThemeFontSettings_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *DashboardTheme_SdkV2) GetFontSettings(ctx context.Context) (DashboardThemeFontSettings_SdkV2, bool) {
+	var e DashboardThemeFontSettings_SdkV2
+	if m.FontSettings.IsNull() || m.FontSettings.IsUnknown() {
+		return e, false
+	}
+	var v []DashboardThemeFontSettings_SdkV2
+	d := m.FontSettings.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetFontSettings sets the value of the FontSettings field in DashboardTheme_SdkV2.
+func (m *DashboardTheme_SdkV2) SetFontSettings(ctx context.Context, v DashboardThemeFontSettings_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["font_settings"]
+	m.FontSettings = types.ListValueMust(t, vs)
+}
+
+// GetGridLineColor returns the value of the GridLineColor field in DashboardTheme_SdkV2 as
+// a DashboardThemeDashboardThemeColor_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *DashboardTheme_SdkV2) GetGridLineColor(ctx context.Context) (DashboardThemeDashboardThemeColor_SdkV2, bool) {
+	var e DashboardThemeDashboardThemeColor_SdkV2
+	if m.GridLineColor.IsNull() || m.GridLineColor.IsUnknown() {
+		return e, false
+	}
+	var v []DashboardThemeDashboardThemeColor_SdkV2
+	d := m.GridLineColor.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetGridLineColor sets the value of the GridLineColor field in DashboardTheme_SdkV2.
+func (m *DashboardTheme_SdkV2) SetGridLineColor(ctx context.Context, v DashboardThemeDashboardThemeColor_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["grid_line_color"]
+	m.GridLineColor = types.ListValueMust(t, vs)
+}
+
+// GetSelectionColor returns the value of the SelectionColor field in DashboardTheme_SdkV2 as
+// a DashboardThemeDashboardThemeColor_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *DashboardTheme_SdkV2) GetSelectionColor(ctx context.Context) (DashboardThemeDashboardThemeColor_SdkV2, bool) {
+	var e DashboardThemeDashboardThemeColor_SdkV2
+	if m.SelectionColor.IsNull() || m.SelectionColor.IsUnknown() {
+		return e, false
+	}
+	var v []DashboardThemeDashboardThemeColor_SdkV2
+	d := m.SelectionColor.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSelectionColor sets the value of the SelectionColor field in DashboardTheme_SdkV2.
+func (m *DashboardTheme_SdkV2) SetSelectionColor(ctx context.Context, v DashboardThemeDashboardThemeColor_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["selection_color"]
+	m.SelectionColor = types.ListValueMust(t, vs)
+}
+
+// GetSentimentColors returns the value of the SentimentColors field in DashboardTheme_SdkV2 as
+// a DashboardThemeSentimentColors_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *DashboardTheme_SdkV2) GetSentimentColors(ctx context.Context) (DashboardThemeSentimentColors_SdkV2, bool) {
+	var e DashboardThemeSentimentColors_SdkV2
+	if m.SentimentColors.IsNull() || m.SentimentColors.IsUnknown() {
+		return e, false
+	}
+	var v []DashboardThemeSentimentColors_SdkV2
+	d := m.SentimentColors.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSentimentColors sets the value of the SentimentColors field in DashboardTheme_SdkV2.
+func (m *DashboardTheme_SdkV2) SetSentimentColors(ctx context.Context, v DashboardThemeSentimentColors_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["sentiment_colors"]
+	m.SentimentColors = types.ListValueMust(t, vs)
+}
+
+// GetWidgetBackgroundColor returns the value of the WidgetBackgroundColor field in DashboardTheme_SdkV2 as
+// a DashboardThemeDashboardThemeColor_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *DashboardTheme_SdkV2) GetWidgetBackgroundColor(ctx context.Context) (DashboardThemeDashboardThemeColor_SdkV2, bool) {
+	var e DashboardThemeDashboardThemeColor_SdkV2
+	if m.WidgetBackgroundColor.IsNull() || m.WidgetBackgroundColor.IsUnknown() {
+		return e, false
+	}
+	var v []DashboardThemeDashboardThemeColor_SdkV2
+	d := m.WidgetBackgroundColor.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetWidgetBackgroundColor sets the value of the WidgetBackgroundColor field in DashboardTheme_SdkV2.
+func (m *DashboardTheme_SdkV2) SetWidgetBackgroundColor(ctx context.Context, v DashboardThemeDashboardThemeColor_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["widget_background_color"]
+	m.WidgetBackgroundColor = types.ListValueMust(t, vs)
+}
+
+// GetWidgetBorderColor returns the value of the WidgetBorderColor field in DashboardTheme_SdkV2 as
+// a DashboardThemeDashboardThemeColor_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *DashboardTheme_SdkV2) GetWidgetBorderColor(ctx context.Context) (DashboardThemeDashboardThemeColor_SdkV2, bool) {
+	var e DashboardThemeDashboardThemeColor_SdkV2
+	if m.WidgetBorderColor.IsNull() || m.WidgetBorderColor.IsUnknown() {
+		return e, false
+	}
+	var v []DashboardThemeDashboardThemeColor_SdkV2
+	d := m.WidgetBorderColor.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetWidgetBorderColor sets the value of the WidgetBorderColor field in DashboardTheme_SdkV2.
+func (m *DashboardTheme_SdkV2) SetWidgetBorderColor(ctx context.Context, v DashboardThemeDashboardThemeColor_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["widget_border_color"]
+	m.WidgetBorderColor = types.ListValueMust(t, vs)
+}
+
+// Configuration for continuous color gradients, with separate values for light
+// and dark mode. Each mode's gradient can reference the visualization color
+// palette via from_categorical_index, use a named color scheme, or define a
+// custom sequential or diverging ramp.
+type DashboardThemeContinuousGradient_SdkV2 struct {
+	// Gradient value used when the dashboard is rendered in dark mode.
+	DarkMode types.List `tfsdk:"dark_mode"`
+	// Gradient value used when the dashboard is rendered in light mode.
+	LightMode types.List `tfsdk:"light_mode"`
+}
+
+func (to *DashboardThemeContinuousGradient_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DashboardThemeContinuousGradient_SdkV2) {
+	if !from.DarkMode.IsNull() && !from.DarkMode.IsUnknown() {
+		if toDarkMode, ok := to.GetDarkMode(ctx); ok {
+			if fromDarkMode, ok := from.GetDarkMode(ctx); ok {
+				// Recursively sync the fields of DarkMode
+				toDarkMode.SyncFieldsDuringCreateOrUpdate(ctx, fromDarkMode)
+				to.SetDarkMode(ctx, toDarkMode)
+			}
+		}
+	}
+	if !from.LightMode.IsNull() && !from.LightMode.IsUnknown() {
+		if toLightMode, ok := to.GetLightMode(ctx); ok {
+			if fromLightMode, ok := from.GetLightMode(ctx); ok {
+				// Recursively sync the fields of LightMode
+				toLightMode.SyncFieldsDuringCreateOrUpdate(ctx, fromLightMode)
+				to.SetLightMode(ctx, toLightMode)
+			}
+		}
+	}
+}
+
+func (to *DashboardThemeContinuousGradient_SdkV2) SyncFieldsDuringRead(ctx context.Context, from DashboardThemeContinuousGradient_SdkV2) {
+	if !from.DarkMode.IsNull() && !from.DarkMode.IsUnknown() {
+		if toDarkMode, ok := to.GetDarkMode(ctx); ok {
+			if fromDarkMode, ok := from.GetDarkMode(ctx); ok {
+				toDarkMode.SyncFieldsDuringRead(ctx, fromDarkMode)
+				to.SetDarkMode(ctx, toDarkMode)
+			}
+		}
+	}
+	if !from.LightMode.IsNull() && !from.LightMode.IsUnknown() {
+		if toLightMode, ok := to.GetLightMode(ctx); ok {
+			if fromLightMode, ok := from.GetLightMode(ctx); ok {
+				toLightMode.SyncFieldsDuringRead(ctx, fromLightMode)
+				to.SetLightMode(ctx, toLightMode)
+			}
+		}
+	}
+}
+
+func (m DashboardThemeContinuousGradient_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["dark_mode"] = attrs["dark_mode"].SetOptional()
+	attrs["dark_mode"] = attrs["dark_mode"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["light_mode"] = attrs["light_mode"].SetOptional()
+	attrs["light_mode"] = attrs["light_mode"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DashboardThemeContinuousGradient.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m DashboardThemeContinuousGradient_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"dark_mode":  reflect.TypeOf(DashboardThemeContinuousGradientGradientValue_SdkV2{}),
+		"light_mode": reflect.TypeOf(DashboardThemeContinuousGradientGradientValue_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DashboardThemeContinuousGradient_SdkV2
+// only implements ToObjectValue() and Type().
+func (m DashboardThemeContinuousGradient_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"dark_mode":  m.DarkMode,
+			"light_mode": m.LightMode,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m DashboardThemeContinuousGradient_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"dark_mode": basetypes.ListType{
+				ElemType: DashboardThemeContinuousGradientGradientValue_SdkV2{}.Type(ctx),
+			},
+			"light_mode": basetypes.ListType{
+				ElemType: DashboardThemeContinuousGradientGradientValue_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetDarkMode returns the value of the DarkMode field in DashboardThemeContinuousGradient_SdkV2 as
+// a DashboardThemeContinuousGradientGradientValue_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *DashboardThemeContinuousGradient_SdkV2) GetDarkMode(ctx context.Context) (DashboardThemeContinuousGradientGradientValue_SdkV2, bool) {
+	var e DashboardThemeContinuousGradientGradientValue_SdkV2
+	if m.DarkMode.IsNull() || m.DarkMode.IsUnknown() {
+		return e, false
+	}
+	var v []DashboardThemeContinuousGradientGradientValue_SdkV2
+	d := m.DarkMode.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetDarkMode sets the value of the DarkMode field in DashboardThemeContinuousGradient_SdkV2.
+func (m *DashboardThemeContinuousGradient_SdkV2) SetDarkMode(ctx context.Context, v DashboardThemeContinuousGradientGradientValue_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["dark_mode"]
+	m.DarkMode = types.ListValueMust(t, vs)
+}
+
+// GetLightMode returns the value of the LightMode field in DashboardThemeContinuousGradient_SdkV2 as
+// a DashboardThemeContinuousGradientGradientValue_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *DashboardThemeContinuousGradient_SdkV2) GetLightMode(ctx context.Context) (DashboardThemeContinuousGradientGradientValue_SdkV2, bool) {
+	var e DashboardThemeContinuousGradientGradientValue_SdkV2
+	if m.LightMode.IsNull() || m.LightMode.IsUnknown() {
+		return e, false
+	}
+	var v []DashboardThemeContinuousGradientGradientValue_SdkV2
+	d := m.LightMode.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetLightMode sets the value of the LightMode field in DashboardThemeContinuousGradient_SdkV2.
+func (m *DashboardThemeContinuousGradient_SdkV2) SetLightMode(ctx context.Context, v DashboardThemeContinuousGradientGradientValue_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["light_mode"]
+	m.LightMode = types.ListValueMust(t, vs)
+}
+
+// A custom three-stop diverging gradient ramp.
+type DashboardThemeContinuousGradientCustomDivergingRamp_SdkV2 struct {
+	// The color at the end of the gradient (highest value).
+	End types.List `tfsdk:"end"`
+	// The color at the midpoint of the gradient.
+	Mid types.List `tfsdk:"mid"`
+	// The color at the start of the gradient (lowest value).
+	Start types.List `tfsdk:"start"`
+}
+
+func (to *DashboardThemeContinuousGradientCustomDivergingRamp_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DashboardThemeContinuousGradientCustomDivergingRamp_SdkV2) {
+	if !from.End.IsNull() && !from.End.IsUnknown() {
+		if toEnd, ok := to.GetEnd(ctx); ok {
+			if fromEnd, ok := from.GetEnd(ctx); ok {
+				// Recursively sync the fields of End
+				toEnd.SyncFieldsDuringCreateOrUpdate(ctx, fromEnd)
+				to.SetEnd(ctx, toEnd)
+			}
+		}
+	}
+	if !from.Mid.IsNull() && !from.Mid.IsUnknown() {
+		if toMid, ok := to.GetMid(ctx); ok {
+			if fromMid, ok := from.GetMid(ctx); ok {
+				// Recursively sync the fields of Mid
+				toMid.SyncFieldsDuringCreateOrUpdate(ctx, fromMid)
+				to.SetMid(ctx, toMid)
+			}
+		}
+	}
+	if !from.Start.IsNull() && !from.Start.IsUnknown() {
+		if toStart, ok := to.GetStart(ctx); ok {
+			if fromStart, ok := from.GetStart(ctx); ok {
+				// Recursively sync the fields of Start
+				toStart.SyncFieldsDuringCreateOrUpdate(ctx, fromStart)
+				to.SetStart(ctx, toStart)
+			}
+		}
+	}
+}
+
+func (to *DashboardThemeContinuousGradientCustomDivergingRamp_SdkV2) SyncFieldsDuringRead(ctx context.Context, from DashboardThemeContinuousGradientCustomDivergingRamp_SdkV2) {
+	if !from.End.IsNull() && !from.End.IsUnknown() {
+		if toEnd, ok := to.GetEnd(ctx); ok {
+			if fromEnd, ok := from.GetEnd(ctx); ok {
+				toEnd.SyncFieldsDuringRead(ctx, fromEnd)
+				to.SetEnd(ctx, toEnd)
+			}
+		}
+	}
+	if !from.Mid.IsNull() && !from.Mid.IsUnknown() {
+		if toMid, ok := to.GetMid(ctx); ok {
+			if fromMid, ok := from.GetMid(ctx); ok {
+				toMid.SyncFieldsDuringRead(ctx, fromMid)
+				to.SetMid(ctx, toMid)
+			}
+		}
+	}
+	if !from.Start.IsNull() && !from.Start.IsUnknown() {
+		if toStart, ok := to.GetStart(ctx); ok {
+			if fromStart, ok := from.GetStart(ctx); ok {
+				toStart.SyncFieldsDuringRead(ctx, fromStart)
+				to.SetStart(ctx, toStart)
+			}
+		}
+	}
+}
+
+func (m DashboardThemeContinuousGradientCustomDivergingRamp_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["end"] = attrs["end"].SetOptional()
+	attrs["end"] = attrs["end"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["mid"] = attrs["mid"].SetOptional()
+	attrs["mid"] = attrs["mid"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["start"] = attrs["start"].SetOptional()
+	attrs["start"] = attrs["start"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DashboardThemeContinuousGradientCustomDivergingRamp.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m DashboardThemeContinuousGradientCustomDivergingRamp_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"end":   reflect.TypeOf(DashboardThemeDashboardThemeColor_SdkV2{}),
+		"mid":   reflect.TypeOf(DashboardThemeDashboardThemeColor_SdkV2{}),
+		"start": reflect.TypeOf(DashboardThemeDashboardThemeColor_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DashboardThemeContinuousGradientCustomDivergingRamp_SdkV2
+// only implements ToObjectValue() and Type().
+func (m DashboardThemeContinuousGradientCustomDivergingRamp_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"end":   m.End,
+			"mid":   m.Mid,
+			"start": m.Start,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m DashboardThemeContinuousGradientCustomDivergingRamp_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"end": basetypes.ListType{
+				ElemType: DashboardThemeDashboardThemeColor_SdkV2{}.Type(ctx),
+			},
+			"mid": basetypes.ListType{
+				ElemType: DashboardThemeDashboardThemeColor_SdkV2{}.Type(ctx),
+			},
+			"start": basetypes.ListType{
+				ElemType: DashboardThemeDashboardThemeColor_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetEnd returns the value of the End field in DashboardThemeContinuousGradientCustomDivergingRamp_SdkV2 as
+// a DashboardThemeDashboardThemeColor_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *DashboardThemeContinuousGradientCustomDivergingRamp_SdkV2) GetEnd(ctx context.Context) (DashboardThemeDashboardThemeColor_SdkV2, bool) {
+	var e DashboardThemeDashboardThemeColor_SdkV2
+	if m.End.IsNull() || m.End.IsUnknown() {
+		return e, false
+	}
+	var v []DashboardThemeDashboardThemeColor_SdkV2
+	d := m.End.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetEnd sets the value of the End field in DashboardThemeContinuousGradientCustomDivergingRamp_SdkV2.
+func (m *DashboardThemeContinuousGradientCustomDivergingRamp_SdkV2) SetEnd(ctx context.Context, v DashboardThemeDashboardThemeColor_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["end"]
+	m.End = types.ListValueMust(t, vs)
+}
+
+// GetMid returns the value of the Mid field in DashboardThemeContinuousGradientCustomDivergingRamp_SdkV2 as
+// a DashboardThemeDashboardThemeColor_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *DashboardThemeContinuousGradientCustomDivergingRamp_SdkV2) GetMid(ctx context.Context) (DashboardThemeDashboardThemeColor_SdkV2, bool) {
+	var e DashboardThemeDashboardThemeColor_SdkV2
+	if m.Mid.IsNull() || m.Mid.IsUnknown() {
+		return e, false
+	}
+	var v []DashboardThemeDashboardThemeColor_SdkV2
+	d := m.Mid.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetMid sets the value of the Mid field in DashboardThemeContinuousGradientCustomDivergingRamp_SdkV2.
+func (m *DashboardThemeContinuousGradientCustomDivergingRamp_SdkV2) SetMid(ctx context.Context, v DashboardThemeDashboardThemeColor_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["mid"]
+	m.Mid = types.ListValueMust(t, vs)
+}
+
+// GetStart returns the value of the Start field in DashboardThemeContinuousGradientCustomDivergingRamp_SdkV2 as
+// a DashboardThemeDashboardThemeColor_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *DashboardThemeContinuousGradientCustomDivergingRamp_SdkV2) GetStart(ctx context.Context) (DashboardThemeDashboardThemeColor_SdkV2, bool) {
+	var e DashboardThemeDashboardThemeColor_SdkV2
+	if m.Start.IsNull() || m.Start.IsUnknown() {
+		return e, false
+	}
+	var v []DashboardThemeDashboardThemeColor_SdkV2
+	d := m.Start.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetStart sets the value of the Start field in DashboardThemeContinuousGradientCustomDivergingRamp_SdkV2.
+func (m *DashboardThemeContinuousGradientCustomDivergingRamp_SdkV2) SetStart(ctx context.Context, v DashboardThemeDashboardThemeColor_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["start"]
+	m.Start = types.ListValueMust(t, vs)
+}
+
+// A custom two-stop sequential gradient ramp.
+type DashboardThemeContinuousGradientCustomSequentialRamp_SdkV2 struct {
+	// The color at the end of the gradient (highest value).
+	End types.List `tfsdk:"end"`
+	// The color at the start of the gradient (lowest value).
+	Start types.List `tfsdk:"start"`
+}
+
+func (to *DashboardThemeContinuousGradientCustomSequentialRamp_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DashboardThemeContinuousGradientCustomSequentialRamp_SdkV2) {
+	if !from.End.IsNull() && !from.End.IsUnknown() {
+		if toEnd, ok := to.GetEnd(ctx); ok {
+			if fromEnd, ok := from.GetEnd(ctx); ok {
+				// Recursively sync the fields of End
+				toEnd.SyncFieldsDuringCreateOrUpdate(ctx, fromEnd)
+				to.SetEnd(ctx, toEnd)
+			}
+		}
+	}
+	if !from.Start.IsNull() && !from.Start.IsUnknown() {
+		if toStart, ok := to.GetStart(ctx); ok {
+			if fromStart, ok := from.GetStart(ctx); ok {
+				// Recursively sync the fields of Start
+				toStart.SyncFieldsDuringCreateOrUpdate(ctx, fromStart)
+				to.SetStart(ctx, toStart)
+			}
+		}
+	}
+}
+
+func (to *DashboardThemeContinuousGradientCustomSequentialRamp_SdkV2) SyncFieldsDuringRead(ctx context.Context, from DashboardThemeContinuousGradientCustomSequentialRamp_SdkV2) {
+	if !from.End.IsNull() && !from.End.IsUnknown() {
+		if toEnd, ok := to.GetEnd(ctx); ok {
+			if fromEnd, ok := from.GetEnd(ctx); ok {
+				toEnd.SyncFieldsDuringRead(ctx, fromEnd)
+				to.SetEnd(ctx, toEnd)
+			}
+		}
+	}
+	if !from.Start.IsNull() && !from.Start.IsUnknown() {
+		if toStart, ok := to.GetStart(ctx); ok {
+			if fromStart, ok := from.GetStart(ctx); ok {
+				toStart.SyncFieldsDuringRead(ctx, fromStart)
+				to.SetStart(ctx, toStart)
+			}
+		}
+	}
+}
+
+func (m DashboardThemeContinuousGradientCustomSequentialRamp_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["end"] = attrs["end"].SetOptional()
+	attrs["end"] = attrs["end"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["start"] = attrs["start"].SetOptional()
+	attrs["start"] = attrs["start"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DashboardThemeContinuousGradientCustomSequentialRamp.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m DashboardThemeContinuousGradientCustomSequentialRamp_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"end":   reflect.TypeOf(DashboardThemeDashboardThemeColor_SdkV2{}),
+		"start": reflect.TypeOf(DashboardThemeDashboardThemeColor_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DashboardThemeContinuousGradientCustomSequentialRamp_SdkV2
+// only implements ToObjectValue() and Type().
+func (m DashboardThemeContinuousGradientCustomSequentialRamp_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"end":   m.End,
+			"start": m.Start,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m DashboardThemeContinuousGradientCustomSequentialRamp_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"end": basetypes.ListType{
+				ElemType: DashboardThemeDashboardThemeColor_SdkV2{}.Type(ctx),
+			},
+			"start": basetypes.ListType{
+				ElemType: DashboardThemeDashboardThemeColor_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetEnd returns the value of the End field in DashboardThemeContinuousGradientCustomSequentialRamp_SdkV2 as
+// a DashboardThemeDashboardThemeColor_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *DashboardThemeContinuousGradientCustomSequentialRamp_SdkV2) GetEnd(ctx context.Context) (DashboardThemeDashboardThemeColor_SdkV2, bool) {
+	var e DashboardThemeDashboardThemeColor_SdkV2
+	if m.End.IsNull() || m.End.IsUnknown() {
+		return e, false
+	}
+	var v []DashboardThemeDashboardThemeColor_SdkV2
+	d := m.End.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetEnd sets the value of the End field in DashboardThemeContinuousGradientCustomSequentialRamp_SdkV2.
+func (m *DashboardThemeContinuousGradientCustomSequentialRamp_SdkV2) SetEnd(ctx context.Context, v DashboardThemeDashboardThemeColor_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["end"]
+	m.End = types.ListValueMust(t, vs)
+}
+
+// GetStart returns the value of the Start field in DashboardThemeContinuousGradientCustomSequentialRamp_SdkV2 as
+// a DashboardThemeDashboardThemeColor_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *DashboardThemeContinuousGradientCustomSequentialRamp_SdkV2) GetStart(ctx context.Context) (DashboardThemeDashboardThemeColor_SdkV2, bool) {
+	var e DashboardThemeDashboardThemeColor_SdkV2
+	if m.Start.IsNull() || m.Start.IsUnknown() {
+		return e, false
+	}
+	var v []DashboardThemeDashboardThemeColor_SdkV2
+	d := m.Start.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetStart sets the value of the Start field in DashboardThemeContinuousGradientCustomSequentialRamp_SdkV2.
+func (m *DashboardThemeContinuousGradientCustomSequentialRamp_SdkV2) SetStart(ctx context.Context, v DashboardThemeDashboardThemeColor_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["start"]
+	m.Start = types.ListValueMust(t, vs)
+}
+
+// The gradient for one color mode. Set at most one field.
+type DashboardThemeContinuousGradientGradientValue_SdkV2 struct {
+	// A static color string (for example, '#FF0000').
+	Color types.String `tfsdk:"color"`
+	// A named color scheme (for example, 'blues', 'viridis', 'spectral').
+	ColorScheme types.String `tfsdk:"color_scheme"`
+	// A custom three-stop diverging gradient.
+	CustomDiverging types.List `tfsdk:"custom_diverging"`
+	// A custom two-stop sequential gradient.
+	CustomSequential types.List `tfsdk:"custom_sequential"`
+	// A 0-based index into the visualization color palette, where 0 is
+	// visualization_color_01. Valid values are 0 to 19.
+	FromCategoricalIndex types.Int64 `tfsdk:"from_categorical_index"`
+}
+
+func (to *DashboardThemeContinuousGradientGradientValue_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DashboardThemeContinuousGradientGradientValue_SdkV2) {
+	if !from.CustomDiverging.IsNull() && !from.CustomDiverging.IsUnknown() {
+		if toCustomDiverging, ok := to.GetCustomDiverging(ctx); ok {
+			if fromCustomDiverging, ok := from.GetCustomDiverging(ctx); ok {
+				// Recursively sync the fields of CustomDiverging
+				toCustomDiverging.SyncFieldsDuringCreateOrUpdate(ctx, fromCustomDiverging)
+				to.SetCustomDiverging(ctx, toCustomDiverging)
+			}
+		}
+	}
+	if !from.CustomSequential.IsNull() && !from.CustomSequential.IsUnknown() {
+		if toCustomSequential, ok := to.GetCustomSequential(ctx); ok {
+			if fromCustomSequential, ok := from.GetCustomSequential(ctx); ok {
+				// Recursively sync the fields of CustomSequential
+				toCustomSequential.SyncFieldsDuringCreateOrUpdate(ctx, fromCustomSequential)
+				to.SetCustomSequential(ctx, toCustomSequential)
+			}
+		}
+	}
+}
+
+func (to *DashboardThemeContinuousGradientGradientValue_SdkV2) SyncFieldsDuringRead(ctx context.Context, from DashboardThemeContinuousGradientGradientValue_SdkV2) {
+	if !from.CustomDiverging.IsNull() && !from.CustomDiverging.IsUnknown() {
+		if toCustomDiverging, ok := to.GetCustomDiverging(ctx); ok {
+			if fromCustomDiverging, ok := from.GetCustomDiverging(ctx); ok {
+				toCustomDiverging.SyncFieldsDuringRead(ctx, fromCustomDiverging)
+				to.SetCustomDiverging(ctx, toCustomDiverging)
+			}
+		}
+	}
+	if !from.CustomSequential.IsNull() && !from.CustomSequential.IsUnknown() {
+		if toCustomSequential, ok := to.GetCustomSequential(ctx); ok {
+			if fromCustomSequential, ok := from.GetCustomSequential(ctx); ok {
+				toCustomSequential.SyncFieldsDuringRead(ctx, fromCustomSequential)
+				to.SetCustomSequential(ctx, toCustomSequential)
+			}
+		}
+	}
+}
+
+func (m DashboardThemeContinuousGradientGradientValue_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["color"] = attrs["color"].SetOptional()
+	attrs["color_scheme"] = attrs["color_scheme"].SetOptional()
+	attrs["custom_diverging"] = attrs["custom_diverging"].SetOptional()
+	attrs["custom_diverging"] = attrs["custom_diverging"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["custom_sequential"] = attrs["custom_sequential"].SetOptional()
+	attrs["custom_sequential"] = attrs["custom_sequential"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["from_categorical_index"] = attrs["from_categorical_index"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DashboardThemeContinuousGradientGradientValue.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m DashboardThemeContinuousGradientGradientValue_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"custom_diverging":  reflect.TypeOf(DashboardThemeContinuousGradientCustomDivergingRamp_SdkV2{}),
+		"custom_sequential": reflect.TypeOf(DashboardThemeContinuousGradientCustomSequentialRamp_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DashboardThemeContinuousGradientGradientValue_SdkV2
+// only implements ToObjectValue() and Type().
+func (m DashboardThemeContinuousGradientGradientValue_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"color":                  m.Color,
+			"color_scheme":           m.ColorScheme,
+			"custom_diverging":       m.CustomDiverging,
+			"custom_sequential":      m.CustomSequential,
+			"from_categorical_index": m.FromCategoricalIndex,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m DashboardThemeContinuousGradientGradientValue_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"color":        types.StringType,
+			"color_scheme": types.StringType,
+			"custom_diverging": basetypes.ListType{
+				ElemType: DashboardThemeContinuousGradientCustomDivergingRamp_SdkV2{}.Type(ctx),
+			},
+			"custom_sequential": basetypes.ListType{
+				ElemType: DashboardThemeContinuousGradientCustomSequentialRamp_SdkV2{}.Type(ctx),
+			},
+			"from_categorical_index": types.Int64Type,
+		},
+	}
+}
+
+// GetCustomDiverging returns the value of the CustomDiverging field in DashboardThemeContinuousGradientGradientValue_SdkV2 as
+// a DashboardThemeContinuousGradientCustomDivergingRamp_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *DashboardThemeContinuousGradientGradientValue_SdkV2) GetCustomDiverging(ctx context.Context) (DashboardThemeContinuousGradientCustomDivergingRamp_SdkV2, bool) {
+	var e DashboardThemeContinuousGradientCustomDivergingRamp_SdkV2
+	if m.CustomDiverging.IsNull() || m.CustomDiverging.IsUnknown() {
+		return e, false
+	}
+	var v []DashboardThemeContinuousGradientCustomDivergingRamp_SdkV2
+	d := m.CustomDiverging.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetCustomDiverging sets the value of the CustomDiverging field in DashboardThemeContinuousGradientGradientValue_SdkV2.
+func (m *DashboardThemeContinuousGradientGradientValue_SdkV2) SetCustomDiverging(ctx context.Context, v DashboardThemeContinuousGradientCustomDivergingRamp_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["custom_diverging"]
+	m.CustomDiverging = types.ListValueMust(t, vs)
+}
+
+// GetCustomSequential returns the value of the CustomSequential field in DashboardThemeContinuousGradientGradientValue_SdkV2 as
+// a DashboardThemeContinuousGradientCustomSequentialRamp_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *DashboardThemeContinuousGradientGradientValue_SdkV2) GetCustomSequential(ctx context.Context) (DashboardThemeContinuousGradientCustomSequentialRamp_SdkV2, bool) {
+	var e DashboardThemeContinuousGradientCustomSequentialRamp_SdkV2
+	if m.CustomSequential.IsNull() || m.CustomSequential.IsUnknown() {
+		return e, false
+	}
+	var v []DashboardThemeContinuousGradientCustomSequentialRamp_SdkV2
+	d := m.CustomSequential.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetCustomSequential sets the value of the CustomSequential field in DashboardThemeContinuousGradientGradientValue_SdkV2.
+func (m *DashboardThemeContinuousGradientGradientValue_SdkV2) SetCustomSequential(ctx context.Context, v DashboardThemeContinuousGradientCustomSequentialRamp_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["custom_sequential"]
+	m.CustomSequential = types.ListValueMust(t, vs)
+}
+
+// Represents a color value with optional overrides for light and dark modes.
+// Authors can customize colors separately to cater to each mode, based on the
+// viewer's user-level theme preference.
+type DashboardThemeDashboardThemeColor_SdkV2 struct {
+	// The color used when the dashboard is rendered in dark mode (for example,
+	// '#FF0000').
+	Dark types.String `tfsdk:"dark"`
+	// The color used when the dashboard is rendered in light mode (for example,
+	// '#FF0000').
+	Light types.String `tfsdk:"light"`
+}
+
+func (to *DashboardThemeDashboardThemeColor_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DashboardThemeDashboardThemeColor_SdkV2) {
+}
+
+func (to *DashboardThemeDashboardThemeColor_SdkV2) SyncFieldsDuringRead(ctx context.Context, from DashboardThemeDashboardThemeColor_SdkV2) {
+}
+
+func (m DashboardThemeDashboardThemeColor_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["dark"] = attrs["dark"].SetOptional()
+	attrs["light"] = attrs["light"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DashboardThemeDashboardThemeColor.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m DashboardThemeDashboardThemeColor_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DashboardThemeDashboardThemeColor_SdkV2
+// only implements ToObjectValue() and Type().
+func (m DashboardThemeDashboardThemeColor_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"dark":  m.Dark,
+			"light": m.Light,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m DashboardThemeDashboardThemeColor_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"dark":  types.StringType,
+			"light": types.StringType,
+		},
+	}
+}
+
+// Defines the typography settings for a single text category.
+type DashboardThemeFontConfig_SdkV2 struct {
+	// The font color applied to text in this category.
+	FontColor types.List `tfsdk:"font_color"`
+	// The font family name used for text in this category.
+	FontFamily types.String `tfsdk:"font_family"`
+	// The font size in pixels.
+	FontSize types.Int64 `tfsdk:"font_size"`
+	// The font style (slant) applied to text in this category.
+	FontStyle types.String `tfsdk:"font_style"`
+	// The font weight value (for example, 400 for normal, 700 for bold).
+	FontWeight types.Int64 `tfsdk:"font_weight"`
+	// The text case transformation applied to text in this category.
+	TextCase types.String `tfsdk:"text_case"`
+	// The text decoration applied to text in this category.
+	TextDecoration types.String `tfsdk:"text_decoration"`
+}
+
+func (to *DashboardThemeFontConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DashboardThemeFontConfig_SdkV2) {
+	if !from.FontColor.IsNull() && !from.FontColor.IsUnknown() {
+		if toFontColor, ok := to.GetFontColor(ctx); ok {
+			if fromFontColor, ok := from.GetFontColor(ctx); ok {
+				// Recursively sync the fields of FontColor
+				toFontColor.SyncFieldsDuringCreateOrUpdate(ctx, fromFontColor)
+				to.SetFontColor(ctx, toFontColor)
+			}
+		}
+	}
+}
+
+func (to *DashboardThemeFontConfig_SdkV2) SyncFieldsDuringRead(ctx context.Context, from DashboardThemeFontConfig_SdkV2) {
+	if !from.FontColor.IsNull() && !from.FontColor.IsUnknown() {
+		if toFontColor, ok := to.GetFontColor(ctx); ok {
+			if fromFontColor, ok := from.GetFontColor(ctx); ok {
+				toFontColor.SyncFieldsDuringRead(ctx, fromFontColor)
+				to.SetFontColor(ctx, toFontColor)
+			}
+		}
+	}
+}
+
+func (m DashboardThemeFontConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["font_color"] = attrs["font_color"].SetOptional()
+	attrs["font_color"] = attrs["font_color"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["font_family"] = attrs["font_family"].SetOptional()
+	attrs["font_size"] = attrs["font_size"].SetOptional()
+	attrs["font_style"] = attrs["font_style"].SetOptional()
+	attrs["font_weight"] = attrs["font_weight"].SetOptional()
+	attrs["text_case"] = attrs["text_case"].SetOptional()
+	attrs["text_decoration"] = attrs["text_decoration"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DashboardThemeFontConfig.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m DashboardThemeFontConfig_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"font_color": reflect.TypeOf(DashboardThemeDashboardThemeColor_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DashboardThemeFontConfig_SdkV2
+// only implements ToObjectValue() and Type().
+func (m DashboardThemeFontConfig_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"font_color":      m.FontColor,
+			"font_family":     m.FontFamily,
+			"font_size":       m.FontSize,
+			"font_style":      m.FontStyle,
+			"font_weight":     m.FontWeight,
+			"text_case":       m.TextCase,
+			"text_decoration": m.TextDecoration,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m DashboardThemeFontConfig_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"font_color": basetypes.ListType{
+				ElemType: DashboardThemeDashboardThemeColor_SdkV2{}.Type(ctx),
+			},
+			"font_family":     types.StringType,
+			"font_size":       types.Int64Type,
+			"font_style":      types.StringType,
+			"font_weight":     types.Int64Type,
+			"text_case":       types.StringType,
+			"text_decoration": types.StringType,
+		},
+	}
+}
+
+// GetFontColor returns the value of the FontColor field in DashboardThemeFontConfig_SdkV2 as
+// a DashboardThemeDashboardThemeColor_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *DashboardThemeFontConfig_SdkV2) GetFontColor(ctx context.Context) (DashboardThemeDashboardThemeColor_SdkV2, bool) {
+	var e DashboardThemeDashboardThemeColor_SdkV2
+	if m.FontColor.IsNull() || m.FontColor.IsUnknown() {
+		return e, false
+	}
+	var v []DashboardThemeDashboardThemeColor_SdkV2
+	d := m.FontColor.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetFontColor sets the value of the FontColor field in DashboardThemeFontConfig_SdkV2.
+func (m *DashboardThemeFontConfig_SdkV2) SetFontColor(ctx context.Context, v DashboardThemeDashboardThemeColor_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["font_color"]
+	m.FontColor = types.ListValueMust(t, vs)
+}
+
+// Per-category typography overrides. When font_settings.base is set, it takes
+// precedence over the top-level font_family and font_color. More specific
+// categories (widget_title, widget_description, field_title, field_value) in
+// turn override base.
+type DashboardThemeFontSettings_SdkV2 struct {
+	// The default font config applied to all text unless overridden by a more
+	// specific category.
+	Base types.List `tfsdk:"base"`
+	// The font config applied to field titles (for example, axis titles, table
+	// heading titles).
+	FieldTitle types.List `tfsdk:"field_title"`
+	// The font config applied to field values (for example, axis tick labels,
+	// table cell values, tooltip values).
+	FieldValue types.List `tfsdk:"field_value"`
+	// The font config applied to widget descriptions.
+	WidgetDescription types.List `tfsdk:"widget_description"`
+	// The font config applied to widget titles.
+	WidgetTitle types.List `tfsdk:"widget_title"`
+}
+
+func (to *DashboardThemeFontSettings_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DashboardThemeFontSettings_SdkV2) {
+	if !from.Base.IsNull() && !from.Base.IsUnknown() {
+		if toBase, ok := to.GetBase(ctx); ok {
+			if fromBase, ok := from.GetBase(ctx); ok {
+				// Recursively sync the fields of Base
+				toBase.SyncFieldsDuringCreateOrUpdate(ctx, fromBase)
+				to.SetBase(ctx, toBase)
+			}
+		}
+	}
+	if !from.FieldTitle.IsNull() && !from.FieldTitle.IsUnknown() {
+		if toFieldTitle, ok := to.GetFieldTitle(ctx); ok {
+			if fromFieldTitle, ok := from.GetFieldTitle(ctx); ok {
+				// Recursively sync the fields of FieldTitle
+				toFieldTitle.SyncFieldsDuringCreateOrUpdate(ctx, fromFieldTitle)
+				to.SetFieldTitle(ctx, toFieldTitle)
+			}
+		}
+	}
+	if !from.FieldValue.IsNull() && !from.FieldValue.IsUnknown() {
+		if toFieldValue, ok := to.GetFieldValue(ctx); ok {
+			if fromFieldValue, ok := from.GetFieldValue(ctx); ok {
+				// Recursively sync the fields of FieldValue
+				toFieldValue.SyncFieldsDuringCreateOrUpdate(ctx, fromFieldValue)
+				to.SetFieldValue(ctx, toFieldValue)
+			}
+		}
+	}
+	if !from.WidgetDescription.IsNull() && !from.WidgetDescription.IsUnknown() {
+		if toWidgetDescription, ok := to.GetWidgetDescription(ctx); ok {
+			if fromWidgetDescription, ok := from.GetWidgetDescription(ctx); ok {
+				// Recursively sync the fields of WidgetDescription
+				toWidgetDescription.SyncFieldsDuringCreateOrUpdate(ctx, fromWidgetDescription)
+				to.SetWidgetDescription(ctx, toWidgetDescription)
+			}
+		}
+	}
+	if !from.WidgetTitle.IsNull() && !from.WidgetTitle.IsUnknown() {
+		if toWidgetTitle, ok := to.GetWidgetTitle(ctx); ok {
+			if fromWidgetTitle, ok := from.GetWidgetTitle(ctx); ok {
+				// Recursively sync the fields of WidgetTitle
+				toWidgetTitle.SyncFieldsDuringCreateOrUpdate(ctx, fromWidgetTitle)
+				to.SetWidgetTitle(ctx, toWidgetTitle)
+			}
+		}
+	}
+}
+
+func (to *DashboardThemeFontSettings_SdkV2) SyncFieldsDuringRead(ctx context.Context, from DashboardThemeFontSettings_SdkV2) {
+	if !from.Base.IsNull() && !from.Base.IsUnknown() {
+		if toBase, ok := to.GetBase(ctx); ok {
+			if fromBase, ok := from.GetBase(ctx); ok {
+				toBase.SyncFieldsDuringRead(ctx, fromBase)
+				to.SetBase(ctx, toBase)
+			}
+		}
+	}
+	if !from.FieldTitle.IsNull() && !from.FieldTitle.IsUnknown() {
+		if toFieldTitle, ok := to.GetFieldTitle(ctx); ok {
+			if fromFieldTitle, ok := from.GetFieldTitle(ctx); ok {
+				toFieldTitle.SyncFieldsDuringRead(ctx, fromFieldTitle)
+				to.SetFieldTitle(ctx, toFieldTitle)
+			}
+		}
+	}
+	if !from.FieldValue.IsNull() && !from.FieldValue.IsUnknown() {
+		if toFieldValue, ok := to.GetFieldValue(ctx); ok {
+			if fromFieldValue, ok := from.GetFieldValue(ctx); ok {
+				toFieldValue.SyncFieldsDuringRead(ctx, fromFieldValue)
+				to.SetFieldValue(ctx, toFieldValue)
+			}
+		}
+	}
+	if !from.WidgetDescription.IsNull() && !from.WidgetDescription.IsUnknown() {
+		if toWidgetDescription, ok := to.GetWidgetDescription(ctx); ok {
+			if fromWidgetDescription, ok := from.GetWidgetDescription(ctx); ok {
+				toWidgetDescription.SyncFieldsDuringRead(ctx, fromWidgetDescription)
+				to.SetWidgetDescription(ctx, toWidgetDescription)
+			}
+		}
+	}
+	if !from.WidgetTitle.IsNull() && !from.WidgetTitle.IsUnknown() {
+		if toWidgetTitle, ok := to.GetWidgetTitle(ctx); ok {
+			if fromWidgetTitle, ok := from.GetWidgetTitle(ctx); ok {
+				toWidgetTitle.SyncFieldsDuringRead(ctx, fromWidgetTitle)
+				to.SetWidgetTitle(ctx, toWidgetTitle)
+			}
+		}
+	}
+}
+
+func (m DashboardThemeFontSettings_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["base"] = attrs["base"].SetOptional()
+	attrs["base"] = attrs["base"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["field_title"] = attrs["field_title"].SetOptional()
+	attrs["field_title"] = attrs["field_title"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["field_value"] = attrs["field_value"].SetOptional()
+	attrs["field_value"] = attrs["field_value"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["widget_description"] = attrs["widget_description"].SetOptional()
+	attrs["widget_description"] = attrs["widget_description"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["widget_title"] = attrs["widget_title"].SetOptional()
+	attrs["widget_title"] = attrs["widget_title"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DashboardThemeFontSettings.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m DashboardThemeFontSettings_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"base":               reflect.TypeOf(DashboardThemeFontConfig_SdkV2{}),
+		"field_title":        reflect.TypeOf(DashboardThemeFontConfig_SdkV2{}),
+		"field_value":        reflect.TypeOf(DashboardThemeFontConfig_SdkV2{}),
+		"widget_description": reflect.TypeOf(DashboardThemeFontConfig_SdkV2{}),
+		"widget_title":       reflect.TypeOf(DashboardThemeFontConfig_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DashboardThemeFontSettings_SdkV2
+// only implements ToObjectValue() and Type().
+func (m DashboardThemeFontSettings_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"base":               m.Base,
+			"field_title":        m.FieldTitle,
+			"field_value":        m.FieldValue,
+			"widget_description": m.WidgetDescription,
+			"widget_title":       m.WidgetTitle,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m DashboardThemeFontSettings_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"base": basetypes.ListType{
+				ElemType: DashboardThemeFontConfig_SdkV2{}.Type(ctx),
+			},
+			"field_title": basetypes.ListType{
+				ElemType: DashboardThemeFontConfig_SdkV2{}.Type(ctx),
+			},
+			"field_value": basetypes.ListType{
+				ElemType: DashboardThemeFontConfig_SdkV2{}.Type(ctx),
+			},
+			"widget_description": basetypes.ListType{
+				ElemType: DashboardThemeFontConfig_SdkV2{}.Type(ctx),
+			},
+			"widget_title": basetypes.ListType{
+				ElemType: DashboardThemeFontConfig_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetBase returns the value of the Base field in DashboardThemeFontSettings_SdkV2 as
+// a DashboardThemeFontConfig_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *DashboardThemeFontSettings_SdkV2) GetBase(ctx context.Context) (DashboardThemeFontConfig_SdkV2, bool) {
+	var e DashboardThemeFontConfig_SdkV2
+	if m.Base.IsNull() || m.Base.IsUnknown() {
+		return e, false
+	}
+	var v []DashboardThemeFontConfig_SdkV2
+	d := m.Base.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetBase sets the value of the Base field in DashboardThemeFontSettings_SdkV2.
+func (m *DashboardThemeFontSettings_SdkV2) SetBase(ctx context.Context, v DashboardThemeFontConfig_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["base"]
+	m.Base = types.ListValueMust(t, vs)
+}
+
+// GetFieldTitle returns the value of the FieldTitle field in DashboardThemeFontSettings_SdkV2 as
+// a DashboardThemeFontConfig_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *DashboardThemeFontSettings_SdkV2) GetFieldTitle(ctx context.Context) (DashboardThemeFontConfig_SdkV2, bool) {
+	var e DashboardThemeFontConfig_SdkV2
+	if m.FieldTitle.IsNull() || m.FieldTitle.IsUnknown() {
+		return e, false
+	}
+	var v []DashboardThemeFontConfig_SdkV2
+	d := m.FieldTitle.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetFieldTitle sets the value of the FieldTitle field in DashboardThemeFontSettings_SdkV2.
+func (m *DashboardThemeFontSettings_SdkV2) SetFieldTitle(ctx context.Context, v DashboardThemeFontConfig_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["field_title"]
+	m.FieldTitle = types.ListValueMust(t, vs)
+}
+
+// GetFieldValue returns the value of the FieldValue field in DashboardThemeFontSettings_SdkV2 as
+// a DashboardThemeFontConfig_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *DashboardThemeFontSettings_SdkV2) GetFieldValue(ctx context.Context) (DashboardThemeFontConfig_SdkV2, bool) {
+	var e DashboardThemeFontConfig_SdkV2
+	if m.FieldValue.IsNull() || m.FieldValue.IsUnknown() {
+		return e, false
+	}
+	var v []DashboardThemeFontConfig_SdkV2
+	d := m.FieldValue.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetFieldValue sets the value of the FieldValue field in DashboardThemeFontSettings_SdkV2.
+func (m *DashboardThemeFontSettings_SdkV2) SetFieldValue(ctx context.Context, v DashboardThemeFontConfig_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["field_value"]
+	m.FieldValue = types.ListValueMust(t, vs)
+}
+
+// GetWidgetDescription returns the value of the WidgetDescription field in DashboardThemeFontSettings_SdkV2 as
+// a DashboardThemeFontConfig_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *DashboardThemeFontSettings_SdkV2) GetWidgetDescription(ctx context.Context) (DashboardThemeFontConfig_SdkV2, bool) {
+	var e DashboardThemeFontConfig_SdkV2
+	if m.WidgetDescription.IsNull() || m.WidgetDescription.IsUnknown() {
+		return e, false
+	}
+	var v []DashboardThemeFontConfig_SdkV2
+	d := m.WidgetDescription.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetWidgetDescription sets the value of the WidgetDescription field in DashboardThemeFontSettings_SdkV2.
+func (m *DashboardThemeFontSettings_SdkV2) SetWidgetDescription(ctx context.Context, v DashboardThemeFontConfig_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["widget_description"]
+	m.WidgetDescription = types.ListValueMust(t, vs)
+}
+
+// GetWidgetTitle returns the value of the WidgetTitle field in DashboardThemeFontSettings_SdkV2 as
+// a DashboardThemeFontConfig_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *DashboardThemeFontSettings_SdkV2) GetWidgetTitle(ctx context.Context) (DashboardThemeFontConfig_SdkV2, bool) {
+	var e DashboardThemeFontConfig_SdkV2
+	if m.WidgetTitle.IsNull() || m.WidgetTitle.IsUnknown() {
+		return e, false
+	}
+	var v []DashboardThemeFontConfig_SdkV2
+	d := m.WidgetTitle.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetWidgetTitle sets the value of the WidgetTitle field in DashboardThemeFontSettings_SdkV2.
+func (m *DashboardThemeFontSettings_SdkV2) SetWidgetTitle(ctx context.Context, v DashboardThemeFontConfig_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["widget_title"]
+	m.WidgetTitle = types.ListValueMust(t, vs)
+}
+
+// Shared sentiment colors reusable across visualizations, primarily for
+// conditional formatting, ensuring consistent positive, negative, and neutral
+// meaning throughout the dashboard.
+type DashboardThemeSentimentColors_SdkV2 struct {
+	// The color applied to negative sentiment values.
+	Negative types.List `tfsdk:"negative"`
+	// The color applied to neutral sentiment values.
+	Neutral types.List `tfsdk:"neutral"`
+	// The color applied to positive sentiment values.
+	Positive types.List `tfsdk:"positive"`
+}
+
+func (to *DashboardThemeSentimentColors_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DashboardThemeSentimentColors_SdkV2) {
+	if !from.Negative.IsNull() && !from.Negative.IsUnknown() {
+		if toNegative, ok := to.GetNegative(ctx); ok {
+			if fromNegative, ok := from.GetNegative(ctx); ok {
+				// Recursively sync the fields of Negative
+				toNegative.SyncFieldsDuringCreateOrUpdate(ctx, fromNegative)
+				to.SetNegative(ctx, toNegative)
+			}
+		}
+	}
+	if !from.Neutral.IsNull() && !from.Neutral.IsUnknown() {
+		if toNeutral, ok := to.GetNeutral(ctx); ok {
+			if fromNeutral, ok := from.GetNeutral(ctx); ok {
+				// Recursively sync the fields of Neutral
+				toNeutral.SyncFieldsDuringCreateOrUpdate(ctx, fromNeutral)
+				to.SetNeutral(ctx, toNeutral)
+			}
+		}
+	}
+	if !from.Positive.IsNull() && !from.Positive.IsUnknown() {
+		if toPositive, ok := to.GetPositive(ctx); ok {
+			if fromPositive, ok := from.GetPositive(ctx); ok {
+				// Recursively sync the fields of Positive
+				toPositive.SyncFieldsDuringCreateOrUpdate(ctx, fromPositive)
+				to.SetPositive(ctx, toPositive)
+			}
+		}
+	}
+}
+
+func (to *DashboardThemeSentimentColors_SdkV2) SyncFieldsDuringRead(ctx context.Context, from DashboardThemeSentimentColors_SdkV2) {
+	if !from.Negative.IsNull() && !from.Negative.IsUnknown() {
+		if toNegative, ok := to.GetNegative(ctx); ok {
+			if fromNegative, ok := from.GetNegative(ctx); ok {
+				toNegative.SyncFieldsDuringRead(ctx, fromNegative)
+				to.SetNegative(ctx, toNegative)
+			}
+		}
+	}
+	if !from.Neutral.IsNull() && !from.Neutral.IsUnknown() {
+		if toNeutral, ok := to.GetNeutral(ctx); ok {
+			if fromNeutral, ok := from.GetNeutral(ctx); ok {
+				toNeutral.SyncFieldsDuringRead(ctx, fromNeutral)
+				to.SetNeutral(ctx, toNeutral)
+			}
+		}
+	}
+	if !from.Positive.IsNull() && !from.Positive.IsUnknown() {
+		if toPositive, ok := to.GetPositive(ctx); ok {
+			if fromPositive, ok := from.GetPositive(ctx); ok {
+				toPositive.SyncFieldsDuringRead(ctx, fromPositive)
+				to.SetPositive(ctx, toPositive)
+			}
+		}
+	}
+}
+
+func (m DashboardThemeSentimentColors_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["negative"] = attrs["negative"].SetOptional()
+	attrs["negative"] = attrs["negative"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["neutral"] = attrs["neutral"].SetOptional()
+	attrs["neutral"] = attrs["neutral"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["positive"] = attrs["positive"].SetOptional()
+	attrs["positive"] = attrs["positive"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DashboardThemeSentimentColors.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m DashboardThemeSentimentColors_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"negative": reflect.TypeOf(DashboardThemeDashboardThemeColor_SdkV2{}),
+		"neutral":  reflect.TypeOf(DashboardThemeDashboardThemeColor_SdkV2{}),
+		"positive": reflect.TypeOf(DashboardThemeDashboardThemeColor_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DashboardThemeSentimentColors_SdkV2
+// only implements ToObjectValue() and Type().
+func (m DashboardThemeSentimentColors_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"negative": m.Negative,
+			"neutral":  m.Neutral,
+			"positive": m.Positive,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m DashboardThemeSentimentColors_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"negative": basetypes.ListType{
+				ElemType: DashboardThemeDashboardThemeColor_SdkV2{}.Type(ctx),
+			},
+			"neutral": basetypes.ListType{
+				ElemType: DashboardThemeDashboardThemeColor_SdkV2{}.Type(ctx),
+			},
+			"positive": basetypes.ListType{
+				ElemType: DashboardThemeDashboardThemeColor_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetNegative returns the value of the Negative field in DashboardThemeSentimentColors_SdkV2 as
+// a DashboardThemeDashboardThemeColor_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *DashboardThemeSentimentColors_SdkV2) GetNegative(ctx context.Context) (DashboardThemeDashboardThemeColor_SdkV2, bool) {
+	var e DashboardThemeDashboardThemeColor_SdkV2
+	if m.Negative.IsNull() || m.Negative.IsUnknown() {
+		return e, false
+	}
+	var v []DashboardThemeDashboardThemeColor_SdkV2
+	d := m.Negative.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetNegative sets the value of the Negative field in DashboardThemeSentimentColors_SdkV2.
+func (m *DashboardThemeSentimentColors_SdkV2) SetNegative(ctx context.Context, v DashboardThemeDashboardThemeColor_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["negative"]
+	m.Negative = types.ListValueMust(t, vs)
+}
+
+// GetNeutral returns the value of the Neutral field in DashboardThemeSentimentColors_SdkV2 as
+// a DashboardThemeDashboardThemeColor_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *DashboardThemeSentimentColors_SdkV2) GetNeutral(ctx context.Context) (DashboardThemeDashboardThemeColor_SdkV2, bool) {
+	var e DashboardThemeDashboardThemeColor_SdkV2
+	if m.Neutral.IsNull() || m.Neutral.IsUnknown() {
+		return e, false
+	}
+	var v []DashboardThemeDashboardThemeColor_SdkV2
+	d := m.Neutral.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetNeutral sets the value of the Neutral field in DashboardThemeSentimentColors_SdkV2.
+func (m *DashboardThemeSentimentColors_SdkV2) SetNeutral(ctx context.Context, v DashboardThemeDashboardThemeColor_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["neutral"]
+	m.Neutral = types.ListValueMust(t, vs)
+}
+
+// GetPositive returns the value of the Positive field in DashboardThemeSentimentColors_SdkV2 as
+// a DashboardThemeDashboardThemeColor_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *DashboardThemeSentimentColors_SdkV2) GetPositive(ctx context.Context) (DashboardThemeDashboardThemeColor_SdkV2, bool) {
+	var e DashboardThemeDashboardThemeColor_SdkV2
+	if m.Positive.IsNull() || m.Positive.IsUnknown() {
+		return e, false
+	}
+	var v []DashboardThemeDashboardThemeColor_SdkV2
+	d := m.Positive.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetPositive sets the value of the Positive field in DashboardThemeSentimentColors_SdkV2.
+func (m *DashboardThemeSentimentColors_SdkV2) SetPositive(ctx context.Context, v DashboardThemeDashboardThemeColor_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["positive"]
+	m.Positive = types.ListValueMust(t, vs)
+}
+
 type GetPublicAccountSettingRequest_SdkV2 struct {
 	Name types.String `tfsdk:"-"`
 }
@@ -2094,6 +4179,10 @@ type Setting_SdkV2 struct {
 	// Effective setting value for string type setting. This is the final
 	// effective value of setting. To set a value use string_val.
 	EffectiveStringVal types.List `tfsdk:"effective_string_val"`
+	// Effective setting value for the workspace_dashboard_theme setting. This
+	// is the final effective value of the setting. To set a value, use
+	// workspace_dashboard_theme.
+	EffectiveWorkspaceDashboardTheme types.List `tfsdk:"effective_workspace_dashboard_theme"`
 	// Effective setting value for workspace_label setting. This is the final
 	// effective value of setting. To set a value use workspace_label.
 	EffectiveWorkspaceLabel types.List `tfsdk:"effective_workspace_label"`
@@ -2116,6 +4205,10 @@ type Setting_SdkV2 struct {
 	// Setting value for string type setting. This is the setting value set by
 	// consumers, check effective_string_val for final setting value.
 	StringVal types.List `tfsdk:"string_val"`
+	// Setting value for the workspace_dashboard_theme setting. This is the
+	// setting value set by consumers. Check effective_workspace_dashboard_theme
+	// for the final setting value.
+	WorkspaceDashboardTheme types.List `tfsdk:"workspace_dashboard_theme"`
 	// Setting value for workspace_label setting. This is the setting value set
 	// by consumers, check effective_workspace_label for final setting value.
 	WorkspaceLabel types.List `tfsdk:"workspace_label"`
@@ -2275,6 +4368,15 @@ func (to *Setting_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fro
 			}
 		}
 	}
+	if !from.EffectiveWorkspaceDashboardTheme.IsNull() && !from.EffectiveWorkspaceDashboardTheme.IsUnknown() {
+		if toEffectiveWorkspaceDashboardTheme, ok := to.GetEffectiveWorkspaceDashboardTheme(ctx); ok {
+			if fromEffectiveWorkspaceDashboardTheme, ok := from.GetEffectiveWorkspaceDashboardTheme(ctx); ok {
+				// Recursively sync the fields of EffectiveWorkspaceDashboardTheme
+				toEffectiveWorkspaceDashboardTheme.SyncFieldsDuringCreateOrUpdate(ctx, fromEffectiveWorkspaceDashboardTheme)
+				to.SetEffectiveWorkspaceDashboardTheme(ctx, toEffectiveWorkspaceDashboardTheme)
+			}
+		}
+	}
 	if !from.EffectiveWorkspaceLabel.IsNull() && !from.EffectiveWorkspaceLabel.IsUnknown() {
 		if toEffectiveWorkspaceLabel, ok := to.GetEffectiveWorkspaceLabel(ctx); ok {
 			if fromEffectiveWorkspaceLabel, ok := from.GetEffectiveWorkspaceLabel(ctx); ok {
@@ -2326,6 +4428,15 @@ func (to *Setting_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fro
 				// Recursively sync the fields of StringVal
 				toStringVal.SyncFieldsDuringCreateOrUpdate(ctx, fromStringVal)
 				to.SetStringVal(ctx, toStringVal)
+			}
+		}
+	}
+	if !from.WorkspaceDashboardTheme.IsNull() && !from.WorkspaceDashboardTheme.IsUnknown() {
+		if toWorkspaceDashboardTheme, ok := to.GetWorkspaceDashboardTheme(ctx); ok {
+			if fromWorkspaceDashboardTheme, ok := from.GetWorkspaceDashboardTheme(ctx); ok {
+				// Recursively sync the fields of WorkspaceDashboardTheme
+				toWorkspaceDashboardTheme.SyncFieldsDuringCreateOrUpdate(ctx, fromWorkspaceDashboardTheme)
+				to.SetWorkspaceDashboardTheme(ctx, toWorkspaceDashboardTheme)
 			}
 		}
 	}
@@ -2477,6 +4588,14 @@ func (to *Setting_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Setting_
 			}
 		}
 	}
+	if !from.EffectiveWorkspaceDashboardTheme.IsNull() && !from.EffectiveWorkspaceDashboardTheme.IsUnknown() {
+		if toEffectiveWorkspaceDashboardTheme, ok := to.GetEffectiveWorkspaceDashboardTheme(ctx); ok {
+			if fromEffectiveWorkspaceDashboardTheme, ok := from.GetEffectiveWorkspaceDashboardTheme(ctx); ok {
+				toEffectiveWorkspaceDashboardTheme.SyncFieldsDuringRead(ctx, fromEffectiveWorkspaceDashboardTheme)
+				to.SetEffectiveWorkspaceDashboardTheme(ctx, toEffectiveWorkspaceDashboardTheme)
+			}
+		}
+	}
 	if !from.EffectiveWorkspaceLabel.IsNull() && !from.EffectiveWorkspaceLabel.IsUnknown() {
 		if toEffectiveWorkspaceLabel, ok := to.GetEffectiveWorkspaceLabel(ctx); ok {
 			if fromEffectiveWorkspaceLabel, ok := from.GetEffectiveWorkspaceLabel(ctx); ok {
@@ -2525,6 +4644,14 @@ func (to *Setting_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Setting_
 			}
 		}
 	}
+	if !from.WorkspaceDashboardTheme.IsNull() && !from.WorkspaceDashboardTheme.IsUnknown() {
+		if toWorkspaceDashboardTheme, ok := to.GetWorkspaceDashboardTheme(ctx); ok {
+			if fromWorkspaceDashboardTheme, ok := from.GetWorkspaceDashboardTheme(ctx); ok {
+				toWorkspaceDashboardTheme.SyncFieldsDuringRead(ctx, fromWorkspaceDashboardTheme)
+				to.SetWorkspaceDashboardTheme(ctx, toWorkspaceDashboardTheme)
+			}
+		}
+	}
 	if !from.WorkspaceLabel.IsNull() && !from.WorkspaceLabel.IsUnknown() {
 		if toWorkspaceLabel, ok := to.GetWorkspaceLabel(ctx); ok {
 			if fromWorkspaceLabel, ok := from.GetWorkspaceLabel(ctx); ok {
@@ -2570,6 +4697,8 @@ func (m Setting_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attri
 	attrs["effective_restrict_workspace_admins"] = attrs["effective_restrict_workspace_admins"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["effective_string_val"] = attrs["effective_string_val"].SetComputed()
 	attrs["effective_string_val"] = attrs["effective_string_val"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["effective_workspace_dashboard_theme"] = attrs["effective_workspace_dashboard_theme"].SetComputed()
+	attrs["effective_workspace_dashboard_theme"] = attrs["effective_workspace_dashboard_theme"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["effective_workspace_label"] = attrs["effective_workspace_label"].SetOptional()
 	attrs["effective_workspace_label"] = attrs["effective_workspace_label"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["integer_val"] = attrs["integer_val"].SetOptional()
@@ -2583,6 +4712,8 @@ func (m Setting_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attri
 	attrs["restrict_workspace_admins"] = attrs["restrict_workspace_admins"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["string_val"] = attrs["string_val"].SetOptional()
 	attrs["string_val"] = attrs["string_val"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["workspace_dashboard_theme"] = attrs["workspace_dashboard_theme"].SetOptional()
+	attrs["workspace_dashboard_theme"] = attrs["workspace_dashboard_theme"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["workspace_label"] = attrs["workspace_label"].SetOptional()
 	attrs["workspace_label"] = attrs["workspace_label"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
@@ -2615,12 +4746,14 @@ func (m Setting_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]refl
 		"effective_personal_compute":                          reflect.TypeOf(PersonalComputeMessage_SdkV2{}),
 		"effective_restrict_workspace_admins":                 reflect.TypeOf(RestrictWorkspaceAdminsMessage_SdkV2{}),
 		"effective_string_val":                                reflect.TypeOf(StringMessage_SdkV2{}),
+		"effective_workspace_dashboard_theme":                 reflect.TypeOf(DashboardTheme_SdkV2{}),
 		"effective_workspace_label":                           reflect.TypeOf(WorkspaceLabelMessage_SdkV2{}),
 		"integer_val":                                         reflect.TypeOf(IntegerMessage_SdkV2{}),
 		"operational_email_custom_recipient":                  reflect.TypeOf(OperationalEmailCustomRecipientMessage_SdkV2{}),
 		"personal_compute":                                    reflect.TypeOf(PersonalComputeMessage_SdkV2{}),
 		"restrict_workspace_admins":                           reflect.TypeOf(RestrictWorkspaceAdminsMessage_SdkV2{}),
 		"string_val":                                          reflect.TypeOf(StringMessage_SdkV2{}),
+		"workspace_dashboard_theme":                           reflect.TypeOf(DashboardTheme_SdkV2{}),
 		"workspace_label":                                     reflect.TypeOf(WorkspaceLabelMessage_SdkV2{}),
 	}
 }
@@ -2649,6 +4782,7 @@ func (m Setting_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 			"effective_personal_compute":                          m.EffectivePersonalCompute,
 			"effective_restrict_workspace_admins":                 m.EffectiveRestrictWorkspaceAdmins,
 			"effective_string_val":                                m.EffectiveStringVal,
+			"effective_workspace_dashboard_theme":                 m.EffectiveWorkspaceDashboardTheme,
 			"effective_workspace_label":                           m.EffectiveWorkspaceLabel,
 			"integer_val":                                         m.IntegerVal,
 			"name":                                                m.Name,
@@ -2656,6 +4790,7 @@ func (m Setting_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 			"personal_compute":                                    m.PersonalCompute,
 			"restrict_workspace_admins":                           m.RestrictWorkspaceAdmins,
 			"string_val":                                          m.StringVal,
+			"workspace_dashboard_theme":                           m.WorkspaceDashboardTheme,
 			"workspace_label":                                     m.WorkspaceLabel,
 		})
 }
@@ -2715,6 +4850,9 @@ func (m Setting_SdkV2) Type(ctx context.Context) attr.Type {
 			"effective_string_val": basetypes.ListType{
 				ElemType: StringMessage_SdkV2{}.Type(ctx),
 			},
+			"effective_workspace_dashboard_theme": basetypes.ListType{
+				ElemType: DashboardTheme_SdkV2{}.Type(ctx),
+			},
 			"effective_workspace_label": basetypes.ListType{
 				ElemType: WorkspaceLabelMessage_SdkV2{}.Type(ctx),
 			},
@@ -2733,6 +4871,9 @@ func (m Setting_SdkV2) Type(ctx context.Context) attr.Type {
 			},
 			"string_val": basetypes.ListType{
 				ElemType: StringMessage_SdkV2{}.Type(ctx),
+			},
+			"workspace_dashboard_theme": basetypes.ListType{
+				ElemType: DashboardTheme_SdkV2{}.Type(ctx),
 			},
 			"workspace_label": basetypes.ListType{
 				ElemType: WorkspaceLabelMessage_SdkV2{}.Type(ctx),
@@ -3183,6 +5324,32 @@ func (m *Setting_SdkV2) SetEffectiveStringVal(ctx context.Context, v StringMessa
 	m.EffectiveStringVal = types.ListValueMust(t, vs)
 }
 
+// GetEffectiveWorkspaceDashboardTheme returns the value of the EffectiveWorkspaceDashboardTheme field in Setting_SdkV2 as
+// a DashboardTheme_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *Setting_SdkV2) GetEffectiveWorkspaceDashboardTheme(ctx context.Context) (DashboardTheme_SdkV2, bool) {
+	var e DashboardTheme_SdkV2
+	if m.EffectiveWorkspaceDashboardTheme.IsNull() || m.EffectiveWorkspaceDashboardTheme.IsUnknown() {
+		return e, false
+	}
+	var v []DashboardTheme_SdkV2
+	d := m.EffectiveWorkspaceDashboardTheme.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetEffectiveWorkspaceDashboardTheme sets the value of the EffectiveWorkspaceDashboardTheme field in Setting_SdkV2.
+func (m *Setting_SdkV2) SetEffectiveWorkspaceDashboardTheme(ctx context.Context, v DashboardTheme_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["effective_workspace_dashboard_theme"]
+	m.EffectiveWorkspaceDashboardTheme = types.ListValueMust(t, vs)
+}
+
 // GetEffectiveWorkspaceLabel returns the value of the EffectiveWorkspaceLabel field in Setting_SdkV2 as
 // a WorkspaceLabelMessage_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
@@ -3337,6 +5504,32 @@ func (m *Setting_SdkV2) SetStringVal(ctx context.Context, v StringMessage_SdkV2)
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["string_val"]
 	m.StringVal = types.ListValueMust(t, vs)
+}
+
+// GetWorkspaceDashboardTheme returns the value of the WorkspaceDashboardTheme field in Setting_SdkV2 as
+// a DashboardTheme_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *Setting_SdkV2) GetWorkspaceDashboardTheme(ctx context.Context) (DashboardTheme_SdkV2, bool) {
+	var e DashboardTheme_SdkV2
+	if m.WorkspaceDashboardTheme.IsNull() || m.WorkspaceDashboardTheme.IsUnknown() {
+		return e, false
+	}
+	var v []DashboardTheme_SdkV2
+	d := m.WorkspaceDashboardTheme.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetWorkspaceDashboardTheme sets the value of the WorkspaceDashboardTheme field in Setting_SdkV2.
+func (m *Setting_SdkV2) SetWorkspaceDashboardTheme(ctx context.Context, v DashboardTheme_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["workspace_dashboard_theme"]
+	m.WorkspaceDashboardTheme = types.ListValueMust(t, vs)
 }
 
 // GetWorkspaceLabel returns the value of the WorkspaceLabel field in Setting_SdkV2 as

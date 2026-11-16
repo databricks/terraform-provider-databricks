@@ -50,6 +50,122 @@ profiles and environment defaults; SDK HTTP traffic is restricted to the
 test's local fixture server. Do not use `t.Parallel`: Terraform CLI discovery is
 configured through process environment variables.
 
+## Refresh HTTP fixtures
+
+Set `TEST_RECORDER_PROFILE_NAME` to a profile in `~/.databrickscfg` (or
+`DATABRICKS_CONFIG_FILE`) and select one exact, anchored test path:
+
+```sh
+TEST_RECORDER_PROFILE_NAME=my-dev-profile \
+  go test ./qa/replay/resources/spark_version -count=1 \
+  -run '^TestSparkVersion$/^TestAccSparkVersion$'
+```
+
+The existing [Spark-version test](../replay/resources/spark_version/testdata/TestAccSparkVersion.yaml)
+lists available runtimes without creating or deleting live resources. Its fixtures
+were refreshed from Databricks using a workspace-host profile; its hostname is
+anonymized.
+Use the wrapper name in your own suite.
+
+Recording makes real API calls and destroys the resources it manages. It
+is rejected in CI, with broad selection, or with Terraform debug logging enabled.
+Ordinary replay remains hermetic regardless of ambient Databricks credentials.
+Recording an `initial_state` requires its setup template before loading a
+profile or making requests; see below.
+
+HCL and existing checks still execute. HTTP calls are captured per step,
+including destroy. A local replay verifies the captured data before saving;
+unexpected failures, failed cleanup or failed replay leave the source untouched.
+The recorder writes the finished YAML atomically and refuses concurrent edits.
+It refreshes calls and reusable host metadata, keeping HCL, checks, comments
+outside refreshed fields, matcher annotations, and `enforce_call_order` choices.
+An annotation that cannot be associated with a new call fails refresh instead
+of being discarded. Capture order alone does not enable ordered replay.
+
+The profile supplies host, authentication and real workspace/account IDs. Use
+stable replay IDs in `host_metadata` and literal provider fields; these must
+agree. Unified-host tests must set stable `account_id` and `workspace_id` in the
+provider HCL so replay has the same routing information without a profile.
+Those two known IDs are mapped in both directions, preserving numeric versus
+string JSON values. The profile's host is mapped to `example.databricks.com`
+in captured metadata and payloads, and restored for recording. URL schemes and
+paths are preserved; unrelated hosts are unchanged. Other IDs and author-selected
+assertions may need manual updates before a refresh. Credential headers are excluded and
+known profile secrets/common secret payload fields are redacted. Review every
+generated diff for service-specific secrets before committing it.
+
+Same-host absolute response `Location` headers become relative URLs so redirects
+follow the local fixture server during replay. Escaped paths, queries and
+fragments are preserved. Cross-host redirects are outside the recorder's scope;
+the replay transport rejects destinations outside the fixture server.
+
+### Secret redaction and replay
+
+Captured requests and responses use `[REDACTED]` for known secrets, even when
+this changes a value needed for exact request matching, a state/plan assertion,
+or Terraform's configuration/state consistency checks. We accept this known
+tradeoff to keep secrets out of committed fixtures. A successful live lifecycle
+does not guarantee that its redacted capture will replay; a failed verification
+replay leaves the YAML unchanged.
+
+The person or agent writing or refreshing the test must make it work with
+redacted data. Use narrow `any_string` request matchers for incidental secret
+strings, or align nonsecret HCL inputs and expectations with the redacted values.
+HCL and assertions are not automatically rewritten, and response values remain
+literal. Never retain a real secret or weaken redaction to make replay pass.
+See [authoring tests with redacted values](AUTHORING.md#write-tests-that-survive-redaction)
+for examples and the record/replay checklist.
+
+### Recording setup and initial state
+
+For `example.yaml`:
+
+```yaml
+recording:
+  environment_template: |
+    resource "databricks_group" "background" {
+      display_name = "Background group"
+    }
+  initial_state_template: |
+    resource "databricks_group" "this" {
+      display_name = "Original group"
+    }
+initial_state:
+  checkpoint: checkpoints/example.tfstate
+# steps and destroy follow as usual
+```
+
+Both templates are optional and run only during recording. Environment resources
+live in separate Terraform state: test steps cannot delete them, and the recorder
+cleans them up after the tested journey, including on failure. Use this for
+resources read by data sources. Resources in `initial_state_template` belong to
+the test's state and its mandatory destroy. Initial setup uses files declared
+by the first step. An initial-state template requires `initial_state.checkpoint`,
+and recording an initial state requires the template.
+
+Recording creates initial resources through Terraform, then executes the steps
+and cleanup. After cleanup, a local replay of the sanitized setup transcript
+generates a genuine Terraform checkpoint; no state JSON is constructed or edited.
+A replay starting from that checkpoint must pass before files are saved. Replay
+runs neither recording template: it reads only the saved checkpoint and fixtures.
+
+Recording writes `checkpoints/<test_name>.tfstate` beside the YAML, using its
+filename without the extension as the test name. Refresh overwrites that checkpoint
+and updates the YAML reference; older checkpoint files are left in place. The
+checkpoint is written first. If saving the YAML fails, rerun recording to refresh
+both files. Regeneration uses the provider version in this checkout; preserve
+historical migration checkpoints rather than refreshing them routinely.
+
+The [rejected-update example](testdata/initial_state/rejected_update.yaml) creates
+a group for its initial state, checks a reserved-name validation error, and
+destroys the group. Refresh its fixtures and checkpoint with:
+
+```sh
+TEST_RECORDER_PROFILE_NAME=my-dev-profile \
+  go test ./qa/terraformtest -count=1 \
+  -run '^TestInitialStateReplay$/^rejected_update$'
+```
+
 ## Test definition
 
 Use `version: 1`, optional `initial_state`, followed by `steps` and `destroy`.
@@ -167,13 +283,10 @@ Destroy always requires an empty resource inventory, including data sources in
 child modules. This is enforced by the engine; `destroy` accepts only `calls`,
 with no configurable final-state assertion.
 
-## MVP scope
+## Schema validation
 
-Tests use handwritten fixtures and start with empty Terraform state unless an
-initial checkpoint is supplied. YAML has strict field validation: recording/setup
-templates and strict attribute matching are not yet supported. Unsupported fields fail
-before any Terraform operations. The step/call/state layout is kept stable
-so these capabilities can be added independently.
+Unknown fields fail before Terraform operations. Strict attribute matching is
+not supported; state assertions check only the selected paths.
 
 ## Local input files
 
@@ -476,31 +589,13 @@ Complete examples are in [testdata/plans](testdata/plans). They exercise
 checkpoint update/apply, empty and nonempty previews, multiple resource instances,
 known/unknown outputs, and automatic cleanup.
 
-## Constraints for future recording
+## Recording limitations
 
-Recording is not implemented. These replay contracts must survive capture and
-refresh:
+Existing plan and state expectations remain assertions; recording does not
+refresh their values or add new assertion paths. Keep checks focused on the
+behavior under test, and adjust server-generated IDs manually when necessary.
 
-- Keep every consumable exchange, including retries and repeated reads, in
-  request-dispatch order. Assign sequence numbers before sending requests;
-  response-completion order can differ under concurrency. Do not infer resource
-  ownership from HTTP calls. Identical concurrent signatures with different
-  responses remain ambiguous under FIFO replay and need explicit handling.
-- Preserve whole-step boundaries, including all native consistency plans and
-  destroy. Capture plan expectations at the same saved-plan hooks as replay:
-  pre-apply for apply steps, post-refresh for plan-only steps.
-- Preserve per-step provider implementation selections when refreshing fixtures;
-  recording must use the same implementation as replay.
-- Preserve author-selected paths, omitted assertions, explicit empty maps, and
-  unknown versus null. Do not turn partial assertions into whole-state snapshots
-  or silently change `enforce_call_order` while refreshing fixtures.
-- Capture reusable host metadata separately from consumable calls. Keep setup
-  and background-environment cleanup outside the test transcript; initial-state
-  resources belong to test destroy. Generate matching checkpoints and calls
-  together without editing opaque checkpoint JSON or reusing stale live IDs.
-- Capture multipart uploads as form parts, without matching the random boundary
-  in the top-level `Content-Type` header. Preserve exact content bytes using
-  text/base64 and keep local input files alongside their YAML definitions.
-- Decide retries/polling, secret and volatile-value handling before enabling
-  live capture. Recording must be explicit, single-test, unavailable in CI, and
-  must never be activated by a replay failure.
+Identical concurrent request signatures with different responses remain
+ambiguous under FIFO replay. Recording preserves dispatch order, but does not
+infer resource ownership or enable ordered replay. Review these scenarios
+before relying on a refreshed transcript.

@@ -47,3 +47,7 @@ This data source exports a single attribute, `cdf_configs`. It is a list of reso
   parent database. Set at creation; the CdfConfig is immutable
 * `schema` (string) - The Unity Catalog schema that replicated tables are written into.
   Set at creation; the CdfConfig is immutable
+* `service_principal` (string) - The service principal (application id) whose identity authorizes this
+  change data feed's ongoing writes to Unity Catalog. When unset, writes are
+  authorized as the creating identity. Changing it requires a new CdfConfig,
+  which writes to new Delta tables

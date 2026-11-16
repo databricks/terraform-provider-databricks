@@ -70,7 +70,7 @@ This data source exports a single attribute, `model_provider_services`. It is a 
 * `parent` (string) - Parent Unity Catalog schema where the inference table is created, in the
   form `schemas/{catalog}.{schema}`. Required when configuring an inference
   table. After the inference table is created, this field cannot be changed
-* `table` (string) - Resolved UC table for payload logs.
+* `table` (string) - Resource name of the Unity Catalog table that receives the payload logs.
   Format: `tables/{catalog}.{schema}.{table}`
 * `table_name_prefix` (string) - Prefix used to form the inference table's registered name. AI Gateway
   appends `_payload`; for example, `table_name_prefix = "orders"` creates
@@ -299,7 +299,7 @@ This data source exports a single attribute, `model_provider_services`. It is a 
 * `principal` (string) - Principal this limit applies to: user email, group name, or service
   principal application ID. Required when `key` applies to a user, group, or
   service principal; otherwise it must be unset
-* `renewal_period` (string) - Renewal period. Possible values are: `RATE_LIMIT_RENEWAL_PERIOD_HOUR`, `RATE_LIMIT_RENEWAL_PERIOD_MINUTE`
+* `renewal_period` (string) - Interval after which the request and token counters reset. Possible values are: `RATE_LIMIT_RENEWAL_PERIOD_HOUR`, `RATE_LIMIT_RENEWAL_PERIOD_MINUTE`
 * `requests` (integer) - Maximum requests allowed in one renewal period. Leave unset for no request
   limit. Set to `0` to deny all requests
 * `tokens` (integer) - Maximum tokens allowed in one renewal period. Leave unset for no token

@@ -41,5 +41,7 @@ This data source exports a single attribute, `managed_memory_entries`. It is a l
   Paths must begin with `/` and must not contain empty, `.` or `..` segments
 * `session_id` (string) - Optional identifier for the session associated with this memory entry. When omitted, the
   entry applies across the actor's sessions
-* `source_type` (string) - Which writer created this entry. Caller sets this on Create; immutable after creation. Possible values are: `MANAGED_MEMORY_ENTRY_SOURCE_TYPE_AGENT`, `MANAGED_MEMORY_ENTRY_SOURCE_TYPE_DREAMER`
+* `source_type` (string) - Which writer created this entry. Caller sets this on Create; immutable after creation.
+  While the workspace's default-source-type rollout flag is on, omitted or UNSPECIFIED is stored
+  as AGENT. While it is off, omitted is stored unset and UNSPECIFIED as UNSPECIFIED. Possible values are: `MANAGED_MEMORY_ENTRY_SOURCE_TYPE_AGENT`, `MANAGED_MEMORY_ENTRY_SOURCE_TYPE_DREAMER`
 * `update_time` (string) - Time when the entry was last updated

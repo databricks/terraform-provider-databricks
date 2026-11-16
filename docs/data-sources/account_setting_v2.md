@@ -43,6 +43,7 @@ The following attributes are exported:
 * `effective_personal_compute` (PersonalComputeMessage) - Effective setting value for personal_compute setting. This is the final effective value of setting. To set a value use personal_compute
 * `effective_restrict_workspace_admins` (RestrictWorkspaceAdminsMessage) - Effective setting value for restrict_workspace_admins setting. This is the final effective value of setting. To set a value use restrict_workspace_admins
 * `effective_string_val` (StringMessage) - Effective setting value for string type setting. This is the final effective value of setting. To set a value use string_val
+* `effective_workspace_dashboard_theme` (DashboardTheme) - Effective setting value for the workspace_dashboard_theme setting. This is the final effective value of the setting. To set a value, use workspace_dashboard_theme
 * `effective_workspace_label` (WorkspaceLabelMessage) - Effective setting value for workspace_label setting. This is the final effective value of setting. To set a value use workspace_label
 * `integer_val` (IntegerMessage) - Setting value for integer type setting. This is the setting value set by consumers, check effective_integer_val for final setting value
 * `name` (string) - Name of the setting
@@ -50,6 +51,7 @@ The following attributes are exported:
 * `personal_compute` (PersonalComputeMessage) - Setting value for personal_compute setting. This is the setting value set by consumers, check effective_personal_compute for final setting value
 * `restrict_workspace_admins` (RestrictWorkspaceAdminsMessage) - Setting value for restrict_workspace_admins setting. This is the setting value set by consumers, check effective_restrict_workspace_admins for final setting value
 * `string_val` (StringMessage) - Setting value for string type setting. This is the setting value set by consumers, check effective_string_val for final setting value
+* `workspace_dashboard_theme` (DashboardTheme) - Setting value for the workspace_dashboard_theme setting. This is the setting value set by consumers. Check effective_workspace_dashboard_theme for the final setting value
 * `workspace_label` (WorkspaceLabelMessage) - Setting value for workspace_label setting. This is the setting value set by consumers, check effective_workspace_label for final setting value
 
 ### AibiDashboardEmbeddingAccessPolicy
@@ -90,6 +92,99 @@ The following attributes are exported:
 
 ### CollaborationPlatformConnectivityMessage
 * `connectivity` (string) - Possible values are: `ALLOW_ALL`, `ALLOW_SLACK`, `ALLOW_TEAMS`, `DENY_ALL`
+
+### DashboardTheme
+* `axis_line_color` (DashboardThemeDashboardThemeColor) - Color of the zero-value grid line, making it visually distinct from other grid lines
+* `canvas_background_color` (DashboardThemeDashboardThemeColor) - The background color of the dashboard canvas
+* `continuous_gradient` (DashboardThemeContinuousGradient) - The continuous gradient configuration for the dashboard
+* `font_color` (DashboardThemeDashboardThemeColor) - The default font color applied to all text in the dashboard.
+  Superseded by font_settings.base.font_color when font_settings is set.
+  More specific font settings in turn override base
+* `font_family` (string) - Font family to customize all text within the dashboard.
+  Unsupported font names fall back to the default font.
+  Superseded by font_settings.base.font_family when font_settings is set
+* `font_settings` (DashboardThemeFontSettings) - The per-category typography overrides for the dashboard
+* `grid_line_color` (DashboardThemeDashboardThemeColor) - Color of chart grid lines in visualizations (horizontal and vertical guide lines)
+* `mark_corner_radius` (integer) - The corner radius in pixels for rectangular marks in visualizations (bars, columns, histogram bins, etc.)
+* `selection_color` (DashboardThemeDashboardThemeColor) - The highlight color for selected elements in widgets
+* `sentiment_colors` (DashboardThemeSentimentColors) - The sentiment color palette for the dashboard
+* `text_box_vertical_align` (string) - The default vertical alignment for all text box widgets in the dashboard.
+  Individual text box widgets can override this. Possible values are: `VERTICAL_ALIGN_BOTTOM`, `VERTICAL_ALIGN_CENTER`, `VERTICAL_ALIGN_TOP`
+* `visualization_color_01` (string) - Color palette for visualizations. Colors are applied in order (visualization_color_01, visualization_color_02, etc.).
+  Invalid color values are preserved but ignored during rendering
+* `visualization_color_02` (string) - The color at position 2 in the visualization color palette
+* `visualization_color_03` (string) - The color at position 3 in the visualization color palette
+* `visualization_color_04` (string) - The color at position 4 in the visualization color palette
+* `visualization_color_05` (string) - The color at position 5 in the visualization color palette
+* `visualization_color_06` (string) - The color at position 6 in the visualization color palette
+* `visualization_color_07` (string) - The color at position 7 in the visualization color palette
+* `visualization_color_08` (string) - The color at position 8 in the visualization color palette
+* `visualization_color_09` (string) - The color at position 9 in the visualization color palette
+* `visualization_color_10` (string) - The color at position 10 in the visualization color palette
+* `visualization_color_11` (string) - The color at position 11 in the visualization color palette
+* `visualization_color_12` (string) - The color at position 12 in the visualization color palette
+* `visualization_color_13` (string) - The color at position 13 in the visualization color palette
+* `visualization_color_14` (string) - The color at position 14 in the visualization color palette
+* `visualization_color_15` (string) - The color at position 15 in the visualization color palette
+* `visualization_color_16` (string) - The color at position 16 in the visualization color palette
+* `visualization_color_17` (string) - The color at position 17 in the visualization color palette
+* `visualization_color_18` (string) - The color at position 18 in the visualization color palette
+* `visualization_color_19` (string) - The color at position 19 in the visualization color palette
+* `visualization_color_20` (string) - The color at position 20 in the visualization color palette
+* `widget_background_color` (DashboardThemeDashboardThemeColor) - The background color of widgets
+* `widget_border_color` (DashboardThemeDashboardThemeColor) - The border color of widgets
+* `widget_corner_radius` (integer) - The widget border radius in pixels
+* `widget_header_alignment` (string) - Alignment setting for all widget titles and descriptions at the dashboard level. Possible values are: `CENTER`, `LEFT`, `RIGHT`
+* `widget_margin` (integer) - The gap between widgets in pixels
+* `widget_padding` (integer) - The content padding inside each widget in pixels
+* `widget_shadow` (integer) - The shadow intensity level applied to widgets (0 = no shadow, 100 = maximum).
+  The actual CSS box-shadow is computed at render time from this value, factoring in
+  background colors and color mode
+
+### DashboardThemeContinuousGradient
+* `dark_mode` (DashboardThemeContinuousGradientGradientValue) - Gradient value used when the dashboard is rendered in dark mode
+* `light_mode` (DashboardThemeContinuousGradientGradientValue) - Gradient value used when the dashboard is rendered in light mode
+
+### DashboardThemeContinuousGradientCustomDivergingRamp
+* `end` (DashboardThemeDashboardThemeColor) - The color at the end of the gradient (highest value)
+* `mid` (DashboardThemeDashboardThemeColor) - The color at the midpoint of the gradient
+* `start` (DashboardThemeDashboardThemeColor) - The color at the start of the gradient (lowest value)
+
+### DashboardThemeContinuousGradientCustomSequentialRamp
+* `end` (DashboardThemeDashboardThemeColor) - The color at the end of the gradient (highest value)
+* `start` (DashboardThemeDashboardThemeColor) - The color at the start of the gradient (lowest value)
+
+### DashboardThemeContinuousGradientGradientValue
+* `color` (string) - A static color string (for example, '#FF0000')
+* `color_scheme` (string) - A named color scheme (for example, 'blues', 'viridis', 'spectral')
+* `custom_diverging` (DashboardThemeContinuousGradientCustomDivergingRamp) - A custom three-stop diverging gradient
+* `custom_sequential` (DashboardThemeContinuousGradientCustomSequentialRamp) - A custom two-stop sequential gradient
+* `from_categorical_index` (integer) - A 0-based index into the visualization color palette, where 0 is visualization_color_01. Valid values are 0 to 19
+
+### DashboardThemeDashboardThemeColor
+* `dark` (string) - The color used when the dashboard is rendered in dark mode (for example, '#FF0000')
+* `light` (string) - The color used when the dashboard is rendered in light mode (for example, '#FF0000')
+
+### DashboardThemeFontConfig
+* `font_color` (DashboardThemeDashboardThemeColor) - The font color applied to text in this category
+* `font_family` (string) - The font family name used for text in this category
+* `font_size` (integer) - The font size in pixels
+* `font_style` (string) - The font style (slant) applied to text in this category. Possible values are: `FONT_STYLE_ITALIC`, `FONT_STYLE_NORMAL`
+* `font_weight` (integer) - The font weight value (for example, 400 for normal, 700 for bold)
+* `text_case` (string) - The text case transformation applied to text in this category. Possible values are: `TEXT_CASE_CAPITALIZE`, `TEXT_CASE_LOWERCASE`, `TEXT_CASE_UPPERCASE`
+* `text_decoration` (string) - The text decoration applied to text in this category. Possible values are: `TEXT_DECORATION_NONE`, `TEXT_DECORATION_UNDERLINE`
+
+### DashboardThemeFontSettings
+* `base` (DashboardThemeFontConfig) - The default font config applied to all text unless overridden by a more specific category
+* `field_title` (DashboardThemeFontConfig) - The font config applied to field titles (for example, axis titles, table heading titles)
+* `field_value` (DashboardThemeFontConfig) - The font config applied to field values (for example, axis tick labels, table cell values, tooltip values)
+* `widget_description` (DashboardThemeFontConfig) - The font config applied to widget descriptions
+* `widget_title` (DashboardThemeFontConfig) - The font config applied to widget titles
+
+### DashboardThemeSentimentColors
+* `negative` (DashboardThemeDashboardThemeColor) - The color applied to negative sentiment values
+* `neutral` (DashboardThemeDashboardThemeColor) - The color applied to neutral sentiment values
+* `positive` (DashboardThemeDashboardThemeColor) - The color applied to positive sentiment values
 
 ### IntegerMessage
 * `value` (integer)

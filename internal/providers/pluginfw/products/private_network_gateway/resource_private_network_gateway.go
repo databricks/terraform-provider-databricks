@@ -284,7 +284,8 @@ func (m PrivateNetworkGateway) ApplySchemaCustomizations(attrs map[string]tfsche
 	attrs["traffic_mode"] = attrs["traffic_mode"].SetRequired()
 	attrs["update_time"] = attrs["update_time"].SetComputed()
 	attrs["parent"] = attrs["parent"].SetRequired()
-	attrs["parent"] = attrs["parent"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["parent"] = attrs["parent"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
+	attrs["parent"] = attrs["parent"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplaceIf(tfschema.RequiresReplaceIfKnownChange, "", "")).(tfschema.AttributeBuilder)
 
 	attrs["name"] = attrs["name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	return attrs
@@ -462,6 +463,9 @@ func (r *PrivateNetworkGatewayResource) Create(ctx context.Context, req resource
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	if !resp.Diagnostics.HasError() {
+		resp.Diagnostics.Append(resp.Private.SetKey(ctx, tfschema.CreationInputsAppliedKey, []byte("true"))...)
+	}
 }
 
 func (r *PrivateNetworkGatewayResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -554,6 +558,9 @@ func (r *PrivateNetworkGatewayResource) Update(ctx context.Context, req resource
 	}
 
 	r.update(ctx, plan, &resp.Diagnostics, &resp.State)
+	if !resp.Diagnostics.HasError() {
+		resp.Diagnostics.Append(resp.Private.SetKey(ctx, tfschema.CreationInputsAppliedKey, []byte("true"))...)
+	}
 }
 
 func (r *PrivateNetworkGatewayResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {

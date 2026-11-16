@@ -97,23 +97,24 @@ func (r ProviderConfigData) Type(ctx context.Context) attr.Type {
 
 // ExternalServicePrincipalData extends the main model with additional fields.
 type ExternalServicePrincipalData struct {
-	// The parent account ID, from Databricks.
+	// The ID of the account that contains the service principal.
 	AccountId types.String `tfsdk:"account_id"`
-	// The activity status of the service principal in the Databricks account.
+	// Whether the service principal is active in the account.
 	AccountSpStatus types.String `tfsdk:"account_sp_status"`
-	// Application ID of the service principal, from the customer's IdP.
+	// The service principal's application ID, from your IdP.
 	ApplicationId types.String `tfsdk:"application_id"`
-	// Display name of the service principal, from the customer's IdP.
+	// The service principal's display name, from your IdP.
 	DisplayName types.String `tfsdk:"display_name"`
-	// The external ID of the service principal in the customer's IdP.
+	// The ID of the service principal in your IdP.
 	ExternalServicePrincipalId types.String `tfsdk:"external_service_principal_id"`
-	// Internal servicePrincipalId of the service principal in Databricks.
+	// The Databricks ID of the service principal. Use it as the
+	// `service_principal_id` in the service principal APIs.
 	InternalId types.String `tfsdk:"internal_id"`
-	// The resource name of the external service principal. The format depends
-	// on the API that returned it: - Account-scoped:
-	// accounts/{account_id}/external-service-principals/{external_service_principal_id}
-	// - Workspace-scoped:
-	// external-service-principals/{external_service_principal_id}
+	// The resource name of the external service principal, in one of these
+	// formats: - Account APIs:
+	// `accounts/{account_id}/external-service-principals/{external_service_principal_id}`
+	// - Workspace APIs:
+	// `external-service-principals/{external_service_principal_id}`
 	Name               types.String `tfsdk:"name"`
 	ProviderConfigData types.Object `tfsdk:"provider_config"`
 }

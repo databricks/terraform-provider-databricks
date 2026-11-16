@@ -23,7 +23,9 @@ The following arguments are supported:
 * `managed_memory_entry_id` (string, optional) - Optional caller-selected memory entry ID. The service generates an ID when omitted
 * `session_id` (string, optional) - Optional identifier for the session associated with this memory entry. When omitted, the
   entry applies across the actor's sessions
-* `source_type` (string, optional) - Which writer created this entry. Caller sets this on Create; immutable after creation. Possible values are: `MANAGED_MEMORY_ENTRY_SOURCE_TYPE_AGENT`, `MANAGED_MEMORY_ENTRY_SOURCE_TYPE_DREAMER`
+* `source_type` (string, optional) - Which writer created this entry. Caller sets this on Create; immutable after creation.
+  While the workspace's default-source-type rollout flag is on, omitted or UNSPECIFIED is stored
+  as AGENT. While it is off, omitted is stored unset and UNSPECIFIED as UNSPECIFIED. Possible values are: `MANAGED_MEMORY_ENTRY_SOURCE_TYPE_AGENT`, `MANAGED_MEMORY_ENTRY_SOURCE_TYPE_DREAMER`
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 
 ### ProviderConfig

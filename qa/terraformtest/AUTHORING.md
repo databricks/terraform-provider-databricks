@@ -248,6 +248,65 @@ after an interrupted apply can have a different transcript. Missing cleanup
 fixtures fail too. Empty Terraform state plus consumed DELETE fixtures verifies
 the replayed cleanup flow, not the state of an independently simulated service.
 
+## Write tests that survive redaction
+
+The recorder redacts known secrets in both HTTP requests and responses, including
+secret-named fields containing fake test values. `[REDACTED]` is a literal string,
+not a wildcard. A live run can pass while replay fails because its outgoing
+request still contains the HCL value, or because a redacted response no longer
+matches an assertion or a configured value. This is an accepted tradeoff: keeping
+secrets out of fixtures takes priority over replaying every capture unchanged.
+The test author, including an agent updating a test, must resolve these mismatches.
+
+Choose the approach that preserves the behavior under test:
+
+- For an incidental secret string in a request, keep the redacted sample and add
+  `any_string` only at that field. It checks presence and string type while
+  allowing the nonsecret HCL input to differ. For example, a secret-write request
+  can use:
+
+  ```yaml
+  request:
+    method: POST
+    path: /api/2.0/secrets/put
+    body:
+      json:
+        scope: fixture-scope
+        key: fixture-key
+        string_value: "[REDACTED]"
+    matchers:
+      json:
+        - path: [string_value]
+          type: any_string
+  ```
+
+  Keep `scope`, `key`, and other behavior-specific fields exact. Header and query
+  string matchers are also supported; JSON matchers require `body.json`, not
+  text, base64, or multipart bodies. Matchers apply only to outgoing requests;
+  they do not change responses, HCL, or plan/state checks.
+- When exact equality matters, use a nonsecret HCL input matching the fixture's
+  redacted value, such as `string_value = "[REDACTED]"`, and align relevant
+  request/response samples and plan/state `equals` checks. This also avoids a
+  configured-value consistency failure if the provider reads the redacted value
+  back into state. For secret-read responses, preserve the API's encoding: the
+  `/secrets/get` response contains base64-encoded `[REDACTED]`, and the decoded
+  value is `[REDACTED]`. Live checks execute too; an expectation of `[REDACTED]`
+  must also hold during recording. If the scenario cannot satisfy both modes,
+  choose a secret-free scenario or test that behavior separately.
+
+Before recording, add any needed matchers to the existing YAML and use fake
+inputs in HCL and local files. The recorder preserves matching annotations but
+does not invent them or rewrite HCL and assertions. If verification replay fails,
+the source stays unchanged: adjust those inputs, matchers, or expectations and
+record again. Never restore the original secret or disable redaction to fix a
+failure, and do not mask fields that define the regression being tested.
+
+After recording, review the whole diff for secrets, including text/base64
+payloads, local files, and checkpoints; automatic redaction cannot identify every
+service-specific secret. Then unset `TEST_RECORDER_PROFILE_NAME` and run the same
+exact test path with `-count=1` to verify ordinary replay succeeds. Submit only
+secret-free fixtures with passing replay.
+
 ## Test local files and uploads
 
 Keep tiny inputs next to the YAML, such as `assets/script.py` containing only

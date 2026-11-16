@@ -1,9 +1,13 @@
-# API responses are inferred from the scenarios and API models, not recorded.
+# API responses recorded from Databricks; workspace hostname anonymized.
 # With fixed version responses, checking the selected ID preserves the Scala 2.13 suffix assertion.
 version: 1
-host_metadata: # Dummy host metadata.
-  host_type: "workspace"
-  cloud: "AWS"
+host_metadata:
+  account_id: replay-account
+  cloud_provider: aws
+  host_type: workspace
+  oidc_endpoint: https://example.databricks.com/oidc
+  token_federation_default_oidc_audiences:
+    - https://example.databricks.com/oidc/v1/token
   workspace_id: "12345"
 steps:
   - name: "select_default_version"
@@ -12,62 +16,430 @@ steps:
       }
     calls:
       - request:
-          method: "GET"
-          path: "/api/2.1/clusters/spark-versions"
+          method: GET
+          path: /api/2.1/clusters/spark-versions
           body: null
-        response: # Inferred API response; not recorded.
+        response:
           status: 200
+          headers:
+            Content-Type: application/json
           body:
             json:
               versions:
-                - key: "17.3.x-scala2.13"
-                  name: "17.3 LTS (includes Apache Spark 4.0.0, Scala 2.13)"
-                - key: "16.4.x-scala2.13"
-                  name: "16.4 LTS (includes Apache Spark 3.5.2, Scala 2.13)"
+                - key: 18.2.x-photon-scala2.13
+                  name: 18.2 Photon (includes Apache Spark 4.1.0, Scala 2.13)
+                - key: 18.2.x-scala2.13
+                  name: 18.2 (includes Apache Spark 4.1.0, Scala 2.13)
+                - key: 16.4.x-cpu-ml-scala2.12
+                  name: 16.4 LTS ML (includes Apache Spark 3.5.2, Scala 2.12)
+                - key: 18.x-aarch64-cpu-ml-photon-scala2.13
+                  name: 18 LTS ML Photon aarch64 (Scala 2.13, Spark 4.1.0)
+                - key: 16.4.x-cpu-ml-photon-scala2.12
+                  name: 16.4 LTS ML Photon (includes Apache Spark 3.5.2, Scala 2.12)
+                - key: 18.2.x-cpu-ml-scala2.13
+                  name: 18.2 ML (includes Apache Spark 4.1.0, Scala 2.13)
+                - key: 18.2.x-gpu-ml-scala2.13
+                  name: 18.2 ML (includes Apache Spark 4.1.0, GPU, Scala 2.13)
+                - key: 16.4.x-photon-scala2.12
+                  name: 16.4 LTS Photon (includes Apache Spark 3.5.2, Scala 2.12)
+                - key: 15.4.x-photon-scala2.12
+                  name: 15.4 LTS Photon (includes Apache Spark 3.5.0, Scala 2.12)
+                - key: 15.4.x-cpu-ml-photon-scala2.12
+                  name: 15.4 LTS ML Photon (includes Apache Spark 3.5.0, Scala 2.12)
+                - key: 16.4.x-photon-scala2.13
+                  name: 16.4 LTS Photon (includes Apache Spark 3.5.2, Scala 2.13)
+                - key: 13.3.x-scala2.12
+                  name: 13.3 LTS (includes Apache Spark 3.4.1, Scala 2.12)
+                - key: 18.2.x-cpu-ml-photon-scala2.13
+                  name: 18.2 ML Photon (includes Apache Spark 4.1.0, Scala 2.13)
+                - key: 16.4.x-scala2.13
+                  name: 16.4 LTS (includes Apache Spark 3.5.2, Scala 2.13)
+                - key: 18.x-gpu-ml-scala2.13
+                  name: 18 LTS ML (GPU, Scala 2.13, Spark 4.1.0)
+                - key: 13.3.x-cpu-ml-scala2.12
+                  name: 13.3 LTS ML (includes Apache Spark 3.4.1, Scala 2.12)
+                - key: 14.3.x-photon-scala2.12
+                  name: 14.3 LTS Photon (includes Apache Spark 3.5.0, Scala 2.12)
+                - key: 15.4.x-gpu-ml-scala2.12
+                  name: 15.4 LTS ML (includes Apache Spark 3.5.0, GPU, Scala 2.12)
+                - key: 16.4.x-gpu-ml-scala2.13
+                  name: 16.4 LTS ML (includes Apache Spark 3.5.2, GPU, Scala 2.13)
+                - key: 17.3.x-scala2.13
+                  name: 17.3 LTS (includes Apache Spark 4.0.0, Scala 2.13)
+                - key: 17.3.x-gpu-ml-scala2.13
+                  name: 17.3 LTS ML (includes Apache Spark 4.0.0, GPU, Scala 2.13)
+                - key: 14.3.x-cpu-ml-scala2.12
+                  name: 14.3 LTS ML (includes Apache Spark 3.5.0, Scala 2.12)
+                - key: 18.x-cpu-ml-photon-scala2.13
+                  name: 18 LTS ML Photon (Scala 2.13, Spark 4.1.0)
+                - key: 16.4.x-scala2.12
+                  name: 16.4 LTS (includes Apache Spark 3.5.2, Scala 2.12)
+                - key: 15.4.x-scala2.12
+                  name: 15.4 LTS (includes Apache Spark 3.5.0, Scala 2.12)
+                - key: 17.3.x-cpu-ml-scala2.13
+                  name: 17.3 LTS ML (includes Apache Spark 4.0.0, Scala 2.13)
+                - key: 19.x-cpu-ml-photon-scala2.13
+                  name: 19 ML Photon (includes Apache Spark 4.2.0, Scala 2.13)
+                - key: 14.3.x-scala2.12
+                  name: 14.3 LTS (includes Apache Spark 3.5.0, Scala 2.12)
+                - key: 18.x-aarch64-scala2.13
+                  name: 18 LTS aarch64 (Scala 2.13, Spark 4.1.0)
+                - key: 18.x-aarch64-cpu-ml-scala2.13
+                  name: 18 LTS ML aarch64 (Scala 2.13, Spark 4.1.0)
+                - key: 15.4.x-cpu-ml-scala2.12
+                  name: 15.4 LTS ML (includes Apache Spark 3.5.0, Scala 2.12)
+                - key: 18.x-photon-scala2.13
+                  name: 18 LTS Photon (Scala 2.13, Spark 4.1.0)
+                - key: 18.x-aarch64-photon-scala2.13
+                  name: 18 LTS Photon aarch64 (Scala 2.13, Spark 4.1.0)
+                - key: 19.x-gpu-ml-scala2.13
+                  name: 19 ML (includes Apache Spark 4.2.0, GPU, Scala 2.13)
+                - key: 18.x-scala2.13
+                  name: 18 LTS (Scala 2.13, Spark 4.1.0)
+                - key: 13.3.x-gpu-ml-scala2.12
+                  name: 13.3 LTS ML (includes Apache Spark 3.4.1, GPU, Scala 2.12)
+                - key: 19.x-photon-scala2.13
+                  name: 19 Photon (includes Apache Spark 4.2.0, Scala 2.13)
+                - key: 14.3.x-gpu-ml-scala2.12
+                  name: 14.3 LTS ML (includes Apache Spark 3.5.0, GPU, Scala 2.12)
+                - key: 16.4.x-cpu-ml-scala2.13
+                  name: 16.4 LTS ML (includes Apache Spark 3.5.2, Scala 2.13)
+                - key: 17.3.x-cpu-ml-photon-scala2.13
+                  name: 17.3 LTS ML Photon (includes Apache Spark 4.0.0, Scala 2.13)
+                - key: 19.x-cpu-ml-scala2.13
+                  name: 19 ML (includes Apache Spark 4.2.0, Scala 2.13)
+                - key: 18.x-cpu-ml-scala2.13
+                  name: 18 LTS ML (Scala 2.13, Spark 4.1.0)
+                - key: 19.x-scala2.13
+                  name: 19 (includes Apache Spark 4.2.0, Scala 2.13)
+                - key: 17.3.x-photon-scala2.13
+                  name: 17.3 LTS Photon (includes Apache Spark 4.0.0, Scala 2.13)
+                - key: 16.4.x-gpu-ml-scala2.12
+                  name: 16.4 LTS ML (includes Apache Spark 3.5.2, GPU, Scala 2.12)
+                - key: 13.3.x-photon-scala2.12
+                  name: 13.3 LTS Photon (includes Apache Spark 3.4.1, Scala 2.12)
+                - key: 16.4.x-cpu-ml-photon-scala2.13
+                  name: 16.4 LTS ML Photon (includes Apache Spark 3.5.2, Scala 2.13)
       - request:
-          method: "GET"
-          path: "/api/2.1/clusters/spark-versions"
+          method: GET
+          path: /api/2.1/clusters/spark-versions
           body: null
-        response: # Inferred API response; not recorded.
+        response:
           status: 200
+          headers:
+            Content-Type: application/json
           body:
             json:
               versions:
-                - key: "17.3.x-scala2.13"
-                  name: "17.3 LTS (includes Apache Spark 4.0.0, Scala 2.13)"
-                - key: "16.4.x-scala2.13"
-                  name: "16.4 LTS (includes Apache Spark 3.5.2, Scala 2.13)"
+                - key: 18.2.x-photon-scala2.13
+                  name: 18.2 Photon (includes Apache Spark 4.1.0, Scala 2.13)
+                - key: 18.2.x-scala2.13
+                  name: 18.2 (includes Apache Spark 4.1.0, Scala 2.13)
+                - key: 16.4.x-cpu-ml-scala2.12
+                  name: 16.4 LTS ML (includes Apache Spark 3.5.2, Scala 2.12)
+                - key: 18.x-aarch64-cpu-ml-photon-scala2.13
+                  name: 18 LTS ML Photon aarch64 (Scala 2.13, Spark 4.1.0)
+                - key: 16.4.x-cpu-ml-photon-scala2.12
+                  name: 16.4 LTS ML Photon (includes Apache Spark 3.5.2, Scala 2.12)
+                - key: 18.2.x-cpu-ml-scala2.13
+                  name: 18.2 ML (includes Apache Spark 4.1.0, Scala 2.13)
+                - key: 18.2.x-gpu-ml-scala2.13
+                  name: 18.2 ML (includes Apache Spark 4.1.0, GPU, Scala 2.13)
+                - key: 16.4.x-photon-scala2.12
+                  name: 16.4 LTS Photon (includes Apache Spark 3.5.2, Scala 2.12)
+                - key: 15.4.x-photon-scala2.12
+                  name: 15.4 LTS Photon (includes Apache Spark 3.5.0, Scala 2.12)
+                - key: 15.4.x-cpu-ml-photon-scala2.12
+                  name: 15.4 LTS ML Photon (includes Apache Spark 3.5.0, Scala 2.12)
+                - key: 16.4.x-photon-scala2.13
+                  name: 16.4 LTS Photon (includes Apache Spark 3.5.2, Scala 2.13)
+                - key: 13.3.x-scala2.12
+                  name: 13.3 LTS (includes Apache Spark 3.4.1, Scala 2.12)
+                - key: 18.2.x-cpu-ml-photon-scala2.13
+                  name: 18.2 ML Photon (includes Apache Spark 4.1.0, Scala 2.13)
+                - key: 16.4.x-scala2.13
+                  name: 16.4 LTS (includes Apache Spark 3.5.2, Scala 2.13)
+                - key: 18.x-gpu-ml-scala2.13
+                  name: 18 LTS ML (GPU, Scala 2.13, Spark 4.1.0)
+                - key: 13.3.x-cpu-ml-scala2.12
+                  name: 13.3 LTS ML (includes Apache Spark 3.4.1, Scala 2.12)
+                - key: 14.3.x-photon-scala2.12
+                  name: 14.3 LTS Photon (includes Apache Spark 3.5.0, Scala 2.12)
+                - key: 15.4.x-gpu-ml-scala2.12
+                  name: 15.4 LTS ML (includes Apache Spark 3.5.0, GPU, Scala 2.12)
+                - key: 16.4.x-gpu-ml-scala2.13
+                  name: 16.4 LTS ML (includes Apache Spark 3.5.2, GPU, Scala 2.13)
+                - key: 17.3.x-scala2.13
+                  name: 17.3 LTS (includes Apache Spark 4.0.0, Scala 2.13)
+                - key: 17.3.x-gpu-ml-scala2.13
+                  name: 17.3 LTS ML (includes Apache Spark 4.0.0, GPU, Scala 2.13)
+                - key: 14.3.x-cpu-ml-scala2.12
+                  name: 14.3 LTS ML (includes Apache Spark 3.5.0, Scala 2.12)
+                - key: 18.x-cpu-ml-photon-scala2.13
+                  name: 18 LTS ML Photon (Scala 2.13, Spark 4.1.0)
+                - key: 16.4.x-scala2.12
+                  name: 16.4 LTS (includes Apache Spark 3.5.2, Scala 2.12)
+                - key: 15.4.x-scala2.12
+                  name: 15.4 LTS (includes Apache Spark 3.5.0, Scala 2.12)
+                - key: 17.3.x-cpu-ml-scala2.13
+                  name: 17.3 LTS ML (includes Apache Spark 4.0.0, Scala 2.13)
+                - key: 19.x-cpu-ml-photon-scala2.13
+                  name: 19 ML Photon (includes Apache Spark 4.2.0, Scala 2.13)
+                - key: 14.3.x-scala2.12
+                  name: 14.3 LTS (includes Apache Spark 3.5.0, Scala 2.12)
+                - key: 18.x-aarch64-scala2.13
+                  name: 18 LTS aarch64 (Scala 2.13, Spark 4.1.0)
+                - key: 18.x-aarch64-cpu-ml-scala2.13
+                  name: 18 LTS ML aarch64 (Scala 2.13, Spark 4.1.0)
+                - key: 15.4.x-cpu-ml-scala2.12
+                  name: 15.4 LTS ML (includes Apache Spark 3.5.0, Scala 2.12)
+                - key: 18.x-photon-scala2.13
+                  name: 18 LTS Photon (Scala 2.13, Spark 4.1.0)
+                - key: 18.x-aarch64-photon-scala2.13
+                  name: 18 LTS Photon aarch64 (Scala 2.13, Spark 4.1.0)
+                - key: 19.x-gpu-ml-scala2.13
+                  name: 19 ML (includes Apache Spark 4.2.0, GPU, Scala 2.13)
+                - key: 18.x-scala2.13
+                  name: 18 LTS (Scala 2.13, Spark 4.1.0)
+                - key: 13.3.x-gpu-ml-scala2.12
+                  name: 13.3 LTS ML (includes Apache Spark 3.4.1, GPU, Scala 2.12)
+                - key: 19.x-photon-scala2.13
+                  name: 19 Photon (includes Apache Spark 4.2.0, Scala 2.13)
+                - key: 14.3.x-gpu-ml-scala2.12
+                  name: 14.3 LTS ML (includes Apache Spark 3.5.0, GPU, Scala 2.12)
+                - key: 16.4.x-cpu-ml-scala2.13
+                  name: 16.4 LTS ML (includes Apache Spark 3.5.2, Scala 2.13)
+                - key: 17.3.x-cpu-ml-photon-scala2.13
+                  name: 17.3 LTS ML Photon (includes Apache Spark 4.0.0, Scala 2.13)
+                - key: 19.x-cpu-ml-scala2.13
+                  name: 19 ML (includes Apache Spark 4.2.0, Scala 2.13)
+                - key: 18.x-cpu-ml-scala2.13
+                  name: 18 LTS ML (Scala 2.13, Spark 4.1.0)
+                - key: 19.x-scala2.13
+                  name: 19 (includes Apache Spark 4.2.0, Scala 2.13)
+                - key: 17.3.x-photon-scala2.13
+                  name: 17.3 LTS Photon (includes Apache Spark 4.0.0, Scala 2.13)
+                - key: 16.4.x-gpu-ml-scala2.12
+                  name: 16.4 LTS ML (includes Apache Spark 3.5.2, GPU, Scala 2.12)
+                - key: 13.3.x-photon-scala2.12
+                  name: 13.3 LTS Photon (includes Apache Spark 3.4.1, Scala 2.12)
+                - key: 16.4.x-cpu-ml-photon-scala2.13
+                  name: 16.4 LTS ML Photon (includes Apache Spark 3.5.2, Scala 2.13)
       - request:
-          method: "GET"
-          path: "/api/2.1/clusters/spark-versions"
+          method: GET
+          path: /api/2.1/clusters/spark-versions
           body: null
-        response: # Inferred API response; not recorded.
+        response:
           status: 200
+          headers:
+            Content-Type: application/json
           body:
             json:
               versions:
-                - key: "17.3.x-scala2.13"
-                  name: "17.3 LTS (includes Apache Spark 4.0.0, Scala 2.13)"
-                - key: "16.4.x-scala2.13"
-                  name: "16.4 LTS (includes Apache Spark 3.5.2, Scala 2.13)"
+                - key: 18.2.x-photon-scala2.13
+                  name: 18.2 Photon (includes Apache Spark 4.1.0, Scala 2.13)
+                - key: 18.2.x-scala2.13
+                  name: 18.2 (includes Apache Spark 4.1.0, Scala 2.13)
+                - key: 16.4.x-cpu-ml-scala2.12
+                  name: 16.4 LTS ML (includes Apache Spark 3.5.2, Scala 2.12)
+                - key: 18.x-aarch64-cpu-ml-photon-scala2.13
+                  name: 18 LTS ML Photon aarch64 (Scala 2.13, Spark 4.1.0)
+                - key: 16.4.x-cpu-ml-photon-scala2.12
+                  name: 16.4 LTS ML Photon (includes Apache Spark 3.5.2, Scala 2.12)
+                - key: 18.2.x-cpu-ml-scala2.13
+                  name: 18.2 ML (includes Apache Spark 4.1.0, Scala 2.13)
+                - key: 18.2.x-gpu-ml-scala2.13
+                  name: 18.2 ML (includes Apache Spark 4.1.0, GPU, Scala 2.13)
+                - key: 16.4.x-photon-scala2.12
+                  name: 16.4 LTS Photon (includes Apache Spark 3.5.2, Scala 2.12)
+                - key: 15.4.x-photon-scala2.12
+                  name: 15.4 LTS Photon (includes Apache Spark 3.5.0, Scala 2.12)
+                - key: 15.4.x-cpu-ml-photon-scala2.12
+                  name: 15.4 LTS ML Photon (includes Apache Spark 3.5.0, Scala 2.12)
+                - key: 16.4.x-photon-scala2.13
+                  name: 16.4 LTS Photon (includes Apache Spark 3.5.2, Scala 2.13)
+                - key: 13.3.x-scala2.12
+                  name: 13.3 LTS (includes Apache Spark 3.4.1, Scala 2.12)
+                - key: 18.2.x-cpu-ml-photon-scala2.13
+                  name: 18.2 ML Photon (includes Apache Spark 4.1.0, Scala 2.13)
+                - key: 16.4.x-scala2.13
+                  name: 16.4 LTS (includes Apache Spark 3.5.2, Scala 2.13)
+                - key: 18.x-gpu-ml-scala2.13
+                  name: 18 LTS ML (GPU, Scala 2.13, Spark 4.1.0)
+                - key: 13.3.x-cpu-ml-scala2.12
+                  name: 13.3 LTS ML (includes Apache Spark 3.4.1, Scala 2.12)
+                - key: 14.3.x-photon-scala2.12
+                  name: 14.3 LTS Photon (includes Apache Spark 3.5.0, Scala 2.12)
+                - key: 15.4.x-gpu-ml-scala2.12
+                  name: 15.4 LTS ML (includes Apache Spark 3.5.0, GPU, Scala 2.12)
+                - key: 16.4.x-gpu-ml-scala2.13
+                  name: 16.4 LTS ML (includes Apache Spark 3.5.2, GPU, Scala 2.13)
+                - key: 17.3.x-scala2.13
+                  name: 17.3 LTS (includes Apache Spark 4.0.0, Scala 2.13)
+                - key: 17.3.x-gpu-ml-scala2.13
+                  name: 17.3 LTS ML (includes Apache Spark 4.0.0, GPU, Scala 2.13)
+                - key: 14.3.x-cpu-ml-scala2.12
+                  name: 14.3 LTS ML (includes Apache Spark 3.5.0, Scala 2.12)
+                - key: 18.x-cpu-ml-photon-scala2.13
+                  name: 18 LTS ML Photon (Scala 2.13, Spark 4.1.0)
+                - key: 16.4.x-scala2.12
+                  name: 16.4 LTS (includes Apache Spark 3.5.2, Scala 2.12)
+                - key: 15.4.x-scala2.12
+                  name: 15.4 LTS (includes Apache Spark 3.5.0, Scala 2.12)
+                - key: 17.3.x-cpu-ml-scala2.13
+                  name: 17.3 LTS ML (includes Apache Spark 4.0.0, Scala 2.13)
+                - key: 19.x-cpu-ml-photon-scala2.13
+                  name: 19 ML Photon (includes Apache Spark 4.2.0, Scala 2.13)
+                - key: 14.3.x-scala2.12
+                  name: 14.3 LTS (includes Apache Spark 3.5.0, Scala 2.12)
+                - key: 18.x-aarch64-scala2.13
+                  name: 18 LTS aarch64 (Scala 2.13, Spark 4.1.0)
+                - key: 18.x-aarch64-cpu-ml-scala2.13
+                  name: 18 LTS ML aarch64 (Scala 2.13, Spark 4.1.0)
+                - key: 15.4.x-cpu-ml-scala2.12
+                  name: 15.4 LTS ML (includes Apache Spark 3.5.0, Scala 2.12)
+                - key: 18.x-photon-scala2.13
+                  name: 18 LTS Photon (Scala 2.13, Spark 4.1.0)
+                - key: 18.x-aarch64-photon-scala2.13
+                  name: 18 LTS Photon aarch64 (Scala 2.13, Spark 4.1.0)
+                - key: 19.x-gpu-ml-scala2.13
+                  name: 19 ML (includes Apache Spark 4.2.0, GPU, Scala 2.13)
+                - key: 18.x-scala2.13
+                  name: 18 LTS (Scala 2.13, Spark 4.1.0)
+                - key: 13.3.x-gpu-ml-scala2.12
+                  name: 13.3 LTS ML (includes Apache Spark 3.4.1, GPU, Scala 2.12)
+                - key: 19.x-photon-scala2.13
+                  name: 19 Photon (includes Apache Spark 4.2.0, Scala 2.13)
+                - key: 14.3.x-gpu-ml-scala2.12
+                  name: 14.3 LTS ML (includes Apache Spark 3.5.0, GPU, Scala 2.12)
+                - key: 16.4.x-cpu-ml-scala2.13
+                  name: 16.4 LTS ML (includes Apache Spark 3.5.2, Scala 2.13)
+                - key: 17.3.x-cpu-ml-photon-scala2.13
+                  name: 17.3 LTS ML Photon (includes Apache Spark 4.0.0, Scala 2.13)
+                - key: 19.x-cpu-ml-scala2.13
+                  name: 19 ML (includes Apache Spark 4.2.0, Scala 2.13)
+                - key: 18.x-cpu-ml-scala2.13
+                  name: 18 LTS ML (Scala 2.13, Spark 4.1.0)
+                - key: 19.x-scala2.13
+                  name: 19 (includes Apache Spark 4.2.0, Scala 2.13)
+                - key: 17.3.x-photon-scala2.13
+                  name: 17.3 LTS Photon (includes Apache Spark 4.0.0, Scala 2.13)
+                - key: 16.4.x-gpu-ml-scala2.12
+                  name: 16.4 LTS ML (includes Apache Spark 3.5.2, GPU, Scala 2.12)
+                - key: 13.3.x-photon-scala2.12
+                  name: 13.3 LTS Photon (includes Apache Spark 3.4.1, Scala 2.12)
+                - key: 16.4.x-cpu-ml-photon-scala2.13
+                  name: 16.4 LTS ML Photon (includes Apache Spark 3.5.2, Scala 2.13)
     state:
       resources:
         data.databricks_spark_version.latest:
           attributes:
             - path: ["id"]
-              equals: "17.3.x-scala2.13"
+              equals: "19.x-scala2.13"
 destroy:
   calls:
     - request:
-        method: "GET"
-        path: "/api/2.1/clusters/spark-versions"
+        method: GET
+        path: /api/2.1/clusters/spark-versions
         body: null
-      response: # Inferred API response; not recorded.
+      response:
         status: 200
+        headers:
+          Content-Type: application/json
         body:
           json:
             versions:
-              - key: "17.3.x-scala2.13"
-                name: "17.3 LTS (includes Apache Spark 4.0.0, Scala 2.13)"
-              - key: "16.4.x-scala2.13"
-                name: "16.4 LTS (includes Apache Spark 3.5.2, Scala 2.13)"
+              - key: 18.2.x-photon-scala2.13
+                name: 18.2 Photon (includes Apache Spark 4.1.0, Scala 2.13)
+              - key: 18.2.x-scala2.13
+                name: 18.2 (includes Apache Spark 4.1.0, Scala 2.13)
+              - key: 16.4.x-cpu-ml-scala2.12
+                name: 16.4 LTS ML (includes Apache Spark 3.5.2, Scala 2.12)
+              - key: 18.x-aarch64-cpu-ml-photon-scala2.13
+                name: 18 LTS ML Photon aarch64 (Scala 2.13, Spark 4.1.0)
+              - key: 16.4.x-cpu-ml-photon-scala2.12
+                name: 16.4 LTS ML Photon (includes Apache Spark 3.5.2, Scala 2.12)
+              - key: 18.2.x-cpu-ml-scala2.13
+                name: 18.2 ML (includes Apache Spark 4.1.0, Scala 2.13)
+              - key: 18.2.x-gpu-ml-scala2.13
+                name: 18.2 ML (includes Apache Spark 4.1.0, GPU, Scala 2.13)
+              - key: 16.4.x-photon-scala2.12
+                name: 16.4 LTS Photon (includes Apache Spark 3.5.2, Scala 2.12)
+              - key: 15.4.x-photon-scala2.12
+                name: 15.4 LTS Photon (includes Apache Spark 3.5.0, Scala 2.12)
+              - key: 15.4.x-cpu-ml-photon-scala2.12
+                name: 15.4 LTS ML Photon (includes Apache Spark 3.5.0, Scala 2.12)
+              - key: 16.4.x-photon-scala2.13
+                name: 16.4 LTS Photon (includes Apache Spark 3.5.2, Scala 2.13)
+              - key: 13.3.x-scala2.12
+                name: 13.3 LTS (includes Apache Spark 3.4.1, Scala 2.12)
+              - key: 18.2.x-cpu-ml-photon-scala2.13
+                name: 18.2 ML Photon (includes Apache Spark 4.1.0, Scala 2.13)
+              - key: 16.4.x-scala2.13
+                name: 16.4 LTS (includes Apache Spark 3.5.2, Scala 2.13)
+              - key: 18.x-gpu-ml-scala2.13
+                name: 18 LTS ML (GPU, Scala 2.13, Spark 4.1.0)
+              - key: 13.3.x-cpu-ml-scala2.12
+                name: 13.3 LTS ML (includes Apache Spark 3.4.1, Scala 2.12)
+              - key: 14.3.x-photon-scala2.12
+                name: 14.3 LTS Photon (includes Apache Spark 3.5.0, Scala 2.12)
+              - key: 15.4.x-gpu-ml-scala2.12
+                name: 15.4 LTS ML (includes Apache Spark 3.5.0, GPU, Scala 2.12)
+              - key: 16.4.x-gpu-ml-scala2.13
+                name: 16.4 LTS ML (includes Apache Spark 3.5.2, GPU, Scala 2.13)
+              - key: 17.3.x-scala2.13
+                name: 17.3 LTS (includes Apache Spark 4.0.0, Scala 2.13)
+              - key: 17.3.x-gpu-ml-scala2.13
+                name: 17.3 LTS ML (includes Apache Spark 4.0.0, GPU, Scala 2.13)
+              - key: 14.3.x-cpu-ml-scala2.12
+                name: 14.3 LTS ML (includes Apache Spark 3.5.0, Scala 2.12)
+              - key: 18.x-cpu-ml-photon-scala2.13
+                name: 18 LTS ML Photon (Scala 2.13, Spark 4.1.0)
+              - key: 16.4.x-scala2.12
+                name: 16.4 LTS (includes Apache Spark 3.5.2, Scala 2.12)
+              - key: 15.4.x-scala2.12
+                name: 15.4 LTS (includes Apache Spark 3.5.0, Scala 2.12)
+              - key: 17.3.x-cpu-ml-scala2.13
+                name: 17.3 LTS ML (includes Apache Spark 4.0.0, Scala 2.13)
+              - key: 19.x-cpu-ml-photon-scala2.13
+                name: 19 ML Photon (includes Apache Spark 4.2.0, Scala 2.13)
+              - key: 14.3.x-scala2.12
+                name: 14.3 LTS (includes Apache Spark 3.5.0, Scala 2.12)
+              - key: 18.x-aarch64-scala2.13
+                name: 18 LTS aarch64 (Scala 2.13, Spark 4.1.0)
+              - key: 18.x-aarch64-cpu-ml-scala2.13
+                name: 18 LTS ML aarch64 (Scala 2.13, Spark 4.1.0)
+              - key: 15.4.x-cpu-ml-scala2.12
+                name: 15.4 LTS ML (includes Apache Spark 3.5.0, Scala 2.12)
+              - key: 18.x-photon-scala2.13
+                name: 18 LTS Photon (Scala 2.13, Spark 4.1.0)
+              - key: 18.x-aarch64-photon-scala2.13
+                name: 18 LTS Photon aarch64 (Scala 2.13, Spark 4.1.0)
+              - key: 19.x-gpu-ml-scala2.13
+                name: 19 ML (includes Apache Spark 4.2.0, GPU, Scala 2.13)
+              - key: 18.x-scala2.13
+                name: 18 LTS (Scala 2.13, Spark 4.1.0)
+              - key: 13.3.x-gpu-ml-scala2.12
+                name: 13.3 LTS ML (includes Apache Spark 3.4.1, GPU, Scala 2.12)
+              - key: 19.x-photon-scala2.13
+                name: 19 Photon (includes Apache Spark 4.2.0, Scala 2.13)
+              - key: 14.3.x-gpu-ml-scala2.12
+                name: 14.3 LTS ML (includes Apache Spark 3.5.0, GPU, Scala 2.12)
+              - key: 16.4.x-cpu-ml-scala2.13
+                name: 16.4 LTS ML (includes Apache Spark 3.5.2, Scala 2.13)
+              - key: 17.3.x-cpu-ml-photon-scala2.13
+                name: 17.3 LTS ML Photon (includes Apache Spark 4.0.0, Scala 2.13)
+              - key: 19.x-cpu-ml-scala2.13
+                name: 19 ML (includes Apache Spark 4.2.0, Scala 2.13)
+              - key: 18.x-cpu-ml-scala2.13
+                name: 18 LTS ML (Scala 2.13, Spark 4.1.0)
+              - key: 19.x-scala2.13
+                name: 19 (includes Apache Spark 4.2.0, Scala 2.13)
+              - key: 17.3.x-photon-scala2.13
+                name: 17.3 LTS Photon (includes Apache Spark 4.0.0, Scala 2.13)
+              - key: 16.4.x-gpu-ml-scala2.12
+                name: 16.4 LTS ML (includes Apache Spark 3.5.2, GPU, Scala 2.12)
+              - key: 13.3.x-photon-scala2.12
+                name: 13.3 LTS Photon (includes Apache Spark 3.4.1, Scala 2.12)
+              - key: 16.4.x-cpu-ml-photon-scala2.13
+                name: 16.4 LTS ML Photon (includes Apache Spark 3.5.2, Scala 2.13)

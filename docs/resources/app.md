@@ -50,11 +50,15 @@ The following arguments are required:
 * `usage_policy_id` - (Optional) The Usage Policy ID set for this resource.
 * `resources` - (Optional) A list of resources that the app have access to.
 * `user_api_scopes` - (Optional) A list of api scopes granted to the user access token.  See [REST API docs](https://docs.databricks.com/api/workspace/api/scopes) for full list of supported scopes.
-* `compute_size` - (Optional) A string specifying compute size for the App. Possible values are `MEDIUM`, `LARGE`.
+* `compute_size` - (Optional) A string specifying compute size for the App. Possible values are `MEDIUM`, `LARGE`. If omitted, the app uses `MEDIUM`.
+* `compute_min_instances` - (Optional) Minimum number of app instances the app is configured to run. Must be set together with `compute_max_instances`.
+* `compute_max_instances` - (Optional) Maximum number of app instances the app is configured to run. Must be set together with `compute_min_instances`. Omitting both disables horizontal scaling.
 * `git_repository` - (Optional) Git repository configuration for app deployments (see [below](#git_repository-configuration-attribute)). When specified, deployments can reference code from this repository by providing only the git reference (branch, tag, or commit).
 * `git_source` - (Optional) The Git source to deploy from, specifying the reference to check out and an optional path to the app source code within the repository configured in `git_repository` (see [below](#git_source-configuration-attribute)).
 * `source_code_path` - (Optional) Workspace filesystem path of the source code to deploy from, as an alternative to Git-based deployment (`git_repository`/`git_source`). This value is not returned by the service; the workspace path of the last active deployment is exported as `default_source_code_path`.
 * `telemetry_export_destinations` - (Optional) A list of destinations to which the app's telemetry (logs, metrics, traces) is exported (see [below](#telemetry_export_destinations-configuration-attribute)).
+
+-> Updates apply the whole configuration: an argument removed from the configuration is cleared or reset to its default, even if it was set outside Terraform. Enabling or disabling horizontal scaling (`compute_min_instances`/`compute_max_instances`) cannot be combined with a change to `compute_size` or `git_repository` in the same apply.
 
 ### resources Configuration Attribute
 

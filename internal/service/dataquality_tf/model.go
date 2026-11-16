@@ -834,6 +834,7 @@ func (to *DataProfilingConfig) SyncFieldsDuringRead(ctx context.Context, from Da
 
 func (m DataProfilingConfig) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["assets_dir"] = attrs["assets_dir"].SetOptional()
+	attrs["assets_dir"] = attrs["assets_dir"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["baseline_table_name"] = attrs["baseline_table_name"].SetOptional()
 	attrs["custom_metrics"] = attrs["custom_metrics"].SetOptional()
 	attrs["dashboard_id"] = attrs["dashboard_id"].SetComputed()
@@ -2144,11 +2145,12 @@ func (m *Monitor) SetDataProfilingConfig(ctx context.Context, v DataProfilingCon
 
 // Destination of the data quality monitoring notification.
 type NotificationDestination struct {
-	// The notification-destination IDs (Slack / Teams / webhook) to send the
-	// notification to. The destinations must already exist in the workspace; a
-	// workspace admin creates them. A maximum of 25 destination IDs is
-	// supported. Only supported on schema monitors, via
-	// `anomaly_detection_config`; rejected on table monitors.
+	// The notification-destination IDs (Slack / Teams / webhook / Asana /
+	// ServiceNow / AWS EventBridge) to send the notification to. The
+	// destinations must already exist in the workspace; a workspace admin
+	// creates them. A maximum of 25 destination IDs is supported. Only
+	// supported on schema monitors, via `anomaly_detection_config`; rejected on
+	// table monitors.
 	DestinationIds types.List `tfsdk:"destination_ids"`
 	// The IDs of the workspace users to notify by email. A maximum of 25 user
 	// IDs is supported. Only supported on schema monitors, via

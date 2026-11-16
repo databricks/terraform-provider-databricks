@@ -118,24 +118,26 @@ type ModelService struct {
 	Config types.Object `tfsdk:"config"`
 	// Time the model service was created.
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
-	// Creator identity.
+	// Username of the user who created the model service.
 	CreatedBy types.String `tfsdk:"created_by"`
-	// Owner of the model service.
+	// Username or group name of the model service owner.
 	EffectiveOwner types.String `tfsdk:"effective_owner"`
 	// Optimistic concurrency token returned on every read. To make an Update or
 	// Delete conditional, pass the last-read value in that request's `etag`
 	// field. In REST responses, this value is a base64 string; URL-encode it
 	// when setting the `etag` query parameter.
 	Etag types.String `tfsdk:"etag"`
-	// Metastore hosting the model service.
+	// Unique identifier of the metastore that contains the model service.
 	MetastoreId types.String `tfsdk:"metastore_id"`
-	// Name for the model service, e.g. "my_model_service".
+	// Name of the model service within the parent schema. The name must not
+	// contain periods, spaces, forward slashes, percent signs, or control
+	// characters, and it is stored in lowercase.
 	ModelServiceId types.String `tfsdk:"model_service_id"`
 	// Resource name of the model service. Format:
 	// `model-services/{catalog}.{schema}.{model_service}`. Each `{...}`
-	// component is capped at 255 characters individually. Server-derived on
-	// Create from `parent` + `model_service_id`; required and immutable on
-	// Update/Get/Delete.
+	// component is capped at 255 characters individually. The server derives
+	// the name on Create from `parent` and `model_service_id`; it is required
+	// and immutable on Update, Get, and Delete.
 	Name types.String `tfsdk:"name"`
 	// Name of the parent schema. Format: `schemas/{catalog}.{schema}`. Each
 	// `{...}` component is capped at 255 characters individually.
@@ -147,7 +149,7 @@ type ModelService struct {
 	SupportedApiTypes types.Set `tfsdk:"supported_api_types"`
 	// Time the model service was last modified.
 	UpdateTime timetypes.RFC3339 `tfsdk:"update_time"`
-	// Identity of the last updater.
+	// Username of the user who last updated the model service.
 	UpdatedBy      types.String `tfsdk:"updated_by"`
 	ProviderConfig types.Object `tfsdk:"provider_config"`
 }

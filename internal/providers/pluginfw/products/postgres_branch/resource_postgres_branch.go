@@ -130,6 +130,10 @@ type Branch struct {
 	// error.
 	ReplaceExisting types.Bool `tfsdk:"replace_existing"`
 	// The spec contains the branch configuration.
+	//
+	// Read the resource's current values from `status`, rather than `spec`.
+	// `spec` tracks field ownership for infrastructure-as-code tools and may
+	// omit unmanaged fields.
 	Spec types.Object `tfsdk:"spec"`
 	// The current status of a Branch.
 	Status types.Object `tfsdk:"status"`

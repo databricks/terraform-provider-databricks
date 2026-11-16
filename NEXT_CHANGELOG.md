@@ -7,11 +7,14 @@
 ### Breaking Changes
 
 ### New Features and Improvements
+* Support `statement_timeout` for all SQL warehouse types; omitting or removing the argument preserves the existing warehouse timeout, while explicit `0` clears the override ([#6144](https://github.com/databricks/terraform-provider-databricks/pull/6144)).
 
 ### Bug Fixes
 
 ### Documentation
 
 ### Exporter
+
+* Preserve `statement_timeout`, including `0`, in exports of all SQL warehouse types ([#6144](https://github.com/databricks/terraform-provider-databricks/pull/6144)).
 
 ### Internal Changes

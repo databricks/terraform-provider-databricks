@@ -307,7 +307,14 @@ func ResourceRepo() common.Resource {
 			if gitCredentialID := d.Get("git_credential_id").(int); gitCredentialID != 0 {
 				req["git_credential_id"] = int64(gitCredentialID)
 			}
-			return reposAPI.Update(d.Id(), req)
+			if err := reposAPI.Update(d.Id(), req); err != nil {
+				// Keep the prior state. Otherwise the SDK saves the requested tag or
+				// branch, and Read cannot correct it because the API does not return
+				// the tag, so later plans would show no change.
+				d.Partial(true)
+				return err
+			}
+			return nil
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			newClient, err := c.DatabricksClientForUnifiedProvider(ctx, d)

@@ -188,8 +188,9 @@ func TestReadLibrary_FoundDuringRefresh(t *testing.T) {
 	})
 }
 
-// Read stores a null id in state, so the identity must come from the library
-// itself. Otherwise the identity id is empty from the second refresh on.
+// Read stores a null id in state, so the identity must come from the cluster
+// and the library itself, in the SDKv2 databricks_library ID format. Otherwise
+// the identity id is empty from the second refresh on.
 func TestLibraryRead_IdentityUsesLibraryWithNullID(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
@@ -221,6 +222,6 @@ func TestLibraryRead_IdentityUsesLibraryWithNullID(t *testing.T) {
 		require.False(t, resp.Diagnostics.HasError(), "%v", resp.Diagnostics)
 		var id types.String
 		require.False(t, resp.Identity.GetAttribute(ctx, path.Root("id"), &id).HasError())
-		assert.Equal(t, compute.Library{Jar: "foo.jar"}.String(), id.ValueString())
+		assert.Equal(t, "test-cluster/"+compute.Library{Jar: "foo.jar"}.String(), id.ValueString())
 	})
 }

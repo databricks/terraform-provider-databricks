@@ -362,7 +362,7 @@ func (r Resource) ToResource() *schema.Resource {
 	if hasIdentity {
 		resource.Identity = workspaceResourceIdentity()
 		// Some resources change their ID in place, for example a renamed
-		// databricks_catalog, which changes the identity without replacing the
+		// databricks_volume, which changes the identity without replacing the
 		// resource. MutableIdentity turns off the SDK check that the identity
 		// never changes, see
 		// https://developer.hashicorp.com/terraform/plugin/sdkv2/resources/identity#mutable-identities

@@ -18,9 +18,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 
 	"github.com/databricks/terraform-provider-databricks/common"
 	tfcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/iptypes"
 	"github.com/databricks/terraform-provider-databricks/internal/tfreflect"
 )
 
@@ -216,11 +218,23 @@ func goSdkToTfSdkSingleField(
 			strVal = srcField.Interface().(string)
 		}
 		// check if the value is non-zero or if the field is in the forceSendFields list
+		stringValue := types.StringNull()
 		if strVal != "" || forceSendField {
-			destField.Set(reflect.ValueOf(types.StringValue(strVal)))
-		} else {
-			destField.Set(reflect.ValueOf(types.StringNull()))
+			stringValue = types.StringValue(strVal)
 		}
+		// Let the schema type build the value, so that a custom string type
+		// such as iptypes.IPAddressType gets its own value type.
+		stringType, ok := tfType.(basetypes.StringTypable)
+		if !ok {
+			d.AddError(goSdkToTfSdkFieldConversionFailureMessage, fmt.Sprintf("inner type is not a string type: %s. %s", tfType, common.TerraformBugErrorMessage))
+			return d
+		}
+		stringValuable, ds := stringType.ValueFromString(ctx, stringValue)
+		d.Append(ds...)
+		if d.HasError() {
+			return d
+		}
+		destField.Set(reflect.ValueOf(stringValuable))
 	case reflect.Struct:
 		// This corresponds to either a types.List or types.Object.
 		// If the destination field is a types.List, treat the source field as a slice with length 1
@@ -338,7 +352,7 @@ func goSdkToTfSdkSingleField(
 			// If the element is a primitive type, we can convert it by recursively calling this function.
 			// Otherwise, it is a struct, and we need to convert it by calling GoSdkToTfSdkStruct.
 			switch innerType {
-			case reflect.TypeFor[types.String](), reflect.TypeFor[types.Bool](), reflect.TypeFor[types.Int64](), reflect.TypeFor[types.Float64]():
+			case reflect.TypeFor[types.String](), reflect.TypeFor[types.Bool](), reflect.TypeFor[types.Int64](), reflect.TypeFor[types.Float64](), reflect.TypeFor[iptypes.IPAddress]():
 				d.Append(goSdkToTfSdkSingleField(ctx, srcField.Index(i), element.Elem(), true, elemType, innerType)...)
 			default:
 				d.Append(GoSdkToTfSdkStruct(ctx, srcField.Index(i).Interface(), element.Interface())...)
@@ -393,7 +407,7 @@ func goSdkToTfSdkSingleField(
 			// If the element is a primitive type, we can convert it by recursively calling this function.
 			// Otherwise, it is a struct, and we need to convert it by calling GoSdkToTfSdkStruct.
 			switch innerType {
-			case reflect.TypeFor[types.String](), reflect.TypeFor[types.Bool](), reflect.TypeFor[types.Int64](), reflect.TypeFor[types.Float64]():
+			case reflect.TypeFor[types.String](), reflect.TypeFor[types.Bool](), reflect.TypeFor[types.Int64](), reflect.TypeFor[types.Float64](), reflect.TypeFor[iptypes.IPAddress]():
 				d.Append(goSdkToTfSdkSingleField(ctx, srcMapValue, destMapValue.Elem(), true, mapType.ElemType, innerType)...)
 			default:
 				d.Append(GoSdkToTfSdkStruct(ctx, srcMapValue.Interface(), destMapValue.Interface())...)

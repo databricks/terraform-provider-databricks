@@ -164,7 +164,10 @@ func namespaceForceNew(ctx context.Context, d *schema.ResourceDiff, c *Databrick
 		if err != nil || resolvedID == 0 {
 			// Resolution failed (e.g., account-level host where /Me doesn't work)
 			// or returned zero. Either way, workspace_id is required but missing.
-			return fmt.Errorf("managing a workspace-level resource requires a workspace_id, but the previously configured workspace_id was removed")
+			// State has a workspace ID that config no longer sets, or never set,
+			// for example after an import by identity. Name the value to put back.
+			return fmt.Errorf("managing a workspace-level resource requires a workspace_id, but none is configured. "+
+				"Set workspace_id = %q in the resource's provider_config to keep it in its current workspace", oldEffective)
 		}
 		newEffective = strconv.FormatInt(resolvedID, 10)
 	}

@@ -3,7 +3,9 @@ package app
 import (
 	"context"
 	"encoding/base64"
+	"errors"
 	"fmt"
+	"io/fs"
 	"net/http"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
@@ -15,11 +17,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 )
 
-// The Apps UI rejects larger thumbnails; the API itself has no size limit.
+// The Apps UI's limit for thumbnail files.
 const maxThumbnailBytes = 250000
 
-// readThumbnail reads a thumbnail image and rejects what the Apps API or UI would reject: anything
-// but a PNG or JPEG (detected by the same signatures the API checks) and files over 250 KB.
+// readThumbnail reads a thumbnail image and checks it the way the Apps UI does: a PNG or JPEG of at
+// most 250 KB. The API applies neither limit: it converts other image formats it can decode, and
+// fails with an empty error message on files it can't decode.
 func readThumbnail(thumbnailPath string) ([]byte, error) {
 	content, err := common.ReadFileContent(thumbnailPath)
 	if err != nil {
@@ -40,19 +43,34 @@ func readThumbnail(thumbnailPath string) ([]byte, error) {
 func planThumbnailMd5(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
 	var thumbnailPath types.String
 	resp.Diagnostics.Append(req.Plan.GetAttribute(ctx, path.Root("thumbnail_path"), &thumbnailPath)...)
-	if resp.Diagnostics.HasError() || thumbnailPath.IsUnknown() {
+	if resp.Diagnostics.HasError() {
 		return
 	}
-	md5 := types.StringNull()
-	if !thumbnailPath.IsNull() {
-		content, err := readThumbnail(thumbnailPath.ValueString())
-		if err != nil {
-			resp.Diagnostics.AddAttributeError(path.Root("thumbnail_path"), "invalid app thumbnail", err.Error())
-			return
-		}
-		md5 = types.StringValue(common.CalculateMd5Hash(content))
+	md5, err := plannedThumbnailMd5(thumbnailPath)
+	if err != nil {
+		resp.Diagnostics.AddAttributeError(path.Root("thumbnail_path"), "invalid app thumbnail", err.Error())
+		return
 	}
 	resp.Diagnostics.Append(resp.Plan.SetAttribute(ctx, path.Root("thumbnail_md5"), md5)...)
+}
+
+// plannedThumbnailMd5 returns the planned thumbnail_md5. It is unknown while the path is, or while
+// the file doesn't exist yet (another resource may write it during apply); apply then checks it.
+func plannedThumbnailMd5(thumbnailPath types.String) (types.String, error) {
+	if thumbnailPath.IsNull() {
+		return types.StringNull(), nil
+	}
+	if thumbnailPath.IsUnknown() {
+		return types.StringUnknown(), nil
+	}
+	content, err := readThumbnail(thumbnailPath.ValueString())
+	if errors.Is(err, fs.ErrNotExist) {
+		return types.StringUnknown(), nil
+	}
+	if err != nil {
+		return types.StringNull(), err
+	}
+	return types.StringValue(common.CalculateMd5Hash(content)), nil
 }
 
 // syncThumbnail uploads the thumbnail when its hash differs from priorMd5, or deletes the app's
@@ -86,10 +104,10 @@ func syncThumbnail(ctx context.Context, a apps.AppsInterface, name string, thumb
 	return types.StringValue(md5), nil
 }
 
-// onlyThumbnailChanged reports whether an update changes nothing but the thumbnail, so that a new
+// appUpdateRequired reports whether an update changes anything but the thumbnail, so that a new
 // image doesn't run a full app update. An unknown value the configuration leaves unset is a
 // computed value the provider fills in, not a change.
-func onlyThumbnailChanged(req resource.UpdateRequest) (bool, error) {
+func appUpdateRequired(req resource.UpdateRequest) (bool, error) {
 	var plan, state, config map[string]tftypes.Value
 	if err := req.Plan.Raw.As(&plan); err != nil {
 		return false, err
@@ -107,7 +125,7 @@ func onlyThumbnailChanged(req resource.UpdateRequest) (bool, error) {
 		if !planned.IsKnown() && config[name].IsNull() {
 			continue
 		}
-		return false, nil
+		return true, nil
 	}
-	return true, nil
+	return false, nil
 }

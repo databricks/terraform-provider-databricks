@@ -402,12 +402,12 @@ func (a *resourceApp) Update(ctx context.Context, req resource.UpdateRequest, re
 		return
 	}
 
-	thumbnailOnly, err := onlyThumbnailChanged(req)
+	needsAppUpdate, err := appUpdateRequired(req)
 	if err != nil {
 		resp.Diagnostics.AddError("failed to compare the plan with the state", err.Error())
 		return
 	}
-	if !thumbnailOnly {
+	if needsAppUpdate {
 		var appGoSdk apps.App
 		resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, app, &appGoSdk)...)
 		if resp.Diagnostics.HasError() {

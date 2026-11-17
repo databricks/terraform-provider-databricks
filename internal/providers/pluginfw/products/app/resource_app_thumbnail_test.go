@@ -161,3 +161,32 @@ func TestSyncThumbnail(t *testing.T) {
 		})
 	}
 }
+
+func TestPlannedThumbnailMd5(t *testing.T) {
+	content := pngSignature + "data"
+	for _, tc := range []struct {
+		name          string
+		thumbnailPath types.String
+		wantMd5       types.String
+		wantErr       string
+	}{
+		{"no thumbnail", types.StringNull(), types.StringNull(), ""},
+		{"unknown path", types.StringUnknown(), types.StringUnknown(), ""},
+		{"existing image", types.StringValue(writeThumbnail(t, content)),
+			types.StringValue(common.CalculateMd5Hash([]byte(content))), ""},
+		{"file written during apply", types.StringValue(filepath.Join(t.TempDir(), "later.png")),
+			types.StringUnknown(), ""},
+		{"invalid image", types.StringValue(writeThumbnail(t, "GIF89a data")), types.StringNull(),
+			"must be a PNG or JPEG image"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			gotMd5, err := plannedThumbnailMd5(tc.thumbnailPath)
+			if tc.wantErr != "" {
+				assert.ErrorContains(t, err, tc.wantErr)
+			} else {
+				assert.NoError(t, err)
+			}
+			assert.Equal(t, tc.wantMd5, gotMd5)
+		})
+	}
+}

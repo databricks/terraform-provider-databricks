@@ -136,6 +136,27 @@ steps:
     expect_error: 'must be a PNG or JPEG\s+image, but its content is image/gif'
     calls:
       - *get_with_thumbnail
+  # A file that doesn't exist yet, such as one another resource writes during apply, leaves the
+  # hash unknown instead of failing the plan; apply then reads and checks it.
+  - name: "plan_with_file_written_during_apply"
+    config: |
+      resource "databricks_app" "this" {
+        no_compute     = true
+        name           = "tf-replay"
+        description    = "thumbnail app"
+        thumbnail_path = abspath("${path.module}/not-written-yet.png")
+      }
+    plan_only: true
+    plan:
+      expect: non_empty
+      changes:
+        databricks_app.this:
+          actions: [update]
+          after:
+            - path: ["thumbnail_md5"]
+              unknown: true
+    calls:
+      - *get_with_thumbnail
   - name: "remove_thumbnail"
     config: |
       resource "databricks_app" "this" {

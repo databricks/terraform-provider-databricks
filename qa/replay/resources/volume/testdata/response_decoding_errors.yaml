@@ -2,13 +2,15 @@
 # PATCH fails with the SDK's unmarshal error and a request log; the pattern checks its
 # message, request line and echoed body, and skips the generated headers in between. An
 # HTML body fails with the SDK's HTML error. An empty GET body blanks every field in the
-# refreshed state and plans a replacement. A PATCH answered {} or without full_name sets
-# the ID to the empty full name, so the read after the update GETs
-# /api/2.1/unity-catalog/volumes/; it fails and the volume keeps its old ID. That empty
-# ID is a known defect: Update takes the ID from the response's full_name without
-# checking it. A fix is expected to keep the ID; update those steps with it. API
-# responses are inferred from the Unity Catalog API contract, not recorded; the answer
-# to that empty-name GET is the workspace's usual reply to an unknown route.
+# refreshed state and plans a replacement. A POST answered {} sets the ID to the empty
+# full name, so the read after the create GETs /api/2.1/unity-catalog/volumes/; it fails
+# and the volume is left out of state. A PATCH answered {} or without full_name sets the
+# ID to the empty full name the same way; the read after the update fails and the volume
+# keeps its old ID. Those empty IDs are known defects: Create and Update take the ID from
+# the response's full_name without checking it. A fix is expected to keep a valid ID;
+# update those steps with it. API responses are inferred from the Unity Catalog API
+# contract, not recorded; the answer to that empty-name GET is the workspace's usual
+# reply to an unknown route.
 version: 1
 enforce_call_order: true
 host_metadata:
@@ -49,6 +51,27 @@ steps:
             Content-Type: application/json
           body:
             text: '{"full_name": "main.replay.decode_volume",'
+  - name: create_answered_200_with_empty_object_reads_an_empty_name
+    config: *config
+    expect_error: 'Error: cannot read volume: No API found for ''GET
+      /unity-catalog/volumes/''\n'
+    calls:
+      - request: *create_request
+        response:
+          status: 200
+          body:
+            json: {}
+      - request: &read_empty_name_request
+          method: GET
+          path: /api/2.1/unity-catalog/volumes/
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response: &empty_name_not_found
+          status: 404
+          body:
+            json: {"error_code": "ENDPOINT_NOT_FOUND",
+                   "message": "No API found for 'GET /unity-catalog/volumes/'"}
   - name: create
     config: *config
     calls:
@@ -174,17 +197,8 @@ steps:
           status: 200
           body:
             json: {}
-      - request: &read_empty_name_request
-          method: GET
-          path: /api/2.1/unity-catalog/volumes/
-          headers:
-            X-Databricks-Workspace-Id: "12345"
-          body: null
-        response: &empty_name_not_found
-          status: 404
-          body:
-            json: {"error_code": "ENDPOINT_NOT_FOUND",
-                   "message": "No API found for 'GET /unity-catalog/volumes/'"}
+      - request: *read_empty_name_request
+        response: *empty_name_not_found
   - name: plan_after_empty_object_keeps_the_old_id_and_plans_the_update_again
     plan_only: true
     config: *config_commented

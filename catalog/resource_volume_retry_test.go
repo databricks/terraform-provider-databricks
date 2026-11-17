@@ -19,24 +19,27 @@ import (
 	"github.com/databricks/terraform-provider-databricks/common"
 )
 
-// These tests pin the classic SDK client's retry timeout, HTTP timeout and cancellation
-// behavior for databricks_volume refreshes, which replay fixtures cannot express.
+// These tests pin the classic SDK client's retry timeout, HTTP timeout and
+// cancellation behavior for databricks_volume refreshes, which replay fixtures cannot
+// express. The SDK backs off on the real clock, so the backoff tests run in a synctest
+// bubble, whose fake clock makes their timing exact.
 
 const (
 	retryVolumeID   = "main.replay.retry_volume"
 	retryVolumePath = "/api/2.1/unity-catalog/volumes/" + retryVolumeID
-	retryVolumeJSON = `{"catalog_name": "main", "schema_name": "replay", "name": "retry_volume",
-		"full_name": "main.replay.retry_volume", "volume_type": "MANAGED"}`
+	retryVolumeJSON = `{"catalog_name": "main", "schema_name": "replay",
+		"name": "retry_volume", "full_name": "main.replay.retry_volume",
+		"volume_type": "MANAGED"}`
 	tooManyRequestsJSON = `{"error_code": "TOO_MANY_REQUESTS",
 		"message": "Too many requests from fixture"}`
-	// The provider's default retry timeout, which retries until the context ends.
+	tooManyRequestsDiagnostic = "cannot read volume: Too many requests from fixture"
+	// retryUntilContextEnds is the provider's default retry timeout.
 	retryUntilContextEnds = -1
 )
 
-// inMemoryVolumeAPI answers volume GETs with respond, numbering attempts from 1, and 404
-// to anything else. The SDK backs off on the real clock, so the backoff tests run in a
-// synctest bubble, whose fake clock makes it deterministic. A qa.HTTPFixture server
-// cannot serve a client inside a bubble, so requests are served in memory instead.
+// inMemoryVolumeAPI answers volume GETs with respond, numbering attempts from 1, and
+// anything else with 404. The backoff tests use it because a qa.HTTPFixture server
+// cannot serve a client inside a synctest bubble.
 type inMemoryVolumeAPI struct {
 	attempts atomic.Int32
 	respond  func(attempt int32) (status int, body string)
@@ -68,7 +71,9 @@ func newVolumeClient(t *testing.T, cfg *config.Config) *common.DatabricksClient 
 }
 
 // refreshVolume runs the provider's wrapped Read, as a Terraform refresh does.
-func refreshVolume(ctx context.Context, c *common.DatabricksClient) (*schema.ResourceData, diag.Diagnostics) {
+func refreshVolume(
+	ctx context.Context, c *common.DatabricksClient,
+) (*schema.ResourceData, diag.Diagnostics) {
 	r := ResourceVolume().ToResource()
 	d := r.TestResourceData()
 	d.SetId(retryVolumeID)
@@ -97,9 +102,9 @@ func TestVolumeRefreshPersistent429FailsAtRetryTimeout(t *testing.T) {
 
 		d, diags := refreshVolume(t.Context(), c)
 
-		assert.Equal(t, "cannot read volume: Too many requests from fixture", diagnosticSummary(t, diags))
+		assert.Equal(t, tooManyRequestsDiagnostic, diagnosticSummary(t, diags))
 		assert.Equal(t, int32(2), api.attempts.Load())
-		assert.Equal(t, retryVolumeID, d.Id(), "a 429 must not remove the volume from state")
+		assert.Equal(t, retryVolumeID, d.Id(), "the volume must stay in state")
 	})
 }
 
@@ -109,7 +114,7 @@ func TestVolumeRefreshPastHTTPTimeoutIsNotRetried(t *testing.T) {
 	// below instead of hanging.
 	release := make(chan struct{})
 	var attempts atomic.Int32
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	handler := func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != retryVolumePath {
 			http.NotFound(w, r)
 			return
@@ -123,9 +128,10 @@ func TestVolumeRefreshPastHTTPTimeoutIsNotRetried(t *testing.T) {
 		}
 		w.Header().Set("Content-Type", "application/json")
 		_, _ = w.Write([]byte(retryVolumeJSON))
-	}))
+	}
+	server := httptest.NewServer(http.HandlerFunc(handler))
 	defer server.Close()
-	// Runs before server.Close, which waits for the held handler to return.
+	// This runs before server.Close, which waits for the held handler to return.
 	defer close(release)
 	c := newVolumeClient(t, &config.Config{
 		Host:                server.URL,
@@ -135,11 +141,12 @@ func TestVolumeRefreshPastHTTPTimeoutIsNotRetried(t *testing.T) {
 
 	d, diags := refreshVolume(context.Background(), c)
 
-	expected := fmt.Sprintf(`cannot read volume: Get "%s%s?": request timed out after 1s of inactivity`,
+	expected := fmt.Sprintf(
+		`cannot read volume: Get "%s%s?": request timed out after 1s of inactivity`,
 		server.URL, retryVolumePath)
 	assert.Equal(t, expected, diagnosticSummary(t, diags))
 	assert.Equal(t, int32(1), attempts.Load())
-	assert.Equal(t, retryVolumeID, d.Id(), "a timed out refresh must not remove the volume from state")
+	assert.Equal(t, retryVolumeID, d.Id(), "the volume must stay in state")
 }
 
 func TestVolumeRefreshCancelledDuringBackoffIsNotRetried(t *testing.T) {
@@ -166,7 +173,7 @@ func TestVolumeRefreshCancelledDuringBackoffIsNotRetried(t *testing.T) {
 			d, diags = refreshVolume(ctx, c)
 		}()
 
-		// Wait returns once the refresh blocks, which after the 429 is in the backoff.
+		// After the 429, the refresh blocks only in its backoff, so Wait returns there.
 		synctest.Wait()
 		require.Equal(t, int32(1), api.attempts.Load())
 		cancel()
@@ -179,8 +186,8 @@ func TestVolumeRefreshCancelledDuringBackoffIsNotRetried(t *testing.T) {
 			t.Fatal("the refresh kept waiting out its backoff after cancellation")
 		}
 
-		assert.Equal(t, "cannot read volume: Too many requests from fixture", diagnosticSummary(t, diags))
+		assert.Equal(t, tooManyRequestsDiagnostic, diagnosticSummary(t, diags))
 		assert.Equal(t, int32(1), api.attempts.Load())
-		assert.Equal(t, retryVolumeID, d.Id(), "a cancelled refresh must not remove the volume from state")
+		assert.Equal(t, retryVolumeID, d.Id(), "the volume must stay in state")
 	})
 }

@@ -1,8 +1,8 @@
-# Pins that the classic SDK client sends the refresh GET exactly once and reports the API
-# message for statuses it does not retry: 400, 401, 409, 502 and 504. read_errors.yaml
-# covers 403 and 500 the same way. None of the messages match a transient error pattern,
-# and none of the errors removes the volume from state. API responses are inferred from
-# the Unity Catalog API contract, not recorded.
+# This journey pins that the classic SDK client sends the refresh GET exactly once and
+# reports the API message for statuses it does not retry: 400, 401, 409, 502 and 504.
+# read_errors.yaml covers 403 and 500 the same way. None of the messages match a transient
+# error pattern, and none of the errors removes the volume from state. API responses are
+# inferred from the Unity Catalog API contract, not recorded.
 version: 1
 enforce_call_order: true
 host_metadata:
@@ -26,15 +26,15 @@ steps:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
           body:
-            json: {"catalog_name": "main", "schema_name": "replay", "name": "retry_volume",
-                   "volume_type": "MANAGED"}
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "retry_volume", "volume_type": "MANAGED"}
         response: &volume
           status: 200
           body:
-            json: {"catalog_name": "main", "schema_name": "replay", "name": "retry_volume",
-                   "full_name": "main.replay.retry_volume", "volume_type": "MANAGED",
-                   "owner": "replay-admin@example.com",
-                   "storage_location": "s3://replay-metastore/volumes/00000000-0000-4000-8000-000000000002",
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "retry_volume", "full_name": "main.replay.retry_volume",
+                   "volume_type": "MANAGED", "owner": "replay-admin@example.com",
+                   "storage_location": "s3://replay-metastore/volumes/retry_volume",
                    "metastore_id": "11111111-1111-1111-1111-111111111111",
                    "volume_id": "00000000-0000-4000-8000-000000000002"}
       - request: &read
@@ -58,14 +58,14 @@ steps:
                    "message": "Invalid volume name from fixture"}
   - name: refresh_401_is_not_retried
     config: *config
-    expect_error: '(?s)cannot\s+read\s+volume:\s+Credential\s+was\s+not\s+sent\s+by\s+fixture'
+    expect_error: '(?s)cannot\s+read\s+volume:\s+No\s+credential\s+in\s+fixture'
     calls:
       - request: *read
         response:
           status: 401
           body:
             json: {"error_code": "UNAUTHENTICATED",
-                   "message": "Credential was not sent by fixture"}
+                   "message": "No credential in fixture"}
   - name: refresh_409_is_not_retried
     config: *config
     expect_error: '(?s)cannot\s+read\s+volume:\s+Conflicting\s+change\s+from\s+fixture'
@@ -92,7 +92,8 @@ steps:
         response:
           status: 504
           body:
-            json: {"error_code": "DEADLINE_EXCEEDED", "message": "Gateway timeout from fixture"}
+            json: {"error_code": "DEADLINE_EXCEEDED",
+                   "message": "Gateway timeout from fixture"}
 destroy:
   calls:
     - request: *read

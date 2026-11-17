@@ -1,6 +1,6 @@
-# Pins that the classic SDK client retries the refresh GET once when a 400 carries an
-# error code that the SDK maps to "too many requests": REQUEST_LIMIT_EXCEEDED and
-# RESOURCE_EXHAUSTED. The messages match no transient pattern, so only the error code
+# This journey pins that the classic SDK client retries the refresh GET once when a 400
+# carries an error code that the SDK maps to "too many requests": REQUEST_LIMIT_EXCEEDED
+# and RESOURCE_EXHAUSTED. The messages match no transient pattern, so only the error code
 # triggers the retry. API responses are inferred from the Unity Catalog API contract, not
 # recorded.
 version: 1
@@ -26,15 +26,15 @@ steps:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
           body:
-            json: {"catalog_name": "main", "schema_name": "replay", "name": "retry_volume",
-                   "volume_type": "MANAGED"}
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "retry_volume", "volume_type": "MANAGED"}
         response: &volume
           status: 200
           body:
-            json: {"catalog_name": "main", "schema_name": "replay", "name": "retry_volume",
-                   "full_name": "main.replay.retry_volume", "volume_type": "MANAGED",
-                   "owner": "replay-admin@example.com",
-                   "storage_location": "s3://replay-metastore/volumes/00000000-0000-4000-8000-000000000002",
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "retry_volume", "full_name": "main.replay.retry_volume",
+                   "volume_type": "MANAGED", "owner": "replay-admin@example.com",
+                   "storage_location": "s3://replay-metastore/volumes/retry_volume",
                    "metastore_id": "11111111-1111-1111-1111-111111111111",
                    "volume_id": "00000000-0000-4000-8000-000000000002"}
       - request: &read
@@ -46,14 +46,16 @@ steps:
         response:
           status: 400
           body:
-            json: {"error_code": "REQUEST_LIMIT_EXCEEDED", "message": "Rate limit hit in fixture"}
+            json: {"error_code": "REQUEST_LIMIT_EXCEEDED",
+                   "message": "Rate limit hit in fixture"}
       - request: *read
         response: *volume
       - request: *read
         response:
           status: 400
           body:
-            json: {"error_code": "RESOURCE_EXHAUSTED", "message": "Quota used up in fixture"}
+            json: {"error_code": "RESOURCE_EXHAUSTED",
+                   "message": "Quota used up in fixture"}
       - request: *read
         response: *volume
 destroy:

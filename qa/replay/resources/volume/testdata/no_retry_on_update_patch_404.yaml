@@ -1,7 +1,7 @@
-# Pins that the classic SDK client sends an update PATCH answered 404 exactly once and
-# reports it as an error, without removing the volume from state. delete.yaml covers a
-# DELETE answered 404, which the provider treats as already gone. API responses are
-# inferred from the Unity Catalog API contract, not recorded.
+# This journey pins that the classic SDK client sends an update PATCH answered 404 exactly
+# once and reports it as an error, without removing the volume from state. delete.yaml
+# covers a DELETE answered 404, which the provider treats as already gone. API responses
+# are inferred from the Unity Catalog API contract, not recorded.
 version: 1
 enforce_call_order: true
 host_metadata:
@@ -26,15 +26,16 @@ steps:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
           body:
-            json: {"catalog_name": "main", "schema_name": "replay", "name": "retry_volume",
-                   "volume_type": "MANAGED", "comment": "first"}
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "retry_volume", "volume_type": "MANAGED", "comment": "first"}
         response: &volume
           status: 200
           body:
-            json: {"catalog_name": "main", "schema_name": "replay", "name": "retry_volume",
-                   "full_name": "main.replay.retry_volume", "volume_type": "MANAGED",
-                   "comment": "first", "owner": "replay-admin@example.com",
-                   "storage_location": "s3://replay-metastore/volumes/00000000-0000-4000-8000-000000000002",
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "retry_volume", "full_name": "main.replay.retry_volume",
+                   "volume_type": "MANAGED", "comment": "first",
+                   "owner": "replay-admin@example.com",
+                   "storage_location": "s3://replay-metastore/volumes/retry_volume",
                    "metastore_id": "11111111-1111-1111-1111-111111111111",
                    "volume_id": "00000000-0000-4000-8000-000000000002"}
       - request: &read

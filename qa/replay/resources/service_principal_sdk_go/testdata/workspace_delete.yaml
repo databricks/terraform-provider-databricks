@@ -1,0 +1,177 @@
+# Runs workspace_delete with reads and writes through sdk-go scim/v1. No sdk-go request
+# carries an Accept header, and its GETs carry no Content-Type header. Reads by ID send no
+# attributes query. Writes send Content-Type application/json. An empty header expectation
+# matches only requests without that header.
+#
+# Pins workspace-level deletes on AWS without disable_as_user_deletion: a DELETE
+# answered 204, and a DELETE answered 404, which the provider treats as already gone.
+# API responses are inferred from the SCIM API contract, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: create
+    sdk_implementations:
+      databricks_service_principal: sdk_go
+    config: |
+      resource "databricks_service_principal" "this" {
+        display_name = "SPN delete"
+      }
+    calls:
+      - request:
+          method: POST
+          path: /api/2.0/preview/scim/v2/ServicePrincipals
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+            Accept: ""
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "displayName": "SPN delete", "active": true, "entitlements": [{}]}
+        response:
+          status: 201
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "id": "201", "applicationId": "00000000-0000-4000-8000-000000000001",
+                   "displayName": "SPN delete", "active": true}
+      - &read_first
+        request:
+          method: GET
+          path: /api/2.0/preview/scim/v2/ServicePrincipals/201
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+            Accept: ""
+            Content-Type: ""
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "id": "201", "applicationId": "00000000-0000-4000-8000-000000000001",
+                   "displayName": "SPN delete", "active": true}
+      - *read_first
+  - name: plan_after_create_is_empty
+    sdk_implementations:
+      databricks_service_principal: sdk_go
+    plan_only: true
+    config: |
+      resource "databricks_service_principal" "this" {
+        display_name = "SPN delete"
+      }
+    plan:
+      expect: empty
+      changes: {}
+    calls:
+      - *read_first
+  - name: delete_answered_204
+    sdk_implementations:
+      databricks_service_principal: sdk_go
+    config: |
+      provider "databricks" {}
+    calls:
+      - *read_first
+      - request:
+          method: DELETE
+          path: /api/2.0/preview/scim/v2/ServicePrincipals/201
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 204
+          body: null
+  - name: plan_after_delete_answered_204_is_empty
+    sdk_implementations:
+      databricks_service_principal: sdk_go
+    plan_only: true
+    config: |
+      provider "databricks" {}
+    plan:
+      expect: empty
+      changes: {}
+    calls: []
+  - name: create_again
+    sdk_implementations:
+      databricks_service_principal: sdk_go
+    config: |
+      resource "databricks_service_principal" "this" {
+        display_name = "SPN delete"
+      }
+    calls:
+      - request:
+          method: POST
+          path: /api/2.0/preview/scim/v2/ServicePrincipals
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+            Accept: ""
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "displayName": "SPN delete", "active": true, "entitlements": [{}]}
+        response:
+          status: 201
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "id": "202", "applicationId": "00000000-0000-4000-8000-000000000002",
+                   "displayName": "SPN delete", "active": true}
+      - &read_second
+        request:
+          method: GET
+          path: /api/2.0/preview/scim/v2/ServicePrincipals/202
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+            Accept: ""
+            Content-Type: ""
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "id": "202", "applicationId": "00000000-0000-4000-8000-000000000002",
+                   "displayName": "SPN delete", "active": true}
+      - *read_second
+  - name: plan_after_create_again_is_empty
+    sdk_implementations:
+      databricks_service_principal: sdk_go
+    plan_only: true
+    config: |
+      resource "databricks_service_principal" "this" {
+        display_name = "SPN delete"
+      }
+    plan:
+      expect: empty
+      changes: {}
+    calls:
+      - *read_second
+  - name: delete_answered_404_is_treated_as_deleted
+    sdk_implementations:
+      databricks_service_principal: sdk_go
+    config: |
+      provider "databricks" {}
+    calls:
+      - *read_second
+      - request:
+          method: DELETE
+          path: /api/2.0/preview/scim/v2/ServicePrincipals/202
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 404
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:api:messages:2.0:Error"],
+                   "detail": "Service Principal with id 202 not found.", "status": "404"}
+  - name: plan_after_delete_answered_404_is_empty
+    sdk_implementations:
+      databricks_service_principal: sdk_go
+    plan_only: true
+    config: |
+      provider "databricks" {}
+    plan:
+      expect: empty
+      changes: {}
+    calls: []
+destroy:
+  calls: []

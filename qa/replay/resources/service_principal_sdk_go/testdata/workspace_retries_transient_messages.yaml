@@ -1,0 +1,230 @@
+# Runs workspace_retries_transient_messages with reads and writes through sdk-go scim/v1:
+# a refresh answered with an HTTP 500 whose message carries one of the classic client's
+# transient errors, or REQUEST_LIMIT_EXCEEDED, is retried once, and a 500 without them is
+# not. The GETs carry no attributes query, Accept or Content-Type header. Writes send
+# Content-Type application/json and no Accept header. API responses are inferred from the
+# SCIM API contract, not recorded. An empty header expectation matches only requests
+# without that header.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: create
+    sdk_implementations:
+      databricks_service_principal: sdk_go
+    config: &config |
+      resource "databricks_service_principal" "this" {
+        display_name = "SPN transient errors"
+      }
+    calls:
+      - request:
+          method: POST
+          path: /api/2.0/preview/scim/v2/ServicePrincipals
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+            Accept: ""
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "displayName": "SPN transient errors", "active": true,
+                   "entitlements": [{}]}
+        response:
+          status: 201
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "id": "201", "applicationId": "00000000-0000-4000-8000-000000000001",
+                   "displayName": "SPN transient errors", "active": true}
+      - &read_created
+        request: &read_request
+          method: GET
+          path: /api/2.0/preview/scim/v2/ServicePrincipals/201
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+            Accept: ""
+            Content-Type: ""
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "id": "201", "applicationId": "00000000-0000-4000-8000-000000000001",
+                   "displayName": "SPN transient errors", "active": true}
+      - *read_created
+  - name: refresh_retries_unknown_worker_environment_exception
+    sdk_implementations:
+      databricks_service_principal: sdk_go
+    plan_only: true
+    config: *config
+    plan:
+      expect: empty
+      changes: {}
+    calls:
+      - request: *read_request
+        response:
+          status: 500
+          body:
+            json:
+              schemas: ["urn:ietf:params:scim:api:messages:2.0:Error"]
+              detail: >-
+                com.databricks.backend.manager.util.UnknownWorkerEnvironmentException
+              status: "500"
+      - *read_created
+  - name: refresh_retries_no_associated_worker_environments
+    sdk_implementations:
+      databricks_service_principal: sdk_go
+    plan_only: true
+    config: *config
+    plan:
+      expect: empty
+      changes: {}
+    calls:
+      - request: *read_request
+        response:
+          status: 500
+          body:
+            json:
+              schemas: ["urn:ietf:params:scim:api:messages:2.0:Error"]
+              detail: "Workspace does not have any associated worker environments."
+              status: "500"
+      - *read_created
+  - name: refresh_retries_no_worker_environment_with_id
+    sdk_implementations:
+      databricks_service_principal: sdk_go
+    plan_only: true
+    config: *config
+    plan:
+      expect: empty
+      changes: {}
+    calls:
+      - request: *read_request
+        response:
+          status: 500
+          body:
+            json:
+              schemas: ["urn:ietf:params:scim:api:messages:2.0:Error"]
+              detail: "There is no worker environment with id workerenv-123."
+              status: "500"
+      - *read_created
+  - name: refresh_retries_unknown_worker_environment
+    sdk_implementations:
+      databricks_service_principal: sdk_go
+    plan_only: true
+    config: *config
+    plan:
+      expect: empty
+      changes: {}
+    calls:
+      - request: *read_request
+        response:
+          status: 500
+          body:
+            json:
+              schemas: ["urn:ietf:params:scim:api:messages:2.0:Error"]
+              detail: "Unknown worker environment WorkerEnvId(workerenv-123)."
+              status: "500"
+      - *read_created
+  - name: refresh_retries_cluster_not_ready_exception
+    sdk_implementations:
+      databricks_service_principal: sdk_go
+    plan_only: true
+    config: *config
+    plan:
+      expect: empty
+      changes: {}
+    calls:
+      - request: *read_request
+        response:
+          status: 500
+          body:
+            json:
+              schemas: ["urn:ietf:params:scim:api:messages:2.0:Error"]
+              detail: "ClusterNotReadyException: cluster is not ready."
+              status: "500"
+      - *read_created
+  - name: refresh_retries_worker_env_not_found
+    sdk_implementations:
+      databricks_service_principal: sdk_go
+    plan_only: true
+    config: *config
+    plan:
+      expect: empty
+      changes: {}
+    calls:
+      - request: *read_request
+        response:
+          status: 500
+          body:
+            json:
+              schemas: ["urn:ietf:params:scim:api:messages:2.0:Error"]
+              detail: "worker env workerenv-123 not found"
+              status: "500"
+      - *read_created
+  - name: refresh_retries_timed_out_after
+    sdk_implementations:
+      databricks_service_principal: sdk_go
+    plan_only: true
+    config: *config
+    plan:
+      expect: empty
+      changes: {}
+    calls:
+      - request: *read_request
+        response:
+          status: 500
+          body:
+            json:
+              schemas: ["urn:ietf:params:scim:api:messages:2.0:Error"]
+              detail: "Timed out after 30000 milliseconds."
+              status: "500"
+      - *read_created
+  - name: refresh_retries_deadline_exceeded
+    sdk_implementations:
+      databricks_service_principal: sdk_go
+    plan_only: true
+    config: *config
+    plan:
+      expect: empty
+      changes: {}
+    calls:
+      - request: *read_request
+        response:
+          status: 500
+          body:
+            json:
+              schemas: ["urn:ietf:params:scim:api:messages:2.0:Error"]
+              detail: "context deadline exceeded"
+              status: "500"
+      - *read_created
+  - name: refresh_retries_request_limit_exceeded
+    sdk_implementations:
+      databricks_service_principal: sdk_go
+    plan_only: true
+    config: *config
+    plan:
+      expect: empty
+      changes: {}
+    calls:
+      - request: *read_request
+        response:
+          status: 500
+          body:
+            json:
+              schemas: ["urn:ietf:params:scim:api:messages:2.0:Error"]
+              detail: "REQUEST_LIMIT_EXCEEDED: SCIM API rate limit reached."
+              status: "500"
+      - *read_created
+destroy:
+  calls:
+    - *read_created
+    - request:
+        method: DELETE
+        path: /api/2.0/preview/scim/v2/ServicePrincipals/201
+        headers:
+          X-Databricks-Workspace-Id: "12345"
+        body: null
+      response:
+        status: 204
+        body: null

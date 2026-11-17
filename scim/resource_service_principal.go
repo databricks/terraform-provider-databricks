@@ -8,7 +8,6 @@ import (
 
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/common"
-	"golang.org/x/exp/slices"
 
 	"github.com/databricks/terraform-provider-databricks/workspace"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -33,6 +32,9 @@ func (a ServicePrincipalsAPI) Create(rsp User) (sp User, err error) {
 	if rsp.Schemas == nil {
 		rsp.Schemas = []URN{ServicePrincipalSchema}
 	}
+	if common.UsesSdkGo(a.context) {
+		return a.createWithSdkGo(rsp)
+	}
 	err = a.client.Scim(a.context, "POST", "/preview/scim/v2/ServicePrincipals", rsp, &sp, a.ApiLevel)
 	return sp, err
 }
@@ -52,6 +54,9 @@ func (a ServicePrincipalsAPI) Read(servicePrincipalID string, attributes string)
 }
 
 func (a ServicePrincipalsAPI) Filter(filter string, excludeRoles bool) (u []User, err error) {
+	if common.UsesSdkGo(a.context) {
+		return a.filterWithSdkGo(filter, excludeRoles)
+	}
 	var sps UserList
 	req := map[string]string{}
 	if filter != "" {
@@ -71,6 +76,9 @@ func (a ServicePrincipalsAPI) Filter(filter string, excludeRoles bool) (u []User
 
 // Patch updates resource-friendly entity
 func (a ServicePrincipalsAPI) Patch(servicePrincipalID string, r patchRequest) error {
+	if common.UsesSdkGo(a.context) {
+		return a.patchWithSdkGo(servicePrincipalID, r)
+	}
 	return a.client.Scim(a.context, http.MethodPatch, fmt.Sprintf("/preview/scim/v2/ServicePrincipals/%v", servicePrincipalID), r, nil, a.ApiLevel)
 }
 
@@ -85,6 +93,9 @@ func (a ServicePrincipalsAPI) Update(servicePrincipalID string, updateRequest Us
 	}
 	updateRequest.Groups = servicePrincipal.Groups
 	updateRequest.Roles = servicePrincipal.Roles
+	if common.UsesSdkGo(a.context) {
+		return a.updateWithSdkGo(servicePrincipalID, updateRequest)
+	}
 	return a.client.Scim(a.context, "PUT",
 		fmt.Sprintf("/preview/scim/v2/ServicePrincipals/%v", servicePrincipalID),
 		updateRequest, nil, a.ApiLevel)
@@ -97,6 +108,9 @@ func (a ServicePrincipalsAPI) UpdateEntitlements(servicePrincipalID string, enti
 
 // Delete will delete the servicePrincipal given the servicePrincipal id
 func (a ServicePrincipalsAPI) Delete(servicePrincipalID string) error {
+	if common.UsesSdkGo(a.context) {
+		return a.deleteWithSdkGo(servicePrincipalID)
+	}
 	servicePrincipalPath := fmt.Sprintf("/preview/scim/v2/ServicePrincipals/%v", servicePrincipalID)
 	return a.client.Scim(a.context, "DELETE", servicePrincipalPath, nil, nil, a.ApiLevel)
 }
@@ -280,7 +294,7 @@ func createForceOverridesManuallyAddedServicePrincipal(err error, d *schema.Reso
 		fmt.Sprintf("Service principal with application ID %s already exists.", u.ApplicationID),
 		fmt.Sprintf("User with email %s already exists in this account", u.ApplicationID),
 	}
-	if !slices.Contains(knownErrs, err.Error()) {
+	if !isKnownScimError(err, knownErrs) {
 		return err
 	}
 	spList, err := spAPI.Filter(fmt.Sprintf(`applicationId eq "%s"`, strings.ReplaceAll(u.ApplicationID, "'", "")), true)

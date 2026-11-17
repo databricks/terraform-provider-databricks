@@ -1,0 +1,158 @@
+# Runs workspace_update_on_azure with reads and writes through sdk-go scim/v1. No sdk-go
+# request carries an Accept header, and its GETs carry no Content-Type header. Reads by ID
+# send no attributes query, and the read before each PUT returns the full object. Writes
+# send Content-Type application/json. PUT bodies also carry the ID. An empty header
+# expectation matches only requests without that header.
+#
+# Pins the workspace-level rename PUT on Azure, which carries applicationId. API
+# responses are inferred from the SCIM API contract, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: Azure
+  workspace_id: "12345"
+steps:
+  - name: create_with_application_id
+    sdk_implementations:
+      databricks_service_principal: sdk_go
+    config: |
+      resource "databricks_service_principal" "this" {
+        application_id = "00000000-0000-4000-8000-000000000001"
+        display_name   = "SPN Azure"
+      }
+    calls:
+      - request:
+          method: POST
+          path: /api/2.0/preview/scim/v2/ServicePrincipals
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+            Accept: ""
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "applicationId": "00000000-0000-4000-8000-000000000001",
+                   "displayName": "SPN Azure", "active": true, "entitlements": [{}]}
+        response:
+          status: 201
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "id": "201", "applicationId": "00000000-0000-4000-8000-000000000001",
+                   "displayName": "SPN Azure", "active": true}
+      - &read_created
+        request: &read_request
+          method: GET
+          path: /api/2.0/preview/scim/v2/ServicePrincipals/201
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+            Accept: ""
+            Content-Type: ""
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "id": "201", "applicationId": "00000000-0000-4000-8000-000000000001",
+                   "displayName": "SPN Azure", "active": true}
+      - *read_created
+  - name: plan_after_create_is_empty
+    sdk_implementations:
+      databricks_service_principal: sdk_go
+    plan_only: true
+    config: |
+      resource "databricks_service_principal" "this" {
+        application_id = "00000000-0000-4000-8000-000000000001"
+        display_name   = "SPN Azure"
+      }
+    plan:
+      expect: empty
+      changes: {}
+    calls:
+      - *read_created
+  - name: rename_on_azure_sends_application_id
+    sdk_implementations:
+      databricks_service_principal: sdk_go
+    config: |
+      resource "databricks_service_principal" "this" {
+        application_id = "00000000-0000-4000-8000-000000000001"
+        display_name   = "SPN Azure renamed"
+      }
+    plan:
+      expect: non_empty
+      changes:
+        databricks_service_principal.this:
+          actions: [update]
+    calls:
+      - *read_created
+      - request:
+          method: GET
+          path: /api/2.0/preview/scim/v2/ServicePrincipals/201
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+            Accept: ""
+            Content-Type: ""
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "id": "201", "applicationId": "00000000-0000-4000-8000-000000000001",
+                   "displayName": "SPN Azure", "active": true,
+                   "groups": [{"display": "data-engineers", "type": "direct",
+                               "value": "301", "$ref": "Groups/301"}]}
+      - request:
+          method: PUT
+          path: /api/2.0/preview/scim/v2/ServicePrincipals/201
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+            Accept: ""
+          body:
+            json: {"id": "201",
+                   "schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "applicationId": "00000000-0000-4000-8000-000000000001",
+                   "displayName": "SPN Azure renamed", "active": true,
+                   "entitlements": [{}],
+                   "groups": [{"display": "data-engineers", "type": "direct",
+                               "value": "301", "$ref": "Groups/301"}]}
+        response:
+          status: 200
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "id": "201", "applicationId": "00000000-0000-4000-8000-000000000001",
+                   "displayName": "SPN Azure renamed", "active": true}
+      - &read_renamed
+        request: *read_request
+        response:
+          status: 200
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "id": "201", "applicationId": "00000000-0000-4000-8000-000000000001",
+                   "displayName": "SPN Azure renamed", "active": true}
+      - *read_renamed
+  - name: plan_after_rename_is_empty
+    sdk_implementations:
+      databricks_service_principal: sdk_go
+    plan_only: true
+    config: |
+      resource "databricks_service_principal" "this" {
+        application_id = "00000000-0000-4000-8000-000000000001"
+        display_name   = "SPN Azure renamed"
+      }
+    plan:
+      expect: empty
+      changes: {}
+    calls:
+      - *read_renamed
+destroy:
+  calls:
+    - *read_renamed
+    - request:
+        method: DELETE
+        path: /api/2.0/preview/scim/v2/ServicePrincipals/201
+        headers:
+          X-Databricks-Workspace-Id: "12345"
+        body: null
+      response:
+        status: 204
+        body: null

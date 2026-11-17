@@ -1,0 +1,162 @@
+# Runs workspace_delete_rejects_disable_with_force_delete_home_dir with reads and writes
+# through sdk-go scim/v1. No sdk-go request carries an Accept header, and its GETs carry
+# no Content-Type header. Reads by ID send no attributes query, and the read before each
+# PUT returns the full object. Writes send Content-Type application/json. PATCH and PUT
+# bodies also carry the ID. An empty header expectation matches only requests without that
+# header.
+#
+# Pins the workspace-level rejection of disable_as_user_deletion = true with
+# force_delete_home_dir = true on AWS. Delete fails before sending any request; only the
+# plan refresh reads the service principal. Clearing force_delete_home_dir sends an
+# update, and destroy then deactivates the service principal. API responses are inferred
+# from the SCIM API contract, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: create_with_disable_and_force_delete_home_dir
+    sdk_implementations:
+      databricks_service_principal: sdk_go
+    config: |
+      resource "databricks_service_principal" "this" {
+        display_name             = "SPN invalid flags"
+        disable_as_user_deletion = true
+        force_delete_home_dir    = true
+      }
+    calls:
+      - request:
+          method: POST
+          path: /api/2.0/preview/scim/v2/ServicePrincipals
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+            Accept: ""
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "displayName": "SPN invalid flags", "active": true,
+                   "entitlements": [{}]}
+        response:
+          status: 201
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "id": "201", "applicationId": "00000000-0000-4000-8000-000000000001",
+                   "displayName": "SPN invalid flags", "active": true}
+      - &read_created
+        request:
+          method: GET
+          path: /api/2.0/preview/scim/v2/ServicePrincipals/201
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+            Accept: ""
+            Content-Type: ""
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "id": "201", "applicationId": "00000000-0000-4000-8000-000000000001",
+                   "displayName": "SPN invalid flags", "active": true}
+      - *read_created
+  - name: plan_after_create_with_disable_and_force_delete_home_dir_is_empty
+    sdk_implementations:
+      databricks_service_principal: sdk_go
+    plan_only: true
+    config: |
+      resource "databricks_service_principal" "this" {
+        display_name             = "SPN invalid flags"
+        disable_as_user_deletion = true
+        force_delete_home_dir    = true
+      }
+    plan:
+      expect: empty
+      changes: {}
+    calls:
+      - *read_created
+  - name: delete_fails_before_any_call
+    sdk_implementations:
+      databricks_service_principal: sdk_go
+    config: |
+      provider "databricks" {}
+    expect_error: 'Error: cannot delete service principal: force_delete_home_dir: cannot
+      force delete if disable_as_user_deletion is set'
+    calls:
+      - *read_created
+  - name: clear_force_delete_home_dir
+    sdk_implementations:
+      databricks_service_principal: sdk_go
+    config: |
+      resource "databricks_service_principal" "this" {
+        display_name             = "SPN invalid flags"
+        disable_as_user_deletion = true
+      }
+    calls:
+      - *read_created
+      - request:
+          method: GET
+          path: /api/2.0/preview/scim/v2/ServicePrincipals/201
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+            Accept: ""
+            Content-Type: ""
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "id": "201", "applicationId": "00000000-0000-4000-8000-000000000001",
+                   "displayName": "SPN invalid flags", "active": true}
+      - request:
+          method: PUT
+          path: /api/2.0/preview/scim/v2/ServicePrincipals/201
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+            Accept: ""
+          body:
+            json: {"id": "201",
+                   "schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "displayName": "SPN invalid flags", "active": true,
+                   "entitlements": [{}]}
+        response:
+          status: 200
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "id": "201", "applicationId": "00000000-0000-4000-8000-000000000001",
+                   "displayName": "SPN invalid flags", "active": true}
+      - *read_created
+      - *read_created
+  - name: plan_after_clear_force_delete_home_dir_is_empty
+    sdk_implementations:
+      databricks_service_principal: sdk_go
+    plan_only: true
+    config: |
+      resource "databricks_service_principal" "this" {
+        display_name             = "SPN invalid flags"
+        disable_as_user_deletion = true
+      }
+    plan:
+      expect: empty
+      changes: {}
+    calls:
+      - *read_created
+destroy:
+  calls:
+    - *read_created
+    - request:
+        method: PATCH
+        path: /api/2.0/preview/scim/v2/ServicePrincipals/201
+        headers:
+          Content-Type: application/json
+          X-Databricks-Workspace-Id: "12345"
+          Accept: ""
+        body:
+          json: {"id": "201",
+                 "schemas": ["urn:ietf:params:scim:api:messages:2.0:PatchOp"],
+                 "Operations": [{"op": "replace", "path": "active",
+                                 "value": [{"value": "false"}]}]}
+      response:
+        status: 200
+        body: null

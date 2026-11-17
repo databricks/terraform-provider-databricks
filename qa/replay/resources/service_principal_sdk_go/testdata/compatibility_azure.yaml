@@ -1,0 +1,272 @@
+# Switches a workspace-level service principal on Azure between the existing SCIM client
+# and sdk-go scim/v1: create on the existing path, refresh and update on sdk-go, then
+# refresh and update on the existing path. Every plan without a configuration change is
+# empty, and state keeps the ID and application ID across each switch. Both PUTs carry
+# applicationId, which only Azure sends, and copy the groups read just before them. The
+# sdk-go requests carry no Accept header, the GETs no attributes query or Content-Type
+# header, and the writes send Content-Type application/json. API responses are inferred
+# from the SCIM API contract, not recorded. An empty header expectation matches only
+# requests without that header.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: Azure
+  workspace_id: "12345"
+steps:
+  - name: create_on_existing_path
+    sdk_implementations:
+      databricks_service_principal: classic
+    config: &config_created |
+      resource "databricks_service_principal" "this" {
+        application_id = "00000000-0000-4000-8000-000000000001"
+        display_name   = "SPN Azure"
+      }
+    calls:
+      - request:
+          method: POST
+          path: /api/2.0/preview/scim/v2/ServicePrincipals
+          headers:
+            Content-Type: application/scim+json; charset=utf-8
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "applicationId": "00000000-0000-4000-8000-000000000001",
+                   "displayName": "SPN Azure", "active": true, "entitlements": [{}]}
+        response:
+          status: 201
+          body: &created
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "id": "201", "applicationId": "00000000-0000-4000-8000-000000000001",
+                   "displayName": "SPN Azure", "active": true}
+      - &existing_read_created
+        request: &existing_read_request
+          method: GET
+          path: /api/2.0/preview/scim/v2/ServicePrincipals/201
+          query:
+            attributes: ["userName,displayName,active,externalId,entitlements"]
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 200
+          body: *created
+      - *existing_read_created
+    state: &state_created
+      resources:
+        databricks_service_principal.this:
+          attributes:
+            - path: [id]
+              equals: "201"
+            - path: [application_id]
+              equals: 00000000-0000-4000-8000-000000000001
+            - path: [acl_principal_id]
+              equals: servicePrincipals/00000000-0000-4000-8000-000000000001
+            - path: [display_name]
+              equals: SPN Azure
+  - name: refresh_on_sdk_go_changes_nothing
+    sdk_implementations:
+      databricks_service_principal: sdk_go
+    config: *config_created
+    plan:
+      expect: empty
+      changes: {}
+    calls:
+      - &sdk_go_read_created
+        request: &sdk_go_read_request
+          method: GET
+          path: /api/2.0/preview/scim/v2/ServicePrincipals/201
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+            Accept: ""
+            Content-Type: ""
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "id": "201", "applicationId": "00000000-0000-4000-8000-000000000001",
+                   "displayName": "SPN Azure", "active": true,
+                   "groups": [{"display": "data-engineers", "type": "direct",
+                               "value": "301", "$ref": "Groups/301"}]}
+      - *sdk_go_read_created
+    state: *state_created
+  - name: plan_on_sdk_go_is_empty
+    sdk_implementations:
+      databricks_service_principal: sdk_go
+    plan_only: true
+    config: *config_created
+    plan:
+      expect: empty
+      changes: {}
+    calls:
+      - *sdk_go_read_created
+    state: *state_created
+  - name: update_on_sdk_go
+    sdk_implementations:
+      databricks_service_principal: sdk_go
+    config: &config_sdk_go_updated |
+      resource "databricks_service_principal" "this" {
+        application_id = "00000000-0000-4000-8000-000000000001"
+        display_name   = "SPN Azure updated on sdk-go"
+      }
+    plan:
+      expect: non_empty
+      changes:
+        databricks_service_principal.this:
+          actions: [update]
+    calls:
+      - *sdk_go_read_created
+      - *sdk_go_read_created
+      - request:
+          method: PUT
+          path: /api/2.0/preview/scim/v2/ServicePrincipals/201
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+            Accept: ""
+          body:
+            json: {"id": "201",
+                   "schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "applicationId": "00000000-0000-4000-8000-000000000001",
+                   "displayName": "SPN Azure updated on sdk-go", "active": true,
+                   "entitlements": [{}],
+                   "groups": [{"display": "data-engineers", "type": "direct",
+                               "value": "301", "$ref": "Groups/301"}]}
+        response:
+          status: 200
+          body: null
+      - &sdk_go_read_updated
+        request: *sdk_go_read_request
+        response:
+          status: 200
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "id": "201", "applicationId": "00000000-0000-4000-8000-000000000001",
+                   "displayName": "SPN Azure updated on sdk-go", "active": true,
+                   "groups": [{"display": "data-engineers", "type": "direct",
+                               "value": "301", "$ref": "Groups/301"}]}
+      - *sdk_go_read_updated
+    state: &state_sdk_go_updated
+      resources:
+        databricks_service_principal.this:
+          attributes:
+            - path: [id]
+              equals: "201"
+            - path: [application_id]
+              equals: 00000000-0000-4000-8000-000000000001
+            - path: [display_name]
+              equals: SPN Azure updated on sdk-go
+  - name: plan_on_sdk_go_after_update_is_empty
+    sdk_implementations:
+      databricks_service_principal: sdk_go
+    plan_only: true
+    config: *config_sdk_go_updated
+    plan:
+      expect: empty
+      changes: {}
+    calls:
+      - *sdk_go_read_updated
+    state: *state_sdk_go_updated
+  - name: refresh_and_update_on_existing_path
+    sdk_implementations:
+      databricks_service_principal: classic
+    config: &config_existing_updated |
+      resource "databricks_service_principal" "this" {
+        application_id = "00000000-0000-4000-8000-000000000001"
+        display_name   = "SPN Azure updated on the existing path"
+      }
+    plan:
+      expect: non_empty
+      changes:
+        databricks_service_principal.this:
+          actions: [update]
+          before:
+            - path: [display_name]
+              equals: SPN Azure updated on sdk-go
+          after:
+            - path: [display_name]
+              equals: SPN Azure updated on the existing path
+    calls:
+      - request: *existing_read_request
+        response:
+          status: 200
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "id": "201", "applicationId": "00000000-0000-4000-8000-000000000001",
+                   "displayName": "SPN Azure updated on sdk-go", "active": true}
+      - request:
+          method: GET
+          path: /api/2.0/preview/scim/v2/ServicePrincipals/201
+          query:
+            attributes: ["groups,roles"]
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "id": "201",
+                   "groups": [{"display": "data-engineers", "type": "direct",
+                               "value": "301", "$ref": "Groups/301"}]}
+      - request:
+          method: PUT
+          path: /api/2.0/preview/scim/v2/ServicePrincipals/201
+          headers:
+            Content-Type: application/scim+json; charset=utf-8
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "applicationId": "00000000-0000-4000-8000-000000000001",
+                   "displayName": "SPN Azure updated on the existing path",
+                   "active": true,
+                   "entitlements": [{}],
+                   "groups": [{"display": "data-engineers", "type": "direct",
+                               "value": "301", "$ref": "Groups/301"}]}
+        response:
+          status: 200
+          body: null
+      - &existing_read_updated
+        request: *existing_read_request
+        response:
+          status: 200
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "id": "201", "applicationId": "00000000-0000-4000-8000-000000000001",
+                   "displayName": "SPN Azure updated on the existing path",
+                   "active": true}
+      - *existing_read_updated
+    state: &state_existing_updated
+      resources:
+        databricks_service_principal.this:
+          attributes:
+            - path: [id]
+              equals: "201"
+            - path: [application_id]
+              equals: 00000000-0000-4000-8000-000000000001
+            - path: [display_name]
+              equals: SPN Azure updated on the existing path
+  - name: plan_on_existing_path_after_update_is_empty
+    sdk_implementations:
+      databricks_service_principal: classic
+    plan_only: true
+    config: *config_existing_updated
+    plan:
+      expect: empty
+      changes: {}
+    calls:
+      - *existing_read_updated
+    state: *state_existing_updated
+destroy:
+  calls:
+    - *existing_read_updated
+    - request:
+        method: DELETE
+        path: /api/2.0/preview/scim/v2/ServicePrincipals/201
+        headers:
+          X-Databricks-Workspace-Id: "12345"
+        body: null
+      response:
+        status: 204
+        body: null

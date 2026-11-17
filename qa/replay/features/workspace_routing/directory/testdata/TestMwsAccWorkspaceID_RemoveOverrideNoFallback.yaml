@@ -124,7 +124,7 @@ steps:
             json:
               error_code: "ENDPOINT_NOT_FOUND"
               message: "SCIM /Me is only available on workspace hosts"
-    expect_error: "(?s)managing a workspace-level resource requires a workspace_id.*previously\\s+configured\\s+workspace_id\\s+was\\s+removed"
+    expect_error: "(?s)managing a workspace-level resource requires a workspace_id.*none\\s+is\\s+configured"
 destroy:
   calls:
     - *metadata_account

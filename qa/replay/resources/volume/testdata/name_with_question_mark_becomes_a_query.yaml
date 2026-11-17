@@ -62,7 +62,7 @@ steps:
             - path: [volume_path]
               equals: /Volumes/main/replay/raw?2
   - name: update_comment_patches_the_name_before_the_question_mark
-    config: &config_commented |
+    config: |
       resource "databricks_volume" "this" {
         name         = "raw?2"
         catalog_name = "main"

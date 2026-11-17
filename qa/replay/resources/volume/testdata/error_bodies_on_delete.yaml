@@ -10,7 +10,7 @@ host_metadata:
   workspace_id: "12345"
 steps:
   - name: create
-    config: &config |
+    config: |
       resource "databricks_volume" "this" {
         name         = "delete_errors_volume"
         catalog_name = "main"

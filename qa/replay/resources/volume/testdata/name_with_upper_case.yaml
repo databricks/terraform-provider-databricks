@@ -120,7 +120,7 @@ steps:
       persist: true
     calls:
       - &read_upper
-        request: &read_upper_request
+        request:
           method: GET
           path: /api/2.1/unity-catalog/volumes/main.replay.Raw_Upper
           headers:

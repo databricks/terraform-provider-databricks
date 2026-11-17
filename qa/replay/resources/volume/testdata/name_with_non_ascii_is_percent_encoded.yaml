@@ -57,7 +57,7 @@ steps:
             - path: [volume_path]
               equals: /Volumes/main/replay/données_2
   - name: update_comment_patches_the_encoded_path
-    config: &config_commented |
+    config: |
       resource "databricks_volume" "this" {
         name         = "données_2"
         catalog_name = "main"

@@ -43,7 +43,7 @@ steps:
       - *read_two_part
   - name: plan_after_import_is_empty
     plan_only: true
-    config: &config |
+    config: |
       resource "databricks_volume" "this" {
         name         = "two_part_volume"
         catalog_name = "main"

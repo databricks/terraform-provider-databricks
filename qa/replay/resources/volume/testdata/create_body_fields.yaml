@@ -36,7 +36,7 @@ steps:
             json: {"error_code": "INVALID_PARAMETER_VALUE",
                    "message": "CreateVolume Missing required field: catalog_name"}
   - name: create_with_owner_and_empty_optional_fields_omits_them_from_the_post
-    config: &config |
+    config: |
       resource "databricks_volume" "this" {
         name             = "body_fields_volume"
         catalog_name     = "main"

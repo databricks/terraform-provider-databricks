@@ -1,10 +1,13 @@
-# Pins the request paths for a volume name with "?". The classic client puts the full
-# name in the path unescaped, so "?2" becomes a query string and every request goes to
-# main.replay.raw. The GET and the DELETE append an empty query string of their own, so
-# they send the query key "2?"; the PATCH sends the query key "2". The fixtures answer
-# those requests with raw?2 because a stateless fixture can't model which volume a real
-# workspace would resolve main.replay.raw to; the paths and queries are what this journey
-# pins. API responses are inferred from the Unity Catalog API contract, not recorded.
+# Pins a known defect: the request paths for a volume name with "?". The classic client
+# puts the full name in the path unescaped, so "?2" becomes a query string and every
+# request goes to main.replay.raw. The GET and the DELETE append an empty query string of
+# their own, so they send the query key "2?"; the PATCH sends the query key "2". If a
+# volume named raw exists in that schema, the calls read, change and delete it instead.
+# The fixtures answer those requests with raw?2's own data because a stateless fixture
+# can't model which volume the workspace resolves main.replay.raw to, so this journey
+# can't show the wrong volume. The planned existing-path escaping fix is expected to
+# change these paths; update this journey with it. API responses are inferred from the
+# Unity Catalog API contract, not recorded.
 version: 1
 enforce_call_order: true
 host_metadata:
@@ -61,7 +64,7 @@ steps:
               equals: main.replay.raw?2
             - path: [volume_path]
               equals: /Volumes/main/replay/raw?2
-  - name: update_comment_patches_the_name_before_the_question_mark
+  - name: update_comment_wrongly_patches_the_name_before_the_question_mark
     config: |
       resource "databricks_volume" "this" {
         name         = "raw?2"
@@ -99,7 +102,7 @@ steps:
           body:
             json: *commented
       - *read_commented
-  - name: delete_deletes_the_name_before_the_question_mark
+  - name: delete_wrongly_deletes_the_name_before_the_question_mark
     config: |
       provider "databricks" {}
     calls:

@@ -3,10 +3,11 @@
 # calls use it. A comment change then sends no new_name: diff suppression keeps the
 # stored lower-case name, which matches the name in the ID. Importing by an upper-case
 # full name keeps it in the GET, PATCH and DELETE paths as is. A comment change after
-# that import also sends new_name with the stored lower-case name, because it differs
-# from the name in the ID, and the PATCH response replaces the ID with the lower-case
-# full name. API responses are inferred from the Unity Catalog API contract, not
-# recorded.
+# that import also sends new_name with the stored lower-case name, and the PATCH
+# response replaces the ID with the lower-case full name. That new_name is a known
+# defect: Update compares the configured name with the name in the ID case-sensitively.
+# A fix is expected to drop it; update the last step with it. API responses are inferred
+# from the Unity Catalog API contract, not recorded.
 version: 1
 enforce_call_order: true
 host_metadata:

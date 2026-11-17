@@ -1,10 +1,12 @@
-# Pins the refresh GET for a volume name with a "%" that doesn't start a valid escape.
-# The classic client puts the full name in the path unescaped, so building the request
-# fails with the exact URL-parse error and nothing is sent. Importing the full name is
-# the only way replay can reach that GET: a created volume could never be refreshed,
-# so the mandatory destroy would fail. The PATCH and the DELETE are pinned by
+# Pins a known defect: the refresh GET for a volume name with a "%" that doesn't start a
+# valid escape. The classic client puts the full name in the path unescaped, so building
+# the request fails with the exact URL-parse error and nothing is sent. Importing the
+# full name is the only way replay can reach that GET: a created volume could never be
+# refreshed, so the mandatory destroy would fail. The PATCH and the DELETE are pinned by
 # TestVolumeUpdateWithPercentInNameFailsBeforeThePatch and
-# TestVolumeDeleteWithPercentInNameFailsBeforeTheDelete in the catalog package.
+# TestVolumeDeleteWithPercentInNameFailsBeforeTheDelete in the catalog package. The
+# planned existing-path escaping fix is expected to make this name work; update this
+# journey and those tests with it.
 version: 1
 enforce_call_order: true
 host_metadata:

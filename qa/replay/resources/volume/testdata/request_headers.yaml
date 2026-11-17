@@ -3,10 +3,10 @@
 # that call decodes no response type. POST and PATCH send Content-Type:
 # application/json, and GET and DELETE send none. Every call sends
 # X-Databricks-Workspace-Id, the runner's PAT as Authorization: Bearer fixture-token, and
-# one traceparent header. An empty header expectation matches only a request without
-# that header. traceparent is generated per request, so any_string checks only that
-# exactly one is present. API responses are inferred from the Unity Catalog API
-# contract, not recorded.
+# one traceparent header. An empty header expectation matches a request without that
+# header, or with an empty value. traceparent is generated per request, so any_string
+# checks only that exactly one is present. API responses are inferred from the Unity
+# Catalog API contract, not recorded.
 version: 1
 enforce_call_order: true
 host_metadata:

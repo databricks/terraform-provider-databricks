@@ -4,7 +4,9 @@
 # HTML body fails with the SDK's HTML error. An empty GET body blanks every field in the
 # refreshed state and plans a replacement. A PATCH answered {} or without full_name sets
 # the ID to the empty full name, so the read after the update GETs
-# /api/2.1/unity-catalog/volumes/; it fails and the volume keeps its old ID. API
+# /api/2.1/unity-catalog/volumes/; it fails and the volume keeps its old ID. That empty
+# ID is a known defect: Update takes the ID from the response's full_name without
+# checking it. A fix is expected to keep the ID; update those steps with it. API
 # responses are inferred from the Unity Catalog API contract, not recorded; the answer
 # to that empty-name GET is the workspace's usual reply to an unknown route.
 version: 1

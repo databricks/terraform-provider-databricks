@@ -1,8 +1,10 @@
 # Pins a request that is redirected to the private-link login page. The client follows
 # the redirect, the login page answers 200, and the classic SDK turns the final URL into
 # the exact private-link diagnostic. A redirected create leaves nothing in state, and a
-# redirected refresh keeps the volume. API responses are inferred from the private-link
-# redirect contract, not recorded.
+# redirected refresh keeps the volume. The SDK picks the diagnostic's cloud from the
+# final URL's host, not from host_metadata.cloud: the fixture server's 127.0.0.1 matches
+# no Databricks domain, so the SDK falls back to AWS. API responses are inferred from the
+# private-link redirect contract, not recorded.
 version: 1
 enforce_call_order: true
 host_metadata:

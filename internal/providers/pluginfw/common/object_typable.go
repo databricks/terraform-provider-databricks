@@ -7,6 +7,7 @@ import (
 	"reflect"
 
 	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/iptypes"
 	"github.com/databricks/terraform-provider-databricks/internal/tfreflect"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -85,6 +86,8 @@ func (o ObjectTyper) Type(ctx context.Context) attr.Type {
 		switch field.Value.Interface().(type) {
 		case types.List:
 			attrs[fieldName] = types.ListType{ElemType: innerType}
+		case types.Set:
+			attrs[fieldName] = types.SetType{ElemType: innerType}
 		case types.Map:
 			attrs[fieldName] = types.MapType{ElemType: innerType}
 		case types.Object:
@@ -104,10 +107,11 @@ func (o ObjectTyper) Type(ctx context.Context) attr.Type {
 }
 
 var simpleTypeMap = map[reflect.Type]attr.Type{
-	reflect.TypeFor[types.Bool]():    types.BoolType,
-	reflect.TypeFor[types.Int64]():   types.Int64Type,
-	reflect.TypeFor[types.Float64](): types.Float64Type,
-	reflect.TypeFor[types.String]():  types.StringType,
+	reflect.TypeFor[types.Bool]():        types.BoolType,
+	reflect.TypeFor[types.Int64]():       types.Int64Type,
+	reflect.TypeFor[types.Float64]():     types.Float64Type,
+	reflect.TypeFor[types.String]():      types.StringType,
+	reflect.TypeFor[iptypes.IPAddress](): iptypes.IPAddressType{},
 }
 
 // getAttrType returns the attr.Type for the given value. The value can be a

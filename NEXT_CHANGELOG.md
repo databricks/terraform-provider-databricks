@@ -15,6 +15,8 @@
 
   On Terraform 1.12 and 1.13, state refreshed by this version cannot be read by older provider versions (`failed to decode identity`). To downgrade the provider, run `terraform apply -refresh-only` once with the older provider and Terraform 1.14 or later, or remove the resource from state and import it again with the older provider.
 
+* Name the workspace ID to set in `provider_config` when a workspace-level resource has one in state but none in config, for example after an import by identity ([#6201](https://github.com/databricks/terraform-provider-databricks/pull/6201)).
+
 ### Documentation
 
 ### Exporter

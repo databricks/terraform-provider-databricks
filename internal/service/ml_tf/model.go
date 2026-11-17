@@ -3707,7 +3707,9 @@ type CreateIssueRequest struct {
 	// retry with the same ID fails with ALREADY_EXISTS rather than making a
 	// duplicate. The server generates one if unset.
 	IssueId types.String `tfsdk:"-"`
-	// experiments/{experiment}
+	// The experiment to create the Issue in, as `experiments/{experiment}`,
+	// where `{experiment}` is the experiment ID. For example,
+	// `experiments/1234567890`.
 	Parent types.String `tfsdk:"-"`
 }
 
@@ -4194,8 +4196,12 @@ func (m *CreateLoggedModelResponse) SetModel(ctx context.Context, v LoggedModel)
 }
 
 type CreateMaterializationSetRequest struct {
-	// The materialization set to create. Supply materialization_set_id to
-	// choose the identifier; leave it unset to have one assigned.
+	// The materialization set to create. Set `materialization_set_id` to choose
+	// the identifier, or omit it to have one assigned.
+	//
+	// Members with a cron schedule or table trigger must request the same
+	// `paused` value. An omitted `paused` defaults to `false`. A set can be
+	// created paused only if all members are batch materializations.
 	MaterializationSet types.Object `tfsdk:"materialization_set"`
 	// Idempotency token for the request. A second request carrying a token that
 	// has already been used returns the operation the first one created,
@@ -5943,6 +5949,8 @@ type DataSource struct {
 	DeltaTableSource types.Object `tfsdk:"delta_table_source"`
 	// A data source composed from registered upstream Features.
 	FeatureViewSource types.Object `tfsdk:"feature_view_source"`
+	// A Unity Catalog managed or foreign Iceberg table source.
+	IcebergTableSource types.Object `tfsdk:"iceberg_table_source"`
 	// A Kafka stream data source.
 	KafkaSource types.Object `tfsdk:"kafka_source"`
 	// Completeness timing for this Feature's use of the source. This
@@ -5973,6 +5981,15 @@ func (to *DataSource) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from D
 				// Recursively sync the fields of FeatureViewSource
 				toFeatureViewSource.SyncFieldsDuringCreateOrUpdate(ctx, fromFeatureViewSource)
 				to.SetFeatureViewSource(ctx, toFeatureViewSource)
+			}
+		}
+	}
+	if !from.IcebergTableSource.IsNull() && !from.IcebergTableSource.IsUnknown() {
+		if toIcebergTableSource, ok := to.GetIcebergTableSource(ctx); ok {
+			if fromIcebergTableSource, ok := from.GetIcebergTableSource(ctx); ok {
+				// Recursively sync the fields of IcebergTableSource
+				toIcebergTableSource.SyncFieldsDuringCreateOrUpdate(ctx, fromIcebergTableSource)
+				to.SetIcebergTableSource(ctx, toIcebergTableSource)
 			}
 		}
 	}
@@ -6040,6 +6057,14 @@ func (to *DataSource) SyncFieldsDuringRead(ctx context.Context, from DataSource)
 			}
 		}
 	}
+	if !from.IcebergTableSource.IsNull() && !from.IcebergTableSource.IsUnknown() {
+		if toIcebergTableSource, ok := to.GetIcebergTableSource(ctx); ok {
+			if fromIcebergTableSource, ok := from.GetIcebergTableSource(ctx); ok {
+				toIcebergTableSource.SyncFieldsDuringRead(ctx, fromIcebergTableSource)
+				to.SetIcebergTableSource(ctx, toIcebergTableSource)
+			}
+		}
+	}
 	if !from.KafkaSource.IsNull() && !from.KafkaSource.IsUnknown() {
 		if toKafkaSource, ok := to.GetKafkaSource(ctx); ok {
 			if fromKafkaSource, ok := from.GetKafkaSource(ctx); ok {
@@ -6085,6 +6110,7 @@ func (to *DataSource) SyncFieldsDuringRead(ctx context.Context, from DataSource)
 func (m DataSource) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["delta_table_source"] = attrs["delta_table_source"].SetOptional()
 	attrs["feature_view_source"] = attrs["feature_view_source"].SetOptional()
+	attrs["iceberg_table_source"] = attrs["iceberg_table_source"].SetOptional()
 	attrs["kafka_source"] = attrs["kafka_source"].SetOptional()
 	attrs["lateness"] = attrs["lateness"].SetOptional()
 	attrs["request_source"] = attrs["request_source"].SetOptional()
@@ -6103,13 +6129,14 @@ func (m DataSource) ApplySchemaCustomizations(attrs map[string]tfschema.Attribut
 // SDK values.
 func (m DataSource) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"delta_table_source":  reflect.TypeOf(DeltaTableSource{}),
-		"feature_view_source": reflect.TypeOf(FeatureViewSource{}),
-		"kafka_source":        reflect.TypeOf(KafkaSource{}),
-		"lateness":            reflect.TypeOf(SourceLateness{}),
-		"request_source":      reflect.TypeOf(RequestSource{}),
-		"sdp_source":          reflect.TypeOf(SdpSource{}),
-		"stream_source":       reflect.TypeOf(StreamSource{}),
+		"delta_table_source":   reflect.TypeOf(DeltaTableSource{}),
+		"feature_view_source":  reflect.TypeOf(FeatureViewSource{}),
+		"iceberg_table_source": reflect.TypeOf(IcebergTableSource{}),
+		"kafka_source":         reflect.TypeOf(KafkaSource{}),
+		"lateness":             reflect.TypeOf(SourceLateness{}),
+		"request_source":       reflect.TypeOf(RequestSource{}),
+		"sdp_source":           reflect.TypeOf(SdpSource{}),
+		"stream_source":        reflect.TypeOf(StreamSource{}),
 	}
 }
 
@@ -6120,13 +6147,14 @@ func (m DataSource) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"delta_table_source":  m.DeltaTableSource,
-			"feature_view_source": m.FeatureViewSource,
-			"kafka_source":        m.KafkaSource,
-			"lateness":            m.Lateness,
-			"request_source":      m.RequestSource,
-			"sdp_source":          m.SdpSource,
-			"stream_source":       m.StreamSource,
+			"delta_table_source":   m.DeltaTableSource,
+			"feature_view_source":  m.FeatureViewSource,
+			"iceberg_table_source": m.IcebergTableSource,
+			"kafka_source":         m.KafkaSource,
+			"lateness":             m.Lateness,
+			"request_source":       m.RequestSource,
+			"sdp_source":           m.SdpSource,
+			"stream_source":        m.StreamSource,
 		})
 }
 
@@ -6134,13 +6162,14 @@ func (m DataSource) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (m DataSource) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"delta_table_source":  DeltaTableSource{}.Type(ctx),
-			"feature_view_source": FeatureViewSource{}.Type(ctx),
-			"kafka_source":        KafkaSource{}.Type(ctx),
-			"lateness":            SourceLateness{}.Type(ctx),
-			"request_source":      RequestSource{}.Type(ctx),
-			"sdp_source":          SdpSource{}.Type(ctx),
-			"stream_source":       StreamSource{}.Type(ctx),
+			"delta_table_source":   DeltaTableSource{}.Type(ctx),
+			"feature_view_source":  FeatureViewSource{}.Type(ctx),
+			"iceberg_table_source": IcebergTableSource{}.Type(ctx),
+			"kafka_source":         KafkaSource{}.Type(ctx),
+			"lateness":             SourceLateness{}.Type(ctx),
+			"request_source":       RequestSource{}.Type(ctx),
+			"sdp_source":           SdpSource{}.Type(ctx),
+			"stream_source":        StreamSource{}.Type(ctx),
 		},
 	}
 }
@@ -6193,6 +6222,31 @@ func (m *DataSource) GetFeatureViewSource(ctx context.Context) (FeatureViewSourc
 func (m *DataSource) SetFeatureViewSource(ctx context.Context, v FeatureViewSource) {
 	vs := v.ToObjectValue(ctx)
 	m.FeatureViewSource = vs
+}
+
+// GetIcebergTableSource returns the value of the IcebergTableSource field in DataSource as
+// a IcebergTableSource value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *DataSource) GetIcebergTableSource(ctx context.Context) (IcebergTableSource, bool) {
+	var e IcebergTableSource
+	if m.IcebergTableSource.IsNull() || m.IcebergTableSource.IsUnknown() {
+		return e, false
+	}
+	var v IcebergTableSource
+	d := m.IcebergTableSource.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetIcebergTableSource sets the value of the IcebergTableSource field in DataSource.
+func (m *DataSource) SetIcebergTableSource(ctx context.Context, v IcebergTableSource) {
+	vs := v.ToObjectValue(ctx)
+	m.IcebergTableSource = vs
 }
 
 // GetKafkaSource returns the value of the KafkaSource field in DataSource as
@@ -8533,19 +8587,17 @@ type DeltaTableSource struct {
 	DataframeSchema types.String `tfsdk:"dataframe_schema"`
 
 	EntityColumns types.List `tfsdk:"entity_columns"`
-	// Single WHERE clause to filter delta table before applying
-	// transformations. Will be row-wise evaluated, so should only include
-	// conditionals and projections.
+	// A single WHERE clause to filter the Delta table before applying
+	// transformations. The predicate is evaluated for each row.
 	FilterCondition types.String `tfsdk:"filter_condition"`
 	// The full three-part (catalog, schema, table) name of the Delta table.
 	FullName types.String `tfsdk:"full_name"`
 
 	TimeseriesColumn types.String `tfsdk:"timeseries_column"`
-	// A single SQL SELECT expression applied after filter_condition. Should
-	// contains all the columns needed (eg. "SELECT *, col_a + col_b AS col_c
-	// FROM x.y.z WHERE col_a > 0" would have `transformation_sql` "*, col_a +
-	// col_b AS col_c") If transformation_sql is not provided, all columns of
-	// the delta table are present in the DataSource dataframe.
+	// A single SQL SELECT expression applied after filter_condition. The
+	// expression must contain all required columns (e.g., "*, col_a + col_b AS
+	// col_c"). If transformation_sql is not provided, all columns of the delta
+	// table are present in the DataSource dataframe.
 	TransformationSql types.String `tfsdk:"transformation_sql"`
 }
 
@@ -13797,7 +13849,10 @@ func (m GetHistoryRequest) Type(ctx context.Context) attr.Type {
 }
 
 type GetIssueRequest struct {
-	// experiments/{experiment}/issues/{issue}
+	// The Issue to get, as `experiments/{experiment}/issues/{issue}`, where
+	// `{experiment}` is the experiment ID and `{issue}` is the Issue ID: `iss-`
+	// followed by 32 lowercase hex digits. For example,
+	// `experiments/1234567890/issues/iss-0123456789abcdef0123456789abcdef`.
 	Name types.String `tfsdk:"-"`
 }
 
@@ -15484,6 +15539,80 @@ func (m HttpUrlSpecWithoutSecret) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// A Unity Catalog managed or foreign Iceberg table, in Iceberg v2 or v3 format.
+// Table identity, format, schema, and permissions are resolved through Unity
+// Catalog.
+type IcebergTableSource struct {
+	// Schema of the resulting dataframe after transformations, in Spark
+	// StructType JSON format (from df.schema.json()). Required if
+	// transformation_sql is specified. Example:
+	// {"type":"struct","fields":[{"name":"col_a","type":"integer","nullable":true,"metadata":{}},{"name":"col_c","type":"integer","nullable":true,"metadata":{}}]}
+	DataframeSchema types.String `tfsdk:"dataframe_schema"`
+	// A single WHERE clause to filter the Iceberg table before applying
+	// transformations. The predicate is evaluated for each row.
+	FilterCondition types.String `tfsdk:"filter_condition"`
+	// Full three-part name of the source table. May be omitted on reads when
+	// inaccessible.
+	FullName types.String `tfsdk:"full_name"`
+	// A single SQL SELECT expression applied after filter_condition. The
+	// expression must contain all required columns (e.g., "*, col_a + col_b AS
+	// col_c"). If transformation_sql is not provided, all columns of the
+	// Iceberg table are present in the DataSource dataframe.
+	TransformationSql types.String `tfsdk:"transformation_sql"`
+}
+
+func (to *IcebergTableSource) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from IcebergTableSource) {
+}
+
+func (to *IcebergTableSource) SyncFieldsDuringRead(ctx context.Context, from IcebergTableSource) {
+}
+
+func (m IcebergTableSource) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["dataframe_schema"] = attrs["dataframe_schema"].SetOptional()
+	attrs["filter_condition"] = attrs["filter_condition"].SetOptional()
+	attrs["full_name"] = attrs["full_name"].SetRequired()
+	attrs["transformation_sql"] = attrs["transformation_sql"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in IcebergTableSource.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m IcebergTableSource) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, IcebergTableSource
+// only implements ToObjectValue() and Type().
+func (m IcebergTableSource) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"dataframe_schema":   m.DataframeSchema,
+			"filter_condition":   m.FilterCondition,
+			"full_name":          m.FullName,
+			"transformation_sql": m.TransformationSql,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m IcebergTableSource) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"dataframe_schema":   types.StringType,
+			"filter_condition":   types.StringType,
+			"full_name":          types.StringType,
+			"transformation_sql": types.StringType,
+		},
+	}
+}
+
 // Configuration for the Databricks-managed ingestion pipeline. Groups the
 // ingestion destination (required) and optional backfill source.
 type IngestionConfig struct {
@@ -15942,7 +16071,10 @@ type Issue struct {
 	// clients must tolerate unknown and missing keys. At most 20 entries, with
 	// keys of at most 64 UTF-8 bytes.
 	Metadata types.Map `tfsdk:"metadata"`
-	// experiments/{experiment}/issues/{issue}
+	// The Issue's resource name, as `experiments/{experiment}/issues/{issue}`,
+	// where `{experiment}` is the experiment ID and `{issue}` is the Issue ID:
+	// `iss-` followed by 32 lowercase hex digits. For example,
+	// `experiments/1234567890/issues/iss-0123456789abcdef0123456789abcdef`.
 	Name types.String `tfsdk:"name"`
 	// Cannot be cleared: an Issue without a severity would match no severity
 	// filter.
@@ -21685,8 +21817,8 @@ func (m *MaterializationFailureNotification) SetEmailAddresses(ctx context.Conte
 	m.EmailAddresses = types.ListValueMust(t, vs)
 }
 
-// Notifications for the jobs and pipelines that materialize the features in a
-// set, one field per trigger.
+// Notifications for the jobs and pipelines that materialize features, one field
+// per trigger.
 type MaterializationNotifications struct {
 	// Who to notify when a run fails, and on which attempts.
 	OnFailure types.Object `tfsdk:"on_failure"`
@@ -23070,8 +23202,9 @@ type MaterializedFeature struct {
 	MaterializationSetId types.String `tfsdk:"materialization_set_id"`
 	// Server-assigned unique identifier for the materialized feature.
 	MaterializedFeatureId types.String `tfsdk:"materialized_feature_id"`
-	// Notification configuration for the jobs and pipelines that materialize
-	// this feature.
+	// Notification configuration around the lifecycle of the job or pipeline
+	// that materializes this feature. Features which are materialized in the
+	// same pipeline will share the same notification.
 	Notifications types.Object `tfsdk:"notifications"`
 	// Destination for writing feature values to an offline Delta table. The
 	// resulting table is returned as `table_name`.
@@ -23254,7 +23387,7 @@ func (m MaterializedFeature) ApplySchemaCustomizations(attrs map[string]tfschema
 	attrs["materialization_set_id"] = attrs["materialization_set_id"].SetComputed()
 	attrs["materialized_feature_id"] = attrs["materialized_feature_id"].SetOptional()
 	attrs["materialized_feature_id"] = attrs["materialized_feature_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
-	attrs["notifications"] = attrs["notifications"].SetComputed()
+	attrs["notifications"] = attrs["notifications"].SetOptional()
 	attrs["offline_store_config"] = attrs["offline_store_config"].SetOptional()
 	attrs["offline_store_config"] = attrs["offline_store_config"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["offline_store_config"] = attrs["offline_store_config"].SetComputed()
@@ -29921,7 +30054,9 @@ type SearchIssuesRequest struct {
 	// Expires after 15 minutes. Every other argument except `view` must match
 	// the request that returned the token.
 	PageToken types.String `tfsdk:"page_token"`
-	// experiments/{experiment}
+	// The experiment to search, as `experiments/{experiment}`, where
+	// `{experiment}` is the experiment ID. For example,
+	// `experiments/1234567890`.
 	Parent types.String `tfsdk:"-"`
 	// Case-insensitive substring match on title.
 	Query types.String `tfsdk:"query"`
@@ -35126,7 +35261,10 @@ func (m *UpdateFeatureTagRequest) SetFeatureTag(ctx context.Context, v FeatureTa
 type UpdateIssueRequest struct {
 	// `issue.name` identifies the target.
 	Issue types.Object `tfsdk:"issue"`
-	// experiments/{experiment}/issues/{issue}
+	// The Issue's resource name, as `experiments/{experiment}/issues/{issue}`,
+	// where `{experiment}` is the experiment ID and `{issue}` is the Issue ID:
+	// `iss-` followed by 32 lowercase hex digits. For example,
+	// `experiments/1234567890/issues/iss-0123456789abcdef0123456789abcdef`.
 	Name types.String `tfsdk:"-"`
 	// Accepts title, description, status, severity, categories, tags,
 	// last_seen_time, and metadata.<key>. A path with an empty value clears the

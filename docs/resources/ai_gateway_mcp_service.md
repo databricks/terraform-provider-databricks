@@ -61,7 +61,7 @@ The following arguments are supported:
 ### RateLimit
 * `key` (string, required) - Scope of the rate limit. Depending on this value, the limit applies to a
   principal, the service as a whole, or each user by default. Possible values are: `RATE_LIMIT_KEY_SERVICE`, `RATE_LIMIT_KEY_SERVICE_PRINCIPAL`, `RATE_LIMIT_KEY_USER`, `RATE_LIMIT_KEY_USER_DEFAULT`, `RATE_LIMIT_KEY_USER_GROUP`
-* `renewal_period` (string, required) - Renewal period. Possible values are: `RATE_LIMIT_RENEWAL_PERIOD_HOUR`, `RATE_LIMIT_RENEWAL_PERIOD_MINUTE`
+* `renewal_period` (string, required) - Interval after which the request and token counters reset. Possible values are: `RATE_LIMIT_RENEWAL_PERIOD_HOUR`, `RATE_LIMIT_RENEWAL_PERIOD_MINUTE`
 * `principal` (string, optional) - Principal this limit applies to: user email, group name, or service
   principal application ID. Required when `key` applies to a user, group, or
   service principal; otherwise it must be unset

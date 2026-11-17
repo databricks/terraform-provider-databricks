@@ -337,6 +337,9 @@ func (r *SessionStoreResource) Create(ctx context.Context, req resource.CreateRe
 		return
 	}
 	resp.Diagnostics.Append(tfschema.PopulateProviderConfigInState(ctx, r.Client, plan.ProviderConfig, &resp.State)...)
+	if !resp.Diagnostics.HasError() {
+		resp.Diagnostics.Append(resp.Private.SetKey(ctx, tfschema.CreationInputsAppliedKey, []byte("true"))...)
+	}
 }
 
 func (r *SessionStoreResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -449,6 +452,9 @@ func (r *SessionStoreResource) Update(ctx context.Context, req resource.UpdateRe
 	}
 
 	r.update(ctx, plan, &resp.Diagnostics, &resp.State)
+	if !resp.Diagnostics.HasError() {
+		resp.Diagnostics.Append(resp.Private.SetKey(ctx, tfschema.CreationInputsAppliedKey, []byte("true"))...)
+	}
 }
 
 func (r *SessionStoreResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {

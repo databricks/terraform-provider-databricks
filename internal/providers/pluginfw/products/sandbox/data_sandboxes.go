@@ -29,7 +29,9 @@ func DataSourceSandboxes() datasource.DataSource {
 // SandboxesData extends the main model with additional fields.
 type SandboxesData struct {
 	Sandbox types.List `tfsdk:"sandboxes"`
-
+	// Maximum number of sandboxes to return in one page. When unset or 0 the
+	// server returns up to 1000 sandboxes; values above 5000 are reduced to
+	// 5000.
 	PageSize           types.Int64  `tfsdk:"page_size"`
 	ProviderConfigData types.Object `tfsdk:"provider_config"`
 }

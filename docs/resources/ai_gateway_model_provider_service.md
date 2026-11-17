@@ -285,7 +285,7 @@ The following arguments are supported:
 ### RateLimit
 * `key` (string, required) - Scope of the rate limit. Depending on this value, the limit applies to a
   principal, the service as a whole, or each user by default. Possible values are: `RATE_LIMIT_KEY_SERVICE`, `RATE_LIMIT_KEY_SERVICE_PRINCIPAL`, `RATE_LIMIT_KEY_USER`, `RATE_LIMIT_KEY_USER_DEFAULT`, `RATE_LIMIT_KEY_USER_GROUP`
-* `renewal_period` (string, required) - Renewal period. Possible values are: `RATE_LIMIT_RENEWAL_PERIOD_HOUR`, `RATE_LIMIT_RENEWAL_PERIOD_MINUTE`
+* `renewal_period` (string, required) - Interval after which the request and token counters reset. Possible values are: `RATE_LIMIT_RENEWAL_PERIOD_HOUR`, `RATE_LIMIT_RENEWAL_PERIOD_MINUTE`
 * `principal` (string, optional) - Principal this limit applies to: user email, group name, or service
   principal application ID. Required when `key` applies to a user, group, or
   service principal; otherwise it must be unset
@@ -316,7 +316,7 @@ In addition to the above arguments, the following attributes are exported:
 * `is_deleted` (boolean) - Whether the referenced inference table has been deleted. The configuration
   remains visible so you can identify the broken dependency. Payload logging
   cannot continue until the table is restored or the configuration is updated
-* `table` (string) - Resolved UC table for payload logs.
+* `table` (string) - Resource name of the Unity Catalog table that receives the payload logs.
   Format: `tables/{catalog}.{schema}.{table}`
 
 ## Import

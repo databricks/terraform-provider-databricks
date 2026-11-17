@@ -43,8 +43,6 @@ The following arguments are supported:
 * `at_least_every` (string, optional) - Defines the minimum cadence as a duration string. It may contain components
   for days, hours, minutes, and seconds (e.g. `5d`, `5d3h`, `3d2h5m12s`,
   `12m16s`)
-* `continuous` (boolean, optional) - Runs the rule continuously. Detection rules do not accept it: batch rules reject it, and
-  streaming rules run continuously without it
 * `cron_expression` (string, optional) - Defines the schedule using a Quartz cron expression
 * `enabled` (boolean, optional) - Sets whether the job is scheduled to run. Defaults to true
 

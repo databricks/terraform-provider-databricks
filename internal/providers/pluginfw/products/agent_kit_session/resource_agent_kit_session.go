@@ -243,7 +243,8 @@ func (m Session) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBu
 	attrs["session_id"] = attrs["session_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplaceIf(tfschema.RequiresReplaceIfKnownChange, "", "")).(tfschema.AttributeBuilder)
 	attrs["update_time"] = attrs["update_time"].SetComputed()
 	attrs["parent"] = attrs["parent"].SetRequired()
-	attrs["parent"] = attrs["parent"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["parent"] = attrs["parent"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
+	attrs["parent"] = attrs["parent"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplaceIf(tfschema.RequiresReplaceIfKnownChange, "", "")).(tfschema.AttributeBuilder)
 
 	attrs["name"] = attrs["name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["provider_config"] = attrs["provider_config"].SetOptional()
@@ -364,6 +365,9 @@ func (r *SessionResource) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 	resp.Diagnostics.Append(tfschema.PopulateProviderConfigInState(ctx, r.Client, plan.ProviderConfig, &resp.State)...)
+	if !resp.Diagnostics.HasError() {
+		resp.Diagnostics.Append(resp.Private.SetKey(ctx, tfschema.CreationInputsAppliedKey, []byte("true"))...)
+	}
 }
 
 func (r *SessionResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -476,6 +480,9 @@ func (r *SessionResource) Update(ctx context.Context, req resource.UpdateRequest
 	}
 
 	r.update(ctx, plan, &resp.Diagnostics, &resp.State)
+	if !resp.Diagnostics.HasError() {
+		resp.Diagnostics.Append(resp.Private.SetKey(ctx, tfschema.CreationInputsAppliedKey, []byte("true"))...)
+	}
 }
 
 func (r *SessionResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {

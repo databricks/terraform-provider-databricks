@@ -46,7 +46,11 @@ This data source exports a single attribute, `databases`. It is a list of resour
   Format: projects/{project_id}/branches/{branch_id}/databases/{database_id}
 * `parent` (string) - The branch containing this database.
   Format: projects/{project_id}/branches/{branch_id}
-* `spec` (DatabaseDatabaseSpec) - The desired state of the Database
+* `spec` (DatabaseDatabaseSpec) - The desired state of the Database.
+  
+  Read the resource's current values from `status`, rather than `spec`.
+  `spec` tracks field ownership for infrastructure-as-code tools and may omit
+  unmanaged fields
 * `status` (DatabaseDatabaseStatus) - The observed state of the Database
 * `update_time` (string) - A timestamp indicating when the database was last updated
 
@@ -63,7 +67,7 @@ This data source exports a single attribute, `databases`. It is a list of resour
   
   To change the owner, pass valid existing Role name when updating the Database
   
-  A database always has an owner
+  Required when creating the Database
 
 ### DatabaseDatabaseStatus
 * `database_id` (string) - Part of the resource name

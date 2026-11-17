@@ -103,7 +103,7 @@ type SandboxData struct {
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
 	// Human-readable display label for the sandbox. At most 256 characters.
 	DisplayName types.String `tfsdk:"display_name"`
-	// Metadata associated with the sandbox.
+	// Tags and other metadata associated with the sandbox.
 	Metadata types.Object `tfsdk:"metadata"`
 	// The sandbox resource name, in the form `sandboxes/{sandbox_id}`. Derived
 	// from `sandbox_id`; any value supplied in a create or update request body

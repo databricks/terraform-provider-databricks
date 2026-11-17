@@ -12,7 +12,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	sdkcommon "github.com/databricks/databricks-sdk-go/common"
+	"github.com/databricks/databricks-sdk-go/logger"
 	sdkapierr "github.com/databricks/sdk-go/core/apierr"
 	"golang.org/x/time/rate"
 )
@@ -22,6 +24,17 @@ import (
 // the messages stay the same. req is the last request sent, if any.
 func (b *sdkGoBridge) classicError(ctx context.Context, err error,
 	req *http.Request) error {
+	// http.Client wraps transport failures in a url.Error, which the classic client
+	// doesn't add to these.
+	if visitorErr, ok := errors.AsType[*visitorError](err); ok {
+		return visitorErr
+	}
+	if bodyErr, ok := errors.AsType[*responseBodyError](err); ok {
+		return bodyErr
+	}
+	if classicErr, ok := errors.AsType[*apierr.APIError](err); ok {
+		return classicErr
+	}
 	apiErr, ok := errors.AsType[*sdkapierr.APIError](err)
 	if !ok || apiErr.HTTPStatusCode() < 0 {
 		var syntaxErr *json.SyntaxError
@@ -52,6 +65,20 @@ func (b *sdkGoBridge) classicError(ctx context.Context, err error,
 	return mapped
 }
 
+// visitorError is a failure before a request is sent: in authentication or in a request
+// visitor. The classic client reports it with this message and never retries it.
+type visitorError struct {
+	err error
+}
+
+func (e *visitorError) Error() string {
+	return "failed during request visitor: " + e.err.Error()
+}
+
+func (e *visitorError) Unwrap() error {
+	return e.err
+}
+
 // classicRetryableURLErrors mirrors the unexported list in
 // httpclient.isRetriableUrlError.
 var classicRetryableURLErrors = []string{
@@ -64,6 +91,10 @@ var classicRetryableURLErrors = []string{
 
 // isRetriable mirrors httpclient.ApiClient.isRetriable for an error from classicError.
 func (b *sdkGoBridge) isRetriable(ctx context.Context, err error) bool {
+	// The classic client halts on these, whatever error they wrap.
+	if _, ok := errors.AsType[*visitorError](err); ok {
+		return false
+	}
 	if b.httpConfig.ErrorRetriable != nil && b.httpConfig.ErrorRetriable(ctx, err) {
 		return true
 	}
@@ -71,12 +102,14 @@ func (b *sdkGoBridge) isRetriable(ctx context.Context, err error) bool {
 	if _, ok := errors.AsType[*url.Error](err); ok {
 		for _, transient := range classicRetryableURLErrors {
 			if strings.Contains(message, transient) {
+				logger.Debugf(ctx, "Attempting retry because of IO error: %s", err)
 				return true
 			}
 		}
 	}
 	for _, transient := range b.httpConfig.TransientErrors {
 		if strings.Contains(message, transient) {
+			logger.Debugf(ctx, "Attempting retry because of %#v", transient)
 			return true
 		}
 	}
@@ -106,10 +139,13 @@ func (b *sdkGoBridge) newRetrier(ctx context.Context,
 func (r *classicRetrier) IsRetriable(err error) (time.Duration, bool) {
 	classic := r.bridge.classicError(r.ctx, err, r.attempt.request)
 	if !r.bridge.isRetriable(r.ctx, classic) {
+		logger.Debugf(r.ctx, "non-retriable error: %s", classic)
 		return 0, false
 	}
 	r.retries++
 	wait := r.bridge.retry.Backoff(r.retries)
+	logger.Tracef(r.ctx, "%s. Sleeping %s", strings.TrimSuffix(classic.Error(), "."),
+		wait.Round(time.Millisecond))
 	// The classic client also stops when the deadline passes during the backoff.
 	if !r.deadline.IsZero() && time.Now().Add(wait).After(r.deadline) {
 		return 0, false

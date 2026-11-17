@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strings"
 	"sync/atomic"
 	"testing"
@@ -408,5 +409,66 @@ func TestSdkGoScimClientTimesOutAuthenticationLikeClassicClient(t *testing.T) {
 	assert.EqualValues(t, 0, r.calls)
 	assert.Equal(t, r.classicCalls, r.calls)
 	// Each client gives up on authentication after the one-second HTTP timeout.
+	assert.Less(t, time.Since(start), 10*time.Second)
+}
+
+// refusedTokenCredentials fail like a token endpoint that refuses connections, which
+// the classic client would retry if it came from an API call.
+type refusedTokenCredentials struct {
+	calls *atomic.Int32
+}
+
+func (refusedTokenCredentials) Name() string { return "refused-token" }
+
+func (c refusedTokenCredentials) Configure(context.Context,
+	*config.Config) (credentials.CredentialsProvider, error) {
+	return credentials.CredentialsProviderFn(func(r *http.Request) error {
+		c.calls.Add(1)
+		return &url.Error{Op: "Post", URL: "https://login.example.com/token",
+			Err: errors.New("dial tcp 127.0.0.1:1: connect: connection refused")}
+	}), nil
+}
+
+func TestSdkGoScimClientDoesNotRetryAuthenticationFailures(t *testing.T) {
+	var sdkGoAuth, classicAuth atomic.Int32
+	withCredentials := func(calls *atomic.Int32) func(*config.Config) {
+		return func(cfg *config.Config) {
+			// A retried failure would make a second attempt within this timeout.
+			cfg.RetryTimeoutSeconds = 5
+			cfg.Credentials = refusedTokenCredentials{calls}
+			cfg.AuthType = "refused-token"
+		}
+	}
+	server, calls := serveSequence(t)
+	ctx := context.Background()
+	sdkGoClient := newSdkGoTestClient(t, server, withCredentials(&sdkGoAuth))
+	_, err := getServicePrincipal(ctx, t, sdkGoClient, "")
+	classicClient := newSdkGoTestClient(t, server, withCredentials(&classicAuth))
+	classicErr := classicGetServicePrincipal(ctx, classicClient)
+
+	assert.EqualError(t, err, `failed during request visitor: Post `+
+		`"https://login.example.com/token": `+
+		`dial tcp 127.0.0.1:1: connect: connection refused`)
+	assert.EqualError(t, classicErr, err.Error())
+	assert.EqualValues(t, 1, sdkGoAuth.Load())
+	assert.Equal(t, classicAuth.Load(), sdkGoAuth.Load())
+	assert.EqualValues(t, 0, calls.Load())
+}
+
+func TestSdkGoScimClientTimesOutRequestVisitorsLikeClassicClient(t *testing.T) {
+	customize := func(cfg *config.Config) {
+		cfg.HTTPTimeoutSeconds = 1
+		cfg.Headers = func(r *http.Request) error {
+			<-r.Context().Done()
+			return r.Context().Err()
+		}
+	}
+	start := time.Now()
+	r := readBothWays(t, context.Background, customize)
+	assert.EqualError(t, r.err, "failed during request visitor: context canceled")
+	assert.EqualError(t, r.classicErr, r.err.Error())
+	assert.EqualValues(t, 0, r.calls)
+	assert.Equal(t, r.classicCalls, r.calls)
+	// Each client gives up on the visitor after the one-second HTTP timeout.
 	assert.Less(t, time.Since(start), 10*time.Second)
 }

@@ -84,7 +84,7 @@ The following attributes are exported:
 * `principal` (string) - Principal this limit applies to: user email, group name, or service
   principal application ID. Required when `key` applies to a user, group, or
   service principal; otherwise it must be unset
-* `renewal_period` (string) - Renewal period. Possible values are: `RATE_LIMIT_RENEWAL_PERIOD_HOUR`, `RATE_LIMIT_RENEWAL_PERIOD_MINUTE`
+* `renewal_period` (string) - Interval after which the request and token counters reset. Possible values are: `RATE_LIMIT_RENEWAL_PERIOD_HOUR`, `RATE_LIMIT_RENEWAL_PERIOD_MINUTE`
 * `requests` (integer) - Maximum requests allowed in one renewal period. Leave unset for no request
   limit. Set to `0` to deny all requests
 * `tokens` (integer) - Maximum tokens allowed in one renewal period. Leave unset for no token

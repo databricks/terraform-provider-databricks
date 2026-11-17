@@ -23,8 +23,11 @@ The following arguments are supported:
 
 ## Attributes
 This data source exports a single attribute, `database_catalogs`. It is a list of resources, each with the following attributes:
-* `create_database_if_not_exists` (boolean)
+* `create_database_if_not_exists` (boolean) - If true, the database named in database_name is created in the instance when it does not already
+  exist, with the calling user as its owner. Defaults to false
 * `database_instance_name` (string) - The name of the DatabaseInstance housing the database
-* `database_name` (string) - The name of the database (in an instance) associated with the catalog
-* `name` (string) - The name of the catalog in UC
-* `uid` (string)
+* `database_name` (string) - The name of the Postgres database in the instance that the catalog registers. The database must
+  already exist unless create_database_if_not_exists is true. The system databases postgres,
+  databricks_system, template0 and template1 cannot be registered
+* `name` (string) - The name of the catalog in Unity Catalog
+* `uid` (string) - An immutable UUID identifier for the catalog, assigned when the catalog is created

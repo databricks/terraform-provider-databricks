@@ -798,9 +798,9 @@ var resourcesMap map[string]importable = map[string]importable{
 		Ignore:         generateIgnoreObjectWithEmptyAttributeValue("databricks_sql_endpoint", "name"),
 		ShouldOmitField: func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData, r *resource) bool {
 			switch pathString {
-			case "enable_serverless_compute", "auto_stop_mins":
+			case "enable_serverless_compute", "auto_stop_mins", "statement_timeout":
 				return false
-			case "statement_timeout", "max_dbu":
+			case "max_dbu":
 				return d.Get("warehouse_type") != "REALTIME"
 			case "tags":
 				return d.Get("tags.0.custom_tags.#").(int) == 0

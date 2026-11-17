@@ -1992,7 +1992,9 @@ func (m *AiParseDocumentResponseMetadata_SdkV2) SetFileMetadata(ctx context.Cont
 }
 
 // The AI Functions Asynchronous API lets you process large volumes of requests
-// as a batch in a single call.
+// as a batch in a single call. It is in Beta: a workspace admin must turn on
+// the **AI Functions Asynchronous API** preview on the workspace Previews page
+// before you can call it.
 type Batch_SdkV2 struct {
 	// Output only. The time when the batch was created.
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
@@ -2006,7 +2008,10 @@ type Batch_SdkV2 struct {
 	// Format: `batch_<id>`.
 	Name types.String `tfsdk:"name"`
 	// Unity Catalog volume path to write the JSONL output file to. If the path
-	// is a directory, the file is `<path>/<name>_output.jsonl`.
+	// is a directory, the file is `<path>/<name>_output.jsonl`. Each line is
+	// the result of one request, in the form `{"custom_id": ..., "response":
+	// ...}`, or `{"custom_id": ..., "error": {"type": ..., "message": ...}}`
+	// for a request that failed.
 	OutputRef types.String `tfsdk:"output_ref"`
 	// Parameters of the function other than its input, applied to every request
 	// in the batch, for example `schema` for `ai_extract`. Put function

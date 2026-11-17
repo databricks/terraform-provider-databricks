@@ -250,12 +250,8 @@ func customizeSqlWarehouseDiff(d *schema.ResourceDiff) error {
 	if isRealtime {
 		defaults["auto_stop_mins"] = 10
 		defaults["enable_serverless_compute"] = true
-	} else if d.NewValueKnown("warehouse_type") {
-		for _, field := range []string{"statement_timeout", "max_dbu"} {
-			if !config.GetAttr(field).IsNull() {
-				return fmt.Errorf("%s is only supported for REALTIME warehouses", field)
-			}
-		}
+	} else if d.NewValueKnown("warehouse_type") && !config.GetAttr("max_dbu").IsNull() {
+		return fmt.Errorf("max_dbu is only supported for REALTIME warehouses")
 	}
 	for field, value := range defaults {
 		if config.GetAttr(field).IsNull() {

@@ -15,7 +15,7 @@ host_metadata:
   account_id: replay-account
 steps:
   - name: create_routes_through_workspace_lookup
-    config: &config |
+    config: |
       provider "databricks" {
         account_id = "replay-account"
       }

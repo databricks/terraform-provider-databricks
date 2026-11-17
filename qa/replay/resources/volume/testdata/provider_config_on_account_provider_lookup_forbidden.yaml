@@ -1,7 +1,8 @@
 # Pins an account-level provider whose workspace lookup answers 403. The provider
 # falls back to the account host and still sends each volume call with the
-# X-Databricks-Workspace-Id header of provider_config.workspace_id, retrying the lookup
-# once in every Terraform command. TestVolumeAccountProviderWorkspaceHost in
+# X-Databricks-Workspace-Id header of provider_config.workspace_id. Every Terraform
+# command that touches the volume makes the failing lookup once, as with a found
+# workspace. TestVolumeAccountProviderWorkspaceHost in
 # catalog/resource_volume_workspace_host_test.go pins that the fallback keeps the
 # account host. API responses are inferred from the account and Unity Catalog API
 # contracts, not recorded.
@@ -13,7 +14,7 @@ host_metadata:
   account_id: replay-account
 steps:
   - name: create_after_lookup_forbidden_routes_with_workspace_header
-    config: &config |
+    config: |
       provider "databricks" {
         account_id = "replay-account"
       }

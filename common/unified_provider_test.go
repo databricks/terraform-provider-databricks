@@ -1385,7 +1385,7 @@ func TestNamespaceCustomizeDiff_ForceNew(t *testing.T) {
 				"name": "test",
 			},
 			expectError:   true,
-			errorContains: "managing a workspace-level resource requires a workspace_id, but the previously configured workspace_id was removed",
+			errorContains: `requires a workspace_id, but none is configured. Set workspace_id = "100" in the resource's provider_config`,
 		},
 		{
 			name: "workspace_id removed A to empty default=A - no ForceNew same effective",
@@ -1506,7 +1506,7 @@ func TestNamespaceCustomizeDiff_ForceNew(t *testing.T) {
 			},
 			cachedWSID:    0,
 			expectError:   true,
-			errorContains: "managing a workspace-level resource requires a workspace_id, but the previously configured workspace_id was removed",
+			errorContains: "managing a workspace-level resource requires a workspace_id, but none is configured",
 		},
 		{
 			name: "default takes precedence over cachedWSID - ForceNew from default",

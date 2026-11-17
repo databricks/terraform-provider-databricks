@@ -635,7 +635,7 @@ func TestMwsAccWorkspaceIDApp_RemoveDefault(t *testing.T) {
 			Template: appWithProviderBlock("", ""),
 			PlanOnly: true,
 			ExpectError: regexp.MustCompile(
-				`(?s)managing a workspace-level resource requires a workspace_id.*previously\s+configured\s+workspace_id\s+was\s+removed`,
+				`(?s)managing a workspace-level resource requires a workspace_id.*none\s+is\s+configured`,
 			),
 		},
 	)
@@ -660,7 +660,7 @@ func TestMwsAccWorkspaceIDApp_RemoveOverrideNoFallback(t *testing.T) {
 			Template: appWithProviderBlock("", ""),
 			PlanOnly: true,
 			ExpectError: regexp.MustCompile(
-				`(?s)managing a workspace-level resource requires a workspace_id.*previously\s+configured\s+workspace_id\s+was\s+removed`,
+				`(?s)managing a workspace-level resource requires a workspace_id.*none\s+is\s+configured`,
 			),
 		},
 	)

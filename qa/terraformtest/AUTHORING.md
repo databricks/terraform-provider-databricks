@@ -229,6 +229,7 @@ mandatory and needs no YAML state assertion.
   with `any_string`. It requires a present string; missing values and JSON null
   still fail. Do not mask names, IDs, or other values that the scenario should
   verify, and do not use `"****"` as a wildcard (it is just a literal string).
+- When a volatile value has a format worth pinning, use a `pattern` matcher instead of `any_string`; see [Check formats and absent headers](#check-formats-and-absent-headers).
 - For polling/retry scenarios, check meaningful requests and outcomes, not
   elapsed time or incidental scheduling.
 - Independent request signatures can interleave. Repeated identical signatures
@@ -247,6 +248,125 @@ Automatic cleanup is part of the test. Normal destroy may refresh first; cleanup
 after an interrupted apply can have a different transcript. Missing cleanup
 fixtures fail too. Empty Terraform state plus consumed DELETE fixtures verifies
 the replayed cleanup flow, not the state of an independently simulated service.
+
+## Check formats and absent headers
+
+`any_string` checks only that a value is present. A `pattern` matcher also checks its format: the value must be a present string that the Go regular expression matches in full, so `^` and `$` are implied. Patterns work on headers, query parameters and JSON strings. In `headers` and `query`, write `{pattern: <regular expression>}`; in a `json` entry, write `pattern:` in place of `type:`. The [pattern example](testdata/matchers/group_create_pattern.yml) checks `traceparent` and `User-Agent`:
+
+```yaml
+request:
+  method: POST
+  path: /api/2.0/preview/scim/v2/Groups
+  headers:
+    # Captured samples; the patterns replace exact comparison.
+    traceparent: 00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01
+    User-Agent: databricks-tf-provider/1.0.0 databricks-sdk-go/0.200.0 resource/group
+  matchers:
+    headers:
+      traceparent: {pattern: '00-[0-9a-f]{32}-[0-9a-f]{16}-01'}
+      User-Agent: {pattern: 'databricks-tf-provider/\S+ databricks-sdk-go/\S+ .*\bresource/group\b.*'}
+```
+
+A JSON string uses the same `path` as `any_string`:
+
+```yaml
+body:
+  json:
+    request_id: 0b6d4a3e-5c1f-4e2a-9d7b-8f3a2c1e0d4b
+matchers:
+  json:
+    - path: [request_id]
+      pattern: '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}'
+```
+
+Write the pattern from the value's contract, such as the W3C `traceparent` format, not from one captured sample. Quote patterns in single quotes: double-quoted YAML treats backslashes as escapes.
+
+An exact header sample of `""` accepts a missing header and a header with an empty value alike. To require that the provider sends no such header, use the `absent` matcher, and leave the header out of `headers`. The [absent example](testdata/matchers/directory_create_absent.yml) pins a read that sends no body and so no `Content-Type`:
+
+```yaml
+request:
+  method: GET
+  path: /api/2.0/workspace/get-status
+  query:
+    path: [/Shared/replay-matchers]
+  matchers:
+    headers:
+      Content-Type: absent
+  body: null
+```
+
+`absent` applies only to headers: query parameters and JSON fields not in the sample already fail to match.
+
+## Test calls to several hosts
+
+Replay serves every host from one local server. By default the provider's host is that server, every call expects it, and replay rejects requests to any other host. When the behavior depends on which host a call reaches, such as an account host and a workspace's own host, or a workspace on a given cloud, name the hosts at the test root and pick the provider's host:
+
+```yaml
+version: 1
+provider_host: account
+hosts:
+  account:
+    url: https://accounts.cloud.databricks.com
+    metadata:
+      host_type: account
+      cloud: AWS
+      account_id: replay-account
+  workspace:
+    url: https://replay-workspace-1002.cloud.databricks.com
+    metadata:
+      host_type: workspace
+      cloud: AWS
+      workspace_id: "1002"
+steps:
+  - name: create
+    config: |
+      provider "databricks" {
+        account_id = "replay-account"
+      }
+
+      resource "databricks_directory" "this" {
+        path = "/Shared/replay-hosts"
+        provider_config {
+          workspace_id = "1002"
+        }
+      }
+    calls:
+      # No host: the call must reach the provider host, account.
+      - request:
+          method: GET
+          path: /api/2.0/accounts/replay-account/workspaces/1002
+          body: null
+        response:
+          status: 200
+          body:
+            json:
+              account_id: replay-account
+              workspace_id: 1002
+              deployment_name: replay-workspace-1002
+              workspace_status: RUNNING
+      - request:
+          method: POST
+          host: workspace
+          path: /api/2.0/workspace/mkdirs
+          body:
+            json:
+              path: /Shared/replay-hosts
+        response:
+          status: 200
+          body:
+            json: {}
+      # Reads and destroy follow.
+```
+
+- `hosts` maps a name to the host's `url`, an `http` or `https` origin without a path, and optional `metadata`, the response to `GET /.well-known/databricks-config` on that host. Like `host_metadata`, metadata answers every discovery call on its host and need not be consumed. No two hosts may share a host and port.
+- `provider_host` names the host the provider is configured with. Without it, the provider uses the local server and named hosts are extra hosts, such as a redirect target. `host_metadata` answers the provider host, so do not also set `metadata` on the host that `provider_host` names.
+- A call's `host` names the host the request must reach. A call without `host` expects the provider host. A request to the wrong named host fails as an unexpected call, and the error names the host it reached: `unexpected HTTP call: POST /api/2.0/workspace/mkdirs on host "account"`.
+- A request to a host that is not named fails before it reaches the server, with `hermetic replay rejected request outside fixture server: <URL>`. Match that diagnostic with `expect_error` to pin a call to a wrong host, as the [unnamed-host example](testdata/hosts/unnamed_host_rejected.yaml) does.
+- A provider block may set `host` to a named host's URL to move the provider there for a step, as the [host-change example](testdata/hosts/provider_host_change.yaml) does. Any other `host` fails provider configuration. Without `hosts`, the runner ignores the HCL `host` as before.
+- The SDK takes the cloud from a named host's DNS zone, as it does live: `.azuredatabricks.net` is Azure and `.gcp.databricks.com` is GCP. Host metadata without `cloud` resolves to that cloud, and a private-link login redirect names that cloud's private-link service. On the local server both fall back to AWS. The [Azure example](testdata/hosts/azure_private_link.yaml) shows the redirect.
+- Recording rejects tests with `hosts`, because a profile has one host. Update their fixtures by hand.
+
+The [workspace-host example](testdata/hosts/workspace_host.yaml) is the complete journey above.
 
 ## Write tests that survive redaction
 

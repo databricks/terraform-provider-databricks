@@ -24,7 +24,8 @@ func (d *testDefinition) validateHosts() error {
 			return fmt.Errorf("provider_host %q is not one of hosts", d.ProviderHost)
 		}
 		if d.HostMetadata != nil && host.Metadata != nil {
-			return fmt.Errorf("host_metadata and hosts.%s.metadata both describe the provider host; keep one", d.ProviderHost)
+			return fmt.Errorf("host_metadata and hosts.%s.metadata both describe the "+
+				"provider host; keep one", d.ProviderHost)
 		}
 	}
 	authorities := map[string]string{}
@@ -36,9 +37,10 @@ func (d *testDefinition) validateHosts() error {
 		if err != nil {
 			return fmt.Errorf("hosts.%s.url: %w", name, err)
 		}
-		// The local server tells hosts apart by the Host header alone, without the scheme.
+		// The local server tells hosts apart by the Host header, which has no scheme.
 		if other, duplicate := authorities[u.Host]; duplicate {
-			return fmt.Errorf("hosts.%s.url: %s is also the host of hosts.%s", name, u.Host, other)
+			return fmt.Errorf("hosts.%s.url: %s is also the host of hosts.%s",
+				name, u.Host, other)
 		}
 		authorities[u.Host] = name
 	}
@@ -48,15 +50,17 @@ func (d *testDefinition) validateHosts() error {
 // parseHostURL accepts only an origin, so a fixture path cannot hide in the host.
 func parseHostURL(raw string) (*url.URL, error) {
 	u, err := url.Parse(raw)
-	if err != nil || (u.Scheme != "http" && u.Scheme != "https") || u.Host == "" || u.User != nil ||
-		(u.Path != "" && u.Path != "/") || u.RawQuery != "" || u.Fragment != "" {
-		return nil, fmt.Errorf("expected an http or https URL without a path, query or fragment, got %q", raw)
+	if err != nil || (u.Scheme != "http" && u.Scheme != "https") || u.Host == "" ||
+		u.User != nil || (u.Path != "" && u.Path != "/") || u.RawQuery != "" ||
+		u.Fragment != "" {
+		return nil, fmt.Errorf("expected an http or https URL without a path, query "+
+			"or fragment, got %q", raw)
 	}
 	return u, nil
 }
 
-// setHosts gives the handler each named host's authority. Validation already
-// checked every URL.
+// setHosts gives the handler each named host's authority. The definition's
+// validation has already checked every URL.
 func (d *testDefinition) setHosts(handler *httpfixture.Handler) error {
 	authorities := map[string]string{}
 	for name, host := range d.Hosts {
@@ -105,7 +109,8 @@ func (h replayHosts) providerHost(configured string) (string, error) {
 	if err == nil && isNamedHost(h.named, u) {
 		return configured, nil
 	}
-	return "", fmt.Errorf("hermetic replay: provider host %s is not one of the journey's hosts", configured)
+	return "", fmt.Errorf("hermetic replay: provider host %s is not one of the "+
+		"journey's hosts", configured)
 }
 
 func isNamedHost(named []*url.URL, u *url.URL) bool {

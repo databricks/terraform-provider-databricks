@@ -161,12 +161,20 @@ func TestRequestMatcherWithRealProvider(t *testing.T) {
 }
 
 func TestAbsentAndPatternShowcasesRejectOtherValues(t *testing.T) {
+	groupCreate := "step 1 (create): unexpected HTTP call: " +
+		"POST /api/2.0/preview/scim/v2/Groups"
 	for _, tc := range []struct {
 		name, file, before, after, message string
 	}{
-		{"absent", "directory_create_absent.yml", "          path: /api/2.0/workspace/mkdirs\n", "          path: /api/2.0/workspace/mkdirs\n          matchers:\n            headers:\n              Content-Type: absent\n", "step 1 (create): unexpected HTTP call: POST /api/2.0/workspace/mkdirs"},
-		{"traceparent pattern", "group_create_pattern.yml", "-[0-9a-f]{16}-01'", "-[0-9a-f]{16}-00'", "step 1 (create): unexpected HTTP call: POST /api/2.0/preview/scim/v2/Groups"},
-		{"User-Agent pattern", "group_create_pattern.yml", `\bresource/group\b`, `\bresource/user\b`, "step 1 (create): unexpected HTTP call: POST /api/2.0/preview/scim/v2/Groups"},
+		// The create sends a body, so it sends Content-Type.
+		{"absent", "directory_create_absent.yml", "path: /api/2.0/workspace/mkdirs\n",
+			"path: /api/2.0/workspace/mkdirs\n" +
+				"          matchers: {headers: {Content-Type: absent}}\n",
+			"step 1 (create): unexpected HTTP call: POST /api/2.0/workspace/mkdirs"},
+		{"traceparent pattern", "group_create_pattern.yml", "-[0-9a-f]{16}-01'",
+			"-[0-9a-f]{16}-00'", groupCreate},
+		{"User-Agent pattern", "group_create_pattern.yml", `\bresource/group\b`,
+			`\bresource/user\b`, groupCreate},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			contents, err := os.ReadFile("testdata/matchers/" + tc.file)
@@ -183,21 +191,33 @@ func TestAbsentAndPatternShowcasesRejectOtherValues(t *testing.T) {
 }
 
 func TestYAMLRejectsInvalidAbsentAndPatternMatchers(t *testing.T) {
+	headers := "headers: {X-Request-ID: any_string}"
+	query := "query: {request_id: any_string}"
+	jsonType := "                type: any_string\n              - path: [items"
 	for _, tc := range []struct {
 		name, before, after, message string
 	}{
-		{"invalid pattern", "headers: {X-Request-ID: any_string}", "headers: {X-Request-ID: {pattern: '('}}", `step 1 (create): call 1 request matchers: headers["X-Request-ID"]: invalid pattern "("`},
-		{"absent with sample", "headers: {X-Request-ID: any_string}", "headers: {X-Request-ID: absent}", `step 1 (create): call 1 request matchers: headers["X-Request-ID"]: remove the header's sample`},
-		{"absent query", "query: {request_id: any_string}", "query: {request_id: absent}", `step 1 (create): call 1 request matchers: query["request_id"]: absent applies only to headers`},
-		{"JSON type and pattern", "                type: any_string\n              - path: [items", "                type: any_string\n                pattern: '.*'\n              - path: [items", "step 1 (create): call 1 request matchers: json[0]: set either a matcher type or a pattern, not both"},
-		{"unknown pattern key", "query: {request_id: any_string}", "query: {request_id: {regex: '.*'}}", "expected a matcher name or {pattern: <regular expression>}"},
+		{"invalid pattern", headers, "headers: {X-Request-ID: {pattern: '('}}",
+			`headers["X-Request-ID"]: invalid pattern "("`},
+		{"absent with sample", headers, "headers: {X-Request-ID: absent}",
+			`headers["X-Request-ID"]: remove the header's sample`},
+		{"absent query", query, "query: {request_id: absent}",
+			`query["request_id"]: absent applies only to headers`},
+		{"JSON type and pattern", jsonType, strings.Replace(jsonType, "\n",
+			"\n                pattern: '.*'\n", 1),
+			"json[0]: set either a matcher type or a pattern, not both"},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			calls := strings.Replace(matcherCalls, tc.before, tc.after, 1)
 			require.NotEqual(t, matcherCalls, calls)
 			input := strings.Replace(minimalDefinition, "    calls: []\n", "    calls:\n"+calls, 1)
 			_, err := decodeDefinition(strings.NewReader(input))
-			require.ErrorContains(t, err, tc.message)
+			require.ErrorContains(t, err, "step 1 (create): call 1 request matchers: "+tc.message)
 		})
 	}
+	calls := strings.Replace(matcherCalls, query, "query: {request_id: {regex: '.*'}}", 1)
+	input := strings.Replace(minimalDefinition, "    calls: []\n", "    calls:\n"+calls, 1)
+	_, err := decodeDefinition(strings.NewReader(input))
+	require.ErrorContains(t, err,
+		"line 20: expected a matcher name or {pattern: <regular expression>}")
 }

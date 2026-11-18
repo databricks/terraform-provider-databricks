@@ -21,7 +21,7 @@ func PreserveMatchers(calls, previous []Call) error {
 		if err != nil {
 			return err
 		}
-		selected, keep := refreshedAnnotation(req, calls[i].Request.Host, body, compiled, retained)
+		selected, keep := refreshedAnnotation(req, body, compiled, retained)
 		if selected != -1 {
 			calls[i].Request.Matchers = previous[selected].Request.Matchers
 			retained[selected] = true
@@ -43,7 +43,7 @@ func PreserveMatchers(calls, previous []Call) error {
 	return nil
 }
 
-func refreshedAnnotation(req *http.Request, host string, body requestBody, previous []exchange, retained []bool) (int, map[string]bool) {
+func refreshedAnnotation(req *http.Request, body requestBody, previous []exchange, retained []bool) (int, map[string]bool) {
 	keep := map[string]bool{"Content-Type": true}
 	selected := -1
 	for j := range previous {
@@ -54,7 +54,8 @@ func refreshedAnnotation(req *http.Request, host string, body requestBody, previ
 		for key := range old.call.Request.Headers {
 			keep[http.CanonicalHeaderKey(key)] = true
 		}
-		if hasMatchers(old.call.Request.Matchers) && old.matches(req, host, body) &&
+		// Recording rejects named hosts, so every refreshed call is on the unnamed host.
+		if hasMatchers(old.call.Request.Matchers) && old.matches(req, "", body) &&
 			(selected == -1 || retained[selected] && !retained[j]) {
 			selected = j
 		}

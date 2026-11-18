@@ -40,7 +40,8 @@ func RunNative(t *testing.T, path string, configure func(*resource.TestCase, fun
 func runNative(t *testing.T, definition *testDefinition, configure func(*resource.TestCase, func(*config.Config) error)) {
 	t.Helper()
 	handler, server := replayBoundary(t, definition)
-	runTerraform(t, definition, handler, definition.replayHosts(server).fixtureConfig(), configure)
+	customize := definition.replayHosts(server).fixtureConfig()
+	runTerraform(t, definition, handler, customize, configure)
 }
 
 func replayBoundary(t *testing.T, definition *testDefinition) (*httpfixture.Handler, string) {
@@ -218,7 +219,8 @@ func (h replayHosts) fixtureConfig() func(*config.Config) error {
 		// An explicit loader prevents ambient credentials and profiles from filling
 		// configuration fields, including account/workspace routing identifiers.
 		cfg.Loaders = []config.Loader{fixtureLoader{}}
-		cfg.HTTPTransport = fixtureTransport{host: h.server, named: h.named, transport: &http.Transport{}}
+		cfg.HTTPTransport = fixtureTransport{host: h.server, named: h.named,
+			transport: &http.Transport{}}
 		return nil
 	}
 }
@@ -245,7 +247,8 @@ func (f fixtureTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	}
 	// The handler matches calls on the Host header, which keeps the named host.
 	local := req.Clone(req.Context())
-	local.URL.Scheme, local.URL.Host, local.Host = expected.Scheme, expected.Host, req.URL.Host
+	local.URL.Scheme, local.URL.Host = expected.Scheme, expected.Host
+	local.Host = req.URL.Host
 	resp, err := f.transport.RoundTrip(local)
 	if resp != nil {
 		// The SDK takes a private-link redirect's cloud from the final request's host.

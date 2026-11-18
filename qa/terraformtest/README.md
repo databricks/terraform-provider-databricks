@@ -97,7 +97,8 @@ generated diff for service-specific secrets before committing it.
 Same-host absolute response `Location` headers become relative URLs so redirects
 follow the local fixture server during replay. Escaped paths, queries and
 fragments are preserved. Cross-host redirects are outside the recorder's scope;
-the replay transport rejects destinations outside the fixture server.
+the replay transport rejects destinations outside the fixture server and the
+test's [named hosts](#named-hosts). Recording rejects tests with named hosts.
 
 ### Secret redaction and replay
 
@@ -176,6 +177,7 @@ its HTTP exchanges belong under `destroy.calls`, and empty state is always
 checked. The testing framework also attempts cleanup after an interrupted test.
 
 Each exchange contains `request` and `response`. Requests specify `method`,
+optional `host` (see [named hosts](#named-hosts)),
 `path`, optional `query` (values are lists of strings), optional `headers`,
 and `body`. Responses specify an explicit HTTP `status`, optional `headers`,
 and `body`. Use `body: null` for no HTTP body and `body: {json: null}` for JSON
@@ -214,11 +216,28 @@ remain literal, without capture/substitution. See the
 [HTTP matcher reference](../httpfixture/README.md#volatile-request-values) for
 root paths, sample overrides, validation, and overlapping signatures.
 
+Two more matchers tighten what a value may be. `absent` requires a header to be missing, so an empty value fails too; the header must not also have a sample in `headers`. A pattern requires a present string that a Go regular expression matches in full; write `{pattern: <regular expression>}` for a header or query parameter, and `pattern:` in place of `type:` for a JSON path:
+
+```yaml
+matchers:
+  headers:
+    Content-Type: absent
+    traceparent: {pattern: '00-[0-9a-f]{32}-[0-9a-f]{16}-01'}
+  query:
+    trace_id: {pattern: '[0-9a-f]{32}'}
+  json:
+    - path: [request_id]
+      pattern: '[0-9a-f-]{36}'
+```
+
+`absent` applies only to headers, because unlisted query parameters and JSON fields already fail to match. Invalid patterns, and a matcher with both `type` and `pattern`, fail when the test loads. [Check formats and absent headers](AUTHORING.md#check-formats-and-absent-headers) explains when to use them.
+
 Runnable examples demonstrate [JSON body](testdata/matchers/group_create_body.yml),
 [header](testdata/matchers/group_create_header.yml), and
 [query](testdata/matchers/group_create_query.yml) matchers separately. Each creates
 and destroys a group, with one request sample deliberately differing from the
 actual value to demonstrate that only the annotated field is relaxed.
+The [pattern example](testdata/matchers/group_create_pattern.yml) checks the `traceparent` and `User-Agent` formats, and the [absent example](testdata/matchers/directory_create_absent.yml) requires a read without `Content-Type`.
 
 Matching uses the complete request signature. Independent signatures are
 unordered; repeated identical signatures consume their responses FIFO.
@@ -234,8 +253,8 @@ without consuming it. Reusable host metadata may occur between any calls.
 Recorded call order can be preserved in the file without enabling enforcement.
 
 Optional `host_metadata` supplies a reusable JSON response for
-`GET /.well-known/databricks-config` throughout the test, keeping repeated
-client initialization out of the consumable resource exchanges.
+`GET /.well-known/databricks-config` on the provider host throughout the test,
+keeping repeated client initialization out of the consumable resource exchanges.
 
 State assertions are entirely optional. `state.resources` selects Terraform
 instance addresses to check, including data sources, modules, and indexed
@@ -282,6 +301,27 @@ values and response-to-state conversions, rather than snapshotting every field.
 Destroy always requires an empty resource inventory, including data sources in
 child modules. This is enforced by the engine; `destroy` accepts only `calls`,
 with no configurable final-state assertion.
+
+## Named hosts
+
+Optional test-level `hosts` names hosts besides the local fixture server, and optional `provider_host` picks the one the provider is configured with:
+
+```yaml
+provider_host: account
+hosts:
+  account:
+    url: https://accounts.cloud.databricks.com
+    metadata: {host_type: account, cloud: AWS, account_id: replay-account}
+  workspace:
+    url: https://replay-workspace-1002.cloud.databricks.com
+    metadata: {host_type: workspace, cloud: AWS, workspace_id: "1002"}
+```
+
+Each `url` is an `http` or `https` origin without a path, query or fragment, and no two hosts may share a host and port. Optional `metadata` answers `GET /.well-known/databricks-config` on that host, like `host_metadata`. `host_metadata` answers the provider host, so the host that `provider_host` names cannot also set `metadata`. Without `provider_host`, the provider uses the local server.
+
+The local server answers every named host. A request's `host` names the host it must reach, matched on the host the provider sent it to; a request without `host` matches only the provider host. Errors for unexpected and unused calls name the host. Requests to hosts that are not named fail in the transport, before reaching the server. A provider block may set `host` to a named host's URL to move the provider there; any other HCL `host` fails, and without `hosts` the HCL `host` is ignored. The SDK takes the cloud from a named host's DNS zone, so Azure and GCP hosts keep their cloud in host metadata resolution and private-link errors.
+
+[Test calls to several hosts](AUTHORING.md#test-calls-to-several-hosts) has a complete journey. Examples in [testdata/hosts](testdata/hosts) show a call that must reach a workspace host, a call rejected on an unnamed host, a provider moved to another host, and an Azure private-link redirect.
 
 ## Schema validation
 

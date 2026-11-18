@@ -80,7 +80,8 @@ func (h *Handler) SetHosts(hosts map[string]string, defaultHost string) error {
 			return fmt.Errorf("host %q: expected a nonempty name and authority", name)
 		}
 		if other, duplicate := names.byAuthority[authority]; duplicate {
-			return fmt.Errorf("hosts %q and %q have the same authority %s", min(name, other), max(name, other), authority)
+			return fmt.Errorf("hosts %q and %q have the same authority %s",
+				min(name, other), max(name, other), authority)
 		}
 		names.byAuthority[authority] = name
 	}
@@ -112,6 +113,11 @@ func onHost(name string) string {
 		return ""
 	}
 	return fmt.Sprintf(" on host %q", name)
+}
+
+// signature describes the expected request in messages.
+func (e *exchange) signature() string {
+	return e.call.Request.Method + " " + e.call.Request.Path + onHost(e.host)
 }
 
 // NewHandler returns an empty handler; fixture sets are configured separately.
@@ -191,7 +197,8 @@ func compileCalls(calls []Call, hosts hostNames) ([]exchange, error) {
 				return nil, fmt.Errorf("call %d request: %w", i+1, err)
 			}
 		}
-		e.matchers, e.expectedBody, err = compileMatchers(call.Request.Matchers, call.Request.Headers, e.expectedBody, e.bodyKind == "json")
+		e.matchers, e.expectedBody, err = compileMatchers(call.Request.Matchers,
+			call.Request.Headers, e.expectedBody, e.bodyKind == "json")
 		if err != nil {
 			return nil, fmt.Errorf("call %d request matchers: %w", i+1, err)
 		}
@@ -252,7 +259,8 @@ func normalizeNumbers(value any) any {
 // without consuming the exchange.
 func (e *exchange) matches(req *http.Request, host string, body requestBody) bool {
 	expected := e.call.Request
-	if e.used || e.host != host || expected.Method != req.Method || expected.Path != req.URL.EscapedPath() {
+	if e.used || e.host != host || expected.Method != req.Method ||
+		expected.Path != req.URL.EscapedPath() {
 		return false
 	}
 	if !matchesQuery(expected.Query, e.matchers.query, req.URL.Query()) {
@@ -281,8 +289,9 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 	host := h.hosts.byAuthority[req.Host]
+	request := req.Method + " " + req.URL.RequestURI() + onHost(host)
 	if err != nil {
-		h.fail(w, fmt.Errorf("%s: %s %s%s: invalid request body: %w", h.label, req.Method, req.URL.RequestURI(), onHost(host), err))
+		h.fail(w, fmt.Errorf("%s: %s: invalid request body: %w", h.label, request, err))
 		return
 	}
 	next := -1
@@ -292,8 +301,9 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		}
 		if h.calls[i].matches(req, host, body) {
 			if h.enforceCallOrder && i != next {
-				expected := h.calls[next]
-				h.fail(w, fmt.Errorf("%s: out-of-order HTTP call: %s %s%s body=%s matched call %d; next expected call %d: %s %s%s", h.label, req.Method, req.URL.RequestURI(), onHost(host), body.raw, i+1, next+1, expected.call.Request.Method, expected.call.Request.Path, onHost(expected.host)))
+				h.fail(w, fmt.Errorf("%s: out-of-order HTTP call: %s body=%s matched "+
+					"call %d; next expected call %d: %s", h.label, request, body.raw, i+1,
+					next+1, h.calls[next].signature()))
 				return
 			}
 			h.calls[i].used = true
@@ -307,7 +317,8 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 			return
 		}
 	}
-	h.fail(w, fmt.Errorf("%s: unexpected HTTP call: %s %s%s body=%s", h.label, req.Method, req.URL.RequestURI(), onHost(host), body.raw))
+	h.fail(w, fmt.Errorf("%s: unexpected HTTP call: %s body=%s",
+		h.label, request, body.raw))
 }
 
 func writeResponse(w http.ResponseWriter, e *exchange) {
@@ -342,7 +353,8 @@ func (h *Handler) verify() error {
 	failures := append([]error(nil), h.failures...)
 	for i, e := range h.calls {
 		if !e.used {
-			failures = append(failures, fmt.Errorf("%s: unconsumed call %d: %s %s%s", h.label, i+1, e.call.Request.Method, e.call.Request.Path, onHost(e.host)))
+			failures = append(failures, fmt.Errorf("%s: unconsumed call %d: %s",
+				h.label, i+1, e.signature()))
 		}
 	}
 	return errors.Join(failures...)

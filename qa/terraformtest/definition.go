@@ -17,18 +17,18 @@ import (
 )
 
 type testDefinition struct {
-	Version      int            `yaml:"version"`
-	HostMetadata map[string]any `yaml:"host_metadata,omitempty"`
+	Version          int             `yaml:"version"`
+	HostMetadata     map[string]any  `yaml:"host_metadata,omitempty"`
+	InitialState     *initialState   `yaml:"initial_state,omitempty"`
+	Recording        *recordingSetup `yaml:"recording,omitempty"`
+	EnforceCallOrder bool            `yaml:"enforce_call_order,omitempty"`
+	Steps            []step          `yaml:"steps"`
+	Destroy          destroy         `yaml:"destroy"`
 	// Hosts names hosts besides the local fixture server, and ProviderHost picks
 	// the one the provider is configured with. Calls without a host expect it.
-	Hosts            map[string]namedHost `yaml:"hosts,omitempty"`
-	ProviderHost     string               `yaml:"provider_host,omitempty"`
-	InitialState     *initialState        `yaml:"initial_state,omitempty"`
-	Recording        *recordingSetup      `yaml:"recording,omitempty"`
-	EnforceCallOrder bool                 `yaml:"enforce_call_order,omitempty"`
-	Steps            []step               `yaml:"steps"`
-	Destroy          destroy              `yaml:"destroy"`
-	checkpoint       []byte
+	Hosts        map[string]namedHost `yaml:"hosts,omitempty"`
+	ProviderHost string               `yaml:"provider_host,omitempty"`
+	checkpoint   []byte
 }
 
 // Setup is recorder-only. Replay never creates background resources or regenerates
@@ -263,7 +263,8 @@ func (d *testDefinition) metadataCalls() []httpfixture.Call {
 
 func metadataCall(host string, metadata map[string]any) httpfixture.Call {
 	return httpfixture.Call{
-		Request:  httpfixture.Request{Method: "GET", Host: host, Path: "/.well-known/databricks-config"},
+		Request: httpfixture.Request{Method: "GET", Host: host,
+			Path: "/.well-known/databricks-config"},
 		Response: httpfixture.Response{Status: 200, Body: &httpfixture.Body{JSON: metadata}},
 	}
 }

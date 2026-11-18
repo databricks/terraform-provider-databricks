@@ -1039,6 +1039,59 @@ resource "databricks_permissions" "supervisor_agent_usage" {
 }
 ```
 
+## Serverless compute usage
+
+[Serverless compute](https://docs.databricks.com/aws/en/compute/serverless/manage-serverless-compute) objects control who can run serverless workloads. They have two possible permissions: `CAN_USE` and `CAN_MANAGE`.
+
+Every workspace has a Default Interactive Compute, for notebooks and Databricks Connect, and a Default Automated Compute, for jobs and pipelines. Use `default_serverless_compute` to manage one of them by type, so that the same configuration works in every workspace without looking up its ID:
+
+```hcl
+resource "databricks_group" "ds" {
+  display_name = "Data Science"
+}
+
+# Only Data Science can run serverless notebooks.
+resource "databricks_permissions" "serverless_interactive" {
+  default_serverless_compute = "INTERACTIVE"
+
+  access_control {
+    group_name       = databricks_group.ds.display_name
+    permission_level = "CAN_USE"
+  }
+}
+
+# Every workspace user can run serverless jobs and pipelines.
+resource "databricks_permissions" "serverless_automated" {
+  default_serverless_compute = "AUTOMATED"
+
+  access_control {
+    group_name       = "users"
+    permission_level = "CAN_USE"
+  }
+}
+```
+
+Use `serverless_compute_id` to manage any serverless compute by its ID, including custom automated computes:
+
+```hcl
+resource "databricks_permissions" "team_compute" {
+  serverless_compute_id = "00000000-0000-0000-0000-000000000000"
+
+  access_control {
+    group_name       = databricks_group.ds.display_name
+    permission_level = "CAN_USE"
+  }
+}
+```
+
+-> By default, the `users` group has `CAN_USE` on both default computes. This resource replaces the whole access control list, so leave out `users` to restrict access, or include it to keep serverless open to everyone. Workspace admins always keep `CAN_MANAGE`.
+
+~> Destroying a `databricks_permissions` resource for serverless compute leaves only workspace admins and the applying user with access, so other users can no longer run serverless workloads on that compute. To return a default compute to all-users access, apply `group_name = "users"` with `CAN_USE` before removing the resource.
+
+`default_serverless_compute` finds the default compute through the serverless compute list APIs, which require serverless compute to be enabled in the workspace.
+
+You don't need to import a default compute's permissions before managing them, because applying the resource replaces the existing access control list. If you do import, configure the resource with `serverless_compute_id` and import `/serverless-compute/<id>`. Importing into a resource configured with `default_serverless_compute` makes Terraform replace the resource on the next apply, which briefly removes access for everyone except admins.
+
 ## Instance Profiles
 
 [Instance Profiles](instance_profile.md) are not managed by General Permissions API and therefore [databricks_group_instance_profile](group_instance_profile.md) and [databricks_user_instance_profile](user_instance_profile.md) should be used to allow usage of specific AWS EC2 IAM roles to users or groups.
@@ -1083,6 +1136,8 @@ Exactly one of the following arguments is required:
 - `database_project_name` - [Lakebase database project](https://docs.databricks.com/aws/en/oltp/) name
 - `knowledge_assistant_id` - [Knowledge Assistant](knowledge_assistant.md) id
 - `supervisor_agent_id` - [Supervisor Agent](supervisor_agent.md) id
+- `serverless_compute_id` - [serverless compute](https://docs.databricks.com/aws/en/compute/serverless/manage-serverless-compute) id
+- `default_serverless_compute` - the workspace's default serverless compute to manage: `INTERACTIVE` (Default Interactive Compute) or `AUTOMATED` (Default Automated Compute)
 - `authorization` - either [`tokens`](https://docs.databricks.com/administration-guide/access-control/tokens.html) or [`passwords`](https://docs.databricks.com/administration-guide/users-groups/single-sign-on/index.html#configure-password-permission).
 - `sql_endpoint_id` - [SQL warehouse](sql_endpoint.md) id
 - `sql_dashboard_id` - [SQL dashboard](sql_dashboard.md) id

@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/databricks/databricks-sdk-go"
+	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/databricks-sdk-go/service/iam"
 	"github.com/databricks/databricks-sdk-go/service/jobs"
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -286,6 +287,48 @@ type permissionLevelOptions struct {
 	deprecated string
 }
 
+// Allowed values for default_serverless_compute.
+const (
+	defaultServerlessComputeInteractive = "INTERACTIVE"
+	defaultServerlessComputeAutomated   = "AUTOMATED"
+)
+
+// getDefaultServerlessComputeID returns the ID of the workspace's Default Interactive Compute or
+// Default Automated Compute. Each workspace has one of each, with a per-workspace ID, so looking
+// them up by type lets the same configuration work across workspaces.
+//
+// The serverless compute list returns Interactive computes. Automated computes are listed by the
+// compute policy API, where each appears as a policy that allows automated compute. That list can
+// also include a default Lakebase policy, so the automated product is checked as well as is_default.
+func getDefaultServerlessComputeID(ctx context.Context, w *databricks.WorkspaceClient, computeType string) (string, error) {
+	switch computeType {
+	case defaultServerlessComputeInteractive:
+		computes, err := w.ServerlessComputeService.ListAll(ctx, compute.ListServerlessComputesRequest{})
+		if err != nil {
+			return "", fmt.Errorf("cannot list serverless computes: %w", err)
+		}
+		for _, c := range computes {
+			if c.IsDefault {
+				return c.ServerlessComputeId, nil
+			}
+		}
+	case defaultServerlessComputeAutomated:
+		policies, err := w.ServerlessComputeService.ListComputePoliciesAll(ctx, compute.ListComputePoliciesRequest{})
+		if err != nil {
+			return "", fmt.Errorf("cannot list compute policies: %w", err)
+		}
+		for _, p := range policies {
+			if p.IsDefault && p.AllowedComputeProducts != nil && p.AllowedComputeProducts.Automated != nil {
+				return p.ComputePolicyId, nil
+			}
+		}
+	default:
+		return "", fmt.Errorf("unsupported default_serverless_compute %q; allowed values: %s, %s",
+			computeType, defaultServerlessComputeInteractive, defaultServerlessComputeAutomated)
+	}
+	return "", fmt.Errorf("default %s serverless compute not found in this workspace", strings.ToLower(computeType))
+}
+
 func getResourcePermissionsFromId(id string) (resourcePermissions, error) {
 	idParts := strings.Split(id, "/")
 	objectType := strings.Join(idParts[1:len(idParts)-1], "/")
@@ -344,6 +387,10 @@ func allResourcePermissions() []resourcePermissions {
 	rewriteCanReadToCanView := read.RewritePermissions(map[iam.PermissionLevel]iam.PermissionLevel{
 		iam.PermissionLevelCanRead: iam.PermissionLevelCanView,
 	})
+	serverlessComputePermissionLevels := map[string]permissionLevelOptions{
+		"CAN_USE":    {isManagementPermission: false},
+		"CAN_MANAGE": {isManagementPermission: true},
+	}
 	return []resourcePermissions{
 		{
 			field:             "cluster_policy_id",
@@ -814,6 +861,28 @@ func allResourcePermissions() []resourcePermissions {
 			},
 			updateAclCustomizers: []update.ACLCustomizer{update.AddCurrentUserAsManage},
 			deleteAclCustomizers: []update.ACLCustomizer{update.AddCurrentUserAsManage},
+		},
+		// serverless_compute_id must come before default_serverless_compute: imports of
+		// /serverless-compute/<id> resolve to the first mapping with this request object type.
+		{
+			field:                   "serverless_compute_id",
+			objectType:              "serverless-compute",
+			requestObjectType:       "serverless-compute",
+			allowedPermissionLevels: serverlessComputePermissionLevels,
+			// When the compute was configured by type, keep serverless_compute_id out of the state.
+			pathVariant:          "default_serverless_compute",
+			updateAclCustomizers: []update.ACLCustomizer{update.AddCurrentUserAsManage},
+			deleteAclCustomizers: []update.ACLCustomizer{update.AddCurrentUserAsManage},
+		},
+		{
+			field:                   "default_serverless_compute",
+			objectType:              "serverless-compute",
+			requestObjectType:       "serverless-compute",
+			allowedPermissionLevels: serverlessComputePermissionLevels,
+			idRetriever:             getDefaultServerlessComputeID,
+			pathVariant:             "default_serverless_compute",
+			updateAclCustomizers:    []update.ACLCustomizer{update.AddCurrentUserAsManage},
+			deleteAclCustomizers:    []update.ACLCustomizer{update.AddCurrentUserAsManage},
 		},
 	}
 }

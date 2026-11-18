@@ -1,0 +1,313 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: workspace
+  cloud: AWS
+  workspace_id: '12345'
+steps:
+  - name: create_permissions
+    config: |
+      resource "databricks_permissions" "interactive" {
+        default_serverless_compute = "INTERACTIVE"
+        access_control {
+          group_name       = "permissions-replay-0"
+          permission_level = "CAN_USE"
+        }
+      }
+      resource "databricks_permissions" "automated" {
+        default_serverless_compute = "AUTOMATED"
+        access_control {
+          group_name       = "users"
+          permission_level = "CAN_USE"
+        }
+      }
+      resource "databricks_permissions" "custom" {
+        serverless_compute_id = "11111111-1111-4111-8111-000000000003"
+        access_control {
+          group_name       = "permissions-replay-0"
+          permission_level = "CAN_USE"
+        }
+      }
+    state:
+      resources:
+        databricks_permissions.interactive:
+          attributes:
+            - path: [id]
+              equals: /serverless-compute/11111111-1111-4111-8111-000000000001
+            - path: [default_serverless_compute]
+              equals: INTERACTIVE
+            - path: [serverless_compute_id]
+              equals: null
+        databricks_permissions.automated:
+          attributes:
+            - path: [id]
+              equals: /serverless-compute/11111111-1111-4111-8111-000000000002
+            - path: [serverless_compute_id]
+              equals: null
+        databricks_permissions.custom:
+          attributes:
+            - path: [id]
+              equals: /serverless-compute/11111111-1111-4111-8111-000000000003
+            - path: [serverless_compute_id]
+              equals: 11111111-1111-4111-8111-000000000003
+            - path: [object_type]
+              equals: serverless-compute
+    calls:
+      - &me
+        request:
+          method: GET
+          path: /api/2.0/preview/scim/v2/Me
+          body: null
+          query:
+            excludedAttributes: [entitlements]
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              active: true
+              displayName: Replay runner
+              groups:
+                - display: admins
+                  value: '901'
+              id: '900'
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:User']
+              userName: 11111111-1111-4111-8111-000000000000
+      - &list_serverless_computes
+        request:
+          method: GET
+          path: /api/2.0/serverless-compute
+          body: null
+        response: # Inferred API response; not recorded. The public list returns Interactive computes.
+          status: 200
+          body:
+            json:
+              serverless_computes:
+                - serverless_compute_id: 11111111-1111-4111-8111-000000000001
+                  name: Default Interactive Compute
+                  is_default: true
+                  can_manage: true
+      - &list_compute_policies
+        request:
+          method: GET
+          path: /api/2.0/policies/compute
+          body: null
+        response: # Inferred API response; not recorded. The default Lakebase policy is skipped.
+          status: 200
+          body:
+            json:
+              compute_policies:
+                - compute_policy_id: 11111111-1111-4111-8111-000000000009
+                  display_name: Default Lakebase Policy
+                  is_default: true
+                  allowed_compute_products:
+                    lakebase: {}
+                - compute_policy_id: 11111111-1111-4111-8111-000000000002
+                  display_name: Default Automated Compute
+                  is_default: true
+                  allowed_compute_products:
+                    automated: {}
+      - request:
+          method: PUT
+          path: /api/2.0/permissions/serverless-compute/11111111-1111-4111-8111-000000000001
+          body:
+            json:
+              access_control_list:
+                - group_name: permissions-replay-0
+                  permission_level: CAN_USE
+                - permission_level: CAN_MANAGE
+                  user_name: 11111111-1111-4111-8111-000000000000
+        response: &acl_interactive # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              access_control_list:
+                - all_permissions:
+                    - inherited: false
+                      permission_level: CAN_USE
+                  group_name: permissions-replay-0
+                - all_permissions:
+                    - inherited: false
+                      permission_level: CAN_MANAGE
+                  user_name: 11111111-1111-4111-8111-000000000000
+                - all_permissions:
+                    - inherited: true
+                      inherited_from_object: [/serverless-compute]
+                      permission_level: CAN_MANAGE
+                  group_name: admins
+              object_id: /serverless-compute/11111111-1111-4111-8111-000000000001
+              object_type: serverless-compute
+      - &get_interactive
+        request:
+          method: GET
+          path: /api/2.0/permissions/serverless-compute/11111111-1111-4111-8111-000000000001
+          body: null
+        response: *acl_interactive # Inferred API response; not recorded.
+      - request:
+          method: PUT
+          path: /api/2.0/permissions/serverless-compute/11111111-1111-4111-8111-000000000002
+          body:
+            json:
+              access_control_list:
+                - group_name: users
+                  permission_level: CAN_USE
+                - permission_level: CAN_MANAGE
+                  user_name: 11111111-1111-4111-8111-000000000000
+        response: &acl_automated # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              access_control_list:
+                - all_permissions:
+                    - inherited: false
+                      permission_level: CAN_USE
+                  group_name: users
+                - all_permissions:
+                    - inherited: false
+                      permission_level: CAN_MANAGE
+                  user_name: 11111111-1111-4111-8111-000000000000
+                - all_permissions:
+                    - inherited: true
+                      inherited_from_object: [/serverless-compute]
+                      permission_level: CAN_MANAGE
+                  group_name: admins
+              object_id: /serverless-compute/11111111-1111-4111-8111-000000000002
+              object_type: serverless-compute
+      - &get_automated
+        request:
+          method: GET
+          path: /api/2.0/permissions/serverless-compute/11111111-1111-4111-8111-000000000002
+          body: null
+        response: *acl_automated # Inferred API response; not recorded.
+      - request:
+          method: PUT
+          path: /api/2.0/permissions/serverless-compute/11111111-1111-4111-8111-000000000003
+          body:
+            json:
+              access_control_list:
+                - group_name: permissions-replay-0
+                  permission_level: CAN_USE
+                - permission_level: CAN_MANAGE
+                  user_name: 11111111-1111-4111-8111-000000000000
+        response: &acl_custom # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              access_control_list:
+                - all_permissions:
+                    - inherited: false
+                      permission_level: CAN_USE
+                  group_name: permissions-replay-0
+                - all_permissions:
+                    - inherited: false
+                      permission_level: CAN_MANAGE
+                  user_name: 11111111-1111-4111-8111-000000000000
+                - all_permissions:
+                    - inherited: true
+                      inherited_from_object: [/serverless-compute]
+                      permission_level: CAN_MANAGE
+                  group_name: admins
+              object_id: /serverless-compute/11111111-1111-4111-8111-000000000003
+              object_type: serverless-compute
+      - &get_custom
+        request:
+          method: GET
+          path: /api/2.0/permissions/serverless-compute/11111111-1111-4111-8111-000000000003
+          body: null
+        response: *acl_custom # Inferred API response; not recorded.
+      - *me
+      - *me
+      - *me
+      - *me
+      - *me
+      - *me
+      - *me
+      - *me
+      - *get_interactive
+      - *get_automated
+      - *get_custom
+destroy:
+  calls:
+    - *me
+    - *me
+    - *me
+    - *me
+    - *me
+    - *me
+    - *get_interactive
+    - *get_interactive
+    - request:
+        method: PUT
+        path: /api/2.0/permissions/serverless-compute/11111111-1111-4111-8111-000000000001
+        body:
+          json:
+            access_control_list:
+              - permission_level: CAN_MANAGE
+                user_name: 11111111-1111-4111-8111-000000000000
+      response: # Inferred API response; not recorded.
+        status: 200
+        body:
+          json:
+            access_control_list:
+              - all_permissions:
+                  - inherited: false
+                    permission_level: CAN_MANAGE
+                user_name: 11111111-1111-4111-8111-000000000000
+              - all_permissions:
+                  - inherited: true
+                    inherited_from_object: [/serverless-compute]
+                    permission_level: CAN_MANAGE
+                group_name: admins
+            object_id: /serverless-compute/11111111-1111-4111-8111-000000000001
+            object_type: serverless-compute
+    - *get_automated
+    - *get_automated
+    - request:
+        method: PUT
+        path: /api/2.0/permissions/serverless-compute/11111111-1111-4111-8111-000000000002
+        body:
+          json:
+            access_control_list:
+              - permission_level: CAN_MANAGE
+                user_name: 11111111-1111-4111-8111-000000000000
+      response: # Inferred API response; not recorded.
+        status: 200
+        body:
+          json:
+            access_control_list:
+              - all_permissions:
+                  - inherited: false
+                    permission_level: CAN_MANAGE
+                user_name: 11111111-1111-4111-8111-000000000000
+              - all_permissions:
+                  - inherited: true
+                    inherited_from_object: [/serverless-compute]
+                    permission_level: CAN_MANAGE
+                group_name: admins
+            object_id: /serverless-compute/11111111-1111-4111-8111-000000000002
+            object_type: serverless-compute
+    - *get_custom
+    - *get_custom
+    - request:
+        method: PUT
+        path: /api/2.0/permissions/serverless-compute/11111111-1111-4111-8111-000000000003
+        body:
+          json:
+            access_control_list:
+              - permission_level: CAN_MANAGE
+                user_name: 11111111-1111-4111-8111-000000000000
+      response: # Inferred API response; not recorded.
+        status: 200
+        body:
+          json:
+            access_control_list:
+              - all_permissions:
+                  - inherited: false
+                    permission_level: CAN_MANAGE
+                user_name: 11111111-1111-4111-8111-000000000000
+              - all_permissions:
+                  - inherited: true
+                    inherited_from_object: [/serverless-compute]
+                    permission_level: CAN_MANAGE
+                group_name: admins
+            object_id: /serverless-compute/11111111-1111-4111-8111-000000000003
+            object_type: serverless-compute

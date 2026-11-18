@@ -202,6 +202,8 @@ func GetWorkspaceIDDataSource(ctx context.Context, providerConfig types.Object) 
 }
 
 // ProviderConfigPlanModifier handles provider_config during plan:
+//   - If config sets provider_config, even to a value unknown at plan time, the
+//     plan keeps it, so apply resolves an unknown value.
 //   - On Create (no prior state): if config doesn't set provider_config, sets plan
 //     to unknown so the provider can populate it during apply.
 //   - On Update: copies prior state to plan (like UseStateForUnknown) to avoid
@@ -218,7 +220,8 @@ func (m ProviderConfigPlanModifier) MarkdownDescription(ctx context.Context) str
 
 func (m ProviderConfigPlanModifier) PlanModifyObject(ctx context.Context, req planmodifier.ObjectRequest, resp *planmodifier.ObjectResponse) {
 	// If config has a value, let it through (user explicitly set provider_config).
-	if !req.ConfigValue.IsNull() && !req.ConfigValue.IsUnknown() {
+	// Copying prior state over an unknown value would plan the old workspace_id.
+	if !req.ConfigValue.IsNull() {
 		return
 	}
 	// Config is null (user didn't set provider_config).
@@ -248,6 +251,11 @@ type UnifiedProviderClient interface {
 // WorkspaceDriftDetection compares the old (state) and new (config/provider)
 // effective workspace IDs and triggers RequiresReplace when they differ.
 // Only runs for updates — during create there is no prior state to compare.
+//
+// When the config sets provider_config or its workspace_id to a value that is unknown
+// at plan time, such as another resource's attribute, the planned value stays unknown
+// and apply resolves it, so no fallback is looked up. A resource with a prior workspace
+// ID is replaced, because the new workspace may differ.
 func WorkspaceDriftDetection(ctx context.Context, client UnifiedProviderClient, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
 	// No prior state means create — nothing to compare.
 	if req.State.Raw.IsNull() {
@@ -276,8 +284,15 @@ func WorkspaceDriftDetection(ctx context.Context, client UnifiedProviderClient, 
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	if workspaceIDUnknown(cfgPC) {
+		if oldWsID != "" {
+			resp.RequiresReplace = append(resp.RequiresReplace,
+				path.Root("provider_config").AtName("workspace_id"))
+		}
+		return
+	}
 	var newWsID string
-	if !cfgPC.IsNull() && !cfgPC.IsUnknown() {
+	if !cfgPC.IsNull() {
 		var wsIDDiags diag.Diagnostics
 		newWsID, wsIDDiags = GetWorkspaceIDResource(ctx, cfgPC)
 		resp.Diagnostics.Append(wsIDDiags...)
@@ -307,6 +322,16 @@ func WorkspaceDriftDetection(ctx context.Context, client UnifiedProviderClient, 
 		resp.Diagnostics.Append(resp.Plan.SetAttribute(ctx, path.Root("provider_config"),
 			ProviderConfig{WorkspaceID: types.StringValue(newWsID)}.ToObjectValue(ctx))...)
 	}
+}
+
+// workspaceIDUnknown reports whether a provider_config object or its workspace_id is
+// unknown.
+func workspaceIDUnknown(providerConfig types.Object) bool {
+	if providerConfig.IsUnknown() {
+		return true
+	}
+	workspaceID, ok := providerConfig.Attributes()["workspace_id"]
+	return ok && workspaceID.IsUnknown()
 }
 
 // PopulateProviderConfigInState resolves the effective workspace ID and sets it

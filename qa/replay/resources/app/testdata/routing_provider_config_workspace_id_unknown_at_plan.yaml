@@ -1,0 +1,196 @@
+# Pins provider_config.workspace_id taken from another resource, so it is unknown at
+# plan time, on an account-level provider without a provider-level workspace_id. On
+# create the planned workspace_id is unknown, and apply looks up and routes through the
+# resolved ID and stores it. An app belongs to its workspace, so when its workspace_id
+# becomes unknown the plan replaces it without looking up a fallback, and apply deletes
+# it from the old workspace and creates it in the new one. API responses are inferred
+# from the account and Apps API contracts, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: account
+  cloud: AWS
+  account_id: replay-account
+steps:
+  - name: create_with_unknown_workspace_id
+    config: |
+      provider "databricks" {
+        account_id = "replay-account"
+      }
+      resource "terraform_data" "workspace" {
+        input = "12345"
+      }
+      resource "databricks_app" "this" {
+        name        = "unknown-ws-app"
+        description = "unknown workspace_id at plan"
+        no_compute  = true
+        provider_config = {
+          workspace_id = terraform_data.workspace.output
+        }
+      }
+    plan:
+      expect: non_empty
+      changes:
+        databricks_app.this:
+          actions: [create]
+          after:
+            - path: [provider_config, workspace_id]
+              unknown: true
+    calls:
+      - &lookup_12345
+        request:
+          method: GET
+          path: /api/2.0/accounts/replay-account/workspaces/12345
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"account_id": "replay-account", "workspace_id": 12345,
+                   "workspace_name": "replay-workspace-12345",
+                   "deployment_name": "replay-workspace-12345",
+                   "workspace_status": "RUNNING"}
+      - request:
+          method: POST
+          path: /api/2.0/apps
+          query:
+            no_compute: ["true"]
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"name": "unknown-ws-app", "description": "unknown workspace_id at plan"}
+        response:
+          status: 200
+          body:
+            json: {"name": "unknown-ws-app", "description": "unknown workspace_id at plan",
+                   "compute_status": {"state": "STOPPED"}}
+      - &read_in_12345
+        request:
+          method: GET
+          path: /api/2.0/apps/unknown-ws-app
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"name": "unknown-ws-app", "description": "unknown workspace_id at plan",
+                   "id": "app-in-12345", "compute_status": {"state": "STOPPED"}}
+      # The post-apply refresh plan.
+      - *lookup_12345
+      - *read_in_12345
+    state:
+      resources:
+        databricks_app.this:
+          attributes:
+            - path: [provider_config, workspace_id]
+              equals: "12345"
+  - name: change_to_unknown_workspace_id
+    config: |
+      provider "databricks" {
+        account_id = "replay-account"
+      }
+      resource "terraform_data" "workspace" {
+        input = "67890"
+      }
+      resource "databricks_app" "this" {
+        name        = "unknown-ws-app"
+        description = "unknown workspace_id at plan"
+        no_compute  = true
+        provider_config = {
+          workspace_id = terraform_data.workspace.output
+        }
+      }
+    plan:
+      expect: non_empty
+      changes:
+        databricks_app.this:
+          actions: [delete, create]
+          before:
+            - path: [provider_config, workspace_id]
+              equals: "12345"
+          after:
+            - path: [provider_config, workspace_id]
+              unknown: true
+    calls:
+      # The plan's refresh.
+      - *lookup_12345
+      - *read_in_12345
+      # The apply deletes the app from the old workspace.
+      - *lookup_12345
+      - request:
+          method: DELETE
+          path: /api/2.0/apps/unknown-ws-app
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"name": "unknown-ws-app", "description": "unknown workspace_id at plan",
+                   "id": "app-in-12345", "compute_status": {"state": "STOPPED"}}
+      # It creates the app in the new workspace.
+      - &lookup_67890
+        request:
+          method: GET
+          path: /api/2.0/accounts/replay-account/workspaces/67890
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"account_id": "replay-account", "workspace_id": 67890,
+                   "workspace_name": "replay-workspace-67890",
+                   "deployment_name": "replay-workspace-67890",
+                   "workspace_status": "RUNNING"}
+      - request:
+          method: POST
+          path: /api/2.0/apps
+          query:
+            no_compute: ["true"]
+          headers:
+            X-Databricks-Workspace-Id: "67890"
+          body:
+            json: {"name": "unknown-ws-app", "description": "unknown workspace_id at plan"}
+        response:
+          status: 200
+          body:
+            json: {"name": "unknown-ws-app", "description": "unknown workspace_id at plan",
+                   "compute_status": {"state": "STOPPED"}}
+      - &read_in_67890
+        request:
+          method: GET
+          path: /api/2.0/apps/unknown-ws-app
+          headers:
+            X-Databricks-Workspace-Id: "67890"
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"name": "unknown-ws-app", "description": "unknown workspace_id at plan",
+                   "id": "app-in-67890", "compute_status": {"state": "STOPPED"}}
+      # The post-apply refresh plan.
+      - *lookup_67890
+      - *read_in_67890
+    state:
+      resources:
+        databricks_app.this:
+          attributes:
+            - path: [id]
+              equals: app-in-67890
+            - path: [provider_config, workspace_id]
+              equals: "67890"
+destroy:
+  calls:
+    - *lookup_67890
+    - *read_in_67890
+    - *lookup_67890
+    - request:
+        method: DELETE
+        path: /api/2.0/apps/unknown-ws-app
+        headers:
+          X-Databricks-Workspace-Id: "67890"
+        body: null
+      response:
+        status: 200
+        body:
+          json: {"name": "unknown-ws-app", "description": "unknown workspace_id at plan",
+                 "id": "app-in-67890", "compute_status": {"state": "STOPPED"}}

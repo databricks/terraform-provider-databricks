@@ -1,0 +1,128 @@
+# Pins that a DELETE answered 200 succeeds whatever its body, because the SDK decodes
+# nothing for it. The DELETE of a replacement is answered with malformed JSON, and the
+# destroy's DELETE with HTML; both succeed, the replacement creates the new volume and the
+# destroy leaves the state empty. API responses are inferred from the Unity Catalog API
+# contract, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: create
+    config: |
+      resource "databricks_volume" "this" {
+        name         = "deleted_volume"
+        catalog_name = "main"
+        schema_name  = "replay"
+        volume_type  = "MANAGED"
+      }
+    calls:
+      - request:
+          method: POST
+          path: /api/2.1/unity-catalog/volumes
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "deleted_volume", "volume_type": "MANAGED"}
+        response:
+          status: 200
+          body:
+            json: &created {"catalog_name": "main", "schema_name": "replay",
+                            "name": "deleted_volume",
+                            "full_name": "main.replay.deleted_volume",
+                            "volume_type": "MANAGED", "owner": "replay-admin@example.com",
+                            "storage_location": "s3://replay-metastore/volume-197"}
+      - &read_created
+        request:
+          method: GET
+          path: /api/2.1/unity-catalog/volumes/main.replay.deleted_volume
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 200
+          body:
+            json: *created
+      - *read_created
+  - name: replacement_delete_answered_200_with_malformed_json_succeeds
+    config: |
+      resource "databricks_volume" "this" {
+        name         = "deleted_volume"
+        catalog_name = "other"
+        schema_name  = "replay"
+        volume_type  = "MANAGED"
+      }
+    plan:
+      expect: non_empty
+      changes:
+        databricks_volume.this:
+          actions: [delete, create]
+    calls:
+      - *read_created
+      - request:
+          method: DELETE
+          path: /api/2.1/unity-catalog/volumes/main.replay.deleted_volume
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 200
+          headers:
+            Content-Type: application/json
+          body:
+            text: '{"full_name": "main.replay.deleted_volume",'
+      - request:
+          method: POST
+          path: /api/2.1/unity-catalog/volumes
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"catalog_name": "other", "schema_name": "replay",
+                   "name": "deleted_volume", "volume_type": "MANAGED"}
+        response:
+          status: 200
+          body:
+            json: &replaced {"catalog_name": "other", "schema_name": "replay",
+                             "name": "deleted_volume",
+                             "full_name": "other.replay.deleted_volume",
+                             "volume_type": "MANAGED",
+                             "owner": "replay-admin@example.com",
+                             "storage_location": "s3://replay-metastore/volume-198"}
+      - &read_replaced
+        request:
+          method: GET
+          path: /api/2.1/unity-catalog/volumes/other.replay.deleted_volume
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 200
+          body:
+            json: *replaced
+      - *read_replaced
+    state:
+      resources:
+        databricks_volume.this:
+          attributes:
+            - path: [id]
+              equals: other.replay.deleted_volume
+destroy:
+  calls:
+    - *read_replaced
+    - request:
+        method: DELETE
+        path: /api/2.1/unity-catalog/volumes/other.replay.deleted_volume
+        headers:
+          X-Databricks-Workspace-Id: "12345"
+        body: null
+      response:
+        status: 200
+        headers:
+          Content-Type: text/html; charset=utf-8
+        body:
+          text: <html><body>Sign in</body></html>

@@ -1,0 +1,77 @@
+# Pins the importer's errors for a volume full name ending in "%", which every GET sends
+# as %25. The importer ignores its own read error: it converts the read diagnostic with
+# Validate, which returns nil for a well-formed diagnostic, so import goes on to
+# Terraform's refresh of the imported ID, a second GET. A 404 on both GETs fails with
+# Terraform's non-existent object error, not the server's message. A 403 on both fails
+# with the server's message from the second GET, with the "%" kept as is. Nothing is
+# imported either time, and the next plan creates the volume. API responses are inferred
+# from the Unity Catalog API contract, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: import_answered_404_fails_as_a_non_existent_object
+    config: &config |
+      resource "databricks_volume" "this" {
+        name         = "raw%"
+        catalog_name = "main"
+        schema_name  = "replay"
+        volume_type  = "MANAGED"
+      }
+    import:
+      resource: databricks_volume.this
+      id: main.replay.raw%
+      persist: true
+    expect_error: 'Error: Cannot import non-existent remote object\n\nWhile attempting to
+      import an existing object to "databricks_volume\.this",\nthe provider detected that
+      no object exists with the given id\.'
+    calls:
+      - &read_not_found
+        request: &read_request
+          method: GET
+          path: /api/2.1/unity-catalog/volumes/main.replay.raw%25
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 404
+          body:
+            json: {"error_code": "RESOURCE_DOES_NOT_EXIST",
+                   "message": "Volume 'main.replay.raw%' does not exist."}
+      - *read_not_found
+  - name: import_answered_403_fails_with_the_server_message
+    config: *config
+    import:
+      resource: databricks_volume.this
+      id: main.replay.raw%
+      persist: true
+    expect_error: 'Error: cannot read volume: User does not have READ VOLUME on Volume
+      ''main\.replay\.raw%''\.\n'
+    calls:
+      - &read_forbidden
+        request: *read_request
+        response:
+          status: 403
+          body:
+            json: {"error_code": "PERMISSION_DENIED",
+                   "message": "User does not have READ VOLUME on Volume 'main.replay.raw%'."}
+      - *read_forbidden
+  - name: plan_after_failed_imports_creates_the_volume
+    plan_only: true
+    config: *config
+    plan:
+      expect: non_empty
+      changes:
+        databricks_volume.this:
+          actions: [create]
+          after:
+            - path: [name]
+              equals: raw%
+            - path: [id]
+              unknown: true
+    calls: []
+destroy:
+  calls: []

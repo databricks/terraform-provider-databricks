@@ -2,8 +2,8 @@
 # read after the create omits them, so state holds empty values and the plan right
 # after the apply isn't empty. A later read returns the values, but a refresh skips
 # fields that are empty in state, so state keeps the empty values and the plan replaces
-# the volume. API responses are inferred from the Unity Catalog API contract, not
-# recorded.
+# the volume. This is a suspected defect, pinned as-is. API responses are inferred from
+# the Unity Catalog API contract, not recorded.
 version: 1
 enforce_call_order: true
 host_metadata:

@@ -1,8 +1,8 @@
 # Pins a change of only provider_config.workspace_id on an account-level provider while
-# comment is unset and null in state. The update is in place, and the PATCH to the new workspace has the
-# body {} because nothing else changed and an unchanged empty comment isn't forced. API
-# responses are inferred from the account and Unity Catalog API contracts, not
-# recorded.
+# comment is unset and null in state. The update is in place, and the PATCH to the new
+# workspace has the body {} because nothing else changed and an unchanged empty comment
+# isn't forced. API responses are inferred from the account and Unity Catalog API
+# contracts, not recorded.
 version: 1
 enforce_call_order: true
 host_metadata:

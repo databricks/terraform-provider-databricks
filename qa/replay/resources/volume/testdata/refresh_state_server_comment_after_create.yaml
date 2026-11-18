@@ -1,7 +1,8 @@
 # Pins a server-set comment in the first read after a create when comment isn't
 # configured. That read adopts the comment into state, so the plan right after the
-# apply isn't empty, and the next plan is an update that removes the comment. API
-# responses are inferred from the Unity Catalog API contract, not recorded.
+# apply isn't empty, and the next plan is an update that removes the comment. This is a
+# suspected defect, pinned as-is. API responses are inferred from the Unity Catalog API
+# contract, not recorded.
 version: 1
 enforce_call_order: true
 host_metadata:

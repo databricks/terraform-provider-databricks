@@ -1,7 +1,9 @@
 # Pins that a refresh skips empty optional fields. State holds a configured comment and
 # the server-set owner and storage_location; reads that omit the three fields, return
 # them as null or return them as "" keep the old values in state, and the plan stays
-# empty. API responses are inferred from the Unity Catalog API contract, not recorded.
+# empty. A value cleared outside Terraform is never detected; this is a suspected
+# defect, pinned as-is. API responses are inferred from the Unity Catalog API contract,
+# not recorded.
 version: 1
 enforce_call_order: true
 host_metadata:

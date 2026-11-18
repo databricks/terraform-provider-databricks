@@ -2,8 +2,9 @@
 # responses without owner, so owner stays null in state. Changing owner and comment
 # sends the owner PATCH, then the comment PATCH; when that fails, the rollback PATCH to
 # the old empty owner has the body {}, so it restores nothing. Apply fails with the
-# comment PATCH's error, and the next refresh adopts the new remote owner. API
-# responses are inferred from the Unity Catalog API contract, not recorded.
+# comment PATCH's error, and the next refresh adopts the new remote owner. This is a
+# suspected defect, pinned as-is. API responses are inferred from the Unity Catalog API
+# contract, not recorded.
 version: 1
 enforce_call_order: true
 host_metadata:
@@ -103,7 +104,8 @@ steps:
                                   "full_name": "main.replay.ownerless_volume",
                                   "volume_type": "MANAGED", "comment": "first comment",
                                   "owner": "analysts",
-                                  "storage_location": "s3://replay-metastore/volume-18904",
+                                  "storage_location":
+                                    "s3://replay-metastore/volume-18904",
                                   "metastore_id": "11111111-1111-1111-1111-111111111111",
                                   "volume_id": "00000000-0000-4000-8000-000000018904"}
       - request:

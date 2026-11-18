@@ -1,0 +1,154 @@
+# Pins that top-level response fields the v0.200.0 SDK doesn't define change nothing: a
+# string, a number, an array, a nested object and a null. The create POST, a refresh and
+# the fields PATCH answered with them give the same state as responses without them, and
+# no plan changes. API responses are inferred from the Unity Catalog API contract, not
+# recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: create_answered_with_unknown_fields
+    config: &config |
+      resource "databricks_volume" "this" {
+        name         = "unknown_fields_volume"
+        catalog_name = "main"
+        schema_name  = "replay"
+        volume_type  = "MANAGED"
+        comment      = "first comment"
+      }
+    calls:
+      - request:
+          method: POST
+          path: /api/2.1/unity-catalog/volumes
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "unknown_fields_volume", "volume_type": "MANAGED",
+                   "comment": "first comment"}
+        response:
+          status: 200
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "unknown_fields_volume",
+                   "full_name": "main.replay.unknown_fields_volume",
+                   "volume_type": "MANAGED", "comment": "first comment",
+                   "owner": "replay-admin@example.com",
+                   "storage_location": "s3://replay-metastore/volume-197",
+                   "securable_kind": "VOLUME_MANAGED", "revision": 1,
+                   "tags": [{"key": "team", "value": "replay"}],
+                   "properties": {"retention": {"days": 7, "enabled": true}},
+                   "pipeline_id": null}
+      - &read_created
+        request: &read_request
+          method: GET
+          path: /api/2.1/unity-catalog/volumes/main.replay.unknown_fields_volume
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "unknown_fields_volume",
+                   "full_name": "main.replay.unknown_fields_volume",
+                   "volume_type": "MANAGED", "comment": "first comment",
+                   "owner": "replay-admin@example.com",
+                   "storage_location": "s3://replay-metastore/volume-197"}
+      - *read_created
+    state: &same_state
+      resources:
+        databricks_volume.this:
+          attributes:
+            - path: [id]
+              equals: main.replay.unknown_fields_volume
+            - path: [owner]
+              equals: replay-admin@example.com
+            - path: [storage_location]
+              equals: s3://replay-metastore/volume-197
+            - path: [volume_path]
+              equals: /Volumes/main/replay/unknown_fields_volume
+  - name: refresh_answered_with_unknown_fields_keeps_the_same_state
+    plan_only: true
+    config: *config
+    plan:
+      expect: empty
+      changes: {}
+    state: *same_state
+    calls:
+      - request: *read_request
+        response:
+          status: 200
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "unknown_fields_volume",
+                   "full_name": "main.replay.unknown_fields_volume",
+                   "volume_type": "MANAGED", "comment": "first comment",
+                   "owner": "replay-admin@example.com",
+                   "storage_location": "s3://replay-metastore/volume-197",
+                   "securable_kind": "VOLUME_MANAGED", "revision": 1,
+                   "tags": [{"key": "team", "value": "replay"}],
+                   "properties": {"retention": {"days": 7, "enabled": true}},
+                   "pipeline_id": null}
+  - name: update_answered_with_unknown_fields_keeps_the_same_state
+    config: |
+      resource "databricks_volume" "this" {
+        name         = "unknown_fields_volume"
+        catalog_name = "main"
+        schema_name  = "replay"
+        volume_type  = "MANAGED"
+        comment      = "second comment"
+      }
+    calls:
+      - *read_created
+      - request:
+          method: PATCH
+          path: /api/2.1/unity-catalog/volumes/main.replay.unknown_fields_volume
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"comment": "second comment"}
+        response:
+          status: 200
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "unknown_fields_volume",
+                   "full_name": "main.replay.unknown_fields_volume",
+                   "volume_type": "MANAGED", "comment": "second comment",
+                   "owner": "replay-admin@example.com",
+                   "storage_location": "s3://replay-metastore/volume-197",
+                   "securable_kind": "VOLUME_MANAGED", "revision": 2,
+                   "tags": [{"key": "team", "value": "replay"}],
+                   "properties": {"retention": {"days": 7, "enabled": true}},
+                   "pipeline_id": null}
+      - &read_updated
+        request: *read_request
+        response:
+          status: 200
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "unknown_fields_volume",
+                   "full_name": "main.replay.unknown_fields_volume",
+                   "volume_type": "MANAGED", "comment": "second comment",
+                   "owner": "replay-admin@example.com",
+                   "storage_location": "s3://replay-metastore/volume-197"}
+      - *read_updated
+    state: *same_state
+destroy:
+  calls:
+    - *read_updated
+    - request:
+        method: DELETE
+        path: /api/2.1/unity-catalog/volumes/main.replay.unknown_fields_volume
+        headers:
+          X-Databricks-Workspace-Id: "12345"
+        body: null
+      response:
+        status: 200
+        body:
+          json: {}

@@ -75,12 +75,10 @@ func (t *sdkGoTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	requestBody := debugRequestBody(r)
 	resp, responseBody, err := t.exchange(req.Context(), r, timeout)
 	if attempt != nil {
-		attempt.request = r
-		if resp != nil {
-			attempt.request = resp.Request
-		}
+		attempt.record(r, requestBody, resp, responseBody)
 	}
-	if err == nil && resp.StatusCode < http.StatusBadRequest {
+	success := err == nil && resp.StatusCode < http.StatusBadRequest
+	if success {
 		// A Private Link redirect ends in a successful login page.
 		err = t.errorMapper(r.Context(), sdkcommon.ResponseWrapper{
 			Response:   resp,
@@ -91,6 +89,12 @@ func (t *sdkGoTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	t.log(r, resp, err, requestBody, responseBody)
 	if err != nil {
 		return nil, err
+	}
+	if success && len(responseBody) == 0 {
+		// The classic client doesn't decode an empty body, so its response stays empty.
+		// sdk-go fails to decode one, but decodes "{}" into the same empty response, as
+		// every uc/volumes/v1 response is a JSON object.
+		resp.Body = io.NopCloser(strings.NewReader("{}"))
 	}
 	return resp, nil
 }

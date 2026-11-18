@@ -2,6 +2,8 @@ package common
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"net/http"
 	"strings"
 	"testing"
@@ -10,6 +12,8 @@ import (
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/config"
+	"github.com/databricks/databricks-sdk-go/httpclient"
+	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/databricks-sdk-go/useragent"
 	sdkvolumes "github.com/databricks/sdk-go/uc/volumes/v1"
 	"github.com/stretchr/testify/assert"
@@ -99,24 +103,16 @@ func TestSdkGoVolumesClientMapsErrorsLikeClassicClient(t *testing.T) {
 			"User does not have READ VOLUME on Volume.", false},
 		{"non-JSON error body", 500, "upstream connect error",
 			"upstream connect error", false},
-		{"undecodable success body", 200, "not json",
-			"failed to unmarshal response body: " +
-				"invalid character 'o' in literal null (expecting 'u')", false},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			r := readBothWays(t, context.Background, nil, respond(tc.status, tc.body))
 			require.Error(t, r.err)
 			assert.Equal(t, tc.message, r.err.Error())
 			assert.Equal(t, tc.missing, apierr.IsMissing(r.err))
-			if tc.status >= 400 {
-				var apiErr *apierr.APIError
-				require.ErrorAs(t, r.err, &apiErr)
-				assert.Equal(t, tc.status, apiErr.StatusCode)
-			}
-			require.Error(t, r.classicErr)
-			// The classic decode error also prints the request and response.
-			classicMessage := r.classicErr.Error()
-			assert.True(t, strings.HasPrefix(classicMessage, tc.message), classicMessage)
+			var apiErr *apierr.APIError
+			require.ErrorAs(t, r.err, &apiErr)
+			assert.Equal(t, tc.status, apiErr.StatusCode)
+			assert.EqualError(t, r.classicErr, tc.message)
 			assert.Equal(t, apierr.IsMissing(r.classicErr), apierr.IsMissing(r.err))
 		})
 	}
@@ -185,12 +181,59 @@ func TestSdkGoVolumesClientEscapesReservedCharactersInNames(t *testing.T) {
 	}
 }
 
-// An empty 200 body fails to decode through sdk-go, while the existing client reads it as
-// a volume without fields.
-func TestSdkGoVolumesClientRejectsEmptySuccessBody(t *testing.T) {
-	r := readBothWays(t, context.Background, nil, respond(http.StatusOK, ""))
-	assert.EqualError(t, r.err,
-		"failed to unmarshal response body: unexpected end of JSON input")
-	assert.NoError(t, r.classicErr)
-	assert.Equal(t, r.classicCalls, r.calls)
+// withoutHeaderLines drops the header lines of the request log in a decode error. The
+// clients send different User-Agent, Accept and traceparent headers.
+func withoutHeaderLines(err error) string {
+	var lines []string
+	for line := range strings.SplitSeq(err.Error(), "\n") {
+		if !strings.HasPrefix(line, "> * ") && !strings.HasPrefix(line, "< * ") {
+			lines = append(lines, line)
+		}
+	}
+	return strings.Join(lines, "\n")
+}
+
+// Both clients decode a successful response after their retries, so neither retries a
+// body it can't decode, even one with a transient error message.
+func TestSdkGoVolumesClientFailsToDecodeLikeClassicClient(t *testing.T) {
+	for name, body := range map[string]string{
+		"malformed JSON":          `{"full_name": "main.replay.volume",`,
+		"not JSON":                "not json",
+		"transient error message": `{"message": "REQUEST_LIMIT_EXCEEDED: retry later.`,
+		"HTML":                    "<html><body>Sign in</body></html>",
+	} {
+		t.Run(name, func(t *testing.T) {
+			r := readBothWays(t, context.Background, nil, respond(http.StatusOK, body),
+				respond(http.StatusOK, sdkGoTestVolume))
+			assert.EqualValues(t, 1, r.calls)
+			assert.Equal(t, r.classicCalls, r.calls)
+			require.Error(t, r.err)
+			require.Error(t, r.classicErr)
+			assert.Equal(t, withoutHeaderLines(r.classicErr), withoutHeaderLines(r.err))
+			assert.Equal(t, errors.Is(r.classicErr, httpclient.ErrHTMLContent),
+				errors.Is(r.err, httpclient.ErrHTMLContent))
+		})
+	}
+}
+
+func TestSdkGoVolumesClientDecodeErrorPrintsTheRequestLog(t *testing.T) {
+	r := readBothWays(t, context.Background, nil, respond(http.StatusOK, "not json"))
+	assert.Equal(t, "failed to unmarshal response body: invalid character 'o' in "+
+		"literal null (expecting 'u'). "+fmt.Sprintf(classicDecodeErrorRequestLog,
+		"GET "+sdkGoTestVolumePath+"\n< HTTP/1.1 200 OK\n< not json"),
+		withoutHeaderLines(r.err))
+}
+
+// The existing client doesn't decode an empty 200 body, so it reads a volume without
+// fields, and sdk-go reads the same.
+func TestSdkGoVolumesClientReadsEmptySuccessBodyLikeClassicClient(t *testing.T) {
+	server, _ := serveSequence(t, respond(http.StatusOK, ""), respond(http.StatusOK, ""))
+	w := newVolumesTestWorkspaceClient(t, server, nil)
+	ctx := context.Background()
+	v, err := getVolume(ctx, t, w, sdkGoTestVolumeName)
+	require.NoError(t, err)
+	assert.Equal(t, &sdkvolumes.VolumeInfo{}, v)
+	classic, err := w.Volumes.ReadByName(ctx, sdkGoTestVolumeName)
+	require.NoError(t, err)
+	assert.Equal(t, &catalog.VolumeInfo{}, classic)
 }

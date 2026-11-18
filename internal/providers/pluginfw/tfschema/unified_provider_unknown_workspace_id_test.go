@@ -5,11 +5,13 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	resourceschema "github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
@@ -176,6 +178,76 @@ func TestProviderConfigPlanModifier_UnknownConfig(t *testing.T) {
 			ProviderConfigPlanModifier{}.PlanModifyObject(ctx, req, resp)
 
 			assert.True(t, tc.want.Equal(resp.PlanValue), "planned %v, want %v", resp.PlanValue, tc.want)
+		})
+	}
+}
+
+func TestWorkspaceIDPlanModifier_UnknownConfig(t *testing.T) {
+	tests := []struct {
+		name            string
+		config          types.String
+		state           types.String
+		plan            types.String
+		wantReplacement bool
+	}{
+		{
+			name:            "unknown workspace_id replaces a prior one",
+			config:          types.StringUnknown(),
+			state:           types.StringValue("12345"),
+			plan:            types.StringUnknown(),
+			wantReplacement: true,
+		},
+		{
+			name:   "unknown workspace_id without a prior one",
+			config: types.StringUnknown(),
+			state:  types.StringNull(),
+			plan:   types.StringUnknown(),
+		},
+		{
+			// An Optional+Computed workspace_id omitted from the config is planned unknown.
+			name:   "omitted workspace_id planned unknown",
+			config: types.StringNull(),
+			state:  types.StringValue("12345"),
+			plan:   types.StringUnknown(),
+		},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			req := planmodifier.StringRequest{
+				ConfigValue: tc.config,
+				StateValue:  tc.state,
+				PlanValue:   tc.plan,
+			}
+			resp := &stringplanmodifier.RequiresReplaceIfFuncResponse{}
+
+			workspaceIDPlanModifier(context.Background(), req, resp)
+
+			assert.Equal(t, tc.wantReplacement, resp.RequiresReplace)
+		})
+	}
+}
+
+func TestWorkspaceIDUnknown_SdkV2(t *testing.T) {
+	ctx := context.Background()
+	pcType := ProviderConfig{}.Type(ctx)
+	providerConfig := func(workspaceID types.String) types.List {
+		return types.ListValueMust(pcType, []attr.Value{
+			ProviderConfig{WorkspaceID: workspaceID}.ToObjectValue(ctx)})
+	}
+	tests := []struct {
+		name           string
+		providerConfig types.List
+		want           bool
+	}{
+		{name: "unknown provider_config", providerConfig: types.ListUnknown(pcType), want: true},
+		{name: "unknown workspace_id", providerConfig: providerConfig(types.StringUnknown()), want: true},
+		{name: "known workspace_id", providerConfig: providerConfig(types.StringValue("12345"))},
+		{name: "null provider_config", providerConfig: types.ListNull(pcType)},
+		{name: "empty provider_config", providerConfig: types.ListValueMust(pcType, []attr.Value{})},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.want, WorkspaceIDUnknown_SdkV2(tc.providerConfig))
 		})
 	}
 }

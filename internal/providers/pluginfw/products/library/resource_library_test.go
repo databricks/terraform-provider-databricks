@@ -4,11 +4,19 @@ import (
 	"context"
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/client"
+	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 	"github.com/databricks/terraform-provider-databricks/qa"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -181,4 +189,52 @@ func TestReadLibrary_FoundDuringRefresh(t *testing.T) {
 		assert.NotNil(t, result)
 		assert.Equal(t, "test-cluster", result.ClusterId.ValueString())
 	})
+}
+
+func TestResourceLibrary_ModifyPlan_UnknownWorkspaceID(t *testing.T) {
+	ctx := context.Background()
+	pcType := tfschema.ProviderConfig{}.Type(ctx)
+	tests := []struct {
+		name           string
+		providerConfig types.List
+		wantErr        string
+	}{
+		{
+			name: "unknown workspace_id",
+			providerConfig: types.ListValueMust(pcType, []attr.Value{
+				tfschema.ProviderConfig{WorkspaceID: types.StringUnknown()}.ToObjectValue(ctx)}),
+		},
+		{name: "unknown provider_config", providerConfig: types.ListUnknown(pcType)},
+		{name: "no provider_config", providerConfig: types.ListNull(pcType), wantErr: "none was found"},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			// An account-level provider without workspace_id fails a workspace client
+			// lookup without a request.
+			r := &LibraryResource{Client: &common.DatabricksClient{
+				DatabricksClient: &client.DatabricksClient{Config: &config.Config{
+					Host:      "https://accounts.cloud.databricks.com",
+					AccountID: "test-account-id",
+					Token:     "test-token",
+				}},
+			}}
+			schemaResp := &resource.SchemaResponse{}
+			r.Schema(ctx, resource.SchemaRequest{}, schemaResp)
+			plan := tfsdk.Plan{
+				Schema: schemaResp.Schema,
+				Raw:    tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), nil),
+			}
+			require.False(t, plan.SetAttribute(ctx, path.Root("provider_config"), tc.providerConfig).HasError())
+			resp := &resource.ModifyPlanResponse{Plan: plan}
+
+			r.ModifyPlan(ctx, resource.ModifyPlanRequest{Plan: plan}, resp)
+
+			if tc.wantErr == "" {
+				assert.False(t, resp.Diagnostics.HasError(), "diagnostics: %v", resp.Diagnostics)
+				return
+			}
+			require.True(t, resp.Diagnostics.HasError())
+			assert.Contains(t, resp.Diagnostics.Errors()[0].Detail(), tc.wantErr)
+		})
+	}
 }

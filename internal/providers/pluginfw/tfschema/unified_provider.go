@@ -54,13 +54,22 @@ func (r ProviderConfig) ApplySchemaCustomizations(attrs map[string]AttributeBuil
 }
 
 // workspaceIDPlanModifier is a plan modifier that requires replacement if the
-// workspace_id changes from one non-empty value to another
+// workspace_id changes from one non-empty value to another, or if the config sets it to
+// a value unknown at plan time over a non-empty one, because an update would fail apply
+// once that value resolves to another workspace.
 func workspaceIDPlanModifier(ctx context.Context, req planmodifier.StringRequest, resp *stringplanmodifier.RequiresReplaceIfFuncResponse) {
-	// Require replacement if workspace_id changes from one non-empty value to another
 	oldValue := req.StateValue.ValueString()
+	if oldValue == "" {
+		return
+	}
+	// Check the config, not the plan: an Optional+Computed workspace_id omitted from the
+	// config is planned unknown too.
+	if req.ConfigValue.IsUnknown() {
+		resp.RequiresReplace = true
+		return
+	}
 	newValue := req.PlanValue.ValueString()
-
-	if oldValue != "" && newValue != "" && oldValue != newValue {
+	if newValue != "" && oldValue != newValue {
 		resp.RequiresReplace = true
 	}
 }
@@ -149,6 +158,20 @@ func GetWorkspaceID_SdkV2(ctx context.Context, providerConfig types.List) (strin
 	}
 
 	return workspaceID, diags
+}
+
+// WorkspaceIDUnknown_SdkV2 reports whether a provider_config list (for SdkV2-compatible
+// resources), or the workspace_id of its element, is unknown.
+func WorkspaceIDUnknown_SdkV2(providerConfig types.List) bool {
+	if providerConfig.IsUnknown() {
+		return true
+	}
+	for _, element := range providerConfig.Elements() {
+		if object, ok := element.(types.Object); ok && workspaceIDUnknown(object) {
+			return true
+		}
+	}
+	return false
 }
 
 // GetWorkspaceIDResource extracts the workspace ID from a provider_config object (for resources).

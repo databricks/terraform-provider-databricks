@@ -76,7 +76,8 @@ steps:
             X-Databricks-Workspace-Id: "12345"
           body: null
         response: *monitor_12345
-      # The post-apply refresh plan.
+      # The post-apply plan validates the resolved workspace_id, then the refresh plan reads.
+      - *lookup_12345
       - *lookup_12345
       - *read_in_12345
     state:
@@ -166,7 +167,8 @@ steps:
             X-Databricks-Workspace-Id: "67890"
           body: null
         response: *monitor_67890
-      # The post-apply refresh plan.
+      # The post-apply plan validates the resolved workspace_id, then the refresh plan reads.
+      - *lookup_67890
       - *lookup_67890
       - *read_in_67890
     state:

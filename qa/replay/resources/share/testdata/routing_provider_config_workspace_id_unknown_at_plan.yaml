@@ -77,7 +77,8 @@ steps:
             json: {"name": "unknown-ws-share", "owner": "replay-admin",
                    "created_at": 1700000000000, "created_by": "replay-admin",
                    "objects": [{"name": "sandbox.things", "data_object_type": "SCHEMA"}]}
-      # The post-apply refresh plan.
+      # The post-apply plan validates the resolved workspace_id, then the refresh plan reads.
+      - *lookup_12345
       - *lookup_12345
       - &read_in_12345
         request:
@@ -178,7 +179,8 @@ steps:
             json: {"name": "unknown-ws-share", "owner": "replay-admin",
                    "created_at": 1700000000001, "created_by": "replay-admin",
                    "objects": [{"name": "sandbox.things", "data_object_type": "SCHEMA"}]}
-      # The post-apply refresh plan.
+      # The post-apply plan validates the resolved workspace_id, then the refresh plan reads.
+      - *lookup_67890
       - *lookup_67890
       - &read_in_67890
         request:

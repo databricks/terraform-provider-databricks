@@ -11,6 +11,7 @@ and the [YAML reference](../terraformtest/README.md).
 - `resources/<resource>/`: resource behavior and related data sources.
 - Each Terraform suite has a small Go discovery wrapper and a `testdata/` folder.
   Each YAML filename becomes a subtest name.
+- CI runs each package under `go test`'s default 10-minute timeout and keeps a package on a single shard. Split a suite that takes more than a few minutes into themed packages, each with its own wrapper and `testdata/`, as [`resources/volume/`](resources/volume) does.
 
 Helper-only Go tests use YAML HTTP transcripts through
 `clienttest.WorkspaceClient`. Keep their transcripts in a nested folder when

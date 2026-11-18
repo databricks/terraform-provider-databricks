@@ -32,7 +32,7 @@ func RunNative(t *testing.T, path string, configure func(*resource.TestCase, fun
 	t.Helper()
 	definition, err := loadDefinition(path)
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("%s: %v", path, err)
 	}
 	runNative(t, definition, configure)
 }

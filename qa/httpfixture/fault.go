@@ -31,6 +31,12 @@ const (
 
 var statusLinePattern = regexp.MustCompile(`^HTTP/1\.[01] ([0-9]{3})(?: [^\r\n]*)?$`)
 
+// writesStatus reports whether the response starts with a status line, which
+// needs a valid status. Unknown faults are left to compileResponse.
+func (r Response) writesStatus() bool {
+	return r.Fault == "" || r.Fault == FaultTruncateBody || r.Fault == FaultStallBody
+}
+
 // compileResponse validates the response and encodes its body once.
 func compileResponse(e *exchange, r Response) error {
 	if r.Delay != "" {
@@ -49,9 +55,6 @@ func compileResponse(e *exchange, r Response) error {
 	case "", FaultTruncateBody, FaultStallBody:
 	default:
 		return fmt.Errorf("unknown fault %q; expected reset, close, truncate_body or stall_body", r.Fault)
-	}
-	if r.Status < 100 || r.Status > 599 {
-		return fmt.Errorf("invalid response status %d", r.Status)
 	}
 	if r.Body != nil {
 		var err error

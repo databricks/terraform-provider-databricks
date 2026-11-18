@@ -127,3 +127,22 @@ Additional part headers are ignored. Part order and the transport boundary are
 ignored; missing or extra parts fail. The request must use `multipart/form-data`.
 Multipart responses and JSON matchers on non-JSON bodies are unsupported.
 Header and query matchers work with every body representation.
+
+## Wire behavior
+
+`Response.Delay` is a Go duration string, such as `"2s"`, waited before writing
+anything; the wait ends when the client closes the connection. The wait runs
+outside the handler lock, so other requests are served meanwhile.
+`Response.Fault` hijacks the connection: `FaultReset` closes it with linger 0,
+`FaultClose` closes it without a response, `FaultTruncateBody` declares the full
+`Content-Length` but writes half the body, and `FaultStallBody` writes half the
+body, then waits until the client closes the connection. `Response.StatusLine`
+writes a literal status line, such as `HTTP/1.1 404`, whose code must equal
+`Status`. Reset and close responses omit status, headers, body and status line.
+Invalid values fail when fixtures are loaded.
+
+Every response closes its connection, because Go's client silently resends an
+idempotent request that fails on a reused connection. Faults and status lines
+need a server that supports hijacking, such as `httptest.NewServer`;
+otherwise `Verify` reports the failure. Faulted calls are consumed and ordered
+like any other call.

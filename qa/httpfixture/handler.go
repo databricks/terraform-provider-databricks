@@ -119,6 +119,9 @@ func compileCalls(calls []Call) ([]exchange, error) {
 		if strings.ContainsAny(call.Request.Path, "?#") {
 			return nil, fmt.Errorf("call %d: query parameters must use query", i+1)
 		}
+		if call.Response.writesStatus() && (call.Response.Status < 100 || call.Response.Status > 599) {
+			return nil, fmt.Errorf("call %d: invalid response status %d", i+1, call.Response.Status)
+		}
 		e := exchange{call: call}
 		var err error
 		if call.Request.Body != nil {

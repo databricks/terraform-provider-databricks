@@ -159,3 +159,45 @@ func TestRequestMatcherWithRealProvider(t *testing.T) {
 	require.NoError(t, err)
 	run(t, d)
 }
+
+func TestAbsentAndPatternShowcasesRejectOtherValues(t *testing.T) {
+	for _, tc := range []struct {
+		name, file, before, after, message string
+	}{
+		{"absent", "directory_create_absent.yml", "          path: /api/2.0/workspace/mkdirs\n", "          path: /api/2.0/workspace/mkdirs\n          matchers:\n            headers:\n              Content-Type: absent\n", "step 1 (create): unexpected HTTP call: POST /api/2.0/workspace/mkdirs"},
+		{"traceparent pattern", "group_create_pattern.yml", "-[0-9a-f]{16}-01'", "-[0-9a-f]{16}-00'", "step 1 (create): unexpected HTTP call: POST /api/2.0/preview/scim/v2/Groups"},
+		{"User-Agent pattern", "group_create_pattern.yml", `\bresource/group\b`, `\bresource/user\b`, "step 1 (create): unexpected HTTP call: POST /api/2.0/preview/scim/v2/Groups"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			contents, err := os.ReadFile("testdata/matchers/" + tc.file)
+			require.NoError(t, err)
+			fixture := strings.Replace(string(contents), tc.before, tc.after, 1)
+			require.NotEqual(t, string(contents), fixture)
+			directory := t.TempDir()
+			writeDiscoveryFile(t, directory, tc.file, fixture)
+			output, err := discoverySubprocess(t, directory, "^TestDirectoryRunnerHelper$")
+			require.Error(t, err, output)
+			require.Contains(t, output, tc.message)
+		})
+	}
+}
+
+func TestYAMLRejectsInvalidAbsentAndPatternMatchers(t *testing.T) {
+	for _, tc := range []struct {
+		name, before, after, message string
+	}{
+		{"invalid pattern", "headers: {X-Request-ID: any_string}", "headers: {X-Request-ID: {pattern: '('}}", `step 1 (create): call 1 request matchers: headers["X-Request-ID"]: invalid pattern "("`},
+		{"absent with sample", "headers: {X-Request-ID: any_string}", "headers: {X-Request-ID: absent}", `step 1 (create): call 1 request matchers: headers["X-Request-ID"]: remove the header's sample`},
+		{"absent query", "query: {request_id: any_string}", "query: {request_id: absent}", `step 1 (create): call 1 request matchers: query["request_id"]: absent applies only to headers`},
+		{"JSON type and pattern", "                type: any_string\n              - path: [items", "                type: any_string\n                pattern: '.*'\n              - path: [items", "step 1 (create): call 1 request matchers: json[0]: set either a matcher type or a pattern, not both"},
+		{"unknown pattern key", "query: {request_id: any_string}", "query: {request_id: {regex: '.*'}}", "expected a matcher name or {pattern: <regular expression>}"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			calls := strings.Replace(matcherCalls, tc.before, tc.after, 1)
+			require.NotEqual(t, matcherCalls, calls)
+			input := strings.Replace(minimalDefinition, "    calls: []\n", "    calls:\n"+calls, 1)
+			_, err := decodeDefinition(strings.NewReader(input))
+			require.ErrorContains(t, err, tc.message)
+		})
+	}
+}

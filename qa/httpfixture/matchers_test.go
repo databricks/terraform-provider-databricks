@@ -4,10 +4,12 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"gopkg.in/yaml.v3"
 )
 
 func volatileCall(result string) Call {
@@ -230,5 +232,135 @@ func TestMatchersKeepFIFOOrderingAndReusableFallback(t *testing.T) {
 		if ordered {
 			require.NotContains(t, h.Verify().Error(), "unconsumed call")
 		}
+	}
+}
+
+func TestAbsentHeaderMatcherRequiresMissingHeader(t *testing.T) {
+	for _, tc := range []struct {
+		name    string
+		headers http.Header
+		matches bool
+	}{
+		{"missing", http.Header{"X-Other": {"ignored"}}, true},
+		{"empty value", http.Header{"X-Workspace-Id": {""}}, false},
+		{"value", http.Header{"X-Workspace-Id": {"12345"}}, false},
+		{"repeated", http.Header{"X-Workspace-Id": {"1", "2"}}, false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			c := call("GET", "/items", nil, "ok")
+			c.Request.Matchers.Headers = map[string]Matcher{"x-workspace-id": {Type: Absent}}
+			h := NewHandler()
+			require.NoError(t, h.StartStep("read", []Call{c}))
+			req := httptest.NewRequest("GET", "/items", nil)
+			req.Header = tc.headers
+			w := httptest.NewRecorder()
+			h.ServeHTTP(w, req)
+			require.Equal(t, tc.matches, w.Code == 200, w.Body.String())
+		})
+	}
+}
+
+func TestPatternMatchersRequireWholeValueMatch(t *testing.T) {
+	pattern := "00-[0-9a-f]{4}-01"
+	for _, tc := range []struct {
+		name, value string
+		matches     bool
+	}{
+		{"whole value", "00-0af7-01", true},
+		{"prefix only", "00-0af7-01-extra", false},
+		{"suffix only", "x00-0af7-01", false},
+		{"wrong format", "00-XYZW-01", false},
+		{"empty", "", false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			for _, location := range []string{"header", "query", "json"} {
+				c := call("POST", "/items", map[string]any{"trace": "captured"}, "ok")
+				req := httptest.NewRequest("POST", "/items", strings.NewReader(`{"trace":"captured"}`))
+				switch location {
+				case "header":
+					c.Request.Headers = map[string]string{"Traceparent": "captured"}
+					c.Request.Matchers.Headers = map[string]Matcher{"traceparent": {Pattern: pattern}}
+					req.Header.Set("traceparent", tc.value)
+				case "query":
+					c.Request.Query = map[string][]string{"trace": {"captured"}}
+					c.Request.Matchers.Query = map[string]Matcher{"trace": {Pattern: pattern}}
+					req.URL.RawQuery = url.Values{"trace": {tc.value}}.Encode()
+				case "json":
+					c.Request.Matchers.JSON = []JSONMatcher{{Path: []any{"trace"}, Pattern: pattern}}
+					req = httptest.NewRequest("POST", "/items", strings.NewReader(`{"trace":"`+tc.value+`"}`))
+				}
+				h := NewHandler()
+				require.NoError(t, h.StartStep("create", []Call{c}))
+				w := httptest.NewRecorder()
+				h.ServeHTTP(w, req)
+				require.Equal(t, tc.matches, w.Code == 200, "%s: %s", location, w.Body.String())
+			}
+		})
+	}
+}
+
+func TestPatternMatchersRequireOnePresentString(t *testing.T) {
+	header := call("GET", "/items", nil, "ok")
+	header.Request.Matchers.Headers = map[string]Matcher{"X-Id": {Pattern: ".*"}}
+	for _, headers := range []http.Header{{}, {"X-Id": {"a", "b"}}} {
+		h := NewHandler()
+		require.NoError(t, h.StartStep("read", []Call{header}))
+		req := httptest.NewRequest("GET", "/items", nil)
+		req.Header = headers
+		w := httptest.NewRecorder()
+		h.ServeHTTP(w, req)
+		require.Equal(t, 400, w.Code)
+	}
+	for _, body := range []string{`{"id":null}`, `{"id":1}`, `{}`} {
+		c := call("POST", "/items", map[string]any{"id": "captured"}, "ok")
+		c.Request.Matchers.JSON = []JSONMatcher{{Path: []any{"id"}, Pattern: ".*"}}
+		h := NewHandler()
+		require.NoError(t, h.StartStep("create", []Call{c}))
+		require.Equal(t, 400, send(h, "POST", "/items", body).Code, body)
+	}
+}
+
+func TestRejectInvalidAbsentAndPatternMatchers(t *testing.T) {
+	for _, tc := range []struct {
+		name     string
+		headers  map[string]string
+		matchers Matchers
+		message  string
+	}{
+		{"absent query", nil, Matchers{Query: map[string]Matcher{"id": {Type: Absent}}}, `query["id"]: absent applies only to headers`},
+		{"absent JSON", nil, Matchers{JSON: []JSONMatcher{{Path: []any{"id"}, Type: Absent}}}, "json[0]: absent applies only to headers"},
+		{"absent with sample", map[string]string{"x-id": "12345"}, Matchers{Headers: map[string]Matcher{"X-Id": {Type: Absent}}}, `headers["X-Id"]: remove the header's sample from headers; it must be absent`},
+		{"invalid header pattern", nil, Matchers{Headers: map[string]Matcher{"X-Id": {Pattern: "("}}}, `headers["X-Id"]: invalid pattern "("`},
+		{"invalid JSON pattern", nil, Matchers{JSON: []JSONMatcher{{Path: []any{"id"}, Pattern: "["}}}, `json[0]: invalid pattern "["`},
+		{"type and pattern", nil, Matchers{Query: map[string]Matcher{"id": {Type: AnyString, Pattern: ".*"}}}, `query["id"]: set either a matcher type or a pattern, not both`},
+		{"JSON type and pattern", nil, Matchers{JSON: []JSONMatcher{{Path: []any{"id"}, Type: AnyString, Pattern: ".*"}}}, "json[0]: set either a matcher type or a pattern, not both"},
+		{"unknown header type", nil, Matchers{Headers: map[string]Matcher{"X-Id": {Type: "missing"}}}, `headers["X-Id"]: expected a nonempty key and matcher any_string, absent or a pattern, got "missing"`},
+		{"pattern on object", nil, Matchers{JSON: []JSONMatcher{{Path: []any{"items", 0}, Pattern: ".*"}}}, "json[0] path [items 0]: matcher target must be a string or null sample"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			c := volatileCall("invalid")
+			c.Request.Headers = tc.headers
+			c.Request.Matchers = tc.matchers
+			require.ErrorContains(t, NewHandler().StartStep("create", []Call{c}), "create: call 1 request matchers: "+tc.message)
+		})
+	}
+}
+
+func TestMatcherYAMLForms(t *testing.T) {
+	var m Matchers
+	input := "headers: {A: any_string, B: absent, C: {pattern: '^x$'}}\njson: [{path: [id], pattern: '[0-9]+'}, {path: [name], type: any_string}]\n"
+	require.NoError(t, yaml.Unmarshal([]byte(input), &m))
+	require.Equal(t, Matchers{
+		Headers: map[string]Matcher{"A": {Type: AnyString}, "B": {Type: Absent}, "C": {Pattern: "^x$"}},
+		JSON:    []JSONMatcher{{Path: []any{"id"}, Pattern: "[0-9]+"}, {Path: []any{"name"}, Type: AnyString}},
+	}, m)
+	output, err := yaml.Marshal(m)
+	require.NoError(t, err)
+	var roundTrip Matchers
+	require.NoError(t, yaml.Unmarshal(output, &roundTrip))
+	require.Equal(t, m, roundTrip)
+	require.Contains(t, string(output), "C:\n        pattern: ^x$")
+	for _, invalid := range []string{"{pattern: ''}", "{regex: x}", "{pattern: x, type: any_string}", "[any_string]"} {
+		require.ErrorContains(t, yaml.Unmarshal([]byte("headers: {A: "+invalid+"}"), &m), "line 1:", invalid)
 	}
 }

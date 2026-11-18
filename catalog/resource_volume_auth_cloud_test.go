@@ -56,13 +56,15 @@ func authGoogleConfig(t *testing.T, authType string) *config.Config {
 // claim, which asks for an ID token for the workspace or for an access token.
 func authGoogleToken(claim string, status int, response string) authExchange {
 	return authExchange{authRequest{method: "POST", url: authGoogleURL,
-		body: `assertion={"aud":"https://` + authGoogleURL + `","iss":"` + authGCPAccount +
-			`",` + claim + `}&grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer`,
+		body: `assertion={"aud":"https://` + authGoogleURL + `","iss":"` +
+			authGCPAccount + `",` + claim +
+			`}&grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer`,
 		headers: map[string]string{}}, status, response}
 }
 
 func authGoogleIDToken(status int, response string) authExchange {
-	return authGoogleToken(`"target_audience":"https://`+authGCPHost+`"`, status, response)
+	return authGoogleToken(`"target_audience":"https://`+authGCPHost+`"`,
+		status, response)
 }
 
 func authGoogleAccessToken(status int, response string) authExchange {
@@ -94,9 +96,10 @@ func authAADClientCredentials(resource string, status int, response string) auth
 func authAADRejectedTwice(resource string) []authExchange {
 	return []authExchange{
 		authAADClientCredentials(resource, http.StatusUnauthorized, authAADRejected),
-		{authRequest{method: "POST", url: authAADToken, body: "client_id=replay-azure-sp" +
-			"&client_secret=replay-azure-secret&grant_type=client_credentials&resource=" +
-			url.QueryEscape(resource), headers: map[string]string{}},
+		{authRequest{method: "POST", url: authAADToken,
+			body: "client_id=replay-azure-sp&client_secret=replay-azure-secret" +
+				"&grant_type=client_credentials&resource=" + url.QueryEscape(resource),
+			headers: map[string]string{}},
 			http.StatusUnauthorized, authAADRejected},
 	}
 }
@@ -106,13 +109,14 @@ func authMSIRequest(resource, token string) authExchange {
 	return authExchange{authRequest{method: "GET", url: authMSIToken +
 		"?api-version=2018-02-01&resource=" + url.QueryEscape(resource),
 		headers: map[string]string{"Metadata": "true"}}, http.StatusOK,
-		fmt.Sprintf(`{"token_type": "Bearer", "access_token": %q, "expires_on": 4102444800}`,
-			token)}
+		fmt.Sprintf(`{"token_type": "Bearer", "access_token": %q,
+			"expires_on": 4102444800}`, token)}
 }
 
 func authAzureClientSecretConfig(*testing.T) *config.Config {
-	return &config.Config{Host: "https://" + authAzureHost, AuthType: "azure-client-secret",
-		AzureResourceID: authAzureWSID, AzureTenantID: "replay-tenant",
+	return &config.Config{Host: "https://" + authAzureHost,
+		AuthType: "azure-client-secret", AzureResourceID: authAzureWSID,
+		AzureTenantID: "replay-tenant",
 		AzureClientID: "replay-azure-sp", AzureClientSecret: "replay-azure-secret"}
 }
 
@@ -149,8 +153,9 @@ func TestVolumeAuthCloudCredentials(t *testing.T) {
 			name:     "azure_msi",
 			metadata: authCloudMetadata("Azure"),
 			config: func(*testing.T) *config.Config {
-				return &config.Config{Host: "https://" + authAzureHost, AuthType: "azure-msi",
-					AzureResourceID: authAzureWSID, AzureUseMSI: true}
+				return &config.Config{Host: "https://" + authAzureHost,
+					AuthType: "azure-msi", AzureResourceID: authAzureWSID,
+					AzureUseMSI: true}
 			},
 			script: []authExchange{
 				authMSIRequest(authAzureAppID, "msi-token"),
@@ -254,11 +259,11 @@ func TestVolumeAuthDeprecatedGoogleAuthTypes(t *testing.T) {
 			a := refreshAuthVolume(t, s, &config.Config{Host: "https://" + authGCPHost,
 				AuthType: authType, GoogleServiceAccount: authGCPAccount})
 
-			a.assertFailed(t, "cannot read volume: failed during request visitor: default "+
-				"auth: could not obtain OIDC token. google: error getting credentials using "+
-				"GOOGLE_APPLICATION_CREDENTIALS environment variable: open "+missing+
-				": no such file or directory Running 'gcloud auth application-default "+
-				"login' may help. Config: host=https://"+authGCPHost+
+			a.assertFailed(t, "cannot read volume: failed during request visitor: "+
+				"default auth: could not obtain OIDC token. google: error getting "+
+				"credentials using GOOGLE_APPLICATION_CREDENTIALS environment variable: "+
+				"open "+missing+": no such file or directory Running 'gcloud auth "+
+				"application-default login' may help. Config: host=https://"+authGCPHost+
 				", workspace_id=12345, google_service_account="+authGCPAccount)
 			assert.Equal(t, "google-id", a.client.Config.AuthType)
 		})

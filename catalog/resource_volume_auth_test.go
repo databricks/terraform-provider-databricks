@@ -53,8 +53,9 @@ const (
 		"/providers/Microsoft.Databricks/workspaces/replay-workspace"
 	authGCPAccount        = "replay-sa@replay-project.iam.gserviceaccount.com"
 	authOIDCDiscoveryPath = "/oidc/.well-known/oauth-authorization-server"
-	authM2MRejected       = `{"error": "invalid_client", "error_description": "Bad secret"}`
-	authAADRejected       = `{"error": "invalid_client", "error_description": ` +
+	authM2MRejected       = `{"error": "invalid_client",` +
+		` "error_description": "Bad secret"}`
+	authAADRejected = `{"error": "invalid_client", "error_description": ` +
 		`"AADSTS7000215: Invalid client secret provided. Trace ID: 1"}`
 	authGoogleRejected = `{"error": "invalid_grant", "error_description": "Bad JWT"}`
 )
@@ -117,7 +118,8 @@ func (s *authServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	next := len(s.requests)
 	s.requests = append(s.requests, request)
 	s.mu.Unlock()
-	status, response := http.StatusNotFound, `{"error_code": "NOT_FOUND", "message": "no fixture"}`
+	status := http.StatusNotFound
+	response := `{"error_code": "NOT_FOUND", "message": "no fixture"}`
 	if next < len(s.script) {
 		status, response = s.script[next].status, s.script[next].response
 	}
@@ -271,6 +273,12 @@ func authVolumeRead(host string, headers map[string]string) authExchange {
 		headers: headers}, http.StatusOK, authVolumeJSON}
 }
 
+// authBearerRead is the volume GET on the AWS workspace with a bearer token.
+func authBearerRead(token string) authExchange {
+	return authVolumeRead(authAWSHost,
+		map[string]string{"Authorization": "Bearer " + token})
+}
+
 func basicAuthorization(user, password string) string {
 	return "Basic " + base64.StdEncoding.EncodeToString([]byte(user+":"+password))
 }
@@ -294,8 +302,9 @@ func authCloudMetadata(cloud string) string {
 var authOIDCDiscovery = authExchange{
 	authRequest{method: "GET", url: authAWSHost + authOIDCDiscoveryPath,
 		headers: map[string]string{}},
-	http.StatusOK, `{"authorization_endpoint": "https://` + authAWSHost + `/oidc/v1/authorize",
-		"token_endpoint": "https://` + authAWSHost + `/oidc/v1/token"}`,
+	http.StatusOK, `{"authorization_endpoint": "https://` + authAWSHost +
+		`/oidc/v1/authorize", "token_endpoint": "https://` + authAWSHost +
+		`/oidc/v1/token"}`,
 }
 
 // authM2MToken is the client_credentials request of service principal replay-sp.
@@ -338,7 +347,7 @@ func TestVolumeAuthM2MSendsBearerToken(t *testing.T) {
 	s := &authServer{metadata: authAWSMetadata(), script: []authExchange{
 		authOIDCDiscovery,
 		authM2MToken(http.StatusOK, authBearerToken("m2m-token", 3600)),
-		authVolumeRead(authAWSHost, map[string]string{"Authorization": "Bearer m2m-token"}),
+		authBearerRead("m2m-token"),
 	}}
 
 	refreshAuthVolume(t, s, authM2MConfig("")).assertSucceeded(t)
@@ -360,8 +369,9 @@ func TestVolumeAuthM2MTokenEndpointFailure(t *testing.T) {
 				authOIDCDiscovery,
 				authM2MToken(http.StatusUnauthorized, authM2MRejected),
 			},
-			summary: `cannot read volume: failed during request visitor: error getting ` +
-				`token: Post "https://` + authAWSHost + `/oidc/v1/token": ` + authM2MRejected,
+			summary: `cannot read volume: failed during request visitor: error ` +
+				`getting token: Post "https://` + authAWSHost + `/oidc/v1/token": ` +
+				authM2MRejected,
 		},
 		{
 			// A failed chain isn't kept, so it runs twice: when the provider builds the
@@ -382,14 +392,16 @@ func TestVolumeAuthM2MTokenEndpointFailure(t *testing.T) {
 			isolateDefaultChain(t)
 			s := &authServer{metadata: authAWSMetadata(), script: tt.script}
 
-			refreshAuthVolume(t, s, authM2MConfig(tt.authType)).assertFailed(t, tt.summary)
+			a := refreshAuthVolume(t, s, authM2MConfig(tt.authType))
+
+			a.assertFailed(t, tt.summary)
 		})
 	}
 }
 
 func TestVolumeAuthM2MTokenEndpointNotFoundDropsVolume(t *testing.T) {
-	// The SDK maps a token endpoint's 404 to apierr.ErrNotFound, so the provider takes
-	// the volume for deleted, and the next plan creates it.
+	// The SDK maps a token endpoint's 404 to apierr.ErrNotFound, so the provider treats
+	// the volume as deleted, and the next plan creates it.
 	s := &authServer{metadata: authAWSMetadata(), script: []authExchange{
 		authOIDCDiscovery,
 		authM2MToken(http.StatusNotFound, `{"error": "not_found"}`),
@@ -400,7 +412,8 @@ func TestVolumeAuthM2MTokenEndpointNotFoundDropsVolume(t *testing.T) {
 	assert.False(t, a.diags.HasError(), "%v", a.diags)
 	assert.Nil(t, a.state)
 	require.NotNil(t, a.plan)
-	assert.Equal(t, &terraform.ResourceAttrDiff{New: "auth_volume"}, a.plan.Attributes["name"])
+	assert.Equal(t, &terraform.ResourceAttrDiff{New: "auth_volume"},
+		a.plan.Attributes["name"])
 	assert.True(t, a.plan.Attributes["volume_path"].NewComputed)
 }
 
@@ -414,7 +427,7 @@ func TestVolumeAuthM2MAuthenticatesEachRetriedAttempt(t *testing.T) {
 			headers: map[string]string{"Authorization": "Bearer m2m-token-1"}},
 			http.StatusTooManyRequests, tooManyRequestsJSON},
 		authM2MToken(http.StatusOK, authBearerToken("m2m-token-2", 3600)),
-		authVolumeRead(authAWSHost, map[string]string{"Authorization": "Bearer m2m-token-2"}),
+		authBearerRead("m2m-token-2"),
 	}}
 
 	refreshAuthVolume(t, s, authM2MConfig("oauth-m2m")).assertSucceeded(t)
@@ -433,7 +446,7 @@ func TestVolumeAuthExplicitAuthTypeSelectsOneSource(t *testing.T) {
 		script   []authExchange
 	}{
 		{"pat", []authExchange{
-			authVolumeRead(authAWSHost, map[string]string{"Authorization": "Bearer replay-pat"}),
+			authBearerRead("replay-pat"),
 		}},
 		{"basic", []authExchange{
 			authVolumeRead(authAWSHost, map[string]string{
@@ -442,7 +455,7 @@ func TestVolumeAuthExplicitAuthTypeSelectsOneSource(t *testing.T) {
 		{"oauth-m2m", []authExchange{
 			authOIDCDiscovery,
 			authM2MToken(http.StatusOK, authBearerToken("m2m-token", 3600)),
-			authVolumeRead(authAWSHost, map[string]string{"Authorization": "Bearer m2m-token"}),
+			authBearerRead("m2m-token"),
 		}},
 	}
 	for _, tt := range tests {
@@ -485,7 +498,7 @@ func TestVolumeAuthDefaultChainFallsBackAfterFailedDryRun(t *testing.T) {
 				"&subject_token_type=urn%3Aietf%3Aparams%3Aoauth%3Atoken-type%3Ajwt",
 			headers: map[string]string{}},
 			http.StatusOK, authBearerToken("federated-token", 3600)},
-		authVolumeRead(authAWSHost, map[string]string{"Authorization": "Bearer federated-token"}),
+		authBearerRead("federated-token"),
 	}}
 
 	a := refreshAuthVolume(t, s, authM2MConfig(""))

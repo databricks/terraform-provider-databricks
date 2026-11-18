@@ -305,6 +305,12 @@ func (c *DatabricksClient) setCachedWorkspaceID(ctx context.Context, w *databric
 			return fmt.Errorf("failed to get the workspace_id: %w",
 				err)
 		}
+		// 0 is never a real workspace ID, and storing it in provider_config would
+		// break every later plan and refresh of the resource.
+		if id == 0 {
+			return fmt.Errorf("failed to get the workspace_id: SCIM /Me returned " +
+				"workspace ID 0 in the X-Databricks-Org-Id header")
+		}
 		c.cachedWorkspaceID = id
 	}
 	return nil

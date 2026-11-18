@@ -1,9 +1,10 @@
 # Pins SCIM /Me answering with X-Databricks-Org-Id 0 during a refresh, on a
 # workspace-level provider whose host metadata has no workspace ID and without a
 # provider_config block. The volume's state holds the ID that /Me returned at create.
-# The refresh checks that ID against the provider's workspace through /Me, caches 0 and
-# fails with a workspace_id mismatch before the volume GET. API responses are inferred
-# from the Unity Catalog and SCIM API contracts, not recorded.
+# The refresh checks that ID against the provider's workspace through /Me, which answers
+# 0, and fails with the error for workspace ID 0 before the volume GET instead of
+# reporting a mismatch against 0. API responses are inferred from the Unity Catalog and
+# SCIM API contracts, not recorded.
 version: 1
 enforce_call_order: true
 host_metadata:
@@ -74,9 +75,9 @@ steps:
               equals: "12345"
   - name: refresh_fails_when_me_returns_workspace_id_0
     config: *config
-    expect_error: 'cannot read volume: failed to validate workspace_id: workspace_id
-      mismatch: provider is configured for workspace 0 but got 12345 in
-      provider_config\. please check the workspace_id provided in provider_config'
+    expect_error: 'cannot read volume: failed to validate workspace_id: failed to get
+      the workspace_id: SCIM /Me returned workspace ID 0 in the X-Databricks-Org-Id
+      header'
     calls:
       - request: *me_request
         response:

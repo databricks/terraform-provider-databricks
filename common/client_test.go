@@ -792,6 +792,70 @@ func TestCurrentWorkspaceID_ReturnsCachedValue(t *testing.T) {
 	assert.Equal(t, int64(12345), id2)
 }
 
+// newMeOrgIDClient returns a workspace-level client whose SCIM /Me answers with
+// orgIDs in order as X-Databricks-Org-Id, and a function counting the /Me calls.
+func newMeOrgIDClient(t *testing.T, orgIDs ...string) (*DatabricksClient, func() int) {
+	t.Helper()
+	var mu sync.Mutex
+	calls := 0
+	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		mu.Lock()
+		defer mu.Unlock()
+		if req.URL.Path != "/api/2.0/preview/scim/v2/Me" || calls >= len(orgIDs) {
+			t.Errorf("unexpected request %s %s", req.Method, req.URL)
+			rw.WriteHeader(http.StatusNotFound)
+			return
+		}
+		rw.Header().Set("X-Databricks-Org-Id", orgIDs[calls])
+		calls++
+		_, _ = rw.Write([]byte(`{}`))
+	}))
+	t.Cleanup(server.Close)
+
+	sdkClient, err := client.New(&config.Config{
+		Host:  server.URL,
+		Token: "dapi-test",
+		HostMetadataResolver: func(ctx context.Context, host string) (*config.HostMetadata, error) {
+			return nil, nil
+		},
+	})
+	require.NoError(t, err)
+	return &DatabricksClient{DatabricksClient: sdkClient}, func() int {
+		mu.Lock()
+		defer mu.Unlock()
+		return calls
+	}
+}
+
+func TestCurrentWorkspaceID_RejectsWorkspaceID0(t *testing.T) {
+	c, meCalls := newMeOrgIDClient(t, "0", "12345")
+	ctx := context.Background()
+
+	_, err := c.CurrentWorkspaceID(ctx)
+	require.EqualError(t, err, "failed to get the workspace_id: SCIM /Me returned "+
+		"workspace ID 0 in the X-Databricks-Org-Id header")
+	assert.Equal(t, int64(0), c.cachedWorkspaceID)
+
+	// Nothing was cached, so the next call asks /Me again and caches its answer.
+	id, err := c.CurrentWorkspaceID(ctx)
+	require.NoError(t, err)
+	assert.Equal(t, int64(12345), id)
+	id, err = c.CurrentWorkspaceID(ctx)
+	require.NoError(t, err)
+	assert.Equal(t, int64(12345), id)
+	assert.Equal(t, 2, meCalls())
+}
+
+func TestValidateWorkspaceIDFromProvider_RejectsWorkspaceID0(t *testing.T) {
+	c, meCalls := newMeOrgIDClient(t, "0")
+
+	_, err := c.getWorkspaceClientForWorkspaceConfiguredProvider(context.Background(), "12345")
+	require.EqualError(t, err, "failed to validate workspace_id: failed to get the "+
+		"workspace_id: SCIM /Me returned workspace ID 0 in the X-Databricks-Org-Id header")
+	assert.Equal(t, int64(0), c.cachedWorkspaceID)
+	assert.Equal(t, 1, meCalls())
+}
+
 func TestClientWithDefaultHTTPTimeout_RaisesUnsetTimeout(t *testing.T) {
 	c := &DatabricksClient{
 		DatabricksClient: &client.DatabricksClient{

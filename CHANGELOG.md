@@ -1,5 +1,16 @@
 # Version changelog
 
+## Release v1.144.0 (2026-11-18)
+
+### New Features and Improvements
+* Add `thumbnail_path` to `databricks_app` to set the app's thumbnail from a local PNG or JPEG file ([#6196](https://github.com/databricks/terraform-provider-databricks/pull/6196)).
+* Support `statement_timeout` for all SQL warehouse types; omitting or removing the argument preserves the existing warehouse timeout, while explicit `0` clears the override ([#6144](https://github.com/databricks/terraform-provider-databricks/pull/6144)).
+
+### Exporter
+
+* Preserve `statement_timeout`, including `0`, in exports of all SQL warehouse types ([#6144](https://github.com/databricks/terraform-provider-databricks/pull/6144)).
+
+
 ## Release v1.143.0 (2026-11-16)
 
 ### Important Changes

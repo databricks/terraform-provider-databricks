@@ -41,11 +41,9 @@ jobs:
         uses: ./.github/actions/setup-go-build-environment
         with:
           go-version-file: go.mod
-          # .goreleaser.yml affects the cache because build inputs change
-          # when the goreleaser config changes.
-          cache-dependency-path: |
-            go.sum
-            .goreleaser.yml
+          # Build from a clean cache. A restored build cache plus a near-full rebuild
+          # for every platform can fill the runner disk.
+          go-cache: "false"
 
       - name: Download Go modules
         run: |

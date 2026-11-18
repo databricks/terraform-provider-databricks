@@ -1041,9 +1041,9 @@ resource "databricks_permissions" "supervisor_agent_usage" {
 
 ## Serverless compute usage
 
-[Serverless compute](https://docs.databricks.com/aws/en/compute/serverless/manage-serverless-compute) objects control who can run serverless workloads. They have two possible permissions: `CAN_USE` and `CAN_MANAGE`.
+[Serverless compute](https://docs.databricks.com/aws/en/compute/serverless/manage-serverless-compute) access controls decide who can run serverless workloads. Serverless computes and compute policies have two possible permissions: `CAN_USE` and `CAN_MANAGE`.
 
-Every workspace has a Default Interactive Compute, for notebooks and Databricks Connect, and a Default Automated Compute, for jobs and pipelines. Use `default_serverless_compute` to manage one of them by type, so that the same configuration works in every workspace without looking up its ID:
+Every workspace has a Default Interactive Compute, for notebooks and Databricks Connect, and a Default Automated Compute, for jobs and pipelines. Interactive computes use the `serverless-compute` permissions object. Automated computes are managed as compute policies and use the `compute-policy` permissions object. Use `default_serverless_compute` and `default_compute_policy` to manage the two defaults by type, so that the same configuration works in every workspace without looking up their IDs:
 
 ```hcl
 resource "databricks_group" "ds" {
@@ -1062,7 +1062,7 @@ resource "databricks_permissions" "serverless_interactive" {
 
 # Every workspace user can run serverless jobs and pipelines.
 resource "databricks_permissions" "serverless_automated" {
-  default_serverless_compute = "AUTOMATED"
+  default_compute_policy = "AUTOMATED"
 
   access_control {
     group_name       = "users"
@@ -1071,11 +1071,11 @@ resource "databricks_permissions" "serverless_automated" {
 }
 ```
 
-Use `serverless_compute_id` to manage any serverless compute by its ID, including custom automated computes:
+Use `compute_policy_id` to manage a custom automated compute by its ID, or `serverless_compute_id` to manage an interactive compute by its ID:
 
 ```hcl
 resource "databricks_permissions" "team_compute" {
-  serverless_compute_id = "00000000-0000-0000-0000-000000000000"
+  compute_policy_id = "00000000-0000-0000-0000-000000000000"
 
   access_control {
     group_name       = databricks_group.ds.display_name
@@ -1088,9 +1088,9 @@ resource "databricks_permissions" "team_compute" {
 
 ~> Destroying a `databricks_permissions` resource for serverless compute leaves only workspace admins and the applying user with access, so other users can no longer run serverless workloads on that compute. To return a default compute to all-users access, apply `group_name = "users"` with `CAN_USE` before removing the resource.
 
-`default_serverless_compute` finds the default compute through the serverless compute list APIs, which require serverless compute to be enabled in the workspace.
+`default_serverless_compute` and `default_compute_policy` find the default computes through the serverless compute and compute policy list APIs, which require serverless compute to be enabled in the workspace.
 
-You don't need to import a default compute's permissions before managing them, because applying the resource replaces the existing access control list. If you do import, configure the resource with `serverless_compute_id` and import `/serverless-compute/<id>`. Importing into a resource configured with `default_serverless_compute` makes Terraform replace the resource on the next apply, which briefly removes access for everyone except admins.
+You don't need to import a default compute's permissions before managing them, because applying the resource replaces the existing access control list. If you do import, configure the resource with `serverless_compute_id` or `compute_policy_id` and import `/serverless-compute/<id>` or `/compute-policy/<id>`. Importing into a resource configured with `default_serverless_compute` or `default_compute_policy` makes Terraform replace the resource on the next apply, which briefly removes access for everyone except admins.
 
 ## Instance Profiles
 
@@ -1136,8 +1136,10 @@ Exactly one of the following arguments is required:
 - `database_project_name` - [Lakebase database project](https://docs.databricks.com/aws/en/oltp/) name
 - `knowledge_assistant_id` - [Knowledge Assistant](knowledge_assistant.md) id
 - `supervisor_agent_id` - [Supervisor Agent](supervisor_agent.md) id
-- `serverless_compute_id` - [serverless compute](https://docs.databricks.com/aws/en/compute/serverless/manage-serverless-compute) id
-- `default_serverless_compute` - the workspace's default serverless compute to manage: `INTERACTIVE` (Default Interactive Compute) or `AUTOMATED` (Default Automated Compute)
+- `serverless_compute_id` - interactive [serverless compute](https://docs.databricks.com/aws/en/compute/serverless/manage-serverless-compute) id
+- `default_serverless_compute` - the workspace's default serverless compute to manage: `INTERACTIVE` (Default Interactive Compute)
+- `compute_policy_id` - compute policy id, including automated [serverless computes](https://docs.databricks.com/aws/en/compute/serverless/manage-serverless-compute)
+- `default_compute_policy` - the workspace's default compute policy to manage: `AUTOMATED` (Default Automated Compute)
 - `authorization` - either [`tokens`](https://docs.databricks.com/administration-guide/access-control/tokens.html) or [`passwords`](https://docs.databricks.com/administration-guide/users-groups/single-sign-on/index.html#configure-password-permission).
 - `sql_endpoint_id` - [SQL warehouse](sql_endpoint.md) id
 - `sql_dashboard_id` - [SQL dashboard](sql_dashboard.md) id

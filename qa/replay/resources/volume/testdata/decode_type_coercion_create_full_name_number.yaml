@@ -1,0 +1,117 @@
+# Pins a create POST answered with "full_name": 123. The SDK decodes the number as the
+# string "123", so it becomes the ID: the reads after create, every refresh and the destroy
+# address /volumes/123, while volume_path comes from the GET's full_name. An update then
+# fails before any PATCH, because the ID isn't in the format catalog.schema.volume. API
+# responses are inferred from the Unity Catalog API contract, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: create_answered_with_full_name_as_a_number_uses_its_digits_as_the_id
+    config: &config |
+      resource "databricks_volume" "this" {
+        name         = "numbered_volume"
+        catalog_name = "main"
+        schema_name  = "replay"
+        volume_type  = "MANAGED"
+        comment      = "first comment"
+      }
+    calls:
+      - request:
+          method: POST
+          path: /api/2.1/unity-catalog/volumes
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "numbered_volume", "volume_type": "MANAGED",
+                   "comment": "first comment"}
+        response:
+          status: 200
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "numbered_volume", "full_name": 123,
+                   "volume_type": "MANAGED", "comment": "first comment",
+                   "owner": "replay-admin@example.com",
+                   "storage_location": "s3://replay-metastore/volume-197"}
+      - &read_numbered
+        request:
+          method: GET
+          path: /api/2.1/unity-catalog/volumes/123
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "numbered_volume",
+                   "full_name": "main.replay.numbered_volume",
+                   "volume_type": "MANAGED", "comment": "first comment",
+                   "owner": "replay-admin@example.com",
+                   "storage_location": "s3://replay-metastore/volume-197"}
+      - *read_numbered
+    state: &numbered_state
+      resources:
+        databricks_volume.this:
+          attributes:
+            - path: [id]
+              equals: "123"
+            - path: [volume_path]
+              equals: /Volumes/main/replay/numbered_volume
+  - name: plan_after_create_refreshes_the_numeric_id_and_is_empty
+    plan_only: true
+    config: *config
+    plan:
+      expect: empty
+      changes: {}
+    state: *numbered_state
+    calls:
+      - *read_numbered
+  - name: update_fails_before_any_patch_because_the_id_has_no_dots
+    config: &config_commented |
+      resource "databricks_volume" "this" {
+        name         = "numbered_volume"
+        catalog_name = "main"
+        schema_name  = "replay"
+        volume_type  = "MANAGED"
+        comment      = "second comment"
+      }
+    expect_error: 'Error: cannot update volume: invalid id <123>: id should be in the
+      format catalog\.schema\.volume\n'
+    calls:
+      - *read_numbered
+  - name: plan_after_the_failed_update_keeps_the_numeric_id_and_plans_the_same_update
+    plan_only: true
+    config: *config_commented
+    plan:
+      expect: non_empty
+      changes:
+        databricks_volume.this:
+          actions: [update]
+          before:
+            - path: [comment]
+              equals: first comment
+          after:
+            - path: [comment]
+              equals: second comment
+    state: *numbered_state
+    calls:
+      - *read_numbered
+destroy:
+  calls:
+    - *read_numbered
+    - request:
+        method: DELETE
+        path: /api/2.1/unity-catalog/volumes/123
+        headers:
+          X-Databricks-Workspace-Id: "12345"
+        body: null
+      response:
+        status: 200
+        body:
+          json: {}

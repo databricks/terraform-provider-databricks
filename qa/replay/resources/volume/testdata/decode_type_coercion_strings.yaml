@@ -1,0 +1,157 @@
+# Pins how a refresh decodes a JSON value of the wrong type for a string field. The SDK
+# first decodes the value, and when that fails it decodes the value's raw bytes as a quoted
+# string, so no error is returned. "full_name": 123 sets volume_path to /Volumes/123 and
+# keeps the ID, so the next plan is empty. A comment that is a JSON object becomes the
+# object's exact text, so the next plan updates the comment. "owner": true becomes the
+# string "true", and the unconfigured owner is adopted with no plan change. The bodies are
+# text so the comment's whitespace is exact. API responses are inferred from the Unity
+# Catalog API contract, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: create
+    config: &config |
+      resource "databricks_volume" "this" {
+        name         = "coerced_volume"
+        catalog_name = "main"
+        schema_name  = "replay"
+        volume_type  = "MANAGED"
+        comment      = "first comment"
+      }
+    calls:
+      - request:
+          method: POST
+          path: /api/2.1/unity-catalog/volumes
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "coerced_volume", "volume_type": "MANAGED",
+                   "comment": "first comment"}
+        response:
+          status: 200
+          body:
+            json: &created {"catalog_name": "main", "schema_name": "replay",
+                            "name": "coerced_volume",
+                            "full_name": "main.replay.coerced_volume",
+                            "volume_type": "MANAGED", "comment": "first comment",
+                            "owner": "replay-admin@example.com",
+                            "storage_location": "s3://replay-metastore/volume-197"}
+      - &read_created
+        request: &read_request
+          method: GET
+          path: /api/2.1/unity-catalog/volumes/main.replay.coerced_volume
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 200
+          body:
+            json: *created
+      - *read_created
+  - name: refresh_with_full_name_as_a_number_sets_volume_path_from_its_digits
+    plan_only: true
+    config: *config
+    plan:
+      expect: empty
+      changes: {}
+    state:
+      resources:
+        databricks_volume.this:
+          attributes:
+            - path: [id]
+              equals: main.replay.coerced_volume
+            - path: [volume_path]
+              equals: /Volumes/123
+    calls:
+      - request: *read_request
+        response:
+          status: 200
+          headers:
+            Content-Type: application/json
+          body:
+            text: '{"catalog_name": "main", "schema_name": "replay", "name":
+              "coerced_volume", "full_name": 123, "volume_type": "MANAGED", "comment":
+              "first comment", "owner": "replay-admin@example.com", "storage_location":
+              "s3://replay-metastore/volume-197"}'
+  - name: refresh_with_comment_as_an_object_sets_its_text_and_plans_an_update
+    plan_only: true
+    config: *config
+    plan:
+      expect: non_empty
+      changes:
+        databricks_volume.this:
+          actions: [update]
+          before:
+            - path: [comment]
+              equals: '{"text": "first comment", "lines": [1, 2]}'
+          after:
+            - path: [comment]
+              equals: first comment
+    state:
+      resources:
+        databricks_volume.this:
+          attributes:
+            - path: [id]
+              equals: main.replay.coerced_volume
+            - path: [comment]
+              equals: '{"text": "first comment", "lines": [1, 2]}'
+            - path: [volume_path]
+              equals: /Volumes/main/replay/coerced_volume
+    calls:
+      - request: *read_request
+        response:
+          status: 200
+          headers:
+            Content-Type: application/json
+          body:
+            text: '{"catalog_name": "main", "schema_name": "replay", "name":
+              "coerced_volume", "full_name": "main.replay.coerced_volume", "volume_type":
+              "MANAGED", "comment": {"text": "first comment", "lines": [1, 2]}, "owner":
+              "replay-admin@example.com", "storage_location":
+              "s3://replay-metastore/volume-197"}'
+  - name: refresh_with_owner_as_a_boolean_adopts_the_string_true
+    plan_only: true
+    config: *config
+    plan:
+      expect: empty
+      changes: {}
+    state:
+      resources:
+        databricks_volume.this:
+          attributes:
+            - path: [id]
+              equals: main.replay.coerced_volume
+            - path: [owner]
+              equals: "true"
+            - path: [volume_path]
+              equals: /Volumes/main/replay/coerced_volume
+    calls:
+      - request: *read_request
+        response:
+          status: 200
+          headers:
+            Content-Type: application/json
+          body:
+            text: '{"catalog_name": "main", "schema_name": "replay", "name":
+              "coerced_volume", "full_name": "main.replay.coerced_volume", "volume_type":
+              "MANAGED", "comment": "first comment", "owner": true, "storage_location":
+              "s3://replay-metastore/volume-197"}'
+destroy:
+  calls:
+    - *read_created
+    - request:
+        method: DELETE
+        path: /api/2.1/unity-catalog/volumes/main.replay.coerced_volume
+        headers:
+          X-Databricks-Workspace-Id: "12345"
+        body: null
+      response:
+        status: 200
+        body:
+          json: {}

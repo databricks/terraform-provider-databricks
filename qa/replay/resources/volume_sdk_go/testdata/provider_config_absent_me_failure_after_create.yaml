@@ -1,0 +1,113 @@
+# Runs volume/testdata/provider_config_absent_me_failure_after_create.yaml with
+# databricks_volume on sdk-go uc/volumes/v1 in every step, and expects the same behavior.
+# The volume requests carry no Accept header, which an empty header expectation pins. The
+# original's description:
+#
+# Pins a failing SCIM /Me call after create, without a provider_config block and with
+# no workspace ID in host metadata. The volume is created and read, then /Me answers
+# 403 and apply fails with the provider_config diagnostic. Terraform keeps the volume
+# in state as tainted, so the next plan refreshes it, resolves the ID through /Me and
+# plans a replacement. API responses are inferred from the Unity Catalog and SCIM API
+# contracts, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+steps:
+  - name: me_failure_after_create_fails_apply
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: &config |
+      resource "databricks_volume" "this" {
+        name         = "me_failure_volume"
+        catalog_name = "main"
+        schema_name  = "replay"
+        volume_type  = "MANAGED"
+      }
+    expect_error: 'cannot populate provider_config for volume: failed to resolve
+      workspace_id: failed to get the workspace_id: Caller cannot read /Me'
+    calls:
+      - request:
+          method: POST
+          path: /api/2.1/unity-catalog/volumes
+          headers:
+            Content-Type: application/json
+            Accept: ""
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "me_failure_volume", "volume_type": "MANAGED"}
+        response:
+          status: 200
+          body:
+            json: &volume {"catalog_name": "main", "schema_name": "replay",
+                           "name": "me_failure_volume",
+                           "full_name": "main.replay.me_failure_volume",
+                           "volume_type": "MANAGED", "owner": "replay-admin@example.com",
+                           "storage_location": "s3://replay-metastore/volume-73",
+                           "metastore_id": "11111111-1111-1111-1111-111111111111",
+                           "volume_id": "00000000-0000-4000-8000-000000000073"}
+      - &read_volume
+        request:
+          method: GET
+          path: /api/2.1/unity-catalog/volumes/main.replay.me_failure_volume
+          headers:
+            Accept: ""
+          body: null
+        response:
+          status: 200
+          body:
+            json: *volume
+      - request: &me_request
+          method: GET
+          path: /api/2.0/preview/scim/v2/Me
+          query:
+            excludedAttributes: [entitlements]
+          body: null
+        response:
+          status: 403
+          body:
+            json: {"error_code": "PERMISSION_DENIED",
+                   "message": "Caller cannot read /Me"}
+  - name: next_plan
+    sdk_implementations:
+      databricks_volume: sdk_go
+    plan_only: true
+    config: *config
+    plan:
+      expect: non_empty
+      changes:
+        databricks_volume.this:
+          actions: [delete, create]
+    calls:
+      - *read_volume
+      - &me
+        request: *me_request
+        response:
+          status: 200
+          headers:
+            X-Databricks-Org-Id: "12345"
+          body:
+            json: {"id": "1001", "userName": "replay-admin@example.com",
+                   "schemas": ["urn:ietf:params:scim:schemas:core:2.0:User"]}
+    state:
+      resources:
+        databricks_volume.this:
+          attributes:
+            - path: [provider_config, 0, workspace_id]
+              equals: "12345"
+destroy:
+  calls:
+    - *read_volume
+    - *me
+    - *me
+    - request:
+        method: DELETE
+        path: /api/2.1/unity-catalog/volumes/main.replay.me_failure_volume
+        headers:
+          Accept: ""
+        body: null
+      response:
+        status: 200
+        body:
+          json: {}

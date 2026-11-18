@@ -1,0 +1,279 @@
+# Runs volume/testdata/response_decoding_errors.yaml with databricks_volume on sdk-go
+# uc/volumes/v1 in every step, and expects the same behavior. The volume requests carry no
+# Accept header, which an empty header expectation pins. The PATCH bodies also carry
+# full_name_arg, the full name in their path, because sdk-go serializes the path field
+# into the body. The original's description:
+#
+# Pins how the classic client decodes 200 responses. Malformed JSON on the POST, GET or
+# PATCH fails with the SDK's unmarshal error and a request log; the pattern checks its
+# message, request line and echoed body, and skips the generated headers in between. An
+# HTML body fails with the SDK's HTML error. An empty GET body blanks every field in the
+# refreshed state and plans a replacement. A PATCH answered {} or without full_name sets
+# the ID to the empty full name, so the read after the update GETs
+# /api/2.1/unity-catalog/volumes/; it fails and the volume keeps its old ID. That empty
+# ID is a known defect: Update takes the ID from the response's full_name without
+# checking it. A fix is expected to keep the ID; update those steps with it. API
+# responses are inferred from the Unity Catalog API contract, not recorded; the answer
+# to that empty-name GET is the workspace's usual reply to an unknown route.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: create_answered_200_with_malformed_json_fails_with_request_log
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: &config |
+      resource "databricks_volume" "this" {
+        name         = "decode_volume"
+        catalog_name = "main"
+        schema_name  = "replay"
+        volume_type  = "MANAGED"
+        comment      = "first comment"
+      }
+    expect_error: 'Error: cannot create volume: failed to unmarshal response body:
+      unexpected end of JSON input\. This is likely a bug in the Databricks SDK for Go or
+      the underlying REST API\. Please report this issue with the following debugging
+      information to the SDK issue tracker at
+      https://github\.com/databricks/databricks-sdk-go/issues\. Request
+      log:\n```\nPOST /api/2\.1/unity-catalog/volumes\n(?s:.*)<
+      \{"full_name": "main\.replay\.decode_volume",\n```\n'
+    calls:
+      - request: &create_request
+          method: POST
+          path: /api/2.1/unity-catalog/volumes
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+            Accept: ""
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "decode_volume", "volume_type": "MANAGED",
+                   "comment": "first comment"}
+        response:
+          status: 200
+          headers:
+            Content-Type: application/json
+          body:
+            text: '{"full_name": "main.replay.decode_volume",'
+  - name: create
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: *config
+    calls:
+      - request: *create_request
+        response:
+          status: 200
+          body:
+            json: &created {"catalog_name": "main", "schema_name": "replay",
+                            "name": "decode_volume",
+                            "full_name": "main.replay.decode_volume",
+                            "volume_type": "MANAGED", "comment": "first comment",
+                            "owner": "replay-admin@example.com",
+                            "storage_location": "s3://replay-metastore/volume-181",
+                            "metastore_id": "11111111-1111-1111-1111-111111111111",
+                            "volume_id": "00000000-0000-4000-8000-000000000181"}
+      - &read_created
+        request: &read_request
+          method: GET
+          path: /api/2.1/unity-catalog/volumes/main.replay.decode_volume
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+            Accept: ""
+          body: null
+        response:
+          status: 200
+          body:
+            json: *created
+      - *read_created
+  - name: refresh_answered_200_with_html_fails_with_html_error
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: *config
+    expect_error: 'Error: cannot read volume: received HTML response instead of JSON\n'
+    calls:
+      - request: *read_request
+        response:
+          status: 200
+          headers:
+            Content-Type: text/html; charset=utf-8
+          body:
+            text: <html><body>Sign in</body></html>
+  - name: refresh_answered_200_with_empty_body_blanks_the_state_and_plans_replacement
+    sdk_implementations:
+      databricks_volume: sdk_go
+    plan_only: true
+    config: *config
+    plan:
+      expect: non_empty
+      changes:
+        databricks_volume.this:
+          actions: [delete, create]
+          before:
+            - path: [catalog_name]
+              equals: ""
+            - path: [name]
+              equals: ""
+    state:
+      resources:
+        databricks_volume.this:
+          attributes:
+            - path: [id]
+              equals: main.replay.decode_volume
+            - path: [volume_path]
+              equals: /Volumes/
+    calls:
+      - request: *read_request
+        response:
+          status: 200
+          body: null
+  - name: refresh_answered_200_with_malformed_json_fails_with_request_log
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: *config
+    expect_error: 'Error: cannot read volume: failed to unmarshal response body:
+      unexpected end of JSON input\. This is likely a bug in the Databricks SDK for Go or
+      the underlying REST API\. Please report this issue with the following debugging
+      information to the SDK issue tracker at
+      https://github\.com/databricks/databricks-sdk-go/issues\. Request
+      log:\n```\nGET /api/2\.1/unity-catalog/volumes/main\.replay\.decode_volume\n(?s:.*)<
+      \{"full_name": "main\.replay\.decode_volume",\n```\n'
+    calls:
+      - request: *read_request
+        response:
+          status: 200
+          headers:
+            Content-Type: application/json
+          body:
+            text: '{"full_name": "main.replay.decode_volume",'
+  - name: update_answered_200_with_malformed_json_fails_with_request_log
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: &config_commented |
+      resource "databricks_volume" "this" {
+        name         = "decode_volume"
+        catalog_name = "main"
+        schema_name  = "replay"
+        volume_type  = "MANAGED"
+        comment      = "decoded"
+      }
+    expect_error: 'Error: cannot update volume: failed to unmarshal response body:
+      unexpected end of JSON input\. This is likely a bug in the Databricks SDK for Go or
+      the underlying REST API\. Please report this issue with the following debugging
+      information to the SDK issue tracker at
+      https://github\.com/databricks/databricks-sdk-go/issues\. Request
+      log:\n```\nPATCH
+      /api/2\.1/unity-catalog/volumes/main\.replay\.decode_volume\n(?s:.*)<
+      \{"full_name": "main\.replay\.decode_volume",\n```\n'
+    calls:
+      - *read_created
+      - request: &patch_request
+          method: PATCH
+          path: /api/2.1/unity-catalog/volumes/main.replay.decode_volume
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+            Accept: ""
+          body:
+            json: {"full_name_arg": "main.replay.decode_volume",
+                   "comment": "decoded"}
+        response:
+          status: 200
+          headers:
+            Content-Type: application/json
+          body:
+            text: '{"full_name": "main.replay.decode_volume",'
+  - name: update_answered_200_with_empty_object_reads_an_empty_name
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: *config_commented
+    expect_error: 'Error: cannot read volume: No API found for ''GET
+      /unity-catalog/volumes/''\n'
+    calls:
+      - *read_created
+      - request: *patch_request
+        response:
+          status: 200
+          body:
+            json: {}
+      - request: &read_empty_name_request
+          method: GET
+          path: /api/2.1/unity-catalog/volumes/
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+            Accept: ""
+          body: null
+        response: &empty_name_not_found
+          status: 404
+          body:
+            json: {"error_code": "ENDPOINT_NOT_FOUND",
+                   "message": "No API found for 'GET /unity-catalog/volumes/'"}
+  - name: plan_after_empty_object_keeps_the_old_id_and_plans_the_update_again
+    sdk_implementations:
+      databricks_volume: sdk_go
+    plan_only: true
+    config: *config_commented
+    plan: &plans_comment_update
+      expect: non_empty
+      changes:
+        databricks_volume.this:
+          actions: [update]
+          before:
+            - path: [comment]
+              equals: first comment
+          after:
+            - path: [comment]
+              equals: decoded
+    state: &old_id
+      resources:
+        databricks_volume.this:
+          attributes:
+            - path: [id]
+              equals: main.replay.decode_volume
+    calls:
+      - *read_created
+  - name: update_answered_200_without_full_name_reads_an_empty_name
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: *config_commented
+    expect_error: 'Error: cannot read volume: No API found for ''GET
+      /unity-catalog/volumes/''\n'
+    calls:
+      - *read_created
+      - request: *patch_request
+        response:
+          status: 200
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "decode_volume", "volume_type": "MANAGED",
+                   "comment": "decoded", "owner": "replay-admin@example.com",
+                   "storage_location": "s3://replay-metastore/volume-181",
+                   "metastore_id": "11111111-1111-1111-1111-111111111111",
+                   "volume_id": "00000000-0000-4000-8000-000000000181"}
+      - request: *read_empty_name_request
+        response: *empty_name_not_found
+  - name: plan_after_missing_full_name_keeps_the_old_id_and_plans_the_update_again
+    sdk_implementations:
+      databricks_volume: sdk_go
+    plan_only: true
+    config: *config_commented
+    plan: *plans_comment_update
+    state: *old_id
+    calls:
+      - *read_created
+destroy:
+  calls:
+    - *read_created
+    - request:
+        method: DELETE
+        path: /api/2.1/unity-catalog/volumes/main.replay.decode_volume
+        headers:
+          X-Databricks-Workspace-Id: "12345"
+          Accept: ""
+        body: null
+      response:
+        status: 200
+        body:
+          json: {}

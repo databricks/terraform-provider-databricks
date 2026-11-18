@@ -14,7 +14,9 @@ import (
 )
 
 func TestVolumesCornerCases(t *testing.T) {
-	qa.ResourceCornerCases(t, ResourceExternalLocation())
+	// Update rejects an ID that isn't catalog.schema.volume before any request, so the
+	// default corner-case ID "x" would never reach the failing fixture server.
+	qa.ResourceCornerCases(t, ResourceVolume(), qa.CornerCaseID("main.default.volume"))
 }
 
 func TestVolumesCreateWithoutInitialOwner(t *testing.T) {
@@ -154,6 +156,13 @@ func TestVolumesCreateWithoutInitialOwner_Error(t *testing.T) {
 			{
 				Method:   http.MethodPost,
 				Resource: "/api/2.1/unity-catalog/volumes",
+				ExpectedRequest: catalog.CreateVolumeRequestContent{
+					Name:        "testName",
+					VolumeType:  catalog.VolumeType("MANAGED"),
+					CatalogName: "testCatalogName",
+					SchemaName:  "testSchemaName",
+					Comment:     "This is a test comment.",
+				},
 				Response: apierr.APIError{
 					ErrorCode: "INVALID_REQUEST",
 					Message:   "Internal error happened",
@@ -216,6 +225,10 @@ func TestVolumesCreateWithInitialOwner_Error(t *testing.T) {
 			{
 				Method:   http.MethodPatch,
 				Resource: "/api/2.1/unity-catalog/volumes/testCatalogName.testSchemaName.testName",
+				ExpectedRequest: catalog.UpdateVolumeRequestContent{
+					Comment: "This is a test comment.",
+					Owner:   "testOwner",
+				},
 				Response: apierr.APIError{
 					ErrorCode: "SERVER_ERROR",
 					Message:   "Something unexpected happened",

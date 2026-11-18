@@ -1,22 +1,64 @@
 package httpfixture
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
 	"reflect"
+	"regexp"
+
+	"gopkg.in/yaml.v3"
 )
 
-// Matcher relaxes a selected request value without changing literal payloads.
-type Matcher string
+// MatcherType names a matcher that takes no argument.
+type MatcherType string
 
-// AnyString requires a present string, including the empty string. It does not
-// capture values or substitute them into later requests or responses.
-const AnyString Matcher = "any_string"
+const (
+	// AnyString requires a present string, including the empty string. It does not
+	// capture values or substitute them into later requests or responses.
+	AnyString MatcherType = "any_string"
+	// Absent requires a header to be missing. Unlisted query parameters and JSON
+	// fields are already rejected, so it applies only to headers.
+	Absent MatcherType = "absent"
+)
+
+// Matcher replaces the exact comparison of one request value. Set either Type or
+// Pattern, a regular expression the whole value must match. In YAML, a type is a
+// scalar and a pattern is a {pattern: <regular expression>} mapping.
+type Matcher struct {
+	Type    MatcherType
+	Pattern string
+}
+
+// UnmarshalYAML rejects mapping keys other than pattern, because yaml.v3 does not
+// apply the decoder's KnownFields setting inside custom unmarshalers.
+func (m *Matcher) UnmarshalYAML(node *yaml.Node) error {
+	switch {
+	case node.Kind == yaml.ScalarNode:
+		m.Type = MatcherType(node.Value)
+		return nil
+	case node.Kind == yaml.MappingNode && len(node.Content) == 2 && node.Content[0].Value == "pattern":
+		if err := node.Content[1].Decode(&m.Pattern); err != nil || m.Pattern == "" {
+			return fmt.Errorf("line %d: pattern must be a nonempty regular expression", node.Line)
+		}
+		return nil
+	}
+	return fmt.Errorf("line %d: expected a matcher name or {pattern: <regular expression>}", node.Line)
+}
+
+// MarshalYAML writes the same forms UnmarshalYAML reads, so refreshed fixtures keep them.
+func (m Matcher) MarshalYAML() (any, error) {
+	if m.Pattern != "" {
+		return map[string]string{"pattern": m.Pattern}, nil
+	}
+	return string(m.Type), nil
+}
 
 // Matchers override only the selected request values. Headers and query keys
-// require exactly one value; JSON targets must exist in the sample body.
-// Keeping these annotations outside the payload avoids reserved JSON keys.
+// require exactly one value unless the header must be absent; JSON targets must
+// exist in the sample body. Keeping these annotations outside the payload avoids
+// reserved JSON keys.
 type Matchers struct {
 	Headers map[string]Matcher `yaml:"headers,omitempty"`
 	Query   map[string]Matcher `yaml:"query,omitempty"`
@@ -24,55 +66,122 @@ type Matchers struct {
 }
 
 // JSONMatcher selects a literal object key or zero-based array index at each
-// path segment. An explicit empty path selects the whole JSON body.
+// path segment. An explicit empty path selects the whole JSON body. Set either
+// Type or Pattern.
 type JSONMatcher struct {
-	Path []any   `yaml:"path"`
-	Type Matcher `yaml:"type"`
+	Path    []any       `yaml:"path"`
+	Type    MatcherType `yaml:"type,omitempty"`
+	Pattern string      `yaml:"pattern,omitempty"`
 }
 
-func compileMatchers(m Matchers, body any, hasBody bool) (Matchers, any, error) {
-	headers := make(map[string]Matcher, len(m.Headers))
+// compiledMatcher is a validated Matcher. A nil pattern accepts every string.
+type compiledMatcher struct {
+	absent  bool
+	pattern *regexp.Regexp
+}
+
+func (m compiledMatcher) matches(value string) bool {
+	return m.pattern == nil || m.pattern.MatchString(value)
+}
+
+// compiledMatchers holds header matchers under canonical names.
+type compiledMatchers struct {
+	headers map[string]compiledMatcher
+	query   map[string]compiledMatcher
+}
+
+// errMatcherType reports a type the location does not support; callers name the location.
+var errMatcherType = errors.New("unsupported matcher type")
+
+func compileMatcher(m Matcher, allowAbsent bool) (compiledMatcher, error) {
+	switch {
+	case m.Pattern != "" && m.Type != "":
+		return compiledMatcher{}, fmt.Errorf("set either a matcher type or a pattern, not both")
+	case m.Pattern != "":
+		// Anchoring makes the pattern constrain the whole value, as an exact sample does.
+		pattern, err := regexp.Compile("^(?:" + m.Pattern + ")$")
+		if err != nil {
+			return compiledMatcher{}, fmt.Errorf("invalid pattern %q: %w", m.Pattern, err)
+		}
+		return compiledMatcher{pattern: pattern}, nil
+	case m.Type == AnyString:
+		return compiledMatcher{}, nil
+	case m.Type == Absent && allowAbsent:
+		return compiledMatcher{absent: true}, nil
+	case m.Type == Absent:
+		return compiledMatcher{}, fmt.Errorf("absent applies only to headers; unlisted query parameters and JSON fields already fail to match")
+	}
+	return compiledMatcher{}, errMatcherType
+}
+
+func compileMatchers(m Matchers, headerSamples map[string]string, body any, hasBody bool) (compiledMatchers, any, error) {
+	result := compiledMatchers{headers: map[string]compiledMatcher{}, query: map[string]compiledMatcher{}}
+	samples := map[string]bool{}
+	for key := range headerSamples {
+		samples[http.CanonicalHeaderKey(key)] = true
+	}
 	for key, matcher := range m.Headers {
 		canonical := http.CanonicalHeaderKey(key)
-		if _, duplicate := headers[canonical]; duplicate {
-			return Matchers{}, nil, fmt.Errorf("duplicate header matcher %q (case-insensitive)", key)
+		if _, duplicate := result.headers[canonical]; duplicate {
+			return compiledMatchers{}, nil, fmt.Errorf("duplicate header matcher %q (case-insensitive)", key)
 		}
-		headers[canonical] = matcher
+		compiled, err := compileKeyMatcher("headers", key, matcher, "any_string, absent or a pattern")
+		if err != nil {
+			return compiledMatchers{}, nil, err
+		}
+		if compiled.absent && samples[canonical] {
+			return compiledMatchers{}, nil, fmt.Errorf("headers[%q]: remove the header's sample from headers; it must be absent", key)
+		}
+		result.headers[canonical] = compiled
 	}
-	for location, values := range map[string]map[string]Matcher{"headers": headers, "query": m.Query} {
-		for key, matcher := range values {
-			if key == "" || matcher != AnyString {
-				return Matchers{}, nil, fmt.Errorf("%s[%q]: expected a nonempty key and matcher any_string, got %q", location, key, matcher)
-			}
+	for key, matcher := range m.Query {
+		compiled, err := compileKeyMatcher("query", key, matcher, "any_string or a pattern")
+		if err != nil {
+			return compiledMatchers{}, nil, err
 		}
+		result.query[key] = compiled
 	}
 	for i, matcher := range m.JSON {
 		if !hasBody {
-			return Matchers{}, nil, fmt.Errorf("json[%d]: requires body.json", i)
+			return compiledMatchers{}, nil, fmt.Errorf("json[%d]: requires body.json", i)
 		}
-		if matcher.Path == nil || matcher.Type != AnyString {
-			return Matchers{}, nil, fmt.Errorf("json[%d]: requires an explicit path and type any_string", i)
+		compiled, err := compileMatcher(Matcher{Type: matcher.Type, Pattern: matcher.Pattern}, false)
+		if matcher.Path == nil || errors.Is(err, errMatcherType) {
+			return compiledMatchers{}, nil, fmt.Errorf("json[%d]: requires an explicit path and type any_string or a pattern", i)
 		}
-		var err error
-		body, err = installJSONMatcher(body, matcher.Path)
 		if err != nil {
-			return Matchers{}, nil, fmt.Errorf("json[%d] path %v: %w", i, matcher.Path, err)
+			return compiledMatchers{}, nil, fmt.Errorf("json[%d]: %w", i, err)
+		}
+		body, err = installJSONMatcher(body, matcher.Path, compiled)
+		if err != nil {
+			return compiledMatchers{}, nil, fmt.Errorf("json[%d] path %v: %w", i, matcher.Path, err)
 		}
 	}
-	return Matchers{Headers: headers, Query: m.Query}, body, nil
+	return result, body, nil
+}
+
+func compileKeyMatcher(location, key string, matcher Matcher, allowed string) (compiledMatcher, error) {
+	compiled, err := compileMatcher(matcher, location == "headers")
+	if key == "" || errors.Is(err, errMatcherType) {
+		return compiledMatcher{}, fmt.Errorf("%s[%q]: expected a nonempty key and matcher %s, got %q", location, key, allowed, matcher.Type)
+	}
+	if err != nil {
+		return compiledMatcher{}, fmt.Errorf("%s[%q]: %w", location, key, err)
+	}
+	return compiled, nil
 }
 
 // installJSONMatcher edits only the normalized copy, never the fixture's sample.
 // String/null leaves prevent a broad matcher from hiding an object or array.
-func installJSONMatcher(value any, path []any) (any, error) {
+func installJSONMatcher(value any, path []any, matcher compiledMatcher) (any, error) {
 	if len(path) == 0 {
-		if _, duplicate := value.(Matcher); duplicate {
+		if _, duplicate := value.(compiledMatcher); duplicate {
 			return nil, fmt.Errorf("duplicate JSON matcher")
 		}
 		if _, isString := value.(string); !isString && value != nil {
-			return nil, fmt.Errorf("any_string target must be a string or null sample")
+			return nil, fmt.Errorf("matcher target must be a string or null sample")
 		}
-		return AnyString, nil
+		return matcher, nil
 	}
 	switch key := path[0].(type) {
 	case string:
@@ -84,7 +193,7 @@ func installJSONMatcher(value any, path []any) (any, error) {
 		if !exists {
 			return nil, fmt.Errorf("key %q is missing from sample", key)
 		}
-		replacement, err := installJSONMatcher(child, path[1:])
+		replacement, err := installJSONMatcher(child, path[1:], matcher)
 		object[key] = replacement
 		return value, err
 	case int:
@@ -92,7 +201,7 @@ func installJSONMatcher(value any, path []any) (any, error) {
 		if !ok || key < 0 || key >= len(array) {
 			return nil, fmt.Errorf("index %d is outside sample array", key)
 		}
-		replacement, err := installJSONMatcher(array[key], path[1:])
+		replacement, err := installJSONMatcher(array[key], path[1:], matcher)
 		array[key] = replacement
 		return value, err
 	default:
@@ -102,9 +211,9 @@ func installJSONMatcher(value any, path []any) (any, error) {
 
 func matchesJSON(expected, actual any) bool {
 	switch value := expected.(type) {
-	case Matcher:
-		_, isString := actual.(string)
-		return value == AnyString && isString
+	case compiledMatcher:
+		s, isString := actual.(string)
+		return isString && value.matches(s)
 	case map[string]any:
 		object, ok := actual.(map[string]any)
 		if !ok || len(value) != len(object) {
@@ -133,12 +242,34 @@ func matchesJSON(expected, actual any) bool {
 	}
 }
 
-func matchesQuery(expected map[string][]string, matchers map[string]Matcher, actual url.Values) bool {
+func matchesHeaders(expected map[string]string, matchers map[string]compiledMatcher, actual http.Header) bool {
+	for key, header := range expected {
+		if _, overridden := matchers[http.CanonicalHeaderKey(key)]; overridden {
+			continue
+		}
+		if actual.Get(key) != header {
+			return false
+		}
+	}
+	for key, matcher := range matchers {
+		values := actual.Values(key)
+		if matcher.absent {
+			if len(values) != 0 {
+				return false
+			}
+		} else if len(values) != 1 || !matcher.matches(values[0]) {
+			return false
+		}
+	}
+	return true
+}
+
+func matchesQuery(expected map[string][]string, matchers map[string]compiledMatcher, actual url.Values) bool {
 	if len(matchers) == 0 {
 		return url.Values(expected).Encode() == actual.Encode()
 	}
-	for key := range matchers {
-		if len(actual[key]) != 1 {
+	for key, matcher := range matchers {
+		if len(actual[key]) != 1 || !matcher.matches(actual[key][0]) {
 			return false
 		}
 	}

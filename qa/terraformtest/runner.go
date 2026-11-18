@@ -39,13 +39,16 @@ func RunNative(t *testing.T, path string, configure func(*resource.TestCase, fun
 
 func runNative(t *testing.T, definition *testDefinition, configure func(*resource.TestCase, func(*config.Config) error)) {
 	t.Helper()
-	handler, host := replayBoundary(t, definition)
-	runTerraform(t, definition, handler, fixtureConfig(host), configure)
+	handler, server := replayBoundary(t, definition)
+	runTerraform(t, definition, handler, definition.replayHosts(server).fixtureConfig(), configure)
 }
 
 func replayBoundary(t *testing.T, definition *testDefinition) (*httpfixture.Handler, string) {
 	t.Helper()
 	handler := httpfixture.NewHandler()
+	if err := definition.setHosts(handler); err != nil {
+		t.Fatal(err)
+	}
 	handler.SetEnforceCallOrder(definition.EnforceCallOrder)
 	if err := handler.SetReusableFixtures(definition.metadataCalls()); err != nil {
 		t.Fatal(err)
@@ -201,31 +204,52 @@ func (fixtureLoader) Configure(*config.Config) error { return nil }
 // fixtureConfig forces local PAT authentication while retaining routing fields,
 // such as account_id, explicitly set in HCL.
 func fixtureConfig(host string) func(*config.Config) error {
+	return replayHosts{server: host}.fixtureConfig()
+}
+
+func (h replayHosts) fixtureConfig() func(*config.Config) error {
 	return func(cfg *config.Config) error {
+		host, err := h.providerHost(cfg.Host)
+		if err != nil {
+			return err
+		}
 		cfg.Host, cfg.Token, cfg.AuthType = host, "fixture-token", "pat"
 		cfg.Credentials = config.PatCredentials{}
 		// An explicit loader prevents ambient credentials and profiles from filling
 		// configuration fields, including account/workspace routing identifiers.
 		cfg.Loaders = []config.Loader{fixtureLoader{}}
-		cfg.HTTPTransport = fixtureTransport{host: host, transport: &http.Transport{}}
+		cfg.HTTPTransport = fixtureTransport{host: h.server, named: h.named, transport: &http.Transport{}}
 		return nil
 	}
 }
 
 type fixtureTransport struct {
 	host      string
+	named     []*url.URL
 	transport http.RoundTripper
 }
 
-// RoundTrip also rejects redirects outside the fixture server, preventing
-// fixture responses from causing accidental live API calls.
+// RoundTrip sends named hosts to the fixture server and rejects other hosts,
+// including redirects, preventing fixture responses from causing accidental
+// live API calls.
 func (f fixtureTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	expected, err := url.Parse(f.host)
 	if err != nil {
 		return nil, err
 	}
-	if req.URL.Scheme != expected.Scheme || req.URL.Host != expected.Host {
+	if req.URL.Scheme == expected.Scheme && req.URL.Host == expected.Host {
+		return f.transport.RoundTrip(req)
+	}
+	if !isNamedHost(f.named, req.URL) {
 		return nil, fmt.Errorf("hermetic replay rejected request outside fixture server: %s", req.URL)
 	}
-	return f.transport.RoundTrip(req)
+	// The handler matches calls on the Host header, which keeps the named host.
+	local := req.Clone(req.Context())
+	local.URL.Scheme, local.URL.Host, local.Host = expected.Scheme, expected.Host, req.URL.Host
+	resp, err := f.transport.RoundTrip(local)
+	if resp != nil {
+		// The SDK takes a private-link redirect's cloud from the final request's host.
+		resp.Request = req
+	}
+	return resp, err
 }

@@ -121,7 +121,7 @@ func TestHeaderAndQueryMatchersRequireOnePresentValue(t *testing.T) {
 					c.Request.Query["id"] = []string{"recorded"}
 					c.Request.Headers["X-REQUEST-ID"] = "recorded"
 				}
-				c.Request.Matchers = Matchers{Headers: map[string]Matcher{"x-request-id": AnyString}, Query: map[string]Matcher{"id": AnyString}}
+				c.Request.Matchers = Matchers{Headers: map[string]Matcher{"x-request-id": {Type: AnyString}}, Query: map[string]Matcher{"id": {Type: AnyString}}}
 				h := NewHandler()
 				require.NoError(t, h.StartStep("read", []Call{c}))
 				req := httptest.NewRequest("GET", tc.target, nil)
@@ -163,11 +163,11 @@ func TestRejectInvalidMatchersWithoutReplacingFixtures(t *testing.T) {
 		matchers Matchers
 		message  string
 	}{
-		{"unknown header", Matchers{Headers: map[string]Matcher{"X-Id": "any"}}, "expected a nonempty key and matcher any_string"},
-		{"empty header", Matchers{Headers: map[string]Matcher{"": AnyString}}, "expected a nonempty key"},
-		{"duplicate header", Matchers{Headers: map[string]Matcher{"X-Id": AnyString, "x-id": AnyString}}, "duplicate header matcher"},
-		{"unknown query", Matchers{Query: map[string]Matcher{"id": "*"}}, "expected a nonempty key and matcher any_string"},
-		{"empty query", Matchers{Query: map[string]Matcher{"": AnyString}}, "expected a nonempty key"},
+		{"unknown header", Matchers{Headers: map[string]Matcher{"X-Id": {Type: "any"}}}, "expected a nonempty key and matcher any_string"},
+		{"empty header", Matchers{Headers: map[string]Matcher{"": {Type: AnyString}}}, "expected a nonempty key"},
+		{"duplicate header", Matchers{Headers: map[string]Matcher{"X-Id": {Type: AnyString}, "x-id": {Type: AnyString}}}, "duplicate header matcher"},
+		{"unknown query", Matchers{Query: map[string]Matcher{"id": {Type: "*"}}}, "expected a nonempty key and matcher any_string"},
+		{"empty query", Matchers{Query: map[string]Matcher{"": {Type: AnyString}}}, "expected a nonempty key"},
 		{"unknown JSON", Matchers{JSON: []JSONMatcher{{Path: []any{"id"}, Type: "any"}}}, "explicit path and type any_string"},
 		{"missing path", Matchers{JSON: []JSONMatcher{{Type: AnyString}}}, "explicit path and type any_string"},
 		{"missing key", Matchers{JSON: []JSONMatcher{{Path: []any{"missing"}, Type: AnyString}}}, "is missing from sample"},

@@ -4,9 +4,11 @@ package terraformtest
 import (
 	"fmt"
 	"io"
+	"maps"
 	"os"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"strings"
 
 	"gopkg.in/yaml.v3"
@@ -15,13 +17,17 @@ import (
 )
 
 type testDefinition struct {
-	Version          int             `yaml:"version"`
-	HostMetadata     map[string]any  `yaml:"host_metadata,omitempty"`
-	InitialState     *initialState   `yaml:"initial_state,omitempty"`
-	Recording        *recordingSetup `yaml:"recording,omitempty"`
-	EnforceCallOrder bool            `yaml:"enforce_call_order,omitempty"`
-	Steps            []step          `yaml:"steps"`
-	Destroy          destroy         `yaml:"destroy"`
+	Version      int            `yaml:"version"`
+	HostMetadata map[string]any `yaml:"host_metadata,omitempty"`
+	// Hosts names hosts besides the local fixture server, and ProviderHost picks
+	// the one the provider is configured with. Calls without a host expect it.
+	Hosts            map[string]namedHost `yaml:"hosts,omitempty"`
+	ProviderHost     string               `yaml:"provider_host,omitempty"`
+	InitialState     *initialState        `yaml:"initial_state,omitempty"`
+	Recording        *recordingSetup      `yaml:"recording,omitempty"`
+	EnforceCallOrder bool                 `yaml:"enforce_call_order,omitempty"`
+	Steps            []step               `yaml:"steps"`
+	Destroy          destroy              `yaml:"destroy"`
 	checkpoint       []byte
 }
 
@@ -124,6 +130,9 @@ func (d *testDefinition) validate() error {
 	if len(d.Steps) == 0 {
 		return fmt.Errorf("at least one step is required")
 	}
+	if err := d.validateHosts(); err != nil {
+		return err
+	}
 	if d.InitialState != nil {
 		if strings.TrimSpace(d.InitialState.Checkpoint) == "" || filepath.IsAbs(d.InitialState.Checkpoint) {
 			return fmt.Errorf("initial_state.checkpoint must be a nonempty path relative to the YAML file")
@@ -208,30 +217,55 @@ func validateState(state *expectedState) error {
 // validateCalls checks every fixture set up front, including later steps and
 // destroy, so an invalid cleanup fixture cannot interrupt a running lifecycle.
 func (d *testDefinition) validateCalls() error {
-	metadataHandler := httpfixture.NewHandler()
+	// Independent handlers validate the fixtures without requiring consumption.
+	handler := func() (*httpfixture.Handler, error) {
+		h := httpfixture.NewHandler()
+		return h, d.setHosts(h)
+	}
+	metadataHandler, err := handler()
+	if err != nil {
+		return err
+	}
 	if err := metadataHandler.SetReusableFixtures(d.metadataCalls()); err != nil {
 		return err
 	}
 	for i, s := range d.Steps {
-		// Independent handlers validate the fixtures without requiring consumption.
-		handler := httpfixture.NewHandler()
-		if err := handler.StartStep(stepLabel(i, s.Name), s.Calls); err != nil {
+		h, err := handler()
+		if err != nil {
+			return err
+		}
+		if err := h.StartStep(stepLabel(i, s.Name), s.Calls); err != nil {
 			return err
 		}
 	}
-	return httpfixture.NewHandler().StartStep("destroy", d.Destroy.Calls)
+	h, err := handler()
+	if err != nil {
+		return err
+	}
+	return h.StartStep("destroy", d.Destroy.Calls)
 }
 
 // metadataCalls keeps host discovery reusable because Terraform configures
-// fresh provider clients multiple times within a single step.
+// fresh provider clients multiple times within a single step. host_metadata
+// answers the provider host; each named host answers with its own metadata.
 func (d *testDefinition) metadataCalls() []httpfixture.Call {
-	if d.HostMetadata == nil {
-		return nil
+	var calls []httpfixture.Call
+	if d.HostMetadata != nil {
+		calls = append(calls, metadataCall("", d.HostMetadata))
 	}
-	return []httpfixture.Call{{
-		Request:  httpfixture.Request{Method: "GET", Path: "/.well-known/databricks-config"},
-		Response: httpfixture.Response{Status: 200, Body: &httpfixture.Body{JSON: d.HostMetadata}},
-	}}
+	for _, name := range slices.Sorted(maps.Keys(d.Hosts)) {
+		if metadata := d.Hosts[name].Metadata; metadata != nil {
+			calls = append(calls, metadataCall(name, metadata))
+		}
+	}
+	return calls
+}
+
+func metadataCall(host string, metadata map[string]any) httpfixture.Call {
+	return httpfixture.Call{
+		Request:  httpfixture.Request{Method: "GET", Host: host, Path: "/.well-known/databricks-config"},
+		Response: httpfixture.Response{Status: 200, Body: &httpfixture.Body{JSON: metadata}},
+	}
 }
 
 func stepLabel(index int, name string) string {

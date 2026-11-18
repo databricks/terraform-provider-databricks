@@ -1,8 +1,10 @@
 # Pins SCIM /Me answering 404 while destroy builds the volume's workspace client, on a
-# workspace-level provider whose host metadata has no workspace ID. The destroy plan's
-# refresh reads the volume, then Delete treats the routing error as an already deleted
-# volume: it sends no DELETE and destroy succeeds with empty state. API responses are
-# inferred from the Unity Catalog and SCIM API contracts, not recorded.
+# workspace-level provider whose host metadata has no workspace ID. Removing the volume
+# from the configuration destroys it: the plan's refresh reads the volume, then Delete
+# fails on the 404, which is about the caller, not the volume. No DELETE is sent and
+# state keeps the volume and its workspace ID. A 404 from the volume DELETE still
+# removes the volume; delete_missing_or_not.yaml pins that. API responses are inferred
+# from the Unity Catalog and SCIM API contracts, not recorded.
 version: 1
 enforce_call_order: true
 host_metadata:
@@ -10,7 +12,7 @@ host_metadata:
   cloud: AWS
 steps:
   - name: create_checks_workspace_id_through_me
-    config: |
+    config: &config |
       resource "databricks_volume" "this" {
         name         = "me_destroy_volume"
         catalog_name = "main"
@@ -65,15 +67,50 @@ steps:
       # The post-apply refresh plan.
       - *me
       - *read_volume
+  - name: destroy_fails_when_me_is_not_found
+    config: |
+      provider "databricks" {}
+    expect_error: 'Error: cannot delete volume: failed to validate workspace_id: failed
+      to get the workspace_id: User not found\n'
+    calls:
+      # The plan's refresh.
+      - *me
+      - *read_volume
+      # The apply: no DELETE follows the failing /Me.
+      - request: *me_request
+        response:
+          status: 404
+          body:
+            json: {"error_code": "NOT_FOUND",
+                   "message": "User not found"}
+  - name: state_keeps_volume_and_workspace_id
+    plan_only: true
+    config: *config
+    plan:
+      expect: empty
+      changes: {}
+    calls:
+      # The refresh plan.
+      - *me
+      - *read_volume
+    state:
+      resources:
+        databricks_volume.this:
+          attributes:
+            - path: [id]
+              equals: main.replay.me_destroy_volume
+            - path: [provider_config, 0, workspace_id]
+              equals: "12345"
 destroy:
   calls:
-    # The destroy plan's refresh.
     - *me
     - *read_volume
-    # The apply: no DELETE follows the failing /Me.
-    - request: *me_request
+    - *me
+    - request:
+        method: DELETE
+        path: /api/2.1/unity-catalog/volumes/main.replay.me_destroy_volume
+        body: null
       response:
-        status: 404
+        status: 200
         body:
-          json: {"error_code": "NOT_FOUND",
-                 "message": "User not found"}
+          json: {}

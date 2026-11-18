@@ -1,10 +1,13 @@
-# Runs read_errors with reads through sdk-go uc/volumes/v1. A 403 and a 500 with a
-# non-JSON body fail with the existing diagnostics and keep the volume in state, and so
-# does a 200 whose body can't be decoded, without the existing client's request and
-# response dump; a 404 removes the volume, and the same apply recreates it. The GETs carry
-# no Accept header, which the existing client sends. Writes stay on the existing path. API
-# responses are inferred from the Unity Catalog API contract, not recorded. An empty
-# header expectation matches only requests without that header.
+# Runs volume/testdata/read_errors.yaml with databricks_volume on sdk-go uc/volumes/v1 in
+# every step, and expects the same behavior. Two more steps pin that a 200 whose body
+# can't be decoded fails the sdk-go refresh and keeps the volume in state, without the
+# existing client's request and response dump. The volume POST and GET requests carry no
+# Accept header, which an empty header expectation pins. The original's description:
+#
+# Pins refresh error handling. A 403 and a 500 with a non-JSON body fail with their
+# exact diagnostics and keep the volume in state; a 404 removes it, and the same apply
+# recreates it. API responses are inferred from the Unity Catalog API contract, not
+# recorded.
 version: 1
 enforce_call_order: true
 host_metadata:
@@ -29,6 +32,7 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
+            Accept: ""
           body:
             json: {"catalog_name": "main", "schema_name": "replay",
                    "name": "read_errors_volume", "volume_type": "MANAGED"}
@@ -47,8 +51,8 @@ steps:
           method: GET
           path: /api/2.1/unity-catalog/volumes/main.replay.read_errors_volume
           headers:
-            Accept: ""
             X-Databricks-Workspace-Id: "12345"
+            Accept: ""
           body: null
         response:
           status: 200

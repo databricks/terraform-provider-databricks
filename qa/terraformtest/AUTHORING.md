@@ -387,4 +387,4 @@ and `qa/replay/resources/mws_workspaces/native_test.go` for SDK checks and an
 explicit local workspace-host alias. Native fixture files are registered by
 their Go wrappers; do not also discover them through the ordinary YAML wrapper.
 
-`ProviderFactoriesWithSdkGo` builds the same providers with the given resource types using sdk-go, as [`sdk_implementations`](README.md#sdk-implementation-selection) selects them in YAML. `qa/replay/resources/volume/user_agent_test.go` uses it to check the User-Agent of sdk-go reads.
+`ProviderFactoriesWithSdkGo` builds the same providers with the given resource types using sdk-go, as [`sdk_implementations`](README.md#sdk-implementation-selection) selects them in YAML. `qa/replay/resources/volume/user_agent_test.go` uses it to check the User-Agent of sdk-go calls.

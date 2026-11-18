@@ -1,9 +1,13 @@
-# Runs drift with reads through sdk-go uc/volumes/v1. The remote comment and owner change
-# outside Terraform; the refresh shows the update, and apply reverts the owner with one
-# PATCH, then the comment with a PATCH without owner. The GETs carry no Accept header,
-# which the existing client sends. Writes stay on the existing path. API responses are
-# inferred from the Unity Catalog API contract, not recorded. An empty header expectation
-# matches only requests without that header.
+# Runs volume/testdata/drift.yaml with databricks_volume on sdk-go uc/volumes/v1 in every
+# step, and expects the same behavior. The volume POST, GET and PATCH requests carry no
+# Accept header, which an empty header expectation pins. Each PATCH body also carries
+# full_name_arg, the full name in its path, because sdk-go serializes the path field into
+# the body. The original's description:
+#
+# Pins drift. The remote comment and owner change outside Terraform; the plan shows the
+# update, and apply reverts the owner with one PATCH, then the comment with a PATCH
+# without owner. API responses are inferred from the Unity Catalog API contract, not
+# recorded.
 version: 1
 enforce_call_order: true
 host_metadata:
@@ -30,6 +34,7 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
+            Accept: ""
           body:
             json: {"catalog_name": "main", "schema_name": "replay",
                    "name": "drift_volume", "volume_type": "MANAGED",
@@ -50,8 +55,10 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
+            Accept: ""
           body:
-            json: {"comment": "managed by terraform", "owner": "data-engineers"}
+            json: {"full_name_arg": "main.replay.drift_volume",
+                   "comment": "managed by terraform", "owner": "data-engineers"}
         response:
           status: 200
           body:
@@ -68,8 +75,8 @@ steps:
           method: GET
           path: /api/2.1/unity-catalog/volumes/main.replay.drift_volume
           headers:
-            Accept: ""
             X-Databricks-Workspace-Id: "12345"
+            Accept: ""
           body: null
         response:
           status: 200
@@ -131,8 +138,10 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
+            Accept: ""
           body:
-            json: {"owner": "data-engineers"}
+            json: {"full_name_arg": "main.replay.drift_volume",
+                   "owner": "data-engineers"}
         response:
           status: 200
           body:
@@ -149,8 +158,10 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
+            Accept: ""
           body:
-            json: {"comment": "managed by terraform"}
+            json: {"full_name_arg": "main.replay.drift_volume",
+                   "comment": "managed by terraform"}
         response:
           status: 200
           body:

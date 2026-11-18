@@ -1,6 +1,6 @@
 package sdkv2
 
-// Resources listed in sdkGoResources can read through the modular
+// Resources listed in sdkGoResources can read and write through the modular
 // github.com/databricks/sdk-go clients instead of the provider's existing clients.
 // Users opt in per resource with the USE_SDK_GO_RESOURCES environment variable, for
 // example USE_SDK_GO_RESOURCES="databricks_volume". It is separate from the plugin

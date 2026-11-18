@@ -30,8 +30,8 @@ func TestVolumeUserAgent(t *testing.T) {
 	assert.Equal(t, want, methods)
 }
 
-// TestVolumeSdkGoUserAgent pins that sdk-go reads keep the existing User-Agent fields
-// and add the sdk-go module, while writes keep the existing one.
+// TestVolumeSdkGoUserAgent pins that sdk-go calls keep the existing User-Agent fields
+// and add the sdk-go module.
 func TestVolumeSdkGoUserAgent(t *testing.T) {
 	calls := recordUserAgents(t, "native_testdata/sdk_go_user_agent.yaml",
 		func(customize func(*config.Config) error) providerFactories {
@@ -44,11 +44,7 @@ func TestVolumeSdkGoUserAgent(t *testing.T) {
 		request := call.method + " " + call.path
 		assert.Contains(t, call.userAgent, "databricks-tf-provider/", request)
 		assert.Contains(t, call.userAgent, "resource/volume", request)
-		if call.method == "GET" {
-			assert.Contains(t, call.userAgent, " sdk-go-uc-volumes/", request)
-		} else {
-			assert.NotContains(t, call.userAgent, "sdk-go-", request)
-		}
+		assert.Contains(t, call.userAgent, " sdk-go-uc-volumes/", request)
 	}
 	want := map[string]bool{"POST": true, "PATCH": true, "GET": true, "DELETE": true}
 	assert.Equal(t, want, methods)

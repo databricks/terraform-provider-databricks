@@ -7,6 +7,9 @@
 ### Breaking Changes
 
 ### New Features and Improvements
+* Add the `USE_SDK_GO_RESOURCES` environment variable, which makes the listed resources read through the modular `github.com/databricks/sdk-go` clients ([#6229](https://github.com/databricks/terraform-provider-databricks/pull/6229)).
+
+  `USE_SDK_GO_RESOURCES=databricks_volume` makes `databricks_volume` read through the `github.com/databricks/sdk-go/uc/volumes` v1 client; its writes stay on the existing client. It is unset by default, and an unknown resource name fails provider configuration.
 * Add `thumbnail_path` to `databricks_app` to set the app's thumbnail from a local PNG or JPEG file ([#6196](https://github.com/databricks/terraform-provider-databricks/pull/6196)).
 * Support `statement_timeout` for all SQL warehouse types; omitting or removing the argument preserves the existing warehouse timeout, while explicit `0` clears the override ([#6144](https://github.com/databricks/terraform-provider-databricks/pull/6144)).
 

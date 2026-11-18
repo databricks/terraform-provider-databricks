@@ -212,6 +212,23 @@ func TestSdkGoClientStopsRetryingAtRetryTimeout(t *testing.T) {
 	assert.Equal(t, r.classicCalls, r.calls)
 }
 
+// The classic client bounds only its backoff by the retry timeout, so a response that
+// arrives after the timeout still succeeds there and must succeed through sdk-go too.
+func TestSdkGoClientWaitsForAResponsePastRetryTimeoutLikeClassicClient(t *testing.T) {
+	slow := func(w http.ResponseWriter, r *http.Request) {
+		time.Sleep(1500 * time.Millisecond)
+		respond(http.StatusOK, sdkGoTestVolume)(w, r)
+	}
+	r := readBothWays(t, context.Background, func(cfg *config.Config) {
+		cfg.RetryTimeoutSeconds = 1
+		cfg.HTTPTimeoutSeconds = 10
+	}, slow)
+	assert.NoError(t, r.err)
+	assert.EqualValues(t, 1, r.calls)
+	assert.NoError(t, r.classicErr)
+	assert.Equal(t, r.classicCalls, r.calls)
+}
+
 func TestSdkGoClientReturnsLastErrorWhenCancelledDuringBackoff(t *testing.T) {
 	var cancel context.CancelFunc
 	newContext := func() context.Context {

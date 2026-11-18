@@ -1,0 +1,214 @@
+# Pins provider_config.workspace_id taken from another resource, so it is unknown at
+# plan time, on an account-level provider without a provider-level workspace_id. On
+# create the plan leaves workspace_id unknown without looking up a workspace client,
+# and apply routes through the resolved ID. A share belongs to its workspace's
+# metastore, so when its workspace_id becomes unknown the plan replaces it, and apply
+# deletes it from the old workspace and creates it in the new one. API responses are
+# inferred from the account and Delta Sharing API contracts, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: account
+  cloud: AWS
+  account_id: replay-account
+steps:
+  - name: create_with_unknown_workspace_id
+    config: |
+      provider "databricks" {
+        account_id = "replay-account"
+      }
+      resource "terraform_data" "workspace" {
+        input = "12345"
+      }
+      resource "databricks_share" "this" {
+        name = "unknown-ws-share"
+        provider_config {
+          workspace_id = terraform_data.workspace.output
+        }
+        object {
+          name             = "sandbox.things"
+          data_object_type = "SCHEMA"
+        }
+      }
+    plan:
+      expect: non_empty
+      changes:
+        databricks_share.this:
+          actions: [create]
+          after:
+            - path: [provider_config, 0, workspace_id]
+              unknown: true
+    calls:
+      - &lookup_12345
+        request:
+          method: GET
+          path: /api/2.0/accounts/replay-account/workspaces/12345
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"account_id": "replay-account", "workspace_id": 12345,
+                   "workspace_name": "replay-workspace-12345",
+                   "deployment_name": "replay-workspace-12345",
+                   "workspace_status": "RUNNING"}
+      - request:
+          method: POST
+          path: /api/2.1/unity-catalog/shares
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"name": "unknown-ws-share"}
+        response:
+          status: 200
+          body:
+            json: {"name": "unknown-ws-share", "owner": "replay-admin",
+                   "created_at": 1700000000000, "created_by": "replay-admin"}
+      - request:
+          method: PATCH
+          path: /api/2.1/unity-catalog/shares/unknown-ws-share
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"updates": [{"action": "ADD",
+                   "data_object": {"name": "sandbox.things", "data_object_type": "SCHEMA"}}]}
+        response: &share_12345
+          status: 200
+          body:
+            json: {"name": "unknown-ws-share", "owner": "replay-admin",
+                   "created_at": 1700000000000, "created_by": "replay-admin",
+                   "objects": [{"name": "sandbox.things", "data_object_type": "SCHEMA"}]}
+      # The post-apply refresh plan.
+      - *lookup_12345
+      - &read_in_12345
+        request:
+          method: GET
+          path: /api/2.1/unity-catalog/shares/unknown-ws-share
+          query:
+            include_shared_data: ["true"]
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response: *share_12345
+    state:
+      resources:
+        databricks_share.this:
+          attributes:
+            - path: [provider_config, 0, workspace_id]
+              equals: "12345"
+  - name: change_to_unknown_workspace_id
+    config: |
+      provider "databricks" {
+        account_id = "replay-account"
+      }
+      resource "terraform_data" "workspace" {
+        input = "67890"
+      }
+      resource "databricks_share" "this" {
+        name = "unknown-ws-share"
+        provider_config {
+          workspace_id = terraform_data.workspace.output
+        }
+        object {
+          name             = "sandbox.things"
+          data_object_type = "SCHEMA"
+        }
+      }
+    plan:
+      expect: non_empty
+      changes:
+        databricks_share.this:
+          actions: [delete, create]
+          before:
+            - path: [provider_config, 0, workspace_id]
+              equals: "12345"
+          after:
+            - path: [provider_config, 0, workspace_id]
+              unknown: true
+    calls:
+      # The plan's refresh.
+      - *lookup_12345
+      - *read_in_12345
+      # The apply deletes the share from the old workspace.
+      - *lookup_12345
+      - request:
+          method: DELETE
+          path: /api/2.1/unity-catalog/shares/unknown-ws-share
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 200
+          body: null
+      # It creates the share in the new workspace.
+      - &lookup_67890
+        request:
+          method: GET
+          path: /api/2.0/accounts/replay-account/workspaces/67890
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"account_id": "replay-account", "workspace_id": 67890,
+                   "workspace_name": "replay-workspace-67890",
+                   "deployment_name": "replay-workspace-67890",
+                   "workspace_status": "RUNNING"}
+      - request:
+          method: POST
+          path: /api/2.1/unity-catalog/shares
+          headers:
+            X-Databricks-Workspace-Id: "67890"
+          body:
+            json: {"name": "unknown-ws-share"}
+        response:
+          status: 200
+          body:
+            json: {"name": "unknown-ws-share", "owner": "replay-admin",
+                   "created_at": 1700000000001, "created_by": "replay-admin"}
+      - request:
+          method: PATCH
+          path: /api/2.1/unity-catalog/shares/unknown-ws-share
+          headers:
+            X-Databricks-Workspace-Id: "67890"
+          body:
+            json: {"updates": [{"action": "ADD",
+                   "data_object": {"name": "sandbox.things", "data_object_type": "SCHEMA"}}]}
+        response: &share_67890
+          status: 200
+          body:
+            json: {"name": "unknown-ws-share", "owner": "replay-admin",
+                   "created_at": 1700000000001, "created_by": "replay-admin",
+                   "objects": [{"name": "sandbox.things", "data_object_type": "SCHEMA"}]}
+      # The post-apply refresh plan.
+      - *lookup_67890
+      - &read_in_67890
+        request:
+          method: GET
+          path: /api/2.1/unity-catalog/shares/unknown-ws-share
+          query:
+            include_shared_data: ["true"]
+          headers:
+            X-Databricks-Workspace-Id: "67890"
+          body: null
+        response: *share_67890
+    state:
+      resources:
+        databricks_share.this:
+          attributes:
+            - path: [created_at]
+              equals: 1700000000001
+            - path: [provider_config, 0, workspace_id]
+              equals: "67890"
+destroy:
+  calls:
+    - *lookup_67890
+    - *read_in_67890
+    - *lookup_67890
+    - request:
+        method: DELETE
+        path: /api/2.1/unity-catalog/shares/unknown-ws-share
+        headers:
+          X-Databricks-Workspace-Id: "67890"
+        body: null
+      response:
+        status: 200
+        body: null

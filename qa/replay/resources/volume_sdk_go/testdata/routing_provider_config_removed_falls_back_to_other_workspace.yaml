@@ -1,0 +1,185 @@
+# Runs volume/testdata/routing_provider_config_removed_falls_back_to_other_workspace.yaml
+# with databricks_volume on sdk-go uc/volumes/v1 in every step, and expects the same
+# behavior. The volume POST, GET and PATCH requests carry no Accept header, which an empty
+# header expectation pins. Each PATCH body also carries full_name_arg, the full name in
+# its path, because sdk-go serializes the path field into the body. The original's
+# description:
+#
+# Pins removing the provider_config block when the provider-level workspace_id names a
+# different workspace, on an account-level provider. The plan refreshes through the
+# block's old workspace and plans an in-place update to the provider-level ID. Apply
+# looks up that workspace and sends it an empty PATCH, then reads the volume back from
+# it and stores the provider-level ID. API responses are inferred from the account and
+# Unity Catalog API contracts, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: account
+  cloud: AWS
+  account_id: replay-account
+steps:
+  - name: create_through_provider_config_67890
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: |
+      provider "databricks" {
+        account_id   = "replay-account"
+        workspace_id = "12345"
+      }
+      resource "databricks_volume" "this" {
+        name         = "fallback_volume"
+        catalog_name = "main"
+        schema_name  = "replay"
+        volume_type  = "MANAGED"
+        provider_config {
+          workspace_id = "67890"
+        }
+      }
+    calls:
+      - &lookup_67890
+        request:
+          method: GET
+          path: /api/2.0/accounts/replay-account/workspaces/67890
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"account_id": "replay-account", "workspace_id": 67890,
+                   "workspace_name": "replay-workspace-67890",
+                   "deployment_name": "replay-workspace-67890",
+                   "workspace_status": "RUNNING"}
+      - request:
+          method: POST
+          path: /api/2.1/unity-catalog/volumes
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "67890"
+            Accept: ""
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "fallback_volume", "volume_type": "MANAGED"}
+        response:
+          status: 200
+          body:
+            json: &volume {"catalog_name": "main", "schema_name": "replay",
+                           "name": "fallback_volume",
+                           "full_name": "main.replay.fallback_volume",
+                           "volume_type": "MANAGED", "owner": "replay-admin@example.com",
+                           "storage_location": "s3://replay-metastore/volume-1904",
+                           "metastore_id": "11111111-1111-1111-1111-111111111111",
+                           "volume_id": "00000000-0000-4000-8000-000000001904"}
+      - &read_in_67890
+        request:
+          method: GET
+          path: /api/2.1/unity-catalog/volumes/main.replay.fallback_volume
+          headers:
+            X-Databricks-Workspace-Id: "67890"
+            Accept: ""
+          body: null
+        response:
+          status: 200
+          body:
+            json: *volume
+      # The post-apply refresh plan.
+      - *lookup_67890
+      - *read_in_67890
+    state:
+      resources:
+        databricks_volume.this:
+          attributes:
+            - path: [provider_config, 0, workspace_id]
+              equals: "67890"
+  - name: removing_provider_config_patches_through_provider_workspace
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: |
+      provider "databricks" {
+        account_id   = "replay-account"
+        workspace_id = "12345"
+      }
+      resource "databricks_volume" "this" {
+        name         = "fallback_volume"
+        catalog_name = "main"
+        schema_name  = "replay"
+        volume_type  = "MANAGED"
+      }
+    plan:
+      expect: non_empty
+      changes:
+        databricks_volume.this:
+          actions: [update]
+          before:
+            - path: [provider_config, 0, workspace_id]
+              equals: "67890"
+          after:
+            - path: [provider_config, 0, workspace_id]
+              equals: "12345"
+    calls:
+      # The plan's refresh.
+      - *lookup_67890
+      - *read_in_67890
+      # The apply.
+      - &lookup_12345
+        request:
+          method: GET
+          path: /api/2.0/accounts/replay-account/workspaces/12345
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"account_id": "replay-account", "workspace_id": 12345,
+                   "workspace_name": "replay-workspace-12345",
+                   "deployment_name": "replay-workspace-12345",
+                   "workspace_status": "RUNNING"}
+      - request:
+          method: PATCH
+          path: /api/2.1/unity-catalog/volumes/main.replay.fallback_volume
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+            Accept: ""
+          body:
+            json: {"full_name_arg": "main.replay.fallback_volume",
+                   }
+        response:
+          status: 200
+          body:
+            json: *volume
+      - &read_in_12345
+        request:
+          method: GET
+          path: /api/2.1/unity-catalog/volumes/main.replay.fallback_volume
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+            Accept: ""
+          body: null
+        response:
+          status: 200
+          body:
+            json: *volume
+      # The post-apply refresh plan.
+      - *lookup_12345
+      - *read_in_12345
+    state:
+      resources:
+        databricks_volume.this:
+          attributes:
+            - path: [id]
+              equals: main.replay.fallback_volume
+            - path: [provider_config, 0, workspace_id]
+              equals: "12345"
+destroy:
+  calls:
+    - *lookup_12345
+    - *read_in_12345
+    - *lookup_12345
+    - request:
+        method: DELETE
+        path: /api/2.1/unity-catalog/volumes/main.replay.fallback_volume
+        headers:
+          X-Databricks-Workspace-Id: "12345"
+        body: null
+      response:
+        status: 200
+        body:
+          json: {}

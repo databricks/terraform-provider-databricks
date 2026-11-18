@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"strings"
 	"sync"
+	"time"
 )
 
 // Request defines a complete signature; only listed headers are compared.
@@ -25,9 +26,17 @@ type Request struct {
 
 // Response defines the HTTP reply, with an optional JSON, text, or binary body.
 type Response struct {
-	Status  int               `yaml:"status"`
+	Status  int               `yaml:"status,omitempty"`
 	Headers map[string]string `yaml:"headers,omitempty"`
 	Body    *Body             `yaml:"body"`
+	// Delay is a Go duration, such as 2s, to wait before writing anything. The
+	// wait ends early when the client closes the connection.
+	Delay string `yaml:"delay,omitempty"`
+	// Fault breaks the connection. Reset and close omit status, headers and body.
+	Fault Fault `yaml:"fault,omitempty"`
+	// StatusLine is the literal status line, such as HTTP/1.1 404 without a
+	// reason phrase. Its code must equal Status.
+	StatusLine string `yaml:"status_line,omitempty"`
 }
 
 // Call pairs a request signature with its response.
@@ -41,6 +50,7 @@ type exchange struct {
 	expectedBody any
 	matchers     Matchers
 	responseBody []byte
+	delay        time.Duration
 	bodyKind     string
 	used         bool
 }
@@ -109,9 +119,6 @@ func compileCalls(calls []Call) ([]exchange, error) {
 		if strings.ContainsAny(call.Request.Path, "?#") {
 			return nil, fmt.Errorf("call %d: query parameters must use query", i+1)
 		}
-		if call.Response.Status < 100 || call.Response.Status > 599 {
-			return nil, fmt.Errorf("call %d: invalid response status %d", i+1, call.Response.Status)
-		}
 		e := exchange{call: call}
 		var err error
 		if call.Request.Body != nil {
@@ -134,11 +141,8 @@ func compileCalls(calls []Call) ([]exchange, error) {
 		if err != nil {
 			return nil, fmt.Errorf("call %d request matchers: %w", i+1, err)
 		}
-		if call.Response.Body != nil {
-			e.responseBody, err = call.Response.Body.literalBytes()
-			if err != nil {
-				return nil, fmt.Errorf("call %d response: %w", i+1, err)
-			}
+		if err := compileResponse(&e, call.Response); err != nil {
+			return nil, fmt.Errorf("call %d response: %w", i+1, err)
 		}
 		result[i] = e
 	}
@@ -222,15 +226,31 @@ func (e *exchange) matches(req *http.Request, body requestBody) bool {
 	}
 }
 
-// ServeHTTP prefers consumable step fixtures over reusable fallbacks. Matching
-// and consumption share a lock so concurrent requests cannot consume a call twice.
+// ServeHTTP prefers consumable step fixtures over reusable fallbacks.
 func (h *Handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	// Go's client silently resends an idempotent request that fails on a reused
+	// connection. One connection per request makes it see every fault.
+	w.Header().Set("Connection", "close")
+	e, label := h.consume(w, req)
+	if e == nil {
+		return
+	}
+	if err := respond(w, req, e); err != nil {
+		h.mu.Lock()
+		defer h.mu.Unlock()
+		h.failures = append(h.failures, fmt.Errorf("%s: %s %s: %w", label, req.Method, req.URL.RequestURI(), err))
+	}
+}
+
+// consume matches and consumes a fixture under the lock, so concurrent requests
+// cannot consume a call twice. It returns nil after reporting a failure.
+func (h *Handler) consume(w http.ResponseWriter, req *http.Request) (*exchange, string) {
 	body, err := parseRequestBody(req)
 	h.mu.Lock()
 	defer h.mu.Unlock()
 	if err != nil {
 		h.fail(w, fmt.Errorf("%s: %s %s: invalid request body: %w", h.label, req.Method, req.URL.RequestURI(), err))
-		return
+		return nil, ""
 	}
 	next := -1
 	for i := range h.calls {
@@ -241,33 +261,37 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 			if h.enforceCallOrder && i != next {
 				expected := h.calls[next].call.Request
 				h.fail(w, fmt.Errorf("%s: out-of-order HTTP call: %s %s body=%s matched call %d; next expected call %d: %s %s", h.label, req.Method, req.URL.RequestURI(), body.raw, i+1, next+1, expected.Method, expected.Path))
-				return
+				return nil, ""
 			}
 			h.calls[i].used = true
-			writeResponse(w, &h.calls[i])
-			return
+			return &h.calls[i], h.label
 		}
 	}
 	for i := range h.reusable {
 		if h.reusable[i].matches(req, body) {
-			writeResponse(w, &h.reusable[i])
-			return
+			return &h.reusable[i], h.label
 		}
 	}
 	h.fail(w, fmt.Errorf("%s: unexpected HTTP call: %s %s body=%s", h.label, req.Method, req.URL.RequestURI(), body.raw))
+	return nil, ""
 }
 
 func writeResponse(w http.ResponseWriter, e *exchange) {
-	for key, value := range e.call.Response.Headers {
-		w.Header().Set(key, value)
-	}
-	if e.call.Response.Body != nil && w.Header().Get("Content-Type") == "" {
-		kind, _ := e.call.Response.Body.kind()
-		contentType := map[string]string{"json": "application/json", "text": "text/plain; charset=utf-8", "base64": "application/octet-stream"}
-		w.Header().Set("Content-Type", contentType[kind])
-	}
+	setResponseHeaders(w.Header(), e)
 	w.WriteHeader(e.call.Response.Status)
 	_, _ = w.Write(e.responseBody)
+}
+
+// setResponseHeaders applies the explicit headers, then the body's default type.
+func setResponseHeaders(header http.Header, e *exchange) {
+	for key, value := range e.call.Response.Headers {
+		header.Set(key, value)
+	}
+	if e.call.Response.Body != nil && header.Get("Content-Type") == "" {
+		kind, _ := e.call.Response.Body.kind()
+		contentType := map[string]string{"json": "application/json", "text": "text/plain; charset=utf-8", "base64": "application/octet-stream"}
+		header.Set("Content-Type", contentType[kind])
+	}
 }
 
 func (h *Handler) fail(w http.ResponseWriter, err error) {

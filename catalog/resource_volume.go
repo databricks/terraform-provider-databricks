@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
+	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -30,6 +32,25 @@ type VolumeInfo struct {
 	StorageLocation string             `json:"storage_location,omitempty" tf:"force_new"`
 	VolumeType      catalog.VolumeType `json:"volume_type" tf:"force_new"`
 	common.Namespace
+}
+
+// volumeOwnerRollbackTimeout bounds the owner rollback, which ignores Update's
+// cancellation and would otherwise retry forever under the default retry timeout.
+const volumeOwnerRollbackTimeout = time.Minute
+
+// rollbackVolumeOwner sets the owner back to owner. It ignores the cancellation of ctx so
+// that a cancelled apply does not leave a new owner on the volume.
+func rollbackVolumeOwner(
+	ctx context.Context, w *databricks.WorkspaceClient, fullName, owner string,
+) error {
+	ctx, cancel := context.WithTimeout(context.WithoutCancel(ctx),
+		volumeOwnerRollbackTimeout)
+	defer cancel()
+	_, err := w.Volumes.Update(ctx, catalog.UpdateVolumeRequestContent{
+		Name:  fullName,
+		Owner: owner,
+	})
+	return err
 }
 
 func getNameFromId(id string) (string, error) {
@@ -148,10 +169,8 @@ func ResourceVolume() common.Resource {
 				if d.HasChange("owner") {
 					// Rollback
 					old, new := d.GetChange("owner")
-					_, rollbackErr := w.Volumes.Update(ctx, catalog.UpdateVolumeRequestContent{
-						Name:  updateVolumeRequestContent.Name,
-						Owner: old.(string),
-					})
+					rollbackErr := rollbackVolumeOwner(ctx, w, updateVolumeRequestContent.Name,
+						old.(string))
 					if rollbackErr != nil {
 						return common.OwnerRollbackError(err, rollbackErr, old.(string), new.(string))
 					}

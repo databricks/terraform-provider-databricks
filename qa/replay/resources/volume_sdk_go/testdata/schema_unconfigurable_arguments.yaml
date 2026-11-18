@@ -1,0 +1,42 @@
+# Runs volume/testdata/schema_unconfigurable_arguments.yaml with databricks_volume on
+# sdk-go uc/volumes/v1 in every step, and expects the same behavior. It sends no API
+# calls, so it has no fixtures to change. The original's description:
+#
+# Pins plan-time validation of arguments a configuration can't set: the computed
+# volume_path, and full_name_arg, which isn't in the schema. Each fails before any API
+# call.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: setting_volume_path_fails_without_calls
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: |
+      resource "databricks_volume" "this" {
+        name         = "unconfigurable_volume"
+        catalog_name = "main"
+        schema_name  = "replay"
+        volume_type  = "MANAGED"
+        volume_path  = "/Volumes/main/replay/unconfigurable_volume"
+      }
+    expect_error: 'Error: Value for unconfigurable attribute(?s:.*)Can''t configure a value for "volume_path": its value will be decided\s+automatically based on the result of applying this configuration\.'
+    calls: []
+  - name: setting_full_name_arg_fails_without_calls
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: |
+      resource "databricks_volume" "this" {
+        name          = "unconfigurable_volume"
+        catalog_name  = "main"
+        schema_name   = "replay"
+        volume_type   = "MANAGED"
+        full_name_arg = "main.replay.unconfigurable_volume"
+      }
+    expect_error: 'Error: Unsupported argument(?s:.*)An argument named "full_name_arg" is not expected here\.'
+    calls: []
+destroy:
+  calls: []

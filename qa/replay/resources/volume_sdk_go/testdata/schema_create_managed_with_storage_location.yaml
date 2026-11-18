@@ -1,0 +1,63 @@
+# Runs volume/testdata/schema_create_managed_with_storage_location.yaml with
+# databricks_volume on sdk-go uc/volumes/v1 in every step, and expects the same behavior.
+# The volume POST request carries no Accept header, which an empty header expectation
+# pins. The original's description:
+#
+# Pins creating a MANAGED volume with storage_location: the provider doesn't check the
+# combination, so the POST sends the location and the API's 400 is surfaced as the
+# create diagnostic. Nothing is left in state, so the next plan creates the volume
+# again without reading it. The error response is synthetic; the exact message Unity
+# Catalog returns for this request isn't recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: create_managed_with_storage_location_sends_it
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: &config |
+      resource "databricks_volume" "this" {
+        name             = "located_managed_volume"
+        catalog_name     = "main"
+        schema_name      = "replay"
+        volume_type      = "MANAGED"
+        storage_location = "s3://replay-bucket/volumes/located"
+      }
+    expect_error: 'Error: cannot create volume: Storage location is not supported for
+      a managed volume\.\n'
+    calls:
+      - request:
+          method: POST
+          path: /api/2.1/unity-catalog/volumes
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+            Accept: ""
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "located_managed_volume", "volume_type": "MANAGED",
+                   "storage_location": "s3://replay-bucket/volumes/located"}
+        response:
+          status: 400
+          body:
+            json: {"error_code": "INVALID_PARAMETER_VALUE",
+                   "message": "Storage location is not supported for a managed volume."}
+  - name: plan_after_failed_create_creates_again
+    sdk_implementations:
+      databricks_volume: sdk_go
+    plan_only: true
+    config: *config
+    plan:
+      expect: non_empty
+      changes:
+        databricks_volume.this:
+          actions: [create]
+          after:
+            - path: [storage_location]
+              equals: s3://replay-bucket/volumes/located
+    calls: []
+destroy:
+  calls: []

@@ -1,0 +1,59 @@
+# Runs volume/testdata/schema_required_arguments.yaml with databricks_volume on sdk-go
+# uc/volumes/v1 in every step, and expects the same behavior. It sends no API calls, so it
+# has no fixtures to change. The original's description:
+#
+# Pins plan-time validation of the required arguments: omitting catalog_name,
+# schema_name, name or volume_type each fails before any API call.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: missing_catalog_name_fails_without_calls
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: |
+      resource "databricks_volume" "this" {
+        name        = "required_volume"
+        schema_name = "replay"
+        volume_type = "MANAGED"
+      }
+    expect_error: 'Error: Missing required argument(?s:.*)The argument "catalog_name" is required, but no definition was found\.'
+    calls: []
+  - name: missing_schema_name_fails_without_calls
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: |
+      resource "databricks_volume" "this" {
+        name         = "required_volume"
+        catalog_name = "main"
+        volume_type  = "MANAGED"
+      }
+    expect_error: 'Error: Missing required argument(?s:.*)The argument "schema_name" is required, but no definition was found\.'
+    calls: []
+  - name: missing_name_fails_without_calls
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: |
+      resource "databricks_volume" "this" {
+        catalog_name = "main"
+        schema_name  = "replay"
+        volume_type  = "MANAGED"
+      }
+    expect_error: 'Error: Missing required argument(?s:.*)The argument "name" is required, but no definition was found\.'
+    calls: []
+  - name: missing_volume_type_fails_without_calls
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: |
+      resource "databricks_volume" "this" {
+        name         = "required_volume"
+        catalog_name = "main"
+        schema_name  = "replay"
+      }
+    expect_error: 'Error: Missing required argument(?s:.*)The argument "volume_type" is required, but no definition was found\.'
+    calls: []
+destroy:
+  calls: []

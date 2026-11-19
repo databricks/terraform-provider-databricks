@@ -442,9 +442,9 @@ no copies of the call and its backoff can be pinned.
 A gap out of bounds fails the step with the observed gap, such as
 `call 2: POST /api/2.0/preview/scim/v2/Groups arrived 2.1s after call 1 (POST /api/2.0/preview/scim/v2/Groups), above max_gap 1s`.
 The call is still answered, so the failure names the gap rather than whatever
-the provider does next. A bounded call that arrives first in its step fails
-too, since nothing precedes it. Host metadata is not a matched call and does
-not count. Invalid values fail when the journey loads, naming the file, step
+the provider does next. A bounded call without `times` that arrives first in
+its step fails too, since nothing precedes it. Host metadata is not a matched
+call and does not count. Invalid values fail when the journey loads, naming the file, step
 and call.
 
 This create gets 503 twice and succeeds on its second retry:

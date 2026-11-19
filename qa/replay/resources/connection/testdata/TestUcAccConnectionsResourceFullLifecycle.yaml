@@ -11,7 +11,7 @@ steps:
         name = "tf-test-connection-replay"
         connection_type = "MYSQL"
         comment = "this is a connection to mysql db"
-        options = {"host":"test.mysql.database.azure.com","port":"3306","user":"user","password":"password"}
+        options = {"host":"test.mysql.database.azure.com","port":"3306","user":"user","password":"{{uc_secrets/main.default.mysql_password}}"}
         owner = "account users"
       }
     calls:
@@ -25,7 +25,7 @@ steps:
               name: "tf-test-connection-replay"
               options:
                 host: "test.mysql.database.azure.com"
-                password: "password"
+                password: "{{uc_secrets/main.default.mysql_password}}"
                 port: "3306"
                 user: "user"
         response: # Inferred API response; not recorded.
@@ -40,6 +40,7 @@ steps:
               name: "tf-test-connection-replay"
               options:
                 host: "test.mysql.database.azure.com"
+                password: "{{uc_secrets/main.default.mysql_password}}"
                 port: "3306"
               owner: "replay-admin"
               provisioning_info:
@@ -51,7 +52,7 @@ steps:
             json:
               options:
                 host: "test.mysql.database.azure.com"
-                password: "password"
+                password: "{{uc_secrets/main.default.mysql_password}}"
                 port: "3306"
                 user: "user"
               owner: "account users"
@@ -67,6 +68,7 @@ steps:
               name: "tf-test-connection-replay"
               options:
                 host: "test.mysql.database.azure.com"
+                password: "{{uc_secrets/main.default.mysql_password}}"
                 port: "3306"
               owner: "account users"
               provisioning_info:
@@ -88,6 +90,7 @@ steps:
               name: "tf-test-connection-replay"
               options:
                 host: "test.mysql.database.azure.com"
+                password: "{{uc_secrets/main.default.mysql_password}}"
                 port: "3306"
               owner: "account users"
               provisioning_info:
@@ -99,7 +102,7 @@ steps:
         name = "tf-test-connection-replay"
         connection_type = "MYSQL"
         comment = "this is a connection to mysql db"
-        options = {"host":"test.mysql.database.aws.com","port":"3306","user":"user","password":"password"}
+        options = {"host":"test.mysql.database.aws.com","port":"3306","user":"user","password":"{{uc_secrets/main.default.mysql_password}}"}
         owner = "account users"
       }
     calls:
@@ -123,7 +126,7 @@ steps:
             json:
               options:
                 host: "test.mysql.database.aws.com"
-                password: "password"
+                password: "{{uc_secrets/main.default.mysql_password}}"
                 port: "3306"
                 user: "user"
         response: # Inferred API response; not recorded.
@@ -138,6 +141,7 @@ steps:
               name: "tf-test-connection-replay"
               options:
                 host: "test.mysql.database.aws.com"
+                password: "{{uc_secrets/main.default.mysql_password}}"
                 port: "3306"
               owner: "account users"
               provisioning_info:
@@ -159,6 +163,7 @@ steps:
               name: "tf-test-connection-replay"
               options:
                 host: "test.mysql.database.aws.com"
+                password: "{{uc_secrets/main.default.mysql_password}}"
                 port: "3306"
               owner: "account users"
               provisioning_info:
@@ -170,7 +175,7 @@ steps:
         name = "tf-test-connection-replay"
         connection_type = "MYSQL"
         comment = "this is a connection to mysql db"
-        options = {"host":"test.mysql.database.azure.com","port":"3306","user":"user","password":"password"}
+        options = {"host":"test.mysql.database.azure.com","port":"3306","user":"user","password":"{{uc_secrets/main.default.mysql_password}}"}
         owner = "metastore-admins"
       }
     calls:
@@ -195,6 +200,7 @@ steps:
               name: "tf-test-connection-replay"
               options:
                 host: "test.mysql.database.aws.com"
+                password: "{{uc_secrets/main.default.mysql_password}}"
                 port: "3306"
               owner: "metastore-admins"
               provisioning_info:
@@ -206,7 +212,7 @@ steps:
             json:
               options:
                 host: "test.mysql.database.azure.com"
-                password: "password"
+                password: "{{uc_secrets/main.default.mysql_password}}"
                 port: "3306"
                 user: "user"
         response: # Inferred API response; not recorded.
@@ -221,6 +227,7 @@ steps:
               name: "tf-test-connection-replay"
               options:
                 host: "test.mysql.database.azure.com"
+                password: "{{uc_secrets/main.default.mysql_password}}"
                 port: "3306"
               owner: "metastore-admins"
               provisioning_info:
@@ -242,6 +249,7 @@ steps:
               name: "tf-test-connection-replay"
               options:
                 host: "test.mysql.database.azure.com"
+                password: "{{uc_secrets/main.default.mysql_password}}"
                 port: "3306"
               owner: "metastore-admins"
               provisioning_info:

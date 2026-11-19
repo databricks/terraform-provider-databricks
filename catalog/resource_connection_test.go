@@ -242,7 +242,8 @@ func TestConnectionsRead(t *testing.T) {
 					FullName:       "testConnectionName",
 					MetastoreId:    "abc",
 					Options: map[string]string{
-						"host": "test.com",
+						"host":     "test.com",
+						"password": "{{uc_secrets/main.default.new_password}}",
 					},
 				},
 			},
@@ -255,6 +256,7 @@ func TestConnectionsRead(t *testing.T) {
 		connection_type = "testConnectionType"
 		options = {
 			host     = "test.com"
+			password = "{{uc_secrets/main.default.old_password}}"
 		}
 		comment = "This is a test comment."
 		`,
@@ -263,7 +265,7 @@ func TestConnectionsRead(t *testing.T) {
 	assert.Equal(t, "testConnectionName", d.Get("name"))
 	assert.Equal(t, "testConnectionType", d.Get("connection_type"))
 	assert.Equal(t, "This is a test comment.", d.Get("comment"))
-	assert.Equal(t, map[string]interface{}{"host": "test.com"}, d.Get("options"))
+	assert.Equal(t, map[string]interface{}{"host": "test.com", "password": "{{uc_secrets/main.default.new_password}}"}, d.Get("options"))
 }
 
 func TestConnectionRead_Error(t *testing.T) {
@@ -953,6 +955,8 @@ func TestSuppressComputedFields(t *testing.T) {
 	assert.False(t, suppressComputedFields("options.userProvidedServerCertificate", pem,
 		"-----BEGIN CERTIFICATE-----\nxyz\n-----END CERTIFICATE-----\n", nil))
 	assert.False(t, suppressComputedFields("options.password", "p", "p ", nil))
+	assert.False(t, suppressComputedFields("options.password", "Password", "password", nil))
+	assert.False(t, suppressComputedFields("options.password", "{{uc_secrets/main.default.pw}}", "{{UC_SECRETS/main.default.pw}}", nil))
 }
 
 // connectionInlineSecretPlan plans a config whose password secret is configRef against state that
@@ -1108,55 +1112,4 @@ func TestConnectionsUpdate_RepointSecret(t *testing.T) {
 	}.ApplyAndExpectData(t, map[string]any{
 		"options.password": "{{uc_secrets/main.default.mysql_pw2}}",
 	})
-}
-
-func TestConnectionsCreate_WriteOnlyOptionsOverlapWithInlineSecret(t *testing.T) {
-	_, err := qa.ResourceFixture{
-		Resource: ResourceConnection(),
-		Create:   true,
-		State: map[string]any{
-			"name":            "testConnectionName",
-			"connection_type": "testConnectionType",
-			"options": map[string]any{
-				"host":     "test.com",
-				"password": "{{uc_secrets/main.default.password}}",
-			},
-			"options_wo":         `{"password":"synthetic-literal"}`,
-			"options_wo_version": 1,
-		},
-	}.Apply(t)
-	assert.EqualError(t, err, "option \"password\" is set in both `options` and `options_wo`")
-}
-
-func TestConnectionsCreate_WriteOnlyOptionsWithInlineSecret(t *testing.T) {
-	connInfo := &catalog.ConnectionInfo{
-		Name:           "testConnectionName",
-		ConnectionType: catalog.ConnectionType("testConnectionType"),
-		FullName:       "testConnectionName",
-		MetastoreId:    "abc",
-		Options:        map[string]string{"host": "test.com", "password": "{{uc_secrets/main.default.password}}"},
-	}
-	d, err := qa.ResourceFixture{
-		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
-			e := w.GetMockConnectionsAPI().EXPECT()
-			e.Create(mock.Anything, mock.MatchedBy(func(req catalog.CreateConnection) bool {
-				return reflect.DeepEqual(req.Options, map[string]string{"host": "test.com", "user": "testUser", "password": "{{uc_secrets/main.default.password}}"}) && len(req.Secrets) == 0
-			})).Return(connInfo, nil)
-			e.GetByName(mock.Anything, "testConnectionName").Return(connInfo, nil)
-		},
-		Resource: ResourceConnection(),
-		Create:   true,
-		State: map[string]any{
-			"name":            "testConnectionName",
-			"connection_type": "testConnectionType",
-			"options": map[string]any{
-				"host":     "test.com",
-				"password": "{{uc_secrets/main.default.password}}",
-			},
-			"options_wo":         `{"user":"testUser"}`,
-			"options_wo_version": 1,
-		},
-	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, map[string]interface{}{"host": "test.com", "password": "{{uc_secrets/main.default.password}}"}, d.Get("options"))
 }

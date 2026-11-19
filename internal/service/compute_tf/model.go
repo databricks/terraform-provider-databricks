@@ -778,10 +778,11 @@ func (m *AzureAttributes) SetLogAnalyticsInfo(ctx context.Context, v LogAnalytic
 }
 
 type CancelCommand struct {
+	// ID of the cluster that hosts the execution context.
 	ClusterId types.String `tfsdk:"cluster_id"`
-
+	// ID of the command to cancel, as returned by __execute__.
 	CommandId types.String `tfsdk:"command_id"`
-
+	// ID of the execution context the command runs in.
 	ContextId types.String `tfsdk:"context_id"`
 }
 
@@ -6261,13 +6262,14 @@ func (m ClusterStatus) Type(ctx context.Context) attr.Type {
 }
 
 type Command struct {
-	// Running cluster id
+	// ID of the cluster that hosts the execution context.
 	ClusterId types.String `tfsdk:"cluster_id"`
-	// Executable code
+	// Code to run, written in the specified language.
 	Command types.String `tfsdk:"command"`
-	// Running context id
+	// ID of the execution context to run the command in, as returned by
+	// __Create__.
 	ContextId types.String `tfsdk:"context_id"`
-
+	// Language the command is written in.
 	Language types.String `tfsdk:"language"`
 }
 
@@ -6324,10 +6326,11 @@ func (m Command) Type(ctx context.Context) attr.Type {
 }
 
 type CommandStatusRequest struct {
+	// ID of the cluster that hosts the execution context.
 	ClusterId types.String `tfsdk:"-"`
-
+	// ID of the command, as returned by __execute__.
 	CommandId types.String `tfsdk:"-"`
-
+	// ID of the execution context the command runs in.
 	ContextId types.String `tfsdk:"-"`
 }
 
@@ -6381,10 +6384,19 @@ func (m CommandStatusRequest) Type(ctx context.Context) attr.Type {
 }
 
 type CommandStatusResponse struct {
+	// ID of the command.
 	Id types.String `tfsdk:"id"`
-
+	// Output of the command. It is populated only once the command has reached
+	// a terminal status, and its `resultType` tells which of its other fields
+	// are set.
 	Results types.Object `tfsdk:"results"`
-
+	// Current status of the command. `Queued` and `Running` mean the command
+	// has not completed yet, and `Cancelling` means a cancellation is in
+	// progress. `Finished`, `Error` and `Cancelled` are terminal: `Finished`
+	// means the command ran to completion, including when the code itself
+	// raised an error (reported in `results` with the `error` result type),
+	// while `Error` means the execution environment failed, for example because
+	// the driver or the context stopped.
 	Status types.String `tfsdk:"status"`
 }
 
@@ -6647,8 +6659,9 @@ func (m *ComputePolicy) SetTags(ctx context.Context, v map[string]types.String) 
 }
 
 type ContextStatusRequest struct {
+	// ID of the cluster that hosts the execution context.
 	ClusterId types.String `tfsdk:"-"`
-
+	// ID of the execution context, as returned by __Create__.
 	ContextId types.String `tfsdk:"-"`
 }
 
@@ -6699,8 +6712,12 @@ func (m ContextStatusRequest) Type(ctx context.Context) attr.Type {
 }
 
 type ContextStatusResponse struct {
+	// ID of the execution context.
 	Id types.String `tfsdk:"id"`
-
+	// Current status of the execution context. `Pending` means the context is
+	// still initializing and does not accept commands yet, `Running` means it
+	// is ready, and `Error` means it failed: running commands may not complete
+	// and new commands may be rejected, so create a new context.
 	Status types.String `tfsdk:"status"`
 }
 
@@ -7736,9 +7753,10 @@ func (m CreateClusterResponse) Type(ctx context.Context) attr.Type {
 }
 
 type CreateContext struct {
-	// Running cluster id
+	// ID of the cluster to create the execution context on. The cluster must be
+	// running.
 	ClusterId types.String `tfsdk:"cluster_id"`
-
+	// Programming language of the execution context.
 	Language types.String `tfsdk:"language"`
 }
 
@@ -8607,6 +8625,9 @@ func (m CreateResponse) Type(ctx context.Context) attr.Type {
 }
 
 type Created struct {
+	// ID of the new execution context when returned by __Create__, or of the
+	// submitted command when returned by __execute__. Pass it to the other
+	// methods of this API as `contextId` or `commandId`.
 	Id types.String `tfsdk:"id"`
 }
 
@@ -9176,8 +9197,9 @@ func (m DeleteResponse) Type(ctx context.Context) attr.Type {
 }
 
 type DestroyContext struct {
+	// ID of the cluster that hosts the execution context.
 	ClusterId types.String `tfsdk:"cluster_id"`
-
+	// ID of the execution context to delete, as returned by __Create__.
 	ContextId types.String `tfsdk:"context_id"`
 }
 
@@ -12093,6 +12115,11 @@ type Environment struct {
 	// version comes with a specific Python version and a set of Python
 	// packages. The version is a string, consisting of an integer.
 	EnvironmentVersion types.String `tfsdk:"environment_version"`
+	// Customer-provided container image to use as the whole environment for
+	// this workload, stored in Databricks Artifact Registry and named by its
+	// Unity Catalog name and tag, as `catalog.schema.artifact:tag`. Cannot be
+	// combined with `environment_version` or `base_environment`.
+	ImageUri types.String `tfsdk:"image_uri"`
 	// List of Java dependencies. Each dependency is a string representing a
 	// Java library path. For example: `/Volumes/path/to/test.jar`.
 	JavaDependencies types.List `tfsdk:"java_dependencies"`
@@ -12139,6 +12166,7 @@ func (m Environment) ApplySchemaCustomizations(attrs map[string]tfschema.Attribu
 	attrs["client"] = attrs["client"].SetOptional()
 	attrs["dependencies"] = attrs["dependencies"].SetOptional()
 	attrs["environment_version"] = attrs["environment_version"].SetOptional()
+	attrs["image_uri"] = attrs["image_uri"].SetOptional()
 	attrs["java_dependencies"] = attrs["java_dependencies"].SetOptional()
 	attrs["project_environment"] = attrs["project_environment"].SetOptional()
 
@@ -12170,6 +12198,7 @@ func (m Environment) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"client":              m.Client,
 			"dependencies":        m.Dependencies,
 			"environment_version": m.EnvironmentVersion,
+			"image_uri":           m.ImageUri,
 			"java_dependencies":   m.JavaDependencies,
 			"project_environment": m.ProjectEnvironment,
 		})
@@ -12185,6 +12214,7 @@ func (m Environment) Type(ctx context.Context) attr.Type {
 				ElemType: types.StringType,
 			},
 			"environment_version": types.StringType,
+			"image_uri":           types.StringType,
 			"java_dependencies": basetypes.ListType{
 				ElemType: types.StringType,
 			},
@@ -22823,9 +22853,12 @@ func (m RestartClusterResponse) Type(ctx context.Context) attr.Type {
 }
 
 type Results struct {
-	// The cause of the error
+	// Details of an `error` result, usually the exception message or stack
+	// trace.
 	Cause types.String `tfsdk:"cause"`
-
+	// Output of a `text` result as a string, or the rows of a `table` result as
+	// an array of rows, each an array of column values in the order of
+	// `schema`.
 	Data types.Object `tfsdk:"data"`
 	// The image data in one of the following formats:
 	//
@@ -22844,13 +22877,19 @@ type Results struct {
 	IsJsonSchema types.Bool `tfsdk:"is_json_schema"`
 	// internal field used by SDK
 	Pos types.Int64 `tfsdk:"pos"`
-
+	// Type of the result, which determines which other fields are set: `text`
+	// puts the output in `data`, `table` fills `data`, `schema`, `truncated`
+	// and `isJsonSchema`, `image` and `images` fill `fileName` and `fileNames`
+	// respectively, and `error` fills `cause` and `summary`.
 	ResultType types.String `tfsdk:"result_type"`
-	// The table schema
+	// Columns of a `table` result, in the order of the values within each row
+	// of `data`. Each entry has a `name`, a `type` and a `metadata` key.
 	Schema types.List `tfsdk:"schema"`
-	// The summary of the error
+	// Short description of an `error` result, such as the exception type and
+	// message, when available.
 	Summary types.String `tfsdk:"summary"`
-	// true if partial results are returned.
+	// Whether a `table` result was cut off because the command output exceeded
+	// the row or byte limit.
 	Truncated types.Bool `tfsdk:"truncated"`
 }
 

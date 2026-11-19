@@ -658,16 +658,6 @@ func (m CloudWatchLogsEnvelope) Type(ctx context.Context) attr.Type {
 // Catch-all per-catalog config — settings that don't belong to any one
 // resource family. Singleton. Name format: `catalogs/{catalog}/commonConfig`.
 type CommonConfig struct {
-	// UC volume path holding user-authored custom content packs, e.g.
-	// `/Volumes/{catalog}/{schema}/{volume}`. User-provided with no default:
-	// when unset, custom content packs are unavailable (referencing one is
-	// rejected) and only built-in content packs apply.
-	CustomContentPackPath types.String `tfsdk:"custom_content_pack_path"`
-	// UC volume path holding user-authored custom presets, e.g.
-	// `/Volumes/{catalog}/{schema}/{volume}`. User-provided with no default:
-	// when unset, custom presets are unavailable and only built-in presets
-	// apply.
-	CustomPresetsPath types.String `tfsdk:"custom_presets_path"`
 	// Opaque entity tag for optimistic concurrency. Returned on every read;
 	// pass it back as the Update request's `etag` to make the update
 	// conditional on the resource being unchanged.
@@ -710,8 +700,6 @@ func (to *CommonConfig) SyncFieldsDuringRead(ctx context.Context, from CommonCon
 }
 
 func (m CommonConfig) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["custom_content_pack_path"] = attrs["custom_content_pack_path"].SetOptional()
-	attrs["custom_presets_path"] = attrs["custom_presets_path"].SetOptional()
 	attrs["etag"] = attrs["etag"].SetComputed()
 	attrs["name"] = attrs["name"].SetOptional()
 	attrs["per_resource_permissions_enabled"] = attrs["per_resource_permissions_enabled"].SetOptional()
@@ -742,8 +730,6 @@ func (m CommonConfig) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"custom_content_pack_path":         m.CustomContentPackPath,
-			"custom_presets_path":              m.CustomPresetsPath,
 			"etag":                             m.Etag,
 			"name":                             m.Name,
 			"per_resource_permissions_enabled": m.PerResourcePermissionsEnabled,
@@ -757,8 +743,6 @@ func (m CommonConfig) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (m CommonConfig) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"custom_content_pack_path":         types.StringType,
-			"custom_presets_path":              types.StringType,
 			"etag":                             types.StringType,
 			"name":                             types.StringType,
 			"per_resource_permissions_enabled": types.BoolType,
@@ -3803,7 +3787,7 @@ func (m ResourceStatus) Type(ctx context.Context) attr.Type {
 type Rule struct {
 	// Free-form client-managed key/value annotations.
 	Annotations types.Map `tfsdk:"annotations"`
-	// Batch SQL rule input.
+	// Scheduled detection (also known as batch detection) input.
 	Batch types.Object `tfsdk:"batch"`
 	// Name of the Unity Catalog catalog that contains the rule. Required.
 	// Cannot be changed after creation. Reads return the value as supplied; the
@@ -3812,9 +3796,9 @@ type Rule struct {
 	// Free-form rule category.
 	Category types.String `tfsdk:"category"`
 	// ID of the workspace whose compute runs this rule's jobs and owns its
-	// associated resources, such as the SQL warehouse a scheduled rule runs on.
-	// Server-assigned; a rule's warehouse can only be changed from this
-	// workspace.
+	// associated resources, such as the SQL warehouse a scheduled detection
+	// runs on. Server-assigned; a rule's warehouse can only be changed from
+	// this workspace.
 	ComputeWorkspaceId types.String `tfsdk:"compute_workspace_id"`
 	// Immutable UUIDv4 identifying the authored content resource installed as
 	// this rule.
@@ -3896,7 +3880,8 @@ type Rule struct {
 	RunAsPrincipal types.String `tfsdk:"run_as_principal"`
 	// Long-form operational guidance carried from the authored rule metadata.
 	// Supports up to 4096 characters. Requests exceeding this limit are
-	// rejected.
+	// rejected. Supports Markdown; analysts and the investigation agent follow
+	// it when triaging this rule's alerts.
 	Runbook types.String `tfsdk:"runbook"`
 	// When the rule executes.
 	Schedule types.Object `tfsdk:"schedule"`
@@ -3911,8 +3896,8 @@ type Rule struct {
 	Status types.Object `tfsdk:"status"`
 	// If set, this rule's signals do not open new alerts until the given time.
 	SuppressUntilTime timetypes.RFC3339 `tfsdk:"suppress_until_time"`
-	// Time-range configuration for batch rules. If unset, the execution time
-	// range is extended by a fixed `15m` lookback.
+	// Time-range configuration for scheduled detections. If unset, the
+	// execution time range is extended by a fixed `15m` lookback.
 	Timerange types.Object `tfsdk:"timerange"`
 	// Time the rule was last updated.
 	UpdateTime timetypes.RFC3339 `tfsdk:"update_time"`
@@ -4887,14 +4872,14 @@ func (m *RuleConfig) SetUpdatedBy(ctx context.Context, v Principal) {
 	m.UpdatedBy = vs
 }
 
-// Batch input for a detection rule.
+// Input for a scheduled detection (also known as batch detection).
 type RuleInputBatch struct {
 	// Custom-notebook user function. The output is used as input data for the
 	// rule.
 	Custom types.Object `tfsdk:"custom"`
 	// SQL query evaluated as the rule input.
 	Sql types.Object `tfsdk:"sql"`
-	// SQL warehouse used to run this batch rule.
+	// SQL warehouse that runs this scheduled detection.
 	WarehouseId types.String `tfsdk:"warehouse_id"`
 }
 
@@ -5034,7 +5019,7 @@ func (m *RuleInputBatch) SetSql(ctx context.Context, v RuleInputBatchSql) {
 	m.Sql = vs
 }
 
-// Batch SQL input for a detection rule.
+// SQL query input for a scheduled detection.
 type RuleInputBatchSql struct {
 	// Default catalog used to resolve unqualified identifiers in `query`. If
 	// unset, the rule's `catalog_name` is used.
@@ -5095,7 +5080,7 @@ func (m RuleInputBatchSql) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Reference to a custom-user-function notebook for stream or batch input.
+// Reference to a custom-user-function notebook for scheduled detection input.
 type RuleInputCustomNotebook struct {
 	// Fully-qualified notebook path, or a path relative to the configured base
 	// notebook directory.
@@ -5354,18 +5339,15 @@ func (m *RuleOutput) SetContext(ctx context.Context, v map[string]types.String) 
 
 // Defines when a detection rule executes.
 //
-// A batch rule sets exactly one of `at_least_every` or `cron_expression`. A
-// streaming rule runs continuously and sets no timing; it accepts only
-// `enabled`, and an omitted schedule means enabled. The server rejects any
-// other combination. `enabled` is orthogonal to the timing.
+// A scheduled detection sets exactly one of `at_least_every` or
+// `cron_expression`. A streaming rule runs continuously and sets no timing; it
+// accepts only `enabled`, and an omitted schedule means enabled. The server
+// rejects any other combination. `enabled` is orthogonal to the timing.
 type RuleSchedule struct {
 	// Defines the minimum cadence as a duration string. It may contain
 	// components for days, hours, minutes, and seconds (e.g. `5d`, `5d3h`,
 	// `3d2h5m12s`, `12m16s`).
 	AtLeastEvery types.String `tfsdk:"at_least_every"`
-	// Runs the rule continuously. Detection rules do not accept it: batch rules
-	// reject it, and streaming rules run continuously without it.
-	Continuous types.Bool `tfsdk:"continuous"`
 	// Defines the schedule using a Quartz cron expression.
 	CronExpression types.String `tfsdk:"cron_expression"`
 	// Sets whether the job is scheduled to run. Defaults to true.
@@ -5380,7 +5362,6 @@ func (to *RuleSchedule) SyncFieldsDuringRead(ctx context.Context, from RuleSched
 
 func (m RuleSchedule) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["at_least_every"] = attrs["at_least_every"].SetOptional()
-	attrs["continuous"] = attrs["continuous"].SetOptional()
 	attrs["cron_expression"] = attrs["cron_expression"].SetOptional()
 	attrs["enabled"] = attrs["enabled"].SetOptional()
 
@@ -5406,7 +5387,6 @@ func (m RuleSchedule) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"at_least_every":  m.AtLeastEvery,
-			"continuous":      m.Continuous,
 			"cron_expression": m.CronExpression,
 			"enabled":         m.Enabled,
 		})
@@ -5417,21 +5397,20 @@ func (m RuleSchedule) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"at_least_every":  types.StringType,
-			"continuous":      types.BoolType,
 			"cron_expression": types.StringType,
 			"enabled":         types.BoolType,
 		},
 	}
 }
 
-// Time-range configuration for a batch detection rule.
+// Time-range configuration for a scheduled detection.
 type RuleTimeRange struct {
 	// Extends the start of the execution time range by a compact duration with
 	// integer days, hours, minutes, and seconds in that order, such as `1h30m`
 	// or `15m`. Zero duration disables extension. Unset or empty uses a fixed
 	// `15m` at execution time. Only the start moves; the end is unchanged. Has
-	// no effect on batch SQL that does not use `IN_TIMERANGE`. Values must fit
-	// signed 64-bit microseconds.
+	// no effect on a detection query that does not use `IN_TIMERANGE`. Values
+	// must fit signed 64-bit microseconds.
 	ExtendLookback types.String `tfsdk:"extend_lookback"`
 }
 

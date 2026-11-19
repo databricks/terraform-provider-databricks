@@ -8,7 +8,61 @@ subcategory: "Postgres"
 
 ### Lakebase Autoscaling Terraform Behavior
 
-This resource uses Lakebase Autoscaling Terraform semantics. For complete details on how spec/status fields work, drift detection behavior, and state management requirements, see the `databricks_postgres_project` resource documentation.
+These resources use a spec/status model: the `spec` field defines the resource configuration Terraform manages, and `status` reports the resource's current state.
+
+Provider versions without drift detection do not detect changes made through the UI, CLI, or API. They apply updates based on changes to your Terraform configuration.
+
+With a provider version that supports drift detection, `terraform plan` detects changes to managed `spec` fields made outside Terraform.
+
+For help resolving provider inconsistency errors or recovering from a partially completed apply, see [Terraform state and drift detection for Lakebase](https://docs.databricks.com/aws/en/oltp/projects/terraform-state-and-drift). Use shared Terraform state storage when collaborating on the same resources.
+
+### Upgrading to a Provider with Drift Detection
+
+When upgrading from a provider version without drift detection to one that supports it, follow the steps below to resolve initial or persistent diffs.
+
+Prefer a complete `spec` that describes the resource's full desired configuration. The examples below show the minimal valid specs for an existing resource, not the recommended end state.
+
+#### Replace a Null Spec
+
+Null specs can produce persistent differences against the object returned during refresh; repeated applies do not resolve those differences.
+
+For an existing Role with no memberships, replace `spec = null` with an empty object:
+
+```hcl
+spec = {}
+```
+
+To preserve existing `DATABRICKS_SUPERUSER` membership, include it in the spec:
+
+```hcl
+spec = {
+  membership_roles = ["DATABRICKS_SUPERUSER"]
+}
+```
+
+Existing Roles do not require identity fields in the spec. `postgres_role` is required when creating a new Role. Review and apply the plan, then run `terraform plan` again.
+
+> **Important:** Applying a non-null spec with `membership_roles` omitted or set to `null` removes existing memberships. An empty spec is appropriate only when the Role has no memberships or you intend to remove them.
+
+#### Reconcile an Initial Diff with an Existing Spec
+
+A Role created before Lakebase supported drift detection can show an initial in-place update even when its current values already match your configured spec. Review the plan against your intended configuration. Include every membership you intend to keep in `membership_roles`. Apply the reviewed plan, then run `terraform plan` again.
+
+#### Resolve a Persistent Diff
+
+If differences remain after applying, follow the [shared reconciliation steps](https://docs.databricks.com/aws/en/oltp/projects/terraform-state-and-drift#reconcile-existing-resources-after-rollout) to choose between the values in your configuration and the current values returned by Lakebase, then review the resulting plan.
+
+### Optional Fields and Memberships
+
+Prefer `null` for unused optional nested objects, such as `attributes`. Keep the root `spec` non-null.
+
+For `membership_roles`, omission or null means no memberships when a non-null spec is applied. Use `membership_roles = ["DATABRICKS_SUPERUSER"]` to retain that membership. Setting the whole `spec` to null preserves live memberships but can leave a persistent null/object difference.
+
+### Import limitations
+
+See [Import](#import) for import commands.
+
+Identity fields can be omitted from an imported Role's spec. If included, they must match the existing Role.
 
 ### Overview
 
@@ -36,18 +90,15 @@ Roles exist within the Lakebase Autoscaling resource hierarchy:
 
 - **`PG_PASSWORD_SCRAM_SHA_256`**: Default for plain Postgres roles (no identity type).
 - **`LAKEBASE_OAUTH_V1`**: Default for managed identities (`USER`, `SERVICE_PRINCIPAL`, `GROUP`). The role logs in via Databricks OAuth.
-- **`NO_LOGIN`**: The role cannot be used for interactive access. Useful for roles that only hold privileges and serve as group targets.
+
+`NO_LOGIN` is not currently supported for role creation.
 
 ### Fields Fixed at Creation
 
-`spec.identity_type`, `spec.auth_method`, and `spec.postgres_role` are fixed when the role is
-created. Changing these fields in your Terraform configuration does not change their values on the
-existing role. Setting `replace_existing = true` adopts an existing role without changing these
-fixed values. You can still manage `spec.membership_roles` and the supported `spec.attributes`
-fields through Terraform.
+`spec.identity_type`, `spec.auth_method`, and `spec.postgres_role` are fixed when the Role is created. They can be omitted when updating an existing Role. If you include them, use the existing values. Setting `replace_existing = true` adopts an existing Role without changing these fixed values. You can still manage `spec.membership_roles` and the supported `spec.attributes` fields through Terraform.
 
 If you need different fixed values, define a new `databricks_postgres_role` resource with a
-different `role_id` and the desired settings.
+different `role_id` and the desired configuration.
 
 ### Attributes
 
@@ -81,16 +132,20 @@ An owner role is implicitly created on every branch, starting with `DATABRICKS_S
 
 If you're unsure of the exact value, find the role in the Lakebase UI (or list the branch's roles with the Postgres API) and read its `role_id` rather than deriving it by hand. Since Terraform is declarative, managing an already-existing resource requires `replace_existing = true`: it lets Terraform represent the implicitly created role in Terraform state and immediately apply the provided configuration to it.
 
-`replace_existing = true` only affects the initial adoption. Once the role is in Terraform state, it is managed like any other resource: removing it from your configuration and applying **deletes the actual role**, not just the state entry. This is unlike `databricks_postgres_branch`, whose deletion is instead controlled by its parent project. To stop managing the role without deleting it, remove it from state with `terraform state rm` before removing it from your configuration — this is also required for the implicit owner role, which cannot be deleted while it still owns objects on the branch.
+`replace_existing = true` only affects the initial adoption. After the role is in Terraform state, it is managed like any other resource: removing it from your configuration and running `terraform apply` **deletes the actual role**, not just the state entry. This is unlike the implicitly created root Branch, whose deletion is controlled by its parent Project. To stop managing the role without deleting it, remove it from state with `terraform state rm` before removing it from your configuration — this is also required for the implicit owner role, which cannot be deleted while it still owns objects on the branch.
 
-`spec.membership_roles` overwrites the role's memberships on every apply. The list you provide fully replaces the previous one, it isn't merged. Keep `DATABRICKS_SUPERUSER` in the list; leaving it out removes all of the role's memberships.
+When Terraform updates a Role with a non-null spec, `spec.membership_roles` replaces its memberships. The list you provide fully replaces the previous one, it isn't merged. Keep `DATABRICKS_SUPERUSER` in the list; leaving it out removes all of the role's memberships.
 
 ```hcl
 resource "databricks_postgres_project" "this" {
-  project_id = "my-project"
+  project_id      = "my-project"
   spec = {
     pg_version   = 17
     display_name = "My Project"
+  }
+
+  lifecycle {
+    prevent_destroy = true
   }
 }
 
@@ -104,11 +159,11 @@ resource "databricks_postgres_branch" "production" {
 }
 
 resource "databricks_postgres_role" "owner" {
-  role_id = "jane-doe"                      # normalized login of the creating identity
+  role_id = "jane-doe" # normalized login of the creating identity
   parent  = databricks_postgres_branch.production.name
   spec = {
-    postgres_role    = "jane.doe@databricks.com"  # the raw login
-    membership_roles = ["DATABRICKS_SUPERUSER"]   # mutable; leaving it empty wipes memberships
+    postgres_role    = "jane.doe@databricks.com" # the raw login
+    membership_roles = ["DATABRICKS_SUPERUSER"]  # mutable; leaving it empty wipes memberships
     attributes = {
       createdb   = true
       createrole = true
@@ -136,11 +191,11 @@ resource "databricks_postgres_branch" "child" {
 }
 
 resource "databricks_postgres_role" "inherited_owner" {
-  role_id = "jane-doe"                      # same role_id as on the source branch
+  role_id = "jane-doe" # same role_id as on the source branch
   parent  = databricks_postgres_branch.child.name
   spec = {
     postgres_role    = "jane.doe@databricks.com"
-    membership_roles = ["DATABRICKS_SUPERUSER"]   # mutable; leaving it empty wipes memberships
+    membership_roles = ["DATABRICKS_SUPERUSER"] # mutable; leaving it empty wipes memberships
     attributes = {
       createdb   = true
       createrole = true
@@ -157,10 +212,14 @@ Create a role that is authenticated as a specific Databricks workspace user via 
 
 ```hcl
 resource "databricks_postgres_project" "this" {
-  project_id = "my-project"
+  project_id      = "my-project"
   spec = {
     pg_version   = 17
     display_name = "My Project"
+  }
+
+  lifecycle {
+    prevent_destroy = true
   }
 }
 
@@ -177,7 +236,7 @@ resource "databricks_postgres_role" "jane" {
   parent  = databricks_postgres_branch.main.name
   spec = {
     identity_type = "USER"
-    postgres_role = "jane@databricks.com"   # Email of the user
+    postgres_role = "jane@databricks.com" # Email of the user
   }
 }
 ```
@@ -223,9 +282,9 @@ For example:
 ```hcl
 resource "databricks_postgres_role" "schema_owner" {
   role_id = "schemamigrator"
-  parent  = databricks_postgres_branch.test.name  # previously created branch, omitted for compactness
+  parent  = databricks_postgres_branch.test.name # previously created branch, omitted for compactness
   spec = {
-    postgres_role = "schemamigrator"
+    postgres_role    = "schemamigrator"
     membership_roles = ["DATABRICKS_SUPERUSER"]
   }
 }
@@ -241,12 +300,12 @@ resource "databricks_postgres_database" "application" {
 
 resource "databricks_postgres_role" "application" {
   role_id = "application"
-  parent  = databricks_postgres_branch.test.name  # previously created branch, omitted for compactness
+  parent  = databricks_postgres_branch.test.name # previously created branch, omitted for compactness
   spec = {
     postgres_role = "application"
   }
-  
-  depends_on = [ databricks_postgres_database.application ]
+
+  depends_on = [databricks_postgres_database.application]
 }
 ```
 
@@ -272,7 +331,11 @@ The following arguments are supported:
   `membership_roles` empty clears all of the role's existing memberships,
   including `DATABRICKS_SUPERUSER`. Always send the complete desired list
   of memberships when using this field
-* `spec` (RoleRoleSpec, optional) - The spec contains the role configuration, including identity type, authentication method, and role attributes
+* `spec` (RoleRoleSpec, optional) - The spec contains the role configuration, including identity type, authentication method, and role attributes.
+  
+  Read the resource's current values from `status`, rather than `spec`.
+  `spec` tracks field ownership for infrastructure-as-code tools and may omit
+  unmanaged fields
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 
 ### ProviderConfig
@@ -295,9 +358,8 @@ The following arguments are supported:
   * PG_PASSWORD_SCRAM_SHA_256: the role authenticates with a Postgres
   password verified server-side using the SCRAM-SHA-256 mechanism.
   Lakebase generates a password for the role.
-  * NO_LOGIN: the role cannot open a Postgres session at all. Useful for
-  roles that exist only to own objects or to aggregate privileges that
-  are then granted to other, loginable roles.
+  
+  NO_LOGIN is not currently supported for Role creation.
   
   If auth_method is left unspecified, a meaningful authentication method is derived from the identity_type:
   * For the managed identities, OAUTH is used.
@@ -306,30 +368,18 @@ The following arguments are supported:
   NOTE: for the Databricks identity type GROUP, LAKEBASE_OAUTH_V1
   is the default auth method (group can login as well).
   
-  This field is set when the role is created and cannot be changed.
-  When replacing an existing role with replace_existing=true, omit this
-  field or supply its current value. A differing value returns
-  INVALID_PARAMETER_VALUE and rejects the entire request, including changes
-  to mutable fields.
-  With `*` or masks containing only mutable fields, supplied values are ignored.
-  Including this field as an explicit path in update_mask returns
-  INVALID_PARAMETER_VALUE. Possible values are: `LAKEBASE_OAUTH_V1`, `NO_LOGIN`, `PG_PASSWORD_SCRAM_SHA_256`
+  This value cannot be changed after creation. Possible values are: `LAKEBASE_OAUTH_V1`, `NO_LOGIN`, `PG_PASSWORD_SCRAM_SHA_256`
 * `identity_type` (string, optional) - The type of role.
-  When specifying a managed-identity, the chosen role_id must be a valid:
+  When specifying a managed-identity, the chosen postgres_role must be a valid:
   
   * application ID for SERVICE_PRINCIPAL
   * user email for USER
   * group name for GROUP
   
-  This field is set when the role is created and cannot be changed.
-  When replacing an existing role with replace_existing=true, omit this
-  field or supply its current value. A differing value returns
-  INVALID_PARAMETER_VALUE and rejects the entire request, including changes
-  to mutable fields.
-  With `*` or masks containing only mutable fields, supplied values are ignored.
-  Including this field as an explicit path in update_mask returns
-  INVALID_PARAMETER_VALUE. Possible values are: `GROUP`, `SERVICE_PRINCIPAL`, `USER`
-* `membership_roles` (list of string, optional) - An enum value for a standard role that this role is a member of
+  This value cannot be changed after creation. Possible values are: `GROUP`, `SERVICE_PRINCIPAL`, `USER`
+* `membership_roles` (list of string, optional) - An enum value for a standard role that this role is a member of.
+  When selected in update_mask, this field replaces all existing memberships.
+  An empty or omitted list clears all memberships, including DATABRICKS_SUPERUSER
 * `postgres_role` (string, optional) - The name of the Postgres role.
   
   This expects a valid Postgres identifier as specified in the link below.
@@ -344,14 +394,7 @@ The following arguments are supported:
   2. app ID for IdentityType.SERVICE_PRINCIPAL
   2. group name for IdentityType.GROUP
   
-  This field is set when the role is created and cannot be changed.
-  When replacing an existing role with replace_existing=true, omit this
-  field or supply its current value. A differing value returns
-  INVALID_PARAMETER_VALUE and rejects the entire request, including changes
-  to mutable fields.
-  With `*` or masks containing only mutable fields, supplied values are ignored.
-  Including this field as an explicit path in update_mask returns
-  INVALID_PARAMETER_VALUE
+  This value cannot be changed after creation
 
 ### RoleRoleStatus
 * `attributes` (RoleAttributes, optional) - The PG role attributes associated with the role

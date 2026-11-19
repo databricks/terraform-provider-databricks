@@ -12,6 +12,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/common/types/fieldmask"
 	sdktime "github.com/databricks/databricks-sdk-go/common/types/time"
 	tfcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/iptypes"
 	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -177,6 +178,8 @@ func tfsdkToGoSdkStructField(
 		}
 		rawMsg := json.RawMessage(jsonStr)
 		destField.Set(reflect.ValueOf(&rawMsg))
+	case iptypes.IPAddress:
+		d.Append(tfsdkToGoSdkStructField(ctx, v.StringValue, destField, destFieldName, forceSendFieldsField, innerType)...)
 	case types.String:
 		if destField.Type() == reflect.TypeFor[fieldmask.FieldMask]() {
 			// fieldmask.FieldMask is represented as a types.String in the TF SDK.
@@ -252,7 +255,7 @@ func tfsdkToGoSdkStructField(
 			// If the element is a primitive type, we can convert it by recursively calling this function.
 			// Otherwise, it is a TF SDK struct, and we need to call TfSdkToGoSdkStruct to convert it.
 			switch typedVv := vv.(type) {
-			case types.Bool, types.String, types.Int64, types.Float64:
+			case types.Bool, types.String, types.Int64, types.Float64, iptypes.IPAddress:
 				d.Append(tfsdkToGoSdkStructField(ctx, typedVv.(attr.Value), nextDest.Elem(), destFieldName, forceSendFieldsField, innerType)...)
 			default:
 				d.Append(TfSdkToGoSdkStruct(ctx, vv, nextDest.Interface())...)
@@ -293,7 +296,7 @@ func tfsdkToGoSdkStructField(
 			// If the element is a primitive type, we can convert it by recursively calling this function.
 			// Otherwise, it is a TF SDK struct, and we need to call TfSdkToGoSdkStruct to convert it.
 			switch typedVv := vv.(type) {
-			case types.Bool, types.String, types.Int64, types.Float64:
+			case types.Bool, types.String, types.Int64, types.Float64, iptypes.IPAddress:
 				d.Append(tfsdkToGoSdkStructField(ctx, typedVv.(attr.Value), nextDest.Elem(), destFieldName, forceSendFieldsField, innerType)...)
 			default:
 				d.Append(TfSdkToGoSdkStruct(ctx, vv, nextDest.Interface())...)

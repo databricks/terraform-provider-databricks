@@ -127,6 +127,7 @@ The following attributes are exported:
 ### DataSource
 * `delta_table_source` (DeltaTableSource) - A Delta table data source
 * `feature_view_source` (FeatureViewSource) - A data source composed from registered upstream Features
+* `iceberg_table_source` (IcebergTableSource) - A Unity Catalog managed or foreign Iceberg table source
 * `kafka_source` (KafkaSource) - A Kafka stream data source
 * `lateness` (SourceLateness) - Completeness timing for this Feature's use of the source. This configuration is part of the
   Feature definition; it does not modify the underlying table or stream
@@ -139,11 +140,12 @@ The following attributes are exported:
   Required if transformation_sql is specified.
   Example: {"type":"struct","fields":[{"name":"col_a","type":"integer","nullable":true,"metadata":{}},{"name":"col_c","type":"integer","nullable":true,"metadata":{}}]}
 * `entity_columns` (list of string, deprecated)
-* `filter_condition` (string) - Single WHERE clause to filter delta table before applying transformations. Will be row-wise evaluated, so should only include conditionals and projections
+* `filter_condition` (string) - A single WHERE clause to filter the Delta table before applying transformations.
+  The predicate is evaluated for each row
 * `full_name` (string) - The full three-part (catalog, schema, table) name of the Delta table
 * `timeseries_column` (string, deprecated)
 * `transformation_sql` (string) - A single SQL SELECT expression applied after filter_condition.
-  Should contains all the columns needed (eg. "SELECT *, col_a + col_b AS col_c FROM x.y.z WHERE col_a > 0" would have `transformation_sql` "*, col_a + col_b AS col_c")
+  The expression must contain all required columns (e.g., "*, col_a + col_b AS col_c").
   If transformation_sql is not provided, all columns of the delta table are present in the DataSource dataframe
 
 ### EntityColumn
@@ -188,6 +190,17 @@ The following attributes are exported:
 ### FunctionExtraParameter
 * `key` (string) - The name of the parameter
 * `value` (string) - The value of the parameter
+
+### IcebergTableSource
+* `dataframe_schema` (string) - Schema of the resulting dataframe after transformations, in Spark StructType JSON format (from df.schema.json()).
+  Required if transformation_sql is specified.
+  Example: {"type":"struct","fields":[{"name":"col_a","type":"integer","nullable":true,"metadata":{}},{"name":"col_c","type":"integer","nullable":true,"metadata":{}}]}
+* `filter_condition` (string) - A single WHERE clause to filter the Iceberg table before applying transformations.
+  The predicate is evaluated for each row
+* `full_name` (string) - Full three-part name of the source table. May be omitted on reads when inaccessible
+* `transformation_sql` (string) - A single SQL SELECT expression applied after filter_condition.
+  The expression must contain all required columns (e.g., "*, col_a + col_b AS col_c").
+  If transformation_sql is not provided, all columns of the Iceberg table are present in the DataSource dataframe
 
 ### InputBinding
 * `column` (string) - Source column whose value is passed for this parameter at execution time

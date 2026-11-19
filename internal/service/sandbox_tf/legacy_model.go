@@ -142,7 +142,9 @@ func (m *Command_SdkV2) SetArgs(ctx context.Context, v []types.String) {
 }
 
 type ComputeSpec_SdkV2 struct {
-	// Idle duration after which the sandbox is automatically terminated.
+	// Idle time after which the sandbox is automatically stopped. Unset or 0
+	// disables inactivity auto-stop. Negative values are rejected. Can be
+	// changed on an existing sandbox with UpdateSandbox.
 	InactivityTimeout timetypes.GoDuration `tfsdk:"inactivity_timeout"`
 }
 
@@ -290,10 +292,13 @@ func (m CreateDirectoryResponse_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type CreateSandboxRequest_SdkV2 struct {
-	// The sandbox to create.
+	// The sandbox to create. An empty body creates a sandbox with the default
+	// configuration.
 	Sandbox types.List `tfsdk:"sandbox"`
 	// Client-supplied ID that becomes the final path segment of the resource
-	// name.
+	// name. It must start with a lowercase letter, contain only lowercase
+	// letters, digits and hyphens, end with a letter or digit, and be at most
+	// 63 characters long. Values shaped like a UUID are rejected.
 	SandboxId types.String `tfsdk:"-"`
 }
 
@@ -492,6 +497,8 @@ func (m DeletePathResponse_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type DeleteSandboxRequest_SdkV2 struct {
+	// Resource name of the sandbox to delete, in the form
+	// `sandboxes/{sandbox_id}`.
 	Name types.String `tfsdk:"-"`
 }
 
@@ -708,10 +715,12 @@ func (m DownloadFileResponse_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type EnvironmentSpec_SdkV2 struct {
-	// The Unity Catalog container image to use for the sandbox environment (for
-	// example, `catalog.schema.folder.image:tag`). See [Artifact Registry].
+	// The Unity Catalog container image to run the sandbox from, in the form
+	// `catalog.schema.artifact:tag`, or
+	// `catalog.schema.artifact@sha256:<digest>` to pin an exact version. When
+	// omitted, the sandbox runs the default sandbox image. See [custom images].
 	//
-	// [Artifact Registry]: https://docs.databricks.com/en/artifact-registry/
+	// [custom images]: https://docs.databricks.com/en/compute/serverless/sandbox-custom-image
 	ImageUri types.String `tfsdk:"image_uri"`
 }
 
@@ -1135,6 +1144,8 @@ func (m *GetMetadataResponse_SdkV2) SetFile(ctx context.Context, v SandboxFileIn
 }
 
 type GetSandboxRequest_SdkV2 struct {
+	// Resource name of the sandbox to retrieve, in the form
+	// `sandboxes/{sandbox_id}`.
 	Name types.String `tfsdk:"-"`
 }
 
@@ -1549,8 +1560,12 @@ func (m *ListDirectoryContentsResponse_SdkV2) SetContents(ctx context.Context, v
 }
 
 type ListSandboxesRequest_SdkV2 struct {
+	// Maximum number of sandboxes to return in one page. When unset or 0 the
+	// server returns up to 1000 sandboxes; values above 5000 are reduced to
+	// 5000.
 	PageSize types.Int64 `tfsdk:"-"`
-
+	// Page token from the `next_page_token` of a previous ListSandboxes
+	// response. Omit it to retrieve the first page.
 	PageToken types.String `tfsdk:"-"`
 }
 
@@ -1602,8 +1617,10 @@ func (m ListSandboxesRequest_SdkV2) Type(ctx context.Context) attr.Type {
 
 // A list of Sandboxes.
 type ListSandboxesResponse_SdkV2 struct {
+	// Token for retrieving the next page of results. Empty when there are no
+	// more results.
 	NextPageToken types.String `tfsdk:"next_page_token"`
-
+	// Sandboxes in this page of results.
 	Sandboxes types.List `tfsdk:"sandboxes"`
 }
 
@@ -1821,13 +1838,19 @@ func (m RenamePathResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// A Sandbox resource representing an execution environment.
+// An isolated, pre-configured, low-latency Serverless compute environment for
+// running code. Create a sandbox, wait until its state is
+// `SANDBOX_STATE_RUNNING`, then run commands in it with ExecuteCommandSync. The
+// data in its home directory persists across stop and start and is removed when
+// the sandbox is deleted. See [Databricks Sandbox].
+//
+// [Databricks Sandbox]: https://docs.databricks.com/en/compute/serverless/sandbox
 type Sandbox_SdkV2 struct {
 	// Output only. The creation time of the sandbox.
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
 	// Human-readable display label for the sandbox. At most 256 characters.
 	DisplayName types.String `tfsdk:"display_name"`
-	// Metadata associated with the sandbox.
+	// Tags and other metadata associated with the sandbox.
 	Metadata types.List `tfsdk:"metadata"`
 	// The sandbox resource name, in the form `sandboxes/{sandbox_id}`. Derived
 	// from `sandbox_id`; any value supplied in a create or update request body
@@ -2220,10 +2243,11 @@ func (m *SandboxMetadata_SdkV2) SetCustomTags(ctx context.Context, v map[string]
 }
 
 type SandboxSpec_SdkV2 struct {
-	// Compute configuration (size, inactivity timeout) requested for the
-	// sandbox.
+	// Compute settings requested for the sandbox, such as the inactivity
+	// timeout.
 	Compute types.List `tfsdk:"compute"`
-	// The execution environment to use for the sandbox.
+	// Software environment for the sandbox, such as the container image it
+	// runs.
 	Environment types.List `tfsdk:"environment"`
 }
 
@@ -2370,6 +2394,15 @@ func (m *SandboxSpec_SdkV2) SetEnvironment(ctx context.Context, v EnvironmentSpe
 
 type SandboxStatus_SdkV2 struct {
 	// Lifecycle state of the sandbox.
+	//
+	// - `SANDBOX_STATE_PENDING`: The sandbox is being provisioned after a
+	// create or start request and cannot run commands yet. -
+	// `SANDBOX_STATE_RUNNING`: The sandbox is ready and commands can run in it.
+	// - `SANDBOX_STATE_STOPPING`: The sandbox is shutting down. It settles to
+	// `SANDBOX_STATE_STOPPED`, or disappears if it is being deleted. -
+	// `SANDBOX_STATE_STOPPED`: The sandbox is stopped, by a stop request,
+	// inactivity auto-stop, or a failed provisioning. Its home directory is
+	// kept and it can be started again with StartSandbox.
 	State types.String `tfsdk:"state"`
 }
 
@@ -2629,6 +2662,11 @@ func (m *UpdateSandboxRequest_SdkV2) SetSandbox(ctx context.Context, v Sandbox_S
 type UploadFileRequest_SdkV2 struct {
 	// The complete file contents. An empty body creates an empty file.
 	Contents types.Object `tfsdk:"-"`
+	// Whether to replace an existing file. Defaults to true when omitted. If
+	// false, the upload atomically creates the file only if the destination
+	// does not exist, equivalent to If-None-Match: *. An existing entry returns
+	// 412 Precondition Failed. Explicit true conflicts with If-None-Match: *.
+	Overwrite types.Bool `tfsdk:"-"`
 	// The sandbox resource name, in the form sandboxes/{sandbox_id}.
 	Parent types.String `tfsdk:"-"`
 	// The absolute UTF-8 destination path inside the sandbox.
@@ -2645,6 +2683,7 @@ func (m UploadFileRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsc
 	attrs["contents"] = attrs["contents"].SetRequired()
 	attrs["parent"] = attrs["parent"].SetRequired()
 	attrs["path"] = attrs["path"].SetRequired()
+	attrs["overwrite"] = attrs["overwrite"].SetOptional()
 
 	return attrs
 }
@@ -2667,9 +2706,10 @@ func (m UploadFileRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.Ob
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"contents": m.Contents,
-			"parent":   m.Parent,
-			"path":     m.Path,
+			"contents":  m.Contents,
+			"overwrite": m.Overwrite,
+			"parent":    m.Parent,
+			"path":      m.Path,
 		})
 }
 
@@ -2677,9 +2717,10 @@ func (m UploadFileRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.Ob
 func (m UploadFileRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"contents": types.ObjectType{},
-			"parent":   types.StringType,
-			"path":     types.StringType,
+			"contents":  types.ObjectType{},
+			"overwrite": types.BoolType,
+			"parent":    types.StringType,
+			"path":      types.StringType,
 		},
 	}
 }

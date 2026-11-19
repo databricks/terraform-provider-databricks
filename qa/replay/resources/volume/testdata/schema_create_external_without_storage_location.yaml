@@ -1,0 +1,51 @@
+# Pins creating an EXTERNAL volume without storage_location: the provider doesn't
+# require it, so the POST omits the field and the API's 400 is surfaced as the create
+# diagnostic. Nothing is left in state, so the next plan creates the volume again
+# without reading it. The error response is synthetic; the exact message Unity Catalog
+# returns for this request isn't recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: create_external_without_storage_location_surfaces_the_api_error
+    config: &config |
+      resource "databricks_volume" "this" {
+        name         = "locationless_volume"
+        catalog_name = "main"
+        schema_name  = "replay"
+        volume_type  = "EXTERNAL"
+      }
+    expect_error: 'Error: cannot create volume: Storage location is required for an
+      external volume\.\n'
+    calls:
+      - request:
+          method: POST
+          path: /api/2.1/unity-catalog/volumes
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "locationless_volume", "volume_type": "EXTERNAL"}
+        response:
+          status: 400
+          body:
+            json: {"error_code": "INVALID_PARAMETER_VALUE",
+                   "message": "Storage location is required for an external volume."}
+  - name: plan_after_failed_create_creates_again
+    plan_only: true
+    config: *config
+    plan:
+      expect: non_empty
+      changes:
+        databricks_volume.this:
+          actions: [create]
+          after:
+            - path: [storage_location]
+              equals: null
+    calls: []
+destroy:
+  calls: []

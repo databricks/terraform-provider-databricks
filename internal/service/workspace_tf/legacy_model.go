@@ -318,7 +318,10 @@ type CreateRepoRequest_SdkV2 struct {
 	GitCredentialId types.Int64 `tfsdk:"git_credential_id"`
 	// Desired path for the repo in the workspace. Almost any path in the
 	// workspace can be chosen. If repo is created in `/Repos`, path must be in
-	// the format `/Repos/{folder}/{repo-name}`.
+	// the format `/Repos/{folder}/{repo-name}`. If omitted, the repo is created
+	// in the calling user's home folder (`/Users/{user}`, or `/Repos/{user}` in
+	// workspaces without workspace files). The repo name is the last path
+	// segment of `url`, for example `cli.git`.
 	Path types.String `tfsdk:"path"`
 	// Git provider. This field is case-insensitive. The available Git providers
 	// are `gitHub`, `bitbucketCloud`, `gitLab`, `azureDevOpsServices` (Azure
@@ -329,7 +332,7 @@ type CreateRepoRequest_SdkV2 struct {
 	// If specified, the repo will be created with sparse checkout enabled. You
 	// cannot enable/disable sparse checkout after the repo is created.
 	SparseCheckout types.List `tfsdk:"sparse_checkout"`
-	// URL of the Git repository to be linked.
+	// HTTPS URL of the Git repository to be linked. SSH URLs are not supported.
 	Url types.String `tfsdk:"url"`
 }
 
@@ -446,11 +449,13 @@ type CreateRepoResponse_SdkV2 struct {
 	Id types.Int64 `tfsdk:"id"`
 	// Path of the Git folder (repo) in the workspace.
 	Path types.String `tfsdk:"path"`
-	// Git provider of the linked Git repository, e.g. `gitHub`,
-	// `azureDevOpsServices`, `bitbucketServer` (Bitbucket Data Center),
-	// `gitLabEnterpriseEdition` (GitLab Self-Managed), or `awsCodeCommit`.
+	// Git provider of the linked Git repository. Supported providers are
+	// `gitHub`, `bitbucketCloud`, `gitLab`, `azureDevOpsServices`,
+	// `gitHubEnterprise`, `bitbucketServer` (Bitbucket Data Center),
+	// `gitLabEnterpriseEdition` (GitLab Self-Managed), and `awsCodeCommit`.
 	Provider types.String `tfsdk:"provider"`
-	// Sparse checkout settings for the Git folder (repo).
+	// Sparse checkout settings for the Git folder (repo). Only present when
+	// sparse checkout is enabled for the Git folder.
 	SparseCheckout types.List `tfsdk:"sparse_checkout"`
 	// URL of the linked Git repository.
 	Url types.String `tfsdk:"url"`
@@ -768,9 +773,9 @@ type Delete_SdkV2 struct {
 	// The absolute path of the notebook or directory.
 	Path types.String `tfsdk:"path"`
 	// The flag that specifies whether to delete the object recursively. It is
-	// `false` by default. Please note this deleting directory is not atomic. If
-	// it fails in the middle, some of objects under this directory may be
-	// deleted and cannot be undone.
+	// `false` by default. Deleting a directory recursively is not atomic. If
+	// the call fails part way, some objects under the directory may already be
+	// deleted and cannot be restored.
 	Recursive types.Bool `tfsdk:"recursive"`
 }
 
@@ -969,7 +974,7 @@ func (m DeleteCredentialsResponse_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type DeleteRepoRequest_SdkV2 struct {
-	// The ID for the corresponding repo to delete.
+	// ID of the Git folder (repo) to delete.
 	RepoId types.Int64 `tfsdk:"-"`
 }
 
@@ -1370,10 +1375,14 @@ func (m ExportRequest_SdkV2) Type(ctx context.Context) attr.Type {
 // The request field `direct_download` determines whether a JSON response or
 // binary contents are returned by this endpoint.
 type ExportResponse_SdkV2 struct {
-	// The base64-encoded content. If the limit (10MB) is exceeded, exception
-	// with error code **MAX_NOTEBOOK_SIZE_EXCEEDED** is thrown.
+	// The base64-encoded content of the exported object. If the content exceeds
+	// the size limit (10 MB), the call fails with error code
+	// `MAX_NOTEBOOK_SIZE_EXCEEDED`.
 	Content types.String `tfsdk:"content"`
-	// The file type of the exported file.
+	// The file extension that matches the exported content, for example `py`
+	// for a Python notebook exported as `SOURCE`, `ipynb` for `JUPYTER`, `html`
+	// for `HTML`, `dbc` for `DBC`, and `zip` for a directory exported as
+	// `SOURCE` or `AUTO`. It is empty for workspace files.
 	FileType types.String `tfsdk:"file_type"`
 }
 
@@ -1872,7 +1881,9 @@ func (m GetRepoRequest_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type GetRepoResponse_SdkV2 struct {
-	// Branch that the local version of the repo is checked out to.
+	// Branch that the local version of the repo is checked out to. Omitted when
+	// the Git folder (repo) is in a detached HEAD state, for example after
+	// checking out a tag.
 	Branch types.String `tfsdk:"branch"`
 	// Whether the Git CLI is enabled for this Git folder (repo). When true, Git
 	// commands can be run directly against this Git folder using the Git CLI.
@@ -1883,11 +1894,13 @@ type GetRepoResponse_SdkV2 struct {
 	Id types.Int64 `tfsdk:"id"`
 	// Path of the Git folder (repo) in the workspace.
 	Path types.String `tfsdk:"path"`
-	// Git provider of the linked Git repository, e.g. `gitHub`,
-	// `azureDevOpsServices`, `bitbucketServer` (Bitbucket Data Center),
-	// `gitLabEnterpriseEdition` (GitLab Self-Managed), or `awsCodeCommit`.
+	// Git provider of the linked Git repository. Supported providers are
+	// `gitHub`, `bitbucketCloud`, `gitLab`, `azureDevOpsServices`,
+	// `gitHubEnterprise`, `bitbucketServer` (Bitbucket Data Center),
+	// `gitLabEnterpriseEdition` (GitLab Self-Managed), and `awsCodeCommit`.
 	Provider types.String `tfsdk:"provider"`
-	// Sparse checkout settings for the Git folder (repo).
+	// Sparse checkout settings for the Git folder (repo). Only present when
+	// sparse checkout is enabled for the Git folder.
 	SparseCheckout types.List `tfsdk:"sparse_checkout"`
 	// URL of the linked Git repository.
 	Url types.String `tfsdk:"url"`
@@ -2385,11 +2398,10 @@ func (m GetWorkspaceObjectPermissionsRequest_SdkV2) Type(ctx context.Context) at
 }
 
 type Import_SdkV2 struct {
-	// The base64-encoded content. This has a limit of 10 MB.
-	//
-	// If the limit (10MB) is exceeded, exception with error code
-	// **MAX_NOTEBOOK_SIZE_EXCEEDED** is thrown. This parameter might be absent,
-	// and instead a posted file is used.
+	// The base64-encoded content to import. The content is limited to 10 MB. If
+	// the limit is exceeded, the call fails with error code
+	// `MAX_NOTEBOOK_SIZE_EXCEEDED`. This parameter might be absent, and instead
+	// a posted file is used.
 	Content types.String `tfsdk:"content"`
 	// This specifies the format of the file to be imported.
 	//
@@ -2405,12 +2417,13 @@ type Import_SdkV2 struct {
 	// directories. - `R_MARKDOWN`: The notebook is imported from R Markdown
 	// format.
 	Format types.String `tfsdk:"format"`
-	// The language of the object. This value is set only if the object type is
-	// `NOTEBOOK`.
+	// The language of the notebook. It applies only to the `SOURCE` format: set
+	// it to import a single notebook, or leave it unset to import a directory.
 	Language types.String `tfsdk:"language"`
 	// The flag that specifies whether to overwrite existing object. It is
 	// `false` by default. For `DBC` format, `overwrite` is not supported since
-	// it may contain a directory.
+	// it may contain a directory. Importing a directory in `SOURCE` format does
+	// not support `overwrite` either.
 	Overwrite types.Bool `tfsdk:"overwrite"`
 	// The absolute path of the object or directory. Importing a directory is
 	// only supported for the `DBC` and `SOURCE` formats.
@@ -3453,7 +3466,10 @@ func (m *ListSecretsResponse_SdkV2) SetSecrets(ctx context.Context, v []SecretMe
 }
 
 type ListWorkspaceRequest_SdkV2 struct {
-	// UTC timestamp in milliseconds
+	// A UTC timestamp in milliseconds since the epoch. When it is set and
+	// `path` is a directory, the response includes only the notebooks that were
+	// modified after this time. Objects that are not notebooks are always
+	// included.
 	NotebooksModifiedAfter types.Int64 `tfsdk:"-"`
 	// The absolute path of the notebook or directory.
 	Path types.String `tfsdk:"-"`
@@ -3599,7 +3615,8 @@ func (m MkdirsResponse_SdkV2) Type(ctx context.Context) attr.Type {
 // The information of the object in workspace. It will be returned by “list“
 // and “get-status“.
 type ObjectInfo_SdkV2 struct {
-	// Only applicable to files. The creation UTC timestamp.
+	// The time the object was created, as a UTC timestamp in milliseconds since
+	// the epoch. It is returned for notebooks and files.
 	CreatedAt types.Int64 `tfsdk:"created_at"`
 	// Additional metadata about the directory. Only set for objects of type
 	// ``DIRECTORY``.
@@ -3607,7 +3624,8 @@ type ObjectInfo_SdkV2 struct {
 	// The language of the object. This value is set only if the object type is
 	// ``NOTEBOOK``. For Jupyter (.ipynb) notebooks, this is always ``PYTHON``.
 	Language types.String `tfsdk:"language"`
-	// Only applicable to files, the last modified UTC timestamp.
+	// The time the object was last modified, as a UTC timestamp in milliseconds
+	// since the epoch. It is returned for notebooks and files.
 	ModifiedAt types.Int64 `tfsdk:"modified_at"`
 	// Unique identifier for the object.
 	ObjectId types.Int64 `tfsdk:"object_id"`
@@ -3622,7 +3640,8 @@ type ObjectInfo_SdkV2 struct {
 	// A unique identifier for the object that is consistent across all
 	// Databricks APIs.
 	ResourceId types.String `tfsdk:"resource_id"`
-	// Only applicable to files. The file size in bytes can be returned.
+	// The size of the file in bytes. It is returned only for objects of type
+	// ``FILE``.
 	Size types.Int64 `tfsdk:"size"`
 }
 
@@ -4060,23 +4079,30 @@ func (m *RepoAccessControlResponse_SdkV2) SetAllPermissions(ctx context.Context,
 	m.AllPermissions = types.ListValueMust(t, vs)
 }
 
-// Git folder (repo) information.
+// Git folder (repo) information. A Git folder is a workspace folder that is
+// linked to a remote Git repository and tracks the branch or commit that is
+// checked out.
 type RepoInfo_SdkV2 struct {
-	// Name of the current git branch of the git folder (repo).
+	// Name of the branch that the Git folder (repo) is checked out to. Omitted
+	// when the Git folder is in a detached HEAD state, for example after
+	// checking out a tag.
 	Branch types.String `tfsdk:"branch"`
-	// Current git commit id of the git folder (repo).
+	// SHA-1 hash of the commit that the Git folder (repo) is currently checked
+	// out to.
 	HeadCommitId types.String `tfsdk:"head_commit_id"`
-	// Id of the git folder (repo) in the Workspace.
+	// ID of the Git folder (repo) object in the workspace.
 	Id types.Int64 `tfsdk:"id"`
 	// Root path of the git folder (repo) in the Workspace.
 	Path types.String `tfsdk:"path"`
-	// Git provider of the remote git repository, e.g. `gitHub`,
-	// `azureDevOpsServices`, `bitbucketServer` (Bitbucket Data Center),
-	// `gitLabEnterpriseEdition` (GitLab Self-Managed), or `awsCodeCommit`.
+	// Git provider of the remote Git repository. Supported providers are
+	// `gitHub`, `bitbucketCloud`, `gitLab`, `azureDevOpsServices`,
+	// `gitHubEnterprise`, `bitbucketServer` (Bitbucket Data Center),
+	// `gitLabEnterpriseEdition` (GitLab Self-Managed), and `awsCodeCommit`.
 	Provider types.String `tfsdk:"provider"`
-	// Sparse checkout config for the git folder (repo).
+	// Sparse checkout configuration of the Git folder (repo). Only present when
+	// sparse checkout is enabled for the Git folder.
 	SparseCheckout types.List `tfsdk:"sparse_checkout"`
-	// URL of the remote git repository.
+	// HTTPS URL of the remote Git repository.
 	Url types.String `tfsdk:"url"`
 }
 
@@ -5078,7 +5104,8 @@ func (m UpdateCredentialsResponse_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type UpdateRepoRequest_SdkV2 struct {
-	// Branch that the local version of the repo is checked out to.
+	// Branch to check out. The Git folder (repo) is then updated to the latest
+	// commit of the branch. Mutually exclusive with `tag`.
 	Branch types.String `tfsdk:"branch"`
 	// WARNING: DESTRUCTIVE AND IRREVERSIBLE. If true, permanently deletes ALL
 	// uncommitted changes in the Git folder — staged, unstaged, and untracked
@@ -5099,12 +5126,13 @@ type UpdateRepoRequest_SdkV2 struct {
 	// ID of the Git folder (repo) object in the workspace.
 	RepoId types.Int64 `tfsdk:"-"`
 	// If specified, update the sparse checkout settings. The update will fail
-	// if sparse checkout is not enabled for the repo.
+	// if sparse checkout is not enabled for the repo. Must be sent together
+	// with `branch` or `tag`.
 	SparseCheckout types.List `tfsdk:"sparse_checkout"`
 	// Tag that the local version of the repo is checked out to. Updating the
 	// repo to a tag puts the repo in a detached HEAD state. Before committing
 	// new changes, you must update the repo to a branch instead of the detached
-	// HEAD.
+	// HEAD. Mutually exclusive with `branch`.
 	Tag types.String `tfsdk:"tag"`
 }
 

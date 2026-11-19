@@ -734,6 +734,10 @@ type Branch struct {
 	// `status.source_branch`.
 	Parent types.String `tfsdk:"parent"`
 	// The spec contains the branch configuration.
+	//
+	// Read the resource's current values from `status`, rather than `spec`.
+	// `spec` tracks field ownership for infrastructure-as-code tools and may
+	// omit unmanaged fields.
 	Spec types.Object `tfsdk:"spec"`
 	// The current status of a Branch.
 	Status types.Object `tfsdk:"status"`
@@ -744,10 +748,6 @@ type Branch struct {
 }
 
 func (to *Branch) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Branch) {
-	if !from.Spec.IsUnknown() && !from.Spec.IsNull() {
-		// Spec is an input only field and not returned by the service, so we keep the value from the prior state.
-		to.Spec = from.Spec
-	}
 	if !from.Spec.IsNull() && !from.Spec.IsUnknown() {
 		if toSpec, ok := to.GetSpec(ctx); ok {
 			if fromSpec, ok := from.GetSpec(ctx); ok {
@@ -769,10 +769,6 @@ func (to *Branch) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Branc
 }
 
 func (to *Branch) SyncFieldsDuringRead(ctx context.Context, from Branch) {
-	if !from.Spec.IsUnknown() && !from.Spec.IsNull() {
-		// Spec is an input only field and not returned by the service, so we keep the value from the prior state.
-		to.Spec = from.Spec
-	}
 	if !from.Spec.IsNull() && !from.Spec.IsUnknown() {
 		if toSpec, ok := to.GetSpec(ctx); ok {
 			if fromSpec, ok := from.GetSpec(ctx); ok {
@@ -797,8 +793,6 @@ func (m Branch) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBui
 	attrs["name"] = attrs["name"].SetOptional()
 	attrs["parent"] = attrs["parent"].SetComputed()
 	attrs["spec"] = attrs["spec"].SetOptional()
-	attrs["spec"] = attrs["spec"].SetComputed()
-	attrs["spec"] = attrs["spec"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["status"] = attrs["status"].SetComputed()
 	attrs["uid"] = attrs["uid"].SetComputed()
 	attrs["update_time"] = attrs["update_time"].SetComputed()
@@ -981,9 +975,33 @@ type BranchSpec struct {
 }
 
 func (to *BranchSpec) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from BranchSpec) {
+	if !from.SourceBranch.IsUnknown() && !from.SourceBranch.IsNull() {
+		// SourceBranch is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.SourceBranch = from.SourceBranch
+	}
+	if !from.SourceBranchLsn.IsUnknown() && !from.SourceBranchLsn.IsNull() {
+		// SourceBranchLsn is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.SourceBranchLsn = from.SourceBranchLsn
+	}
+	if !from.SourceBranchTime.IsUnknown() && !from.SourceBranchTime.IsNull() {
+		// SourceBranchTime is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.SourceBranchTime = from.SourceBranchTime
+	}
 }
 
 func (to *BranchSpec) SyncFieldsDuringRead(ctx context.Context, from BranchSpec) {
+	if !from.SourceBranch.IsUnknown() && !from.SourceBranch.IsNull() {
+		// SourceBranch is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.SourceBranch = from.SourceBranch
+	}
+	if !from.SourceBranchLsn.IsUnknown() && !from.SourceBranchLsn.IsNull() {
+		// SourceBranchLsn is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.SourceBranchLsn = from.SourceBranchLsn
+	}
+	if !from.SourceBranchTime.IsUnknown() && !from.SourceBranchTime.IsNull() {
+		// SourceBranchTime is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.SourceBranchTime = from.SourceBranchTime
+	}
 }
 
 func (m BranchSpec) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -992,10 +1010,16 @@ func (m BranchSpec) ApplySchemaCustomizations(attrs map[string]tfschema.Attribut
 	attrs["no_expiry"] = attrs["no_expiry"].SetOptional()
 	attrs["source_branch"] = attrs["source_branch"].SetOptional()
 	attrs["source_branch"] = attrs["source_branch"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["source_branch"] = attrs["source_branch"].SetComputed()
+	attrs["source_branch"] = attrs["source_branch"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["source_branch_lsn"] = attrs["source_branch_lsn"].SetOptional()
 	attrs["source_branch_lsn"] = attrs["source_branch_lsn"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["source_branch_lsn"] = attrs["source_branch_lsn"].SetComputed()
+	attrs["source_branch_lsn"] = attrs["source_branch_lsn"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["source_branch_time"] = attrs["source_branch_time"].SetOptional()
 	attrs["source_branch_time"] = attrs["source_branch_time"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["source_branch_time"] = attrs["source_branch_time"].SetComputed()
+	attrs["source_branch_time"] = attrs["source_branch_time"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["source_snapshot"] = attrs["source_snapshot"].SetOptional()
 	attrs["source_snapshot"] = attrs["source_snapshot"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["ttl"] = attrs["ttl"].SetOptional()
@@ -1170,7 +1194,8 @@ func (m BranchStatus) Type(ctx context.Context) attr.Type {
 }
 
 type Catalog struct {
-	// The part of the name, chosen by the user when the resource was created.
+	// The ID chosen when the catalog was created, which is also its name in
+	// Unity Catalog. It is the last segment of the name field.
 	CatalogId types.String `tfsdk:"catalog_id"`
 	// A timestamp indicating when the catalog was created.
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
@@ -1178,11 +1203,13 @@ type Catalog struct {
 	//
 	// Format: "catalogs/{catalog_id}".
 	Name types.String `tfsdk:"name"`
-	// The desired state of the Catalog.
+	// The desired state of the Catalog. The catalog has no update method, so
+	// the spec is fixed when the catalog is created.
 	Spec types.Object `tfsdk:"spec"`
 	// The observed state of the Catalog.
 	Status types.Object `tfsdk:"status"`
-	// System-generated unique identifier for the catalog.
+	// The immutable UUID that identifies the catalog, assigned when the catalog
+	// is created.
 	Uid types.String `tfsdk:"uid"`
 	// A timestamp indicating when the catalog was last updated.
 	UpdateTime timetypes.RFC3339 `tfsdk:"update_time"`
@@ -1348,7 +1375,8 @@ func (m *Catalog) SetStatus(ctx context.Context, v CatalogCatalogStatus) {
 
 // The desired state of the Catalog.
 type CatalogCatalogSpec struct {
-	// The resource path of the branch associated with the catalog.
+	// The resource path of the branch that holds the Postgres database. The
+	// branch must have a read-write compute endpoint.
 	//
 	// Format: projects/{project_id}/branches/{branch_id}.
 	Branch types.String `tfsdk:"branch"`
@@ -1363,7 +1391,8 @@ type CatalogCatalogSpec struct {
 	// The name of the Postgres database inside the specified Lakebase project
 	// and branch to be associated with the UC catalog. This database must
 	// already exist, unless create_database_if_missing is set to true on
-	// creation.
+	// creation. The system databases postgres, databricks_system, template0 and
+	// template1 cannot be registered.
 	//
 	// A database can only be registered with one UC catalog at a time. To
 	// re-register a database with a different catalog, the existing catalog
@@ -1886,8 +1915,9 @@ func (m *CreateBranchRequest) SetBranch(ctx context.Context, v Branch) {
 
 type CreateCatalogRequest struct {
 	Catalog types.Object `tfsdk:"catalog"`
-	// The ID in the Unity Catalog. It becomes the full resource name, for
-	// example "my_catalog" becomes "catalogs/my_catalog".
+	// The ID of the catalog to create, which is also its name in Unity Catalog.
+	// It becomes the last segment of the catalog's resource name,
+	// catalogs/{catalog_id}.
 	CatalogId types.String `tfsdk:"-"`
 }
 
@@ -2189,9 +2219,8 @@ func (m *CreateDataApiRequest) SetDataApi(ctx context.Context, v DataApi) {
 type CreateDatabaseRequest struct {
 	// The desired specification of a Database.
 	Database types.Object `tfsdk:"database"`
-	// The ID to use for the Database, which will become the final component of
-	// the database's resource name. This ID becomes the database name in
-	// postgres.
+	// The ID used to identify and manage the Database resource through the API.
+	// The Postgres database name is specified in `spec.postgres_database`.
 	//
 	// This value should be 4-63 characters, and only use characters available
 	// in DNS names, as defined by RFC-1123
@@ -2314,19 +2343,24 @@ func (m *CreateDatabaseRequest) SetDatabase(ctx context.Context, v Database) {
 }
 
 type CreateEndpointRequest struct {
-	// The Endpoint to create.
+	// The endpoint to create. Only `spec` is read from this message; the system
+	// sets the other fields.
 	Endpoint types.Object `tfsdk:"endpoint"`
-	// The ID to use for the Endpoint. This becomes the final component of the
-	// endpoint's resource name. The ID is required and must be 1-63 characters
-	// long, start with a lowercase letter, and contain only lowercase letters,
-	// numbers, and hyphens. For example, `primary` becomes
-	// `projects/my-app/branches/development/endpoints/primary`.
+	// The ID to use for the endpoint. It becomes the final segment of the
+	// endpoint's resource name,
+	// `projects/{project_id}/branches/{branch_id}/endpoints/{endpoint_id}`. The
+	// ID must be 3 to 63 characters long, start with a lowercase letter, end
+	// with a lowercase letter or digit, and contain only lowercase letters,
+	// digits, and hyphens.
 	EndpointId types.String `tfsdk:"-"`
 	// The Branch where this Endpoint will be created. Format:
 	// projects/{project_id}/branches/{branch_id}
 	Parent types.String `tfsdk:"-"`
 	// If true, update the endpoint if it already exists instead of returning an
-	// error.
+	// error. The request's `spec.endpoint_type` must match the existing
+	// endpoint's type, and the other `spec` fields are applied as an update.
+	// Use this to configure the read-write endpoint that was created together
+	// with the branch.
 	ReplaceExisting types.Bool `tfsdk:"-"`
 }
 
@@ -2539,10 +2573,12 @@ func (m *CreateMigrationRequest) SetMigration(ctx context.Context, v Migration) 
 type CreateProjectRequest struct {
 	// The Project to create.
 	Project types.Object `tfsdk:"project"`
-	// The ID to use for the Project. This becomes the final component of the
-	// project's resource name. The ID is required and must be 1-63 characters
-	// long, start with a lowercase letter, and contain only lowercase letters,
-	// numbers, and hyphens. For example, `my-app` becomes `projects/my-app`.
+	// The ID to use for the project. It becomes the final segment of the
+	// project's resource name, `projects/{project_id}`. The ID must be 3 to 63
+	// characters long, start with a lowercase letter, end with a lowercase
+	// letter or digit, and contain only lowercase letters, digits, and hyphens.
+	// The ID of a soft-deleted project stays reserved until that project is
+	// permanently deleted.
 	ProjectId types.String `tfsdk:"-"`
 }
 
@@ -2657,8 +2693,8 @@ type CreateRoleRequest struct {
 	ReplaceExisting types.Bool `tfsdk:"-"`
 	// The desired specification of a Role.
 	Role types.Object `tfsdk:"role"`
-	// The ID to use for the Role, which will become the final component of the
-	// role's resource name. This ID becomes the role in Postgres.
+	// The ID used to identify and manage the Role resource through the API. The
+	// Postgres role name is specified in `spec.postgres_role`.
 	//
 	// This value should be 4-63 characters, and valid characters are lowercase
 	// letters, numbers, and hyphens, as defined by RFC 1123.
@@ -3747,6 +3783,10 @@ type Database struct {
 	// projects/{project_id}/branches/{branch_id}
 	Parent types.String `tfsdk:"parent"`
 	// The desired state of the Database.
+	//
+	// Read the resource's current values from `status`, rather than `spec`.
+	// `spec` tracks field ownership for infrastructure-as-code tools and may
+	// omit unmanaged fields.
 	Spec types.Object `tfsdk:"spec"`
 	// The observed state of the Database.
 	Status types.Object `tfsdk:"status"`
@@ -3755,10 +3795,6 @@ type Database struct {
 }
 
 func (to *Database) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Database) {
-	if !from.Spec.IsUnknown() && !from.Spec.IsNull() {
-		// Spec is an input only field and not returned by the service, so we keep the value from the prior state.
-		to.Spec = from.Spec
-	}
 	if !from.Spec.IsNull() && !from.Spec.IsUnknown() {
 		if toSpec, ok := to.GetSpec(ctx); ok {
 			if fromSpec, ok := from.GetSpec(ctx); ok {
@@ -3780,10 +3816,6 @@ func (to *Database) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Dat
 }
 
 func (to *Database) SyncFieldsDuringRead(ctx context.Context, from Database) {
-	if !from.Spec.IsUnknown() && !from.Spec.IsNull() {
-		// Spec is an input only field and not returned by the service, so we keep the value from the prior state.
-		to.Spec = from.Spec
-	}
 	if !from.Spec.IsNull() && !from.Spec.IsUnknown() {
 		if toSpec, ok := to.GetSpec(ctx); ok {
 			if fromSpec, ok := from.GetSpec(ctx); ok {
@@ -3808,8 +3840,6 @@ func (m Database) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeB
 	attrs["name"] = attrs["name"].SetOptional()
 	attrs["parent"] = attrs["parent"].SetComputed()
 	attrs["spec"] = attrs["spec"].SetOptional()
-	attrs["spec"] = attrs["spec"].SetComputed()
-	attrs["spec"] = attrs["spec"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["status"] = attrs["status"].SetComputed()
 	attrs["update_time"] = attrs["update_time"].SetComputed()
 
@@ -3981,7 +4011,7 @@ type DatabaseDatabaseSpec struct {
 	// To change the owner, pass valid existing Role name when updating the
 	// Database
 	//
-	// A database always has an owner.
+	// Required when creating the Database.
 	Role types.String `tfsdk:"role"`
 }
 
@@ -4708,8 +4738,13 @@ type DeleteProjectRequest struct {
 	// The full resource path of the project to delete. Format:
 	// projects/{project_id}
 	Name types.String `tfsdk:"-"`
-	// If true, permanently deletes the project (hard delete). If false or
-	// unset, performs a soft delete.
+	// If true, permanently deletes the project and all of its data immediately.
+	// If false or unset, the project is soft-deleted: it stops accepting
+	// connections and is retained for 7 days, during which it can be restored
+	// with Undelete, and is then permanently deleted. Deleting an already
+	// soft-deleted project with `purge` set to true removes it immediately. See
+	// https://docs.databricks.com/aws/en/oltp/projects/manage-projects for
+	// details.
 	Purge types.Bool `tfsdk:"-"`
 }
 
@@ -4971,10 +5006,15 @@ func (m DeltaTableSyncInfo) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// A compute endpoint of a Lakebase Postgres branch. An endpoint provides the
+// compute that runs Postgres for the branch's data and the hostnames that
+// clients connect to. Each branch has one read-write endpoint, created together
+// with the branch, and can have additional read-only endpoints (read replicas).
 type Endpoint struct {
 	// A timestamp indicating when the compute endpoint was created.
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
-	// The part of the name, chosen by the user when the resource was created.
+	// The endpoint ID chosen when the endpoint was created. It is the final
+	// segment of `name`.
 	EndpointId types.String `tfsdk:"endpoint_id"`
 	// Output only. The full resource path of the endpoint. Format:
 	// projects/{project_id}/branches/{branch_id}/endpoints/{endpoint_id}
@@ -4982,22 +5022,26 @@ type Endpoint struct {
 	// The branch containing this endpoint (API resource hierarchy). Format:
 	// projects/{project_id}/branches/{branch_id}
 	Parent types.String `tfsdk:"parent"`
-	// The spec contains the compute endpoint configuration, including
-	// autoscaling limits, suspend timeout, and disabled state.
+	// The desired configuration of the endpoint. Every field under `spec`
+	// except `endpoint_type` can be changed after creation. See `status` for
+	// the configuration that is currently in effect.
+	//
+	// Read the resource's current values from `status`, rather than `spec`.
+	// `spec` tracks field ownership for infrastructure-as-code tools and may
+	// omit unmanaged fields.
 	Spec types.Object `tfsdk:"spec"`
-	// Current operational status of the compute endpoint.
+	// The configuration and state of the endpoint that are currently in effect,
+	// as reported by the system, including the hostnames to connect to.
 	Status types.Object `tfsdk:"status"`
-	// System-generated unique ID for the endpoint.
+	// A system-generated ID that identifies the endpoint. Unlike `name`, it is
+	// not derived from the user-chosen endpoint ID. The endpoint's connection
+	// hostnames are based on this ID.
 	Uid types.String `tfsdk:"uid"`
 	// A timestamp indicating when the compute endpoint was last updated.
 	UpdateTime timetypes.RFC3339 `tfsdk:"update_time"`
 }
 
 func (to *Endpoint) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Endpoint) {
-	if !from.Spec.IsUnknown() && !from.Spec.IsNull() {
-		// Spec is an input only field and not returned by the service, so we keep the value from the prior state.
-		to.Spec = from.Spec
-	}
 	if !from.Spec.IsNull() && !from.Spec.IsUnknown() {
 		if toSpec, ok := to.GetSpec(ctx); ok {
 			if fromSpec, ok := from.GetSpec(ctx); ok {
@@ -5019,10 +5063,6 @@ func (to *Endpoint) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from End
 }
 
 func (to *Endpoint) SyncFieldsDuringRead(ctx context.Context, from Endpoint) {
-	if !from.Spec.IsUnknown() && !from.Spec.IsNull() {
-		// Spec is an input only field and not returned by the service, so we keep the value from the prior state.
-		to.Spec = from.Spec
-	}
 	if !from.Spec.IsNull() && !from.Spec.IsUnknown() {
 		if toSpec, ok := to.GetSpec(ctx); ok {
 			if fromSpec, ok := from.GetSpec(ctx); ok {
@@ -5047,8 +5087,6 @@ func (m Endpoint) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeB
 	attrs["name"] = attrs["name"].SetOptional()
 	attrs["parent"] = attrs["parent"].SetComputed()
 	attrs["spec"] = attrs["spec"].SetOptional()
-	attrs["spec"] = attrs["spec"].SetComputed()
-	attrs["spec"] = attrs["spec"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["status"] = attrs["status"].SetComputed()
 	attrs["uid"] = attrs["uid"].SetComputed()
 	attrs["update_time"] = attrs["update_time"].SetComputed()
@@ -5156,7 +5194,8 @@ func (m *Endpoint) SetStatus(ctx context.Context, v EndpointStatus) {
 
 type EndpointGroupSpec struct {
 	// Whether to allow read-only connections to read-write endpoints. Only
-	// relevant for read-write endpoints where size.max > 1.
+	// relevant for read-write endpoints where `max` is greater than 1. When
+	// enabled, the endpoint also reports a read-only host in `status.hosts`.
 	EnableReadableSecondaries types.Bool `tfsdk:"enable_readable_secondaries"`
 	// The maximum number of computes in the endpoint group. Currently, this
 	// must be equal to min. Set to 1 for single compute endpoints, to disable
@@ -5219,7 +5258,8 @@ func (m EndpointGroupSpec) Type(ctx context.Context) attr.Type {
 
 type EndpointGroupStatus struct {
 	// Whether read-only connections to read-write endpoints are allowed. Only
-	// relevant if read replicas are configured by specifying size.max > 1.
+	// relevant if the endpoint has more than one compute (`max` greater than
+	// 1).
 	EnableReadableSecondaries types.Bool `tfsdk:"enable_readable_secondaries"`
 	// The maximum number of computes in the endpoint group. Currently, this
 	// must be equal to min. Set to 1 for single compute endpoints, to disable
@@ -5398,7 +5438,8 @@ func (m EndpointOperationMetadata) Type(ctx context.Context) attr.Type {
 
 // A collection of settings for a compute endpoint.
 type EndpointSettings struct {
-	// A raw representation of Postgres settings.
+	// Postgres server parameters to set on the compute endpoint, keyed by
+	// parameter name. Each value is given as a string.
 	PgSettings types.Map `tfsdk:"pg_settings"`
 }
 
@@ -5478,29 +5519,40 @@ func (m *EndpointSettings) SetPgSettings(ctx context.Context, v map[string]types
 type EndpointSpec struct {
 	// The maximum number of Compute Units. The maximum value is 64. The
 	// difference between the minimum and maximum Compute Units (max - min) must
-	// not exceed 16.
+	// not exceed 16. Set it equal to `autoscaling_limit_min_cu` for a
+	// fixed-size compute. When omitted at creation, the project's default
+	// endpoint settings apply.
 	AutoscalingLimitMaxCu types.Float64 `tfsdk:"autoscaling_limit_max_cu"`
-	// The minimum number of Compute Units. Minimum value is 0.5.
+	// The minimum number of Compute Units. Minimum value is 0.5, and it must
+	// not exceed `autoscaling_limit_max_cu`. When omitted at creation, the
+	// project's default endpoint settings apply.
 	AutoscalingLimitMinCu types.Float64 `tfsdk:"autoscaling_limit_min_cu"`
 	// Whether to restrict connections to the compute endpoint. Enabling this
 	// option schedules a suspend compute operation. A disabled compute endpoint
-	// cannot be enabled by a connection or console action.
+	// cannot be enabled by a connection or console action. To accept
+	// connections again, set this field back to false.
 	Disabled types.Bool `tfsdk:"disabled"`
 	// The endpoint type. A branch can only have one READ_WRITE endpoint.
 	EndpointType types.String `tfsdk:"endpoint_type"`
 	// Settings for optional HA configuration of the endpoint. If unspecified,
 	// the endpoint defaults to non HA settings, with a single compute backing
 	// the endpoint (and no readable secondaries for Read/Write endpoints).
+	// Automatic suspension is not available for an endpoint with more than one
+	// compute, so set `no_suspension` to true when configuring one.
 	Group types.Object `tfsdk:"group"`
 	// When set to true, explicitly disables automatic suspension (never
-	// suspend). Should be set to true when provided. Mutually exclusive with
+	// suspend). The value must be true when provided. Mutually exclusive with
 	// `suspend_timeout_duration`.
 	NoSuspension types.Bool `tfsdk:"no_suspension"`
-
+	// Postgres server parameters for the compute endpoint. On update, an empty
+	// `pg_settings` map leaves the current parameters unchanged.
 	Settings types.Object `tfsdk:"settings"`
 	// Duration of inactivity after which the compute endpoint is automatically
-	// suspended. If specified should be between 60s and 604800s (1 minute to 1
-	// week). Mutually exclusive with `no_suspension`.
+	// suspended. If specified, the value must be between 60s and 604800s (1
+	// minute to 1 week). A suspended endpoint keeps its hostnames and
+	// configuration, and the next connection attempt restarts it. When neither
+	// this field nor `no_suspension` is set at creation, the project's default
+	// endpoint settings apply. Mutually exclusive with `no_suspension`.
 	SuspendTimeoutDuration timetypes.GoDuration `tfsdk:"suspend_timeout_duration"`
 }
 
@@ -5663,13 +5715,14 @@ type EndpointStatus struct {
 	AutoscalingLimitMaxCu types.Float64 `tfsdk:"autoscaling_limit_max_cu"`
 	// The minimum number of Compute Units.
 	AutoscalingLimitMinCu types.Float64 `tfsdk:"autoscaling_limit_min_cu"`
-
+	// The state the compute endpoint is in now.
 	CurrentState types.String `tfsdk:"current_state"`
 	// Whether to restrict connections to the compute endpoint. Enabling this
 	// option schedules a suspend compute operation. A disabled compute endpoint
 	// cannot be enabled by a connection or console action.
 	Disabled types.Bool `tfsdk:"disabled"`
-	// Part of the resource name.
+	// The endpoint ID, which is the final segment of the endpoint's resource
+	// name.
 	EndpointId types.String `tfsdk:"endpoint_id"`
 	// The endpoint type. A branch can only have one READ_WRITE endpoint.
 	EndpointType types.String `tfsdk:"endpoint_type"`
@@ -5679,12 +5732,13 @@ type EndpointStatus struct {
 	Hosts types.Object `tfsdk:"hosts"`
 	// A timestamp indicating when the compute endpoint was last active.
 	LastActiveTime timetypes.RFC3339 `tfsdk:"last_active_time"`
-
+	// The state the compute endpoint is transitioning to, if a transition is in
+	// progress.
 	PendingState types.String `tfsdk:"pending_state"`
-
+	// The Postgres server parameters currently set on the compute endpoint.
 	Settings types.Object `tfsdk:"settings"`
 	// Duration of inactivity after which the compute endpoint is automatically
-	// suspended.
+	// suspended. Absent when automatic suspension is disabled.
 	SuspendTimeoutDuration timetypes.GoDuration `tfsdk:"suspend_timeout_duration"`
 }
 
@@ -6826,9 +6880,11 @@ func (m InitialBranchSpec) Type(ctx context.Context) attr.Type {
 // Configuration for the initial Read/Write endpoint created during project
 // creation.
 type InitialEndpointSpec struct {
-	// The maximum number of Compute Units for the initial endpoint.
+	// The maximum number of Compute Units for the initial endpoint. Minimum
+	// value is 0.5.
 	AutoscalingLimitMaxCu types.Float64 `tfsdk:"autoscaling_limit_max_cu"`
-	// The minimum number of Compute Units for the initial endpoint.
+	// The minimum number of Compute Units for the initial endpoint. Minimum
+	// value is 0.5, and it must not exceed autoscaling_limit_max_cu.
 	AutoscalingLimitMinCu types.Float64 `tfsdk:"autoscaling_limit_min_cu"`
 	// Settings for HA configuration of the endpoint.
 	Group types.Object `tfsdk:"group"`
@@ -7855,7 +7911,8 @@ func (m *ListDatabasesResponse) SetDatabases(ctx context.Context, v []Database) 
 }
 
 type ListEndpointsRequest struct {
-	// Upper bound for items returned. Cannot be negative.
+	// Upper bound for the number of endpoints returned. If set, the value must
+	// be at least 10.
 	PageSize types.Int64 `tfsdk:"-"`
 	// Page token from a previous response. If not provided, returns the first
 	// page.
@@ -8217,8 +8274,8 @@ func (m *ListMigrationsResponse) SetMigrations(ctx context.Context, v []Migratio
 }
 
 type ListProjectsRequest struct {
-	// Upper bound for items returned. Cannot be negative. The maximum value is
-	// 100.
+	// Upper bound for the number of projects returned. Cannot be negative.
+	// Values above the maximum page size are reduced to that maximum.
 	PageSize types.Int64 `tfsdk:"-"`
 	// Page token from a previous response. If not provided, returns the first
 	// page.
@@ -9377,19 +9434,27 @@ type Project struct {
 	// Output only. The full resource path of the project. Format:
 	// projects/{project_id}
 	Name types.String `tfsdk:"name"`
-	// The part of the name, chosen by the user when the resource was created.
+	// The project ID chosen when the project was created. It is the final
+	// segment of `name`.
 	ProjectId types.String `tfsdk:"project_id"`
 	// A timestamp indicating when the project is scheduled for permanent
 	// deletion. Empty if the project is not deleted, otherwise set to a
 	// timestamp in the future.
 	PurgeTime timetypes.RFC3339 `tfsdk:"purge_time"`
-	// The spec contains the project configuration, including display_name,
-	// pg_version (Postgres version), history_retention_duration, and
-	// default_endpoint_settings.
+	// The desired configuration of the project. The fields under `spec` are the
+	// ones that can be changed after creation, except `pg_version`, which is
+	// fixed when the project is created. See `status` for the configuration
+	// that is currently in effect.
+	//
+	// Read the resource's current values from `status`, rather than `spec`.
+	// `spec` tracks field ownership for infrastructure-as-code tools and may
+	// omit unmanaged fields.
 	Spec types.Object `tfsdk:"spec"`
-	// The current status of a Project.
+	// The configuration and state of the project that are currently in effect,
+	// as reported by the system.
 	Status types.Object `tfsdk:"status"`
-	// System-generated unique ID for the project.
+	// A system-generated UUID that identifies the project. Unlike `name`, it is
+	// not derived from the user-chosen project ID.
 	Uid types.String `tfsdk:"uid"`
 	// A timestamp indicating when the project was last updated.
 	UpdateTime timetypes.RFC3339 `tfsdk:"update_time"`
@@ -9421,10 +9486,6 @@ func (to *Project) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Proj
 				to.SetInitialEndpointSpec(ctx, toInitialEndpointSpec)
 			}
 		}
-	}
-	if !from.Spec.IsUnknown() && !from.Spec.IsNull() {
-		// Spec is an input only field and not returned by the service, so we keep the value from the prior state.
-		to.Spec = from.Spec
 	}
 	if !from.Spec.IsNull() && !from.Spec.IsUnknown() {
 		if toSpec, ok := to.GetSpec(ctx); ok {
@@ -9471,10 +9532,6 @@ func (to *Project) SyncFieldsDuringRead(ctx context.Context, from Project) {
 			}
 		}
 	}
-	if !from.Spec.IsUnknown() && !from.Spec.IsNull() {
-		// Spec is an input only field and not returned by the service, so we keep the value from the prior state.
-		to.Spec = from.Spec
-	}
 	if !from.Spec.IsNull() && !from.Spec.IsUnknown() {
 		if toSpec, ok := to.GetSpec(ctx); ok {
 			if fromSpec, ok := from.GetSpec(ctx); ok {
@@ -9506,8 +9563,6 @@ func (m Project) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBu
 	attrs["project_id"] = attrs["project_id"].SetComputed()
 	attrs["purge_time"] = attrs["purge_time"].SetComputed()
 	attrs["spec"] = attrs["spec"].SetOptional()
-	attrs["spec"] = attrs["spec"].SetComputed()
-	attrs["spec"] = attrs["spec"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["status"] = attrs["status"].SetComputed()
 	attrs["uid"] = attrs["uid"].SetComputed()
 	attrs["update_time"] = attrs["update_time"].SetComputed()
@@ -9873,17 +9928,22 @@ type ProjectSpec struct {
 	// status.budget_policy_id for the policy that is actually applied to the
 	// project.
 	BudgetPolicyId types.String `tfsdk:"budget_policy_id"`
-	// Custom tags to associate with the project. Forwarded to LBM for billing
-	// and cost tracking. To update tags, provide the new tag list and include
+	// Custom tags to associate with the project, used for billing and cost
+	// tracking. To update tags, provide the new tag list and include
 	// "spec.custom_tags" in the update_mask. To clear all tags, provide an
 	// empty list and include "spec.custom_tags" in the update_mask. To preserve
 	// existing tags, omit this field from the update_mask (or use wildcard "*"
 	// which auto-excludes empty tags).
 	CustomTags types.List `tfsdk:"custom_tags"`
-	// The full resource path for the default branch of the project Format:
-	// projects/{project_id}/branches/{branch_id}
+	// The full resource path of the default branch of the project. Format:
+	// projects/{project_id}/branches/{branch_id} At creation time, the branch
+	// ID in this path names the initial branch, which is called `production`
+	// when the field is omitted. On update, the path must name an existing
+	// branch of this project, which then becomes the default branch.
 	DefaultBranch types.String `tfsdk:"default_branch"`
-
+	// Settings applied by default to compute endpoints created in this project.
+	// The initial endpoint also takes these values for any setting that
+	// initial_endpoint_spec does not provide.
 	DefaultEndpointSettings types.Object `tfsdk:"default_endpoint_settings"`
 	// Human-readable project name. Length should be between 1 and 256
 	// characters.
@@ -9893,10 +9953,11 @@ type ProjectSpec struct {
 	EnablePgNativeLogin types.Bool `tfsdk:"enable_pg_native_login"`
 	// The number of seconds to retain the shared history for point in time
 	// recovery for all branches in this project. Value should be between
-	// 172800s (2 days) and 3024000s (35 days).
+	// 172800s (2 days) and 3024000s (35 days). Defaults to 604800s (7 days)
+	// when omitted.
 	HistoryRetentionDuration timetypes.GoDuration `tfsdk:"history_retention_duration"`
-	// The major Postgres version number. The set of supported versions may
-	// vary; consult the API documentation for currently accepted values.
+	// The major Postgres version number. Defaults to 17 when omitted. The set
+	// of versions that new projects can use may change over time.
 	PgVersion types.Int64 `tfsdk:"pg_version"`
 }
 
@@ -9929,6 +9990,10 @@ func (to *ProjectSpec) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from 
 			}
 		}
 	}
+	if !from.PgVersion.IsUnknown() && !from.PgVersion.IsNull() {
+		// PgVersion is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.PgVersion = from.PgVersion
+	}
 }
 
 func (to *ProjectSpec) SyncFieldsDuringRead(ctx context.Context, from ProjectSpec) {
@@ -9958,6 +10023,10 @@ func (to *ProjectSpec) SyncFieldsDuringRead(ctx context.Context, from ProjectSpe
 			}
 		}
 	}
+	if !from.PgVersion.IsUnknown() && !from.PgVersion.IsNull() {
+		// PgVersion is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.PgVersion = from.PgVersion
+	}
 }
 
 func (m ProjectSpec) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -9970,6 +10039,8 @@ func (m ProjectSpec) ApplySchemaCustomizations(attrs map[string]tfschema.Attribu
 	attrs["history_retention_duration"] = attrs["history_retention_duration"].SetOptional()
 	attrs["pg_version"] = attrs["pg_version"].SetOptional()
 	attrs["pg_version"] = attrs["pg_version"].(tfschema.Int64AttributeBuilder).AddPlanModifier(int64planmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["pg_version"] = attrs["pg_version"].SetComputed()
+	attrs["pg_version"] = attrs["pg_version"].(tfschema.Int64AttributeBuilder).AddPlanModifier(int64planmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 
 	return attrs
 }
@@ -10084,7 +10155,7 @@ type ProjectStatus struct {
 	ComputeLastActiveTime timetypes.RFC3339 `tfsdk:"compute_last_active_time"`
 	// The effective custom tags associated with the project.
 	CustomTags types.List `tfsdk:"custom_tags"`
-	// The full resource path of the default branch of the project
+	// The full resource path of the default branch of the project.
 	DefaultBranch types.String `tfsdk:"default_branch"`
 	// The effective default endpoint settings.
 	DefaultEndpointSettings types.Object `tfsdk:"default_endpoint_settings"`
@@ -10100,7 +10171,8 @@ type ProjectStatus struct {
 	Owner types.String `tfsdk:"owner"`
 	// The effective major Postgres version number.
 	PgVersion types.Int64 `tfsdk:"pg_version"`
-	// Part of the resource name.
+	// The project ID, which is the final segment of the project's resource
+	// name.
 	ProjectId types.String `tfsdk:"project_id"`
 	// The current space occupied by the project in storage.
 	SyntheticStorageSizeBytes types.Int64 `tfsdk:"synthetic_storage_size_bytes"`
@@ -10575,6 +10647,10 @@ type Role struct {
 	RoleId types.String `tfsdk:"role_id"`
 	// The spec contains the role configuration, including identity type,
 	// authentication method, and role attributes.
+	//
+	// Read the resource's current values from `status`, rather than `spec`.
+	// `spec` tracks field ownership for infrastructure-as-code tools and may
+	// omit unmanaged fields.
 	Spec types.Object `tfsdk:"spec"`
 	// Current status of the role, including its identity type, authentication
 	// method, and role attributes.
@@ -10584,10 +10660,6 @@ type Role struct {
 }
 
 func (to *Role) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Role) {
-	if !from.Spec.IsUnknown() && !from.Spec.IsNull() {
-		// Spec is an input only field and not returned by the service, so we keep the value from the prior state.
-		to.Spec = from.Spec
-	}
 	if !from.Spec.IsNull() && !from.Spec.IsUnknown() {
 		if toSpec, ok := to.GetSpec(ctx); ok {
 			if fromSpec, ok := from.GetSpec(ctx); ok {
@@ -10609,10 +10681,6 @@ func (to *Role) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Role) {
 }
 
 func (to *Role) SyncFieldsDuringRead(ctx context.Context, from Role) {
-	if !from.Spec.IsUnknown() && !from.Spec.IsNull() {
-		// Spec is an input only field and not returned by the service, so we keep the value from the prior state.
-		to.Spec = from.Spec
-	}
 	if !from.Spec.IsNull() && !from.Spec.IsUnknown() {
 		if toSpec, ok := to.GetSpec(ctx); ok {
 			if fromSpec, ok := from.GetSpec(ctx); ok {
@@ -10637,8 +10705,6 @@ func (m Role) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuild
 	attrs["parent"] = attrs["parent"].SetComputed()
 	attrs["role_id"] = attrs["role_id"].SetComputed()
 	attrs["spec"] = attrs["spec"].SetOptional()
-	attrs["spec"] = attrs["spec"].SetComputed()
-	attrs["spec"] = attrs["spec"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["status"] = attrs["status"].SetComputed()
 	attrs["update_time"] = attrs["update_time"].SetComputed()
 
@@ -10857,10 +10923,9 @@ type RoleRoleSpec struct {
 	// `postgres_role`). No static password exists for roles using this method.
 	// * PG_PASSWORD_SCRAM_SHA_256: the role authenticates with a Postgres
 	// password verified server-side using the SCRAM-SHA-256 mechanism. Lakebase
-	// generates a password for the role. * NO_LOGIN: the role cannot open a
-	// Postgres session at all. Useful for roles that exist only to own objects
-	// or to aggregate privileges that are then granted to other, loginable
-	// roles.
+	// generates a password for the role.
+	//
+	// NO_LOGIN is not currently supported for Role creation.
 	//
 	// If auth_method is left unspecified, a meaningful authentication method is
 	// derived from the identity_type: * For the managed identities, OAUTH is
@@ -10870,29 +10935,20 @@ type RoleRoleSpec struct {
 	// NOTE: for the Databricks identity type GROUP, LAKEBASE_OAUTH_V1 is the
 	// default auth method (group can login as well).
 	//
-	// This field is set when the role is created and cannot be changed. When
-	// replacing an existing role with replace_existing=true, omit this field or
-	// supply its current value. A differing value returns
-	// INVALID_PARAMETER_VALUE and rejects the entire request, including changes
-	// to mutable fields. With `*` or masks containing only mutable fields,
-	// supplied values are ignored. Including this field as an explicit path in
-	// update_mask returns INVALID_PARAMETER_VALUE.
+	// This value cannot be changed after creation.
 	AuthMethod types.String `tfsdk:"auth_method"`
-	// The type of role. When specifying a managed-identity, the chosen role_id
-	// must be a valid:
+	// The type of role. When specifying a managed-identity, the chosen
+	// postgres_role must be a valid:
 	//
 	// * application ID for SERVICE_PRINCIPAL * user email for USER * group name
 	// for GROUP
 	//
-	// This field is set when the role is created and cannot be changed. When
-	// replacing an existing role with replace_existing=true, omit this field or
-	// supply its current value. A differing value returns
-	// INVALID_PARAMETER_VALUE and rejects the entire request, including changes
-	// to mutable fields. With `*` or masks containing only mutable fields,
-	// supplied values are ignored. Including this field as an explicit path in
-	// update_mask returns INVALID_PARAMETER_VALUE.
+	// This value cannot be changed after creation.
 	IdentityType types.String `tfsdk:"identity_type"`
-	// An enum value for a standard role that this role is a member of.
+	// An enum value for a standard role that this role is a member of. When
+	// selected in update_mask, this field replaces all existing memberships. An
+	// empty or omitted list clears all memberships, including
+	// DATABRICKS_SUPERUSER.
 	MembershipRoles types.List `tfsdk:"membership_roles"`
 	// The name of the Postgres role.
 	//
@@ -10907,13 +10963,7 @@ type RoleRoleSpec struct {
 	// 1. user email for IdentityType.USER 2. app ID for
 	// IdentityType.SERVICE_PRINCIPAL 2. group name for IdentityType.GROUP
 	//
-	// This field is set when the role is created and cannot be changed. When
-	// replacing an existing role with replace_existing=true, omit this field or
-	// supply its current value. A differing value returns
-	// INVALID_PARAMETER_VALUE and rejects the entire request, including changes
-	// to mutable fields. With `*` or masks containing only mutable fields,
-	// supplied values are ignored. Including this field as an explicit path in
-	// update_mask returns INVALID_PARAMETER_VALUE.
+	// This value cannot be changed after creation.
 	PostgresRole types.String `tfsdk:"postgres_role"`
 }
 
@@ -10927,11 +10977,23 @@ func (to *RoleRoleSpec) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from
 			}
 		}
 	}
+	if !from.AuthMethod.IsUnknown() && !from.AuthMethod.IsNull() {
+		// AuthMethod is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.AuthMethod = from.AuthMethod
+	}
+	if !from.IdentityType.IsUnknown() && !from.IdentityType.IsNull() {
+		// IdentityType is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.IdentityType = from.IdentityType
+	}
 	if !from.MembershipRoles.IsNull() && !from.MembershipRoles.IsUnknown() && to.MembershipRoles.IsNull() && len(from.MembershipRoles.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for MembershipRoles, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.MembershipRoles = from.MembershipRoles
+	}
+	if !from.PostgresRole.IsUnknown() && !from.PostgresRole.IsNull() {
+		// PostgresRole is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.PostgresRole = from.PostgresRole
 	}
 }
 
@@ -10944,20 +11006,38 @@ func (to *RoleRoleSpec) SyncFieldsDuringRead(ctx context.Context, from RoleRoleS
 			}
 		}
 	}
+	if !from.AuthMethod.IsUnknown() && !from.AuthMethod.IsNull() {
+		// AuthMethod is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.AuthMethod = from.AuthMethod
+	}
+	if !from.IdentityType.IsUnknown() && !from.IdentityType.IsNull() {
+		// IdentityType is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.IdentityType = from.IdentityType
+	}
 	if !from.MembershipRoles.IsNull() && !from.MembershipRoles.IsUnknown() && to.MembershipRoles.IsNull() && len(from.MembershipRoles.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for MembershipRoles, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.MembershipRoles = from.MembershipRoles
 	}
+	if !from.PostgresRole.IsUnknown() && !from.PostgresRole.IsNull() {
+		// PostgresRole is an input only field and not returned by the service, so we keep the value from the prior state.
+		to.PostgresRole = from.PostgresRole
+	}
 }
 
 func (m RoleRoleSpec) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["attributes"] = attrs["attributes"].SetOptional()
 	attrs["auth_method"] = attrs["auth_method"].SetOptional()
+	attrs["auth_method"] = attrs["auth_method"].SetComputed()
+	attrs["auth_method"] = attrs["auth_method"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["identity_type"] = attrs["identity_type"].SetOptional()
+	attrs["identity_type"] = attrs["identity_type"].SetComputed()
+	attrs["identity_type"] = attrs["identity_type"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["membership_roles"] = attrs["membership_roles"].SetOptional()
 	attrs["postgres_role"] = attrs["postgres_role"].SetOptional()
+	attrs["postgres_role"] = attrs["postgres_role"].SetComputed()
+	attrs["postgres_role"] = attrs["postgres_role"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 
 	return attrs
 }
@@ -13700,7 +13780,11 @@ type UpdateEndpointRequest struct {
 	// Output only. The full resource path of the endpoint. Format:
 	// projects/{project_id}/branches/{branch_id}/endpoints/{endpoint_id}
 	Name types.String `tfsdk:"-"`
-	// The list of fields to update.
+	// The fields to update, as paths relative to the endpoint, for example
+	// `spec.autoscaling_limit_max_cu`. Pass `spec` to update every field that
+	// is set in `spec`. Only fields under `spec` can be updated. To change the
+	// suspension setting, include `spec.suspension` or the specific suspension
+	// field.
 	UpdateMask types.String `tfsdk:"-"`
 }
 
@@ -13908,7 +13992,9 @@ type UpdateProjectRequest struct {
 	// The project's `name` field is used to identify the project to update.
 	// Format: projects/{project_id}
 	Project types.Object `tfsdk:"project"`
-	// The list of fields to update.
+	// The fields to update, as paths relative to the project, for example
+	// `spec.display_name`. Pass `*` to update every field that is set in the
+	// request. Only fields under `spec` can be updated.
 	UpdateMask types.String `tfsdk:"-"`
 }
 

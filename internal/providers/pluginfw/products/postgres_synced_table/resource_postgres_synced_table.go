@@ -404,6 +404,9 @@ func (r *SyncedTableResource) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 	resp.Diagnostics.Append(tfschema.PopulateProviderConfigInState(ctx, r.Client, plan.ProviderConfig, &resp.State)...)
+	if !resp.Diagnostics.HasError() {
+		resp.Diagnostics.Append(resp.Private.SetKey(ctx, tfschema.CreationInputsAppliedKey, []byte("true"))...)
+	}
 }
 
 func (r *SyncedTableResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -461,6 +464,12 @@ func (r *SyncedTableResource) Read(ctx context.Context, req resource.ReadRequest
 }
 
 func (r *SyncedTableResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	if tfschema.AdoptImportedCreateFields(ctx, req, resp, "synced_table_id") {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.Append(resp.Private.SetKey(ctx, tfschema.CreationInputsAppliedKey, []byte("true"))...)
+		}
+		return
+	}
 	// VARIANT_IMMUTABLE resources do not support updates - all changes require replacement.
 	resp.Diagnostics.AddError("Update not supported", "This resource does not support updates. All changes require replacement.")
 }

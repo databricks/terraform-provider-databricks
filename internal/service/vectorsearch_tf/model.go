@@ -76,16 +76,24 @@ func (m ColumnInfo) Type(ctx context.Context) attr.Type {
 }
 
 type CreateEndpoint struct {
-	// The budget policy id to be applied
+	// Budget policy to attribute the endpoint's usage to. If omitted, the
+	// default budget policy applies.
 	BudgetPolicyId types.String `tfsdk:"budget_policy_id"`
-	// Type of endpoint
+	// Type of endpoint to create. STANDARD endpoints are optimized for
+	// low-latency queries and support Target QPS scaling. STORAGE_OPTIMIZED
+	// endpoints hold much larger indexes and index faster, with higher query
+	// latency. See
+	// https://docs.databricks.com/aws/en/ai-search/ai-search#endpoint-options.
 	EndpointType types.String `tfsdk:"endpoint_type"`
-	// Name of the AI Search endpoint
+	// Name of the AI Search endpoint. The name must be unique within the
+	// workspace, have at most 50 characters, contain only lowercase letters,
+	// digits, hyphens, underscores and periods, and start and end with a letter
+	// or digit.
 	Name types.String `tfsdk:"name"`
-	// Target QPS for the endpoint. Mutually exclusive with num_replicas. The
-	// actual replica count is calculated at index creation/sync time based on
-	// this value. Best-effort target; the system does not guarantee this QPS
-	// will be achieved.
+	// Target queries per second (QPS) for the endpoint. Supported for STANDARD
+	// endpoints only. The actual replica count is calculated at index
+	// creation/sync time based on this value. Best-effort target; the system
+	// does not guarantee this QPS will be achieved.
 	TargetQps types.Int64 `tfsdk:"target_qps"`
 	// The usage policy id to be applied once we've migrated to usage policies
 	UsagePolicyId types.String `tfsdk:"usage_policy_id"`
@@ -1751,29 +1759,37 @@ func (m EmbeddingVectorColumn) Type(ctx context.Context) attr.Type {
 type EndpointInfo struct {
 	// The user-selected budget policy id for the endpoint.
 	BudgetPolicyId types.String `tfsdk:"budget_policy_id"`
-	// Timestamp of endpoint creation
+	// Time at which the endpoint was created, in milliseconds since the Unix
+	// epoch.
 	CreationTimestamp types.Int64 `tfsdk:"creation_timestamp"`
-	// Creator of the endpoint
+	// User or service principal that created the endpoint. Users are identified
+	// by username and service principals by application ID.
 	Creator types.String `tfsdk:"creator"`
 	// The custom tags assigned to the endpoint
 	CustomTags types.List `tfsdk:"custom_tags"`
-	// The budget policy id applied to the endpoint
+	// Budget policy ID in effect for the endpoint. This is the policy set on
+	// the endpoint when one was set, and otherwise the default budget policy.
 	EffectiveBudgetPolicyId types.String `tfsdk:"effective_budget_policy_id"`
 	// Current status of the endpoint
 	EndpointStatus types.Object `tfsdk:"endpoint_status"`
-	// Type of endpoint
+	// Type of the endpoint. See
+	// https://docs.databricks.com/aws/en/ai-search/ai-search#endpoint-options
+	// for how the types differ.
 	EndpointType types.String `tfsdk:"endpoint_type"`
 	// Unique identifier of the endpoint
 	Id types.String `tfsdk:"id"`
-	// Timestamp of last update to the endpoint
+	// Time at which the endpoint was last updated, in milliseconds since the
+	// Unix epoch.
 	LastUpdatedTimestamp types.Int64 `tfsdk:"last_updated_timestamp"`
-	// User who last updated the endpoint
+	// User or service principal that last updated the endpoint, in the same
+	// form as creator.
 	LastUpdatedUser types.String `tfsdk:"last_updated_user"`
 	// Name of the AI Search endpoint
 	Name types.String `tfsdk:"name"`
 	// Number of indexes on the endpoint
 	NumIndexes types.Int64 `tfsdk:"num_indexes"`
-	// Scaling information for the endpoint
+	// Scaling information for the endpoint. Present only for STANDARD endpoints
+	// that have a Target QPS set.
 	ScalingInfo types.Object `tfsdk:"scaling_info"`
 }
 
@@ -2104,7 +2120,8 @@ func (m EndpointScalingInfo) Type(ctx context.Context) attr.Type {
 
 // Status information of an endpoint
 type EndpointStatus struct {
-	// Additional status message
+	// Additional detail about the state, such as the reason the endpoint is
+	// OFFLINE. Absent when there is nothing to report.
 	Message types.String `tfsdk:"message"`
 	// Current state of the endpoint
 	State types.String `tfsdk:"state"`
@@ -3656,6 +3673,8 @@ func (m PatchEndpointBudgetPolicyRequest) Type(ctx context.Context) attr.Type {
 }
 
 type PatchEndpointBudgetPolicyResponse struct {
+	// The requested budget policy ID, returned when the endpoint was already
+	// using it.
 	BudgetPolicyId types.String `tfsdk:"budget_policy_id"`
 	// The budget policy applied to the AI Search endpoint.
 	EffectiveBudgetPolicyId types.String `tfsdk:"effective_budget_policy_id"`
@@ -3711,7 +3730,8 @@ type PatchEndpointRequest struct {
 	// Name of the AI Search endpoint
 	EndpointName types.String `tfsdk:"-"`
 	// Target QPS for the endpoint. Best-effort; the system does not guarantee
-	// this QPS will be achieved.
+	// this QPS will be achieved. Set to -1 to clear the Target QPS, as if it
+	// had never been set.
 	TargetQps types.Int64 `tfsdk:"target_qps"`
 }
 

@@ -29,7 +29,8 @@ func DataSourceAlertsV2() datasource.DataSource {
 // AlertsV2Data extends the main model with additional fields.
 type AlertsV2Data struct {
 	AlertsV2 types.List `tfsdk:"alerts"`
-
+	// Maximum number of alerts to return per page. Values above 100 are coerced
+	// to 100.
 	PageSize           types.Int64  `tfsdk:"page_size"`
 	ProviderConfigData types.Object `tfsdk:"provider_config"`
 }

@@ -1,4 +1,7 @@
 # API responses are inferred from the scenarios and API models, not recorded.
+# Volume requests pin Content-Type and X-Databricks-Workspace-Id, and each apply is
+# followed by a no-op plan. Calls stay unordered because Terraform handles the
+# independent schema and storage credential concurrently.
 version: 1
 host_metadata: # Dummy host metadata.
   host_type: "workspace"
@@ -6,7 +9,7 @@ host_metadata: # Dummy host metadata.
   workspace_id: "12345"
 steps:
   - name: "create"
-    config: |
+    config: &config_create |
       resource "databricks_schema" "this" {
         name         = "schema-replay"
         catalog_name = "main"
@@ -108,6 +111,9 @@ steps:
       - request:
           method: "POST"
           path: "/api/2.1/unity-catalog/volumes"
+          headers:
+            Content-Type: "application/json"
+            X-Databricks-Workspace-Id: "12345"
           body:
             json:
               catalog_name: "main"
@@ -133,6 +139,9 @@ steps:
       - request:
           method: "PATCH"
           path: "/api/2.1/unity-catalog/volumes/main.schema-replay.name-abc"
+          headers:
+            Content-Type: "application/json"
+            X-Databricks-Workspace-Id: "12345"
           body:
             json:
               comment: "comment-abc"
@@ -152,14 +161,30 @@ steps:
               volume_id: "volume-1"
               volume_type: "EXTERNAL"
       - &get_4
-        request: {method: "GET", path: "/api/2.1/unity-catalog/volumes/main.schema-replay.name-abc", body: null}
+        request:
+          method: "GET"
+          path: "/api/2.1/unity-catalog/volumes/main.schema-replay.name-abc"
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
         response: *response_5
       - *get_1
       - *get_2
       - *get_3
       - *get_4
+  - name: "plan_after_create_is_empty"
+    plan_only: true
+    config: *config_create
+    plan:
+      expect: empty
+      changes: {}
+    calls:
+      - *get_1
+      - *get_2
+      - *get_3
+      - *get_4
   - name: "update_owner"
-    config: |
+    config: &config_update_owner |
       resource "databricks_schema" "this" {
         name         = "schema-replay"
         catalog_name = "main"
@@ -196,6 +221,9 @@ steps:
       - request:
           method: "PATCH"
           path: "/api/2.1/unity-catalog/volumes/main.schema-replay.name-abc"
+          headers:
+            Content-Type: "application/json"
+            X-Databricks-Workspace-Id: "12345"
           body:
             json:
               owner: "replay-test_data_eng_group"
@@ -214,14 +242,30 @@ steps:
               volume_id: "volume-1"
               volume_type: "EXTERNAL"
       - &get_5
-        request: {method: "GET", path: "/api/2.1/unity-catalog/volumes/main.schema-replay.name-abc", body: null}
+        request:
+          method: "GET"
+          path: "/api/2.1/unity-catalog/volumes/main.schema-replay.name-abc"
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
         response: *response_6
       - *get_1
       - *get_2
       - *get_3
       - *get_5
+  - name: "plan_after_update_owner_is_empty"
+    plan_only: true
+    config: *config_update_owner
+    plan:
+      expect: empty
+      changes: {}
+    calls:
+      - *get_1
+      - *get_2
+      - *get_3
+      - *get_5
   - name: "rename_and_update_owner"
-    config: |
+    config: &config_rename_and_update_owner |
       resource "databricks_schema" "this" {
         name         = "schema-replay"
         catalog_name = "main"
@@ -258,6 +302,9 @@ steps:
       - request:
           method: "PATCH"
           path: "/api/2.1/unity-catalog/volumes/main.schema-replay.name-abc"
+          headers:
+            Content-Type: "application/json"
+            X-Databricks-Workspace-Id: "12345"
           body:
             json:
               owner: "replay-test_metastore_admin_group_name"
@@ -278,6 +325,9 @@ steps:
       - request:
           method: "PATCH"
           path: "/api/2.1/unity-catalog/volumes/main.schema-replay.name-abc"
+          headers:
+            Content-Type: "application/json"
+            X-Databricks-Workspace-Id: "12345"
           body:
             json:
               comment: "comment-def"
@@ -297,8 +347,24 @@ steps:
               volume_id: "volume-1"
               volume_type: "EXTERNAL"
       - &get_6
-        request: {method: "GET", path: "/api/2.1/unity-catalog/volumes/main.schema-replay.name-def", body: null}
+        request:
+          method: "GET"
+          path: "/api/2.1/unity-catalog/volumes/main.schema-replay.name-def"
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
         response: *response_8
+      - *get_1
+      - *get_2
+      - *get_3
+      - *get_6
+  - name: "plan_after_rename_and_update_owner_is_empty"
+    plan_only: true
+    config: *config_rename_and_update_owner
+    plan:
+      expect: empty
+      changes: {}
+    calls:
       - *get_1
       - *get_2
       - *get_3
@@ -312,6 +378,8 @@ destroy:
     - request:
         method: "DELETE"
         path: "/api/2.1/unity-catalog/volumes/main.schema-replay.name-def"
+        headers:
+          X-Databricks-Workspace-Id: "12345"
         body: null
       response: # Inferred API response; not recorded.
         status: 200

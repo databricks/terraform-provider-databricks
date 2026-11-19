@@ -18,8 +18,8 @@ import (
 	"github.com/databricks/terraform-provider-databricks/common"
 )
 
-// sensitiveOptions can be omitted by the API, so Read keeps omitted literal values from state.
-// Returned values always take precedence so changes outside Terraform remain detectable.
+// sensitiveOptions can be omitted by the API, so Read keeps their values from state
+// only when the API does not return them.
 var sensitiveOptions = []string{"user", "password", "personalAccessToken", "access_token", "client_secret",
 	"pem_private_key", "pem_key_passphrase", "OAuthPvtKey", "GoogleServiceAccountKeyJson", "bearer_token",
 	"ssl_keystore_key", "ssl_key_password", "schema_registry_api_secret"}
@@ -46,31 +46,6 @@ var computedOptions = []string{"pem_private_key_expiration_epoch_sec", "access_t
 
 func isUCSecretReference(value string) bool {
 	return strings.HasPrefix(value, "{{uc_secrets/") && strings.HasSuffix(value, "}}")
-}
-
-// Keep existing secrets configurations stable when the API returns inline references.
-// Only previously configured keys use the legacy map; imports retain the API representation.
-func retainLegacyConnectionSecrets(conn *catalog.ConnectionInfo, previous map[string]string) {
-	for key := range previous {
-		value, returned := conn.Options[key]
-		if !returned || !isUCSecretReference(value) {
-			continue
-		}
-		if conn.Secrets == nil {
-			conn.Secrets = map[string]string{}
-		}
-		conn.Secrets[key] = strings.TrimSuffix(strings.TrimPrefix(value, "{{uc_secrets/"), "}}")
-		delete(conn.Options, key)
-	}
-}
-
-// suppressSecretNameCase ignores case-only differences in secret names, which UC stores
-// lowercased. The map's element count is left alone so an unknown map stays unknown.
-func suppressSecretNameCase(k, old, new string, d *schema.ResourceData) bool {
-	if strings.HasSuffix(k, ".%") {
-		return false
-	}
-	return common.EqualFoldDiffSuppress(k, old, new, d)
 }
 
 func suppressComputedFields(k, old, new string, d *schema.ResourceData) bool {
@@ -162,13 +137,9 @@ func mergeWriteOnlyOptions(d *schema.ResourceData, options map[string]string) (m
 	if merged == nil {
 		merged = map[string]string{}
 	}
-	secrets, _ := d.Get("secrets").(map[string]any)
 	for key, value := range woOptions {
 		if _, ok := merged[key]; ok {
 			return nil, fmt.Errorf("option %q is set in both `options` and `options_wo`", key)
-		}
-		if _, ok := secrets[key]; ok {
-			return nil, fmt.Errorf("option %q is set in both `options_wo` and `secrets`", key)
 		}
 		merged[key] = value
 	}
@@ -215,7 +186,7 @@ func ResourceConnection() common.Resource {
 				ValidateFunc: validation.IntAtLeast(1),
 				RequiredWith: []string{"options_wo"},
 			}
-			common.CustomizeSchemaPath(m, "secrets").SetCustomSuppressDiff(suppressSecretNameCase)
+			delete(m, "secrets")
 			common.NamespaceCustomizeSchemaMap(m)
 			return m
 		})
@@ -289,13 +260,11 @@ func ResourceConnection() common.Resource {
 				delete(conn.Options, "home_workspace_id")
 				delete(conn.Options, "database")
 			}
-			// Preserve omitted literal credentials, but let returned values and removed
-			// UC secret references reflect the current remote state.
+			// Preserve sensitive options omitted by the API without overwriting returned references.
 			var cOrig catalog.CreateConnection
 			common.DataToStructPointer(d, s, &cOrig)
-			retainLegacyConnectionSecrets(conn, cOrig.Secrets)
 			for key, element := range cOrig.Options {
-				if _, returned := conn.Options[key]; !returned && slices.Contains(sensitiveOptions, key) && !isUCSecretReference(element) {
+				if _, returned := conn.Options[key]; !returned && slices.Contains(sensitiveOptions, key) {
 					conn.Options[key] = element
 				}
 			}
@@ -306,14 +275,6 @@ func ResourceConnection() common.Resource {
 						delete(conn.Options, key)
 					}
 				}
-			}
-			// StructToData skips empty or previously unset maps, which would hide deletions
-			// and omit returned references during import.
-			if err := d.Set("options", conn.Options); err != nil {
-				return err
-			}
-			if err := d.Set("secrets", conn.Secrets); err != nil {
-				return err
 			}
 			if err := common.StructToData(conn, s, d); err != nil {
 				return err

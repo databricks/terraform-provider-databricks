@@ -145,6 +145,11 @@ func (a *sdkGoAttempt) record(r *http.Request, requestBody []byte, resp *http.Re
 	}
 }
 
+// succeeded reports whether the last attempt got a successful response.
+func (a *sdkGoAttempt) succeeded() bool {
+	return a != nil && a.response != nil && a.response.StatusCode < http.StatusBadRequest
+}
+
 // keepTimeout stores the timeout started by authentication for the transport.
 func (a *sdkGoAttempt) keepTimeout(t *attemptTimeout) {
 	a.endTimeout()

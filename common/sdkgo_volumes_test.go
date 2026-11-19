@@ -201,6 +201,12 @@ func TestSdkGoVolumesClientFailsToDecodeLikeClassicClient(t *testing.T) {
 		"not JSON":                "not json",
 		"transient error message": `{"message": "REQUEST_LIMIT_EXCEEDED: retry later.`,
 		"HTML":                    "<html><body>Sign in</body></html>",
+		"timestamp that isn't a number": `{"full_name": "main.replay.volume",
+			"created_at": "yesterday"}`,
+		"timestamp out of range": `{"full_name": "main.replay.volume",
+			"created_at": "99999999999999999999"}`,
+		"timestamp with a transient error message": `{"full_name": "main.replay.volume",
+			"created_at": "REQUEST_LIMIT_EXCEEDED"}`,
 	} {
 		t.Run(name, func(t *testing.T) {
 			r := readBothWays(t, context.Background, nil, respond(http.StatusOK, body),

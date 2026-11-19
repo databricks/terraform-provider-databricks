@@ -9,6 +9,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"time"
 
@@ -39,9 +40,9 @@ func (b *sdkGoBridge) classicError(ctx context.Context, err error,
 	}
 	apiErr, ok := errors.AsType[*sdkapierr.APIError](err)
 	if !ok || apiErr.HTTPStatusCode() < 0 {
-		var syntaxErr *json.SyntaxError
-		var typeErr *json.UnmarshalTypeError
-		if errors.As(err, &syntaxErr) || errors.As(err, &typeErr) {
+		// After a successful response, only decoding it can fail, whatever error the
+		// sdk-go wire types return.
+		if attempt.succeeded() {
 			return &responseDecodeError{classicDecodeError(err, attempt)}
 		}
 		return err
@@ -92,14 +93,16 @@ const classicDecodeErrorRequestLog = "This is likely a bug in the Databricks SDK
 	"https://github.com/databricks/databricks-sdk-go/issues. Request log:\n```\n%s\n```"
 
 // classicDecodeError mirrors the error of httpclient.WithResponseUnmarshal for err, the
-// failure to decode the response body of attempt.
+// failure to decode the successful response of attempt.
 func classicDecodeError(err error, attempt *sdkGoAttempt) error {
-	if attempt == nil || attempt.response == nil {
-		return fmt.Errorf("failed to unmarshal response body: %w", err)
-	}
 	if _, ok := errors.AsType[*json.SyntaxError](err); ok &&
 		bytes.HasPrefix(attempt.responseBody, []byte("<")) {
 		return httpclient.ErrHTMLContent
+	}
+	// sdk-go adds the text to the error for a quoted integer it can't parse, where the
+	// classic decoder reports the parse error alone.
+	if numErr, ok := errors.AsType[*strconv.NumError](err); ok {
+		err = numErr
 	}
 	requestLog := httplog.RoundTripStringer{
 		Request:            attempt.request,

@@ -263,10 +263,13 @@ func (f fixtureTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	}
 	sent := req
 	if !direct {
-		// The handler matches calls on the Host header, which keeps the named host.
+		// The handler matches calls on the Host header. Go sends a nonempty Host in
+		// place of the URL's authority, so the clone keeps it.
 		sent = req.Clone(req.Context())
 		sent.URL.Scheme, sent.URL.Host = expected.Scheme, expected.Host
-		sent.Host = req.URL.Host
+		if sent.Host == "" {
+			sent.Host = req.URL.Host
+		}
 	}
 	if sent.Body != nil && sent.Body != http.NoBody {
 		if sent, err = withBufferedBody(sent); err != nil {

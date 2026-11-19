@@ -106,11 +106,8 @@ func applyEnvironment(t *testing.T, env map[string]string) error {
 	// The SDK caches each detection for the life of the process. Registered first,
 	// this cleanup runs after every variable is restored.
 	t.Cleanup(useragent.ClearCache)
-	for _, name := range clearedVariables() {
-		t.Setenv(name, "")
-		if err := os.Unsetenv(name); err != nil {
-			return err
-		}
+	if err := unsetVariables(t, clearedVariables()); err != nil {
+		return err
 	}
 	useragent.ClearCache()
 	if err := undetectedEnvironment(); err != nil {
@@ -120,6 +117,19 @@ func applyEnvironment(t *testing.T, env map[string]string) error {
 		t.Setenv(name, value)
 	}
 	useragent.ClearCache()
+	return nil
+}
+
+// unsetVariables unsets names until the test ends. The SDK detects agents from a
+// variable's presence, so setting one to an empty string is not enough.
+func unsetVariables(t *testing.T, names []string) error {
+	t.Helper()
+	for _, name := range names {
+		t.Setenv(name, "")
+		if err := os.Unsetenv(name); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 

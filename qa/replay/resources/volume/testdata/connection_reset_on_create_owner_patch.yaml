@@ -1,0 +1,144 @@
+# This journey pins connection resets on the owner PATCH after a successful create POST.
+# The SDK retries "connection reset by peer" as a transient URL error, resending the same
+# body. When every PATCH is reset, apply fails with the last reset once
+# retry_timeout_seconds ends, and the volume stays in state under its full name, tainted,
+# so the next plan replaces it. The replacement deletes the volume, creates it again and
+# gets its owner PATCH through on the retry after one reset. Three seconds allow exactly
+# two attempts: the retry starts 1.05 to 1.75 seconds after the first attempt, and a
+# third attempt could start no sooner than 3.1 seconds after it. API responses are
+# inferred from the Unity Catalog API contract, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: owner_patch_reset_until_the_retry_timeout_ends
+    config: &config |
+      provider "databricks" {
+        retry_timeout_seconds = 3
+      }
+      resource "databricks_volume" "this" {
+        name         = "connection_volume"
+        catalog_name = "main"
+        schema_name  = "replay"
+        volume_type  = "MANAGED"
+        owner        = "owner-a@example.com"
+      }
+    expect_error: 'Error: cannot create volume: Patch
+      "http://127\.0\.0\.1:\d+/api/2\.1/unity-catalog/volumes/main\.replay\.connection_volume":
+      read tcp 127\.0\.0\.1:\d+->127\.0\.0\.1:\d+: read: connection reset by peer\n'
+    calls:
+      - &create
+        request:
+          method: POST
+          path: /api/2.1/unity-catalog/volumes
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "connection_volume", "volume_type": "MANAGED"}
+        response:
+          status: 200
+          body:
+            json: &created {"catalog_name": "main", "schema_name": "replay",
+                            "name": "connection_volume",
+                            "full_name": "main.replay.connection_volume",
+                            "volume_type": "MANAGED",
+                            "owner": "replay-admin@example.com",
+                            "storage_location": "s3://replay-metastore/volume-299",
+                            "metastore_id": "11111111-1111-1111-1111-111111111111",
+                            "volume_id": "00000000-0000-4000-8000-000000000299"}
+      - request: &owner_patch
+          method: PATCH
+          path: /api/2.1/unity-catalog/volumes/main.replay.connection_volume
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"owner": "owner-a@example.com"}
+        response:
+          fault: reset
+        times: 2
+        min_gap: 1s
+        max_gap: 3s
+  - name: plan_after_exhausted_owner_patch_replaces_the_tainted_volume
+    plan_only: true
+    config: *config
+    plan:
+      expect: non_empty
+      changes:
+        databricks_volume.this:
+          actions: [delete, create]
+    state:
+      resources:
+        databricks_volume.this:
+          attributes:
+            - path: [id]
+              equals: main.replay.connection_volume
+            - path: [owner]
+              equals: replay-admin@example.com
+    calls:
+      - &read_created
+        request: &read
+          method: GET
+          path: /api/2.1/unity-catalog/volumes/main.replay.connection_volume
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 200
+          body:
+            json: *created
+  - name: replacement_owner_patch_retried_once_after_a_reset
+    config: *config
+    calls:
+      - *read_created
+      - &delete
+        request:
+          method: DELETE
+          path: /api/2.1/unity-catalog/volumes/main.replay.connection_volume
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 200
+          body:
+            json: {}
+      - *create
+      - request: *owner_patch
+        response:
+          fault: reset
+      # The retry carries the same body as the reset attempt.
+      - request: *owner_patch
+        response: &volume_owner_a
+          status: 200
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "connection_volume",
+                   "full_name": "main.replay.connection_volume",
+                   "volume_type": "MANAGED",
+                   "owner": "owner-a@example.com",
+                   "storage_location": "s3://replay-metastore/volume-299",
+                   "metastore_id": "11111111-1111-1111-1111-111111111111",
+                   "volume_id": "00000000-0000-4000-8000-000000000299"}
+        min_gap: 1s
+        max_gap: 3s
+      - &read_owner_a
+        request: *read
+        response: *volume_owner_a
+      - *read_owner_a
+    state:
+      resources:
+        databricks_volume.this:
+          attributes:
+            - path: [id]
+              equals: main.replay.connection_volume
+            - path: [owner]
+              equals: owner-a@example.com
+destroy:
+  calls:
+    - *read_owner_a
+    - *delete

@@ -3,6 +3,7 @@ package httpfixture
 import (
 	"errors"
 	"fmt"
+	"slices"
 	"strconv"
 	"time"
 
@@ -38,7 +39,8 @@ func (t *Times) UnmarshalYAML(node *yaml.Node) error {
 	case yaml.ScalarNode:
 		n, err := strconv.Atoi(node.Value)
 		if err != nil || n < 1 {
-			t.err = fmt.Errorf("times %q must be a positive count or {min, max}", node.Value)
+			t.err = fmt.Errorf("times %q must be a positive count or {min, max}",
+				node.Value)
 			return nil
 		}
 		*t = Exactly(n)
@@ -53,7 +55,7 @@ func (t *Times) UnmarshalYAML(node *yaml.Node) error {
 func (t *Times) decodeRange(node *yaml.Node) error {
 	seen := map[string]bool{}
 	for i := 0; i+1 < len(node.Content); i += 2 {
-		key, value := node.Content[i].Value, node.Content[i+1]
+		key, value := resolveAlias(node.Content[i]).Value, resolveAlias(node.Content[i+1])
 		n, err := strconv.Atoi(value.Value)
 		if value.Kind != yaml.ScalarNode || err != nil {
 			return fmt.Errorf("times.%s %q must be an integer", key, value.Value)
@@ -77,6 +79,14 @@ func (t *Times) decodeRange(node *yaml.Node) error {
 	return t.validate()
 }
 
+// resolveAlias returns the anchored node that an alias, such as *n, refers to.
+func resolveAlias(node *yaml.Node) *yaml.Node {
+	for node.Kind == yaml.AliasNode && node.Alias != nil {
+		node = node.Alias
+	}
+	return node
+}
+
 func (t Times) validate() error {
 	if t.Min < 0 || t.Max < 1 || t.Min > t.Max {
 		return fmt.Errorf("times {min: %d, max: %d} needs 0 <= min <= max and max >= 1",
@@ -96,15 +106,14 @@ func (t Times) MarshalYAML() (any, error) {
 	}{t.Min, t.Max}, nil
 }
 
-// repeat is a call's compiled times, gap bounds and arrivals.
+// repeat is a call's compiled times and gap bounds, and how often it matched.
 type repeat struct {
 	min, max       int
 	repeated       bool
 	minGap, maxGap time.Duration
 	count          int
 	// closed stops further repetitions once ordered replay has moved past the call.
-	closed      bool
-	lastArrival time.Time
+	closed bool
 }
 
 func compileRepeat(c Call) (repeat, error) {
@@ -141,7 +150,8 @@ func parseGap(field, value string) (time.Duration, error) {
 	}
 	gap, err := time.ParseDuration(value)
 	if err != nil || gap <= 0 {
-		return 0, fmt.Errorf("%s %q must be a positive duration, such as 1s", field, value)
+		return 0, fmt.Errorf("%s %q must be a positive duration, such as 1s",
+			field, value)
 	}
 	return gap, nil
 }
@@ -153,23 +163,51 @@ func (r *repeat) open() bool { return !r.closed && r.count < r.max }
 
 func (r *repeat) satisfied() bool { return r.count >= r.min }
 
-// checkGap measures a repetition from the call's previous one, and a call
-// without times from the previous matched call in the step. A repeated call's
-// first arrival has no bound: it usually is the attempt that the retries follow.
-func (r *repeat) checkGap(arrival, previous time.Time, previousCall string) error {
-	if !r.hasGap() || r.repeated && r.count == 0 {
-		return nil
+// arrival is a matched call's index, arrival time and request line.
+type arrival struct {
+	call    int
+	at      time.Time
+	request string
+}
+
+// gapFailures checks gap bounds in arrival order, because concurrent requests
+// can take the lock in another order after reading their bodies. A repeated
+// call measures from its previous repetition and leaves its first unbounded; a
+// call without times measures from the previous matched call in the step.
+func (h *Handler) gapFailures() []error {
+	ordered := slices.Clone(h.arrivals)
+	slices.SortStableFunc(ordered, func(a, b arrival) int { return a.at.Compare(b.at) })
+	var failures []error
+	repetitions, previous := map[int]int{}, map[int]time.Time{}
+	for i, a := range ordered {
+		e := &h.calls[a.call]
+		repetitions[a.call]++
+		n := repetitions[a.call]
+		var err error
+		switch {
+		case !e.hasGap() || e.repeated && n == 1:
+		case e.repeated:
+			err = e.checkGap(a.at.Sub(previous[a.call]),
+				fmt.Sprintf("repetition %d arrived", n),
+				fmt.Sprintf("repetition %d", n-1))
+		case i == 0:
+			err = errors.New("arrived first in its step, so min_gap and max_gap " +
+				"have no earlier call to measure from")
+		default:
+			p := ordered[i-1]
+			err = e.checkGap(a.at.Sub(p.at), "arrived",
+				fmt.Sprintf("call %d (%s)", p.call+1, p.request))
+		}
+		previous[a.call] = a.at
+		if err != nil {
+			failures = append(failures,
+				fmt.Errorf("%s: call %d: %s %w", h.label, a.call+1, a.request, err))
+		}
 	}
-	arrived, reference, from := "arrived", previous, previousCall
-	if r.repeated {
-		arrived = fmt.Sprintf("repetition %d arrived", r.count+1)
-		reference, from = r.lastArrival, fmt.Sprintf("repetition %d", r.count)
-	}
-	if reference.IsZero() {
-		return errors.New("arrived first in its step, so min_gap and max_gap have no " +
-			"earlier call to measure from")
-	}
-	gap := arrival.Sub(reference)
+	return failures
+}
+
+func (r *repeat) checkGap(gap time.Duration, arrived, from string) error {
 	observed := fmt.Sprintf("%s %s after %s", arrived, gap.Round(time.Millisecond), from)
 	if r.minGap > 0 && gap < r.minGap {
 		return fmt.Errorf("%s, below min_gap %s", observed, r.minGap)

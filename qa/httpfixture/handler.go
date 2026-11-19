@@ -74,9 +74,8 @@ type Handler struct {
 	failures         []error
 	enforceCallOrder bool
 	hosts            hostNames
-	// lastArrival and lastCall describe the step's previous matched call.
-	lastArrival time.Time
-	lastCall    string
+	// arrivals lists the step's matched calls, in the order they took the lock.
+	arrivals []arrival
 }
 
 // hostNames maps request Host headers to host names. Calls without a host
@@ -165,7 +164,8 @@ func (h *Handler) SetReusableFixtures(calls []Call) error {
 	}
 	for i, e := range compiled {
 		if e.repeated || e.hasGap() {
-			return fmt.Errorf("reusable call %d: times, min_gap and max_gap apply only to step calls", i+1)
+			return fmt.Errorf("reusable call %d: times, min_gap and max_gap apply "+
+				"only to step calls", i+1)
 		}
 	}
 	h.reusable = compiled
@@ -183,7 +183,7 @@ func (h *Handler) StartStep(label string, calls []Call) error {
 	}
 	err = h.verify()
 	h.label, h.calls, h.failures = label, compiled, nil
-	h.lastArrival, h.lastCall = time.Time{}, ""
+	h.arrivals = nil
 	return err
 }
 
@@ -308,7 +308,7 @@ func (e *exchange) matches(req *http.Request, host string, body requestBody) boo
 
 // ServeHTTP prefers consumable step fixtures over reusable fallbacks.
 func (h *Handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	// Gaps are measured between arrivals, before reading the body or waiting for the lock.
+	// Gaps are measured between arrivals, before reading the body or taking the lock.
 	arrival := time.Now()
 	e, label, request := h.consume(w, req, arrival)
 	if e == nil {
@@ -324,8 +324,9 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 // consume matches and consumes a fixture under the lock, so concurrent requests
 // cannot consume a call twice. It returns nil after reporting a failure, and
 // otherwise the step label and request description for later messages.
-func (h *Handler) consume(w http.ResponseWriter, req *http.Request,
-	arrival time.Time) (*exchange, string, string) {
+func (h *Handler) consume(
+	w http.ResponseWriter, req *http.Request, arrival time.Time,
+) (*exchange, string, string) {
 	body, err := parseRequestBody(req)
 	h.mu.Lock()
 	defer h.mu.Unlock()
@@ -373,27 +374,16 @@ func (h *Handler) nextRequired() int {
 	return -1
 }
 
-// record consumes call i at its arrival time. A gap out of bounds is reported
-// but still answered, so the step fails with the gap rather than a later error.
-// Ordered replay closes the earlier calls, which can no longer repeat.
-func (h *Handler) record(i int, request string, arrival time.Time) {
-	e := &h.calls[i]
-	if err := e.checkGap(arrival, h.lastArrival, h.lastCall); err != nil {
-		h.failures = append(h.failures, fmt.Errorf("%s: call %d: %s %w", h.label, i+1, request, err))
-	}
+// record consumes call i at its arrival time. Ordered replay closes the
+// earlier calls, which can no longer repeat.
+func (h *Handler) record(i int, request string, at time.Time) {
 	if h.enforceCallOrder {
 		for j := range h.calls[:i] {
 			h.calls[j].closed = true
 		}
 	}
-	e.count++
-	e.lastArrival = arrival
-	// Concurrent requests can take the lock out of arrival order; the latest
-	// arrival stays the reference.
-	if !arrival.Before(h.lastArrival) {
-		h.lastArrival = arrival
-		h.lastCall = fmt.Sprintf("call %d (%s)", i+1, request)
-	}
+	h.calls[i].count++
+	h.arrivals = append(h.arrivals, arrival{call: i, at: at, request: request})
 }
 
 func writeResponse(w http.ResponseWriter, e *exchange) {
@@ -437,5 +427,6 @@ func (h *Handler) verify() error {
 				h.label, i+1, e.signature(), e.countDetail()))
 		}
 	}
+	failures = append(failures, h.gapFailures()...)
 	return errors.Join(failures...)
 }

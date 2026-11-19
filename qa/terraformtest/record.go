@@ -97,7 +97,8 @@ func recordableCalls(label string, calls []httpfixture.Call) error {
 			return fmt.Errorf("%s: call %d: recording cannot reproduce a response delay, fault or status_line; edit this journey by hand", label, i+1)
 		}
 		if !call.Times.IsZero() || call.MinGap != "" || call.MaxGap != "" {
-			return fmt.Errorf("%s: call %d: recording cannot reproduce times, min_gap or max_gap; edit this journey by hand", label, i+1)
+			return fmt.Errorf("%s: call %d: recording cannot reproduce times, "+
+				"min_gap or max_gap; edit this journey by hand", label, i+1)
 		}
 	}
 	return nil

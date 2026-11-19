@@ -95,18 +95,7 @@ but cannot bypass an out-of-order matching consumable call.
 Test-wide reusable exchanges are intended for invariant client initialization,
 such as host metadata; they are not required to be consumed.
 
-`Call.Times` expects a call more than once in a row: `Exactly(n)` with n of at
-least 1, or `Times{Min: 2, Max: 3}` for a count that depends on timing. In YAML
-it is `times: 3` or `times: {min: 2, max: 3}`. `Verify` requires `Min`; a
-request past `Max` falls through to later fixtures. A range is greedy, so an
-identical signature listed after it matches only once the range reaches `Max`.
-Under ordering, a call must reach `Min` before a later call matches, and closes
-once one does. `Call.MinGap` and `Call.MaxGap` are Go durations bounding the
-time since the previous matched step call's arrival or, with `Times`, since the
-call's previous repetition; the first repetition is not bounded. Arrival is
-taken when `ServeHTTP` starts, before the body is read. An out-of-bounds gap is
-answered normally and reported by `Verify` with the observed gap. Reusable
-fixtures reject these fields.
+`Call.Times` expects a call more than once in a row: `Exactly(n)` with n of at least 1, or `Times{Min: 2, Max: 3}` for a count that depends on timing. In YAML it is `times: 3` or `times: {min: 2, max: 3}`. `Verify` requires `Min`; a request past `Max` falls through to later fixtures. A range is greedy, so an identical signature listed after it matches only once the range reaches `Max`. Under ordering, a call must reach `Min` before a later call matches, and closes once one does. `Call.MinGap` and `Call.MaxGap` are Go durations bounding the time since the previous matched step call's arrival or, with `Times`, since the call's previous repetition; the first repetition is not bounded. Arrival is taken when `ServeHTTP` starts, before the body is read. `Verify` checks gaps in arrival order, whatever order concurrent requests took the lock in, and reports an out-of-bounds gap with the observed gap; the call is still answered. Reusable fixtures reject these fields.
 
 ## Files and non-JSON bodies
 

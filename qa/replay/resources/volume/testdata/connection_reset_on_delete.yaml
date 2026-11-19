@@ -60,8 +60,8 @@ steps:
         retry_timeout_seconds = 3
       }
     expect_error: 'Error: cannot delete volume: Delete
-      "http://127\.0\.0\.1:\d+/api/2\.1/unity-catalog/volumes/main\.replay\.connection_volume\?":
-      read tcp 127\.0\.0\.1:\d+->127\.0\.0\.1:\d+: read: connection reset by peer\n'
+      "http://[\d.:]+/api/2\.1/unity-catalog/volumes/main\.replay\.connection_volume\?":
+      read tcp [\d.:]+->[\d.:]+: read: connection reset by peer\n'
     calls:
       - *read
       - request: &delete

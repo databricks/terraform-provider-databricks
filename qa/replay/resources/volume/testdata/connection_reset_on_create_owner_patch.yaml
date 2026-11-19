@@ -27,8 +27,8 @@ steps:
         owner        = "owner-a@example.com"
       }
     expect_error: 'Error: cannot create volume: Patch
-      "http://127\.0\.0\.1:\d+/api/2\.1/unity-catalog/volumes/main\.replay\.connection_volume":
-      read tcp 127\.0\.0\.1:\d+->127\.0\.0\.1:\d+: read: connection reset by peer\n'
+      "http://[\d.:]+/api/2\.1/unity-catalog/volumes/main\.replay\.connection_volume":
+      read tcp [\d.:]+->[\d.:]+: read: connection reset by peer\n'
     calls:
       - &create
         request:

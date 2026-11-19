@@ -25,8 +25,8 @@ steps:
         volume_type  = "MANAGED"
       }
     expect_error: 'Error: cannot create volume: Post
-      "http://127\.0\.0\.1:\d+/api/2\.1/unity-catalog/volumes": read tcp
-      127\.0\.0\.1:\d+->127\.0\.0\.1:\d+: read: connection reset by peer\n'
+      "http://[\d.:]+/api/2\.1/unity-catalog/volumes": read tcp [\d.:]+->[\d.:]+:
+      read: connection reset by peer\n'
     calls:
       - request: &create
           method: POST

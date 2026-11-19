@@ -79,8 +79,8 @@ steps:
   - name: refresh_get_reset_until_the_retry_timeout_ends
     config: *config
     expect_error: 'Error: cannot read volume: Get
-      "http://127\.0\.0\.1:\d+/api/2\.1/unity-catalog/volumes/main\.replay\.connection_volume\?":
-      read tcp 127\.0\.0\.1:\d+->127\.0\.0\.1:\d+: read: connection reset by peer\n'
+      "http://[\d.:]+/api/2\.1/unity-catalog/volumes/main\.replay\.connection_volume\?":
+      read tcp [\d.:]+->[\d.:]+: read: connection reset by peer\n'
     calls:
       - request: *read_request
         response:

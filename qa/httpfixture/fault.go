@@ -133,7 +133,8 @@ func setLingerZero(conn net.Conn) error {
 	return tcp.SetLinger(0)
 }
 
-// rawHead declares the full body length, even when a fault writes less of it.
+// rawHead frames the body by its full length, even when a fault writes less of
+// it, so it replaces any framing headers in the fixture.
 func rawHead(e *exchange) []byte {
 	r := e.call.Response
 	line := r.StatusLine
@@ -142,8 +143,8 @@ func rawHead(e *exchange) []byte {
 	}
 	header := http.Header{}
 	setResponseHeaders(header, e)
+	header.Del("Transfer-Encoding")
 	header.Set("Content-Length", strconv.Itoa(len(e.responseBody)))
-	header.Set("Connection", "close")
 	var head bytes.Buffer
 	head.WriteString(line + "\r\n")
 	_ = header.Write(&head)

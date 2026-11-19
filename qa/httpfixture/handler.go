@@ -231,8 +231,7 @@ func (e *exchange) matches(req *http.Request, body requestBody) bool {
 
 // ServeHTTP prefers consumable step fixtures over reusable fallbacks.
 func (h *Handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	// Go's client silently resends an idempotent request that fails on a reused
-	// connection. One connection per request makes it see every fault.
+	// Failure responses close the connection too; see setResponseHeaders.
 	w.Header().Set("Connection", "close")
 	e, label := h.consume(w, req)
 	if e == nil {
@@ -295,6 +294,10 @@ func setResponseHeaders(header http.Header, e *exchange) {
 		contentType := map[string]string{"json": "application/json", "text": "text/plain; charset=utf-8", "base64": "application/octet-stream"}
 		header.Set("Content-Type", contentType[kind])
 	}
+	// Go's client silently resends an idempotent request that fails on a reused
+	// connection. One connection per request, whatever the fixture's headers say,
+	// makes it see every fault.
+	header.Set("Connection", "close")
 }
 
 func (h *Handler) fail(w http.ResponseWriter, err error) {

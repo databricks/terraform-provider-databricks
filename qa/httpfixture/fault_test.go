@@ -143,9 +143,10 @@ func TestFaultStallBody(t *testing.T) {
 
 func TestStatusLineWithoutReasonPhrase(t *testing.T) {
 	c := call("GET", "/missing", nil, "")
+	// The raw response frames the body by length, so a chunked header is dropped.
 	c.Response = Response{Status: 404, StatusLine: "HTTP/1.1 404", Body: &Body{JSON: map[string]any{
 		"error_code": "NOT_FOUND",
-	}}}
+	}}, Headers: map[string]string{"Transfer-Encoding": "chunked", "Content-Length": "1"}}
 	h, url := faultServer(t, c)
 	resp, err := http.Get(url + "/missing")
 	require.NoError(t, err)
@@ -160,9 +161,12 @@ func TestStatusLineWithoutReasonPhrase(t *testing.T) {
 }
 
 // Go's client resends an idempotent request that fails on a reused connection.
-// The handler closes every connection, so a fault after another call still fails.
+// The handler closes every connection, even when a fixture asks to keep it alive,
+// so a fault after another call still fails.
 func TestFaultAfterAnotherCallIsNotRetriedByTheClient(t *testing.T) {
-	h, url := faultServer(t, textCall("/first", "ok"), faulted(textCall("/close", "unused"), FaultClose))
+	first := textCall("/first", "ok")
+	first.Response.Headers = map[string]string{"Connection": "keep-alive"}
+	h, url := faultServer(t, first, faulted(textCall("/close", "unused"), FaultClose))
 	resp, err := http.Get(url + "/first")
 	require.NoError(t, err)
 	_, _ = io.Copy(io.Discard, resp.Body)

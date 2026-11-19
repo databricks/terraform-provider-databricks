@@ -408,9 +408,11 @@ fails or retries a group create, with this classic SDK diagnostic:
 | `fault: stall_body`, `http_timeout_seconds = 1` | [stall_body](testdata/faults/stall_body.yaml) | `response body: context canceled`, not retried |
 | `status: 404`, `status_line: HTTP/1.1 404` | [status_line](testdata/faults/status_line.yaml) | `Not Found` |
 
-The fixture server closes every connection after one response. Go's HTTP client
-silently resends an idempotent request that fails on a reused connection, so a
-fresh connection per request is what lets each fault reach the provider.
+The fixture server closes every connection after one response, whatever the
+fixture's `Connection` header says. Go's HTTP client silently resends an
+idempotent request that fails on a reused connection, so a fresh connection per
+request is what lets each fault reach the provider. Faults and `status_line`
+frame the body by its `Content-Length`, replacing any `Transfer-Encoding`.
 
 Connection refused is not supported: the server has already accepted the
 connection by the time it matches a request. Recording rejects journeys that

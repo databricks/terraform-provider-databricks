@@ -251,3 +251,79 @@ func TestWorkspaceIDUnknown_SdkV2(t *testing.T) {
 		})
 	}
 }
+
+var unknownTestProviderConfigListType = tftypes.List{ElementType: unknownTestProviderConfigType}
+
+var unknownTestSdkV2RootType = tftypes.Object{
+	AttributeTypes: map[string]tftypes.Type{"provider_config": unknownTestProviderConfigListType},
+}
+
+var unknownTestSdkV2Schema = resourceschema.Schema{
+	Blocks: map[string]resourceschema.Block{
+		"provider_config": resourceschema.ListNestedBlock{
+			NestedObject: resourceschema.NestedBlockObject{
+				Attributes: map[string]resourceschema.Attribute{
+					"workspace_id": resourceschema.StringAttribute{Required: true},
+				},
+			},
+		},
+	},
+}
+
+func unknownTestSdkV2State(workspaceIDs ...string) tftypes.Value {
+	elements := []tftypes.Value{}
+	for _, workspaceID := range workspaceIDs {
+		elements = append(elements, unknownTestProviderConfig(workspaceID))
+	}
+	return tftypes.NewValue(unknownTestSdkV2RootType, map[string]tftypes.Value{
+		"provider_config": tftypes.NewValue(unknownTestProviderConfigListType, elements),
+	})
+}
+
+func TestRequireReplaceForUnknownProviderConfig_SdkV2(t *testing.T) {
+	ctx := context.Background()
+	pcType := ProviderConfig{}.Type(ctx)
+	unknownBlock := types.ListUnknown(pcType)
+	tests := []struct {
+		name            string
+		state           tftypes.Value
+		planned         types.List
+		wantReplacement bool
+	}{
+		{
+			name:            "unknown block replaces a prior workspace_id",
+			state:           unknownTestSdkV2State("12345"),
+			planned:         unknownBlock,
+			wantReplacement: true,
+		},
+		{
+			name:    "unknown block on create",
+			state:   tftypes.NewValue(unknownTestSdkV2RootType, nil),
+			planned: unknownBlock,
+		},
+		{
+			name:    "unknown block without a prior provider_config",
+			state:   unknownTestSdkV2State(),
+			planned: unknownBlock,
+		},
+		{
+			// workspaceIDPlanModifier handles a known block.
+			name:  "known block with an unknown workspace_id",
+			state: unknownTestSdkV2State("12345"),
+			planned: types.ListValueMust(pcType, []attr.Value{
+				ProviderConfig{WorkspaceID: types.StringUnknown()}.ToObjectValue(ctx)}),
+		},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			resp := &resource.ModifyPlanResponse{}
+
+			RequireReplaceForUnknownProviderConfig_SdkV2(ctx,
+				tfsdk.State{Schema: unknownTestSdkV2Schema, Raw: tc.state}, tc.planned, resp)
+
+			require.False(t, resp.Diagnostics.HasError(), "diagnostics: %v", resp.Diagnostics)
+			assert.Equal(t, tc.wantReplacement, resp.RequiresReplace.Contains(path.Root("provider_config")),
+				"RequiresReplace = %v", resp.RequiresReplace)
+		})
+	}
+}

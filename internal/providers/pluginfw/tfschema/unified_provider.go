@@ -174,6 +174,27 @@ func WorkspaceIDUnknown_SdkV2(providerConfig types.List) bool {
 	return false
 }
 
+// RequireReplaceForUnknownProviderConfig_SdkV2 requires replacement of an SdkV2-compatible
+// resource with a prior workspace_id whose planned provider_config list is unknown, such
+// as a dynamic block with an unknown for_each, because the new workspace may differ.
+// workspaceIDPlanModifier doesn't run inside an unknown list.
+func RequireReplaceForUnknownProviderConfig_SdkV2(ctx context.Context, state tfsdk.State,
+	planned types.List, resp *resource.ModifyPlanResponse) {
+	if !planned.IsUnknown() || state.Raw.IsNull() {
+		return
+	}
+	var prior types.List
+	resp.Diagnostics.Append(state.GetAttribute(ctx, path.Root("provider_config"), &prior)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	priorWorkspaceID, diags := GetWorkspaceID_SdkV2(ctx, prior)
+	resp.Diagnostics.Append(diags...)
+	if priorWorkspaceID != "" {
+		resp.RequiresReplace = append(resp.RequiresReplace, path.Root("provider_config"))
+	}
+}
+
 // GetWorkspaceIDResource extracts the workspace ID from a provider_config object (for resources).
 // It returns the workspace ID string and any diagnostics encountered during extraction.
 // If the provider_config is not set, it returns an empty string with no diagnostics.

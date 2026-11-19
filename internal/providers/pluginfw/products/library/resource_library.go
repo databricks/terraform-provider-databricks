@@ -153,6 +153,7 @@ func (r *LibraryResource) ModifyPlan(ctx context.Context, req resource.ModifyPla
 	// A workspace_id taken from another resource can be unknown until apply, whose final
 	// plan validates it.
 	if tfschema.WorkspaceIDUnknown_SdkV2(plan.ProviderConfig) {
+		tfschema.RequireReplaceForUnknownProviderConfig_SdkV2(ctx, req.State, plan.ProviderConfig, resp)
 		return
 	}
 	workspaceID, diags := tfschema.GetWorkspaceID_SdkV2(ctx, plan.ProviderConfig)

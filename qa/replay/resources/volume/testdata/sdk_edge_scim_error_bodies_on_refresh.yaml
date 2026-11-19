@@ -3,9 +3,11 @@
 # Internal Error" when the detail is the string "null", prefixed with scimType when set.
 # A message, when present, wins over the detail. A SCIM 404 still removes the volume from
 # state, because the SDK's SCIM_<status> error code is not one it maps, so the HTTP status
-# decides. Failing refreshes keep the volume in state, so the next step reads it again.
-# None of these is retried. API responses are inferred from the Unity Catalog API
-# contract, not recorded.
+# decides. A status sent as a JSON number, not the string RFC 7644 requires, makes the
+# whole body unparseable: the SDK uses the raw body as the message and the code UNKNOWN,
+# which it maps to an internal error, so that 404 fails the refresh. Failing refreshes
+# keep the volume in state, so the next step reads it again. None of these is retried.
+# API responses are inferred from the Unity Catalog API contract, not recorded.
 version: 1
 enforce_call_order: true
 host_metadata:
@@ -82,6 +84,20 @@ steps:
             json: {"schemas": ["urn:ietf:params:scim:api:messages:2.0:Error"],
                    "message": "Volume lookup failed.", "scimType": "invalidValue",
                    "detail": "Volume name is not valid.", "status": "400"}
+  - name: refresh_answered_scim_404_with_numeric_status_fails_with_raw_body
+    config: *config
+    expect_error: 'Error: cannot read volume: \{"schemas":
+      \["urn:ietf:params:scim:api:messages:2\.0:Error"\], "detail": "Volume not
+      found\.", "status": 404\}\n'
+    calls:
+      - request: *read
+        response:
+          status: 404
+          headers:
+            Content-Type: application/json
+          body:
+            text: '{"schemas": ["urn:ietf:params:scim:api:messages:2.0:Error"], "detail":
+              "Volume not found.", "status": 404}'
   - name: refresh_answered_scim_404_plans_create
     plan_only: true
     config: *config

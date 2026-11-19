@@ -149,6 +149,16 @@ func TestFixtureTransportRoutesNamedHosts(t *testing.T) {
 		require.Same(t, req, resp.Request)
 		require.Equal(t, target, req.URL.String())
 	}
+	// An explicit Host header is what Go sends, so the handler sees it.
+	req, err := http.NewRequest("GET", workspaceURL+"/get", nil)
+	require.NoError(t, err)
+	req.Host = "accounts.cloud.databricks.com"
+	resp, err := transport.RoundTrip(req)
+	require.NoError(t, err)
+	body, err := io.ReadAll(resp.Body)
+	require.NoError(t, err)
+	resp.Body.Close()
+	require.Equal(t, "accounts.cloud.databricks.com /get", string(body))
 	for _, target := range []string{
 		"http://accounts.cloud.databricks.com/api", "https://.cloud.databricks.com/api",
 		"https://example.invalid",

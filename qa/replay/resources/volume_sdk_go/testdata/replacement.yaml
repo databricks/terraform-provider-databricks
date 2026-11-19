@@ -1,6 +1,7 @@
-# Runs volume/testdata/replacement.yaml with databricks_volume on sdk-go uc/volumes/v1 in
-# every step, and expects the same behavior. The volume POST and GET requests carry no
-# Accept header, which an empty header expectation pins. The original's description:
+# Runs volume_lifecycle/testdata/replacement.yaml with databricks_volume on sdk-go
+# uc/volumes/v1 in every step, and expects the same behavior. The volume POST and GET
+# requests carry no Accept header, which an empty header expectation pins. The original's
+# description:
 #
 # Pins replacement. Changing catalog_name, schema_name, storage_location or volume_type
 # deletes the volume by its old full name, then creates it again. API responses are

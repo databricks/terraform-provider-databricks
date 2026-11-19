@@ -39,7 +39,8 @@ func (t *Times) UnmarshalYAML(node *yaml.Node) error {
 	case yaml.ScalarNode:
 		n, err := strconv.Atoi(node.Value)
 		if err != nil || n < 1 {
-			t.err = fmt.Errorf("times %q must be a positive count or {min, max}", node.Value)
+			t.err = fmt.Errorf("times %q must be a positive count or {min, max}",
+				node.Value)
 			return nil
 		}
 		*t = Exactly(n)
@@ -97,7 +98,7 @@ func (t Times) MarshalYAML() (any, error) {
 	}{t.Min, t.Max}, nil
 }
 
-// repeat is a call's compiled times, gap bounds and arrivals.
+// repeat is a call's compiled times and gap bounds, and how often it matched.
 type repeat struct {
 	min, max       int
 	repeated       bool
@@ -141,7 +142,8 @@ func parseGap(field, value string) (time.Duration, error) {
 	}
 	gap, err := time.ParseDuration(value)
 	if err != nil || gap <= 0 {
-		return 0, fmt.Errorf("%s %q must be a positive duration, such as 1s", field, value)
+		return 0, fmt.Errorf("%s %q must be a positive duration, such as 1s",
+			field, value)
 	}
 	return gap, nil
 }
@@ -177,17 +179,21 @@ func (h *Handler) gapFailures() []error {
 		switch {
 		case !e.hasGap() || e.repeated && n == 1:
 		case e.repeated:
-			err = e.checkGap(a.at.Sub(previous[a.call]), fmt.Sprintf("repetition %d arrived", n), fmt.Sprintf("repetition %d", n-1))
+			err = e.checkGap(a.at.Sub(previous[a.call]),
+				fmt.Sprintf("repetition %d arrived", n),
+				fmt.Sprintf("repetition %d", n-1))
 		case i == 0:
-			err = errors.New("arrived first in its step, so min_gap and max_gap have no " +
-				"earlier call to measure from")
+			err = errors.New("arrived first in its step, so min_gap and max_gap " +
+				"have no earlier call to measure from")
 		default:
 			p := ordered[i-1]
-			err = e.checkGap(a.at.Sub(p.at), "arrived", fmt.Sprintf("call %d (%s)", p.call+1, p.request))
+			err = e.checkGap(a.at.Sub(p.at), "arrived",
+				fmt.Sprintf("call %d (%s)", p.call+1, p.request))
 		}
 		previous[a.call] = a.at
 		if err != nil {
-			failures = append(failures, fmt.Errorf("%s: call %d: %s %w", h.label, a.call+1, a.request, err))
+			failures = append(failures,
+				fmt.Errorf("%s: call %d: %s %w", h.label, a.call+1, a.request, err))
 		}
 	}
 	return failures

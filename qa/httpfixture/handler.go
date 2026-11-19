@@ -98,7 +98,8 @@ func (h *Handler) SetReusableFixtures(calls []Call) error {
 	}
 	for i, e := range compiled {
 		if e.repeated || e.hasGap() {
-			return fmt.Errorf("reusable call %d: times, min_gap and max_gap apply only to step calls", i+1)
+			return fmt.Errorf("reusable call %d: times, min_gap and max_gap apply "+
+				"only to step calls", i+1)
 		}
 	}
 	h.mu.Lock()
@@ -248,7 +249,7 @@ func (e *exchange) matches(req *http.Request, body requestBody) bool {
 
 // ServeHTTP prefers consumable step fixtures over reusable fallbacks.
 func (h *Handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	// Gaps are measured between arrivals, before reading the body or waiting for the lock.
+	// Gaps are measured between arrivals, before reading the body or taking the lock.
 	arrival := time.Now()
 	e, label := h.consume(w, req, arrival)
 	if e == nil {
@@ -263,7 +264,9 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 // consume matches and consumes a fixture under the lock, so concurrent requests
 // cannot consume a call twice. It returns nil after reporting a failure.
-func (h *Handler) consume(w http.ResponseWriter, req *http.Request, arrival time.Time) (*exchange, string) {
+func (h *Handler) consume(
+	w http.ResponseWriter, req *http.Request, arrival time.Time,
+) (*exchange, string) {
 	body, err := parseRequestBody(req)
 	h.mu.Lock()
 	defer h.mu.Unlock()
@@ -277,7 +280,10 @@ func (h *Handler) consume(w http.ResponseWriter, req *http.Request, arrival time
 		}
 		if next := h.nextRequired(); next != -1 && i > next {
 			expected := h.calls[next].call.Request
-			h.fail(w, fmt.Errorf("%s: out-of-order HTTP call: %s %s body=%s matched call %d; next expected call %d: %s %s", h.label, req.Method, req.URL.RequestURI(), body.raw, i+1, next+1, expected.Method, expected.Path))
+			h.fail(w, fmt.Errorf("%s: out-of-order HTTP call: %s %s body=%s "+
+				"matched call %d; next expected call %d: %s %s",
+				h.label, req.Method, req.URL.RequestURI(), body.raw,
+				i+1, next+1, expected.Method, expected.Path))
 			return nil, ""
 		}
 		h.record(i, req, arrival)
@@ -316,7 +322,8 @@ func (h *Handler) record(i int, req *http.Request, at time.Time) {
 		}
 	}
 	h.calls[i].count++
-	h.arrivals = append(h.arrivals, arrival{call: i, at: at, request: req.Method + " " + req.URL.RequestURI()})
+	request := req.Method + " " + req.URL.RequestURI()
+	h.arrivals = append(h.arrivals, arrival{call: i, at: at, request: request})
 }
 
 func writeResponse(w http.ResponseWriter, e *exchange) {
@@ -356,7 +363,9 @@ func (h *Handler) verify() error {
 	failures := append([]error(nil), h.failures...)
 	for i, e := range h.calls {
 		if !e.satisfied() {
-			failures = append(failures, fmt.Errorf("%s: unconsumed call %d: %s %s%s", h.label, i+1, e.call.Request.Method, e.call.Request.Path, e.countDetail()))
+			failures = append(failures, fmt.Errorf("%s: unconsumed call %d: %s %s%s",
+				h.label, i+1, e.call.Request.Method, e.call.Request.Path,
+				e.countDetail()))
 		}
 	}
 	failures = append(failures, h.gapFailures()...)

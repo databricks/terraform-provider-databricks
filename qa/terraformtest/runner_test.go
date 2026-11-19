@@ -88,7 +88,8 @@ func TestFixtureTransportRejectsExternalTargets(t *testing.T) {
 // rather than holding the request while the transport copies the body.
 func TestFixtureTransportTimesOutABlockedBody(t *testing.T) {
 	h := httpfixture.NewHandler()
-	require.NoError(t, h.SetReusableFixtures((&testDefinition{HostMetadata: map[string]any{"workspace_id": "12345"}}).metadataCalls()))
+	metadata := &testDefinition{HostMetadata: map[string]any{"workspace_id": "12345"}}
+	require.NoError(t, h.SetReusableFixtures(metadata.metadataCalls()))
 	server := httptest.NewServer(h)
 	defer server.Close()
 	cfg := &config.Config{HTTPTimeoutSeconds: 1, RetryTimeoutSeconds: -1}
@@ -98,7 +99,9 @@ func TestFixtureTransportTimesOutABlockedBody(t *testing.T) {
 	body, writer := io.Pipe()
 	defer writer.Close()
 	done := make(chan error, 1)
-	go func() { done <- c.Do(context.Background(), "POST", "/api/2.0/upload", nil, nil, body, nil) }()
+	go func() {
+		done <- c.Do(context.Background(), "POST", "/api/2.0/upload", nil, nil, body, nil)
+	}()
 	select {
 	case err := <-done:
 		require.ErrorContains(t, err, "request timed out after 1s of inactivity")

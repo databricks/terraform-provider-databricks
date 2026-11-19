@@ -18,8 +18,9 @@ import (
 )
 
 const (
-	accountURL   = "https://accounts.cloud.databricks.com"
-	workspaceURL = "https://replay-workspace-1002.cloud.databricks.com"
+	accountURL    = "https://accounts.cloud.databricks.com"
+	workspaceHost = "replay-workspace-1002.cloud.databricks.com"
+	workspaceURL  = "https://" + workspaceHost
 )
 
 const hostsDefinition = `version: 1
@@ -176,6 +177,7 @@ func TestFixtureConfigSelectsProviderHost(t *testing.T) {
 		{"provider host", d.replayHosts(server), "", accountURL},
 		{"no provider host", withoutProvider, "", server},
 		{"HCL names a host", d.replayHosts(server), workspaceURL + "/", workspaceURL + "/"},
+		{"HCL host without scheme", d.replayHosts(server), workspaceHost, workspaceHost},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			cfg := &config.Config{Host: tc.configured}
@@ -184,9 +186,31 @@ func TestFixtureConfigSelectsProviderHost(t *testing.T) {
 			require.Equal(t, "fixture-token", cfg.Token)
 		})
 	}
-	cfg := &config.Config{Host: "https://other.cloud.databricks.com"}
-	require.EqualError(t, d.replayHosts(server).fixtureConfig()(cfg), "hermetic replay: "+
-		"provider host https://other.cloud.databricks.com is not one of the journey's hosts")
+	for _, configured := range []string{
+		"https://other.cloud.databricks.com", "http://" + workspaceHost, "other.cloud.databricks.com",
+	} {
+		cfg := &config.Config{Host: configured}
+		require.EqualError(t, d.replayHosts(server).fixtureConfig()(cfg), "hermetic replay: "+
+			"provider host "+configured+" is not one of the journey's hosts")
+	}
+}
+
+// The SDK adds https to an HCL host without a scheme, so the provider reaches
+// the named HTTPS host and its metadata.
+func TestFixtureConfigAcceptsHostWithoutScheme(t *testing.T) {
+	d, err := decodeDefinition(strings.NewReader(hostsDefinition))
+	require.NoError(t, err)
+	handler := httpfixture.NewHandler()
+	require.NoError(t, d.setHosts(handler))
+	require.NoError(t, handler.SetReusableFixtures(d.metadataCalls()))
+	server := httptest.NewServer(handler)
+	defer server.Close()
+	cfg := &config.Config{Host: workspaceHost}
+	require.NoError(t, d.replayHosts(server.URL).fixtureConfig()(cfg))
+	require.NoError(t, cfg.EnsureResolved())
+	require.Equal(t, workspaceURL, cfg.Host)
+	require.Equal(t, "1002", cfg.WorkspaceID)
+	require.NoError(t, handler.Verify())
 }
 
 // privateLinkCalls redirect a read to the private-link login page.

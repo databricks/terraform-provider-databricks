@@ -106,6 +106,10 @@ func (h replayHosts) providerHost(configured string) (string, error) {
 		return h.server, nil
 	}
 	u, err := url.Parse(configured)
+	if err == nil && u.Host == "" {
+		// The SDK assumes https for a host without a scheme.
+		u, err = url.Parse("https://" + configured)
+	}
 	if err == nil && isNamedHost(h.named, u) {
 		return configured, nil
 	}

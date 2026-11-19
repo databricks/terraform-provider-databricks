@@ -368,6 +368,131 @@ steps:
 
 The [workspace-host example](testdata/hosts/workspace_host.yaml) is the complete journey above.
 
+## Choose the credentials
+
+By default the provider authenticates with a fixed PAT, `fixture-token`. To pin the headers and token requests of another credential type, set `auth` at the test root. Its `type` is the SDK auth type, and its other keys are the provider's credential attributes, named as in a provider block. The [OAuth M2M example](testdata/auth/oauth_m2m.yaml) is a complete journey:
+
+```yaml
+version: 1
+provider_host: workspace
+hosts:
+  workspace:
+    url: https://replay-workspace.cloud.databricks.com
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+auth:
+  type: oauth-m2m
+  client_id: replay-sp
+  client_secret: replay-secret
+steps:
+  - name: create
+    config: |
+      resource "databricks_directory" "this" {
+        path = "/Shared/replay-auth"
+      }
+    calls:
+      # The token endpoint's discovery, sent without credentials.
+      - &discovery
+        request:
+          method: GET
+          path: /oidc/.well-known/oauth-authorization-server
+          matchers:
+            headers:
+              Authorization: absent
+          body: null
+        response:
+          status: 200
+          body:
+            json:
+              authorization_endpoint: https://replay-workspace.cloud.databricks.com/oidc/v1/authorize
+              token_endpoint: https://replay-workspace.cloud.databricks.com/oidc/v1/token
+      # The client ID and secret, sent as basic auth, exchanged for a token.
+      - &token
+        request:
+          method: POST
+          path: /oidc/v1/token
+          headers:
+            Authorization: Basic cmVwbGF5LXNwOnJlcGxheS1zZWNyZXQ=
+          body:
+            text: grant_type=client_credentials&scope=all-apis
+        response:
+          status: 200
+          body:
+            json: {access_token: m2m-token, token_type: Bearer, expires_in: 3600}
+      - request:
+          method: POST
+          path: /api/2.0/workspace/mkdirs
+          headers:
+            Authorization: Bearer m2m-token
+          body:
+            json:
+              path: /Shared/replay-auth
+        response:
+          status: 200
+          body:
+            json: {}
+      # Reads, the post-apply plan's token calls and destroy follow.
+```
+
+- `type` is required and is one of `pat`, `basic`, `oauth-m2m`, `azure-client-secret` and `azure-msi`. The SDK then configures only that type, as it does for `auth_type` in a provider block. Without a type, the SDK would try each type in turn, including ones that run a CLI, so the result would depend on the machine.
+- The other keys are credential attributes, such as `token`, `username`, `client_secret`, `azure_tenant_id` or `azure_use_msi`; their values are strings, and `azure_use_msi` takes `true` or `false`. Other attributes, such as `host` and `account_id`, stay in the provider block. The runner clears the credential attributes of every provider block, so `auth` is their only source. As before, ambient credentials, environment variables and profiles are ignored.
+- Token requests are ordinary calls, so a journey pins them and can fail them. Each Terraform operation configures a new provider, which fetches its own token: a create step has one token exchange for the apply and one for Terraform's post-apply plan, and destroy has one for its refresh and one for the destroy.
+- Token endpoints are absolute URLs, and the local server's URL changes on every run, so a journey that fetches tokens names its hosts. Azure AD (`https://login.microsoftonline.com`) and the Azure instance metadata service (`http://169.254.169.254`) are named hosts like any other; the provider host must be an Azure workspace for the SDK to use them.
+- To pin a token endpoint that fails, answer its call with an error and set `expect_error` on the step, as the [token failure example](testdata/auth/token_endpoint_failure.yaml) does.
+- Recording rejects tests with `auth`, because the profile supplies the credentials. Update their fixtures by hand.
+
+Examples in [testdata/auth](testdata/auth) cover basic auth, OAuth M2M, a rejected client secret, an Azure client secret and Azure MSI.
+
+Fixtures cannot serve the other auth types:
+
+- `databricks-cli` and `azure-cli` run a CLI, which fetches its token outside the provider's transport.
+- `google-credentials` signs its token request with a service account's private key, which the journey would have to commit.
+- `google-id` reads Google application default credentials from the machine, and calls Google's IAM API with a client that does not use the provider's transport.
+- `metadata-service`, `github-oidc`, `github-oidc-azure`, `azure-devops-oidc`, `env-oidc` and `file-oidc` read a token, or the URL to fetch one from, out of a variable or file that a CI runner or the machine provides. The runner does not support them.
+
+## Set environment variables
+
+To pin behavior that comes from the provider's environment, such as the User-Agent dimensions for `DATABRICKS_USER_AGENT_EXTRA`, a CI runner, a coding agent or the Databricks Runtime, set `environment` at the test root. The runner sets each variable with `t.Setenv` for that journey only. The [User-Agent extra example](testdata/environment/user_agent_extra.yaml) pins the products' place in every User-Agent:
+
+```yaml
+version: 1
+host_metadata:
+  workspace_id: "12345"
+environment:
+  DATABRICKS_USER_AGENT_EXTRA: partner-a/1.2.3 team_b/0.0.1
+steps:
+  - name: create
+    config: |
+      resource "databricks_directory" "this" {
+        path = "/Shared/replay-environment"
+      }
+    calls:
+      - request:
+          method: POST
+          path: /api/2.0/workspace/mkdirs
+          matchers:
+            headers:
+              User-Agent:
+                pattern: 'databricks-tf-provider/\S+ databricks-sdk-go/\S+ go/\S+ os/\S+ partner-a/1\.2\.3 team_b/0\.0\.1 terraform/\S+ sdk/sdkv2 resource/directory auth/pat'
+          body:
+            json:
+              path: /Shared/replay-environment
+        response:
+          status: 200
+          body:
+            json: {}
+      # Reads and destroy follow.
+```
+
+- Before it sets the journey's variables, the runner clears every variable that changes the User-Agent or the client's configuration, so a journey gets the same result under a coding agent, a CI runner or a developer's shell. It clears every `DATABRICKS_*` variable, including `DATABRICKS_RUNTIME_VERSION` and `DATABRICKS_SDK_UPSTREAM`; every variable the SDK reads its configuration from, such as `ARM_CLIENT_ID` and `GOOGLE_CREDENTIALS`; the coding-agent variables the SDK detects, such as `CLAUDECODE`, `CURSOR_AGENT`, `AGENT` and `AI_AGENT`, and the agent meta-harness variable `OMNIGENT`; the CI variables the SDK detects, such as `GITHUB_ACTIONS`, `GITLAB_CI`, `JENKINS_URL` and `TF_BUILD`; and the rollout variables `USE_SDK_V2_RESOURCES` and `USE_SDK_V2_DATA_SOURCES`. `userAgentVariables` in [environment.go](environment.go) lists every agent and CI variable. If the SDK still detects an agent, CI runner or runtime once they are cleared, as it would from a variable a newer SDK reads, the journey fails and names what the SDK detected.
+- `environment: {}` clears these variables and sets none, so a journey can pin a whole User-Agent. Without `environment`, the journey keeps the process's variables.
+- The provider reads `DATABRICKS_USER_AGENT_EXTRA` once, when its process starts, so `t.Setenv` cannot change it. A journey that sets it runs in a new test process that starts with the journey's environment, as Terraform starts the provider in a new process, and a failure there fails the journey with that process's output. `RunNative` rejects it, because its Go checks run in the calling process. If the test process itself starts with `DATABRICKS_USER_AGENT_EXTRA`, every journey with `environment` fails, because every User-Agent already contains it.
+- The SDK reads the agent, CI and runtime variables for each request, so those journeys run in the test process. The [detected User-Agent example](testdata/environment/detected_user_agent.yaml) sets `GITHUB_ACTIONS`, `DATABRICKS_RUNTIME_VERSION` and `CLAUDECODE`.
+- A journey cannot set the variables the runner sets, `TF_ACC_*`, `CHECKPOINT_DISABLE`, `TF_IN_AUTOMATION` and `TEST_RECORDER_PROFILE_NAME`, or the SDK's configuration variables, such as `DATABRICKS_HOST` and `DATABRICKS_TOKEN`: replay ignores those, so use `auth` and the provider block instead.
+- Recording rejects tests with `environment`. Update their fixtures by hand.
+
 ## Write tests that survive redaction
 
 The recorder redacts known secrets in both HTTP requests and responses, including

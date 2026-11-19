@@ -90,16 +90,16 @@ func clearedVariables() []string {
 // applyEnvironment gives a journey with an environment the same variables under any
 // coding agent, CI runner or shell: it clears the variables that change the
 // User-Agent or the configuration, then sets the journey's for the test.
-func applyEnvironment(t *testing.T, env map[string]string) {
+func applyEnvironment(t *testing.T, env map[string]string) error {
 	t.Helper()
 	if env == nil {
-		return
+		return nil
 	}
-	if os.Getenv(journeyProcessEnv) != t.Name() {
+	if !inOwnProcess(t) {
 		for _, name := range processStartVariables {
 			if value := os.Getenv(name); value != "" {
-				t.Fatalf("unset %s=%q: the provider read it when the test process "+
-					"started, so every User-Agent contains it", name, value)
+				return fmt.Errorf("unset %s=%q: the provider read it when the test "+
+					"process started, so every User-Agent contains it", name, value)
 			}
 		}
 	}
@@ -109,17 +109,18 @@ func applyEnvironment(t *testing.T, env map[string]string) {
 	for _, name := range clearedVariables() {
 		t.Setenv(name, "")
 		if err := os.Unsetenv(name); err != nil {
-			t.Fatal(err)
+			return err
 		}
 	}
 	useragent.ClearCache()
 	if err := undetectedEnvironment(); err != nil {
-		t.Fatal(err)
+		return err
 	}
 	for name, value := range env {
 		t.Setenv(name, value)
 	}
 	useragent.ClearCache()
+	return nil
 }
 
 // undetectedEnvironment fails if the SDK still detects a User-Agent dimension, as
@@ -148,6 +149,21 @@ func (d *testDefinition) processStartVariable() string {
 		}
 	}
 	return ""
+}
+
+// inOwnProcess reports whether this test process was started to run t's journey.
+func inOwnProcess(t *testing.T) bool {
+	return os.Getenv(journeyProcessEnv) == t.Name()
+}
+
+// validateNative rejects process-start variables in RunNative, whose Go checks run
+// in the calling process, so the journey cannot start its own.
+func (d *testDefinition) validateNative() error {
+	if name := d.processStartVariable(); name != "" {
+		return fmt.Errorf("environment.%s: the provider reads it when its process "+
+			"starts, which only Run supports", name)
+	}
+	return nil
 }
 
 // runOwnProcess runs the journey t names in a new test process that starts with the

@@ -98,7 +98,8 @@ Same-host absolute response `Location` headers become relative URLs so redirects
 follow the local fixture server during replay. Escaped paths, queries and
 fragments are preserved. Cross-host redirects are outside the recorder's scope;
 the replay transport rejects destinations outside the fixture server and the
-test's [named hosts](#named-hosts). Recording rejects tests with named hosts.
+test's [named hosts](#named-hosts). Recording rejects tests with named hosts,
+[`auth`](#authentication) or [`environment`](#environment-variables).
 
 ### Secret redaction and replay
 
@@ -322,6 +323,35 @@ Each `url` is an `http` or `https` origin without a path, query or fragment, and
 The local server answers every named host. A request's `host` names the host it must reach, matched on the host the provider sent it to; a request without `host` matches only the provider host. Errors for unexpected and unused calls name the host. Requests to hosts that are not named fail in the transport, before reaching the server. A provider block may set `host` to a named host's URL, or to its host without `https://`, to move the provider there; any other HCL `host` fails, and without `hosts` the HCL `host` is ignored. The SDK takes the cloud from a named host's DNS zone, so Azure and GCP hosts keep their cloud in host metadata resolution and private-link errors.
 
 [Test calls to several hosts](AUTHORING.md#test-calls-to-several-hosts) has a complete journey. Examples in [testdata/hosts](testdata/hosts) show a call that must reach a workspace host, a call rejected on an unnamed host, a provider moved to another host, and an Azure private-link redirect.
+
+## Authentication
+
+Optional test-level `auth` chooses the provider's credentials in place of the fixture PAT, `fixture-token`:
+
+```yaml
+auth:
+  type: basic
+  username: replay-user
+  password: replay-password
+```
+
+`type` is required: `pat`, `basic`, `oauth-m2m`, `azure-client-secret` or `azure-msi`. The other keys are the SDK's credential attributes, named as in a provider block, such as `client_id`, `client_secret`, `azure_tenant_id` or `azure_use_msi`, with string values. The runner clears the credential attributes of every provider block, sets these and the auth type, and lets the SDK configure that type alone. Token requests are ordinary calls; token endpoints on other hosts, such as Azure AD, need [named hosts](#named-hosts). Unknown types and attributes, empty values and invalid booleans fail when the test loads, and recording rejects tests with `auth`.
+
+[Choose the credentials](AUTHORING.md#choose-the-credentials) explains token calls and the auth types fixtures cannot serve. Examples in [testdata/auth](testdata/auth) cover basic auth, OAuth M2M, a failing token endpoint, an Azure client secret and Azure MSI.
+
+## Environment variables
+
+Optional test-level `environment` maps variable names to values that the runner sets with `t.Setenv` for the journey:
+
+```yaml
+environment:
+  DATABRICKS_USER_AGENT_EXTRA: partner-a/1.2.3
+  GITHUB_ACTIONS: "true"
+```
+
+Before setting them, the runner clears the variables that change the User-Agent or the client's configuration: every `DATABRICKS_*` variable, the SDK's configuration variables, the coding-agent, agent meta-harness and CI variables the SDK detects, and `USE_SDK_V2_RESOURCES` and `USE_SDK_V2_DATA_SOURCES`. `environment: {}` only clears them; without `environment`, the journey keeps the process's variables. A journey that sets `DATABRICKS_USER_AGENT_EXTRA`, which the provider reads when its process starts, runs in a new test process; `RunNative` rejects it. Variables the runner sets and the SDK's configuration variables, such as `DATABRICKS_HOST`, fail when the test loads, and recording rejects tests with `environment`.
+
+[Set environment variables](AUTHORING.md#set-environment-variables) lists the cleared variables. Examples in [testdata/environment](testdata/environment) pin `DATABRICKS_USER_AGENT_EXTRA` and the CI, runtime and agent dimensions of the User-Agent.
 
 ## Schema validation
 

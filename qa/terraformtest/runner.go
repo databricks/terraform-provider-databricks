@@ -19,10 +19,11 @@ import (
 )
 
 // run keeps the fixture server alive through the framework's deferred destroy,
-// then checks for requests or fixtures left over after cleanup.
+// then checks for requests or fixtures left over after cleanup. A journey that sets
+// a process-start variable runs in its own test process.
 func run(t *testing.T, definition *testDefinition) {
 	t.Helper()
-	if definition.processStartVariable() != "" && os.Getenv(journeyProcessEnv) != t.Name() {
+	if definition.processStartVariable() != "" && !inOwnProcess(t) {
 		runOwnProcess(t, definition.Environment)
 		return
 	}
@@ -39,19 +40,20 @@ func RunNative(t *testing.T, path string, configure func(*resource.TestCase, fun
 	if err != nil {
 		t.Fatal(err)
 	}
-	// The Go checks run in this process, so the journey cannot start its own.
-	if name := definition.processStartVariable(); name != "" {
-		t.Fatalf("%s: environment.%s: the provider reads it when its process starts, "+
-			"which only Run supports", path, name)
+	if err := definition.validateNative(); err != nil {
+		t.Fatalf("%s: %v", path, err)
 	}
 	runNative(t, definition, configure)
 }
 
 func runNative(t *testing.T, definition *testDefinition, configure func(*resource.TestCase, func(*config.Config) error)) {
 	t.Helper()
-	applyEnvironment(t, definition.Environment)
+	if err := applyEnvironment(t, definition.Environment); err != nil {
+		t.Fatal(err)
+	}
 	handler, server := replayBoundary(t, definition)
-	customize := definition.Auth.withCredentials(definition.replayHosts(server).fixtureConfig())
+	hosts := definition.replayHosts(server)
+	customize := definition.Auth.withCredentials(hosts.fixtureConfig())
 	runTerraform(t, definition, handler, customize, configure)
 }
 

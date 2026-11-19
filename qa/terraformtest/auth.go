@@ -49,7 +49,8 @@ func (a journeyAuth) validate() error {
 // withCredentials replaces the fixture PAT that customize sets with the journey's
 // credentials. It clears the credential attributes of the provider block first, so
 // that auth is their only source.
-func (a journeyAuth) withCredentials(customize func(*config.Config) error) func(*config.Config) error {
+func (a journeyAuth) withCredentials(
+	customize func(*config.Config) error) func(*config.Config) error {
 	if a == nil {
 		return customize
 	}

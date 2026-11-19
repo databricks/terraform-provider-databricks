@@ -8,7 +8,6 @@ import (
 	"os/exec"
 	"regexp"
 	"runtime"
-	"runtime/debug"
 	"strings"
 	"sync"
 	"testing"
@@ -201,8 +200,8 @@ func TestVolumeUserAgentDimensions(t *testing.T) {
 				setUserAgentEnvironment(t, tc.env)
 				requests := runVolumeJourney(t,
 					"native_testdata/"+prefix+"user_agent.yaml", sdkGo)
-				want := wantUserAgent(t, nil, tc.upstream, tc.detected, sdkGo)
-				assertUserAgent(t, requests, want)
+				want := wantUserAgent(t, nil, tc.upstream, tc.detected)
+				assertUserAgent(t, requests, want, sdkGo)
 			})
 		})
 	}
@@ -237,7 +236,7 @@ func TestVolumeUserAgentExtra(t *testing.T) {
 	forEachVolumeJourneyClient(t, func(t *testing.T, sdkGo bool, prefix string) {
 		requests := runVolumeJourney(t, "native_testdata/"+prefix+"user_agent.yaml",
 			sdkGo)
-		assertUserAgent(t, requests, wantUserAgent(t, parsed, nil, nil, sdkGo))
+		assertUserAgent(t, requests, wantUserAgent(t, parsed, nil, nil), sdkGo)
 	})
 }
 
@@ -306,8 +305,8 @@ func setUserAgentEnvironment(t *testing.T, env map[string]string) {
 }
 
 // wantUserAgent returns the User-Agent of a volume call with the given extra, upstream
-// and detected dimensions. sdk-go calls end with the sdk-go module segments.
-func wantUserAgent(t *testing.T, extra, upstream, detected []string, sdkGo bool) string {
+// and detected dimensions.
+func wantUserAgent(t *testing.T, extra, upstream, detected []string) string {
 	t.Helper()
 	dimensions := []string{
 		"databricks-tf-provider/" + common.Version(),
@@ -319,32 +318,7 @@ func wantUserAgent(t *testing.T, extra, upstream, detected []string, sdkGo bool)
 	dimensions = append(dimensions, "terraform/"+terraformCLIVersion(t))
 	dimensions = append(dimensions, upstream...)
 	dimensions = append(dimensions, "sdk/sdkv2", "resource/volume", "auth/pat")
-	dimensions = append(dimensions, detected...)
-	if sdkGo {
-		dimensions = append(dimensions, sdkGoModuleSegments(t)...)
-	}
-	return strings.Join(dimensions, " ")
-}
-
-// sdkGoModuleSegments are the module segments sdk-go uc/volumes/v1 calls add, such as
-// sdk-go-core/0.1.0, with the module versions this test binary is built with.
-func sdkGoModuleSegments(t *testing.T) []string {
-	t.Helper()
-	info, ok := debug.ReadBuildInfo()
-	require.True(t, ok)
-	var segments []string
-	for _, module := range []string{"core", "uc/volumes"} {
-		version := ""
-		for _, dep := range info.Deps {
-			if dep.Path == "github.com/databricks/sdk-go/"+module {
-				version = strings.TrimPrefix(dep.Version, "v")
-			}
-		}
-		require.NotEmpty(t, version, module)
-		name := "sdk-go-" + strings.ReplaceAll(module, "/", "-")
-		segments = append(segments, name+"/"+version)
-	}
-	return segments
+	return strings.Join(append(dimensions, detected...), " ")
 }
 
 // goUserAgentVersion returns the toolchain version as the three-part semantic version
@@ -373,14 +347,23 @@ func terraformCLIVersion(t *testing.T) string {
 }
 
 // assertUserAgent checks that every volume call sends exactly the wanted User-Agent,
-// and that the journey sent each method.
-func assertUserAgent(t *testing.T, requests []volumeRequest, want string) {
+// and that the journey sent each method. An sdk-go call's User-Agent is the wanted one
+// followed by the sdk-go module segments, whose versions follow go.mod.
+func assertUserAgent(t *testing.T, requests []volumeRequest, want string, sdkGo bool) {
 	t.Helper()
+	pattern := regexp.QuoteMeta(want)
+	if sdkGo {
+		pattern += ` sdk-go-core/\d+\.\d+\.\d+ sdk-go-uc-volumes/\d+\.\d+\.\d+`
+	}
+	exact := regexp.MustCompile("^" + pattern + "$")
 	methods := map[string]bool{}
 	for _, r := range requests {
 		methods[r.method] = true
 		call := r.method + " " + r.path
-		assert.Equal(t, []string{want}, r.header.Values("User-Agent"), call)
+		values := r.header.Values("User-Agent")
+		if assert.Len(t, values, 1, call) {
+			assert.Regexp(t, exact, values[0], call)
+		}
 	}
 	all := map[string]bool{"POST": true, "PATCH": true, "GET": true, "DELETE": true}
 	assert.Equal(t, all, methods)

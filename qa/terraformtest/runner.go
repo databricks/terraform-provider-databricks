@@ -262,10 +262,13 @@ func (f fixtureTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 		if !isNamedHost(f.named, req.URL) {
 			return nil, fmt.Errorf("hermetic replay rejected request outside fixture server: %s", req.URL)
 		}
-		// The handler matches calls on the Host header, which keeps the named host.
+		// The handler matches calls on the Host header. Go sends a nonempty Host in
+		// place of the URL's authority, so the clone keeps it.
 		local = req.Clone(req.Context())
 		local.URL.Scheme, local.URL.Host = expected.Scheme, expected.Host
-		local.Host = req.URL.Host
+		if local.Host == "" {
+			local.Host = req.URL.Host
+		}
 	}
 	if local.Body != nil && local.Body != http.NoBody {
 		if local, err = withBufferedBody(local); err != nil {

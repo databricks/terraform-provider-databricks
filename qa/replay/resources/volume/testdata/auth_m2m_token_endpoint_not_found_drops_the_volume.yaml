@@ -63,7 +63,8 @@ steps:
         response: &token_issued
           status: 200
           body:
-            json: {"access_token": "m2m-token", "token_type": "Bearer", "expires_in": 3600}
+            json: {"access_token": "m2m-token", "token_type": "Bearer",
+                   "expires_in": 3600}
       - request:
           method: POST
           path: /api/2.1/unity-catalog/volumes
@@ -99,7 +100,7 @@ steps:
           matchers: *bearer_m2m_token
           body: null
         response: *volume
-      # Terraform's post-apply plan configures a new provider, which fetches its own token.
+      # The post-apply plan configures a new provider, which fetches its own token.
       - *discovery
       - *token
       - *read_volume

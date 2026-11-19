@@ -1,0 +1,183 @@
+# This journey pins an Azure client secret refresh whose Azure Databricks token request
+# Azure AD rejects. oauth2 retries it once with the secret in the body, which Azure AD
+# rejects too, and the refresh fails in the GET's request visitor with the inner token
+# error before the management token request or the GET. The volume stays in state, so
+# the next plan, with tokens again, is empty. API responses are inferred from the Azure
+# AD and Unity Catalog API contracts, not recorded.
+version: 1
+enforce_call_order: true
+provider_host: workspace
+hosts:
+  workspace:
+    url: https://adb-12345.6.azuredatabricks.net
+  aad:
+    url: https://login.microsoftonline.com
+host_metadata:
+  host_type: workspace
+  cloud: Azure
+  workspace_id: "12345"
+auth:
+  type: azure-client-secret
+  azure_tenant_id: replay-tenant
+  azure_client_id: replay-azure-sp
+  azure_client_secret: replay-azure-secret
+  azure_workspace_resource_id: /subscriptions/replay-subscription/resourceGroups/replay-group/providers/Microsoft.Databricks/workspaces/replay-workspace
+steps:
+  - name: create
+    config: &config |
+      resource "databricks_volume" "this" {
+        name         = "auth_volume"
+        catalog_name = "main"
+        schema_name  = "replay"
+        volume_type  = "MANAGED"
+      }
+    calls:
+      - &databricks_token
+        request: &databricks_token_request
+          method: POST
+          host: aad
+          path: /replay-tenant/oauth2/token
+          headers:
+            Authorization: Basic cmVwbGF5LWF6dXJlLXNwOnJlcGxheS1henVyZS1zZWNyZXQ=
+          matchers: &only_authorization
+            headers:
+              Metadata: absent
+              X-Databricks-Azure-Sp-Management-Token: absent
+              X-Databricks-Azure-Workspace-Resource-Id: absent
+              X-Databricks-Gcp-Sa-Access-Token: absent
+          body:
+            text: grant_type=client_credentials&resource=2ff814a6-3304-4ab8-85cb-cd0e6f879c1d
+        response:
+          status: 200
+          body:
+            json: {"access_token": "aad-token", "token_type": "Bearer",
+                   "expires_in": 3600}
+      - &management_token
+        request:
+          method: POST
+          host: aad
+          path: /replay-tenant/oauth2/token
+          headers:
+            Authorization: Basic cmVwbGF5LWF6dXJlLXNwOnJlcGxheS1henVyZS1zZWNyZXQ=
+          matchers: *only_authorization
+          body:
+            text: grant_type=client_credentials&resource=https%3A%2F%2Fmanagement.core.windows.net%2F
+        response:
+          status: 200
+          body:
+            json: {"access_token": "management-token", "token_type": "Bearer",
+                   "expires_in": 3600}
+      - request:
+          method: POST
+          path: /api/2.1/unity-catalog/volumes
+          headers:
+            Authorization: Bearer aad-token
+            Content-Type: application/json
+            X-Databricks-Azure-Sp-Management-Token: management-token
+            X-Databricks-Azure-Workspace-Resource-Id: /subscriptions/replay-subscription/resourceGroups/replay-group/providers/Microsoft.Databricks/workspaces/replay-workspace
+            X-Databricks-Workspace-Id: "12345"
+          matchers: &no_metadata_or_gcp_token
+            headers:
+              Metadata: absent
+              X-Databricks-Gcp-Sa-Access-Token: absent
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "auth_volume", "volume_type": "MANAGED"}
+        response: &volume
+          status: 200
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "auth_volume", "full_name": "main.replay.auth_volume",
+                   "volume_type": "MANAGED", "owner": "replay-admin@example.com",
+                   "storage_location": "s3://replay-metastore/volume-199",
+                   "metastore_id": "11111111-1111-1111-1111-111111111111",
+                   "volume_id": "00000000-0000-4000-8000-000000000199"}
+      - &read_volume
+        request:
+          method: GET
+          path: /api/2.1/unity-catalog/volumes/main.replay.auth_volume
+          headers:
+            Authorization: Bearer aad-token
+            X-Databricks-Azure-Sp-Management-Token: management-token
+            X-Databricks-Azure-Workspace-Resource-Id: /subscriptions/replay-subscription/resourceGroups/replay-group/providers/Microsoft.Databricks/workspaces/replay-workspace
+            X-Databricks-Workspace-Id: "12345"
+          matchers: *no_metadata_or_gcp_token
+          body: null
+        response: *volume
+      # The post-apply plan configures a new provider, which fetches its own tokens.
+      - *databricks_token
+      - *management_token
+      - *read_volume
+    state:
+      resources:
+        databricks_volume.this:
+          attributes:
+            - path: [id]
+              equals: main.replay.auth_volume
+            - path: [provider_config, 0, workspace_id]
+              equals: "12345"
+  - name: refresh_fails_when_azure_ad_rejects_the_databricks_token
+    config: *config
+    expect_error: 'Error: cannot read volume: failed during request visitor: inner token:
+      Post "https://login\.microsoftonline\.com/replay-tenant/oauth2/token":
+      AADSTS7000215: Invalid client secret provided\n'
+    calls:
+      - request: *databricks_token_request
+        response: &rejected
+          status: 401
+          body:
+            json: {"error": "invalid_client", "error_description":
+                   "AADSTS7000215: Invalid client secret provided. Trace ID: 1"}
+      # oauth2 retries a rejected client with the secret in the body instead.
+      - request:
+          method: POST
+          host: aad
+          path: /replay-tenant/oauth2/token
+          matchers:
+            headers:
+              Authorization: absent
+              Metadata: absent
+              X-Databricks-Azure-Sp-Management-Token: absent
+              X-Databricks-Azure-Workspace-Resource-Id: absent
+              X-Databricks-Gcp-Sa-Access-Token: absent
+          body:
+            text: client_id=replay-azure-sp&client_secret=replay-azure-secret&grant_type=client_credentials&resource=2ff814a6-3304-4ab8-85cb-cd0e6f879c1d
+        response: *rejected
+  - name: plan_after_failed_refresh_keeps_the_volume
+    plan_only: true
+    config: *config
+    plan:
+      expect: empty
+      changes: {}
+    state:
+      resources:
+        databricks_volume.this:
+          attributes:
+            - path: [id]
+              equals: main.replay.auth_volume
+    calls:
+      - *databricks_token
+      - *management_token
+      - *read_volume
+destroy:
+  calls:
+    # The refresh, then the destroy.
+    - *databricks_token
+    - *management_token
+    - *read_volume
+    - *databricks_token
+    - *management_token
+    - request:
+        method: DELETE
+        path: /api/2.1/unity-catalog/volumes/main.replay.auth_volume
+        headers:
+          Authorization: Bearer aad-token
+          X-Databricks-Azure-Sp-Management-Token: management-token
+          X-Databricks-Azure-Workspace-Resource-Id: /subscriptions/replay-subscription/resourceGroups/replay-group/providers/Microsoft.Databricks/workspaces/replay-workspace
+          X-Databricks-Workspace-Id: "12345"
+        matchers: *no_metadata_or_gcp_token
+        body: null
+      response:
+        status: 200
+        body:
+          json: {}

@@ -1,12 +1,11 @@
 # Pins an account-level provider with provider_config.workspace_id. Every Terraform
-# command that touches the volume first looks up the workspace through the account
-# API, then sends each volume call with that workspace's X-Databricks-Workspace-Id
-# header. Replay serves every host from one local server, so the SDK keeps the account
-# host for the workspace client; TestVolumeAccountProviderWorkspaceHost in
-# catalog/resource_volume_workspace_host_test.go pins the workspace host on a real
-# account domain. Import doesn't see the resource configuration, so without a
-# provider-level workspace_id it fails before any call. API responses are inferred from
-# the account and Unity Catalog API contracts, not recorded.
+# command that touches the volume first looks up the workspace through the account API,
+# then sends each volume call with that workspace's X-Databricks-Workspace-Id header.
+# Replay serves every host from one local server, so the SDK keeps the account host for
+# the workspace client; workspace_host_lookup_found_routes_to_the_workspace_host pins
+# the workspace host on a real account domain. Import doesn't see the resource
+# configuration, so without a provider-level workspace_id it fails before any call. API
+# responses are inferred from the account and Unity Catalog API contracts, not recorded.
 version: 1
 enforce_call_order: true
 host_metadata:

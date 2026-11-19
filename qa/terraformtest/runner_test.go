@@ -2,11 +2,14 @@ package terraformtest
 
 import (
 	"context"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"testing"
+	"time"
 
+	"github.com/databricks/databricks-sdk-go/client"
 	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/stretchr/testify/require"
@@ -79,6 +82,48 @@ func TestFixtureTransportRejectsExternalTargets(t *testing.T) {
 		_, err = transport.RoundTrip(req)
 		require.ErrorContains(t, err, "hermetic replay rejected request outside fixture server")
 	}
+}
+
+// lateBodyRead delays every read of a request body after its first bytes, as
+// a busy machine can delay the read net/http makes after writing the body.
+type lateBodyRead struct{ transport http.RoundTripper }
+
+func (l lateBodyRead) RoundTrip(req *http.Request) (*http.Response, error) {
+	if req.Body != nil && req.Body != http.NoBody {
+		req.Body = &lateReader{ReadCloser: req.Body}
+	}
+	return l.transport.RoundTrip(req)
+}
+
+type lateReader struct {
+	io.ReadCloser
+	read bool
+}
+
+func (l *lateReader) Read(p []byte) (int, error) {
+	if l.read {
+		time.Sleep(200 * time.Millisecond)
+	}
+	l.read = true
+	return l.ReadCloser.Read(p)
+}
+
+func TestFixtureTransportKeepsRetriedBodies(t *testing.T) {
+	h := httpfixture.NewHandler()
+	require.NoError(t, h.SetReusableFixtures((&testDefinition{HostMetadata: map[string]any{"workspace_id": "12345"}}).metadataCalls()))
+	busy := httpfixture.Response{Status: 429, Body: &httpfixture.Body{JSON: map[string]any{"error_code": "TOO_MANY_REQUESTS", "message": "busy"}}}
+	request := httpfixture.Request{Method: "POST", Path: "/api/2.0/retried", Body: &httpfixture.Body{JSON: map[string]any{"name": "a"}}}
+	require.NoError(t, h.StartStep("step 1 (create)", []httpfixture.Call{{Request: request, Response: busy, Times: httpfixture.Exactly(2)}}))
+	server := httptest.NewServer(h)
+	defer server.Close()
+	c, err := client.New(&config.Config{
+		Host: server.URL, Token: "fixture-token", RetryTimeoutSeconds: 2,
+		HTTPTransport: fixtureTransport{host: server.URL, transport: lateBodyRead{&http.Transport{}}},
+	})
+	require.NoError(t, err)
+	err = c.Do(context.Background(), "POST", "/api/2.0/retried", nil, nil, map[string]any{"name": "a"}, nil)
+	require.ErrorContains(t, err, "busy")
+	require.NoError(t, h.Verify(), "the retry repeats the request body")
 }
 
 func TestFixtureConfigIgnoresAmbientCredentials(t *testing.T) {

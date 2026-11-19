@@ -1,8 +1,10 @@
 package terraformtest
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -227,5 +229,29 @@ func (f fixtureTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	if req.URL.Scheme != expected.Scheme || req.URL.Host != expected.Host {
 		return nil, fmt.Errorf("hermetic replay rejected request outside fixture server: %s", req.URL)
 	}
+	if req, err = bufferedBody(req); err != nil {
+		return nil, err
+	}
 	return f.transport.RoundTrip(req)
+}
+
+// bufferedBody reads the body before sending it. After writing a body that it
+// does not know to be in memory, net/http reads it once more to check its
+// length, and that read can come after the response. The classic SDK rewinds
+// the same reader to retry, so a late read empties the retried request.
+func bufferedBody(req *http.Request) (*http.Request, error) {
+	if req.Body == nil || req.Body == http.NoBody {
+		return req, nil
+	}
+	body, err := io.ReadAll(req.Body)
+	if closeErr := req.Body.Close(); err == nil {
+		err = closeErr
+	}
+	if err != nil {
+		return nil, err
+	}
+	buffered := req.Clone(req.Context())
+	buffered.Body = io.NopCloser(bytes.NewReader(body))
+	buffered.GetBody = func() (io.ReadCloser, error) { return io.NopCloser(bytes.NewReader(body)), nil }
+	return buffered, nil
 }

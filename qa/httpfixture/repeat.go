@@ -19,8 +19,14 @@ type Times struct {
 	err error
 }
 
-// Exactly expects a call n times in a row.
-func Exactly(n int) Times { return Times{Min: n, Max: n} }
+// Exactly expects a call n times in a row. A count below 1 fails when the
+// fixtures compile, rather than becoming the zero value, which means once.
+func Exactly(n int) Times {
+	if n < 1 {
+		return Times{err: fmt.Errorf("times %d must be a positive count", n)}
+	}
+	return Times{Min: n, Max: n}
+}
 
 // IsZero reports an omitted times field, so YAML encoding omits it too.
 func (t Times) IsZero() bool { return t.Min == 0 && t.Max == 0 && t.err == nil }

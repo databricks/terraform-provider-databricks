@@ -678,7 +678,8 @@ no copies of the call and its backoff can be pinned.
   `retry_timeout_seconds`. The unused-fixture check needs `min`; a repetition
   past `max` is an unexpected call. A `min` of 0 makes the call optional.
 - `min_gap` and `max_gap` are Go durations, such as `1s` or `1500ms`, bounding
-  the time between arrivals at the fixture server. Without `times`, they bound
+  the time between arrivals at the fixture server, taken before each request's
+  body is read. Without `times`, they bound
   the gap since the previous matched call in the step. With `times`, they bound
   the gap before each repetition since the previous one; the first repetition
   is not bounded, because it usually is the attempt that the retries follow.

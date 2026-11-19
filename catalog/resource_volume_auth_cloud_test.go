@@ -91,17 +91,33 @@ func authAADClientCredentials(resource string, status int, response string) auth
 			"replay-azure-sp", "replay-azure-secret")}}, status, response}
 }
 
+// authAADClientCredentialsInBody is the client_credentials request that oauth2 sends
+// with the secret in the body after the first one fails.
+func authAADClientCredentialsInBody(resource string, status int,
+	response string) authExchange {
+	return authExchange{authRequest{method: "POST", url: authAADToken,
+		body: "client_id=replay-azure-sp&client_secret=replay-azure-secret" +
+			"&grant_type=client_credentials&resource=" + url.QueryEscape(resource),
+		headers: map[string]string{}}, status, response}
+}
+
 // authAADRejectedTwice is the rejection of the client_credentials request for
 // resource, and of the retry that oauth2 sends with the secret in the body instead.
 func authAADRejectedTwice(resource string) []authExchange {
 	return []authExchange{
 		authAADClientCredentials(resource, http.StatusUnauthorized, authAADRejected),
-		{authRequest{method: "POST", url: authAADToken,
-			body: "client_id=replay-azure-sp&client_secret=replay-azure-secret" +
-				"&grant_type=client_credentials&resource=" + url.QueryEscape(resource),
-			headers: map[string]string{}},
-			http.StatusUnauthorized, authAADRejected},
+		authAADClientCredentialsInBody(resource, http.StatusUnauthorized, authAADRejected),
 	}
+}
+
+// authAzureRead is the volume GET on the Azure workspace with the given Azure AD
+// token and management token.
+func authAzureRead(token, managementToken string) authExchange {
+	return authVolumeRead(authAzureHost, map[string]string{
+		"Authorization":                            "Bearer " + token,
+		"X-Databricks-Azure-Sp-Management-Token":   managementToken,
+		"X-Databricks-Azure-Workspace-Resource-Id": authAzureWSID,
+	})
 }
 
 // authMSIRequest is the Azure instance metadata token request for resource.
@@ -142,11 +158,7 @@ func TestVolumeAuthCloudCredentials(t *testing.T) {
 					authBearerToken("aad-token", 3600)),
 				authAADClientCredentials(authAzureMgmt, http.StatusOK,
 					authBearerToken("management-token", 3600)),
-				authVolumeRead(authAzureHost, map[string]string{
-					"Authorization":                            "Bearer aad-token",
-					"X-Databricks-Azure-Sp-Management-Token":   "management-token",
-					"X-Databricks-Azure-Workspace-Resource-Id": authAzureWSID,
-				}),
+				authAzureRead("aad-token", "management-token"),
 			},
 		},
 		{
@@ -160,11 +172,7 @@ func TestVolumeAuthCloudCredentials(t *testing.T) {
 			script: []authExchange{
 				authMSIRequest(authAzureAppID, "msi-token"),
 				authMSIRequest(authAzureMgmt, "msi-management-token"),
-				authVolumeRead(authAzureHost, map[string]string{
-					"Authorization":                            "Bearer msi-token",
-					"X-Databricks-Azure-Sp-Management-Token":   "msi-management-token",
-					"X-Databricks-Azure-Workspace-Resource-Id": authAzureWSID,
-				}),
+				authAzureRead("msi-token", "msi-management-token"),
 			},
 		},
 		{

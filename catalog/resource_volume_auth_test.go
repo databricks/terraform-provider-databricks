@@ -93,13 +93,17 @@ type authExchange struct {
 type authServer struct {
 	metadata string
 	script   []authExchange
+	// cutShort holds the script indexes whose responses are cut short as a gateway's
+	// would be: sent as text/html with a Content-Length one byte longer than the body,
+	// before the connection closes.
+	cutShort []int
 	mu       sync.Mutex
 	requests []authRequest
 }
 
 func (s *authServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
 	if r.URL.Path == "/.well-known/databricks-config" {
+		w.Header().Set("Content-Type", "application/json")
 		_, _ = io.WriteString(w, s.metadata)
 		return
 	}
@@ -123,6 +127,13 @@ func (s *authServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if next < len(s.script) {
 		status, response = s.script[next].status, s.script[next].response
 	}
+	if slices.Contains(s.cutShort, next) {
+		if err := truncateResponse(w, status, "text/html", response); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	_, _ = io.WriteString(w, response)
 }

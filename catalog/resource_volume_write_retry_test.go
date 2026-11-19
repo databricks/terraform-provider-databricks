@@ -70,6 +70,11 @@ type volumeResponse struct {
 	// reset reads the request and then resets the connection, so it needs a real
 	// server.
 	reset bool
+	// eof reads the request and then closes the connection without responding.
+	eof bool
+	// truncated sends status and body with a Content-Length one byte longer than
+	// body, and then closes the connection.
+	truncated bool
 }
 
 // scriptedVolumeAPI answers volume requests with its responses in order and records
@@ -82,6 +87,8 @@ type scriptedVolumeAPI struct {
 	mu        sync.Mutex
 	responses []volumeResponse
 	received  []volumeRequest
+	// clients holds the client address of each received request.
+	clients []string
 }
 
 func newScriptedVolumeAPI(t *testing.T, responses ...volumeResponse) *scriptedVolumeAPI {
@@ -117,6 +124,7 @@ func (api *scriptedVolumeAPI) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 	api.mu.Lock()
 	request := volumeRequest{r.Method, r.URL.RequestURI(), string(body)}
 	api.received = append(api.received, request)
+	api.clients = append(api.clients, r.RemoteAddr)
 	response := volumeResponse{
 		status: http.StatusInternalServerError,
 		body:   `{"error_code": "INTERNAL_ERROR", "message": "unexpected request"}`,
@@ -133,6 +141,13 @@ func (api *scriptedVolumeAPI) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 		}
 	case response.reset:
 		api.resetConnection(w)
+	case response.eof:
+		api.closeConnection(w)
+	case response.truncated:
+		err := truncateResponse(w, response.status, "application/json", response.body)
+		if err != nil {
+			api.t.Errorf("cannot truncate the response: %v", err)
+		}
 	default:
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(response.status)
@@ -153,6 +168,29 @@ func (api *scriptedVolumeAPI) resetConnection(w http.ResponseWriter) {
 	_ = conn.Close()
 }
 
+func (api *scriptedVolumeAPI) closeConnection(w http.ResponseWriter) {
+	conn, _, err := http.NewResponseController(w).Hijack()
+	if err != nil {
+		api.t.Errorf("cannot hijack the connection: %v", err)
+		return
+	}
+	_ = conn.Close()
+}
+
+// truncateResponse sends status and body with a Content-Length one byte longer than
+// body, and then closes the connection, so the client's read of the body fails.
+func truncateResponse(w http.ResponseWriter, status int, contentType, body string) error {
+	conn, _, err := http.NewResponseController(w).Hijack()
+	if err != nil {
+		return fmt.Errorf("cannot hijack the connection: %w", err)
+	}
+	defer conn.Close()
+	_, err = fmt.Fprintf(conn, "HTTP/1.1 %d %s\r\nContent-Type: %s\r\n"+
+		"Content-Length: %d\r\n\r\n%s", status, http.StatusText(status), contentType,
+		len(body)+1, body)
+	return err
+}
+
 // RoundTrip serves the API in memory, which a synctest bubble needs.
 func (api *scriptedVolumeAPI) RoundTrip(req *http.Request) (*http.Response, error) {
 	recorder := httptest.NewRecorder()
@@ -160,6 +198,13 @@ func (api *scriptedVolumeAPI) RoundTrip(req *http.Request) (*http.Response, erro
 	resp := recorder.Result()
 	resp.Request = req
 	return resp, nil
+}
+
+// clientAddresses returns the client address of each received request.
+func (api *scriptedVolumeAPI) clientAddresses() []string {
+	api.mu.Lock()
+	defer api.mu.Unlock()
+	return append([]string(nil), api.clients...)
 }
 
 func (api *scriptedVolumeAPI) requests() []volumeRequest {

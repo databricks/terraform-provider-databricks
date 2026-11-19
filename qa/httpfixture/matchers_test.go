@@ -353,6 +353,9 @@ func TestRejectInvalidAbsentAndPatternMatchers(t *testing.T) {
 			`headers["X-Id"]: remove the header's sample from headers; it must be absent`},
 		{"invalid header pattern", nil, headers(Matcher{Pattern: "("}),
 			`headers["X-Id"]: invalid pattern "("`},
+		// Wrapping this in ^(?:...)$ would parse as ^(?:foo)|(?:bar)$.
+		{"pattern valid only when wrapped", nil, headers(Matcher{Pattern: "foo)|(?:bar"}),
+			`headers["X-Id"]: invalid pattern "foo)|(?:bar": error parsing regexp: unexpected )`},
 		{"invalid JSON pattern", nil, json(JSONMatcher{Path: []any{"id"}, Pattern: "["}),
 			`json[0]: invalid pattern "["`},
 		{"type and pattern", nil, query(Matcher{Type: AnyString, Pattern: ".*"}),

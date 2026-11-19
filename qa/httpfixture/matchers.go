@@ -103,8 +103,14 @@ func compileMatcher(m Matcher, allowAbsent bool) (compiledMatcher, error) {
 		return compiledMatcher{}, errors.New(
 			"set either a matcher type or a pattern, not both")
 	case m.Pattern != "":
-		// Anchoring makes the pattern constrain the whole value, as an exact sample does.
-		pattern, err := regexp.Compile("^(?:" + m.Pattern + ")$")
+		// Compiling the pattern alone first rejects text such as "a)|(b" that only
+		// parses once wrapped, which would escape the anchors.
+		_, err := regexp.Compile(m.Pattern)
+		var pattern *regexp.Regexp
+		if err == nil {
+			// Anchoring makes the pattern constrain the whole value, as an exact sample does.
+			pattern, err = regexp.Compile("^(?:" + m.Pattern + ")$")
+		}
 		if err != nil {
 			return compiledMatcher{}, fmt.Errorf("invalid pattern %q: %w", m.Pattern, err)
 		}

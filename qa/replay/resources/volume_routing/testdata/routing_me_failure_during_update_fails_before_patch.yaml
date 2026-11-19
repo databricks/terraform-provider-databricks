@@ -3,9 +3,11 @@
 # checks provider_config.workspace_id through /Me and plans a comment update. Apply
 # starts a fresh client whose /Me call fails, so Update fails before any PATCH: with
 # the 403's message, and with the 404's message too, because only refresh and delete
-# treat a missing object as gone. The volume stays in state and the next plan still
-# updates its comment. API responses are inferred from the Unity Catalog and SCIM API
-# contracts, not recorded.
+# treat a missing object as gone. Each failed apply still stores the planned comment,
+# as SDKv2 does for every planned value: a refresh whose read has no comment keeps it,
+# and the plan is empty. Only a refresh that reads the server's comment plans the
+# update again, so an apply with -refresh=false wouldn't resend it. API responses are
+# inferred from the Unity Catalog and SCIM API contracts, not recorded.
 version: 1
 enforce_call_order: true
 host_metadata:
@@ -111,7 +113,40 @@ steps:
           body:
             json: {"error_code": "NOT_FOUND",
                    "message": "User not found"}
-  - name: next_plan_still_updates_comment
+  - name: state_stores_the_planned_comment
+    plan_only: true
+    config: *config_second
+    plan:
+      expect: empty
+      changes: {}
+    state:
+      resources:
+        databricks_volume.this:
+          attributes:
+            - path: [id]
+              equals: main.replay.me_update_volume
+            - path: [comment]
+              equals: second comment
+            - path: [provider_config, 0, workspace_id]
+              equals: "12345"
+    calls:
+      # The refresh plan. The read leaves out comment, which the refresh then keeps.
+      - *me
+      - request:
+          method: GET
+          path: /api/2.1/unity-catalog/volumes/main.replay.me_update_volume
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "me_update_volume",
+                   "full_name": "main.replay.me_update_volume",
+                   "volume_type": "MANAGED", "owner": "replay-admin@example.com",
+                   "storage_location": "s3://replay-metastore/volume-1738",
+                   "metastore_id": "11111111-1111-1111-1111-111111111111",
+                   "volume_id": "00000000-0000-4000-8000-000000001738"}
+  - name: refresh_of_the_server_comment_plans_the_update
     plan_only: true
     config: *config_second
     plan:

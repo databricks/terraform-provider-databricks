@@ -1,8 +1,8 @@
 # Pins a read after create that answers 404 RESOURCE_DOES_NOT_EXIST, with owner. The
 # POST and the owner PATCH succeed, the GET fails, and apply fails with the GET's error.
-# Terraform keeps the volume in state under its full name and marks it tainted, so the
-# next plan refreshes it and plans a replacement. API responses are inferred from the
-# Unity Catalog API contract, not recorded.
+# Terraform keeps the volume in state under its full name, with the configured owner,
+# and marks it tainted, so the next plan refreshes it and plans a replacement. API
+# responses are inferred from the Unity Catalog API contract, not recorded.
 version: 1
 enforce_call_order: true
 host_metadata:
@@ -87,12 +87,20 @@ steps:
             - path: [owner]
               equals: data-engineers
     calls:
+      # The read leaves out owner, which the refresh then keeps, so the check sees the
+      # owner that the failed create stored.
       - &read_volume
         request: *read_request
         response:
           status: 200
           body:
-            json: *owned
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "unread_owned_volume",
+                   "full_name": "main.replay.unread_owned_volume",
+                   "volume_type": "MANAGED",
+                   "storage_location": "s3://replay-metastore/volume-1731",
+                   "metastore_id": "11111111-1111-1111-1111-111111111111",
+                   "volume_id": "00000000-0000-4000-8000-000000001731"}
 destroy:
   calls:
     - *read_volume

@@ -1,14 +1,17 @@
 # Pins a change of the provider-level workspace_id to a workspace other than the one
 # SCIM /Me returns, on a workspace-level provider whose host metadata has no workspace
 # ID, while the volume has no provider_config block. Host metadata without an ID lets
-# the provider start with any workspace_id. The plan refreshes through the old ID and
-# plans an update. Apply's /Me call returns workspace 12345, so Update fails on the
-# mismatch before any PATCH, with an error that names provider_config although only the
-# provider changed. The failed apply still stores the new ID in state, so even with the
-# old configuration back, the refresh fails on the same mismatch before the volume GET.
-# Cleanup answers /Me with the stored ID, as a provider pointed at that workspace would,
-# because no configuration of this provider can refresh the volume again. API responses
-# are inferred from the Unity Catalog and SCIM API contracts, not recorded.
+# the provider start with any workspace_id, and every volume call carries the
+# provider's workspace_id in X-Databricks-Workspace-Id. The plan's refresh checks the
+# stored 12345 through /Me, yet its GET carries the new 67890, and the plan updates the
+# ID in place. Apply's /Me call returns workspace 12345, so Update fails on the mismatch
+# before any PATCH, with an error that names provider_config although only the provider
+# changed. The failed apply still stores the new ID in state, so even with the old
+# configuration back, the refresh fails on the same mismatch before the volume GET.
+# Cleanup answers /Me with the stored 67890, as a provider pointed at that workspace
+# would, because no configuration of this provider can refresh the volume again; its
+# calls carry the provider's 12345. API responses are inferred from the Unity Catalog
+# and SCIM API contracts, not recorded.
 version: 1
 enforce_call_order: true
 host_metadata:
@@ -46,6 +49,7 @@ steps:
           path: /api/2.1/unity-catalog/volumes
           headers:
             Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
           body:
             json: {"catalog_name": "main", "schema_name": "replay",
                    "name": "provider_mismatch_volume", "volume_type": "MANAGED"}
@@ -59,10 +63,12 @@ steps:
                            "storage_location": "s3://replay-metastore/volume-1737",
                            "metastore_id": "11111111-1111-1111-1111-111111111111",
                            "volume_id": "00000000-0000-4000-8000-000000001737"}
-      - &read_volume
+      - &read_through_12345
         request:
           method: GET
           path: /api/2.1/unity-catalog/volumes/main.replay.provider_mismatch_volume
+          headers:
+            X-Databricks-Workspace-Id: "12345"
           body: null
         response:
           status: 200
@@ -70,7 +76,7 @@ steps:
             json: *volume
       # The post-apply refresh plan.
       - *me_12345
-      - *read_volume
+      - *read_through_12345
     state:
       resources:
         databricks_volume.this:
@@ -92,9 +98,19 @@ steps:
       workspace_id mismatch: provider is configured for workspace 12345 but got 67890 in
       provider_config\. please check the workspace_id provided in provider_config'
     calls:
-      # The plan's refresh.
+      # The plan's refresh: /Me checks the stored 12345, and the GET carries the
+      # provider's 67890.
       - *me_12345
-      - *read_volume
+      - request:
+          method: GET
+          path: /api/2.1/unity-catalog/volumes/main.replay.provider_mismatch_volume
+          headers:
+            X-Databricks-Workspace-Id: "67890"
+          body: null
+        response:
+          status: 200
+          body:
+            json: *volume
       # The apply: no PATCH follows the mismatch.
       - *me_12345
   - name: refresh_with_old_configuration_fails_on_stored_workspace_id
@@ -115,11 +131,13 @@ destroy:
         body:
           json: {"id": "1001", "userName": "replay-admin@example.com",
                  "schemas": ["urn:ietf:params:scim:schemas:core:2.0:User"]}
-    - *read_volume
+    - *read_through_12345
     - *me_67890
     - request:
         method: DELETE
         path: /api/2.1/unity-catalog/volumes/main.replay.provider_mismatch_volume
+        headers:
+          X-Databricks-Workspace-Id: "12345"
         body: null
       response:
         status: 200

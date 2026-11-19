@@ -456,6 +456,7 @@ func TestVolumeUpdateUnroutableWorkspaceIDIsStored(t *testing.T) {
 				workspaceID: tc.workspaceID,
 			})
 			require.Len(t, diags, 1)
+			require.True(t, diags.HasError())
 			assert.Equal(t, "cannot update volume: "+tc.wantErr, diags[0].Summary)
 			require.NotNil(t, state)
 			assert.Equal(t, "main.replay.routing_volume", state.ID)
@@ -464,10 +465,12 @@ func TestVolumeUpdateUnroutableWorkspaceIDIsStored(t *testing.T) {
 
 			_, diags = routingRefreshVolume(newClient(), state)
 			require.Len(t, diags, 1)
+			require.True(t, diags.HasError())
 			assert.Equal(t, "cannot read volume: "+tc.wantErr, diags[0].Summary)
 			// The delete that terraform destroy -refresh=false makes.
 			diags = routingDestroyVolume(newClient(), state)
 			require.Len(t, diags, 1)
+			require.True(t, diags.HasError())
 			assert.Equal(t, "cannot delete volume: "+tc.wantErr, diags[0].Summary)
 
 			volumeCall := workspaceHostWorkspaceDomain + ` %s workspace_id=["12345"]`

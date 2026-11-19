@@ -213,7 +213,7 @@ func TestResourcePermissionsCreate_DefaultServerlessComputeNotFound(t *testing.T
 			"access_control":             groupCanUse("data-science"),
 		},
 		Create: true,
-	}.ExpectError(t, "default interactive serverless compute not found in this workspace")
+	}.ExpectError(t, "default interactive serverless compute not found in this workspace, or the caller doesn't have access to it")
 }
 
 func TestResourcePermissionsCreate_DefaultComputePolicyNotFound(t *testing.T) {
@@ -227,7 +227,7 @@ func TestResourcePermissionsCreate_DefaultComputePolicyNotFound(t *testing.T) {
 			"access_control":         groupCanUse("data-science"),
 		},
 		Create: true,
-	}.ExpectError(t, "default automated compute policy not found in this workspace")
+	}.ExpectError(t, "default automated compute policy not found in this workspace, or the caller doesn't have access to it")
 }
 
 func TestResourcePermissionsCreate_DefaultComputePolicyListError(t *testing.T) {

@@ -310,7 +310,7 @@ func getDefaultServerlessComputeID(ctx context.Context, w *databricks.WorkspaceC
 			return c.ServerlessComputeId, nil
 		}
 	}
-	return "", fmt.Errorf("default interactive serverless compute not found in this workspace")
+	return "", fmt.Errorf("default interactive serverless compute not found in this workspace, or the caller doesn't have access to it")
 }
 
 // getDefaultComputePolicyID returns the ID of the workspace's default compute policy for a
@@ -331,7 +331,7 @@ func getDefaultComputePolicyID(ctx context.Context, w *databricks.WorkspaceClien
 			return p.ComputePolicyId, nil
 		}
 	}
-	return "", fmt.Errorf("default automated compute policy not found in this workspace")
+	return "", fmt.Errorf("default automated compute policy not found in this workspace, or the caller doesn't have access to it")
 }
 
 func getResourcePermissionsFromId(id string) (resourcePermissions, error) {

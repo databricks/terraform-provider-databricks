@@ -1088,7 +1088,7 @@ resource "databricks_permissions" "team_compute" {
 
 ~> Destroying a `databricks_permissions` resource for serverless compute leaves only workspace admins and the applying user with access, so other users can no longer run serverless workloads on that compute. To return a default compute to all-users access, apply `group_name = "users"` with `CAN_USE` before removing the resource.
 
-`default_serverless_compute` and `default_compute_policy` find the default computes through the serverless compute and compute policy list APIs, which require serverless compute to be enabled in the workspace.
+`default_serverless_compute` and `default_compute_policy` find the default computes through the serverless compute and compute policy list APIs. These APIs are in Private Preview and only work in workspaces enrolled in the serverless compute preview, so the lookups fail in other workspaces, while `serverless_compute_id` and `compute_policy_id` still work. The lists also only return computes the caller can use or manage, so a lookup can fail for a user who has no access to the default compute.
 
 You don't need to import a default compute's permissions before managing them, because applying the resource replaces the existing access control list. If you do import, configure the resource with `serverless_compute_id` or `compute_policy_id` and import `/serverless-compute/<id>` or `/compute-policy/<id>`. Importing into a resource configured with `default_serverless_compute` or `default_compute_policy` makes Terraform replace the resource on the next apply, which briefly removes access for everyone except admins.
 

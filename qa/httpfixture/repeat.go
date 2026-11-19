@@ -55,7 +55,7 @@ func (t *Times) UnmarshalYAML(node *yaml.Node) error {
 func (t *Times) decodeRange(node *yaml.Node) error {
 	seen := map[string]bool{}
 	for i := 0; i+1 < len(node.Content); i += 2 {
-		key, value := node.Content[i].Value, node.Content[i+1]
+		key, value := resolveAlias(node.Content[i]).Value, resolveAlias(node.Content[i+1])
 		n, err := strconv.Atoi(value.Value)
 		if value.Kind != yaml.ScalarNode || err != nil {
 			return fmt.Errorf("times.%s %q must be an integer", key, value.Value)
@@ -77,6 +77,14 @@ func (t *Times) decodeRange(node *yaml.Node) error {
 	}
 	// Checked here as well, because {min: 0, max: 0} decodes to the zero value.
 	return t.validate()
+}
+
+// resolveAlias returns the anchored node that an alias, such as *n, refers to.
+func resolveAlias(node *yaml.Node) *yaml.Node {
+	for node.Kind == yaml.AliasNode && node.Alias != nil {
+		node = node.Alias
+	}
+	return node
 }
 
 func (t Times) validate() error {

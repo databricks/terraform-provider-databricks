@@ -356,4 +356,9 @@ func TestTimesYAMLRoundTrip(t *testing.T) {
 	require.NoError(t, yaml.Unmarshal([]byte(anchored), &aliased))
 	require.Equal(t, Times{Min: 2, Max: 3}, aliased.Times,
 		"journeys reuse values through YAML anchors")
+	var bounds struct {
+		Times Times `yaml:"times"`
+	}
+	require.NoError(t, yaml.Unmarshal([]byte("times: {min: &n 2, max: *n}\n"), &bounds))
+	require.Equal(t, Exactly(2), bounds.Times, "a bound can be an alias")
 }

@@ -1,7 +1,7 @@
-# Runs volume/testdata/write_retry_exhaustion_on_create_post.yaml with databricks_volume
-# on sdk-go uc/volumes/v1 in every step, and expects the same behavior. The volume POST
-# request carries no Accept header, which an empty header expectation pins. The
-# original's description:
+# Runs volume_retries/testdata/write_retry_exhaustion_on_create_post.yaml with
+# databricks_volume on sdk-go uc/volumes/v1 in every step, and expects the same
+# behavior. The volume POST request carries no Accept header, which an empty header
+# expectation pins. The original's description:
 #
 # This journey pins a create POST that gets a 503 until retry_timeout_seconds ends. One
 # second is shorter than the SDK's first backoff (1.05 to 1.75 seconds), so exactly one

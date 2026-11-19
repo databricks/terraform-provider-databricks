@@ -141,11 +141,11 @@ writes a literal status line, such as `HTTP/1.1 404`, whose code must equal
 `Status`. Reset and close responses omit status, headers, body and status line.
 Invalid values fail when fixtures are loaded.
 
-Every response closes its connection, because Go's client silently resends an
-idempotent request that fails on a reused connection; this overrides a
-`Connection` header in the fixture. Faults and status lines frame the body by
-its `Content-Length`, replacing fixture `Content-Length` and `Transfer-Encoding`
-headers. Faults and status lines
-need a server that supports hijacking, such as `httptest.NewServer`;
-otherwise `Verify` reports the failure. Faulted calls are consumed and ordered
-like any other call.
+Go's client silently resends a replayable request, such as a GET, that fails
+on a reused connection. A client that must see `reset` and `close` faults should
+therefore open one connection per request, as `qa/terraformtest` does. Faults
+and status lines close the connection and frame the body by its
+`Content-Length`, replacing fixture `Connection`, `Content-Length` and
+`Transfer-Encoding` headers. They need a server that supports hijacking, such
+as `httptest.NewServer`; otherwise `Verify` reports the failure. Faulted calls
+are consumed and ordered like any other call.

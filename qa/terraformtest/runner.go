@@ -209,7 +209,9 @@ func fixtureConfig(host string) func(*config.Config) error {
 		// An explicit loader prevents ambient credentials and profiles from filling
 		// configuration fields, including account/workspace routing identifiers.
 		cfg.Loaders = []config.Loader{fixtureLoader{}}
-		cfg.HTTPTransport = fixtureTransport{host: host, transport: &http.Transport{}}
+		// Go's client silently resends a replayable request that fails on a reused
+		// connection, which would hide a reset or close fault from the SDK.
+		cfg.HTTPTransport = fixtureTransport{host: host, transport: &http.Transport{DisableKeepAlives: true}}
 		return nil
 	}
 }
@@ -229,29 +231,28 @@ func (f fixtureTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	if req.URL.Scheme != expected.Scheme || req.URL.Host != expected.Host {
 		return nil, fmt.Errorf("hermetic replay rejected request outside fixture server: %s", req.URL)
 	}
-	if req, err = bufferedBody(req); err != nil {
-		return nil, err
+	if req.Body != nil && req.Body != http.NoBody {
+		if req, err = withBufferedBody(req); err != nil {
+			return nil, err
+		}
 	}
 	return f.transport.RoundTrip(req)
 }
 
-// bufferedBody reads the body before sending it. After writing a body that it
-// does not know to be in memory, net/http reads it once more to check its
-// length, and that read can come after the response. The classic SDK rewinds
-// the same reader to retry, so a late read empties the retried request.
-func bufferedBody(req *http.Request) (*http.Request, error) {
-	if req.Body == nil || req.Body == http.NoBody {
-		return req, nil
-	}
+// withBufferedBody sends a copy of the body. net/http can return a response that
+// closes the connection before it has finished reading the body, and the SDK
+// rewinds that same reader for a retry, which could then go out empty.
+func withBufferedBody(req *http.Request) (*http.Request, error) {
 	body, err := io.ReadAll(req.Body)
-	if closeErr := req.Body.Close(); err == nil {
-		err = closeErr
-	}
-	if err != nil {
+	if err = errors.Join(err, req.Body.Close()); err != nil {
 		return nil, err
 	}
-	buffered := req.Clone(req.Context())
-	buffered.Body = io.NopCloser(bytes.NewReader(body))
-	buffered.GetBody = func() (io.ReadCloser, error) { return io.NopCloser(bytes.NewReader(body)), nil }
-	return buffered, nil
+	clone := req.Clone(req.Context())
+	clone.ContentLength = int64(len(body))
+	clone.Body, clone.GetBody = http.NoBody, func() (io.ReadCloser, error) { return http.NoBody, nil }
+	if len(body) > 0 {
+		clone.GetBody = func() (io.ReadCloser, error) { return io.NopCloser(bytes.NewReader(body)), nil }
+		clone.Body, _ = clone.GetBody()
+	}
+	return clone, nil
 }

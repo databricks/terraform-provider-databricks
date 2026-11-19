@@ -1,11 +1,17 @@
 package terraformtest
 
 import (
+	"io"
+	"net/http"
+	"net/http/httptest"
 	"strings"
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/stretchr/testify/require"
 	"gopkg.in/yaml.v3"
+
+	"github.com/databricks/terraform-provider-databricks/qa/httpfixture"
 )
 
 func TestFaultReplay(t *testing.T) {
@@ -85,4 +91,66 @@ func TestRecordingRejectsScriptedWireBehavior(t *testing.T) {
 	require.NoError(t, err)
 	d.Steps[0].Calls = d.Steps[0].Calls[1:]
 	require.NoError(t, validateRecordableCalls(d))
+}
+
+// The replay transport opens one connection per request, so net/http cannot
+// resend a faulted request on a fresh connection before the SDK sees the fault.
+func TestFixtureTransportReportsFaultsAfterEarlierCalls(t *testing.T) {
+	ok := "ok"
+	handler := httpfixture.NewHandler()
+	require.NoError(t, handler.StartStep("faults", []httpfixture.Call{
+		{Request: httpfixture.Request{Method: "GET", Path: "/first"}, Response: httpfixture.Response{Status: 200, Body: &httpfixture.Body{Text: &ok}}},
+		{Request: httpfixture.Request{Method: "GET", Path: "/close"}, Response: httpfixture.Response{Fault: httpfixture.FaultClose}},
+	}))
+	server := httptest.NewServer(handler)
+	defer server.Close()
+	cfg := &config.Config{}
+	require.NoError(t, fixtureConfig(server.URL)(cfg))
+	client := &http.Client{Transport: cfg.HTTPTransport}
+	resp, err := client.Get(server.URL + "/first")
+	require.NoError(t, err)
+	_, _ = io.Copy(io.Discard, resp.Body)
+	resp.Body.Close()
+	_, err = client.Get(server.URL + "/close")
+	require.ErrorIs(t, err, io.EOF)
+	require.NoError(t, handler.Verify())
+}
+
+type roundTripFunc func(*http.Request) (*http.Response, error)
+
+func (f roundTripFunc) RoundTrip(req *http.Request) (*http.Response, error) { return f(req) }
+
+// The SDK rewinds its body reader for a retry while net/http may still drain the
+// previous attempt's body. The transport sends a copy, so that late read cannot
+// empty the retry.
+func TestFixtureTransportSendsACopyOfTheBody(t *testing.T) {
+	var sent *http.Request
+	transport := fixtureTransport{host: "http://fixture.test", transport: roundTripFunc(func(req *http.Request) (*http.Response, error) {
+		sent = req
+		return &http.Response{StatusCode: 204, Body: http.NoBody, Request: req}, nil
+	})}
+	original := strings.NewReader(`{"name":"volume"}`)
+	req, err := http.NewRequest("PATCH", "http://fixture.test/volumes", io.NopCloser(original))
+	require.NoError(t, err)
+	_, err = transport.RoundTrip(req)
+	require.NoError(t, err)
+	_, err = original.Seek(0, io.SeekStart)
+	require.NoError(t, err)
+	late, err := io.ReadAll(sent.Body)
+	require.NoError(t, err)
+	require.Equal(t, `{"name":"volume"}`, string(late))
+	require.Equal(t, int64(len(late)), sent.ContentLength)
+	require.Equal(t, original.Size(), int64(original.Len()), "the late read leaves the rewound reader alone")
+	again, err := sent.GetBody()
+	require.NoError(t, err)
+	retried, err := io.ReadAll(again)
+	require.NoError(t, err)
+	require.Equal(t, string(late), string(retried))
+
+	req, err = http.NewRequest("POST", "http://fixture.test/empty", io.NopCloser(strings.NewReader("")))
+	require.NoError(t, err)
+	_, err = transport.RoundTrip(req)
+	require.NoError(t, err)
+	require.Equal(t, http.NoBody, sent.Body)
+	require.Zero(t, sent.ContentLength)
 }

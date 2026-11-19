@@ -160,20 +160,30 @@ func TestStatusLineWithoutReasonPhrase(t *testing.T) {
 	require.NoError(t, h.Verify())
 }
 
-// Go's client resends an idempotent request that fails on a reused connection.
-// The handler closes every connection, even when a fixture asks to keep it alive,
-// so a fault after another call still fails.
-func TestFaultAfterAnotherCallIsNotRetriedByTheClient(t *testing.T) {
-	first := textCall("/first", "ok")
-	first.Response.Headers = map[string]string{"Connection": "keep-alive"}
-	h, url := faultServer(t, first, faulted(textCall("/close", "unused"), FaultClose))
-	resp, err := http.Get(url + "/first")
-	require.NoError(t, err)
-	_, _ = io.Copy(io.Discard, resp.Body)
-	resp.Body.Close()
-	_, err = http.Get(url + "/close")
-	require.ErrorIs(t, err, io.EOF)
-	require.NoError(t, h.Verify())
+// Go's client silently resends a replayable request that fails on a reused
+// connection, so only a client that opens one connection per request sees a
+// reset or close fault after an earlier call.
+func TestFaultAfterAnotherCallNeedsAFreshConnection(t *testing.T) {
+	for _, keepAlive := range []bool{true, false} {
+		t.Run(map[bool]string{true: "reused connection", false: "fresh connection"}[keepAlive], func(t *testing.T) {
+			h, url := faultServer(t, textCall("/first", "ok"), faulted(textCall("/close", "unused"), FaultClose))
+			client := &http.Client{Transport: &http.Transport{DisableKeepAlives: !keepAlive}}
+			resp, err := client.Get(url + "/first")
+			require.NoError(t, err)
+			_, _ = io.Copy(io.Discard, resp.Body)
+			resp.Body.Close()
+			resp, err = client.Get(url + "/close")
+			if keepAlive {
+				require.NoError(t, err, "net/http resent the request instead of reporting EOF")
+				resp.Body.Close()
+				require.Equal(t, 400, resp.StatusCode)
+				require.ErrorContains(t, h.Verify(), "unexpected HTTP call: GET /close")
+				return
+			}
+			require.ErrorIs(t, err, io.EOF)
+			require.NoError(t, h.Verify())
+		})
+	}
 }
 
 func TestFaultedCallsAreConsumedInOrder(t *testing.T) {

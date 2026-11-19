@@ -249,7 +249,9 @@ func (e *exchange) matches(req *http.Request, body requestBody) bool {
 
 // ServeHTTP prefers consumable step fixtures over reusable fallbacks.
 func (h *Handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	e, label := h.consume(w, req)
+	// Gaps are measured between arrivals, before reading the body or waiting for the lock.
+	arrival := time.Now()
+	e, label := h.consume(w, req, arrival)
 	if e == nil {
 		return
 	}
@@ -262,7 +264,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 // consume matches and consumes a fixture under the lock, so concurrent requests
 // cannot consume a call twice. It returns nil after reporting a failure.
-func (h *Handler) consume(w http.ResponseWriter, req *http.Request) (*exchange, string) {
+func (h *Handler) consume(w http.ResponseWriter, req *http.Request, arrival time.Time) (*exchange, string) {
 	body, err := parseRequestBody(req)
 	h.mu.Lock()
 	defer h.mu.Unlock()
@@ -279,7 +281,7 @@ func (h *Handler) consume(w http.ResponseWriter, req *http.Request) (*exchange, 
 			h.fail(w, fmt.Errorf("%s: out-of-order HTTP call: %s %s body=%s matched call %d; next expected call %d: %s %s", h.label, req.Method, req.URL.RequestURI(), body.raw, i+1, next+1, expected.Method, expected.Path))
 			return nil, ""
 		}
-		h.record(i, req)
+		h.record(i, req, arrival)
 		return &h.calls[i], h.label
 	}
 	for i := range h.reusable {
@@ -309,8 +311,7 @@ func (h *Handler) nextRequired() int {
 // record consumes call i at its arrival time. A gap out of bounds is reported
 // but still answered, so the step fails with the gap rather than a later error.
 // Ordered replay closes the earlier calls, which can no longer repeat.
-func (h *Handler) record(i int, req *http.Request) {
-	arrival := time.Now()
+func (h *Handler) record(i int, req *http.Request, arrival time.Time) {
 	e := &h.calls[i]
 	if err := e.checkGap(arrival, h.lastArrival, h.lastCall); err != nil {
 		h.failures = append(h.failures, fmt.Errorf("%s: call %d: %s %s %w", h.label, i+1, req.Method, req.URL.RequestURI(), err))
@@ -321,8 +322,13 @@ func (h *Handler) record(i int, req *http.Request) {
 		}
 	}
 	e.count++
-	e.lastArrival, h.lastArrival = arrival, arrival
-	h.lastCall = fmt.Sprintf("call %d (%s %s)", i+1, req.Method, req.URL.RequestURI())
+	e.lastArrival = arrival
+	// Concurrent requests can take the lock out of arrival order; the latest
+	// arrival stays the reference.
+	if !arrival.Before(h.lastArrival) {
+		h.lastArrival = arrival
+		h.lastCall = fmt.Sprintf("call %d (%s %s)", i+1, req.Method, req.URL.RequestURI())
+	}
 }
 
 func writeResponse(w http.ResponseWriter, e *exchange) {

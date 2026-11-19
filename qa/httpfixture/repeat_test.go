@@ -1,6 +1,10 @@
 package httpfixture
 
 import (
+	"fmt"
+	"io"
+	"net/http/httptest"
+	"strings"
 	"testing"
 	"testing/synctest"
 	"time"
@@ -163,6 +167,74 @@ func TestGapBoundsWithTimesMeasureBetweenRepetitions(t *testing.T) {
 	})
 }
 
+// slowBody takes wait to deliver its bytes, as a large upload would.
+type slowBody struct {
+	wait time.Duration
+	body io.Reader
+}
+
+func (s *slowBody) Read(p []byte) (int, error) {
+	time.Sleep(s.wait)
+	s.wait = 0
+	return s.body.Read(p)
+}
+
+// A gap ends when a request arrives, so time spent reading its body neither
+// breaks max_gap nor hides a min_gap violation.
+func TestGapBoundsMeasureArrivalBeforeTheBody(t *testing.T) {
+	for _, tc := range []struct {
+		name, minGap, maxGap, message string
+	}{
+		{"within max_gap", "", "1s", ""},
+		{"below min_gap", "1s", "", "step 1 (retry): call 2: POST /second arrived 500ms after call 1 (GET /first), below min_gap 1s"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			synctest.Test(t, func(t *testing.T) {
+				h := NewHandler()
+				require.NoError(t, h.StartStep("step 1 (retry)", []Call{
+					call("GET", "/first", nil, "first"),
+					repeated(call("POST", "/second", map[string]any{"name": "a"}, "second"), Times{}, tc.minGap, tc.maxGap),
+				}))
+				require.Equal(t, 200, sendAfter(h, 0, "/first"))
+				time.Sleep(500 * time.Millisecond)
+				w := httptest.NewRecorder()
+				h.ServeHTTP(w, httptest.NewRequest("POST", "/second", &slowBody{2 * time.Second, strings.NewReader(`{"name":"a"}`)}))
+				require.Equal(t, 200, w.Code)
+				err := h.Verify()
+				if tc.message == "" {
+					require.NoError(t, err)
+					return
+				}
+				require.Error(t, err)
+				require.Equal(t, tc.message, err.Error())
+			})
+		})
+	}
+}
+
+// Concurrent requests can take the lock out of arrival order. The latest
+// arrival stays the reference, so a later call is not measured from an earlier one.
+func TestGapBoundsMeasureFromTheLatestArrival(t *testing.T) {
+	h := NewHandler()
+	require.NoError(t, h.StartStep("step 1 (create)", []Call{
+		call("GET", "/a", nil, "a"),
+		call("GET", "/b", nil, "b"),
+		repeated(call("GET", "/c", nil, "c"), Times{}, "1s", ""),
+	}))
+	start := time.Now()
+	for _, arrival := range []struct {
+		path  string
+		after time.Duration
+	}{{"/b", time.Second}, {"/a", 0}, {"/c", 1500 * time.Millisecond}} {
+		w := httptest.NewRecorder()
+		e, _ := h.consume(w, httptest.NewRequest("GET", arrival.path, nil), start.Add(arrival.after))
+		require.NotNil(t, e, arrival.path)
+	}
+	err := h.Verify()
+	require.Error(t, err)
+	require.Equal(t, "step 1 (create): call 3: GET /c arrived 500ms after call 2 (GET /b), below min_gap 1s", err.Error())
+}
+
 func TestGapBoundsNeedAnEarlierCallInTheStep(t *testing.T) {
 	h := NewHandler()
 	require.NoError(t, h.StartStep("step 1 (create)", []Call{call("GET", "/first", nil, "first")}))
@@ -197,6 +269,15 @@ func TestRepeatFieldsValidateOnLoad(t *testing.T) {
 			require.Error(t, err)
 			require.Equal(t, "step 1 (create): "+tc.message, err.Error())
 		})
+	}
+}
+
+// Exactly(0) must not become the zero Times, which expects the call once.
+func TestExactlyRejectsCountsBelowOne(t *testing.T) {
+	for _, n := range []int{0, -2} {
+		err := NewHandler().StartStep("step 1 (create)", []Call{repeated(call("GET", "/retry", nil, "busy"), Exactly(n), "", "")})
+		require.Error(t, err)
+		require.Equal(t, fmt.Sprintf("step 1 (create): call 1: times %d must be a positive count", n), err.Error())
 	}
 }
 

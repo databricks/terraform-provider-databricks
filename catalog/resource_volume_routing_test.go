@@ -396,3 +396,85 @@ func TestVolumeWithoutWorkspaceIDSendsNoWorkspaceHeader(t *testing.T) {
 		fmt.Sprintf(call, "DELETE "+routingVolumePath),
 	}, recorder.snapshot())
 }
+
+// TestVolumeUpdateUnroutableWorkspaceIDIsStored pins an in-place change of
+// provider_config.workspace_id to an ID that a workspace-level provider, seeded with
+// workspace 12345 by host metadata, can't route to. Update fails before any PATCH, yet
+// the failed apply returns the new ID in state, so a refresh and a delete without
+// refresh fail the same way before any volume call. A replay journey can't pin this:
+// with that state, its destroy can never clean up the volume.
+func TestVolumeUpdateUnroutableWorkspaceIDIsStored(t *testing.T) {
+	testCases := []struct {
+		name        string
+		workspaceID string
+		wantErr     string
+	}{
+		{
+			name:        "mismatched_workspace_id",
+			workspaceID: "67890",
+			wantErr: "failed to validate workspace_id: workspace_id mismatch: " +
+				"provider is configured for workspace 12345 but got 67890 in " +
+				"provider_config. please check the workspace_id provided in " +
+				"provider_config",
+		},
+		{
+			name:        "connection_id",
+			workspaceID: "conn-a1b2c3",
+			wantErr: "failed to validate workspace_id: workspace_id " +
+				`"conn-a1b2c3" is not a numeric workspace ID. Connection IDs are ` +
+				"only supported when the provider is configured against an " +
+				"account-level or unified host that the platform gateway can " +
+				"disambiguate. To use this workspace_id, reconfigure the provider " +
+				"with account-level credentials (account_id + host) instead of " +
+				"workspace-level credentials",
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			volume := routingVolumeJSON("replay-admin@example.com", "")
+			_, workspaceURL := newRoutingServer(t, routingWorkspace12345JSON,
+				map[string]routingResponse{
+					"POST " + workspaceHostVolumesPath: {http.StatusOK, nil, volume},
+					"PATCH " + routingVolumePath:       {http.StatusOK, nil, volume},
+					"GET " + routingVolumePath:         {http.StatusOK, nil, volume},
+					"DELETE " + routingVolumePath:      {http.StatusOK, nil, `{}`},
+				})
+			recorder := &routingRecorder{next: workspaceHostTransport{
+				workspaceHostWorkspaceDomain: workspaceURL,
+			}}
+			newClient := func() *common.DatabricksClient {
+				return newRoutingClient(t, workspaceHostWorkspaceDomain, "", recorder)
+			}
+			state, diags := routingApplyVolume(t, newClient(), nil, routingVolume{
+				attributes:  routingVolumeAttributes(nil),
+				workspaceID: "12345",
+			})
+			require.False(t, diags.HasError(), "%v", diags)
+
+			state, diags = routingApplyVolume(t, newClient(), state, routingVolume{
+				attributes:  routingVolumeAttributes(nil),
+				workspaceID: tc.workspaceID,
+			})
+			require.Len(t, diags, 1)
+			assert.Equal(t, "cannot update volume: "+tc.wantErr, diags[0].Summary)
+			require.NotNil(t, state)
+			assert.Equal(t, "main.replay.routing_volume", state.ID)
+			assert.Equal(t, tc.workspaceID,
+				state.Attributes["provider_config.0.workspace_id"])
+
+			_, diags = routingRefreshVolume(newClient(), state)
+			require.Len(t, diags, 1)
+			assert.Equal(t, "cannot read volume: "+tc.wantErr, diags[0].Summary)
+			// The delete that terraform destroy -refresh=false makes.
+			diags = routingDestroyVolume(newClient(), state)
+			require.Len(t, diags, 1)
+			assert.Equal(t, "cannot delete volume: "+tc.wantErr, diags[0].Summary)
+
+			volumeCall := workspaceHostWorkspaceDomain + ` %s workspace_id=["12345"]`
+			assert.Equal(t, []string{
+				fmt.Sprintf(volumeCall, "POST "+workspaceHostVolumesPath),
+				fmt.Sprintf(volumeCall, "GET "+routingVolumePath),
+			}, recorder.snapshot())
+		})
+	}
+}

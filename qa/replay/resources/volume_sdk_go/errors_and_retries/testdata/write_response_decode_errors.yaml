@@ -1,0 +1,193 @@
+# Pins how sdk-go handles a create POST or an update PATCH answered 200 with an empty body
+# or a body that isn't JSON, as the existing client does. An empty body decodes as a
+# volume without fields, whose empty full name becomes the ID, so the read that follows
+# GETs /api/2.1/unity-catalog/volumes/ and fails. A body that isn't JSON fails with the
+# existing client's unmarshal error and request log; the pattern checks its message,
+# request line and echoed body, and skips the generated headers in between. A failed
+# create leaves nothing in state, and a failed update keeps the volume under its ID, so
+# the next plan shows the update again. The sdk-go requests carry no Accept header, which
+# an empty header expectation pins, and the PATCH bodies also carry full_name_arg, the
+# full name in their path. API responses are inferred from the Unity Catalog API contract,
+# not recorded; the answer to the empty-name GET is the workspace's usual reply to an
+# unknown route.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: create_answered_200_with_empty_body_reads_an_empty_name
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: &config_created |
+      resource "databricks_volume" "this" {
+        name         = "decode_volume"
+        catalog_name = "main"
+        schema_name  = "replay"
+        volume_type  = "MANAGED"
+        comment      = "first"
+      }
+    expect_error: &reads_empty_name 'Error: cannot read volume: No API found for ''GET
+      /unity-catalog/volumes/''\n'
+    calls:
+      - request: &create_request
+          method: POST
+          path: /api/2.1/unity-catalog/volumes
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+            Accept: ""
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "decode_volume", "volume_type": "MANAGED", "comment": "first"}
+        response:
+          status: 200
+          body: null
+      - &read_empty_name
+        request:
+          method: GET
+          path: /api/2.1/unity-catalog/volumes/
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+            Accept: ""
+          body: null
+        response:
+          status: 404
+          body:
+            json: {"error_code": "ENDPOINT_NOT_FOUND",
+                   "message": "No API found for 'GET /unity-catalog/volumes/'"}
+  - name: create_answered_200_with_undecodable_body_fails_with_request_log
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: *config_created
+    expect_error: 'Error: cannot create volume: failed to unmarshal response body: invalid
+      character ''o'' in literal null \(expecting ''u''\)\. This is likely a bug in the
+      Databricks SDK for Go or the underlying REST API\. Please report this issue with the
+      following debugging information to the SDK issue tracker at
+      https://github\.com/databricks/databricks-sdk-go/issues\. Request
+      log:\n```\nPOST /api/2\.1/unity-catalog/volumes\n(?s:.*)< not json\n```\n'
+    calls:
+      - request: *create_request
+        response:
+          status: 200
+          body:
+            text: not json
+  - name: create_succeeds
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: *config_created
+    calls:
+      - request: *create_request
+        response:
+          status: 200
+          body:
+            json: &created {"catalog_name": "main", "schema_name": "replay",
+                            "name": "decode_volume",
+                            "full_name": "main.replay.decode_volume",
+                            "volume_type": "MANAGED", "comment": "first",
+                            "owner": "replay-admin@example.com",
+                            "storage_location": "s3://replay-metastore/volume-95",
+                            "metastore_id": "11111111-1111-1111-1111-111111111111",
+                            "volume_id": "00000000-0000-4000-8000-000000000095"}
+      - &read_created
+        request:
+          method: GET
+          path: /api/2.1/unity-catalog/volumes/main.replay.decode_volume
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+            Accept: ""
+          body: null
+        response:
+          status: 200
+          body:
+            json: *created
+      - *read_created
+    state:
+      resources:
+        databricks_volume.this:
+          attributes:
+            - path: [id]
+              equals: main.replay.decode_volume
+  - name: update_answered_200_with_empty_body_reads_an_empty_name
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: &config_updated |
+      resource "databricks_volume" "this" {
+        name         = "decode_volume"
+        catalog_name = "main"
+        schema_name  = "replay"
+        volume_type  = "MANAGED"
+        comment      = "second"
+      }
+    expect_error: *reads_empty_name
+    calls:
+      - *read_created
+      - request: &update_request
+          method: PATCH
+          path: /api/2.1/unity-catalog/volumes/main.replay.decode_volume
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+            Accept: ""
+          body:
+            json: {"full_name_arg": "main.replay.decode_volume", "comment": "second"}
+        response:
+          status: 200
+          body: null
+      - *read_empty_name
+  - name: update_answered_200_with_undecodable_body_fails_with_request_log
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: *config_updated
+    expect_error: 'Error: cannot update volume: failed to unmarshal response body: invalid
+      character ''o'' in literal null \(expecting ''u''\)\. This is likely a bug in the
+      Databricks SDK for Go or the underlying REST API\. Please report this issue with the
+      following debugging information to the SDK issue tracker at
+      https://github\.com/databricks/databricks-sdk-go/issues\. Request
+      log:\n```\nPATCH
+      /api/2\.1/unity-catalog/volumes/main\.replay\.decode_volume\n(?s:.*)< not
+      json\n```\n'
+    calls:
+      - *read_created
+      - request: *update_request
+        response:
+          status: 200
+          body:
+            text: not json
+  - name: plan_after_failed_updates_shows_the_update
+    sdk_implementations:
+      databricks_volume: sdk_go
+    plan_only: true
+    config: *config_updated
+    plan:
+      expect: non_empty
+      changes:
+        databricks_volume.this:
+          actions: [update]
+          after:
+            - path: [comment]
+              equals: second
+    state:
+      resources:
+        databricks_volume.this:
+          attributes:
+            - path: [id]
+              equals: main.replay.decode_volume
+            - path: [comment]
+              equals: first
+    calls:
+      - *read_created
+destroy:
+  calls:
+    - *read_created
+    - request:
+        method: DELETE
+        path: /api/2.1/unity-catalog/volumes/main.replay.decode_volume
+        headers:
+          X-Databricks-Workspace-Id: "12345"
+        body: null
+      response:
+        status: 200
+        body:
+          json: {}

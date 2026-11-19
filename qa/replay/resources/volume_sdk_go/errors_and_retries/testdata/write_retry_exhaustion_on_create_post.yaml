@@ -1,0 +1,62 @@
+# Runs volume/testdata/write_retry_exhaustion_on_create_post.yaml with databricks_volume
+# on sdk-go uc/volumes/v1 in every step, and expects the same behavior. The volume
+# requests carry no Accept header, which an empty header expectation pins. The original's
+# description:
+#
+# This journey pins a create POST that gets a 503 until retry_timeout_seconds ends. One
+# second is shorter than the SDK's first backoff (1.05 to 1.75 seconds), so exactly one
+# POST is sent and the timeout ends during the backoff. Apply fails with the 503's
+# message, no ID is stored, and the next plan creates the volume again. API responses
+# are inferred from the Unity Catalog API contract, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: create_post_retries_until_the_retry_timeout_ends
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: &config |
+      provider "databricks" {
+        retry_timeout_seconds = 1
+      }
+      resource "databricks_volume" "this" {
+        name         = "write_retry_volume"
+        catalog_name = "main"
+        schema_name  = "replay"
+        volume_type  = "MANAGED"
+      }
+    expect_error: 'Error: cannot create volume: The service is temporarily
+      unavailable\.\n'
+    calls:
+      - request:
+          method: POST
+          path: /api/2.1/unity-catalog/volumes
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+            Accept: ""
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "write_retry_volume", "volume_type": "MANAGED"}
+        response:
+          status: 503
+          body:
+            json: {"error_code": "TEMPORARILY_UNAVAILABLE",
+                   "message": "The service is temporarily unavailable."}
+  # Nothing is in state, so the plan reads nothing and creates the volume.
+  - name: plan_after_exhausted_create_creates_the_volume
+    sdk_implementations:
+      databricks_volume: sdk_go
+    plan_only: true
+    config: *config
+    plan:
+      expect: non_empty
+      changes:
+        databricks_volume.this:
+          actions: [create]
+    calls: []
+destroy:
+  calls: []

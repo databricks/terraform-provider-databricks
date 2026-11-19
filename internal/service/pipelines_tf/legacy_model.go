@@ -507,7 +507,9 @@ type ClonePipelineRequest_SdkV2 struct {
 	Notifications types.List `tfsdk:"notifications"`
 	// Path of the pipeline parent folder in workspace file tree.
 	//
-	// If absent, the pipeline doesn't have a workspace object.
+	// If absent, the pipeline doesn't have a parent folder.
+	//
+	// Example: /Workspace/Projects/my_project
 	ParentPath types.String `tfsdk:"parent_path"`
 	// Whether Photon is enabled for this pipeline.
 	Photon types.Bool `tfsdk:"photon"`
@@ -2544,6 +2546,10 @@ func (m *ConnectorOptions_SdkV2) SetZendeskSupportOptions(ctx context.Context, v
 type CreatePipeline_SdkV2 struct {
 	// If false, deployment will fail if name conflicts with that of another
 	// pipeline.
+	//
+	// Ignored when `parent_path` is set. A pipeline in a workspace folder must
+	// have a name that is unique within that folder, and creation fails if the
+	// folder already contains an object with the same name.
 	AllowDuplicateNames types.Bool `tfsdk:"allow_duplicate_names"`
 	// ID (UUID) of the serverless budget policy applied to this pipeline. Only
 	// supported for serverless pipelines.
@@ -2607,7 +2613,9 @@ type CreatePipeline_SdkV2 struct {
 	Parameters types.Map `tfsdk:"parameters"`
 	// Path of the pipeline parent folder in workspace file tree.
 	//
-	// If absent, the pipeline doesn't have a workspace object.
+	// If absent, the pipeline doesn't have a parent folder.
+	//
+	// Example: /Workspace/Projects/my_project
 	ParentPath types.String `tfsdk:"parent_path"`
 	// Whether Photon is enabled for this pipeline.
 	Photon types.Bool `tfsdk:"photon"`
@@ -3926,8 +3934,12 @@ func (m DeletePipelineResponse_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type EditPipeline_SdkV2 struct {
-	// If false, deployment will fail if name has changed and conflicts the name
-	// of another pipeline.
+	// If false, deployment will fail if name has changed and conflicts with the
+	// name of another pipeline.
+	//
+	// Ignored when the pipeline is in a workspace folder or the request sets
+	// `parent_path`. Renaming or moving such a pipeline fails if the target
+	// folder already contains an object with the same name.
 	AllowDuplicateNames types.Bool `tfsdk:"allow_duplicate_names"`
 	// ID (UUID) of the serverless budget policy applied to this pipeline. Only
 	// supported for serverless pipelines.
@@ -3991,7 +4003,9 @@ type EditPipeline_SdkV2 struct {
 	Parameters types.Map `tfsdk:"parameters"`
 	// Path of the pipeline parent folder in workspace file tree.
 	//
-	// If absent, the pipeline doesn't have a workspace object.
+	// If absent, the pipeline doesn't have a parent folder.
+	//
+	// Example: /Workspace/Projects/my_project
 	ParentPath types.String `tfsdk:"parent_path"`
 	// Whether Photon is enabled for this pipeline.
 	Photon types.Bool `tfsdk:"photon"`
@@ -12909,7 +12923,9 @@ type PipelineSpec_SdkV2 struct {
 	Notifications types.List `tfsdk:"notifications"`
 	// Path of the pipeline parent folder in workspace file tree.
 	//
-	// If absent, the pipeline doesn't have a workspace object.
+	// If absent, the pipeline doesn't have a parent folder.
+	//
+	// Example: /Workspace/Projects/my_project
 	ParentPath types.String `tfsdk:"parent_path"`
 	// Whether Photon is enabled for this pipeline.
 	Photon types.Bool `tfsdk:"photon"`

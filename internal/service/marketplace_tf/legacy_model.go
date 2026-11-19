@@ -626,12 +626,13 @@ func (m ConsumerTerms_SdkV2) Type(ctx context.Context) attr.Type {
 // contact info for the consumer requesting data or performing a listing
 // installation
 type ContactInfo_SdkV2 struct {
+	// Company of the consumer contact.
 	Company types.String `tfsdk:"company"`
-
+	// Email address of the consumer contact.
 	Email types.String `tfsdk:"email"`
-
+	// First name of the consumer contact.
 	FirstName types.String `tfsdk:"first_name"`
-
+	// Last name of the consumer contact.
 	LastName types.String `tfsdk:"last_name"`
 }
 
@@ -972,12 +973,16 @@ func (m CreateExchangeResponse_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type CreateFileRequest_SdkV2 struct {
+	// Name shown to consumers for the file, for example a notebook title. At
+	// most 255 characters.
 	DisplayName types.String `tfsdk:"display_name"`
-
+	// Provider profile or listing to attach the file to.
 	FileParent types.List `tfsdk:"file_parent"`
-
+	// Purpose of the file. PROVIDER_ICON requires a PROVIDER parent;
+	// EMBEDDED_NOTEBOOK requires a LISTING parent.
 	MarketplaceFileType types.String `tfsdk:"marketplace_file_type"`
-
+	// MIME type of the file content: text/html for notebooks; image/png,
+	// image/jpeg or image/svg+xml for icons.
 	MimeType types.String `tfsdk:"mime_type"`
 }
 
@@ -1082,8 +1087,9 @@ func (m *CreateFileRequest_SdkV2) SetFileParent(ctx context.Context, v FileParen
 }
 
 type CreateFileResponse_SdkV2 struct {
+	// Metadata of the created file.
 	FileInfo types.List `tfsdk:"file_info"`
-	// Pre-signed POST URL to blob storage
+	// Short-lived URL for uploading the file content with an HTTP PUT request.
 	UploadUrl types.String `tfsdk:"upload_url"`
 }
 
@@ -1349,6 +1355,7 @@ func (m *CreateInstallationRequest_SdkV2) SetRepoDetail(ctx context.Context, v R
 }
 
 type CreateListingRequest_SdkV2 struct {
+	// Listing to create.
 	Listing types.List `tfsdk:"listing"`
 }
 
@@ -1444,6 +1451,7 @@ func (m *CreateListingRequest_SdkV2) SetListing(ctx context.Context, v Listing_S
 }
 
 type CreateListingResponse_SdkV2 struct {
+	// ID of the created listing.
 	ListingId types.String `tfsdk:"listing_id"`
 }
 
@@ -1715,6 +1723,7 @@ func (m CreateProviderAnalyticsDashboardRequest_SdkV2) Type(ctx context.Context)
 }
 
 type CreateProviderRequest_SdkV2 struct {
+	// Provider profile to create.
 	Provider types.List `tfsdk:"provider"`
 }
 
@@ -1810,6 +1819,7 @@ func (m *CreateProviderRequest_SdkV2) SetProvider(ctx context.Context, v Provide
 }
 
 type CreateProviderResponse_SdkV2 struct {
+	// ID of the created provider profile.
 	Id types.String `tfsdk:"id"`
 }
 
@@ -1857,8 +1867,9 @@ func (m CreateProviderResponse_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type DataRefreshInfo_SdkV2 struct {
+	// Number of time units. Must be greater than zero.
 	Interval types.Int64 `tfsdk:"interval"`
-
+	// Time unit that the interval is expressed in.
 	Unit types.String `tfsdk:"unit"`
 }
 
@@ -2085,6 +2096,7 @@ func (m DeleteExchangeResponse_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type DeleteFileRequest_SdkV2 struct {
+	// ID of the file to delete.
 	FileId types.String `tfsdk:"-"`
 }
 
@@ -2266,6 +2278,7 @@ func (m DeleteInstallationResponse_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type DeleteListingRequest_SdkV2 struct {
+	// ID of the listing to delete.
 	Id types.String `tfsdk:"-"`
 }
 
@@ -2354,6 +2367,7 @@ func (m DeleteListingResponse_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type DeleteProviderRequest_SdkV2 struct {
+	// ID of the provider profile to delete.
 	Id types.String `tfsdk:"-"`
 }
 
@@ -2826,25 +2840,29 @@ func (m ExchangeListing_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type FileInfo_SdkV2 struct {
+	// Time the file was created, in epoch milliseconds.
 	CreatedAt types.Int64 `tfsdk:"created_at"`
 	// Name displayed to users for applicable files, e.g. embedded notebooks
 	DisplayName types.String `tfsdk:"display_name"`
-
+	// Short-lived URL for downloading the file content.
 	DownloadLink types.String `tfsdk:"download_link"`
-
+	// Provider or listing that the file belongs to.
 	FileParent types.List `tfsdk:"file_parent"`
-
+	// ID of the file.
 	Id types.String `tfsdk:"id"`
-
+	// Purpose of the file, such as a provider icon or a notebook attached to a
+	// listing.
 	MarketplaceFileType types.String `tfsdk:"marketplace_file_type"`
-
+	// MIME type of the file content, for example text/html for notebooks or
+	// image/png for icons.
 	MimeType types.String `tfsdk:"mime_type"`
-
+	// Processing status of the file. New files start in FILE_STATUS_STAGING and
+	// become FILE_STATUS_PUBLISHED after Databricks has sanitized them.
 	Status types.String `tfsdk:"status"`
 	// Populated if status is in a failed state with more information on reason
 	// for the failure.
 	StatusMessage types.String `tfsdk:"status_message"`
-
+	// Time the file was last updated, in epoch milliseconds.
 	UpdatedAt types.Int64 `tfsdk:"updated_at"`
 }
 
@@ -2967,8 +2985,10 @@ func (m *FileInfo_SdkV2) SetFileParent(ctx context.Context, v FileParent_SdkV2) 
 }
 
 type FileParent_SdkV2 struct {
+	// Type of the parent: PROVIDER for provider icons, LISTING for notebooks
+	// attached to a listing.
 	FileParentType types.String `tfsdk:"file_parent_type"`
-
+	// ID of the provider or listing that the file belongs to.
 	ParentId types.String `tfsdk:"parent_id"`
 }
 
@@ -3161,6 +3181,7 @@ func (m *GetExchangeResponse_SdkV2) SetExchange(ctx context.Context, v Exchange_
 }
 
 type GetFileRequest_SdkV2 struct {
+	// ID of the file.
 	FileId types.String `tfsdk:"-"`
 }
 
@@ -3208,6 +3229,7 @@ func (m GetFileRequest_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type GetFileResponse_SdkV2 struct {
+	// Metadata of the file.
 	FileInfo types.List `tfsdk:"file_info"`
 }
 
@@ -3344,7 +3366,7 @@ func (m GetLatestVersionProviderAnalyticsDashboardRequest_SdkV2) Type(ctx contex
 }
 
 type GetLatestVersionProviderAnalyticsDashboardResponse_SdkV2 struct {
-	// version here is latest logical version of the dashboard template
+	// Latest available version of the dashboard template.
 	Version types.Int64 `tfsdk:"version"`
 }
 
@@ -3615,6 +3637,7 @@ func (m GetListingRequest_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type GetListingResponse_SdkV2 struct {
+	// The requested listing.
 	Listing types.List `tfsdk:"listing"`
 }
 
@@ -3710,8 +3733,10 @@ func (m *GetListingResponse_SdkV2) SetListing(ctx context.Context, v Listing_Sdk
 }
 
 type GetListingsRequest_SdkV2 struct {
+	// Maximum number of results to return per page.
 	PageSize types.Int64 `tfsdk:"-"`
-
+	// Token from the next_page_token field of a previous response. Omit to get
+	// the first page.
 	PageToken types.String `tfsdk:"-"`
 }
 
@@ -3762,8 +3787,9 @@ func (m GetListingsRequest_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type GetListingsResponse_SdkV2 struct {
+	// Listings on this page.
 	Listings types.List `tfsdk:"listings"`
-
+	// Token for the next page. Not set when there are no more results.
 	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
@@ -4089,6 +4115,7 @@ func (m GetProviderRequest_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type GetProviderResponse_SdkV2 struct {
+	// The requested provider profile.
 	Provider types.List `tfsdk:"provider"`
 }
 
@@ -4723,8 +4750,9 @@ func (m ListAllPersonalizationRequestsRequest_SdkV2) Type(ctx context.Context) a
 }
 
 type ListAllPersonalizationRequestsResponse_SdkV2 struct {
+	// Token for the next page. Not set when there are no more results.
 	NextPageToken types.String `tfsdk:"next_page_token"`
-
+	// Personalization requests on this page.
 	PersonalizationRequests types.List `tfsdk:"personalization_requests"`
 }
 
@@ -5422,10 +5450,12 @@ func (m *ListExchangesResponse_SdkV2) SetExchanges(ctx context.Context, v []Exch
 }
 
 type ListFilesRequest_SdkV2 struct {
+	// Provider profile or listing whose files to list.
 	FileParent types.List `tfsdk:"-"`
-
+	// Maximum number of results to return per page.
 	PageSize types.Int64 `tfsdk:"-"`
-
+	// Token from the next_page_token field of a previous response. Omit to get
+	// the first page.
 	PageToken types.String `tfsdk:"-"`
 }
 
@@ -5527,8 +5557,9 @@ func (m *ListFilesRequest_SdkV2) SetFileParent(ctx context.Context, v FileParent
 }
 
 type ListFilesResponse_SdkV2 struct {
+	// Files on this page.
 	FileInfos types.List `tfsdk:"file_infos"`
-
+	// Token for the next page. Not set when there are no more results.
 	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
@@ -6593,11 +6624,13 @@ func (m ListProviderAnalyticsDashboardRequest_SdkV2) Type(ctx context.Context) a
 }
 
 type ListProviderAnalyticsDashboardResponse_SdkV2 struct {
-	// dashboard_id will be used to open Lakeview dashboard.
+	// ID of the AI/BI dashboard in the workspace. Use it to open the dashboard.
 	DashboardId types.String `tfsdk:"dashboard_id"`
-
+	// Marketplace-specific ID of the dashboard record. Use it as the `id` when
+	// updating the dashboard.
 	Id types.String `tfsdk:"id"`
-
+	// Version of the dashboard template that the dashboard was created or last
+	// updated from.
 	Version types.Int64 `tfsdk:"version"`
 }
 
@@ -6651,8 +6684,10 @@ func (m ListProviderAnalyticsDashboardResponse_SdkV2) Type(ctx context.Context) 
 }
 
 type ListProvidersRequest_SdkV2 struct {
+	// Maximum number of results to return per page.
 	PageSize types.Int64 `tfsdk:"-"`
-
+	// Token from the next_page_token field of a previous response. Omit to get
+	// the first page.
 	PageToken types.String `tfsdk:"-"`
 }
 
@@ -6703,8 +6738,9 @@ func (m ListProvidersRequest_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type ListProvidersResponse_SdkV2 struct {
+	// Token for the next page. Not set when there are no more results.
 	NextPageToken types.String `tfsdk:"next_page_token"`
-
+	// Provider profiles on this page.
 	Providers types.List `tfsdk:"providers"`
 }
 
@@ -6821,11 +6857,18 @@ func (m *ListProvidersResponse_SdkV2) SetProviders(ctx context.Context, v []Prov
 	m.Providers = types.ListValueMust(t, vs)
 }
 
+// A Marketplace listing: a data product that a provider offers to consumers.
+// The summary holds the listing's identity, status and sharing configuration,
+// and the detail holds the descriptive content that consumers see on the
+// listing page.
 type Listing_SdkV2 struct {
+	// Descriptive content shown to consumers on the listing page, such as the
+	// description, links and data attributes.
 	Detail types.List `tfsdk:"detail"`
-
+	// ID of the listing. Assigned by the server; not allowed in create
+	// requests.
 	Id types.String `tfsdk:"id"`
-
+	// Identity, status and sharing configuration of the listing.
 	Summary types.List `tfsdk:"summary"`
 }
 
@@ -6974,8 +7017,8 @@ func (m *Listing_SdkV2) SetSummary(ctx context.Context, v ListingSummary_SdkV2) 
 }
 
 type ListingDetail_SdkV2 struct {
-	// Type of assets included in the listing. eg. GIT_REPO, DATA_TABLE, MODEL,
-	// NOTEBOOK
+	// Types of assets included in the listing. At least one is required unless
+	// the listing is a DRAFT. Duplicate values are ignored.
 	Assets types.List `tfsdk:"assets"`
 	// The ending date timestamp for when the data spans
 	CollectionDateEnd types.Int64 `tfsdk:"collection_date_end"`
@@ -6987,37 +7030,36 @@ type ListingDetail_SdkV2 struct {
 	Cost types.String `tfsdk:"cost"`
 	// Where/how the data is sourced
 	DataSource types.String `tfsdk:"data_source"`
-
+	// Detailed description of the data product. Supports basic Markdown
+	// formatting such as bold, italics and lists.
 	Description types.String `tfsdk:"description"`
-
+	// URL of documentation that helps consumers use the data product.
 	DocumentationLink types.String `tfsdk:"documentation_link"`
-
+	// Sample notebooks attached to the listing. Create each notebook with
+	// createFile, using the EMBEDDED_NOTEBOOK file type and the listing as the
+	// parent, and reference it here.
 	EmbeddedNotebookFileInfos types.List `tfsdk:"embedded_notebook_file_infos"`
 
 	FileIds types.List `tfsdk:"file_ids"`
 	// Which geo region the listing data is collected from
 	GeographicalCoverage types.String `tfsdk:"geographical_coverage"`
-	// ID 20, 21 removed don't use License of the data asset - Required for
-	// listings with model based assets
+	// License of the data asset. Required for listings with model-based assets.
 	License types.String `tfsdk:"license"`
 	// What the pricing model is (e.g. paid, subscription, paid upfront); should
 	// only be present if cost is paid
 	PricingModel types.String `tfsdk:"pricing_model"`
-
+	// URL of the privacy policy for the listing. Defaults to the provider
+	// profile's privacy policy link when empty.
 	PrivacyPolicyLink types.String `tfsdk:"privacy_policy_link"`
 	// size of the dataset in GB
 	Size types.Float64 `tfsdk:"size"`
-
+	// URL where consumers can get support for the listing.
 	SupportLink types.String `tfsdk:"support_link"`
-	// Listing tags - Simple key value pair to annotate listings. When should I
-	// use tags vs dedicated fields? Using tags avoids the need to add new
-	// columns in the database for new annotations. However, this should be used
-	// sparingly since tags are stored as key value pair. Use tags only: 1. If
-	// the field is optional and won't need to have NOT NULL integrity check 2.
-	// The value is fairly fixed, static and low cardinality (eg. enums). 3. The
-	// value won't be used in filters or joins with other tables.
+	// Tags that annotate the listing with fixed, low-cardinality values, such
+	// as supported languages or tasks.
 	Tags types.List `tfsdk:"tags"`
-
+	// URL of the terms of service for the listing. Defaults to the provider
+	// profile's terms of service link when empty.
 	TermsOfService types.String `tfsdk:"terms_of_service"`
 	// How often data is updated
 	UpdateFrequency types.List `tfsdk:"update_frequency"`
@@ -7592,6 +7634,9 @@ func (m *ListingFulfillment_SdkV2) SetShareInfo(ctx context.Context, v ShareInfo
 }
 
 type ListingSetting_SdkV2 struct {
+	// PUBLIC listings are visible to all consumers in the Marketplace. PRIVATE
+	// listings are visible only to members of the private exchanges that they
+	// are shared in.
 	Visibility types.String `tfsdk:"visibility"`
 }
 
@@ -7639,43 +7684,57 @@ func (m ListingSetting_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type ListingSummary_SdkV2 struct {
+	// Categories that consumers can use to filter listings. They also appear as
+	// tags on the listing tile and detail page.
 	Categories types.List `tfsdk:"categories"`
-
+	// Time the listing was created, in epoch milliseconds.
 	CreatedAt types.Int64 `tfsdk:"created_at"`
-
+	// Name of the user who created the listing.
 	CreatedBy types.String `tfsdk:"created_by"`
-
+	// ID of the user who created the listing.
 	CreatedById types.Int64 `tfsdk:"created_by_id"`
-
+	// IDs of the private exchanges that the listing is shared in. A listing can
+	// be linked to at most 10 exchanges.
 	ExchangeIds types.List `tfsdk:"exchange_ids"`
-	// if a git repo is being created, a listing will be initialized with this
-	// field as opposed to a share
+	// Git repository that holds the listing's assets, used instead of a share
+	// for notebook and Git repo listings. A listing cannot have both a share
+	// and a Git repo.
 	GitRepo types.List `tfsdk:"git_repo"`
-
+	// How consumers get access to the listing. STANDARD listings are instantly
+	// available; PERSONALIZED listings require the provider to approve each
+	// consumer request. Cannot be changed after the listing is created.
 	ListingType types.String `tfsdk:"listing_type"`
-
+	// Display name of the listing. Must start with a letter or digit and be at
+	// most 100 characters.
 	Name types.String `tfsdk:"name"`
-
+	// ID of the provider profile that owns the listing.
 	ProviderId types.String `tfsdk:"provider_id"`
-
+	// Cloud and region of the provider's Unity Catalog metastore. Not allowed
+	// in create requests.
 	ProviderRegion types.List `tfsdk:"provider_region"`
 
 	PublishedAt types.Int64 `tfsdk:"published_at"`
 
 	PublishedBy types.String `tfsdk:"published_by"`
-
+	// Listing settings, such as whether the listing is visible in the public
+	// Marketplace or only in private exchanges.
 	Setting types.List `tfsdk:"setting"`
-
+	// Delta Sharing share that holds the listing's data assets. Required to
+	// publish a STANDARD listing, except for app and MCP server listings;
+	// notebook and Git repo listings can use git_repo instead. The caller must
+	// have access to the share.
 	Share types.List `tfsdk:"share"`
-
+	// Publication status of the listing. Only PUBLISHED listings are visible to
+	// consumers; create a listing as DRAFT and set the status to PUBLISHED when
+	// it is ready.
 	Status types.String `tfsdk:"status"`
-
+	// One-line subtitle shown with the listing name.
 	Subtitle types.String `tfsdk:"subtitle"`
-
+	// Time the listing was last updated, in epoch milliseconds.
 	UpdatedAt types.Int64 `tfsdk:"updated_at"`
-
+	// Name of the user who last updated the listing.
 	UpdatedBy types.String `tfsdk:"updated_by"`
-
+	// ID of the user who last updated the listing.
 	UpdatedById types.Int64 `tfsdk:"updated_by_id"`
 }
 
@@ -8144,37 +8203,42 @@ func (m *ListingTag_SdkV2) SetTagValues(ctx context.Context, v []types.String) {
 }
 
 type PersonalizationRequest_SdkV2 struct {
+	// Comment that the consumer entered with the request.
 	Comment types.String `tfsdk:"comment"`
-
+	// Cloud and region of the consumer's Unity Catalog metastore.
 	ConsumerRegion types.List `tfsdk:"consumer_region"`
-
+	// Contact details that the consumer entered with the request.
 	ContactInfo types.List `tfsdk:"contact_info"`
-
+	// Time the request was created, in epoch milliseconds.
 	CreatedAt types.Int64 `tfsdk:"created_at"`
-
+	// ID of the personalization request.
 	Id types.String `tfsdk:"id"`
-
+	// How the consumer intends to use the data product, as entered with the
+	// request.
 	IntendedUse types.String `tfsdk:"intended_use"`
 
 	IsFromLighthouse types.Bool `tfsdk:"is_from_lighthouse"`
-
+	// ID of the listing that the request was made for.
 	ListingId types.String `tfsdk:"listing_id"`
-
+	// Name of the listing that the request was made for.
 	ListingName types.String `tfsdk:"listing_name"`
-
+	// ID of the consumer's Unity Catalog metastore.
 	MetastoreId types.String `tfsdk:"metastore_id"`
-
+	// ID of the provider profile that owns the listing.
 	ProviderId types.String `tfsdk:"provider_id"`
-
+	// How the consumer receives the shared data:
+	// DELTA_SHARING_RECIPIENT_TYPE_DATABRICKS for a consumer on a Databricks
+	// workspace, DELTA_SHARING_RECIPIENT_TYPE_OPEN for a consumer on another
+	// platform who uses a credential file.
 	RecipientType types.String `tfsdk:"recipient_type"`
 	// Share information is required for data listings but should be
 	// empty/ignored for non-data listings (MCP and App).
 	Share types.List `tfsdk:"share"`
-
+	// Current status of the request.
 	Status types.String `tfsdk:"status"`
-
+	// Reason that the provider gave in the most recent status update.
 	StatusMessage types.String `tfsdk:"status_message"`
-
+	// Time the request was last updated, in epoch milliseconds.
 	UpdatedAt types.Int64 `tfsdk:"updated_at"`
 }
 
@@ -8409,6 +8473,8 @@ func (m *PersonalizationRequest_SdkV2) SetShare(ctx context.Context, v ShareInfo
 }
 
 type ProviderAnalyticsDashboard_SdkV2 struct {
+	// Marketplace-specific ID of the dashboard record, distinct from the AI/BI
+	// dashboard ID.
 	Id types.String `tfsdk:"id"`
 }
 
@@ -8456,32 +8522,45 @@ func (m ProviderAnalyticsDashboard_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type ProviderInfo_SdkV2 struct {
+	// Email address that Databricks uses to contact the provider. Not shown to
+	// consumers.
 	BusinessContactEmail types.String `tfsdk:"business_contact_email"`
-
+	// URL of the provider's website. Shown on all of the provider's listings.
 	CompanyWebsiteLink types.String `tfsdk:"company_website_link"`
-
+	// ID of the provider icon file used in dark mode, created with createFile
+	// using the PROVIDER_ICON file type.
 	DarkModeIconFileId types.String `tfsdk:"dark_mode_icon_file_id"`
-
+	// URL for downloading the dark mode provider icon. Populated by the server
+	// from dark_mode_icon_file_id.
 	DarkModeIconFilePath types.String `tfsdk:"dark_mode_icon_file_path"`
-
+	// Description of the provider organization, shown on the provider profile
+	// and on all of its listings.
 	Description types.String `tfsdk:"description"`
-
+	// ID of the provider icon file, created with createFile using the
+	// PROVIDER_ICON file type.
 	IconFileId types.String `tfsdk:"icon_file_id"`
-
+	// URL for downloading the provider icon. Populated by the server from
+	// icon_file_id.
 	IconFilePath types.String `tfsdk:"icon_file_path"`
-
+	// ID of the provider profile. Assigned by the server; not allowed in create
+	// or update requests.
 	Id types.String `tfsdk:"id"`
-	// is_featured is accessible by consumers only
+	// Whether Databricks features the provider in the Marketplace. Set by
+	// Databricks; not allowed in create or update requests.
 	IsFeatured types.Bool `tfsdk:"is_featured"`
-
+	// Display name of the provider. Consumers can filter listings by provider
+	// name.
 	Name types.String `tfsdk:"name"`
-
+	// URL of the provider's privacy policy. Shown on all of the provider's
+	// listings unless a listing sets its own privacy policy.
 	PrivacyPolicyLink types.String `tfsdk:"privacy_policy_link"`
 	// published_by is only applicable to data aggregators (e.g. Crux)
 	PublishedBy types.String `tfsdk:"published_by"`
-
+	// Email address that consumers can use to request support. Shown on all of
+	// the provider's listings.
 	SupportContactEmail types.String `tfsdk:"support_contact_email"`
-
+	// URL of the provider's terms of service. Shown on all of the provider's
+	// listings unless a listing sets its own terms of service.
 	TermOfServiceLink types.String `tfsdk:"term_of_service_link"`
 }
 
@@ -8568,8 +8647,9 @@ func (m ProviderInfo_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type RegionInfo_SdkV2 struct {
+	// Cloud provider: aws, azure or gcp.
 	Cloud types.String `tfsdk:"cloud"`
-
+	// Cloud region, for example us-west-2.
 	Region types.String `tfsdk:"region"`
 }
 
@@ -9137,6 +9217,8 @@ func (m *SearchListingsResponse_SdkV2) SetListings(ctx context.Context, v []List
 }
 
 type ShareInfo_SdkV2 struct {
+	// Name of the Delta Sharing share in the provider's Unity Catalog
+	// metastore.
 	Name types.String `tfsdk:"name"`
 
 	Type_ types.String `tfsdk:"type"`
@@ -9981,8 +10063,10 @@ func (m *UpdateInstallationResponse_SdkV2) SetInstallation(ctx context.Context, 
 }
 
 type UpdateListingRequest_SdkV2 struct {
+	// ID of the listing to update.
 	Id types.String `tfsdk:"-"`
-
+	// Full definition of the listing, including the fields that are not
+	// changing.
 	Listing types.List `tfsdk:"listing"`
 }
 
@@ -10081,6 +10165,7 @@ func (m *UpdateListingRequest_SdkV2) SetListing(ctx context.Context, v Listing_S
 }
 
 type UpdateListingResponse_SdkV2 struct {
+	// The updated listing.
 	Listing types.List `tfsdk:"listing"`
 }
 
@@ -10176,14 +10261,20 @@ func (m *UpdateListingResponse_SdkV2) SetListing(ctx context.Context, v Listing_
 }
 
 type UpdatePersonalizationRequestRequest_SdkV2 struct {
+	// ID of the listing that the request was made for.
 	ListingId types.String `tfsdk:"-"`
-
+	// Message for the consumer that explains the status change, at most 255
+	// characters.
 	Reason types.String `tfsdk:"reason"`
-
+	// ID of the personalization request.
 	RequestId types.String `tfsdk:"-"`
-
+	// Share to grant the consumer access to. Required when fulfilling a request
+	// for a listing with data assets and not allowed with other statuses.
+	// Ignored for app and MCP server listings.
 	Share types.List `tfsdk:"share"`
-
+	// New status of the request. Allowed transitions: NEW or REQUEST_PENDING to
+	// REQUEST_PENDING, FULFILLED or DENIED; FULFILLED to DENIED; DENIED to
+	// REQUEST_PENDING.
 	Status types.String `tfsdk:"status"`
 }
 
@@ -10291,6 +10382,7 @@ func (m *UpdatePersonalizationRequestRequest_SdkV2) SetShare(ctx context.Context
 }
 
 type UpdatePersonalizationRequestResponse_SdkV2 struct {
+	// The updated personalization request.
 	Request types.List `tfsdk:"request"`
 }
 
@@ -10386,11 +10478,12 @@ func (m *UpdatePersonalizationRequestResponse_SdkV2) SetRequest(ctx context.Cont
 }
 
 type UpdateProviderAnalyticsDashboardRequest_SdkV2 struct {
-	// id is immutable property and can't be updated.
+	// Marketplace-specific ID of the dashboard record, as returned when the
+	// dashboard was created or retrieved.
 	Id types.String `tfsdk:"-"`
-	// this is the version of the dashboard template we want to update our user
-	// to current expectation is that it should be equal to latest version of
-	// the dashboard template
+	// Version of the dashboard template to update to. Must be newer than the
+	// version that the dashboard currently uses; use the version returned by
+	// getLatestVersionProviderAnalyticsDashboard.
 	Version types.Int64 `tfsdk:"version"`
 }
 
@@ -10441,11 +10534,12 @@ func (m UpdateProviderAnalyticsDashboardRequest_SdkV2) Type(ctx context.Context)
 }
 
 type UpdateProviderAnalyticsDashboardResponse_SdkV2 struct {
-	// this is newly created Lakeview dashboard for the user
+	// ID of the AI/BI dashboard that now contains the updated template.
 	DashboardId types.String `tfsdk:"dashboard_id"`
-	// id & version should be the same as the request
+	// Marketplace-specific ID of the dashboard record, the same as in the
+	// request.
 	Id types.String `tfsdk:"id"`
-
+	// Version of the dashboard template that the dashboard now uses.
 	Version types.Int64 `tfsdk:"version"`
 }
 
@@ -10499,8 +10593,10 @@ func (m UpdateProviderAnalyticsDashboardResponse_SdkV2) Type(ctx context.Context
 }
 
 type UpdateProviderRequest_SdkV2 struct {
+	// ID of the provider profile to update.
 	Id types.String `tfsdk:"-"`
-
+	// Full definition of the provider profile, including the fields that are
+	// not changing.
 	Provider types.List `tfsdk:"provider"`
 }
 
@@ -10599,6 +10695,7 @@ func (m *UpdateProviderRequest_SdkV2) SetProvider(ctx context.Context, v Provide
 }
 
 type UpdateProviderResponse_SdkV2 struct {
+	// The updated provider profile.
 	Provider types.List `tfsdk:"provider"`
 }
 

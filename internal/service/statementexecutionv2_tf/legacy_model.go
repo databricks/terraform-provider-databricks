@@ -379,10 +379,10 @@ type ExecuteStatementRequest_SdkV2 struct {
 	//
 	// The parameters can be passed in the request body as follows:
 	//
-	// ` { ..., "statement": "SELECT * FROM my_table WHERE name = :my_name AND
+	// ``` { ..., "statement": "SELECT * FROM my_table WHERE name = :my_name AND
 	// date = :my_date", "parameters": [ { "name": "my_name", "value": "the
 	// name" }, { "name": "my_date", "value": "2020-01-01", "type": "DATE" } ] }
-	// `
+	// ```
 	//
 	// Currently, positional parameters denoted by a `?` marker are not
 	// supported by the Databricks SQL Statement Execution API.
@@ -901,8 +901,9 @@ func (m GetStatementResultRequest_SdkV2) Type(ctx context.Context) attr.Type {
 // users to attribute the executions by key and optional value to filter by.
 // QueryTag is the user-facing representation.
 type QueryTag_SdkV2 struct {
+	// The key of the tag.
 	Key types.String `tfsdk:"key"`
-
+	// The value of the tag. Key-only tags have no value.
 	Value types.String `tfsdk:"value"`
 }
 

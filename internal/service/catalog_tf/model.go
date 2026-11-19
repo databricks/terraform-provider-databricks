@@ -3610,7 +3610,11 @@ func (m CloudflareApiToken) Type(ctx context.Context) attr.Type {
 type ColumnInfo struct {
 	// User-provided free-form text description.
 	Comment types.String `tfsdk:"comment"`
-
+	// The column mask function applied to this column, if any. A column mask is
+	// a SQL user-defined function that transforms the values a query returns
+	// for the column. See
+	// https://docs.databricks.com/aws/en/tables/row-and-column-filters for
+	// details.
 	Mask types.Object `tfsdk:"mask"`
 	// Name of Column.
 	Name types.String `tfsdk:"name"`
@@ -3624,7 +3628,9 @@ type ColumnInfo struct {
 	TypeIntervalType types.String `tfsdk:"type_interval_type"`
 	// Full data type specification, JSON-serialized.
 	TypeJson types.String `tfsdk:"type_json"`
-
+	// The name of the column's data type, for example STRING, DECIMAL or
+	// STRUCT. The complete type, including parameters such as the precision of
+	// a decimal or the element type of an array, is in type_text.
 	TypeName types.String `tfsdk:"type_name"`
 	// Digits of precision; required for DecimalTypes.
 	TypePrecision types.Int64 `tfsdk:"type_precision"`
@@ -4222,16 +4228,20 @@ type ConnectionInfo struct {
 	Comment types.String `tfsdk:"comment"`
 	// Unique identifier of the Connection.
 	ConnectionId types.String `tfsdk:"connection_id"`
-	// The type of connection.
+	// The type of external data source or service that the connection reaches.
+	// The connection type determines which keys are required in options and
+	// cannot be changed after creation.
 	ConnectionType types.String `tfsdk:"connection_type"`
 	// Time at which this connection was created, in epoch milliseconds.
 	CreatedAt types.Int64 `tfsdk:"created_at"`
 	// Username of connection creator.
 	CreatedBy types.String `tfsdk:"created_by"`
-	// The type of credential.
+	// The type of credential that is used to authenticate to the external data
+	// source. The server derives it from the connection type and the keys
+	// present in options.
 	CredentialType types.String `tfsdk:"credential_type"`
-	// [Create,Update:OPT] Connection environment settings as
-	// EnvironmentSettings object.
+	// Environment settings for the connection, such as the Java libraries that
+	// it needs and the environment version.
 	EnvironmentSettings types.Object `tfsdk:"environment_settings"`
 	// Full name of connection.
 	FullName types.String `tfsdk:"full_name"`
@@ -4241,25 +4251,28 @@ type ConnectionInfo struct {
 	Name types.String `tfsdk:"name"`
 	// A map of key-value properties attached to the securable.
 	Options types.Map `tfsdk:"options"`
-	// Username of current owner of the connection.
+	// Username of the current owner of the connection. The creator becomes the
+	// owner at creation, and ownership can be transferred on update.
 	Owner types.String `tfsdk:"owner"`
 	// A map of key-value properties attached to the securable.
 	Properties types.Map `tfsdk:"properties"`
-
+	// Provisioning status of the connection.
 	ProvisioningInfo types.Object `tfsdk:"provisioning_info"`
-	// If the connection is read only.
+	// Whether the connection is read only. All connections are currently read
+	// only, so a value set on create or update is ignored.
 	ReadOnly types.Bool `tfsdk:"read_only"`
 	// A map of option names to UC Secret references. Keys are connection option
 	// names (same as in OptionsKVPairs) and values are UC Secret fully
 	// qualified names.
 	Secrets types.Map `tfsdk:"secrets"`
-
+	// The type of Unity Catalog securable. This is always CONNECTION.
 	SecurableType types.String `tfsdk:"securable_type"`
 	// Time at which this connection was updated, in epoch milliseconds.
 	UpdatedAt types.Int64 `tfsdk:"updated_at"`
 	// Username of user who last modified connection.
 	UpdatedBy types.String `tfsdk:"updated_by"`
-	// URL of the remote data source, extracted from options.
+	// URL of the remote data source. The server derives it from the host, port
+	// and path options.
 	Url types.String `tfsdk:"url"`
 }
 
@@ -5572,10 +5585,12 @@ func (m *CreateCatalog) SetProperties(ctx context.Context, v map[string]types.St
 type CreateConnection struct {
 	// User-provided free-form text description.
 	Comment types.String `tfsdk:"comment"`
-	// The type of connection.
+	// The type of external data source or service that the connection reaches.
+	// The connection type determines which keys are required in options and
+	// cannot be changed after creation.
 	ConnectionType types.String `tfsdk:"connection_type"`
-	// [Create,Update:OPT] Connection environment settings as
-	// EnvironmentSettings object.
+	// Environment settings for the connection, such as the Java libraries that
+	// it needs and the environment version.
 	EnvironmentSettings types.Object `tfsdk:"environment_settings"`
 	// Name of the connection.
 	Name types.String `tfsdk:"name"`
@@ -5587,7 +5602,8 @@ type CreateConnection struct {
 	Parent types.String `tfsdk:"parent"`
 	// A map of key-value properties attached to the securable.
 	Properties types.Map `tfsdk:"properties"`
-	// If the connection is read only.
+	// Whether the connection is read only. All connections are currently read
+	// only, so a value set on create or update is ignored.
 	ReadOnly types.Bool `tfsdk:"read_only"`
 	// A map of option names to UC Secret references. Keys are connection option
 	// names (same as in OptionsKVPairs) and values are UC Secret fully
@@ -6576,53 +6592,76 @@ func (m *CreateExternalMetadataRequest) SetExternalMetadata(ctx context.Context,
 	m.ExternalMetadata = vs
 }
 
+// A user-defined function (UDF) registered in Unity Catalog. A function belongs
+// to a schema and is referenced as catalog_name.schema_name.function_name. Its
+// body is either a SQL expression or query, or source code in an external
+// language such as Python. See
+// https://docs.databricks.com/aws/en/udf/unity-catalog for an overview.
 type CreateFunction struct {
 	// Name of parent Catalog.
 	CatalogName types.String `tfsdk:"catalog_name"`
 	// User-provided free-form text description.
 	Comment types.String `tfsdk:"comment"`
-	// Scalar function return data type.
+	// Data type of the value the function returns. A table function uses
+	// TABLE_TYPE and describes its result columns in return_params, except for
+	// a polymorphic Python UDTF, which omits them.
 	DataType types.String `tfsdk:"data_type"`
-	// External function language.
+	// Language of the function body for an EXTERNAL function. It is required
+	// when routine_body is EXTERNAL.
 	ExternalLanguage types.String `tfsdk:"external_language"`
-	// External function name.
+	// Name of the function in its external language. It is reserved for future
+	// use.
 	ExternalName types.String `tfsdk:"external_name"`
-	// Pretty printed function data type.
+	// Return data type of the function in SQL syntax, including any type
+	// parameters such as precision and scale.
 	FullDataType types.String `tfsdk:"full_data_type"`
-	// Function input parameters.
+	// Input parameters of the function. When it is set, parameters must contain
+	// at least one entry. A function that takes no arguments omits
+	// input_params, even though the Create request schema marks it as required.
 	InputParams types.Object `tfsdk:"input_params"`
-	// Whether the function is deterministic.
+	// Whether the function returns the same result for the same arguments. It
+	// corresponds to the DETERMINISTIC characteristic of CREATE FUNCTION.
 	IsDeterministic types.Bool `tfsdk:"is_deterministic"`
-	// Function null call.
+	// Whether the function is a null-call function in the sense of the SQL
+	// standard, which returns NULL whenever any argument is NULL.
 	IsNullCall types.Bool `tfsdk:"is_null_call"`
 	// Name of function, relative to parent schema.
 	Name types.String `tfsdk:"name"`
-	// Function parameter style. **S** is the value for SQL.
+	// How arguments are passed to the function body. S means that each argument
+	// is passed as a single scalar value.
 	ParameterStyle types.String `tfsdk:"parameter_style"`
 	// JSON-serialized key-value pair map, encoded (escaped) as a string.
 	Properties types.String `tfsdk:"properties"`
-	// Table function return parameters.
+	// Result columns of a table function. Set it when data_type is TABLE_TYPE,
+	// except for a polymorphic Python UDTF (an EXTERNAL Python function with
+	// full_data_type "()"), which must not set it.
 	ReturnParams types.Object `tfsdk:"return_params"`
-	// Function language. When **EXTERNAL** is used, the language of the routine
-	// function should be specified in the **external_language** field, and the
-	// **return_params** of the function cannot be used (as **TABLE** return
-	// type is not supported), and the **sql_data_access** field must be
-	// **NO_SQL**.
+	// Language of the function body. SQL means that routine_definition holds a
+	// SQL expression or query. EXTERNAL means that it holds source code in the
+	// language named by external_language, and sql_data_access must then be
+	// NO_SQL.
 	RoutineBody types.String `tfsdk:"routine_body"`
-	// Function body.
+	// Body of the function. For a SQL function it is the expression or query
+	// that computes the result; for an EXTERNAL function it is the source code
+	// of the function. It is omitted when the caller can only browse the
+	// function.
 	RoutineDefinition types.String `tfsdk:"routine_definition"`
 	// Function dependencies. For external UDFs, dependencies may contain only
 	// credential, secret, or volume objects.
 	RoutineDependencies types.Object `tfsdk:"routine_dependencies"`
 	// Name of parent Schema relative to its parent Catalog.
 	SchemaName types.String `tfsdk:"schema_name"`
-	// Function security type.
+	// Whose privileges the function body runs with. DEFINER runs it with the
+	// privileges of the function owner.
 	SecurityType types.String `tfsdk:"security_type"`
-	// Specific name of the function; Reserved for future use.
+	// Specific name of the function. Set it to the same value as name.
 	SpecificName types.String `tfsdk:"specific_name"`
-	// Function SQL data access.
+	// How the function body interacts with SQL data. CONTAINS_SQL means that
+	// the body contains SQL but reads no table or view, READS_SQL_DATA means
+	// that it reads a table or view, and NO_SQL is required for EXTERNAL
+	// functions.
 	SqlDataAccess types.String `tfsdk:"sql_data_access"`
-	// List of schemes whose objects can be referenced without qualification.
+	// List of schemas whose objects can be referenced without qualification.
 	SqlPath types.String `tfsdk:"sql_path"`
 }
 
@@ -6955,7 +6994,9 @@ type CreateMcpServiceRequest struct {
 	// The MCP service to create. Do not set `name`; the server derives it from
 	// `parent` and `mcp_service_id`. `source_connection` is required.
 	McpService types.Object `tfsdk:"mcp_service"`
-	// Name for the MCP service, e.g. "my_mcp_service".
+	// Name of the MCP service within the parent schema. The name must not
+	// contain periods, spaces, forward slashes, percent signs, or control
+	// characters, and it is stored in lowercase.
 	McpServiceId types.String `tfsdk:"-"`
 	// Name of the parent schema. Format: `schemas/{catalog}.{schema}`. Each
 	// `{...}` component is capped at 255 characters individually.
@@ -7280,7 +7321,10 @@ type CreateModelProviderServiceRequest struct {
 	// The model provider service to create. Do not set `name`; the server
 	// derives it from `parent` and `model_provider_service_id`.
 	ModelProviderService types.Object `tfsdk:"model_provider_service"`
-	// Name for the model provider service, e.g. "openai_prod".
+	// Name of the model provider service within the parent schema. The name
+	// must not contain periods, spaces, forward slashes, percent signs, or
+	// control characters, must not end in `_DO_NOT_MODIFY`, and must not exceed
+	// 241 characters. It is stored in lowercase.
 	ModelProviderServiceId types.String `tfsdk:"-"`
 	// Name of the parent schema. Format: `schemas/{catalog}.{schema}`. Each
 	// `{...}` component is capped at 255 characters individually.
@@ -8617,13 +8661,22 @@ type CreateSchema struct {
 	CatalogName types.String `tfsdk:"catalog_name"`
 	// User-provided free-form text description.
 	Comment types.String `tfsdk:"comment"`
-	// Custom maximum retention period in hours for the schema.
+	// Dropped objects in the schema remain recoverable for this number of hours
+	// before they are permanently purged. The value must be 0 or within the
+	// range allowed for the metastore. Schemas that do not set their own value
+	// inherit the parent catalog's value.
 	CustomMaxRetentionHours types.Int64 `tfsdk:"custom_max_retention_hours"`
 	// Name of schema, relative to parent catalog.
 	Name types.String `tfsdk:"name"`
 	// A map of key-value properties attached to the securable.
 	Properties types.Map `tfsdk:"properties"`
-	// Storage root URL for managed tables within schema.
+	// Managed tables and volumes in the schema are stored under this storage
+	// root URL. The path must be inside an external location on which the
+	// caller has the CREATE MANAGED STORAGE privilege. If omitted, managed data
+	// is stored under the parent catalog's storage root, or under the
+	// metastore's root storage location when the catalog has none. Schemas in
+	// Delta Sharing catalogs cannot have a storage root, and schemas in a
+	// federated Hive metastore catalog must set one.
 	StorageRoot types.String `tfsdk:"storage_root"`
 }
 
@@ -9323,7 +9376,9 @@ type CreateTableRequest struct {
 	CatalogName types.String `tfsdk:"catalog_name"`
 	// The array of __ColumnInfo__ definitions of the table's columns.
 	Columns types.List `tfsdk:"columns"`
-
+	// The format of the data that backs the table, such as DELTA, PARQUET, CSV
+	// or JSON. Foreign tables report the external system that holds them, for
+	// example SNOWFLAKE_FORMAT or MYSQL_FORMAT.
 	DataSourceFormat types.String `tfsdk:"data_source_format"`
 	// Name of table, relative to parent schema.
 	Name types.String `tfsdk:"name"`
@@ -9331,9 +9386,20 @@ type CreateTableRequest struct {
 	Properties types.Map `tfsdk:"properties"`
 	// Name of parent schema relative to its parent catalog.
 	SchemaName types.String `tfsdk:"schema_name"`
-	// Storage root URL for table (for **MANAGED**, **EXTERNAL** tables).
+	// The cloud storage URL under which the data files of the table are stored.
+	// For an EXTERNAL table, it must be set on creation to a path within an
+	// existing external location. For a MANAGED table, the server assigns a
+	// path under the managed storage location of the parent schema, catalog or
+	// metastore and returns it in this field. Views have no storage location.
 	StorageLocation types.String `tfsdk:"storage_location"`
-
+	// The type of the table. MANAGED tables store their data in storage that
+	// Unity Catalog manages, EXTERNAL tables store it in a registered external
+	// location, FOREIGN tables mirror objects of an external database through a
+	// connection, and the shallow clone types reference the data files of a
+	// base table. VIEW, MATERIALIZED_VIEW, STREAMING_TABLE and METRIC_VIEW are
+	// defined by a view definition. See
+	// https://docs.databricks.com/aws/en/tables/ for an overview of the table
+	// types.
 	TableType types.String `tfsdk:"table_type"`
 }
 
@@ -10822,6 +10888,7 @@ func (m DeleteExternalLocationRequest) Type(ctx context.Context) attr.Type {
 }
 
 type DeleteExternalMetadataRequest struct {
+	// Name of the external metadata object to delete.
 	Name types.String `tfsdk:"-"`
 }
 
@@ -10869,10 +10936,10 @@ func (m DeleteExternalMetadataRequest) Type(ctx context.Context) attr.Type {
 }
 
 type DeleteFunctionRequest struct {
-	// Force deletion even if the function is notempty.
+	// Force deletion even if the function is not empty.
 	Force types.Bool `tfsdk:"-"`
 	// The fully-qualified name of the function (of the form
-	// __catalog_name__.__schema_name__.__function__name__) .
+	// __catalog_name__.__schema_name__.__function_name__).
 	Name types.String `tfsdk:"-"`
 }
 
@@ -11775,7 +11842,7 @@ func (m DeleteResponse) Type(ctx context.Context) attr.Type {
 type DeleteSchemaRequest struct {
 	// Force deletion even if the schema is not empty.
 	Force types.Bool `tfsdk:"-"`
-	// Full name of the schema.
+	// Full name of the schema, in the form catalog_name.schema_name.
 	FullName types.String `tfsdk:"-"`
 }
 
@@ -12701,7 +12768,7 @@ func (m *DependencyList) SetDependencies(ctx context.Context, v []Dependency) {
 type DisableRequest struct {
 	// The metastore ID under which the system schema lives.
 	MetastoreId types.String `tfsdk:"-"`
-	// Full name of the system schema.
+	// Name of the system schema, without the catalog prefix.
 	SchemaName types.String `tfsdk:"-"`
 }
 
@@ -13160,11 +13227,13 @@ func (m *EffectivePrivilegeAssignment) SetPrivileges(ctx context.Context, v []Ef
 }
 
 type EnableRequest struct {
-	// the catalog for which the system schema is to enabled in
+	// Name of the catalog in which to enable the system schema. The supported
+	// values are `system` and `samples`. If not set, the system schema is
+	// enabled in the `system` catalog.
 	CatalogName types.String `tfsdk:"catalog_name"`
 	// The metastore ID under which the system schema lives.
 	MetastoreId types.String `tfsdk:"-"`
-	// Full name of the system schema.
+	// Name of the system schema, without the catalog prefix.
 	SchemaName types.String `tfsdk:"-"`
 }
 
@@ -15477,34 +15546,57 @@ func (m *ExternalLocationInfo) SetFileEventQueue(ctx context.Context, v FileEven
 	m.FileEventQueue = vs
 }
 
+// Metadata about an object that lives outside of Databricks, such as a Kafka
+// topic, a Tableau dashboard, or a Salesforce table. An external metadata
+// object is a Unity Catalog securable that can be the source or the target of
+// external lineage relationships, so that data flows into and out of Databricks
+// appear in the Unity Catalog lineage graph. See [External lineage].
+//
+// [External lineage]: https://docs.databricks.com/aws/en/data-governance/unity-catalog/external-lineage
 type ExternalMetadata struct {
-	// List of columns associated with the external metadata object.
+	// Names of the columns of the object, used for column-level mappings in
+	// external lineage relationships. Column names must be unique within the
+	// list, and the combined size of all column names is limited.
 	Columns types.List `tfsdk:"columns"`
 	// Time at which this external metadata object was created.
 	CreateTime types.String `tfsdk:"create_time"`
 	// Username of external metadata object creator.
 	CreatedBy types.String `tfsdk:"created_by"`
-	// User-provided free-form text description.
+	// User-provided free-form text description of the object. The description
+	// must not exceed 5000 characters.
 	Description types.String `tfsdk:"description"`
-	// Type of entity within the external system.
+	// Type of the object within the external system, such as a table, a report,
+	// or a dashboard. The value is free-form text of at most 255 characters.
 	EntityType types.String `tfsdk:"entity_type"`
-	// Unique identifier of the external metadata object.
+	// Unique identifier of the external metadata object. The ID is a UUID that
+	// the system assigns on creation.
 	Id types.String `tfsdk:"id"`
 	// Unique identifier of parent metastore.
 	MetastoreId types.String `tfsdk:"metastore_id"`
-	// Name of the external metadata object.
+	// Name of the external metadata object. The name is unique within the
+	// metastore, must follow the [Unity Catalog naming requirements], and is
+	// stored in lowercase. It cannot be changed after creation, and external
+	// lineage relationships refer to the object by this name.
+	//
+	// [Unity Catalog naming requirements]: https://docs.databricks.com/aws/en/data-governance/unity-catalog/requirements#naming-requirements
 	Name types.String `tfsdk:"name"`
-	// Owner of the external metadata object.
+	// Owner of the external metadata object. Defaults to the creator. To change
+	// the owner, send an update whose update mask includes `owner`.
 	Owner types.String `tfsdk:"owner"`
-	// A map of key-value properties attached to the external metadata object.
+	// Key-value properties attached to the object. Keys and values must be
+	// non-empty, and the combined length of all keys and values must not exceed
+	// 5000 characters.
 	Properties types.Map `tfsdk:"properties"`
-	// Type of external system.
+	// Type of the external system that holds the object. Use `OTHER` for a
+	// system that is not in the list.
 	SystemType types.String `tfsdk:"system_type"`
 	// Time at which this external metadata object was last modified.
 	UpdateTime types.String `tfsdk:"update_time"`
 	// Username of user who last modified external metadata object.
 	UpdatedBy types.String `tfsdk:"updated_by"`
-	// URL associated with the external metadata object.
+	// URL of the object in the external system. When set, lineage graph viewers
+	// can follow it to the external asset. The URL must not exceed 2048
+	// characters.
 	Url types.String `tfsdk:"url"`
 }
 
@@ -16477,6 +16569,11 @@ func (m FunctionDependency) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// A user-defined function (UDF) registered in Unity Catalog. A function belongs
+// to a schema and is referenced as catalog_name.schema_name.function_name. Its
+// body is either a SQL expression or query, or source code in an external
+// language such as Python. See
+// https://docs.databricks.com/aws/en/udf/unity-catalog for an overview.
 type FunctionInfo struct {
 	// Indicates whether the principal is limited to retrieving metadata for the
 	// associated object through the BROWSE privilege when include_browse is
@@ -16490,24 +16587,33 @@ type FunctionInfo struct {
 	CreatedAt types.Int64 `tfsdk:"created_at"`
 	// Username of function creator.
 	CreatedBy types.String `tfsdk:"created_by"`
-	// Scalar function return data type.
+	// Data type of the value the function returns. A table function uses
+	// TABLE_TYPE and describes its result columns in return_params, except for
+	// a polymorphic Python UDTF, which omits them.
 	DataType types.String `tfsdk:"data_type"`
-	// External function language.
+	// Language of the function body for an EXTERNAL function. It is required
+	// when routine_body is EXTERNAL.
 	ExternalLanguage types.String `tfsdk:"external_language"`
-	// External function name.
+	// Name of the function in its external language. It is reserved for future
+	// use.
 	ExternalName types.String `tfsdk:"external_name"`
-	// Pretty printed function data type.
+	// Return data type of the function in SQL syntax, including any type
+	// parameters such as precision and scale.
 	FullDataType types.String `tfsdk:"full_data_type"`
 	// Full name of Function, in form of
 	// **catalog_name**.**schema_name**.**function_name**
 	FullName types.String `tfsdk:"full_name"`
 	// Id of Function, relative to parent schema.
 	FunctionId types.String `tfsdk:"function_id"`
-	// Function input parameters.
+	// Input parameters of the function. When it is set, parameters must contain
+	// at least one entry. A function that takes no arguments omits
+	// input_params, even though the Create request schema marks it as required.
 	InputParams types.Object `tfsdk:"input_params"`
-	// Whether the function is deterministic.
+	// Whether the function returns the same result for the same arguments. It
+	// corresponds to the DETERMINISTIC characteristic of CREATE FUNCTION.
 	IsDeterministic types.Bool `tfsdk:"is_deterministic"`
-	// Function null call.
+	// Whether the function is a null-call function in the sense of the SQL
+	// standard, which returns NULL whenever any argument is NULL.
 	IsNullCall types.Bool `tfsdk:"is_null_call"`
 	// Unique identifier of parent metastore.
 	MetastoreId types.String `tfsdk:"metastore_id"`
@@ -16515,32 +16621,41 @@ type FunctionInfo struct {
 	Name types.String `tfsdk:"name"`
 	// Username of current owner of the function.
 	Owner types.String `tfsdk:"owner"`
-	// Function parameter style. **S** is the value for SQL.
+	// How arguments are passed to the function body. S means that each argument
+	// is passed as a single scalar value.
 	ParameterStyle types.String `tfsdk:"parameter_style"`
 	// JSON-serialized key-value pair map, encoded (escaped) as a string.
 	Properties types.String `tfsdk:"properties"`
-	// Table function return parameters.
+	// Result columns of a table function. Set it when data_type is TABLE_TYPE,
+	// except for a polymorphic Python UDTF (an EXTERNAL Python function with
+	// full_data_type "()"), which must not set it.
 	ReturnParams types.Object `tfsdk:"return_params"`
-	// Function language. When **EXTERNAL** is used, the language of the routine
-	// function should be specified in the **external_language** field, and the
-	// **return_params** of the function cannot be used (as **TABLE** return
-	// type is not supported), and the **sql_data_access** field must be
-	// **NO_SQL**.
+	// Language of the function body. SQL means that routine_definition holds a
+	// SQL expression or query. EXTERNAL means that it holds source code in the
+	// language named by external_language, and sql_data_access must then be
+	// NO_SQL.
 	RoutineBody types.String `tfsdk:"routine_body"`
-	// Function body.
+	// Body of the function. For a SQL function it is the expression or query
+	// that computes the result; for an EXTERNAL function it is the source code
+	// of the function. It is omitted when the caller can only browse the
+	// function.
 	RoutineDefinition types.String `tfsdk:"routine_definition"`
 	// Function dependencies. For external UDFs, dependencies may contain only
 	// credential, secret, or volume objects.
 	RoutineDependencies types.Object `tfsdk:"routine_dependencies"`
 	// Name of parent Schema relative to its parent Catalog.
 	SchemaName types.String `tfsdk:"schema_name"`
-	// Function security type.
+	// Whose privileges the function body runs with. DEFINER runs it with the
+	// privileges of the function owner.
 	SecurityType types.String `tfsdk:"security_type"`
-	// Specific name of the function; Reserved for future use.
+	// Specific name of the function. Set it to the same value as name.
 	SpecificName types.String `tfsdk:"specific_name"`
-	// Function SQL data access.
+	// How the function body interacts with SQL data. CONTAINS_SQL means that
+	// the body contains SQL but reads no table or view, READS_SQL_DATA means
+	// that it reads a table or view, and NO_SQL is required for EXTERNAL
+	// functions.
 	SqlDataAccess types.String `tfsdk:"sql_data_access"`
-	// List of schemes whose objects can be referenced without qualification.
+	// List of schemas whose objects can be referenced without qualification.
 	SqlPath types.String `tfsdk:"sql_path"`
 	// Time at which this function was last modified, in epoch milliseconds.
 	UpdatedAt types.Int64 `tfsdk:"updated_at"`
@@ -16813,17 +16928,23 @@ type FunctionParameterInfo struct {
 	Comment types.String `tfsdk:"comment"`
 	// Name of Parameter.
 	Name types.String `tfsdk:"name"`
-	// Default value of the parameter.
+	// Default value of the parameter as a SQL expression, used when a call
+	// omits the argument.
 	ParameterDefault types.String `tfsdk:"parameter_default"`
-	// Function parameter mode.
+	// Direction of the parameter. Only IN parameters, which pass a value into
+	// the function, are supported.
 	ParameterMode types.String `tfsdk:"parameter_mode"`
-	// Function parameter type.
+	// Whether the entry is an input parameter (PARAM) or a result column of a
+	// table function (COLUMN).
 	ParameterType types.String `tfsdk:"parameter_type"`
-	// Ordinal position of column (starting at position 0).
+	// Zero-based position of the parameter in the parameter list. Positions
+	// must be unique and consecutive.
 	Position types.Int64 `tfsdk:"position"`
-	// Format of IntervalType.
+	// Unit range of the data type for INTERVAL parameters. It is unset for
+	// other types.
 	TypeIntervalType types.String `tfsdk:"type_interval_type"`
-	// Full data type spec, JSON-serialized.
+	// Data type of the parameter as the JSON representation of a Spark SQL
+	// struct field, with name, type, nullable and metadata keys.
 	TypeJson types.String `tfsdk:"type_json"`
 	// Name of type (INT, STRUCT, MAP, etc.)
 	TypeName types.String `tfsdk:"type_name"`
@@ -16831,7 +16952,8 @@ type FunctionParameterInfo struct {
 	TypePrecision types.Int64 `tfsdk:"type_precision"`
 	// Digits to right of decimal; Required on Create for DecimalTypes.
 	TypeScale types.Int64 `tfsdk:"type_scale"`
-	// Full data type spec, SQL/catalogString text.
+	// Data type of the parameter in SQL syntax, including any type parameters
+	// such as precision and scale.
 	TypeText types.String `tfsdk:"type_text"`
 }
 
@@ -16912,6 +17034,7 @@ func (m FunctionParameterInfo) Type(ctx context.Context) attr.Type {
 }
 
 type FunctionParameterInfos struct {
+	// The parameters that make up the list, ordered by position.
 	Parameters types.List `tfsdk:"parameters"`
 }
 
@@ -17028,6 +17151,8 @@ func (m *FunctionParameterInfos) SetParameters(ctx context.Context, v []Function
 // GCP temporary credentials for API authentication. Read more at
 // https://developers.google.com/identity/protocols/oauth2/service-account
 type GcpOauthToken struct {
+	// The OAuth 2.0 access token to pass as a bearer token to Google Cloud
+	// APIs.
 	OauthToken types.String `tfsdk:"oauth_token"`
 }
 
@@ -17192,17 +17317,22 @@ func (m GenerateTemporaryPathCredentialRequest) Type(ctx context.Context) attr.T
 }
 
 type GenerateTemporaryPathCredentialResponse struct {
+	// Temporary AWS credentials that can be used to sign AWS API requests.
 	AwsTempCredentials types.Object `tfsdk:"aws_temp_credentials"`
-
+	// A Microsoft Entra ID (formerly Azure Active Directory) token that is
+	// issued for the credential's identity.
 	AzureAad types.Object `tfsdk:"azure_aad"`
-
+	// An Azure user delegation shared access signature (SAS) that grants access
+	// to the requested storage path.
 	AzureUserDelegationSas types.Object `tfsdk:"azure_user_delegation_sas"`
 	// Server time when the credential will expire, in epoch milliseconds. The
 	// API client is advised to cache the credential given this expiration time.
 	ExpirationTime types.Int64 `tfsdk:"expiration_time"`
-
+	// A GCP OAuth 2.0 access token that is issued for the credential's service
+	// account.
 	GcpOauthToken types.Object `tfsdk:"gcp_oauth_token"`
-
+	// Temporary Cloudflare R2 credentials that can be used with the R2
+	// S3-compatible API.
 	R2TempCredentials types.Object `tfsdk:"r2_temp_credentials"`
 	// The URL of the storage path accessible by the temporary credential.
 	Url types.String `tfsdk:"url"`
@@ -17489,7 +17619,9 @@ func (m *GenerateTemporaryPathCredentialResponse) SetR2TempCredentials(ctx conte
 type GenerateTemporaryServiceCredentialAzureOptions struct {
 	// The resources to which the temporary Azure credential should apply. These
 	// resources are the scopes that are passed to the token provider (see
-	// https://learn.microsoft.com/python/api/azure-core/azure.core.credentials.tokencredential?view=azure-python)
+	// https://learn.microsoft.com/python/api/azure-core/azure.core.credentials.tokencredential?view=azure-python).
+	// Exactly one resource is supported, and its URL must end with the
+	// `.default` scope.
 	Resources types.List `tfsdk:"resources"`
 }
 
@@ -17582,7 +17714,9 @@ func (m *GenerateTemporaryServiceCredentialAzureOptions) SetResources(ctx contex
 type GenerateTemporaryServiceCredentialGcpOptions struct {
 	// The scopes to which the temporary GCP credential should apply. These
 	// resources are the scopes that are passed to the token provider (see
-	// https://google-auth.readthedocs.io/en/latest/reference/google.auth.html#google.auth.credentials.Credentials)
+	// https://google-auth.readthedocs.io/en/latest/reference/google.auth.html#google.auth.credentials.Credentials).
+	// Each scope must be a Google OAuth 2.0 scope URL on the `googleapis.com`
+	// or `www.googleapis.com` host.
 	Scopes types.List `tfsdk:"scopes"`
 }
 
@@ -17672,11 +17806,14 @@ func (m *GenerateTemporaryServiceCredentialGcpOptions) SetScopes(ctx context.Con
 }
 
 type GenerateTemporaryServiceCredentialRequest struct {
+	// Options for an Azure service credential. They are required when the
+	// service credential uses an Azure managed identity.
 	AzureOptions types.Object `tfsdk:"azure_options"`
 	// The name of the service credential used to generate a temporary
 	// credential
 	CredentialName types.String `tfsdk:"credential_name"`
-
+	// Options for a GCP service credential. They are required when the service
+	// credential uses a Databricks-managed GCP service account.
 	GcpOptions types.Object `tfsdk:"gcp_options"`
 }
 
@@ -17872,17 +18009,22 @@ func (m GenerateTemporaryTableCredentialRequest) Type(ctx context.Context) attr.
 }
 
 type GenerateTemporaryTableCredentialResponse struct {
+	// Temporary AWS credentials that can be used to sign AWS API requests.
 	AwsTempCredentials types.Object `tfsdk:"aws_temp_credentials"`
-
+	// A Microsoft Entra ID (formerly Azure Active Directory) token that is
+	// issued for the credential's identity.
 	AzureAad types.Object `tfsdk:"azure_aad"`
-
+	// An Azure user delegation shared access signature (SAS) that grants access
+	// to the requested storage path.
 	AzureUserDelegationSas types.Object `tfsdk:"azure_user_delegation_sas"`
 	// Server time when the credential will expire, in epoch milliseconds. The
 	// API client is advised to cache the credential given this expiration time.
 	ExpirationTime types.Int64 `tfsdk:"expiration_time"`
-
+	// A GCP OAuth 2.0 access token that is issued for the credential's service
+	// account.
 	GcpOauthToken types.Object `tfsdk:"gcp_oauth_token"`
-
+	// Temporary Cloudflare R2 credentials that can be used with the R2
+	// S3-compatible API.
 	R2TempCredentials types.Object `tfsdk:"r2_temp_credentials"`
 	// The URL of the storage path accessible by the temporary credential.
 	Url types.String `tfsdk:"url"`
@@ -18222,17 +18364,22 @@ func (m GenerateTemporaryVolumeCredentialRequest) Type(ctx context.Context) attr
 }
 
 type GenerateTemporaryVolumeCredentialResponse struct {
+	// Temporary AWS credentials that can be used to sign AWS API requests.
 	AwsTempCredentials types.Object `tfsdk:"aws_temp_credentials"`
-
+	// A Microsoft Entra ID (formerly Azure Active Directory) token that is
+	// issued for the credential's identity.
 	AzureAad types.Object `tfsdk:"azure_aad"`
-
+	// An Azure user delegation shared access signature (SAS) that grants access
+	// to the requested storage path.
 	AzureUserDelegationSas types.Object `tfsdk:"azure_user_delegation_sas"`
 	// Server time when the credential will expire, in epoch milliseconds. The
 	// API client is advised to cache the credential given this expiration time.
 	ExpirationTime types.Int64 `tfsdk:"expiration_time"`
-
+	// A GCP OAuth 2.0 access token that is issued for the credential's service
+	// account.
 	GcpOauthToken types.Object `tfsdk:"gcp_oauth_token"`
-
+	// Temporary Cloudflare R2 credentials that can be used with the R2
+	// S3-compatible API.
 	R2TempCredentials types.Object `tfsdk:"r2_temp_credentials"`
 	// The URL of the storage path accessible by the temporary credential.
 	Url types.String `tfsdk:"url"`
@@ -19332,6 +19479,7 @@ func (m GetExternalLocationRequest) Type(ctx context.Context) attr.Type {
 }
 
 type GetExternalMetadataRequest struct {
+	// Name of the external metadata object to get.
 	Name types.String `tfsdk:"-"`
 }
 
@@ -19383,7 +19531,7 @@ type GetFunctionRequest struct {
 	// only access selective metadata for
 	IncludeBrowse types.Bool `tfsdk:"-"`
 	// The fully-qualified name of the function (of the form
-	// __catalog_name__.__schema_name__.__function__name__).
+	// __catalog_name__.__schema_name__.__function_name__).
 	Name types.String `tfsdk:"-"`
 }
 
@@ -20509,10 +20657,11 @@ func (m GetRegisteredModelRequest) Type(ctx context.Context) attr.Type {
 }
 
 type GetSchemaRequest struct {
-	// Full name of the schema.
+	// Full name of the schema, in the form catalog_name.schema_name.
 	FullName types.String `tfsdk:"-"`
-	// Whether to include schemas in the response for which the principal can
-	// only access selective metadata for
+	// Whether to return the schema when the principal can only access selective
+	// metadata for it through the BROWSE privilege. The response then has
+	// browse_only set to true.
 	IncludeBrowse types.Bool `tfsdk:"-"`
 }
 
@@ -22897,7 +23046,8 @@ func (m *ListExternalLocationsResponse) SetExternalLocations(ctx context.Context
 
 type ListExternalMetadataRequest struct {
 	// Specifies the maximum number of external metadata objects to return in a
-	// single response. The value must be less than or equal to 1000.
+	// single response. The value must be less than or equal to 1000. Defaults
+	// to 1000 when omitted.
 	PageSize types.Int64 `tfsdk:"-"`
 	// Opaque pagination token to go to next page based on previous query.
 	PageToken types.String `tfsdk:"-"`
@@ -25047,8 +25197,9 @@ func (m *ListRegisteredModelsResponse) SetRegisteredModels(ctx context.Context, 
 type ListSchemasRequest struct {
 	// Parent catalog for schemas of interest.
 	CatalogName types.String `tfsdk:"-"`
-	// Whether to include schemas in the response for which the principal can
-	// only access selective metadata for
+	// Whether to include schemas for which the principal can only access
+	// selective metadata through the BROWSE privilege. Such schemas are
+	// returned with browse_only set to true.
 	IncludeBrowse types.Bool `tfsdk:"-"`
 	// Maximum number of schemas to return. If not set, all the schemas are
 	// returned (not recommended). - when set to a value greater than 0, the
@@ -26674,25 +26825,29 @@ type McpService struct {
 	Config types.Object `tfsdk:"config"`
 	// Time the MCP service was created.
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
-	// Creator identity.
+	// Username or service principal application ID of the principal that
+	// created the MCP service.
 	CreatedBy types.String `tfsdk:"created_by"`
-	// Owner of the MCP service.
+	// Username, group name, or service principal application ID of the MCP
+	// service owner.
 	EffectiveOwner types.String `tfsdk:"effective_owner"`
 	// Optimistic concurrency token returned on every read. To make an Update or
 	// Delete conditional, pass the last-read value in that request's `etag`
 	// field. In REST responses, this value is a base64 string; URL-encode it
 	// when setting the `etag` query parameter.
 	Etag types.String `tfsdk:"etag"`
-	// Metastore hosting the MCP service.
+	// Unique identifier of the metastore that contains the MCP service.
 	MetastoreId types.String `tfsdk:"metastore_id"`
 	// Resource name of the MCP service. Format:
 	// `mcp-services/{catalog}.{schema}.{mcp_service}`. Each `{...}` component
-	// is capped at 255 characters individually. Server-derived on Create from
-	// `parent` + `mcp_service_id`; required and immutable on Update/Get/Delete.
+	// is capped at 255 characters individually. The server derives the name on
+	// Create from `parent` and `mcp_service_id`; it is required and immutable
+	// on Update, Get, and Delete.
 	Name types.String `tfsdk:"name"`
 	// Time the MCP service was last modified.
 	UpdateTime timetypes.RFC3339 `tfsdk:"update_time"`
-	// Identity of the last updater.
+	// Username or service principal application ID of the principal that last
+	// updated the MCP service.
 	UpdatedBy types.String `tfsdk:"updated_by"`
 }
 
@@ -27562,26 +27717,28 @@ type ModelProviderService struct {
 	Config types.Object `tfsdk:"config"`
 	// Time the provider service was created.
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
-	// Creator identity.
+	// Username of the user who created the model provider service.
 	CreatedBy types.String `tfsdk:"created_by"`
-	// Owner of the model provider service.
+	// Username or group name of the model provider service owner.
 	EffectiveOwner types.String `tfsdk:"effective_owner"`
 	// Optimistic concurrency token returned on every read. To make an Update or
 	// Delete conditional, pass the last-read value in that request's `etag`
 	// field. In REST responses, this value is a base64 string; URL-encode it
 	// when setting the `etag` query parameter.
 	Etag types.String `tfsdk:"etag"`
-	// Metastore hosting the provider service.
+	// Unique identifier of the metastore that contains the model provider
+	// service.
 	MetastoreId types.String `tfsdk:"metastore_id"`
 	// Resource name of the provider service. Format:
 	// `model-provider-services/{catalog}.{schema}.{model_provider_service}`.
-	// Each `{...}` component is capped at 255 characters individually.
-	// Server-derived on Create from `parent` + `model_provider_service_id`;
-	// required and immutable on Update/Get/Delete.
+	// Each `{...}` component is capped at 255 characters individually. The
+	// server derives the name on Create from `parent` and
+	// `model_provider_service_id`; it is required and immutable on Update, Get,
+	// and Delete.
 	Name types.String `tfsdk:"name"`
 	// Time the provider service was last modified.
 	UpdateTime timetypes.RFC3339 `tfsdk:"update_time"`
-	// Identity of the last updater.
+	// Username of the user who last updated the model provider service.
 	UpdatedBy types.String `tfsdk:"updated_by"`
 }
 
@@ -27712,15 +27869,21 @@ type ModelProviderServiceConfig struct {
 	// built-in model catalog and must leave this false and list their models in
 	// `targets`.
 	AllowAllTargets types.Bool `tfsdk:"allow_all_targets"`
-
+	// Configuration for Amazon Bedrock. Set this field when `provider_type` is
+	// `EXTERNAL_MODEL_PROVIDER_TYPE_AMAZON_BEDROCK`.
 	AmazonBedrock types.Object `tfsdk:"amazon_bedrock"`
-
+	// Configuration for Anthropic. Set this field when `provider_type` is
+	// `EXTERNAL_MODEL_PROVIDER_TYPE_ANTHROPIC`.
 	Anthropic types.Object `tfsdk:"anthropic"`
-
+	// Configuration for Azure OpenAI. Set this field when `provider_type` is
+	// `EXTERNAL_MODEL_PROVIDER_TYPE_AZURE_OPENAI`.
 	AzureOpenai types.Object `tfsdk:"azure_openai"`
-
+	// Configuration for Amazon Bedrock Mantle, with the same fields as
+	// `amazon_bedrock`. Set this field when `provider_type` is
+	// `EXTERNAL_MODEL_PROVIDER_TYPE_BEDROCK_MANTLE`.
 	BedrockMantle types.Object `tfsdk:"bedrock_mantle"`
-
+	// Configuration for a custom OpenAI-compatible provider. Set this field
+	// when `provider_type` is `EXTERNAL_MODEL_PROVIDER_TYPE_CUSTOM`.
 	Custom types.Object `tfsdk:"custom"`
 	// Whether to forward incoming HTTP headers to the upstream provider.
 	// Defaults to false and is configured for the entire provider service, not
@@ -27739,15 +27902,18 @@ type ModelProviderServiceConfig struct {
 	// Policies on opaque unmanaged requests, so unmanaged requests are rejected
 	// whenever Service Policies are attached to this securable.
 	ForwardUnmanagedPaths types.Bool `tfsdk:"forward_unmanaged_paths"`
-
+	// Configuration for Google Gemini Enterprise. Set this field when
+	// `provider_type` is `EXTERNAL_MODEL_PROVIDER_TYPE_GEMINI_ENTERPRISE`.
 	GeminiEnterprise types.Object `tfsdk:"gemini_enterprise"`
 	// Payload logging configuration for requests sent directly to this provider
 	// service. Requests routed through a model service are captured by that
 	// model service's inference table instead.
 	InferenceTable types.Object `tfsdk:"inference_table"`
-
+	// Configuration for Microsoft Foundry. Set this field when `provider_type`
+	// is `EXTERNAL_MODEL_PROVIDER_TYPE_MICROSOFT_FOUNDRY`.
 	MicrosoftFoundry types.Object `tfsdk:"microsoft_foundry"`
-
+	// Configuration for OpenAI. Set this field when `provider_type` is
+	// `EXTERNAL_MODEL_PROVIDER_TYPE_OPENAI`.
 	Openai types.Object `tfsdk:"openai"`
 	// Pricing configuration for this provider service. An explicitly empty
 	// configuration is retained on Create and Update and applies no adjustment.
@@ -29379,7 +29545,7 @@ type ModelProviderServiceConfigCustomProviderApiKeyHeaderAuth struct {
 	// supplied via `api_key_value`.
 	ApiKeyName types.String `tfsdk:"api_key_name"`
 	// Secret value forwarded under the `api_key_name` header on outbound
-	// requests. Supplied as inline plaintext via `ProviderSecret.plaintext`.
+	// requests. Supply the value in `api_key_value.plaintext`.
 	ApiKeyValue types.Object `tfsdk:"api_key_value"`
 }
 
@@ -30757,9 +30923,10 @@ func (m ModelProviderServiceConfigProviderPricingConfig) Type(ctx context.Contex
 // encrypted. The `plaintext` field is `INPUT_ONLY` and never round-trips on
 // reads.
 type ModelProviderServiceConfigProviderSecret struct {
-	// Inline plaintext credential. INPUT_ONLY: the value never round-trips on
-	// reads. Get and List responses omit `plaintext`; the enclosing secret
-	// object remains present to indicate that a secret is configured.
+	// Inline plaintext credential. The value is write-only and never
+	// round-trips on reads. Get and List responses omit `plaintext`; the
+	// enclosing secret object remains present to indicate that a secret is
+	// configured.
 	Plaintext types.String `tfsdk:"plaintext"`
 	// Reference to a customer-owned UC Secret that carries this secret value.
 	// The value is read at invoke time under the model provider service owner's
@@ -36801,6 +36968,11 @@ func (m RunRefreshRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// A schema (also called a database) is the second layer of Unity Catalog's
+// three-level namespace and groups the tables, views, volumes, models, and
+// functions under its parent catalog. Managed tables and volumes in the schema
+// are stored under the schema's storage root when it has one, and otherwise
+// under the storage of the parent catalog or the metastore.
 type SchemaInfo struct {
 	// Indicates whether the principal is limited to retrieving metadata for the
 	// associated object through the BROWSE privilege when include_browse is
@@ -36808,7 +36980,7 @@ type SchemaInfo struct {
 	BrowseOnly types.Bool `tfsdk:"browse_only"`
 	// Name of parent catalog.
 	CatalogName types.String `tfsdk:"catalog_name"`
-	// The type of the parent catalog.
+	// The type of the parent catalog, which the server copies from the catalog.
 	CatalogType types.String `tfsdk:"catalog_type"`
 	// User-provided free-form text description.
 	Comment types.String `tfsdk:"comment"`
@@ -36816,12 +36988,19 @@ type SchemaInfo struct {
 	CreatedAt types.Int64 `tfsdk:"created_at"`
 	// Username of schema creator.
 	CreatedBy types.String `tfsdk:"created_by"`
-	// Custom maximum retention period in hours for the schema.
+	// Dropped objects in the schema remain recoverable for this number of hours
+	// before they are permanently purged. The value must be 0 or within the
+	// range allowed for the metastore. Schemas that do not set their own value
+	// inherit the parent catalog's value.
 	CustomMaxRetentionHours types.Int64 `tfsdk:"custom_max_retention_hours"`
-
+	// Indicates the predictive optimization setting that is in effect for the
+	// schema once inherited values are resolved.
 	EffectivePredictiveOptimizationFlag types.Object `tfsdk:"effective_predictive_optimization_flag"`
-	// Whether predictive optimization should be enabled for this object and
-	// objects under it.
+	// Whether predictive optimization is enabled for this schema and the
+	// objects under it. Valid values are ENABLE, DISABLE, and INHERIT, where
+	// INHERIT applies the parent catalog's setting. New schemas start as
+	// INHERIT. It cannot be set when creating a schema; use the update method
+	// instead.
 	EnablePredictiveOptimization types.String `tfsdk:"enable_predictive_optimization"`
 	// Full name of schema, in form of __catalog_name__.__schema_name__.
 	FullName types.String `tfsdk:"full_name"`
@@ -36829,17 +37008,27 @@ type SchemaInfo struct {
 	MetastoreId types.String `tfsdk:"metastore_id"`
 	// Name of schema, relative to parent catalog.
 	Name types.String `tfsdk:"name"`
-	// Username of current owner of schema.
+	// The user or group that owns the schema. The creator becomes the owner,
+	// and the owner can be changed only through the update method.
 	Owner types.String `tfsdk:"owner"`
 	// A map of key-value properties attached to the securable.
 	Properties types.Map `tfsdk:"properties"`
-	// The unique identifier of the schema.
+	// The unique identifier (UUID) that the server assigns to the schema when
+	// it is created.
 	SchemaId types.String `tfsdk:"schema_id"`
-	// Storage location for managed tables within schema.
+	// The server derives this full storage location URL for managed tables and
+	// volumes within the schema from storage_root and the schema ID. It is
+	// absent when the schema has no storage root of its own.
 	StorageLocation types.String `tfsdk:"storage_location"`
-	// Storage root URL for managed tables within schema.
+	// Managed tables and volumes in the schema are stored under this storage
+	// root URL. The path must be inside an external location on which the
+	// caller has the CREATE MANAGED STORAGE privilege. If omitted, managed data
+	// is stored under the parent catalog's storage root, or under the
+	// metastore's root storage location when the catalog has none. Schemas in
+	// Delta Sharing catalogs cannot have a storage root, and schemas in a
+	// federated Hive metastore catalog must set one.
 	StorageRoot types.String `tfsdk:"storage_root"`
-	// Time at which this schema was created, in epoch milliseconds.
+	// Time at which this schema was last modified, in epoch milliseconds.
 	UpdatedAt types.Int64 `tfsdk:"updated_at"`
 	// Username of user who last modified schema.
 	UpdatedBy types.String `tfsdk:"updated_by"`
@@ -38350,13 +38539,20 @@ func (m SummaryRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// A system schema of a metastore, with its current enablement state. System
+// schemas hold Databricks-provided system tables, such as audit logs and
+// billing usage. They live in the `system` catalog unless they are enabled in
+// another supported catalog. See
+// https://docs.databricks.com/aws/en/admin/system-tables/.
 type SystemSchemaInfo struct {
-	// Name of the system schema.
+	// Name of the system schema, without the catalog prefix.
 	Schema types.String `tfsdk:"schema"`
-	// The current state of enablement for the system schema. An empty string
-	// means the system schema is available and ready for opt-in. Possible
-	// values: AVAILABLE | ENABLE_INITIALIZED | ENABLE_COMPLETED |
-	// DISABLE_INITIALIZED | UNAVAILABLE | MANAGED
+	// The current enablement state of the system schema. Possible values are
+	// `AVAILABLE` (the schema can be enabled), `ENABLE_INITIALIZED` (enablement
+	// is in progress), `ENABLE_COMPLETED` (the schema is enabled),
+	// `DISABLE_INITIALIZED` (disablement is in progress), `UNAVAILABLE` (the
+	// schema cannot be enabled at the moment) and `MANAGED` (Databricks enables
+	// the schema automatically).
 	State types.String `tfsdk:"state"`
 }
 
@@ -38694,8 +38890,13 @@ func (m TableExistsResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// A table resides in the third layer of Unity Catalog's three-level namespace
+// and holds rows of data organized in columns. Besides managed and external
+// tables, it covers views, materialized views, streaming tables, metric views,
+// foreign tables and shallow clones, which table_type distinguishes.
 type TableInfo struct {
-	// The AWS access point to use when accesing s3 for this external location.
+	// The AWS access point to use when accessing S3 for the storage location of
+	// this table.
 	AccessPoint types.String `tfsdk:"access_point"`
 	// Indicates whether the principal is limited to retrieving metadata for the
 	// associated object through the BROWSE privilege when include_browse is
@@ -38713,16 +38914,23 @@ type TableInfo struct {
 	CreatedBy types.String `tfsdk:"created_by"`
 	// Unique ID of the Data Access Configuration to use with the table data.
 	DataAccessConfigurationId types.String `tfsdk:"data_access_configuration_id"`
-
+	// The format of the data that backs the table, such as DELTA, PARQUET, CSV
+	// or JSON. Foreign tables report the external system that holds them, for
+	// example SNOWFLAKE_FORMAT or MYSQL_FORMAT.
 	DataSourceFormat types.String `tfsdk:"data_source_format"`
 	// Time at which this table was deleted, in epoch milliseconds. Field is
 	// omitted if table is not deleted.
 	DeletedAt types.Int64 `tfsdk:"deleted_at"`
 	// Information pertaining to current state of the delta table.
 	DeltaRuntimePropertiesKvpairs types.Object `tfsdk:"delta_runtime_properties_kvpairs"`
-
+	// The predictive optimization setting that is in effect for the table once
+	// inherited values are resolved.
 	EffectivePredictiveOptimizationFlag types.Object `tfsdk:"effective_predictive_optimization_flag"`
-
+	// Whether predictive optimization is enabled for this table. Valid values
+	// are ENABLE, DISABLE and INHERIT, where INHERIT applies the setting of the
+	// parent schema. It is ignored when creating a table. See
+	// https://docs.databricks.com/aws/en/optimizations/predictive-optimization
+	// for details.
 	EnablePredictiveOptimization types.String `tfsdk:"enable_predictive_optimization"`
 
 	EncryptionDetails types.Object `tfsdk:"encryption_details"`
@@ -38733,14 +38941,18 @@ type TableInfo struct {
 	MetastoreId types.String `tfsdk:"metastore_id"`
 	// Name of table, relative to parent schema.
 	Name types.String `tfsdk:"name"`
-	// Username of current owner of table.
+	// The user or group that owns the table. The principal that creates the
+	// table becomes its owner.
 	Owner types.String `tfsdk:"owner"`
 	// The pipeline ID of the table. Applicable for tables created by pipelines
 	// (Materialized View, Streaming Table, etc.).
 	PipelineId types.String `tfsdk:"pipeline_id"`
 	// A map of key-value properties attached to the securable.
 	Properties types.Map `tfsdk:"properties"`
-
+	// The row filter function applied to the table, if any. A row filter is a
+	// SQL user-defined function that decides which rows a query returns. See
+	// https://docs.databricks.com/aws/en/tables/row-and-column-filters for
+	// details.
 	RowFilter types.Object `tfsdk:"row_filter"`
 	// Name of parent schema relative to its parent catalog.
 	SchemaName types.String `tfsdk:"schema_name"`
@@ -38751,14 +38963,25 @@ type TableInfo struct {
 	// Name of the storage credential, when a storage credential is configured
 	// for use with this table.
 	StorageCredentialName types.String `tfsdk:"storage_credential_name"`
-	// Storage root URL for table (for **MANAGED**, **EXTERNAL** tables).
+	// The cloud storage URL under which the data files of the table are stored.
+	// For an EXTERNAL table, it must be set on creation to a path within an
+	// existing external location. For a MANAGED table, the server assigns a
+	// path under the managed storage location of the parent schema, catalog or
+	// metastore and returns it in this field. Views have no storage location.
 	StorageLocation types.String `tfsdk:"storage_location"`
 	// List of table constraints. Note: this field is not set in the output of
 	// the __listTables__ API.
 	TableConstraints types.List `tfsdk:"table_constraints"`
 	// The unique identifier of the table.
 	TableId types.String `tfsdk:"table_id"`
-
+	// The type of the table. MANAGED tables store their data in storage that
+	// Unity Catalog manages, EXTERNAL tables store it in a registered external
+	// location, FOREIGN tables mirror objects of an external database through a
+	// connection, and the shallow clone types reference the data files of a
+	// base table. VIEW, MATERIALIZED_VIEW, STREAMING_TABLE and METRIC_VIEW are
+	// defined by a view definition. See
+	// https://docs.databricks.com/aws/en/tables/ for an overview of the table
+	// types.
 	TableType types.String `tfsdk:"table_type"`
 	// Time at which this table was last modified, in epoch milliseconds.
 	UpdatedAt types.Int64 `tfsdk:"updated_at"`
@@ -39499,7 +39722,7 @@ type TableSummary struct {
 	FullName types.String `tfsdk:"full_name"`
 	// SecurableKindManifest of table, including capabilities the table has.
 	SecurableKindManifest types.Object `tfsdk:"securable_kind_manifest"`
-
+	// The type of the table, with the same meaning as table_type on TableInfo.
 	TableType types.String `tfsdk:"table_type"`
 }
 
@@ -39840,15 +40063,19 @@ func (m TagValueExtraction) Type(ctx context.Context) attr.Type {
 }
 
 type TemporaryCredentials struct {
+	// Temporary AWS credentials that can be used to sign AWS API requests.
 	AwsTempCredentials types.Object `tfsdk:"aws_temp_credentials"`
-
+	// A Microsoft Entra ID (formerly Azure Active Directory) token that is
+	// issued for the credential's identity.
 	AzureAad types.Object `tfsdk:"azure_aad"`
 	// Server time when the credential will expire, in epoch milliseconds. The
 	// API client is advised to cache the credential given this expiration time.
 	ExpirationTime types.Int64 `tfsdk:"expiration_time"`
-
+	// A GCP OAuth 2.0 access token that is issued for the credential's service
+	// account.
 	GcpOauthToken types.Object `tfsdk:"gcp_oauth_token"`
-
+	// Temporary Cloudflare R2 credentials that can be used with the R2
+	// S3-compatible API.
 	R2TempCredentials types.Object `tfsdk:"r2_temp_credentials"`
 }
 
@@ -41163,8 +41390,8 @@ func (m *UpdateCatalogWorkspaceBindingsResponse) SetWorkspaces(ctx context.Conte
 }
 
 type UpdateConnection struct {
-	// [Create,Update:OPT] Connection environment settings as
-	// EnvironmentSettings object.
+	// Environment settings for the connection, such as the Java libraries that
+	// it needs and the environment version.
 	EnvironmentSettings types.Object `tfsdk:"environment_settings"`
 	// Name of the connection.
 	Name types.String `tfsdk:"-"`
@@ -41172,7 +41399,8 @@ type UpdateConnection struct {
 	NewName types.String `tfsdk:"new_name"`
 	// A map of key-value properties attached to the securable.
 	Options types.Map `tfsdk:"options"`
-	// Username of current owner of the connection.
+	// Username of the current owner of the connection. The creator becomes the
+	// owner at creation, and ownership can be transferred on update.
 	Owner types.String `tfsdk:"owner"`
 	// A map of option names to UC Secret references. Keys are connection option
 	// names (same as in OptionsKVPairs) and values are UC Secret fully
@@ -42116,19 +42344,16 @@ func (m *UpdateExternalLocation) SetFileEventQueue(ctx context.Context, v FileEv
 
 type UpdateExternalMetadataRequest struct {
 	ExternalMetadata types.Object `tfsdk:"external_metadata"`
-	// Name of the external metadata object.
-	Name types.String `tfsdk:"-"`
-	// The field mask must be a single string, with multiple fields separated by
-	// commas (no spaces). The field path is relative to the resource object,
-	// using a dot (`.`) to navigate sub-fields (e.g., `author.given_name`).
-	// Specification of elements in sequence or map fields is not allowed, as
-	// only the entire collection field can be specified. Field names must
-	// exactly match the resource field names.
+	// Name of the external metadata object. The name is unique within the
+	// metastore, must follow the [Unity Catalog naming requirements], and is
+	// stored in lowercase. It cannot be changed after creation, and external
+	// lineage relationships refer to the object by this name.
 	//
-	// A field mask of `*` indicates full replacement. It’s recommended to
-	// always explicitly list the fields being updated and avoid using `*`
-	// wildcards, as it can lead to unintended results if the API changes in the
-	// future.
+	// [Unity Catalog naming requirements]: https://docs.databricks.com/aws/en/data-governance/unity-catalog/requirements#naming-requirements
+	Name types.String `tfsdk:"-"`
+	// Comma-separated list of the fields to update, for example
+	// `description,properties`. Only the listed fields change. The other fields
+	// keep their current values. The mask must not be empty.
 	UpdateMask types.String `tfsdk:"-"`
 }
 
@@ -42227,7 +42452,7 @@ func (m *UpdateExternalMetadataRequest) SetExternalMetadata(ctx context.Context,
 
 type UpdateFunction struct {
 	// The fully-qualified name of the function (of the form
-	// __catalog_name__.__schema_name__.__function__name__).
+	// __catalog_name__.__schema_name__.__function_name__).
 	Name types.String `tfsdk:"-"`
 	// Username of current owner of the function.
 	Owner types.String `tfsdk:"owner"`
@@ -42291,8 +42516,9 @@ type UpdateMcpServiceRequest struct {
 	McpService types.Object `tfsdk:"mcp_service"`
 	// Resource name of the MCP service. Format:
 	// `mcp-services/{catalog}.{schema}.{mcp_service}`. Each `{...}` component
-	// is capped at 255 characters individually. Server-derived on Create from
-	// `parent` + `mcp_service_id`; required and immutable on Update/Get/Delete.
+	// is capped at 255 characters individually. The server derives the name on
+	// Create from `parent` and `mcp_service_id`; it is required and immutable
+	// on Update, Get, and Delete.
 	Name types.String `tfsdk:"-"`
 	// Fields to update. Use `config` to replace the entire configuration. The
 	// replacement must include every required field; any optional field you
@@ -42563,9 +42789,10 @@ type UpdateModelProviderServiceRequest struct {
 	ModelProviderService types.Object `tfsdk:"model_provider_service"`
 	// Resource name of the provider service. Format:
 	// `model-provider-services/{catalog}.{schema}.{model_provider_service}`.
-	// Each `{...}` component is capped at 255 characters individually.
-	// Server-derived on Create from `parent` + `model_provider_service_id`;
-	// required and immutable on Update/Get/Delete.
+	// Each `{...}` component is capped at 255 characters individually. The
+	// server derives the name on Create from `parent` and
+	// `model_provider_service_id`; it is required and immutable on Update, Get,
+	// and Delete.
 	Name types.String `tfsdk:"-"`
 	// Fields to update. Use `config` to replace the entire configuration. The
 	// replacement must include every required field; any optional field you
@@ -44408,16 +44635,23 @@ func (m UpdateResponse) Type(ctx context.Context) attr.Type {
 type UpdateSchema struct {
 	// User-provided free-form text description.
 	Comment types.String `tfsdk:"comment"`
-	// Custom maximum retention period in hours for the schema.
+	// Dropped objects in the schema remain recoverable for this number of hours
+	// before they are permanently purged. The value must be 0 or within the
+	// range allowed for the metastore. Schemas that do not set their own value
+	// inherit the parent catalog's value.
 	CustomMaxRetentionHours types.Int64 `tfsdk:"custom_max_retention_hours"`
-	// Whether predictive optimization should be enabled for this object and
-	// objects under it.
+	// Whether predictive optimization is enabled for this schema and the
+	// objects under it. Valid values are ENABLE, DISABLE, and INHERIT, where
+	// INHERIT applies the parent catalog's setting. New schemas start as
+	// INHERIT. It cannot be set when creating a schema; use the update method
+	// instead.
 	EnablePredictiveOptimization types.String `tfsdk:"enable_predictive_optimization"`
-	// Full name of the schema.
+	// Full name of the schema, in the form catalog_name.schema_name.
 	FullName types.String `tfsdk:"-"`
 	// New name for the schema.
 	NewName types.String `tfsdk:"new_name"`
-	// Username of current owner of schema.
+	// The user or group that owns the schema. The creator becomes the owner,
+	// and the owner can be changed only through the update method.
 	Owner types.String `tfsdk:"owner"`
 	// A map of key-value properties attached to the securable.
 	Properties types.Map `tfsdk:"properties"`
@@ -45071,7 +45305,8 @@ func (m *UpdateStorageCredential) SetDatabricksGcpServiceAccount(ctx context.Con
 type UpdateTableRequest struct {
 	// Full name of the table.
 	FullName types.String `tfsdk:"-"`
-	// Username of current owner of table.
+	// The user or group that owns the table. The principal that creates the
+	// table becomes its owner.
 	Owner types.String `tfsdk:"owner"`
 }
 

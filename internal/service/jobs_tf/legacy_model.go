@@ -4034,10 +4034,14 @@ func (m *ContinuousTriggerConfiguration_SdkV2) SetMaintenanceWindow(ctx context.
 }
 
 type ContinuousTriggerState_SdkV2 struct {
+	// The number of consecutive unsuccessful runs. Resets to `0` after a
+	// healthy run and determines the exponential backoff before the next run.
 	ConsecutiveFailures types.Int64 `tfsdk:"consecutive_failures"`
-
+	// Whether the trigger is delaying the next run with exponential backoff
+	// after repeated failures.
 	IsBackingOff types.Bool `tfsdk:"is_backing_off"`
-
+	// The time at which the trigger next attempts to start a run, in epoch
+	// milliseconds.
 	NextAttemptMs types.Int64 `tfsdk:"next_attempt_ms"`
 }
 
@@ -4158,7 +4162,7 @@ type CreateJob_SdkV2 struct {
 	// Note: dbt and SQL File tasks support only version-controlled sources. If
 	// dbt or SQL File tasks are used, `git_source` must be defined on the job.
 	GitSource types.List `tfsdk:"git_source"`
-
+	// An optional set of health rules that can be defined for this job.
 	Health types.List `tfsdk:"health"`
 	// A list of job cluster specifications that can be shared and reused by
 	// tasks of this job. Libraries cannot be declared in a shared job cluster.
@@ -4186,7 +4190,9 @@ type CreateJob_SdkV2 struct {
 	// Job-level parameter definitions
 	Parameters types.List `tfsdk:"parameter"`
 	// Path of the job parent folder in workspace file tree. If absent, the job
-	// doesn't have a workspace object.
+	// doesn't have a parent folder.
+	//
+	// Example: /Workspace/Projects/my_project
 	ParentPath types.String `tfsdk:"parent_path"`
 	// The performance mode on a serverless job. This field determines the level
 	// of compute performance or cost-efficiency for the run. The performance
@@ -8793,7 +8799,8 @@ type GitSource_SdkV2 struct {
 	// Unique identifier of the service used to host the Git repository. The
 	// value is case insensitive.
 	GitProvider types.String `tfsdk:"provider"`
-
+	// Read-only state of the remote repository at the time the job was run.
+	// This field is only included on job runs.
 	GitSnapshot types.List `tfsdk:"git_snapshot"`
 	// Name of the tag to be checked out and used by this job. This field cannot
 	// be specified in conjunction with git_branch or git_commit.
@@ -8803,7 +8810,8 @@ type GitSource_SdkV2 struct {
 	// The source of the job specification in the remote repository when the job
 	// is source controlled.
 	JobSource types.List `tfsdk:"job_source"`
-
+	// Sparse checkout settings for the repository. When set, only the
+	// directories listed in `patterns` are checked out.
 	SparseCheckout types.List `tfsdk:"sparse_checkout"`
 }
 
@@ -9827,7 +9835,6 @@ type JobCompletionTriggerConfigurationMonitoredJob_SdkV2 struct {
 	// The ID of the workspace containing the upstream job. This can differ from
 	// the caller's workspace and downstream services enforce correct
 	// entitlements and CAN_VIEW permissions for the user + job combination.
-	// SDR: https://databricks.atlassian.net/browse/SDR-5267
 	WorkspaceId types.String `tfsdk:"workspace_id"`
 }
 
@@ -10759,7 +10766,8 @@ func (m *JobEmailNotifications_SdkV2) SetOnSuccess(ctx context.Context, v []type
 type JobEnvironment_SdkV2 struct {
 	// The key of an environment. It has to be unique within a job.
 	EnvironmentKey types.String `tfsdk:"environment_key"`
-
+	// The environment specification, including the environment version and the
+	// dependencies to install before a task runs.
 	Spec types.List `tfsdk:"spec"`
 }
 
@@ -11810,7 +11818,7 @@ type JobSettings_SdkV2 struct {
 	// Note: dbt and SQL File tasks support only version-controlled sources. If
 	// dbt or SQL File tasks are used, `git_source` must be defined on the job.
 	GitSource types.List `tfsdk:"git_source"`
-
+	// An optional set of health rules that can be defined for this job.
 	Health types.List `tfsdk:"health"`
 	// A list of job cluster specifications that can be shared and reused by
 	// tasks of this job. Libraries cannot be declared in a shared job cluster.
@@ -11838,7 +11846,9 @@ type JobSettings_SdkV2 struct {
 	// Job-level parameter definitions
 	Parameters types.List `tfsdk:"parameter"`
 	// Path of the job parent folder in workspace file tree. If absent, the job
-	// doesn't have a workspace object.
+	// doesn't have a parent folder.
+	//
+	// Example: /Workspace/Projects/my_project
 	ParentPath types.String `tfsdk:"parent_path"`
 	// The performance mode on a serverless job. This field determines the level
 	// of compute performance or cost-efficiency for the run. The performance
@@ -13035,8 +13045,21 @@ func (m JobSource_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type JobsHealthRule_SdkV2 struct {
+	// Specifies the health metric that is being evaluated for a particular
+	// health rule.
+	//
+	// * `RUN_DURATION_SECONDS`: Expected total time for a run in seconds. *
+	// `STREAMING_BACKLOG_BYTES`: An estimate of the maximum bytes of data
+	// waiting to be consumed across all streams. This metric is in Public
+	// Preview. * `STREAMING_BACKLOG_RECORDS`: An estimate of the maximum offset
+	// lag across all streams. This metric is in Public Preview. *
+	// `STREAMING_BACKLOG_SECONDS`: An estimate of the maximum consumer delay
+	// across all streams. This metric is in Public Preview. *
+	// `STREAMING_BACKLOG_FILES`: An estimate of the maximum number of
+	// outstanding files across all streams. This metric is in Public Preview.
 	Metric types.String `tfsdk:"metric"`
-
+	// Specifies the operator used to compare the health metric value with the
+	// specified threshold.
 	Op types.String `tfsdk:"op"`
 	// Specifies the threshold value that the health metric should obey to
 	// satisfy the health rule.
@@ -13094,6 +13117,7 @@ func (m JobsHealthRule_SdkV2) Type(ctx context.Context) attr.Type {
 
 // An optional set of health rules that can be defined for this job.
 type JobsHealthRules_SdkV2 struct {
+	// The health rules to evaluate for each run.
 	Rules types.List `tfsdk:"rules"`
 }
 
@@ -14324,24 +14348,25 @@ func (m OutputSchemaInfo_SdkV2) Type(ctx context.Context) attr.Type {
 // one variant matching the corresponding trigger's type. Variants with no
 // runtime state today (`schedule`, `model`) are emitted as empty messages.
 type PerTriggerState_SdkV2 struct {
+	// State of the continuous trigger.
 	Continuous types.List `tfsdk:"continuous"`
-
+	// State of the file arrival trigger.
 	FileArrival types.List `tfsdk:"file_arrival"`
-
+	// State of the job completion trigger.
 	JobCompletion types.List `tfsdk:"job_completion"`
-
+	// State of the model trigger.
 	Model types.List `tfsdk:"model"`
 	// Whether this trigger is paused or not. Mirrors the configured
 	// pause_status.
 	PauseStatus types.String `tfsdk:"pause_status"`
-
+	// State of the periodic trigger.
 	Periodic types.List `tfsdk:"periodic"`
-
+	// State of the cron schedule trigger.
 	Schedule types.List `tfsdk:"schedule"`
 	// State for SQL condition evaluation, can coexist with other trigger
 	// states.
 	SqlCondition types.List `tfsdk:"sql_condition"`
-
+	// State of the table update trigger.
 	TableUpdate types.List `tfsdk:"table_update"`
 }
 
@@ -14843,6 +14868,8 @@ func (m PeriodicTriggerConfiguration_SdkV2) Type(ctx context.Context) attr.Type 
 }
 
 type PeriodicTriggerState_SdkV2 struct {
+	// The time of the next scheduled run, in epoch milliseconds. Only set while
+	// the trigger is not paused.
 	NextRunTime types.Int64 `tfsdk:"next_run_time"`
 }
 
@@ -20648,8 +20675,8 @@ type RunNow_SdkV2 struct {
 	JarParams types.List `tfsdk:"jar_params"`
 	// The ID of the job to be executed
 	JobId types.Int64 `tfsdk:"job_id"`
-	// Job-level parameters used in the run. for example `"param":
-	// "overriding_val"`
+	// Job-level parameters used in the run, for example `"param":
+	// "overriding_val"`.
 	JobParameters types.Map `tfsdk:"job_parameters"`
 	// A map from keys to values for jobs with notebook task, for example
 	// `"notebook_params": {"name": "john doe", "age": "35"}`. The map is passed
@@ -25106,7 +25133,8 @@ func (m *SparkSubmitTask_SdkV2) SetParameters(ctx context.Context, v []types.Str
 }
 
 type SparseCheckout_SdkV2 struct {
-	// List of patterns to include for sparse checkout.
+	// List of patterns to include for sparse checkout. Each pattern is the path
+	// of a directory relative to the repository root.
 	Patterns types.List `tfsdk:"patterns"`
 }
 
@@ -25331,7 +25359,8 @@ func (m *SqlAlertOutput_SdkV2) SetSqlStatements(ctx context.Context, v []SqlStat
 }
 
 type SqlConditionConfiguration_SdkV2 struct {
-	// The ID of the SQL query to evaluate as the trigger condition.
+	// The ID of the SQL query to evaluate as the trigger condition. Exactly one
+	// of `sql_query_id` or `file` must be set.
 	SqlQueryId types.String `tfsdk:"sql_query_id"`
 	// Determines how the SQL query result is interpreted to decide whether the
 	// condition fires. Must be set to a recognized value when provided. When
@@ -25352,7 +25381,7 @@ func (to *SqlConditionConfiguration_SdkV2) SyncFieldsDuringRead(ctx context.Cont
 }
 
 func (m SqlConditionConfiguration_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["sql_query_id"] = attrs["sql_query_id"].SetRequired()
+	attrs["sql_query_id"] = attrs["sql_query_id"].SetOptional()
 	attrs["trigger_mode"] = attrs["trigger_mode"].SetOptional()
 	attrs["warehouse_id"] = attrs["warehouse_id"].SetRequired()
 
@@ -30839,6 +30868,7 @@ func (m TableState_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type TableTriggerState_SdkV2 struct {
+	// The last observed state of each monitored table.
 	LastSeenTableStates types.List `tfsdk:"last_seen_table_states"`
 	// Indicates whether the trigger is using scalable monitoring.
 	UsingScalableMonitoring types.Bool `tfsdk:"using_scalable_monitoring"`
@@ -31124,7 +31154,7 @@ type Task_SdkV2 struct {
 	ForEachTask types.List `tfsdk:"for_each_task"`
 
 	GenAiComputeTask types.List `tfsdk:"gen_ai_compute_task"`
-
+	// An optional set of health rules that can be defined for this task.
 	Health types.List `tfsdk:"health"`
 	// If job_cluster_key, this task is executed reusing the cluster specified
 	// in `job.settings.job_clusters`.
@@ -34395,7 +34425,7 @@ type TriggerSettings_SdkV2 struct {
 	// in combination with other trigger types and runs *after* other trigger
 	// types conditions are evaluated.
 	SqlCondition types.List `tfsdk:"sql_condition"`
-
+	// Table update trigger settings.
 	TableUpdate types.List `tfsdk:"table_update"`
 }
 
@@ -34744,8 +34774,9 @@ func (m *TriggerSettings_SdkV2) SetTableUpdate(ctx context.Context, v TableUpdat
 }
 
 type TriggerStateProto_SdkV2 struct {
+	// State of the file arrival trigger.
 	FileArrival types.List `tfsdk:"file_arrival"`
-
+	// State of the job completion trigger.
 	JobCompletion types.List `tfsdk:"job_completion"`
 	// Whether this trigger is paused or not. For continuous schedules, it can
 	// differ from the configured pause_status whenever a paused continuous job
@@ -34754,7 +34785,7 @@ type TriggerStateProto_SdkV2 struct {
 	// State for SQL condition evaluation, can coexist with other trigger
 	// states.
 	SqlCondition types.List `tfsdk:"sql_condition"`
-
+	// State of the table update trigger.
 	Table types.List `tfsdk:"table"`
 }
 
@@ -35272,6 +35303,7 @@ func (m VolumeSource_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type Webhook_SdkV2 struct {
+	// The ID of the notification destination to call. Must be a UUID.
 	Id types.String `tfsdk:"id"`
 }
 

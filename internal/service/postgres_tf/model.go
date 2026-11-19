@@ -2222,8 +2222,9 @@ type CreateDatabaseRequest struct {
 	// The ID used to identify and manage the Database resource through the API.
 	// The Postgres database name is specified in `spec.postgres_database`.
 	//
-	// This value should be 4-63 characters, and only use characters available
-	// in DNS names, as defined by RFC-1123
+	// This value should be 3-63 characters, start with a lowercase letter, end
+	// with a lowercase letter or digit, and contain only lowercase letters,
+	// digits, and hyphens.
 	//
 	// If database_id is not specified in the request, it is generated
 	// automatically.
@@ -2232,7 +2233,9 @@ type CreateDatabaseRequest struct {
 	// projects/{project_id}/branches/{branch_id}
 	Parent types.String `tfsdk:"-"`
 	// If true, update the database if it already exists instead of returning an
-	// error.
+	// error. This requires `database_id` to be set. Without `database_id`, the
+	// request follows the normal create path and fails if the database name
+	// already exists.
 	ReplaceExisting types.Bool `tfsdk:"-"`
 }
 
@@ -2696,8 +2699,9 @@ type CreateRoleRequest struct {
 	// The ID used to identify and manage the Role resource through the API. The
 	// Postgres role name is specified in `spec.postgres_role`.
 	//
-	// This value should be 4-63 characters, and valid characters are lowercase
-	// letters, numbers, and hyphens, as defined by RFC 1123.
+	// This value should be 3-63 characters, start with a lowercase letter, end
+	// with a lowercase letter or digit, and contain only lowercase letters,
+	// digits, and hyphens.
 	//
 	// If role_id is not specified in the request, it is generated
 	// automatically.
@@ -2814,10 +2818,14 @@ type CreateSnapshotRequest struct {
 	// The project in which to create the snapshot. Format:
 	// projects/{project_id}
 	Parent types.String `tfsdk:"-"`
-	// The snapshot to create.
+	// The snapshot to create. Only `spec` is read from this message; the system
+	// sets the other fields.
 	Snapshot types.Object `tfsdk:"snapshot"`
 	// Client-chosen ID for the snapshot. It becomes the final segment of the
-	// snapshot resource name and cannot be changed after creation.
+	// snapshot resource name and cannot be changed after creation. The ID must
+	// be 3 to 63 characters long, start with a lowercase letter, end with a
+	// lowercase letter or digit, and contain only lowercase letters, digits,
+	// and hyphens.
 	SnapshotId types.String `tfsdk:"-"`
 }
 
@@ -2915,6 +2923,8 @@ func (m *CreateSnapshotRequest) SetSnapshot(ctx context.Context, v Snapshot) {
 }
 
 type CreateSyncedTableRequest struct {
+	// The synced table to create. Its configuration is read from spec, and its
+	// name comes from synced_table_id.
 	SyncedTable types.Object `tfsdk:"synced_table"`
 	// The ID to use for the Synced Table. This becomes the final component of
 	// the SyncedTable's resource name. ID is required and is the synced table
@@ -4008,8 +4018,8 @@ type DatabaseDatabaseSpec struct {
 	// The name of the role that owns the database. Format:
 	// projects/{project_id}/branches/{branch_id}/roles/{role_id}
 	//
-	// To change the owner, pass valid existing Role name when updating the
-	// Database
+	// The role must be in the same branch as the database. To change the owner,
+	// pass valid existing Role name when updating the Database
 	//
 	// Required when creating the Database.
 	Role types.String `tfsdk:"role"`
@@ -4799,7 +4809,8 @@ type DeleteRoleRequest struct {
 	// projects/{project_id}/branches/{branch_id}/roles/{role_id}
 	Name types.String `tfsdk:"-"`
 	// Reassign objects. If this is set, all objects owned by the role are
-	// reassigned to the role specified in this parameter.
+	// reassigned to the role specified in this parameter. The role must already
+	// exist. Format: projects/{project_id}/branches/{branch_id}/roles/{role_id}
 	//
 	// NOTE: setting this requires spinning up a compute to succeed, since it
 	// involves running SQL queries.
@@ -10636,6 +10647,7 @@ func (m RevealRolePasswordResponse) Type(ctx context.Context) attr.Type {
 
 // Role represents a Postgres role within a Branch.
 type Role struct {
+	// A timestamp indicating when the role was created.
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
 	// Output only. The full resource path of the role. Format:
 	// projects/{project_id}/branches/{branch_id}/roles/{role_id}
@@ -10655,7 +10667,7 @@ type Role struct {
 	// Current status of the role, including its identity type, authentication
 	// method, and role attributes.
 	Status types.Object `tfsdk:"status"`
-
+	// A timestamp indicating when the role was last updated.
 	UpdateTime timetypes.RFC3339 `tfsdk:"update_time"`
 }
 
@@ -10813,10 +10825,13 @@ func (m *Role) SetStatus(ctx context.Context, v RoleRoleStatus) {
 // Postgres keyword naming e.g. CREATEDB, BYPASSRLS, etc. which is why they
 // don't include typical underscores between words.
 type RoleAttributes struct {
+	// Whether the role bypasses every row-level security policy (the Postgres
+	// BYPASSRLS attribute).
 	Bypassrls types.Bool `tfsdk:"bypassrls"`
-
+	// Whether the role can create databases (the Postgres CREATEDB attribute).
 	Createdb types.Bool `tfsdk:"createdb"`
-
+	// Whether the role can create, alter and drop other roles (the Postgres
+	// CREATEROLE attribute).
 	Createrole types.Bool `tfsdk:"createrole"`
 }
 
@@ -10911,8 +10926,7 @@ func (m RoleOperationMetadata) Type(ctx context.Context) attr.Type {
 }
 
 type RoleRoleSpec struct {
-	// The desired API-exposed Postgres role attribute to associate with the
-	// role. Optional.
+	// The Postgres role attributes to grant to the role.
 	Attributes types.Object `tfsdk:"attributes"`
 	// Controls how the Postgres role authenticates when a client opens a
 	// database connection. Supported values:
@@ -10937,8 +10951,10 @@ type RoleRoleSpec struct {
 	//
 	// This value cannot be changed after creation.
 	AuthMethod types.String `tfsdk:"auth_method"`
-	// The type of role. When specifying a managed-identity, the chosen
-	// postgres_role must be a valid:
+	// The type of Databricks identity that backs the role. Leave unset to
+	// create a native Postgres role that is not associated with a Databricks
+	// identity. When specifying a managed-identity, the chosen postgres_role
+	// must be a valid:
 	//
 	// * application ID for SERVICE_PRINCIPAL * user email for USER * group name
 	// for GROUP
@@ -10961,7 +10977,7 @@ type RoleRoleSpec struct {
 	// identity, then postgres_role must be one of the following:
 	//
 	// 1. user email for IdentityType.USER 2. app ID for
-	// IdentityType.SERVICE_PRINCIPAL 2. group name for IdentityType.GROUP
+	// IdentityType.SERVICE_PRINCIPAL 3. group name for IdentityType.GROUP
 	//
 	// This value cannot be changed after creation.
 	PostgresRole types.String `tfsdk:"postgres_role"`
@@ -11138,13 +11154,13 @@ func (m *RoleRoleSpec) SetMembershipRoles(ctx context.Context, v []types.String)
 }
 
 type RoleRoleStatus struct {
-	// The PG role attributes associated with the role.
+	// The Postgres role attributes currently granted to the role.
 	Attributes types.Object `tfsdk:"attributes"`
-
+	// How the role authenticates when it connects to Postgres.
 	AuthMethod types.String `tfsdk:"auth_method"`
-	// The type of the role.
+	// The type of Databricks identity that backs the role, if any.
 	IdentityType types.String `tfsdk:"identity_type"`
-	// An enum value for a standard role that this role is a member of.
+	// The standard roles that the role is currently a member of.
 	MembershipRoles types.List `tfsdk:"membership_roles"`
 	// The name of the Postgres role.
 	PostgresRole types.String `tfsdk:"postgres_role"`
@@ -11492,7 +11508,10 @@ func (m *ScheduleCadence) SetWeeklySchedule(ctx context.Context, v WeeklySchedul
 }
 
 // An immutable, point-in-time copy of a branch's data within a project. It
-// remains available after the source branch is deleted.
+// remains available after the source branch is deleted. To restore a snapshot,
+// create a new branch with `spec.source_snapshot` set to the snapshot's
+// resource name. For an overview, see
+// https://docs.databricks.com/aws/en/oltp/projects/snapshots.
 type Snapshot struct {
 	// When the snapshot was created.
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
@@ -11501,7 +11520,8 @@ type Snapshot struct {
 	Name types.String `tfsdk:"name"`
 	// The user-chosen ID; the final segment of `name`.
 	SnapshotId types.String `tfsdk:"snapshot_id"`
-	// Client-provided configuration of the snapshot.
+	// Client-provided configuration of the snapshot. When you create a
+	// snapshot, set exactly one of `expire_time`, `ttl`, or `no_expiry`.
 	Spec types.Object `tfsdk:"spec"`
 	// Server-observed state of the snapshot.
 	Status types.Object `tfsdk:"status"`
@@ -11843,23 +11863,28 @@ func (m SnapshotScheduleOperationMetadata) Type(ctx context.Context) attr.Type {
 
 // Client-provided configuration of the snapshot.
 type SnapshotSpec struct {
-	// Absolute time at which the snapshot is deleted. Mutually exclusive with
-	// `ttl` and `no_expiry`.
+	// Absolute time at which the snapshot is deleted. It must not be in the
+	// past. Mutually exclusive with `ttl` and `no_expiry`.
 	ExpireTime timetypes.RFC3339 `tfsdk:"expire_time"`
-	// If true, the snapshot never expires. Mutually exclusive with `ttl` and
+	// If true, the snapshot never expires. The value `false` is rejected; set
+	// `expire_time` or `ttl` instead. Mutually exclusive with `ttl` and
 	// `expire_time`.
 	NoExpiry types.Bool `tfsdk:"no_expiry"`
-	// The source branch to snapshot. Format:
-	// projects/{project_id}/branches/{branch_id}
+	// The source branch to snapshot. The branch must belong to the same project
+	// as the snapshot. Format: projects/{project_id}/branches/{branch_id}
 	SourceBranch types.String `tfsdk:"source_branch"`
-	// LSN to snapshot from, e.g. `16/B374D848`. Mutually exclusive with
-	// `source_branch_time`.
+	// Postgres log sequence number (LSN) to snapshot from. It must fall within
+	// the project's history retention window. If neither this field nor
+	// `source_branch_time` is set, the snapshot captures the current head of
+	// the source branch. Mutually exclusive with `source_branch_time`.
 	SourceBranchLsn types.String `tfsdk:"source_branch_lsn"`
-	// Timestamp to snapshot from. Mutually exclusive with `source_branch_lsn`.
+	// Timestamp to snapshot from. It must fall within the project's history
+	// retention window. Mutually exclusive with `source_branch_lsn`.
 	SourceBranchTime timetypes.RFC3339 `tfsdk:"source_branch_time"`
-	// Time-to-live. The snapshot expires this long after it is created.
-	// Mutually exclusive with `expire_time` and `no_expiry`. Reads report the
-	// resolved absolute `expire_time` instead.
+	// Time-to-live, as a positive duration in seconds with an `s` suffix. The
+	// snapshot expires this long after it is created. Mutually exclusive with
+	// `expire_time` and `no_expiry`. Reads report the resolved absolute
+	// `expire_time` instead.
 	Ttl timetypes.GoDuration `tfsdk:"ttl"`
 }
 
@@ -12151,14 +12176,19 @@ func (m *StartMigrationResponse) SetMigration(ctx context.Context, v Migration) 
 	m.Migration = vs
 }
 
+// A synced table is a read-only Postgres table that Databricks keeps up to date
+// from a Unity Catalog source table through a managed pipeline. It is also
+// registered in Unity Catalog under its three-part name. See
+// https://docs.databricks.com/aws/en/oltp/projects/sync-tables.
 type SyncedTable struct {
+	// The time when the synced table was created.
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
-	// Output only. The Full resource name of the synced table in Postgres where
-	// (catalog, schema, table) are the UC entity names.
+	// The full resource name of the synced table, where (catalog, schema,
+	// table) are the Unity Catalog names of the synced table.
 	//
-	// Format "synced_tables/{catalog}.{schema}.{table}"
+	// Format: "synced_tables/{catalog}.{schema}.{table}".
 	//
-	// For the corresponding source table in the Unity catalog look for the
+	// For the corresponding source table in Unity Catalog, look for the
 	// "source_table_full_name" attribute.
 	Name types.String `tfsdk:"name"`
 	// Configuration details of the synced table, such as the source table,
@@ -12166,7 +12196,9 @@ type SyncedTable struct {
 	Spec types.Object `tfsdk:"spec"`
 	// Synced Table data synchronization status.
 	Status types.Object `tfsdk:"status"`
-	// The part of the name, chosen by the user when the resource was created.
+	// The three-part Unity Catalog name of the synced table, in the format
+	// "{catalog}.{schema}.{table}". It is the synced_table_id that was used to
+	// create the synced table and the last component of name.
 	SyncedTableId types.String `tfsdk:"synced_table_id"`
 	// The Unity Catalog table ID for this synced table.
 	Uid types.String `tfsdk:"uid"`
@@ -12441,6 +12473,7 @@ func (m SyncedTablePipelineProgress) Type(ctx context.Context) attr.Type {
 }
 
 type SyncedTablePosition struct {
+	// The source Delta table version that the last successful sync read.
 	DeltaTableSyncInfo types.Object `tfsdk:"delta_table_sync_info"`
 	// The end timestamp of the most recent successful synchronization. This is
 	// the time when the data is available in the synced table.
@@ -12550,9 +12583,13 @@ type SyncedTableSyncedTableSpec struct {
 	// significantly improves performance for large tables. Requires
 	// workspace-level enablement through Lakebase Accelerated Sync preview.
 	AcceleratedSync types.Bool `tfsdk:"accelerated_sync"`
-	// The full resource name the branch associated with the table.
+	// The full resource name of the branch that contains the synced table.
 	//
 	// Format: "projects/{project_id}/branches/{branch_id}".
+	//
+	// A value must be specified when creating a synced table inside a standard
+	// catalog. Inside a Lakebase catalog it can be omitted, and if specified it
+	// must match the branch of that catalog.
 	Branch types.String `tfsdk:"branch"`
 	// If true, the synced table's logical database and schema resources in PG
 	// will be created if they do not already exist. The request will fail if
@@ -12560,33 +12597,32 @@ type SyncedTableSyncedTableSpec struct {
 	//
 	// Defaults to true if omitted.
 	CreateDatabaseObjectsIfMissing types.Bool `tfsdk:"create_database_objects_if_missing"`
-	// ID of an existing pipeline to bin-pack this synced table into. At most
-	// one of existing_pipeline_id and new_pipeline_spec should be defined.
+	// ID of an existing pipeline to bin-pack this synced table into. The
+	// pipeline must be a synced table pipeline that runs continuously if and
+	// only if scheduling_policy is CONTINUOUS. At most one of
+	// existing_pipeline_id and new_pipeline_spec should be defined.
 	//
-	// The pipeline used for the synced table is returned via the top level
-	// pipeline_id attribute.
+	// The pipeline used for the synced table is returned in status.pipeline_id.
 	ExistingPipelineId types.String `tfsdk:"existing_pipeline_id"`
 	// Extra PostgreSQL-only columns to add to the synced table.
 	ExtraColumns types.List `tfsdk:"extra_columns"`
 	// Specification for creating a new pipeline. At most one of
 	// existing_pipeline_id and new_pipeline_spec should be defined.
 	//
-	// The pipeline used for the synced table is returned via the top level
-	// pipeline_id attribute.
+	// The pipeline used for the synced table is returned in status.pipeline_id.
 	NewPipelineSpec types.Object `tfsdk:"new_pipeline_spec"`
-	// The Postgres database name where the synced table will be created in.
-	//
-	// If this synced table is created inside a Lakebase Catalog, this attribute
-	// can be omitted on creation and is inferred from the postgres_database
-	// associated with the Lakebase Catalog. If specified when inside a Lakebase
-	// Catalog, the value must match.
-	//
-	// A value must be specified when creating a synced table inside a Standard
-	// Catalog.
+	// The name of the Postgres database where the synced table is created. A
+	// value must be specified on creation. If the synced table is created
+	// inside a Lakebase catalog, the value must match the Postgres database of
+	// that catalog.
 	PostgresDatabase types.String `tfsdk:"postgres_database"`
 	// Primary Key columns to be used for data insert/update in the destination.
+	// At least one column must be specified.
 	PrimaryKeyColumns types.List `tfsdk:"primary_key_columns"`
-	// Scheduling policy of the underlying pipeline.
+	// Scheduling policy of the underlying pipeline. A value must be specified
+	// on creation. See
+	// https://docs.databricks.com/aws/en/oltp/projects/sync-tables for how to
+	// choose a sync mode.
 	SchedulingPolicy types.String `tfsdk:"scheduling_policy"`
 	// Three-part (catalog, schema, table) name of the source Delta table.
 	//
@@ -13040,7 +13076,8 @@ type SyncedTableSyncedTableStatus struct {
 	LastSyncTime timetypes.RFC3339 `tfsdk:"last_sync_time"`
 	// A text description of the current state of the synced table.
 	Message types.String `tfsdk:"message"`
-
+	// Progress of the sync that is currently running, either the initial data
+	// load or an update of a triggered or snapshot synced table.
 	OngoingSyncProgress types.Object `tfsdk:"ongoing_sync_progress"`
 	// ID of the associated pipeline.
 	PipelineId types.String `tfsdk:"pipeline_id"`
@@ -13673,7 +13710,8 @@ type UpdateDatabaseRequest struct {
 	// The resource name of the database. Format:
 	// projects/{project_id}/branches/{branch_id}/databases/{database_id}
 	Name types.String `tfsdk:"-"`
-	// The list of fields to update.
+	// The list of fields to update. The updatable fields are `spec.role` and
+	// `spec.postgres_database`.
 	UpdateMask types.String `tfsdk:"-"`
 }
 

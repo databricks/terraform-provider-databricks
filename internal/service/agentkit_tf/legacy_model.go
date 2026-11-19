@@ -459,7 +459,9 @@ type CreateManagedMemoryStoreRequest_SdkV2 struct {
 	ManagedMemoryStore types.List `tfsdk:"managed_memory_store"`
 	// Caller-provided, workspace-unique memory store ID. It must be 3-56
 	// characters, begin with a lowercase letter, contain only lowercase
-	// letters, digits, and hyphens, and end with a letter or digit.
+	// letters, digits, and hyphens, and end with a letter or digit. It becomes
+	// the last segment of the store's `name` and cannot be changed after
+	// creation.
 	ManagedMemoryStoreId types.String `tfsdk:"-"`
 }
 
@@ -1667,7 +1669,9 @@ func (m GetSessionStoreRequest_SdkV2) Type(ctx context.Context) attr.Type {
 type GrantMemoryStorePermissionRequest_SdkV2 struct {
 	// Resource name in the form `memory-stores/{managed_memory_store_id}`.
 	Name types.String `tfsdk:"-"`
-	// Permission level to grant.
+	// Permission level to grant. `WRITE` includes `READ`. Grants are additive:
+	// granting `READ` to a principal that already holds `WRITE` does not lower
+	// its access. To downgrade a principal, revoke its grants and grant again.
 	Permission types.String `tfsdk:"permission"`
 	// Principal to grant the permission to.
 	Principal types.List `tfsdk:"principal"`
@@ -1976,9 +1980,10 @@ type ListManagedMemoryEntriesRequest_SdkV2 struct {
 	Parent types.String `tfsdk:"-"`
 	// Optional path prefix used to restrict entries within the actor partition.
 	PathPrefix types.String `tfsdk:"-"`
-	// Optional session identifier. When set, only entries with this exact
-	// `session_id` are returned. Omitted-session (cross-session) entries are
-	// not included. Ignored when path is set.
+	// Deprecated: the service will ignore this filter. Until then, when set,
+	// only entries with this exact `session_id` are returned, and
+	// omitted-session (cross-session) entries are not included. Ignored when
+	// path is set.
 	SessionId types.String `tfsdk:"-"`
 	// Controls whether each returned entry includes memory content. Defaults to
 	// `FULL`.
@@ -2172,7 +2177,8 @@ type ListManagedMemoryStoresRequest_SdkV2 struct {
 	// Maximum number of stores to return. The service may return fewer stores
 	// than requested. Defaults to 10; must be between 1 and 100.
 	PageSize types.Int64 `tfsdk:"-"`
-	// Opaque pagination token from a previous ListManagedMemoryStores response.
+	// Opaque pagination token, taken from the `next_page_token` of a previous
+	// response.
 	PageToken types.String `tfsdk:"-"`
 }
 
@@ -3284,17 +3290,18 @@ type ManagedMemoryEntry_SdkV2 struct {
 	// `memory-stores/{managed_memory_store_id}/entries/{managed_memory_entry_id}`.
 	// Required for updates; assigned by the service on creation.
 	Name types.String `tfsdk:"name"`
-	// Absolute, case-sensitive path identifying the entry within its actor and
-	// optional session. Paths must begin with `/` and must not contain empty,
-	// `.` or `..` segments.
+	// Absolute, case-sensitive path identifying the entry within its actor and,
+	// until the deprecated `session_id` is ignored, its optional session. Paths
+	// must begin with `/` and must not contain empty, `.` or `..` segments.
 	Path types.String `tfsdk:"path"`
-	// Optional identifier for the session associated with this memory entry.
-	// When omitted, the entry applies across the actor's sessions.
+	// Deprecated: memory entries will be identified by `(actor_id, path)`, and
+	// the service will ignore this field on writes and omit it from responses.
+	// Until then, an omitted value means the entry applies across the actor's
+	// sessions.
 	SessionId types.String `tfsdk:"session_id"`
 	// Which writer created this entry. Caller sets this on Create; immutable
-	// after creation. While the workspace's default-source-type rollout flag is
-	// on, omitted or UNSPECIFIED is stored as AGENT. While it is off, omitted
-	// is stored unset and UNSPECIFIED as UNSPECIFIED.
+	// after creation. The server may store an omitted or UNSPECIFIED value as
+	// AGENT.
 	SourceType types.String `tfsdk:"source_type"`
 	// Time when the entry was last updated.
 	UpdateTime timetypes.RFC3339 `tfsdk:"update_time"`
@@ -3473,7 +3480,11 @@ func (m *ManagedMemoryEntrySearchResult_SdkV2) SetManagedMemoryEntry(ctx context
 	m.ManagedMemoryEntry = types.ListValueMust(t, vs)
 }
 
-// A workspace-scoped memory store backed by service-managed storage.
+// A workspace-scoped memory store backed by service-managed storage. A store is
+// the container for an agent's memory entries and the boundary at which access
+// is granted; creating one provisions its Lakebase storage automatically. See
+// https://docs.databricks.com/aws/en/agents/agent-memory/managed-memory for an
+// overview.
 type ManagedMemoryStore_SdkV2 struct {
 	// Time when the store was created.
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
@@ -4181,9 +4192,9 @@ type SearchManagedMemoryEntriesRequest_SdkV2 struct {
 	PathPrefix types.String `tfsdk:"path_prefix"`
 	// Free-form search query.
 	Query types.String `tfsdk:"query"`
-	// Optional session identifier. When set, only entries with this exact
-	// `session_id` are searched. Omitted-session (cross-session) entries are
-	// not included.
+	// Deprecated: the service will ignore this filter. Until then, when set,
+	// only entries with this exact `session_id` are searched, and
+	// omitted-session (cross-session) entries are not included.
 	SessionId types.String `tfsdk:"session_id"`
 	// Controls whether each returned entry includes memory content. Search
 	// scores are always returned. Defaults to `FULL`.
@@ -4860,7 +4871,9 @@ func (m *SessionStorePermission_SdkV2) SetPrincipal(ctx context.Context, v Store
 
 // Service-managed storage backing a memory store.
 type StorageBackend_SdkV2 struct {
-	// Backend-specific identifier. For Lakebase, this is the project ID.
+	// Backend-specific identifier. For Lakebase, this is the resource name of
+	// the database that holds the store's entries, in the form
+	// `projects/{project_id}/branches/{branch_id}/databases/{database_id}`.
 	BackendId types.String `tfsdk:"backend_id"`
 	// Type of the storage backend.
 	BackendType types.String `tfsdk:"backend_type"`
@@ -4916,9 +4929,11 @@ func (m StorageBackend_SdkV2) Type(ctx context.Context) attr.Type {
 // Lakebase identifier: a user's email or a service principal's application
 // (client) id.
 type StorePrincipal_SdkV2 struct {
+	// Identifier of the principal: the email address of a user, or the
+	// application (client) ID of a service principal. Groups are not supported.
 	Name types.String `tfsdk:"name"`
-	// The kind of principal. Required unless the deprecated type alias is
-	// supplied.
+	// The kind of principal, which determines how `name` is interpreted. A
+	// principal without a type is rejected.
 	PrincipalType types.String `tfsdk:"principal_type"`
 }
 
@@ -5081,8 +5096,9 @@ type UpdateManagedMemoryStoreRequest_SdkV2 struct {
 	ManagedMemoryStore types.List `tfsdk:"managed_memory_store"`
 	// Resource name in the form `memory-stores/{managed_memory_store_id}`.
 	Name types.String `tfsdk:"-"`
-	// Only `description` and `metadata` may be updated. Selecting `metadata`
-	// replaces the entire map.
+	// Only `description` and `metadata` may be updated. Selecting `description`
+	// while leaving it unset clears it. Selecting `metadata` replaces the
+	// entire map.
 	UpdateMask types.String `tfsdk:"-"`
 }
 

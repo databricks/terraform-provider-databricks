@@ -104,6 +104,7 @@ type AiClassifyRequest struct {
 	// ["spam", "not_spam"]), or a JSON object mapping each label to a
 	// description (e.g. {"spam": "unsolicited bulk message", "not_spam": "a
 	// legitimate message"}). Accepts 2 to 500 labels, each 1 to 100 characters.
+	// When multilabel is true, a single label is also accepted.
 	Labels jsontypes.Normalized `tfsdk:"labels"`
 	// Function options. Omitted fields fall back to their documented defaults.
 	Options types.Object `tfsdk:"options"`
@@ -353,8 +354,8 @@ func (m AiClassifyResponseMetadata) Type(ctx context.Context) attr.Type {
 
 // ai_decide
 type AiDecideOptions struct {
-	// The function API version to invoke. Defaults to "1.0". Supported
-	// versions: ["1.0"].
+	// The function API version to invoke. If unset, the version is inferred per
+	// row. Supported versions: ["1.0"].
 	Version types.String `tfsdk:"version"`
 }
 
@@ -1060,9 +1061,11 @@ type AiExtractRequest struct {
 	Options types.Object `tfsdk:"options"`
 	// The extraction schema defining the fields to extract. Either a JSON array
 	// of field names, assumed to be strings (e.g. ["company", "valuation"]), or
-	// a JSON object mapping each field to its type/description/nullability
-	// (e.g. {"company": {"type": "string", "description": "the company
-	// name"}}). Accepts up to 256 fields, 12 levels of nesting, and 500 enum
+	// a JSON object mapping each field to its type/description (e.g.
+	// {"company": {"type": "string", "description": "the company name"}}). Enum
+	// fields list their values in "labels" (e.g. {"currency": {"type": "enum",
+	// "labels": ["USD", "EUR"]}}). Primitive and enum fields are nullable by
+	// default. Accepts up to 256 fields, 12 levels of nesting, and 500 enum
 	// values. Supported field types are string, integer, number, boolean, and
 	// enum.
 	Schema jsontypes.Normalized `tfsdk:"schema"`

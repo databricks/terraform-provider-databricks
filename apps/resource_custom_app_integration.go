@@ -109,11 +109,11 @@ func customAppIntegrationCustomizeDiff(ctx context.Context, d *schema.ResourceDi
 	// The API ignores an empty user_authorized_scopes list in an update and keeps the old scopes,
 	// so clearing it would report success without changing anything.
 	if d.HasChange("user_authorized_scopes") {
-		old, new := d.GetChange("user_authorized_scopes")
-		if len(old.([]any)) > 0 && len(new.([]any)) == 0 {
+		oldScopes, newScopes := d.GetChange("user_authorized_scopes")
+		if len(oldScopes.([]any)) > 0 && len(newScopes.([]any)) == 0 {
 			return fmt.Errorf("user_authorized_scopes can't be removed from an existing custom app integration, "+
 				"because the API keeps the current scopes %v when an empty list is sent. "+
-				"Keep at least one scope, or recreate the integration (this issues a new client ID and secret)", old)
+				"Keep at least one scope, or recreate the integration (this issues a new client ID and secret)", oldScopes)
 		}
 	}
 	// token_access_policy is computed, so removing the block wouldn't show up in the plan.

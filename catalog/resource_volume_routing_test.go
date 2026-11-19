@@ -179,16 +179,18 @@ func routingVolumeAttributes(extra map[string]string) map[string]string {
 }
 
 // routingApplyVolume plans v against state and applies the plan with c, as one terraform
-// apply does, and returns the new state. A nil state creates the volume.
+// apply does, through sdk-go if sdkGo is set, and returns the new state. A nil state
+// creates the volume.
 func routingApplyVolume(
 	t *testing.T,
 	c *common.DatabricksClient,
 	state *terraform.InstanceState,
 	v routingVolume,
+	sdkGo bool,
 ) (*terraform.InstanceState, diag.Diagnostics) {
 	t.Helper()
 	ctx := context.WithValue(context.Background(), common.ResourceName, "volume")
-	r := ResourceVolume().ToResource()
+	r := volumeResource(sdkGo)
 	raw := v.rawConfig(t, r)
 	if state == nil {
 		state = &terraform.InstanceState{}
@@ -201,16 +203,16 @@ func routingApplyVolume(
 	return r.Apply(ctx, state, diff, c)
 }
 
-func routingRefreshVolume(c *common.DatabricksClient,
-	state *terraform.InstanceState) (*terraform.InstanceState, diag.Diagnostics) {
+func routingRefreshVolume(c *common.DatabricksClient, state *terraform.InstanceState,
+	sdkGo bool) (*terraform.InstanceState, diag.Diagnostics) {
 	ctx := context.WithValue(context.Background(), common.ResourceName, "volume")
-	return ResourceVolume().ToResource().RefreshWithoutUpgrade(ctx, state, c)
+	return volumeResource(sdkGo).RefreshWithoutUpgrade(ctx, state, c)
 }
 
-func routingDestroyVolume(c *common.DatabricksClient,
-	state *terraform.InstanceState) diag.Diagnostics {
+func routingDestroyVolume(c *common.DatabricksClient, state *terraform.InstanceState,
+	sdkGo bool) diag.Diagnostics {
 	ctx := context.WithValue(context.Background(), common.ResourceName, "volume")
-	_, diags := ResourceVolume().ToResource().Apply(ctx, state,
+	_, diags := volumeResource(sdkGo).Apply(ctx, state,
 		&terraform.InstanceDiff{Destroy: true}, c)
 	return diags
 }
@@ -221,6 +223,10 @@ func routingDestroyVolume(c *common.DatabricksClient,
 // DELETE in TestVolumeAccountProviderWorkspaceHost. Replay serves every host from one
 // local server, so it can't tell the hosts apart.
 func TestVolumeAccountProviderPatchesGoToWorkspaceHost(t *testing.T) {
+	forEachVolumeClient(t, testVolumeAccountProviderPatchesGoToWorkspaceHost)
+}
+
+func testVolumeAccountProviderPatchesGoToWorkspaceHost(t *testing.T, sdkGo bool) {
 	routes := map[string]routingResponse{
 		"POST " + workspaceHostVolumesPath: {http.StatusOK,
 			nil, routingVolumeJSON("replay-admin@example.com", "")},
@@ -245,7 +251,7 @@ func TestVolumeAccountProviderPatchesGoToWorkspaceHost(t *testing.T) {
 	state, diags := routingApplyVolume(t, newClient(), nil, routingVolume{
 		attributes:  routingVolumeAttributes(map[string]string{"owner": "data-engineers"}),
 		workspaceID: "12345",
-	})
+	}, sdkGo)
 	require.False(t, diags.HasError(), "%v", diags)
 	workspace.set("GET "+routingVolumePath, routingResponse{http.StatusOK,
 		nil, routingVolumeJSON("data-stewards", "routed comment")})
@@ -253,7 +259,7 @@ func TestVolumeAccountProviderPatchesGoToWorkspaceHost(t *testing.T) {
 		attributes: routingVolumeAttributes(map[string]string{"owner": "data-stewards",
 			"comment": "routed comment"}),
 		workspaceID: "12345",
-	})
+	}, sdkGo)
 	require.False(t, diags.HasError(), "%v", diags)
 
 	lookup := workspaceHostAccountDomain + " GET " + workspaceHostLookupPath +
@@ -277,6 +283,10 @@ func TestVolumeAccountProviderPatchesGoToWorkspaceHost(t *testing.T) {
 // https://.cloud.databricks.com. The test transport rejects that host, standing in for
 // the DNS failure a real run gets, and create fails with the transport error.
 func TestVolumeAccountProviderLookupWithoutDeploymentName(t *testing.T) {
+	forEachVolumeClient(t, testVolumeAccountProviderLookupWithoutDeploymentName)
+}
+
+func testVolumeAccountProviderLookupWithoutDeploymentName(t *testing.T, sdkGo bool) {
 	_, accountURL := newRoutingServer(t, routingAccountJSON, map[string]routingResponse{
 		"GET " + workspaceHostLookupPath: {http.StatusOK, nil, `{
 			"account_id": "replay-account", "workspace_id": 12345,
@@ -290,7 +300,7 @@ func TestVolumeAccountProviderLookupWithoutDeploymentName(t *testing.T) {
 	_, diags := routingApplyVolume(t, c, nil, routingVolume{
 		attributes:  routingVolumeAttributes(nil),
 		workspaceID: "12345",
-	})
+	}, sdkGo)
 
 	assert.Equal(t, []string{
 		workspaceHostAccountDomain + " GET " + workspaceHostLookupPath + " workspace_id=[]",
@@ -307,6 +317,10 @@ func TestVolumeAccountProviderLookupWithoutDeploymentName(t *testing.T) {
 // Host metadata seeds the new provider's workspace ID, so the refresh fails with a
 // workspace_id mismatch without any call to the new host.
 func TestVolumeHostChangeFailsRefreshBeforeRead(t *testing.T) {
+	forEachVolumeClient(t, testVolumeHostChangeFailsRefreshBeforeRead)
+}
+
+func testVolumeHostChangeFailsRefreshBeforeRead(t *testing.T, sdkGo bool) {
 	routes := map[string]routingResponse{
 		"POST " + workspaceHostVolumesPath: {http.StatusOK,
 			nil, routingVolumeJSON("replay-admin@example.com", "")},
@@ -323,11 +337,11 @@ func TestVolumeHostChangeFailsRefreshBeforeRead(t *testing.T) {
 
 	state, diags := routingApplyVolume(t,
 		newRoutingClient(t, workspaceHostWorkspaceDomain, "", recorder), nil,
-		routingVolume{attributes: routingVolumeAttributes(nil)})
+		routingVolume{attributes: routingVolumeAttributes(nil)}, sdkGo)
 	require.False(t, diags.HasError(), "%v", diags)
 	assert.Equal(t, "12345", state.Attributes["provider_config.0.workspace_id"])
 	_, diags = routingRefreshVolume(
-		newRoutingClient(t, routingWorkspace67890Domain, "", recorder), state)
+		newRoutingClient(t, routingWorkspace67890Domain, "", recorder), state, sdkGo)
 
 	volumeCall := workspaceHostWorkspaceDomain + ` %s workspace_id=["12345"]`
 	assert.Equal(t, []string{
@@ -347,6 +361,10 @@ func TestVolumeHostChangeFailsRefreshBeforeRead(t *testing.T) {
 // the ID into state. Replay ignores unlisted headers, so it can't assert an absence.
 // Each operation uses a fresh client, as each Terraform command does.
 func TestVolumeWithoutWorkspaceIDSendsNoWorkspaceHeader(t *testing.T) {
+	forEachVolumeClient(t, testVolumeWithoutWorkspaceIDSendsNoWorkspaceHeader)
+}
+
+func testVolumeWithoutWorkspaceIDSendsNoWorkspaceHeader(t *testing.T, sdkGo bool) {
 	workspace, workspaceURL := newRoutingServer(t, `{"host_type": "workspace",
 		"cloud": "AWS"}`, map[string]routingResponse{
 		"POST " + workspaceHostVolumesPath: {http.StatusOK,
@@ -369,7 +387,7 @@ func TestVolumeWithoutWorkspaceIDSendsNoWorkspaceHeader(t *testing.T) {
 
 	state, diags := routingApplyVolume(t, newClient(), nil, routingVolume{
 		attributes: routingVolumeAttributes(map[string]string{"owner": "data-engineers"}),
-	})
+	}, sdkGo)
 	require.False(t, diags.HasError(), "%v", diags)
 	assert.Equal(t, "12345", state.Attributes["provider_config.0.workspace_id"])
 	workspace.set("GET "+routingVolumePath, routingResponse{http.StatusOK,
@@ -377,9 +395,9 @@ func TestVolumeWithoutWorkspaceIDSendsNoWorkspaceHeader(t *testing.T) {
 	state, diags = routingApplyVolume(t, newClient(), state, routingVolume{
 		attributes: routingVolumeAttributes(map[string]string{"owner": "data-stewards",
 			"comment": "routed comment"}),
-	})
+	}, sdkGo)
 	require.False(t, diags.HasError(), "%v", diags)
-	diags = routingDestroyVolume(newClient(), state)
+	diags = routingDestroyVolume(newClient(), state, sdkGo)
 	require.False(t, diags.HasError(), "%v", diags)
 
 	call := workspaceHostWorkspaceDomain + " %s workspace_id=[]"

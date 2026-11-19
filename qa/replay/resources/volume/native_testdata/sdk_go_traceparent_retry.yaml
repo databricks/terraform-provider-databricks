@@ -1,0 +1,83 @@
+# Supplies volume calls for TestVolumeTraceparent with reads and writes through sdk-go
+# uc/volumes/v1, which checks their traceparent headers in Go. The create POST and the
+# destroy DELETE each fail once with a 503 and are retried by the classic client's
+# retry rules, which sdk-go calls follow. The volume requests carry no Accept header,
+# which an empty header expectation pins. API responses are inferred from the Unity
+# Catalog API contract, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: create_retries_the_post_once
+    config: |
+      resource "databricks_volume" "this" {
+        name         = "traceparent_volume"
+        catalog_name = "main"
+        schema_name  = "replay"
+        volume_type  = "MANAGED"
+      }
+    calls:
+      - request: &create
+          method: POST
+          path: /api/2.1/unity-catalog/volumes
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+            Accept: ""
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "traceparent_volume", "volume_type": "MANAGED"}
+        response: &unavailable
+          status: 503
+          body:
+            json: {"error_code": "TEMPORARILY_UNAVAILABLE",
+                   "message": "The service is temporarily unavailable."}
+      - request: *create
+        response:
+          status: 200
+          body:
+            json: &volume {"catalog_name": "main", "schema_name": "replay",
+                           "name": "traceparent_volume",
+                           "full_name": "main.replay.traceparent_volume",
+                           "volume_type": "MANAGED", "owner": "replay-admin@example.com",
+                           "storage_location": "s3://replay-metastore/volume-91",
+                           "metastore_id": "11111111-1111-1111-1111-111111111111",
+                           "volume_id": "00000000-0000-4000-8000-000000000091"}
+      - &read_volume
+        request:
+          method: GET
+          path: /api/2.1/unity-catalog/volumes/main.replay.traceparent_volume
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+            Accept: ""
+          body: null
+        response:
+          status: 200
+          body:
+            json: *volume
+      - *read_volume
+    state:
+      resources:
+        databricks_volume.this:
+          attributes:
+            - path: [id]
+              equals: main.replay.traceparent_volume
+destroy:
+  calls:
+    - *read_volume
+    - request: &delete
+        method: DELETE
+        path: /api/2.1/unity-catalog/volumes/main.replay.traceparent_volume
+        headers:
+          X-Databricks-Workspace-Id: "12345"
+          Accept: ""
+        body: null
+      response: *unavailable
+    - request: *delete
+      response:
+        status: 200
+        body:
+          json: {}

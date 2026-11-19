@@ -428,10 +428,12 @@ func (r *ShareResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		if err != nil {
 			resp.Diagnostics.AddError("failed to update share", err.Error())
 
-			rollbackShareInfo, rollbackErr := w.Shares.Update(ctx, sharing.UpdateShare{
+			rollbackCtx, cancel := common.OwnerRollbackContext(ctx)
+			rollbackShareInfo, rollbackErr := w.Shares.Update(rollbackCtx, sharing.UpdateShare{
 				Name:  currentShareInfo.Name,
 				Owner: currentShareInfo.Owner,
 			})
+			cancel()
 			if rollbackErr != nil {
 				resp.Diagnostics.AddError("failed to roll back", common.OwnerRollbackError(err, rollbackErr, currentShareInfo.Owner, plan.Owner.ValueString()).Error())
 				return

@@ -2,11 +2,14 @@ package terraformtest
 
 import (
 	"context"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"testing"
+	"time"
 
+	"github.com/databricks/databricks-sdk-go/client"
 	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/stretchr/testify/require"
@@ -79,6 +82,32 @@ func TestFixtureTransportRejectsExternalTargets(t *testing.T) {
 		_, err = transport.RoundTrip(req)
 		require.ErrorContains(t, err, "hermetic replay rejected request outside fixture server")
 	}
+}
+
+// A request body that blocks still ends with the SDK's inactivity timeout,
+// rather than holding the request while the transport copies the body.
+func TestFixtureTransportTimesOutABlockedBody(t *testing.T) {
+	h := httpfixture.NewHandler()
+	require.NoError(t, h.SetReusableFixtures((&testDefinition{HostMetadata: map[string]any{"workspace_id": "12345"}}).metadataCalls()))
+	server := httptest.NewServer(h)
+	defer server.Close()
+	cfg := &config.Config{HTTPTimeoutSeconds: 1, RetryTimeoutSeconds: -1}
+	require.NoError(t, fixtureConfig(server.URL)(cfg))
+	c, err := client.New(cfg)
+	require.NoError(t, err)
+	body, writer := io.Pipe()
+	defer writer.Close()
+	done := make(chan error, 1)
+	go func() { done <- c.Do(context.Background(), "POST", "/api/2.0/upload", nil, nil, body, nil) }()
+	select {
+	case err := <-done:
+		require.ErrorContains(t, err, "request timed out after 1s of inactivity")
+	case <-time.After(10 * time.Second):
+		t.Fatal("copying a blocked request body ignored the SDK's timeout")
+	}
+	_, err = writer.Write([]byte("late"))
+	require.ErrorIs(t, err, io.ErrClosedPipe, "the transport closes the blocked body")
+	require.NoError(t, h.Verify(), "the blocked request never reaches the server")
 }
 
 func TestFixtureConfigIgnoresAmbientCredentials(t *testing.T) {

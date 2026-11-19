@@ -68,7 +68,9 @@ anonymized.
 Use the wrapper name in your own suite.
 
 Recording makes real API calls and destroys the resources it manages. It
-is rejected in CI, with broad selection, or with Terraform debug logging enabled.
+is rejected in CI, with broad selection, or with Terraform debug logging enabled,
+for journeys whose responses script a `delay`, `fault` or `status_line`, and
+for journeys whose calls set `times`, `min_gap` or `max_gap`.
 Ordinary replay remains hermetic regardless of ambient Databricks credentials.
 Recording an `initial_state` requires its setup template before loading a
 profile or making requests; see below.
@@ -181,7 +183,13 @@ Each exchange contains `request` and `response`. Requests specify `method`,
 optional `host` (see [named hosts](#named-hosts)),
 `path`, optional `query` (values are lists of strings), optional `headers`,
 and `body`. Responses specify an explicit HTTP `status`, optional `headers`,
-and `body`. Use `body: null` for no HTTP body and `body: {json: null}` for JSON
+and `body`. Optional `delay`, `fault` and `status_line` script slow responses,
+broken connections and literal status lines; see
+[slow and broken connections](AUTHORING.md#test-slow-and-broken-connections).
+Optional call fields `times`, `min_gap` and `max_gap` repeat a call and bound
+the time between calls; see
+[repeated calls and retry timing](AUTHORING.md#test-repeated-calls-and-retry-timing).
+Use `body: null` for no HTTP body and `body: {json: null}` for JSON
 null. Other JSON values go under `body.json`; IDs are literal, without substitution.
 Non-JSON payloads use `body.text`, `body.base64`, or request-only
 `body.multipart`; see the [payload reference](../httpfixture/README.md#files-and-non-json-bodies).

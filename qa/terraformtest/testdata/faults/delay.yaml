@@ -1,0 +1,32 @@
+# The create response is held past http_timeout_seconds. The SDK gives up with
+# its inactivity timeout and does not retry: a second POST would be unexpected.
+version: 1
+host_metadata:
+  workspace_id: "12345"
+steps:
+  - name: create_times_out
+    config: |
+      provider "databricks" {
+        http_timeout_seconds = 1
+      }
+      resource "databricks_group" "this" {
+        display_name = "Example group"
+      }
+    expect_error: 'cannot create group: Post "http://[^"]+/Groups": request timed out after 1s of inactivity'
+    calls:
+      - request:
+          method: POST
+          path: /api/2.0/preview/scim/v2/Groups
+          body:
+            json:
+              displayName: Example group
+              schemas: [urn:ietf:params:scim:schemas:core:2.0:Group]
+              entitlements: [{}]
+        response:
+          delay: 10s
+          status: 201
+          body:
+            json:
+              id: group-id
+destroy:
+  calls: []

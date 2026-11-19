@@ -143,7 +143,7 @@ func (b *sdkGoBridge) isRetriable(ctx context.Context, err error) bool {
 	if _, ok := errors.AsType[*visitorError](err); ok {
 		return false
 	}
-	// It decodes responses only after its retries.
+	// The classic client decodes a response only after its retries.
 	if _, ok := errors.AsType[*responseDecodeError](err); ok {
 		return false
 	}

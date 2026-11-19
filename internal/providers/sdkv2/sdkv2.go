@@ -53,6 +53,7 @@ type sdkV2ProviderOptions struct {
 	resourceOptIns           []string
 	dataSourceOptIns         []string
 	configCustomizer         func(*config.Config) error
+	sdkGoResources           *[]string
 }
 
 // SdkV2ProviderOption is a functional option for configuring the SDK V2 provider.
@@ -134,7 +135,14 @@ func DatabricksProvider(opts ...SdkV2ProviderOption) *schema.Provider {
 	for name, resource := range settings.AllSettingsResources() {
 		p.ResourcesMap[fmt.Sprintf("databricks_%s_setting", name)] = resource.ToResource()
 	}
+	sdkGoResources, sdkGoErr := providerOptions.selectedSdkGoResources()
+	if sdkGoErr == nil {
+		enableSdkGoResources(p.ResourcesMap, sdkGoResources)
+	}
 	p.ConfigureContextFunc = func(ctx context.Context, d *schema.ResourceData) (any, diag.Diagnostics) {
+		if sdkGoErr != nil {
+			return nil, diag.FromErr(sdkGoErr)
+		}
 		if p.TerraformVersion != "" {
 			terraformVersionOnce.Do(func() {
 				useragent.WithUserAgentExtra("terraform", p.TerraformVersion)

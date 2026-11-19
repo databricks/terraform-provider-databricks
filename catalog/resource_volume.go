@@ -3,8 +3,10 @@ package catalog
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"strings"
 
+	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -40,6 +42,13 @@ func getNameFromId(id string) (string, error) {
 	return split[2], nil
 }
 
+// volumeFullNameInPath escapes a volume full name for the path of a classic Volumes call,
+// which formats it into the URL unescaped. It sends the bytes sdk-go sends: characters
+// such as "#", "?" and "%" are escaped, and a name already valid in a path is kept.
+func volumeFullNameInPath(fullName string) string {
+	return (&url.URL{Path: fullName, RawPath: fullName}).EscapedPath()
+}
+
 func ResourceVolume() common.Resource {
 	s := common.StructToSchema(VolumeInfo{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
@@ -70,13 +79,17 @@ func ResourceVolume() common.Resource {
 			if err != nil {
 				return err
 			}
-			var createVolumeRequestContent catalog.CreateVolumeRequestContent
-			common.DataToStructPointer(d, s, &createVolumeRequestContent)
-			v, err := w.Volumes.Create(ctx, createVolumeRequestContent)
+			volumes, err := newVolumeWriter(ctx, w)
 			if err != nil {
 				return err
 			}
-			d.SetId(v.FullName)
+			var createVolumeRequestContent catalog.CreateVolumeRequestContent
+			common.DataToStructPointer(d, s, &createVolumeRequestContent)
+			fullName, err := volumes.create(ctx, createVolumeRequestContent)
+			if err != nil {
+				return err
+			}
+			d.SetId(fullName)
 
 			// Don't update owner if it is not provided
 			if d.Get("owner") == "" {
@@ -86,7 +99,7 @@ func ResourceVolume() common.Resource {
 			var updateVolumeRequestContent catalog.UpdateVolumeRequestContent
 			common.DataToStructPointer(d, s, &updateVolumeRequestContent)
 			updateVolumeRequestContent.Name = d.Id()
-			_, err = w.Volumes.Update(ctx, updateVolumeRequestContent)
+			_, err = volumes.update(ctx, updateVolumeRequestContent)
 			if err != nil {
 				return err
 			}
@@ -97,7 +110,10 @@ func ResourceVolume() common.Resource {
 			if err != nil {
 				return err
 			}
-			v, err := w.Volumes.ReadByName(ctx, d.Id())
+			if common.UsesSdkGo(ctx) {
+				return readVolumeWithSdkGo(ctx, w, s, d)
+			}
+			v, err := w.Volumes.ReadByName(ctx, volumeFullNameInPath(d.Id()))
 			if err != nil {
 				return err
 			}
@@ -109,6 +125,10 @@ func ResourceVolume() common.Resource {
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
+			if err != nil {
+				return err
+			}
+			volumes, err := newVolumeWriter(ctx, w)
 			if err != nil {
 				return err
 			}
@@ -125,7 +145,7 @@ func ResourceVolume() common.Resource {
 			}
 
 			if d.HasChange("owner") {
-				_, err := w.Volumes.Update(ctx, catalog.UpdateVolumeRequestContent{
+				_, err := volumes.update(ctx, catalog.UpdateVolumeRequestContent{
 					Name:  updateVolumeRequestContent.Name,
 					Owner: updateVolumeRequestContent.Owner,
 				})
@@ -143,12 +163,12 @@ func ResourceVolume() common.Resource {
 			}
 
 			updateVolumeRequestContent.Owner = ""
-			v, err := w.Volumes.Update(ctx, updateVolumeRequestContent)
+			fullName, err := volumes.update(ctx, updateVolumeRequestContent)
 			if err != nil {
 				if d.HasChange("owner") {
 					// Rollback
 					old, new := d.GetChange("owner")
-					_, rollbackErr := w.Volumes.Update(ctx, catalog.UpdateVolumeRequestContent{
+					_, rollbackErr := volumes.update(ctx, catalog.UpdateVolumeRequestContent{
 						Name:  updateVolumeRequestContent.Name,
 						Owner: old.(string),
 					})
@@ -161,8 +181,8 @@ func ResourceVolume() common.Resource {
 
 			// We need to update the resource Id because Name is updatable and FullName consists of Name,
 			// So if we don't update the field then the requests would be made to old FullName which doesn't exists.
-			d.SetId(v.FullName)
-			d.Set("volume_path", "/Volumes/"+strings.ReplaceAll(v.FullName, ".", "/"))
+			d.SetId(fullName)
+			d.Set("volume_path", "/Volumes/"+strings.ReplaceAll(fullName, ".", "/"))
 			return nil
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
@@ -170,7 +190,55 @@ func ResourceVolume() common.Resource {
 			if err != nil {
 				return err
 			}
-			return w.Volumes.DeleteByName(ctx, d.Id())
+			volumes, err := newVolumeWriter(ctx, w)
+			if err != nil {
+				return err
+			}
+			return volumes.delete(ctx, d.Id())
 		},
 	}
+}
+
+// volumeWriter sends the volume writes through the existing client, or through sdk-go
+// uc/volumes/v1 when the operation selects it. Each method takes the unescaped full name,
+// and create and update return the full name in the response.
+type volumeWriter interface {
+	create(ctx context.Context, req catalog.CreateVolumeRequestContent) (string, error)
+	update(ctx context.Context, req catalog.UpdateVolumeRequestContent) (string, error)
+	delete(ctx context.Context, fullName string) error
+}
+
+func newVolumeWriter(ctx context.Context,
+	w *databricks.WorkspaceClient) (volumeWriter, error) {
+	if common.UsesSdkGo(ctx) {
+		return newSdkGoVolumeWriter(ctx, w)
+	}
+	return classicVolumeWriter{w.Volumes}, nil
+}
+
+type classicVolumeWriter struct {
+	volumes catalog.VolumesInterface
+}
+
+func (c classicVolumeWriter) create(ctx context.Context,
+	req catalog.CreateVolumeRequestContent) (string, error) {
+	v, err := c.volumes.Create(ctx, req)
+	if err != nil {
+		return "", err
+	}
+	return v.FullName, nil
+}
+
+func (c classicVolumeWriter) update(ctx context.Context,
+	req catalog.UpdateVolumeRequestContent) (string, error) {
+	req.Name = volumeFullNameInPath(req.Name)
+	v, err := c.volumes.Update(ctx, req)
+	if err != nil {
+		return "", err
+	}
+	return v.FullName, nil
+}
+
+func (c classicVolumeWriter) delete(ctx context.Context, fullName string) error {
+	return c.volumes.DeleteByName(ctx, volumeFullNameInPath(fullName))
 }

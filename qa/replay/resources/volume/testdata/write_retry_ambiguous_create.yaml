@@ -1,0 +1,56 @@
+# This journey pins a create POST that reaches the server, which creates the volume and
+# then resets the connection before answering. The classic SDK client retries "connection
+# reset by peer" after its first backoff (1.05 to 1.75 seconds) with the same body, and
+# the server rejects the retry with a 409 because the volume now exists. The 409 is not
+# retried. Create returns before it stores an ID, so apply fails, the volume the first
+# POST created is not in state, and the next plan creates it again. API responses are
+# inferred from the Unity Catalog API contract, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: create_post_retried_after_reset_fails_with_already_exists
+    config: &config |
+      resource "databricks_volume" "this" {
+        name         = "write_retry_volume"
+        catalog_name = "main"
+        schema_name  = "replay"
+        volume_type  = "MANAGED"
+      }
+    expect_error: 'Error: cannot create volume: Volume ''main\.replay\.write_retry_volume''
+      already exists\n'
+    calls:
+      - request: &create
+          method: POST
+          path: /api/2.1/unity-catalog/volumes
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "write_retry_volume", "volume_type": "MANAGED"}
+        response:
+          fault: reset
+      - request: *create
+        response:
+          status: 409
+          body:
+            json: {"error_code": "RESOURCE_ALREADY_EXISTS",
+                   "message": "Volume 'main.replay.write_retry_volume' already exists"}
+        min_gap: 1s
+        max_gap: 3s
+  # Nothing is in state, so the plan reads nothing and creates the volume.
+  - name: plan_after_ambiguous_create_creates_the_volume
+    plan_only: true
+    config: *config
+    plan:
+      expect: non_empty
+      changes:
+        databricks_volume.this:
+          actions: [create]
+    calls: []
+destroy:
+  calls: []

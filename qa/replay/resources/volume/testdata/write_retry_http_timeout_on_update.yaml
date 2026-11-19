@@ -1,0 +1,266 @@
+# This journey pins each Update PATCH whose response is held past http_timeout_seconds,
+# for an owner change made together with a comment change. The classic SDK client gives
+# up on each with its inactivity timeout and does not retry. A timed-out owner PATCH stops
+# Update before the fields PATCH and sends no rollback. A timed-out fields PATCH still
+# restores the old owner, because the timeout ends only that request's context, and fails
+# with the timeout. When the rollback PATCH times out after a rejected fields PATCH, apply
+# fails with the owner-rollback message that joins both errors. API responses are
+# inferred from the Unity Catalog API contract, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: create_with_owner_and_comment
+    config: |
+      provider "databricks" {
+        http_timeout_seconds = 1
+      }
+      resource "databricks_volume" "this" {
+        name         = "write_retry_volume"
+        catalog_name = "main"
+        schema_name  = "replay"
+        volume_type  = "MANAGED"
+        comment      = "first"
+        owner        = "owner-a@example.com"
+      }
+    calls:
+      - request:
+          method: POST
+          path: /api/2.1/unity-catalog/volumes
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "write_retry_volume", "volume_type": "MANAGED",
+                   "comment": "first"}
+        response:
+          status: 200
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "write_retry_volume",
+                   "full_name": "main.replay.write_retry_volume",
+                   "volume_type": "MANAGED", "comment": "first",
+                   "owner": "replay-admin@example.com",
+                   "storage_location": "s3://replay-metastore/volume-301",
+                   "metastore_id": "11111111-1111-1111-1111-111111111111",
+                   "volume_id": "00000000-0000-4000-8000-000000000301"}
+      - request:
+          method: PATCH
+          path: /api/2.1/unity-catalog/volumes/main.replay.write_retry_volume
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"comment": "first", "owner": "owner-a@example.com"}
+        response: &volume_owner_a
+          status: 200
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "write_retry_volume",
+                   "full_name": "main.replay.write_retry_volume",
+                   "volume_type": "MANAGED", "comment": "first",
+                   "owner": "owner-a@example.com",
+                   "storage_location": "s3://replay-metastore/volume-301",
+                   "metastore_id": "11111111-1111-1111-1111-111111111111",
+                   "volume_id": "00000000-0000-4000-8000-000000000301"}
+      - &read_owner_a
+        request: &read
+          method: GET
+          path: /api/2.1/unity-catalog/volumes/main.replay.write_retry_volume
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response: *volume_owner_a
+      - *read_owner_a
+  - name: timed_out_owner_patch_sends_no_fields_patch_or_rollback
+    config: &config_owner_b |
+      provider "databricks" {
+        http_timeout_seconds = 1
+      }
+      resource "databricks_volume" "this" {
+        name         = "write_retry_volume"
+        catalog_name = "main"
+        schema_name  = "replay"
+        volume_type  = "MANAGED"
+        comment      = "second"
+        owner        = "owner-b@example.com"
+      }
+    expect_error: &timed_out_update 'Error: cannot update volume: Patch
+      "http://127\.0\.0\.1:\d+/api/2\.1/unity-catalog/volumes/main\.replay\.write_retry_volume":
+      request timed out after 1s of inactivity\n'
+    calls:
+      - *read_owner_a
+      - request: &owner_patch
+          method: PATCH
+          path: /api/2.1/unity-catalog/volumes/main.replay.write_retry_volume
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"owner": "owner-b@example.com"}
+        response:
+          delay: 10s
+          status: 200
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "write_retry_volume",
+                   "full_name": "main.replay.write_retry_volume",
+                   "volume_type": "MANAGED", "comment": "first",
+                   "owner": "owner-b@example.com",
+                   "storage_location": "s3://replay-metastore/volume-301",
+                   "metastore_id": "11111111-1111-1111-1111-111111111111",
+                   "volume_id": "00000000-0000-4000-8000-000000000301"}
+  - name: plan_after_timed_out_owner_patch_shows_the_whole_update
+    plan_only: true
+    config: *config_owner_b
+    plan: &plan_whole_update
+      expect: non_empty
+      changes:
+        databricks_volume.this:
+          actions: [update]
+          before:
+            - path: [owner]
+              equals: owner-a@example.com
+            - path: [comment]
+              equals: first
+          after:
+            - path: [owner]
+              equals: owner-b@example.com
+            - path: [comment]
+              equals: second
+    state: &state_kept
+      resources:
+        databricks_volume.this:
+          attributes:
+            - path: [id]
+              equals: main.replay.write_retry_volume
+    calls:
+      - *read_owner_a
+  - name: timed_out_fields_patch_rolls_back_the_owner
+    config: *config_owner_b
+    expect_error: *timed_out_update
+    calls:
+      - *read_owner_a
+      - request: *owner_patch
+        response: &volume_owner_b_comment_first
+          status: 200
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "write_retry_volume",
+                   "full_name": "main.replay.write_retry_volume",
+                   "volume_type": "MANAGED", "comment": "first",
+                   "owner": "owner-b@example.com",
+                   "storage_location": "s3://replay-metastore/volume-301",
+                   "metastore_id": "11111111-1111-1111-1111-111111111111",
+                   "volume_id": "00000000-0000-4000-8000-000000000301"}
+      - request: &fields_patch
+          method: PATCH
+          path: /api/2.1/unity-catalog/volumes/main.replay.write_retry_volume
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"comment": "second"}
+        response:
+          delay: 10s
+          status: 200
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "write_retry_volume",
+                   "full_name": "main.replay.write_retry_volume",
+                   "volume_type": "MANAGED", "comment": "second",
+                   "owner": "owner-b@example.com",
+                   "storage_location": "s3://replay-metastore/volume-301",
+                   "metastore_id": "11111111-1111-1111-1111-111111111111",
+                   "volume_id": "00000000-0000-4000-8000-000000000301"}
+      - request: &rollback_patch
+          method: PATCH
+          path: /api/2.1/unity-catalog/volumes/main.replay.write_retry_volume
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"owner": "owner-a@example.com"}
+        response: *volume_owner_a
+  - name: plan_after_rolled_back_owner_shows_the_whole_update
+    plan_only: true
+    config: *config_owner_b
+    plan: *plan_whole_update
+    state: *state_kept
+    calls:
+      - *read_owner_a
+  - name: timed_out_rollback_patch_fails_with_the_owner_rollback_error
+    config: *config_owner_b
+    expect_error: 'Error: cannot update volume: Comment rejected by fixture\. Owner
+      rollback also failed: Patch
+      "http://127\.0\.0\.1:\d+/api/2\.1/unity-catalog/volumes/main\.replay\.write_retry_volume":
+      request timed out after 1s of inactivity\. Owner of this resource was updated but
+      other fields couldn''t be updated and owner couldn''t be rolled back\.\s+As a
+      result, the owner of this resource is updated to owner-b@example\.com but other
+      attributes aren''t\. To revert the owner change, please manually change the owner
+      to owner-a@example\.com\.\s+You can also use the databricks cli
+      \(https://docs\.databricks\.com/en/dev-tools/cli/install\.html\) to update the
+      owner\.\n'
+    calls:
+      - *read_owner_a
+      - request: *owner_patch
+        response: *volume_owner_b_comment_first
+      - request: *fields_patch
+        response:
+          status: 400
+          body:
+            json: {"error_code": "INVALID_PARAMETER_VALUE",
+                   "message": "Comment rejected by fixture"}
+      - request: *rollback_patch
+        response:
+          delay: 10s
+          status: 200
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "write_retry_volume",
+                   "full_name": "main.replay.write_retry_volume",
+                   "volume_type": "MANAGED", "comment": "first",
+                   "owner": "owner-a@example.com",
+                   "storage_location": "s3://replay-metastore/volume-301",
+                   "metastore_id": "11111111-1111-1111-1111-111111111111",
+                   "volume_id": "00000000-0000-4000-8000-000000000301"}
+  - name: plan_after_timed_out_rollback_shows_only_the_comment_update
+    plan_only: true
+    config: *config_owner_b
+    plan:
+      expect: non_empty
+      changes:
+        databricks_volume.this:
+          actions: [update]
+          before:
+            - path: [owner]
+              equals: owner-b@example.com
+            - path: [comment]
+              equals: first
+          after:
+            - path: [owner]
+              equals: owner-b@example.com
+            - path: [comment]
+              equals: second
+    state: *state_kept
+    calls:
+      - &read_owner_b_comment_first
+        request: *read
+        response: *volume_owner_b_comment_first
+destroy:
+  calls:
+    - *read_owner_b_comment_first
+    - request:
+        method: DELETE
+        path: /api/2.1/unity-catalog/volumes/main.replay.write_retry_volume
+        headers:
+          X-Databricks-Workspace-Id: "12345"
+        body: null
+      response:
+        status: 200
+        body:
+          json: {}

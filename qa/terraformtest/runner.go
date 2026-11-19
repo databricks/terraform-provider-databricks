@@ -2,6 +2,7 @@ package terraformtest
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -243,8 +244,8 @@ func (f fixtureTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 // closes the connection before it has finished reading the body, and the SDK
 // rewinds that same reader for a retry, which could then go out empty.
 func withBufferedBody(req *http.Request) (*http.Request, error) {
-	body, err := io.ReadAll(req.Body)
-	if err = errors.Join(err, req.Body.Close()); err != nil {
+	body, err := readBody(req)
+	if err != nil {
 		return nil, err
 	}
 	clone := req.Clone(req.Context())
@@ -255,4 +256,26 @@ func withBufferedBody(req *http.Request) (*http.Request, error) {
 		clone.Body, _ = clone.GetBody()
 	}
 	return clone, nil
+}
+
+// readBody reads and closes the body, but returns when the request's context
+// ends, as net/http does, so a blocked body still fails with the SDK's timeout.
+// Closing the body then unblocks a reader such as a pipe.
+func readBody(req *http.Request) ([]byte, error) {
+	type result struct {
+		body []byte
+		err  error
+	}
+	read := make(chan result, 1)
+	go func() {
+		body, err := io.ReadAll(req.Body)
+		read <- result{body, err}
+	}()
+	select {
+	case r := <-read:
+		return r.body, errors.Join(r.err, req.Body.Close())
+	case <-req.Context().Done():
+		_ = req.Body.Close()
+		return nil, context.Cause(req.Context())
+	}
 }

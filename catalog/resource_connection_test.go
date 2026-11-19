@@ -243,7 +243,7 @@ func TestConnectionsRead(t *testing.T) {
 					MetastoreId:    "abc",
 					Options: map[string]string{
 						"host":     "test.com",
-						"password": "{{uc_secrets/main.default.new_password}}",
+						"password": "{{secrets/main.default.new_password}}",
 					},
 				},
 			},
@@ -256,7 +256,7 @@ func TestConnectionsRead(t *testing.T) {
 		connection_type = "testConnectionType"
 		options = {
 			host     = "test.com"
-			password = "{{uc_secrets/main.default.old_password}}"
+			password = "{{secrets/main.default.old_password}}"
 		}
 		comment = "This is a test comment."
 		`,
@@ -265,7 +265,7 @@ func TestConnectionsRead(t *testing.T) {
 	assert.Equal(t, "testConnectionName", d.Get("name"))
 	assert.Equal(t, "testConnectionType", d.Get("connection_type"))
 	assert.Equal(t, "This is a test comment.", d.Get("comment"))
-	assert.Equal(t, map[string]interface{}{"host": "test.com", "password": "{{uc_secrets/main.default.new_password}}"}, d.Get("options"))
+	assert.Equal(t, map[string]interface{}{"host": "test.com", "password": "{{secrets/main.default.new_password}}"}, d.Get("options"))
 }
 
 func TestConnectionRead_Error(t *testing.T) {
@@ -956,12 +956,12 @@ func TestSuppressComputedFields(t *testing.T) {
 		"-----BEGIN CERTIFICATE-----\nxyz\n-----END CERTIFICATE-----\n", nil))
 	assert.False(t, suppressComputedFields("options.password", "p", "p ", nil))
 	assert.False(t, suppressComputedFields("options.password", "Password", "password", nil))
-	assert.False(t, suppressComputedFields("options.password", "{{uc_secrets/main.default.pw}}", "{{UC_SECRETS/main.default.pw}}", nil))
+	assert.False(t, suppressComputedFields("options.password", "{{secrets/main.default.pw}}", "{{SECRETS/main.default.pw}}", nil))
 }
 
-// connectionInlineSecretPlan plans a config whose password secret is configRef against state that
+// connectionSecretsPlan plans a config whose password secret is configRef against state that
 // holds the lowercased reference returned by the server.
-func connectionInlineSecretPlan(configRef string, expected map[string]*terraform.ResourceAttrDiff) qa.ResourceFixture {
+func connectionSecretsPlan(configRef string, expected map[string]*terraform.ResourceAttrDiff) qa.ResourceFixture {
 	return qa.ResourceFixture{
 		Resource: ResourceConnection(),
 		ID:       "abc|my_conn",
@@ -984,7 +984,7 @@ func connectionInlineSecretPlan(configRef string, expected map[string]*terraform
 			"provider_config.#":   "0",
 			"options.%":           "2",
 			"options.host":        "test.com",
-			"options.password":    "{{uc_secrets/main.default.mysql_pw}}",
+			"options.password":    "{{secrets/main.default.mysql_pw}}",
 		},
 		State: map[string]any{
 			"name":            "my_conn",
@@ -998,7 +998,7 @@ func connectionInlineSecretPlan(configRef string, expected map[string]*terraform
 // unknownValue is how the plugin SDK represents a value that is unknown until apply.
 const unknownValue = "74D93920-ED26-11E3-AC10-0800200C9A66"
 
-func TestConnectionInlineSecretPlan(t *testing.T) {
+func TestConnectionSecretsPlan(t *testing.T) {
 	testCases := []struct {
 		name         string
 		configRef    string
@@ -1006,19 +1006,19 @@ func TestConnectionInlineSecretPlan(t *testing.T) {
 	}{
 		{
 			"same reference plans no changes",
-			"{{uc_secrets/main.default.mysql_pw}}",
+			"{{secrets/main.default.mysql_pw}}",
 			map[string]*terraform.ResourceAttrDiff{},
 		},
 		{
 			"case-only difference is suppressed",
-			"{{uc_secrets/Main.Default.MYSQL_PW}}",
+			"{{secrets/Main.Default.MYSQL_PW}}",
 			map[string]*terraform.ResourceAttrDiff{},
 		},
 		{
 			"different secret plans an in-place update",
-			"{{uc_secrets/main.default.mysql_pw2}}",
+			"{{secrets/main.default.mysql_pw2}}",
 			map[string]*terraform.ResourceAttrDiff{
-				"options.password": {Old: "{{uc_secrets/main.default.mysql_pw}}", New: "{{uc_secrets/main.default.mysql_pw2}}", Sensitive: true},
+				"options.password": {Old: "{{secrets/main.default.mysql_pw}}", New: "{{secrets/main.default.mysql_pw2}}", Sensitive: true},
 			},
 		},
 		{
@@ -1028,13 +1028,13 @@ func TestConnectionInlineSecretPlan(t *testing.T) {
 			map[string]*terraform.ResourceAttrDiff{
 				"options.%":        {NewComputed: true},
 				"options.host":     {Old: "test.com", NewRemoved: true},
-				"options.password": {Old: "{{uc_secrets/main.default.mysql_pw}}", NewRemoved: true},
+				"options.password": {Old: "{{secrets/main.default.mysql_pw}}", NewRemoved: true},
 			},
 		},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			connectionInlineSecretPlan(tc.configRef, tc.expectedDiff).ApplyNoError(t)
+			connectionSecretsPlan(tc.configRef, tc.expectedDiff).ApplyNoError(t)
 		})
 	}
 }
@@ -1049,16 +1049,16 @@ func mysqlConnectionWithSecret(secretRef string) *catalog.ConnectionInfo {
 	}
 }
 
-func TestConnectionsCreate_WithInlineSecret(t *testing.T) {
+func TestConnectionsCreate_WithSecrets(t *testing.T) {
 	qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
 			e := w.GetMockConnectionsAPI().EXPECT()
 			e.Create(mock.Anything, catalog.CreateConnection{
 				Name:           "my_conn",
 				ConnectionType: catalog.ConnectionTypeMysql,
-				Options:        map[string]string{"host": "test.com", "port": "3306", "password": "{{uc_secrets/main.default.mysql_pw}}"},
-			}).Return(mysqlConnectionWithSecret("{{uc_secrets/main.default.mysql_pw}}"), nil)
-			e.GetByName(mock.Anything, "my_conn").Return(mysqlConnectionWithSecret("{{uc_secrets/main.default.mysql_pw}}"), nil)
+				Options:        map[string]string{"host": "test.com", "port": "3306", "password": "{{secrets/main.default.mysql_pw}}"},
+			}).Return(mysqlConnectionWithSecret("{{secrets/main.default.mysql_pw}}"), nil)
+			e.GetByName(mock.Anything, "my_conn").Return(mysqlConnectionWithSecret("{{secrets/main.default.mysql_pw}}"), nil)
 		},
 		Resource: ResourceConnection(),
 		Create:   true,
@@ -1068,13 +1068,13 @@ func TestConnectionsCreate_WithInlineSecret(t *testing.T) {
 		options = {
 			host = "test.com"
 			port = "3306"
-			password = "{{uc_secrets/main.default.mysql_pw}}"
+			password = "{{secrets/main.default.mysql_pw}}"
 		}
 		`,
 	}.ApplyAndExpectData(t, map[string]any{
 		"id":               "abc|my_conn",
 		"options.%":        "3",
-		"options.password": "{{uc_secrets/main.default.mysql_pw}}",
+		"options.password": "{{secrets/main.default.mysql_pw}}",
 	})
 }
 
@@ -1084,9 +1084,9 @@ func TestConnectionsUpdate_RepointSecret(t *testing.T) {
 			e := w.GetMockConnectionsAPI().EXPECT()
 			e.Update(mock.Anything, catalog.UpdateConnection{
 				Name:    "my_conn",
-				Options: map[string]string{"host": "test.com", "port": "3306", "password": "{{uc_secrets/main.default.mysql_pw2}}"},
-			}).Return(mysqlConnectionWithSecret("{{uc_secrets/main.default.mysql_pw2}}"), nil)
-			e.GetByName(mock.Anything, "my_conn").Return(mysqlConnectionWithSecret("{{uc_secrets/main.default.mysql_pw2}}"), nil)
+				Options: map[string]string{"host": "test.com", "port": "3306", "password": "{{secrets/main.default.mysql_pw2}}"},
+			}).Return(mysqlConnectionWithSecret("{{secrets/main.default.mysql_pw2}}"), nil)
+			e.GetByName(mock.Anything, "my_conn").Return(mysqlConnectionWithSecret("{{secrets/main.default.mysql_pw2}}"), nil)
 		},
 		Resource: ResourceConnection(),
 		Update:   true,
@@ -1098,7 +1098,7 @@ func TestConnectionsUpdate_RepointSecret(t *testing.T) {
 			"options.%":        "3",
 			"options.host":     "test.com",
 			"options.port":     "3306",
-			"options.password": "{{uc_secrets/main.default.mysql_pw}}",
+			"options.password": "{{secrets/main.default.mysql_pw}}",
 		},
 		HCL: `
 		name = "my_conn"
@@ -1106,10 +1106,10 @@ func TestConnectionsUpdate_RepointSecret(t *testing.T) {
 		options = {
 			host = "test.com"
 			port = "3306"
-			password = "{{uc_secrets/main.default.mysql_pw2}}"
+			password = "{{secrets/main.default.mysql_pw2}}"
 		}
 		`,
 	}.ApplyAndExpectData(t, map[string]any{
-		"options.password": "{{uc_secrets/main.default.mysql_pw2}}",
+		"options.password": "{{secrets/main.default.mysql_pw2}}",
 	})
 }

@@ -18,8 +18,9 @@ import (
 	"github.com/databricks/terraform-provider-databricks/common"
 )
 
-// sensitiveOptions can be omitted by the API, so Read keeps their values from state
-// only when the API does not return them.
+// sensitiveOptions are options the API doesn't return, so Read keeps their values from state.
+// Options the API does return (such as certificates or `schema_registry_api_key`) must not be
+// listed, so changes made outside of Terraform are still detected.
 var sensitiveOptions = []string{"user", "password", "personalAccessToken", "access_token", "client_secret",
 	"pem_private_key", "pem_key_passphrase", "OAuthPvtKey", "GoogleServiceAccountKeyJson", "bearer_token",
 	"ssl_keystore_key", "ssl_key_password", "schema_registry_api_secret"}
@@ -45,11 +46,11 @@ func isWriteOnlyOption(key string) bool {
 var computedOptions = []string{"pem_private_key_expiration_epoch_sec", "access_token_expiration"}
 
 func isUCSecretReference(value string) bool {
-	return strings.HasPrefix(value, "{{uc_secrets/") && strings.HasSuffix(value, "}}")
+	return strings.HasPrefix(value, "{{secrets/") && strings.HasSuffix(value, "}}")
 }
 
 func suppressComputedFields(k, old, new string, d *schema.ResourceData) bool {
-	if !strings.HasSuffix(k, ".%") && isUCSecretReference(old) && isUCSecretReference(new) {
+	if isUCSecretReference(old) && isUCSecretReference(new) {
 		return strings.EqualFold(old, new)
 	}
 	for _, option := range computedOptions {
@@ -260,7 +261,7 @@ func ResourceConnection() common.Resource {
 				delete(conn.Options, "home_workspace_id")
 				delete(conn.Options, "database")
 			}
-			// Preserve sensitive options omitted by the API without overwriting returned references.
+			// We need to preserve original sensitive options as API doesn't return them
 			var cOrig catalog.CreateConnection
 			common.DataToStructPointer(d, s, &cOrig)
 			for key, element := range cOrig.Options {

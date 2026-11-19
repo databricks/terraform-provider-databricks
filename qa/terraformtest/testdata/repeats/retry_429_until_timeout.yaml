@@ -1,0 +1,38 @@
+# Every create attempt gets 429, so the SDK retries until retry_timeout_seconds
+# ends, then reports the last response. Attempt 2 starts 1.05-1.75 s after the
+# first and attempt 3 a further 2.05-2.75 s later, so three attempts normally
+# fit in 5 s; attempt 4 could start no earlier than 6.15 s. The minimum of 2
+# lets a slow machine push attempt 3 past the timeout.
+version: 1
+host_metadata:
+  workspace_id: "12345"
+steps:
+  - name: create_gives_up_at_retry_timeout
+    config: |
+      provider "databricks" {
+        retry_timeout_seconds = 5
+      }
+      resource "databricks_group" "this" {
+        display_name = "Example group"
+      }
+    expect_error: 'cannot create group: Too many requests from fixture'
+    calls:
+      - request:
+          method: POST
+          path: /api/2.0/preview/scim/v2/Groups
+          body:
+            json:
+              displayName: Example group
+              schemas: [urn:ietf:params:scim:schemas:core:2.0:Group]
+              entitlements: [{}]
+        response:
+          status: 429
+          body:
+            json:
+              error_code: TOO_MANY_REQUESTS
+              message: Too many requests from fixture
+        times: {min: 2, max: 3}
+        min_gap: 1s
+        max_gap: 4s
+destroy:
+  calls: []

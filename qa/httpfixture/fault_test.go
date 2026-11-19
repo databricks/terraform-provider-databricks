@@ -90,7 +90,7 @@ func TestDelayDoesNotBlockConcurrentRequests(t *testing.T) {
 	require.Eventually(t, func() bool {
 		h.mu.Lock()
 		defer h.mu.Unlock()
-		return h.calls[0].used
+		return h.calls[0].count == 1
 	}, 5*time.Second, time.Millisecond, "the slow call holds its delay")
 	client := &http.Client{Timeout: 5 * time.Second}
 	resp, err := client.Get(url + "/fast")

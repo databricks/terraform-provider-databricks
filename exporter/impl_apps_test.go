@@ -10,10 +10,56 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/database"
 	"github.com/databricks/databricks-sdk-go/service/iam"
 	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
+	app_resource "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/app"
 	"github.com/databricks/terraform-provider-databricks/permissions/entity"
 	"github.com/databricks/terraform-provider-databricks/qa"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
+
+func TestImportAppEmitsUnityCatalogDependencies(t *testing.T) {
+	ctx := context.Background()
+	ic := importContextForTest()
+	ic.Context = ctx
+	services, _ := ic.allServicesAndListing()
+	ic.enableServices(services)
+
+	app := apps.App{
+		Name: "test-app",
+		Resources: []apps.AppResource{
+			{Name: "table", UcSecurable: &apps.AppResourceUcSecurable{SecurableType: "TABLE", SecurableFullName: "main.default.events"}},
+			{Name: "connection", UcSecurable: &apps.AppResourceUcSecurable{SecurableType: "CONNECTION", SecurableFullName: "salesforce"}},
+			{Name: "volume", UcSecurable: &apps.AppResourceUcSecurable{SecurableType: "VOLUME", SecurableFullName: "main.default.checkpoints"}},
+		},
+		TelemetryExportDestinations: []apps.TelemetryExportDestination{{
+			UnityCatalog: &apps.UnityCatalog{
+				LogsTable: "main.telemetry.logs", MetricsTable: "main.telemetry.metrics", TracesTable: "main.telemetry.traces",
+			},
+		}},
+	}
+	var tfApp app_resource.AppResource
+	diags := converters.GoSdkToTfSdkStruct(ctx, app, &tfApp)
+	require.False(t, diags.HasError(), diags.Errors())
+	wrapper, state := newPluginFrameworkTestState(t, ic, ctx, "databricks_app", app.Name)
+	require.Empty(t, state.SetAttribute(ctx, path.Root("name"), tfApp.Name).Errors())
+	require.Empty(t, state.SetAttribute(ctx, path.Root("resources"), tfApp.Resources).Errors())
+	require.Empty(t, state.SetAttribute(ctx, path.Root("telemetry_export_destinations"), tfApp.TelemetryExportDestinations).Errors())
+
+	err := importApp(ic, &resource{Resource: "databricks_app", ID: app.Name, Name: "test_app", DataWrapper: wrapper})
+	require.NoError(t, err)
+	for _, expected := range []string{
+		"databricks_sql_table[<unknown>] (id: main.default.events)",
+		"databricks_connection[<unknown>] (id: salesforce)",
+		"databricks_volume[<unknown>] (id: main.default.checkpoints)",
+		"databricks_sql_table[<unknown>] (id: main.telemetry.logs)",
+		"databricks_sql_table[<unknown>] (id: main.telemetry.metrics)",
+		"databricks_sql_table[<unknown>] (id: main.telemetry.traces)",
+	} {
+		assert.Contains(t, ic.testEmits, expected)
+	}
+}
 
 func TestAppExport(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{

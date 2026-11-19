@@ -25,6 +25,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
+// The notification destinations that receive access requests for a Unity
+// Catalog securable. A securable without destinations of its own uses its
+// owner's email when default owner email destinations are on; otherwise it
+// inherits the destinations of its nearest parent that has any.
 type AccessRequestDestinations_SdkV2 struct {
 	// Indicates whether any destinations are hidden from the caller due to a
 	// lack of permissions. This value is true if the caller does not have
@@ -36,14 +40,12 @@ type AccessRequestDestinations_SdkV2 struct {
 	DestinationSourceSecurable types.List `tfsdk:"destination_source_securable"`
 	// The access request destinations for the securable.
 	Destinations types.Set `tfsdk:"destinations"`
-	// The full name of the securable. Redundant with the name in the securable
-	// object, but necessary for Terraform integration
+	// The full name of the securable, repeated from **securable**.
 	FullName types.String `tfsdk:"full_name"`
 	// The securable for which the access request destinations are being
 	// modified or read.
 	Securable types.List `tfsdk:"securable"`
-	// The type of the securable. Redundant with the type in the securable
-	// object, but necessary for Terraform integration
+	// The type of the securable, repeated from **securable** as a plain string.
 	SecurableType types.String `tfsdk:"securable_type"`
 }
 
@@ -2340,8 +2342,8 @@ type AwsSqsQueue_SdkV2 struct {
 	// Unique identifier included in the name of file events managed cloud
 	// resources.
 	ManagedResourceId types.String `tfsdk:"managed_resource_id"`
-	// The AQS queue url in the format
-	// https://sqs.{region}.amazonaws.com/{account id}/{queue name}. Only
+	// The SQS queue URL in the format
+	// `https://sqs.{region}.amazonaws.com/{account id}/{queue name}`. Only
 	// required for provided_sqs.
 	QueueUrl types.String `tfsdk:"queue_url"`
 }
@@ -2698,8 +2700,8 @@ type AzureQueueStorage_SdkV2 struct {
 	// Unique identifier included in the name of file events managed cloud
 	// resources.
 	ManagedResourceId types.String `tfsdk:"managed_resource_id"`
-	// The AQS queue url in the format https://{storage
-	// account}.queue.core.windows.net/{queue name} Only required for
+	// The AQS queue URL in the format `https://{storage
+	// account}.queue.core.windows.net/{queue name}`. Only required for
 	// provided_aqs.
 	QueueUrl types.String `tfsdk:"queue_url"`
 	// Optional resource group for the queue, event grid subscription, and
@@ -2995,6 +2997,8 @@ func (m *BatchCreateAccessRequestsRequest_SdkV2) SetRequests(ctx context.Context
 	m.Requests = types.ListValueMust(t, vs)
 }
 
+// The access request destinations resolved for each principal and securable in
+// the batch.
 type BatchCreateAccessRequestsResponse_SdkV2 struct {
 	// The access request destinations for each securable object the principal
 	// requested.
@@ -3205,38 +3209,66 @@ func (m CancelRefreshResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// A catalog is the first layer of Unity Catalog's three-level namespace and
+// groups the schemas, tables, volumes, and other data assets under it. Catalogs
+// created through this API are standard catalogs, Delta Sharing catalogs
+// created from a share, or foreign catalogs that mirror a database behind a
+// connection to an external data source.
 type CatalogInfo_SdkV2 struct {
 	// Indicates whether the principal is limited to retrieving metadata for the
 	// associated object through the BROWSE privilege when include_browse is
 	// enabled in the request.
 	BrowseOnly types.Bool `tfsdk:"browse_only"`
-
+	// The server sets the catalog type from the create request. Catalogs
+	// created through this API are MANAGED_CATALOG (standard catalogs),
+	// DELTASHARING_CATALOG when created from a share with provider_name and
+	// share_name, or FOREIGN_CATALOG when created from a connection with
+	// connection_name. The remaining types are provisioned by Databricks.
 	CatalogType types.String `tfsdk:"catalog_type"`
 	// User-provided free-form text description.
 	Comment types.String `tfsdk:"comment"`
-	// The name of the connection to an external data source.
+	// Naming a connection to an external data source creates a foreign catalog
+	// that mirrors a database in that source, which requires ownership of or
+	// the CREATE FOREIGN CATALOG privilege on the connection.
+	// Connection-specific settings, such as the database to mirror, go in
+	// options. The connection cannot be changed after creation.
 	ConnectionName types.String `tfsdk:"connection_name"`
 	// Time at which this catalog was created, in epoch milliseconds.
 	CreatedAt types.Int64 `tfsdk:"created_at"`
 	// Username of catalog creator.
 	CreatedBy types.String `tfsdk:"created_by"`
-	// Custom maximum retention period in hours for the catalog
+	// Dropped objects in the catalog remain recoverable for this number of
+	// hours before they are permanently purged. The value applies to standard
+	// catalogs only, must be 0 or within the range allowed for the metastore,
+	// and is inherited by schemas and tables that do not set their own value.
 	CustomMaxRetentionHours types.Int64 `tfsdk:"custom_max_retention_hours"`
-
+	// Indicates the predictive optimization setting that is in effect for the
+	// catalog once inherited values are resolved.
 	EffectivePredictiveOptimizationFlag types.List `tfsdk:"effective_predictive_optimization_flag"`
-	// Whether predictive optimization should be enabled for this object and
-	// objects under it.
+	// Whether predictive optimization is enabled for this catalog and the
+	// objects under it. Valid values are ENABLE, DISABLE, and INHERIT, where
+	// INHERIT applies the account-level setting. Standard catalogs start as
+	// INHERIT and other catalog types as DISABLE. It cannot be set when
+	// creating a catalog; use the update method instead.
 	EnablePredictiveOptimization types.String `tfsdk:"enable_predictive_optimization"`
 	// The full name of the catalog. Corresponds with the name field.
 	FullName types.String `tfsdk:"full_name"`
-	// Whether the current securable is accessible from all workspaces or a
-	// specific set of workspaces.
+	// Whether the catalog is accessible from all workspaces attached to the
+	// metastore (OPEN) or only from the workspaces bound to it (ISOLATED). It
+	// cannot be set when creating a catalog; change it with the update method
+	// and manage the bound workspaces with the workspace bindings API. See
+	// [Workspace-catalog binding].
+	//
+	// [Workspace-catalog binding]: https://docs.databricks.com/aws/en/catalogs/binding
 	IsolationMode types.String `tfsdk:"isolation_mode"`
-	// Control CMK encryption for managed catalog data
+	// Customer-managed key (CMK) settings control the encryption at rest of the
+	// catalog's managed data.
 	ManagedEncryptionSettings types.List `tfsdk:"managed_encryption_settings"`
 	// Unique identifier of parent metastore.
 	MetastoreId types.String `tfsdk:"metastore_id"`
-	// Name of catalog.
+	// The name of the catalog is stored in lowercase, can be at most 255
+	// characters long, and cannot contain periods, spaces, forward slashes, or
+	// control characters.
 	Name types.String `tfsdk:"name"`
 	// A map of key-value properties attached to the securable.
 	Options types.Map `tfsdk:"options"`
@@ -3244,20 +3276,28 @@ type CatalogInfo_SdkV2 struct {
 	Owner types.String `tfsdk:"owner"`
 	// A map of key-value properties attached to the securable.
 	Properties types.Map `tfsdk:"properties"`
-	// The name of delta sharing provider.
-	//
-	// A Delta Sharing catalog is a catalog that is based on a Delta share on a
-	// remote sharing server.
+	// The Delta Sharing provider that owns the share must be named here,
+	// together with share_name, to create a Delta Sharing catalog that exposes
+	// the data of the share on a remote sharing server. The provider cannot be
+	// changed after creation.
 	ProviderName types.String `tfsdk:"provider_name"`
-
+	// Indicates the provisioning status of the catalog. It is present only for
+	// catalogs that are provisioned asynchronously.
 	ProvisioningInfo types.List `tfsdk:"provisioning_info"`
-
+	// The securable type is always CATALOG for a catalog.
 	SecurableType types.String `tfsdk:"securable_type"`
-	// The name of the share under the share provider.
+	// The share under the Delta Sharing provider must be named here, together
+	// with provider_name, to create a Delta Sharing catalog. The share cannot
+	// be changed after creation.
 	ShareName types.String `tfsdk:"share_name"`
-	// Storage Location URL (full path) for managed tables within catalog.
+	// The server derives this full storage location URL for managed tables and
+	// volumes within the catalog from storage_root and the catalog ID.
 	StorageLocation types.String `tfsdk:"storage_location"`
-	// Storage root URL for managed tables within catalog.
+	// Managed tables and volumes in the catalog are stored under this storage
+	// root URL. The path must be inside an external location on which the
+	// caller has the CREATE MANAGED STORAGE privilege. If omitted, managed data
+	// is stored under the metastore's root storage location, which must then be
+	// configured. Delta Sharing catalogs cannot have a storage root.
 	StorageRoot types.String `tfsdk:"storage_root"`
 	// Time at which this catalog was last modified, in epoch milliseconds.
 	UpdatedAt types.Int64 `tfsdk:"updated_at"`
@@ -3794,10 +3834,10 @@ func (m *ColumnInfo_SdkV2) SetMask(ctx context.Context, v ColumnMask_SdkV2) {
 type ColumnMask_SdkV2 struct {
 	// The full name of the column mask SQL UDF.
 	FunctionName types.String `tfsdk:"function_name"`
-	// The list of additional table columns or literals to be passed as
-	// additional arguments to a column mask function. This is the replacement
-	// of the deprecated using_column_names field and carries information about
-	// the types (alias or constant) of the arguments to the mask function.
+	// The list of table columns or literals to be passed as additional
+	// arguments to a column mask function, carrying the type (column reference
+	// vs constant literal) of each argument. Deprecated: use using_column_names
+	// instead.
 	UsingArguments types.List `tfsdk:"using_arguments"`
 	// The list of additional table columns to be passed as input to the column
 	// mask function. The first arg of the mask function should be of the type
@@ -4095,9 +4135,11 @@ func (m *ColumnMaskOptions_SdkV2) SetUsing(ctx context.Context, v []FunctionArgu
 	m.Using = types.ListValueMust(t, vs)
 }
 
+// Mapping from a column of the source object to a column of the target object.
 type ColumnRelationship_SdkV2 struct {
+	// Name of the column in the source object.
 	Source types.String `tfsdk:"source"`
-
+	// Name of the column in the target object.
 	Target types.String `tfsdk:"target"`
 }
 
@@ -4143,6 +4185,61 @@ func (m ColumnRelationship_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"source": types.StringType,
 			"target": types.StringType,
+		},
+	}
+}
+
+// Extracts the value of a column-level tag: get_column_tag_value(col,
+// "tagKey").
+type ColumnTagValueExtraction_SdkV2 struct {
+	// The alias from MATCH COLUMNS that identifies the column.
+	ColumnAlias types.String `tfsdk:"column_alias"`
+	// 1024 matches the max_length on FunctionArgument.constant above.
+	TagKey types.String `tfsdk:"tag_key"`
+}
+
+func (to *ColumnTagValueExtraction_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ColumnTagValueExtraction_SdkV2) {
+}
+
+func (to *ColumnTagValueExtraction_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ColumnTagValueExtraction_SdkV2) {
+}
+
+func (m ColumnTagValueExtraction_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["column_alias"] = attrs["column_alias"].SetRequired()
+	attrs["tag_key"] = attrs["tag_key"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ColumnTagValueExtraction.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ColumnTagValueExtraction_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ColumnTagValueExtraction_SdkV2
+// only implements ToObjectValue() and Type().
+func (m ColumnTagValueExtraction_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"column_alias": m.ColumnAlias,
+			"tag_key":      m.TagKey,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ColumnTagValueExtraction_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"column_alias": types.StringType,
+			"tag_key":      types.StringType,
 		},
 	}
 }
@@ -4229,6 +4326,10 @@ type ConnectionInfo_SdkV2 struct {
 	ProvisioningInfo types.List `tfsdk:"provisioning_info"`
 	// If the connection is read only.
 	ReadOnly types.Bool `tfsdk:"read_only"`
+	// A map of option names to UC Secret references. Keys are connection option
+	// names (same as in OptionsKVPairs) and values are UC Secret fully
+	// qualified names.
+	Secrets types.Map `tfsdk:"secrets"`
 
 	SecurableType types.String `tfsdk:"securable_type"`
 	// Time at which this connection was updated, in epoch milliseconds.
@@ -4297,6 +4398,7 @@ func (m ConnectionInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschem
 	attrs["provisioning_info"] = attrs["provisioning_info"].SetOptional()
 	attrs["provisioning_info"] = attrs["provisioning_info"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["read_only"] = attrs["read_only"].SetOptional()
+	attrs["secrets"] = attrs["secrets"].SetOptional()
 	attrs["securable_type"] = attrs["securable_type"].SetOptional()
 	attrs["updated_at"] = attrs["updated_at"].SetOptional()
 	attrs["updated_by"] = attrs["updated_by"].SetOptional()
@@ -4318,6 +4420,7 @@ func (m ConnectionInfo_SdkV2) GetComplexFieldTypes(ctx context.Context) map[stri
 		"options":              reflect.TypeOf(types.String{}),
 		"properties":           reflect.TypeOf(types.String{}),
 		"provisioning_info":    reflect.TypeOf(ProvisioningInfo_SdkV2{}),
+		"secrets":              reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -4343,6 +4446,7 @@ func (m ConnectionInfo_SdkV2) ToObjectValue(ctx context.Context) basetypes.Objec
 			"properties":           m.Properties,
 			"provisioning_info":    m.ProvisioningInfo,
 			"read_only":            m.ReadOnly,
+			"secrets":              m.Secrets,
 			"securable_type":       m.SecurableType,
 			"updated_at":           m.UpdatedAt,
 			"updated_by":           m.UpdatedBy,
@@ -4376,7 +4480,10 @@ func (m ConnectionInfo_SdkV2) Type(ctx context.Context) attr.Type {
 			"provisioning_info": basetypes.ListType{
 				ElemType: ProvisioningInfo_SdkV2{}.Type(ctx),
 			},
-			"read_only":      types.BoolType,
+			"read_only": types.BoolType,
+			"secrets": basetypes.MapType{
+				ElemType: types.StringType,
+			},
 			"securable_type": types.StringType,
 			"updated_at":     types.Int64Type,
 			"updated_by":     types.StringType,
@@ -4487,6 +4594,32 @@ func (m *ConnectionInfo_SdkV2) SetProvisioningInfo(ctx context.Context, v Provis
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["provisioning_info"]
 	m.ProvisioningInfo = types.ListValueMust(t, vs)
+}
+
+// GetSecrets returns the value of the Secrets field in ConnectionInfo_SdkV2 as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ConnectionInfo_SdkV2) GetSecrets(ctx context.Context) (map[string]types.String, bool) {
+	if m.Secrets.IsNull() || m.Secrets.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := m.Secrets.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSecrets sets the value of the Secrets field in ConnectionInfo_SdkV2.
+func (m *ConnectionInfo_SdkV2) SetSecrets(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["secrets"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Secrets = types.MapValueMust(t, vs)
 }
 
 // Detailed status of an online table. Shown if the online table is in the
@@ -5013,6 +5146,11 @@ func (m CreateAccountsMetastore_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// A storage credential represents an authentication and authorization mechanism
+// for accessing data stored on your cloud tenant. It holds exactly one cloud
+// credential, for example an AWS IAM role, an Azure managed identity or service
+// principal, or a GCP service account. Only the field for the selected
+// credential type is set in requests and responses.
 type CreateAccountsStorageCredential_SdkV2 struct {
 	// The AWS IAM role configuration.
 	AwsIamRole types.List `tfsdk:"aws_iam_role"`
@@ -5337,26 +5475,42 @@ func (m *CreateAccountsStorageCredential_SdkV2) SetDatabricksGcpServiceAccount(c
 type CreateCatalog_SdkV2 struct {
 	// User-provided free-form text description.
 	Comment types.String `tfsdk:"comment"`
-	// The name of the connection to an external data source.
+	// Naming a connection to an external data source creates a foreign catalog
+	// that mirrors a database in that source, which requires ownership of or
+	// the CREATE FOREIGN CATALOG privilege on the connection.
+	// Connection-specific settings, such as the database to mirror, go in
+	// options. The connection cannot be changed after creation.
 	ConnectionName types.String `tfsdk:"connection_name"`
-	// Custom maximum retention period in hours for the catalog
+	// Dropped objects in the catalog remain recoverable for this number of
+	// hours before they are permanently purged. The value applies to standard
+	// catalogs only, must be 0 or within the range allowed for the metastore,
+	// and is inherited by schemas and tables that do not set their own value.
 	CustomMaxRetentionHours types.Int64 `tfsdk:"custom_max_retention_hours"`
-	// Control CMK encryption for managed catalog data
+	// Customer-managed key (CMK) settings control the encryption at rest of the
+	// catalog's managed data.
 	ManagedEncryptionSettings types.List `tfsdk:"managed_encryption_settings"`
-	// Name of catalog.
+	// The name of the catalog is stored in lowercase, can be at most 255
+	// characters long, and cannot contain periods, spaces, forward slashes, or
+	// control characters.
 	Name types.String `tfsdk:"name"`
 	// A map of key-value properties attached to the securable.
 	Options types.Map `tfsdk:"options"`
 	// A map of key-value properties attached to the securable.
 	Properties types.Map `tfsdk:"properties"`
-	// The name of delta sharing provider.
-	//
-	// A Delta Sharing catalog is a catalog that is based on a Delta share on a
-	// remote sharing server.
+	// The Delta Sharing provider that owns the share must be named here,
+	// together with share_name, to create a Delta Sharing catalog that exposes
+	// the data of the share on a remote sharing server. The provider cannot be
+	// changed after creation.
 	ProviderName types.String `tfsdk:"provider_name"`
-	// The name of the share under the share provider.
+	// The share under the Delta Sharing provider must be named here, together
+	// with provider_name, to create a Delta Sharing catalog. The share cannot
+	// be changed after creation.
 	ShareName types.String `tfsdk:"share_name"`
-	// Storage root URL for managed tables within catalog.
+	// Managed tables and volumes in the catalog are stored under this storage
+	// root URL. The path must be inside an external location on which the
+	// caller has the CREATE MANAGED STORAGE privilege. If omitted, managed data
+	// is stored under the metastore's root storage location, which must then be
+	// configured. Delta Sharing catalogs cannot have a storage root.
 	StorageRoot types.String `tfsdk:"storage_root"`
 }
 
@@ -5556,6 +5710,10 @@ type CreateConnection_SdkV2 struct {
 	Properties types.Map `tfsdk:"properties"`
 	// If the connection is read only.
 	ReadOnly types.Bool `tfsdk:"read_only"`
+	// A map of option names to UC Secret references. Keys are connection option
+	// names (same as in OptionsKVPairs) and values are UC Secret fully
+	// qualified names.
+	Secrets types.Map `tfsdk:"secrets"`
 }
 
 func (to *CreateConnection_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateConnection_SdkV2) {
@@ -5591,6 +5749,7 @@ func (m CreateConnection_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsch
 	attrs["parent"] = attrs["parent"].SetOptional()
 	attrs["properties"] = attrs["properties"].SetOptional()
 	attrs["read_only"] = attrs["read_only"].SetOptional()
+	attrs["secrets"] = attrs["secrets"].SetOptional()
 
 	return attrs
 }
@@ -5607,6 +5766,7 @@ func (m CreateConnection_SdkV2) GetComplexFieldTypes(ctx context.Context) map[st
 		"environment_settings": reflect.TypeOf(EnvironmentSettings_SdkV2{}),
 		"options":              reflect.TypeOf(types.String{}),
 		"properties":           reflect.TypeOf(types.String{}),
+		"secrets":              reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -5625,6 +5785,7 @@ func (m CreateConnection_SdkV2) ToObjectValue(ctx context.Context) basetypes.Obj
 			"parent":               m.Parent,
 			"properties":           m.Properties,
 			"read_only":            m.ReadOnly,
+			"secrets":              m.Secrets,
 		})
 }
 
@@ -5646,6 +5807,9 @@ func (m CreateConnection_SdkV2) Type(ctx context.Context) attr.Type {
 				ElemType: types.StringType,
 			},
 			"read_only": types.BoolType,
+			"secrets": basetypes.MapType{
+				ElemType: types.StringType,
+			},
 		},
 	}
 }
@@ -5726,6 +5890,32 @@ func (m *CreateConnection_SdkV2) SetProperties(ctx context.Context, v map[string
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["properties"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	m.Properties = types.MapValueMust(t, vs)
+}
+
+// GetSecrets returns the value of the Secrets field in CreateConnection_SdkV2 as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *CreateConnection_SdkV2) GetSecrets(ctx context.Context) (map[string]types.String, bool) {
+	if m.Secrets.IsNull() || m.Secrets.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := m.Secrets.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSecrets sets the value of the Secrets field in CreateConnection_SdkV2.
+func (m *CreateConnection_SdkV2) SetSecrets(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["secrets"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Secrets = types.MapValueMust(t, vs)
 }
 
 type CreateCredentialRequest_SdkV2 struct {
@@ -6211,19 +6401,20 @@ type CreateExternalLocation_SdkV2 struct {
 	// whether the user explicitly set `enable_file_events`. Use this field
 	// instead of `file_event_queue` for reading the actual queue state.
 	EffectiveFileEventQueue types.List `tfsdk:"effective_file_event_queue"`
-	// Whether to enable file events on this external location. Default to
+	// Whether to enable file events on this external location. Defaults to
 	// `true`. Set to `false` to disable file events. The actual applied value
 	// may differ due to server-side defaults; check
 	// `effective_enable_file_events` for the effective state.
 	EnableFileEvents types.Bool `tfsdk:"enable_file_events"`
-
+	// Encryption options that apply to clients connecting to cloud storage.
 	EncryptionDetails types.List `tfsdk:"encryption_details"`
 	// Indicates whether fallback mode is enabled for this external location.
 	// When fallback mode is enabled, the access to the location falls back to
 	// cluster credentials if UC credentials are not sufficient.
 	Fallback types.Bool `tfsdk:"fallback"`
-	// File event queue settings. If `enable_file_events` is not `false`, must
-	// be defined and have exactly one of the documented properties.
+	// File event queue settings. When `enable_file_events` is `true`, exactly
+	// one of the queue options must be set. Must be omitted when
+	// `enable_file_events` is `false`.
 	FileEventQueue types.List `tfsdk:"file_event_queue"`
 	// Name of the external location.
 	Name types.String `tfsdk:"name"`
@@ -6232,7 +6423,8 @@ type CreateExternalLocation_SdkV2 struct {
 	// Skips validation of the storage credential associated with the external
 	// location.
 	SkipValidation types.Bool `tfsdk:"skip_validation"`
-	// Path URL of the external location.
+	// URL of the cloud storage path that the external location points to,
+	// including the scheme (for example `s3://`, `abfss://`, or `gs://`).
 	Url types.String `tfsdk:"url"`
 }
 
@@ -6584,7 +6776,8 @@ type CreateFunction_SdkV2 struct {
 	RoutineBody types.String `tfsdk:"routine_body"`
 	// Function body.
 	RoutineDefinition types.String `tfsdk:"routine_definition"`
-	// function dependencies.
+	// Function dependencies. For external UDFs, dependencies may contain only
+	// credential, secret, or volume objects.
 	RoutineDependencies types.List `tfsdk:"routine_dependencies"`
 	// Name of parent Schema relative to its parent Catalog.
 	SchemaName types.String `tfsdk:"schema_name"`
@@ -6940,8 +7133,8 @@ func (m *CreateFunctionRequest_SdkV2) SetFunctionInfo(ctx context.Context, v Cre
 }
 
 type CreateMcpServiceRequest_SdkV2 struct {
-	// The MCP service to create. The server populates `name` from `parent` +
-	// `mcp_service_id`; clients should leave it unset.
+	// The MCP service to create. Do not set `name`; the server derives it from
+	// `parent` and `mcp_service_id`. `source_connection` is required.
 	McpService types.List `tfsdk:"mcp_service"`
 	// Name for the MCP service, e.g. "my_mcp_service".
 	McpServiceId types.String `tfsdk:"-"`
@@ -7045,6 +7238,107 @@ func (m *CreateMcpServiceRequest_SdkV2) SetMcpService(ctx context.Context, v Mcp
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["mcp_service"]
 	m.McpService = types.ListValueMust(t, vs)
+}
+
+type CreateMcpServiceUserMappedCredentialRequest_SdkV2 struct {
+	Login types.List `tfsdk:"login"`
+	// Resource name of the MCP service. Format:
+	// `mcp-services/{catalog}.{schema}.{mcp_service}`.
+	Name types.String `tfsdk:"-"`
+}
+
+func (to *CreateMcpServiceUserMappedCredentialRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateMcpServiceUserMappedCredentialRequest_SdkV2) {
+	if !from.Login.IsNull() && !from.Login.IsUnknown() {
+		if toLogin, ok := to.GetLogin(ctx); ok {
+			if fromLogin, ok := from.GetLogin(ctx); ok {
+				// Recursively sync the fields of Login
+				toLogin.SyncFieldsDuringCreateOrUpdate(ctx, fromLogin)
+				to.SetLogin(ctx, toLogin)
+			}
+		}
+	}
+}
+
+func (to *CreateMcpServiceUserMappedCredentialRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from CreateMcpServiceUserMappedCredentialRequest_SdkV2) {
+	if !from.Login.IsNull() && !from.Login.IsUnknown() {
+		if toLogin, ok := to.GetLogin(ctx); ok {
+			if fromLogin, ok := from.GetLogin(ctx); ok {
+				toLogin.SyncFieldsDuringRead(ctx, fromLogin)
+				to.SetLogin(ctx, toLogin)
+			}
+		}
+	}
+}
+
+func (m CreateMcpServiceUserMappedCredentialRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["login"] = attrs["login"].SetRequired()
+	attrs["login"] = attrs["login"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateMcpServiceUserMappedCredentialRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m CreateMcpServiceUserMappedCredentialRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"login": reflect.TypeOf(McpServiceUserMappedCredentialLogin_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CreateMcpServiceUserMappedCredentialRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (m CreateMcpServiceUserMappedCredentialRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"login": m.Login,
+			"name":  m.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m CreateMcpServiceUserMappedCredentialRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"login": basetypes.ListType{
+				ElemType: McpServiceUserMappedCredentialLogin_SdkV2{}.Type(ctx),
+			},
+			"name": types.StringType,
+		},
+	}
+}
+
+// GetLogin returns the value of the Login field in CreateMcpServiceUserMappedCredentialRequest_SdkV2 as
+// a McpServiceUserMappedCredentialLogin_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *CreateMcpServiceUserMappedCredentialRequest_SdkV2) GetLogin(ctx context.Context) (McpServiceUserMappedCredentialLogin_SdkV2, bool) {
+	var e McpServiceUserMappedCredentialLogin_SdkV2
+	if m.Login.IsNull() || m.Login.IsUnknown() {
+		return e, false
+	}
+	var v []McpServiceUserMappedCredentialLogin_SdkV2
+	d := m.Login.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetLogin sets the value of the Login field in CreateMcpServiceUserMappedCredentialRequest_SdkV2.
+func (m *CreateMcpServiceUserMappedCredentialRequest_SdkV2) SetLogin(ctx context.Context, v McpServiceUserMappedCredentialLogin_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["login"]
+	m.Login = types.ListValueMust(t, vs)
 }
 
 type CreateMetastore_SdkV2 struct {
@@ -7172,8 +7466,8 @@ func (m CreateMetastoreAssignment_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type CreateModelProviderServiceRequest_SdkV2 struct {
-	// The model provider service to create. The server populates `name` from
-	// `parent` + `model_provider_service_id`; clients should leave it unset.
+	// The model provider service to create. Do not set `name`; the server
+	// derives it from `parent` and `model_provider_service_id`.
 	ModelProviderService types.List `tfsdk:"model_provider_service"`
 	// Name for the model provider service, e.g. "openai_prod".
 	ModelProviderServiceId types.String `tfsdk:"-"`
@@ -7280,10 +7574,12 @@ func (m *CreateModelProviderServiceRequest_SdkV2) SetModelProviderService(ctx co
 }
 
 type CreateModelServiceRequest_SdkV2 struct {
-	// The model service to create. The server populates `name` from `parent` +
-	// `model_service_id`; clients should leave it unset.
+	// The model service to create. Do not set `name`; the server derives it
+	// from `parent` and `model_service_id`.
 	ModelService types.List `tfsdk:"model_service"`
-	// Name for the model service, e.g. "my_model_service".
+	// Name of the model service within the parent schema. The name must not
+	// contain periods, spaces, forward slashes, percent signs, or control
+	// characters, and it is stored in lowercase.
 	ModelServiceId types.String `tfsdk:"-"`
 	// Name of the parent schema. Format: `schemas/{catalog}.{schema}`. Each
 	// `{...}` component is capped at 255 characters individually.
@@ -8286,12 +8582,21 @@ func (m *CreateRegisteredModelRequest_SdkV2) SetAliases(ctx context.Context, v [
 	m.Aliases = types.ListValueMust(t, vs)
 }
 
+// A lineage relationship between a source object and a target object, where at
+// least one of the two is an external metadata object. The other object can be
+// a Unity Catalog table, a cloud storage path, a model version, or another
+// external metadata object. A relationship is identified by its source and
+// target; optional column mappings and key-value properties describe the data
+// flow between them.
 type CreateRequestExternalLineage_SdkV2 struct {
-	// List of column relationships between source and target objects.
+	// List of column relationships between source and target objects. The
+	// combined size of all source and target column names is limited.
 	Columns types.List `tfsdk:"columns"`
 	// Unique identifier of the external lineage relationship.
 	Id types.String `tfsdk:"id"`
 	// Key-value properties associated with the external lineage relationship.
+	// The combined length of all keys and values must not exceed 5000
+	// characters.
 	Properties types.Map `tfsdk:"properties"`
 	// Source object of the external lineage relationship.
 	Source types.List `tfsdk:"source"`
@@ -8742,6 +9047,117 @@ func (m *CreateSecretRequest_SdkV2) SetSecret(ctx context.Context, v Secret_SdkV
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["secret"]
 	m.Secret = types.ListValueMust(t, vs)
+}
+
+type CreateSkillRequest_SdkV2 struct {
+	// Name of the parent schema. Format: `schemas/{catalog}.{schema}`. Each
+	// `{...}` component is capped at 255 characters individually.
+	Parent types.String `tfsdk:"-"`
+	// The skill to create. `comment` is the only accepted client input and may
+	// be omitted. Do not set `name`; the server derives it from `parent` and
+	// `skill_id`.
+	Skill types.List `tfsdk:"skill"`
+	// Name for the skill, e.g. "basic-math". The server normalizes this
+	// identifier to lowercase. It is independent of the bundle name read from
+	// SKILL.md.
+	SkillId types.String `tfsdk:"-"`
+}
+
+func (to *CreateSkillRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateSkillRequest_SdkV2) {
+	if !from.Skill.IsNull() && !from.Skill.IsUnknown() {
+		if toSkill, ok := to.GetSkill(ctx); ok {
+			if fromSkill, ok := from.GetSkill(ctx); ok {
+				// Recursively sync the fields of Skill
+				toSkill.SyncFieldsDuringCreateOrUpdate(ctx, fromSkill)
+				to.SetSkill(ctx, toSkill)
+			}
+		}
+	}
+}
+
+func (to *CreateSkillRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from CreateSkillRequest_SdkV2) {
+	if !from.Skill.IsNull() && !from.Skill.IsUnknown() {
+		if toSkill, ok := to.GetSkill(ctx); ok {
+			if fromSkill, ok := from.GetSkill(ctx); ok {
+				toSkill.SyncFieldsDuringRead(ctx, fromSkill)
+				to.SetSkill(ctx, toSkill)
+			}
+		}
+	}
+}
+
+func (m CreateSkillRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["skill"] = attrs["skill"].SetRequired()
+	attrs["skill"] = attrs["skill"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["parent"] = attrs["parent"].SetRequired()
+	attrs["skill_id"] = attrs["skill_id"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateSkillRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m CreateSkillRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"skill": reflect.TypeOf(Skill_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CreateSkillRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (m CreateSkillRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"parent":   m.Parent,
+			"skill":    m.Skill,
+			"skill_id": m.SkillId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m CreateSkillRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"parent": types.StringType,
+			"skill": basetypes.ListType{
+				ElemType: Skill_SdkV2{}.Type(ctx),
+			},
+			"skill_id": types.StringType,
+		},
+	}
+}
+
+// GetSkill returns the value of the Skill field in CreateSkillRequest_SdkV2 as
+// a Skill_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *CreateSkillRequest_SdkV2) GetSkill(ctx context.Context) (Skill_SdkV2, bool) {
+	var e Skill_SdkV2
+	if m.Skill.IsNull() || m.Skill.IsUnknown() {
+		return e, false
+	}
+	var v []Skill_SdkV2
+	d := m.Skill.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSkill sets the value of the Skill field in CreateSkillRequest_SdkV2.
+func (m *CreateSkillRequest_SdkV2) SetSkill(ctx context.Context, v Skill_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["skill"]
+	m.Skill = types.ListValueMust(t, vs)
 }
 
 type CreateStorageCredential_SdkV2 struct {
@@ -9359,7 +9775,12 @@ type CreateVolumeRequestContent_SdkV2 struct {
 	Name types.String `tfsdk:"name"`
 	// The name of the schema where the volume is
 	SchemaName types.String `tfsdk:"schema_name"`
-	// The storage location on the cloud
+	// The cloud storage URL where the files of the volume are stored. For an
+	// external volume, it must be set on creation to a path within an existing
+	// external location. For a managed volume, it must be omitted on creation;
+	// the volume is placed under the managed storage location of the parent
+	// schema, catalog, or metastore, and the assigned path is returned in this
+	// field.
 	StorageLocation types.String `tfsdk:"storage_location"`
 	// The type of the volume. An external volume is located in the specified
 	// external location. A managed volume is located in the default location
@@ -9478,6 +9899,11 @@ func (m CredentialDependency_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// A storage credential represents an authentication and authorization mechanism
+// for accessing data stored on your cloud tenant. It holds exactly one cloud
+// credential, for example an AWS IAM role, an Azure managed identity or service
+// principal, or a GCP service account. Only the field for the selected
+// credential type is set in requests and responses.
 type CredentialInfo_SdkV2 struct {
 	// The AWS IAM role configuration.
 	AwsIamRole types.List `tfsdk:"aws_iam_role"`
@@ -10379,7 +10805,7 @@ func (m DeleteConnectionRequest_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type DeleteCredentialRequest_SdkV2 struct {
-	// Force an update even if there are dependent services (when purpose is
+	// Force deletion even if there are dependent services (when purpose is
 	// **SERVICE**) or dependent external locations and external tables (when
 	// purpose is **STORAGE**).
 	Force types.Bool `tfsdk:"-"`
@@ -10533,6 +10959,10 @@ func (m DeleteEntityTagAssignmentRequest_SdkV2) Type(ctx context.Context) attr.T
 }
 
 type DeleteExternalLineageRelationshipRequest_SdkV2 struct {
+	// The relationship to delete, identified by its `source` and `target`
+	// objects. Since this field is a query parameter, flatten the nested
+	// fields, for example
+	// `external_lineage_relationship.source.table.name=main.sales.orders`.
 	ExternalLineageRelationship types.List `tfsdk:"-"`
 }
 
@@ -10782,8 +11212,10 @@ func (m DeleteFunctionRequest_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type DeleteMcpServiceRequest_SdkV2 struct {
-	// If-match precondition: when set, the delete proceeds only if the current
-	// server-side etag matches. Empty means unconditional delete.
+	// Optimistic concurrency token from the most recent read. When set, the
+	// delete succeeds only if the resource has not changed. Leave unset for an
+	// unconditional delete. For REST requests, URL-encode the base64 string
+	// returned by the API when setting the `etag` query parameter.
 	Etag types.String `tfsdk:"-"`
 	// Resource name of the MCP service. Format:
 	// `mcp-services/{catalog}.{schema}.{mcp_service}`. Each `{...}` component
@@ -10834,6 +11266,98 @@ func (m DeleteMcpServiceRequest_SdkV2) Type(ctx context.Context) attr.Type {
 			"etag": types.StringType,
 			"name": types.StringType,
 		},
+	}
+}
+
+type DeleteMcpServiceUserMappedCredentialRequest_SdkV2 struct {
+	// Resource name of the MCP service. Format:
+	// `mcp-services/{catalog}.{schema}.{mcp_service}`.
+	Name types.String `tfsdk:"-"`
+}
+
+func (to *DeleteMcpServiceUserMappedCredentialRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DeleteMcpServiceUserMappedCredentialRequest_SdkV2) {
+}
+
+func (to *DeleteMcpServiceUserMappedCredentialRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from DeleteMcpServiceUserMappedCredentialRequest_SdkV2) {
+}
+
+func (m DeleteMcpServiceUserMappedCredentialRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteMcpServiceUserMappedCredentialRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m DeleteMcpServiceUserMappedCredentialRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteMcpServiceUserMappedCredentialRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (m DeleteMcpServiceUserMappedCredentialRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name": m.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m DeleteMcpServiceUserMappedCredentialRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name": types.StringType,
+		},
+	}
+}
+
+// Delete returns no resource; a dedicated (empty) response keeps the revoke
+// RPC's shape owned here rather than google.protobuf.Empty.
+type DeleteMcpServiceUserMappedCredentialResponse_SdkV2 struct {
+}
+
+func (to *DeleteMcpServiceUserMappedCredentialResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DeleteMcpServiceUserMappedCredentialResponse_SdkV2) {
+}
+
+func (to *DeleteMcpServiceUserMappedCredentialResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from DeleteMcpServiceUserMappedCredentialResponse_SdkV2) {
+}
+
+func (m DeleteMcpServiceUserMappedCredentialResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteMcpServiceUserMappedCredentialResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m DeleteMcpServiceUserMappedCredentialResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteMcpServiceUserMappedCredentialResponse_SdkV2
+// only implements ToObjectValue() and Type().
+func (m DeleteMcpServiceUserMappedCredentialResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m DeleteMcpServiceUserMappedCredentialResponse_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
 	}
 }
 
@@ -10891,8 +11415,10 @@ func (m DeleteMetastoreRequest_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type DeleteModelProviderServiceRequest_SdkV2 struct {
-	// If-match precondition: when set, the delete proceeds only if the current
-	// server-side etag matches. Empty means unconditional delete.
+	// Optimistic concurrency token from the most recent read. When set, the
+	// delete succeeds only if the resource has not changed. Leave unset for an
+	// unconditional delete. For REST requests, URL-encode the base64 string
+	// returned by the API when setting the `etag` query parameter.
 	Etag types.String `tfsdk:"-"`
 	// Resource name of the model provider service. Format:
 	// `model-provider-services/{catalog}.{schema}.{model_provider_service}`.
@@ -10947,8 +11473,10 @@ func (m DeleteModelProviderServiceRequest_SdkV2) Type(ctx context.Context) attr.
 }
 
 type DeleteModelServiceRequest_SdkV2 struct {
-	// If-match precondition: when set, the delete proceeds only if the current
-	// server-side etag matches. Empty means unconditional delete.
+	// Optimistic concurrency token from the most recent read. When set, the
+	// delete succeeds only if the resource has not changed. Leave unset for an
+	// unconditional delete. For REST requests, URL-encode the base64 string
+	// returned by the API when setting the `etag` query parameter.
 	Etag types.String `tfsdk:"-"`
 	// Resource name of the model service. Format:
 	// `model-services/{catalog}.{schema}.{model_service}`. Each `{...}`
@@ -11341,6 +11869,12 @@ func (m DeleteRegisteredModelRequest_SdkV2) Type(ctx context.Context) attr.Type 
 	}
 }
 
+// A lineage relationship between a source object and a target object, where at
+// least one of the two is an external metadata object. The other object can be
+// a Unity Catalog table, a cloud storage path, a model version, or another
+// external metadata object. A relationship is identified by its source and
+// target; optional column mappings and key-value properties describe the data
+// flow between them.
 type DeleteRequestExternalLineage_SdkV2 struct {
 	// Unique identifier of the external lineage relationship.
 	Id types.String `tfsdk:"id"`
@@ -11637,10 +12171,67 @@ func (m DeleteSecretRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+type DeleteSkillRequest_SdkV2 struct {
+	// Optimistic concurrency token from the most recent read. When set, the
+	// delete succeeds only if the resource has not changed. Leave unset for an
+	// unconditional delete. For REST requests, URL-encode the base64 string
+	// returned by the API when setting the `etag` query parameter.
+	Etag types.String `tfsdk:"-"`
+	// Full resource name of the skill. Format:
+	// `skills/{catalog}.{schema}.{skill}`. Each `{...}` component is capped at
+	// 255 characters individually.
+	Name types.String `tfsdk:"-"`
+}
+
+func (to *DeleteSkillRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DeleteSkillRequest_SdkV2) {
+}
+
+func (to *DeleteSkillRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from DeleteSkillRequest_SdkV2) {
+}
+
+func (m DeleteSkillRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["etag"] = attrs["etag"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteSkillRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m DeleteSkillRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteSkillRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (m DeleteSkillRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"etag": m.Etag,
+			"name": m.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m DeleteSkillRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"etag": types.StringType,
+			"name": types.StringType,
+		},
+	}
+}
+
 type DeleteStorageCredentialRequest_SdkV2 struct {
-	// Force an update even if there are dependent external locations or
-	// external tables (when purpose is **STORAGE**) or dependent services (when
-	// purpose is **SERVICE**).
+	// Force deletion even if there are dependent external locations or external
+	// tables.
 	Force types.Bool `tfsdk:"-"`
 	// Name of the storage credential.
 	Name types.String `tfsdk:"-"`
@@ -11968,6 +12559,86 @@ func (m *DeltaRuntimePropertiesKvPairs_SdkV2) SetDeltaRuntimeProperties(ctx cont
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["delta_runtime_properties"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	m.DeltaRuntimeProperties = types.MapValueMust(t, vs)
+}
+
+type DenyOptions_SdkV2 struct {
+	// List of privileges to deny. When any of these privileges are requested,
+	// the policy will deny access if the principal and condition match.
+	// Required on create and update.
+	Privileges types.List `tfsdk:"privileges"`
+}
+
+func (to *DenyOptions_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DenyOptions_SdkV2) {
+}
+
+func (to *DenyOptions_SdkV2) SyncFieldsDuringRead(ctx context.Context, from DenyOptions_SdkV2) {
+}
+
+func (m DenyOptions_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["privileges"] = attrs["privileges"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DenyOptions.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m DenyOptions_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"privileges": reflect.TypeOf(types.String{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DenyOptions_SdkV2
+// only implements ToObjectValue() and Type().
+func (m DenyOptions_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"privileges": m.Privileges,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m DenyOptions_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"privileges": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+		},
+	}
+}
+
+// GetPrivileges returns the value of the Privileges field in DenyOptions_SdkV2 as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *DenyOptions_SdkV2) GetPrivileges(ctx context.Context) ([]types.String, bool) {
+	if m.Privileges.IsNull() || m.Privileges.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := m.Privileges.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetPrivileges sets the value of the Privileges field in DenyOptions_SdkV2.
+func (m *DenyOptions_SdkV2) SetPrivileges(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["privileges"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Privileges = types.ListValueMust(t, vs)
 }
 
 // A dependency of a SQL object. One of the following fields must be defined:
@@ -13331,7 +14002,9 @@ func (m ExistsRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// An external metadata object at one end of an external lineage relationship.
 type ExternalLineageExternalMetadata_SdkV2 struct {
+	// Name of the external metadata object.
 	Name types.String `tfsdk:"name"`
 }
 
@@ -13816,9 +14489,12 @@ func (m *ExternalLineageInfo_SdkV2) SetTableInfo(ctx context.Context, v External
 	m.TableInfo = types.ListValueMust(t, vs)
 }
 
+// A version of a Unity Catalog registered model at one end of an external
+// lineage relationship.
 type ExternalLineageModelVersion_SdkV2 struct {
+	// Full name of the registered model, in the form `catalog.schema.model`.
 	Name types.String `tfsdk:"name"`
-
+	// Version number of the model, as a string.
 	Version types.String `tfsdk:"version"`
 }
 
@@ -13927,13 +14603,17 @@ func (m ExternalLineageModelVersionInfo_SdkV2) Type(ctx context.Context) attr.Ty
 	}
 }
 
+// An object at one end of an external lineage relationship. Exactly one of the
+// fields is set.
 type ExternalLineageObject_SdkV2 struct {
+	// An external metadata object registered in Unity Catalog.
 	ExternalMetadata types.List `tfsdk:"external_metadata"`
-
+	// A version of a Unity Catalog registered model.
 	ModelVersion types.List `tfsdk:"model_version"`
-
+	// A cloud storage path registered in Unity Catalog, i.e. under a table,
+	// volume, or external location.
 	Path types.List `tfsdk:"path"`
-
+	// A Unity Catalog table.
 	Table types.List `tfsdk:"table"`
 }
 
@@ -14178,7 +14858,10 @@ func (m *ExternalLineageObject_SdkV2) SetTable(ctx context.Context, v ExternalLi
 	m.Table = types.ListValueMust(t, vs)
 }
 
+// A cloud storage path at one end of an external lineage relationship.
 type ExternalLineagePath_SdkV2 struct {
+	// URL of the cloud storage path. The path must be registered in Unity
+	// Catalog, i.e. under a table, volume, or external location.
 	Url types.String `tfsdk:"url"`
 }
 
@@ -14225,12 +14908,21 @@ func (m ExternalLineagePath_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// A lineage relationship between a source object and a target object, where at
+// least one of the two is an external metadata object. The other object can be
+// a Unity Catalog table, a cloud storage path, a model version, or another
+// external metadata object. A relationship is identified by its source and
+// target; optional column mappings and key-value properties describe the data
+// flow between them.
 type ExternalLineageRelationship_SdkV2 struct {
-	// List of column relationships between source and target objects.
+	// List of column relationships between source and target objects. The
+	// combined size of all source and target column names is limited.
 	Columns types.List `tfsdk:"columns"`
 	// Unique identifier of the external lineage relationship.
 	Id types.String `tfsdk:"id"`
 	// Key-value properties associated with the external lineage relationship.
+	// The combined length of all keys and values must not exceed 5000
+	// characters.
 	Properties types.Map `tfsdk:"properties"`
 	// Source object of the external lineage relationship.
 	Source types.List `tfsdk:"source"`
@@ -14483,12 +15175,21 @@ func (m *ExternalLineageRelationship_SdkV2) SetTarget(ctx context.Context, v Ext
 	m.Target = types.ListValueMust(t, vs)
 }
 
+// A lineage relationship between a source object and a target object, where at
+// least one of the two is an external metadata object. The other object can be
+// a Unity Catalog table, a cloud storage path, a model version, or another
+// external metadata object. A relationship is identified by its source and
+// target; optional column mappings and key-value properties describe the data
+// flow between them.
 type ExternalLineageRelationshipInfo_SdkV2 struct {
-	// List of column relationships between source and target objects.
+	// List of column relationships between source and target objects. The
+	// combined size of all source and target column names is limited.
 	Columns types.List `tfsdk:"columns"`
 	// Unique identifier of the external lineage relationship.
 	Id types.String `tfsdk:"id"`
 	// Key-value properties associated with the external lineage relationship.
+	// The combined length of all keys and values must not exceed 5000
+	// characters.
 	Properties types.Map `tfsdk:"properties"`
 	// Source object of the external lineage relationship.
 	Source types.List `tfsdk:"source"`
@@ -14741,7 +15442,9 @@ func (m *ExternalLineageRelationshipInfo_SdkV2) SetTarget(ctx context.Context, v
 	m.Target = types.ListValueMust(t, vs)
 }
 
+// A Unity Catalog table at one end of an external lineage relationship.
 type ExternalLineageTable_SdkV2 struct {
+	// Full name of the table, in the form `catalog.schema.table`.
 	Name types.String `tfsdk:"name"`
 }
 
@@ -14852,6 +15555,11 @@ func (m ExternalLineageTableInfo_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// An external location combines a cloud storage path with a storage credential
+// that authorizes access to that path. Privileges granted on the external
+// location control which users and groups can access the cloud storage path,
+// for example to create external tables, external volumes, or managed storage
+// locations under it.
 type ExternalLocationInfo_SdkV2 struct {
 	// Indicates whether the principal is limited to retrieving metadata for the
 	// associated object through the BROWSE privilege when include_browse is
@@ -14875,21 +15583,24 @@ type ExternalLocationInfo_SdkV2 struct {
 	// whether the user explicitly set `enable_file_events`. Use this field
 	// instead of `file_event_queue` for reading the actual queue state.
 	EffectiveFileEventQueue types.List `tfsdk:"effective_file_event_queue"`
-	// Whether to enable file events on this external location. Default to
+	// Whether to enable file events on this external location. Defaults to
 	// `true`. Set to `false` to disable file events. The actual applied value
 	// may differ due to server-side defaults; check
 	// `effective_enable_file_events` for the effective state.
 	EnableFileEvents types.Bool `tfsdk:"enable_file_events"`
-
+	// Encryption options that apply to clients connecting to cloud storage.
 	EncryptionDetails types.List `tfsdk:"encryption_details"`
 	// Indicates whether fallback mode is enabled for this external location.
 	// When fallback mode is enabled, the access to the location falls back to
 	// cluster credentials if UC credentials are not sufficient.
 	Fallback types.Bool `tfsdk:"fallback"`
-	// File event queue settings. If `enable_file_events` is not `false`, must
-	// be defined and have exactly one of the documented properties.
+	// File event queue settings. When `enable_file_events` is `true`, exactly
+	// one of the queue options must be set. Must be omitted when
+	// `enable_file_events` is `false`.
 	FileEventQueue types.List `tfsdk:"file_event_queue"`
-
+	// Whether the current securable is accessible from all workspaces or a
+	// specific set of workspaces. Cannot be set when creating an external
+	// location.
 	IsolationMode types.String `tfsdk:"isolation_mode"`
 	// Unique identifier of metastore hosting the external location.
 	MetastoreId types.String `tfsdk:"metastore_id"`
@@ -14899,12 +15610,13 @@ type ExternalLocationInfo_SdkV2 struct {
 	Owner types.String `tfsdk:"owner"`
 	// Indicates whether the external location is read-only.
 	ReadOnly types.Bool `tfsdk:"read_only"`
-	// Time at which external location this was last modified, in epoch
+	// Time at which this external location was last modified, in epoch
 	// milliseconds.
 	UpdatedAt types.Int64 `tfsdk:"updated_at"`
 	// Username of user who last modified the external location.
 	UpdatedBy types.String `tfsdk:"updated_by"`
-	// Path URL of the external location.
+	// URL of the cloud storage path that the external location points to,
+	// including the scheme (for example `s3://`, `abfss://`, or `gs://`).
 	Url types.String `tfsdk:"url"`
 }
 
@@ -15749,6 +16461,56 @@ func (m *FileEventQueue_SdkV2) SetProvidedSqs(ctx context.Context, v AwsSqsQueue
 	m.ProvidedSqs = types.ListValueMust(t, vs)
 }
 
+type FinalizeSkillRequest_SdkV2 struct {
+	// Full resource name of the skill. Format:
+	// `skills/{catalog}.{schema}.{skill}`. Each `{...}` component is capped at
+	// 255 characters individually.
+	Name types.String `tfsdk:"-"`
+}
+
+func (to *FinalizeSkillRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from FinalizeSkillRequest_SdkV2) {
+}
+
+func (to *FinalizeSkillRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from FinalizeSkillRequest_SdkV2) {
+}
+
+func (m FinalizeSkillRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in FinalizeSkillRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m FinalizeSkillRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, FinalizeSkillRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (m FinalizeSkillRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name": m.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m FinalizeSkillRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name": types.StringType,
+		},
+	}
+}
+
 type ForeignKeyConstraint_SdkV2 struct {
 	// Column names for this constraint.
 	ChildColumns types.List `tfsdk:"child_columns"`
@@ -15876,22 +16638,143 @@ func (m *ForeignKeyConstraint_SdkV2) SetParentColumns(ctx context.Context, v []t
 	m.ParentColumns = types.ListValueMust(t, vs)
 }
 
+// An expression that is evaluated at query time against per-request context.
+// New variants (e.g., identity attributes) are added as additional oneof cases.
+type FunctionArgExpression_SdkV2 struct {
+	// An expression that introspects tags at query time.
+	TagIntrospection types.List `tfsdk:"tag_introspection"`
+}
+
+func (to *FunctionArgExpression_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from FunctionArgExpression_SdkV2) {
+	if !from.TagIntrospection.IsNull() && !from.TagIntrospection.IsUnknown() {
+		if toTagIntrospection, ok := to.GetTagIntrospection(ctx); ok {
+			if fromTagIntrospection, ok := from.GetTagIntrospection(ctx); ok {
+				// Recursively sync the fields of TagIntrospection
+				toTagIntrospection.SyncFieldsDuringCreateOrUpdate(ctx, fromTagIntrospection)
+				to.SetTagIntrospection(ctx, toTagIntrospection)
+			}
+		}
+	}
+}
+
+func (to *FunctionArgExpression_SdkV2) SyncFieldsDuringRead(ctx context.Context, from FunctionArgExpression_SdkV2) {
+	if !from.TagIntrospection.IsNull() && !from.TagIntrospection.IsUnknown() {
+		if toTagIntrospection, ok := to.GetTagIntrospection(ctx); ok {
+			if fromTagIntrospection, ok := from.GetTagIntrospection(ctx); ok {
+				toTagIntrospection.SyncFieldsDuringRead(ctx, fromTagIntrospection)
+				to.SetTagIntrospection(ctx, toTagIntrospection)
+			}
+		}
+	}
+}
+
+func (m FunctionArgExpression_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["tag_introspection"] = attrs["tag_introspection"].SetOptional()
+	attrs["tag_introspection"] = attrs["tag_introspection"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in FunctionArgExpression.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m FunctionArgExpression_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"tag_introspection": reflect.TypeOf(TagIntrospectionExpression_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, FunctionArgExpression_SdkV2
+// only implements ToObjectValue() and Type().
+func (m FunctionArgExpression_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"tag_introspection": m.TagIntrospection,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m FunctionArgExpression_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"tag_introspection": basetypes.ListType{
+				ElemType: TagIntrospectionExpression_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetTagIntrospection returns the value of the TagIntrospection field in FunctionArgExpression_SdkV2 as
+// a TagIntrospectionExpression_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *FunctionArgExpression_SdkV2) GetTagIntrospection(ctx context.Context) (TagIntrospectionExpression_SdkV2, bool) {
+	var e TagIntrospectionExpression_SdkV2
+	if m.TagIntrospection.IsNull() || m.TagIntrospection.IsUnknown() {
+		return e, false
+	}
+	var v []TagIntrospectionExpression_SdkV2
+	d := m.TagIntrospection.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetTagIntrospection sets the value of the TagIntrospection field in FunctionArgExpression_SdkV2.
+func (m *FunctionArgExpression_SdkV2) SetTagIntrospection(ctx context.Context, v TagIntrospectionExpression_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["tag_introspection"]
+	m.TagIntrospection = types.ListValueMust(t, vs)
+}
+
 type FunctionArgument_SdkV2 struct {
 	// The alias of a matched column.
 	Alias types.String `tfsdk:"alias"`
 	// A constant literal.
 	Constant types.String `tfsdk:"constant"`
+	// An expression evaluated at query time. Wraps per-request expression
+	// variants (e.g., tag introspection) so new variants can be added without
+	// extending the FunctionArgument oneof.
+	FunctionArgExpression types.List `tfsdk:"function_arg_expression"`
 }
 
 func (to *FunctionArgument_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from FunctionArgument_SdkV2) {
+	if !from.FunctionArgExpression.IsNull() && !from.FunctionArgExpression.IsUnknown() {
+		if toFunctionArgExpression, ok := to.GetFunctionArgExpression(ctx); ok {
+			if fromFunctionArgExpression, ok := from.GetFunctionArgExpression(ctx); ok {
+				// Recursively sync the fields of FunctionArgExpression
+				toFunctionArgExpression.SyncFieldsDuringCreateOrUpdate(ctx, fromFunctionArgExpression)
+				to.SetFunctionArgExpression(ctx, toFunctionArgExpression)
+			}
+		}
+	}
 }
 
 func (to *FunctionArgument_SdkV2) SyncFieldsDuringRead(ctx context.Context, from FunctionArgument_SdkV2) {
+	if !from.FunctionArgExpression.IsNull() && !from.FunctionArgExpression.IsUnknown() {
+		if toFunctionArgExpression, ok := to.GetFunctionArgExpression(ctx); ok {
+			if fromFunctionArgExpression, ok := from.GetFunctionArgExpression(ctx); ok {
+				toFunctionArgExpression.SyncFieldsDuringRead(ctx, fromFunctionArgExpression)
+				to.SetFunctionArgExpression(ctx, toFunctionArgExpression)
+			}
+		}
+	}
 }
 
 func (m FunctionArgument_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["alias"] = attrs["alias"].SetOptional()
 	attrs["constant"] = attrs["constant"].SetOptional()
+	attrs["function_arg_expression"] = attrs["function_arg_expression"].SetOptional()
+	attrs["function_arg_expression"] = attrs["function_arg_expression"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
 	return attrs
 }
@@ -15904,7 +16787,9 @@ func (m FunctionArgument_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsch
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m FunctionArgument_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+	return map[string]reflect.Type{
+		"function_arg_expression": reflect.TypeOf(FunctionArgExpression_SdkV2{}),
+	}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -15914,8 +16799,9 @@ func (m FunctionArgument_SdkV2) ToObjectValue(ctx context.Context) basetypes.Obj
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"alias":    m.Alias,
-			"constant": m.Constant,
+			"alias":                   m.Alias,
+			"constant":                m.Constant,
+			"function_arg_expression": m.FunctionArgExpression,
 		})
 }
 
@@ -15925,8 +16811,37 @@ func (m FunctionArgument_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"alias":    types.StringType,
 			"constant": types.StringType,
+			"function_arg_expression": basetypes.ListType{
+				ElemType: FunctionArgExpression_SdkV2{}.Type(ctx),
+			},
 		},
 	}
+}
+
+// GetFunctionArgExpression returns the value of the FunctionArgExpression field in FunctionArgument_SdkV2 as
+// a FunctionArgExpression_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *FunctionArgument_SdkV2) GetFunctionArgExpression(ctx context.Context) (FunctionArgExpression_SdkV2, bool) {
+	var e FunctionArgExpression_SdkV2
+	if m.FunctionArgExpression.IsNull() || m.FunctionArgExpression.IsUnknown() {
+		return e, false
+	}
+	var v []FunctionArgExpression_SdkV2
+	d := m.FunctionArgExpression.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetFunctionArgExpression sets the value of the FunctionArgExpression field in FunctionArgument_SdkV2.
+func (m *FunctionArgument_SdkV2) SetFunctionArgExpression(ctx context.Context, v FunctionArgExpression_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["function_arg_expression"]
+	m.FunctionArgExpression = types.ListValueMust(t, vs)
 }
 
 // A function that is dependent on a SQL object.
@@ -16031,7 +16946,8 @@ type FunctionInfo_SdkV2 struct {
 	RoutineBody types.String `tfsdk:"routine_body"`
 	// Function body.
 	RoutineDefinition types.String `tfsdk:"routine_definition"`
-	// function dependencies.
+	// Function dependencies. For external UDFs, dependencies may contain only
+	// credential, secret, or volume objects.
 	RoutineDependencies types.List `tfsdk:"routine_dependencies"`
 	// Name of parent Schema relative to its parent Catalog.
 	SchemaName types.String `tfsdk:"schema_name"`
@@ -16592,7 +17508,7 @@ type GcpPubsub_SdkV2 struct {
 	// resources.
 	ManagedResourceId types.String `tfsdk:"managed_resource_id"`
 	// The Pub/Sub subscription name in the format
-	// projects/{project}/subscriptions/{subscription name}. Only required for
+	// `projects/{project}/subscriptions/{subscription name}`. Only required for
 	// provided_pubsub.
 	SubscriptionName types.String `tfsdk:"subscription_name"`
 }
@@ -18097,9 +19013,11 @@ func (m *GenerateTemporaryVolumeCredentialResponse_SdkV2) SetR2TempCredentials(c
 }
 
 type GetAccessRequestDestinationsRequest_SdkV2 struct {
-	// The full name of the securable.
+	// The full name of the securable: the names of its parents followed by its
+	// own name, separated by dots, for example `main.sales.orders` for a table.
 	FullName types.String `tfsdk:"-"`
-	// The type of the securable.
+	// The type of the securable. Matching is case-insensitive, and hyphens may
+	// replace underscores in multi-word types.
 	SecurableType types.String `tfsdk:"-"`
 }
 
@@ -18478,8 +19396,9 @@ func (m GetByAliasRequest_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type GetCatalogRequest_SdkV2 struct {
-	// Whether to include catalogs in the response for which the principal can
-	// only access selective metadata for
+	// Whether to return the catalog when the principal can only access
+	// selective metadata for it through the BROWSE privilege. The response then
+	// has browse_only set to true.
 	IncludeBrowse types.Bool `tfsdk:"-"`
 	// The name of the catalog.
 	Name types.String `tfsdk:"-"`
@@ -18857,7 +19776,7 @@ func (m GetEntityTagAssignmentRequest_SdkV2) Type(ctx context.Context) attr.Type
 
 type GetExternalLocationRequest_SdkV2 struct {
 	// Whether to include external locations in the response for which the
-	// principal can only access selective metadata for
+	// principal can only access selective metadata.
 	IncludeBrowse types.Bool `tfsdk:"-"`
 	// Name of the external location.
 	Name types.String `tfsdk:"-"`
@@ -19134,6 +20053,55 @@ func (m GetMcpServiceRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes
 
 // Type implements basetypes.ObjectValuable.
 func (m GetMcpServiceRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name": types.StringType,
+		},
+	}
+}
+
+type GetMcpServiceUserMappedCredentialRequest_SdkV2 struct {
+	// Resource name of the MCP service. Format:
+	// `mcp-services/{catalog}.{schema}.{mcp_service}`.
+	Name types.String `tfsdk:"-"`
+}
+
+func (to *GetMcpServiceUserMappedCredentialRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetMcpServiceUserMappedCredentialRequest_SdkV2) {
+}
+
+func (to *GetMcpServiceUserMappedCredentialRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from GetMcpServiceUserMappedCredentialRequest_SdkV2) {
+}
+
+func (m GetMcpServiceUserMappedCredentialRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetMcpServiceUserMappedCredentialRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m GetMcpServiceUserMappedCredentialRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetMcpServiceUserMappedCredentialRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (m GetMcpServiceUserMappedCredentialRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name": m.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m GetMcpServiceUserMappedCredentialRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"name": types.StringType,
@@ -20150,6 +21118,56 @@ func (m GetSecretRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+type GetSkillRequest_SdkV2 struct {
+	// Full resource name of the skill. Format:
+	// `skills/{catalog}.{schema}.{skill}`. Each `{...}` component is capped at
+	// 255 characters individually.
+	Name types.String `tfsdk:"-"`
+}
+
+func (to *GetSkillRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetSkillRequest_SdkV2) {
+}
+
+func (to *GetSkillRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from GetSkillRequest_SdkV2) {
+}
+
+func (m GetSkillRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetSkillRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m GetSkillRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetSkillRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (m GetSkillRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name": m.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m GetSkillRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name": types.StringType,
+		},
+	}
+}
+
 type GetStorageCredentialRequest_SdkV2 struct {
 	// Name of the storage credential.
 	Name types.String `tfsdk:"-"`
@@ -20433,6 +21451,60 @@ func (m *GetWorkspaceBindingsResponse_SdkV2) SetBindings(ctx context.Context, v 
 	m.Bindings = types.ListValueMust(t, vs)
 }
 
+// A governed tag referenced by a policy condition.
+type GovernedTagReference_SdkV2 struct {
+	// The governed tag key.
+	TagKey types.String `tfsdk:"tag_key"`
+	// The governed tag value, when the policy references a specific value.
+	TagValue types.String `tfsdk:"tag_value"`
+}
+
+func (to *GovernedTagReference_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GovernedTagReference_SdkV2) {
+}
+
+func (to *GovernedTagReference_SdkV2) SyncFieldsDuringRead(ctx context.Context, from GovernedTagReference_SdkV2) {
+}
+
+func (m GovernedTagReference_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["tag_key"] = attrs["tag_key"].SetRequired()
+	attrs["tag_value"] = attrs["tag_value"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GovernedTagReference.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m GovernedTagReference_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GovernedTagReference_SdkV2
+// only implements ToObjectValue() and Type().
+func (m GovernedTagReference_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"tag_key":   m.TagKey,
+			"tag_value": m.TagValue,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m GovernedTagReference_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"tag_key":   types.StringType,
+			"tag_value": types.StringType,
+		},
+	}
+}
+
 type GrantOptions_SdkV2 struct {
 	// List of privileges to grant. When any of these privileges are requested,
 	// the policy will grant access if the principal and condition match.
@@ -20513,40 +21585,28 @@ func (m *GrantOptions_SdkV2) SetPrivileges(ctx context.Context, v []types.String
 	m.Privileges = types.ListValueMust(t, vs)
 }
 
-// Inference table configuration for payload logging on a model service.
-//
-// `parent` is always REQUIRED when the sub-message is set; the destination UC
-// schema is needed to construct or rebind the payload TABLE regardless of
-// whether payload logging is currently active. Payload logging is active by
-// default; set `disabled = true` to pause runtime logging without dropping the
-// table or the binding.
+// Configuration for logging request and response payloads to a Unity Catalog
+// inference table. When this configuration is present, payload logging is
+// enabled by default.
 type InferenceTableConfig_SdkV2 struct {
-	// Indicates whether payload logging is disabled (opt-out). Unset means that
-	// payload logging is active (the on-by-default state coincides with the
-	// proto zero-value, so the server never fills this field for a client that
-	// leaves it unset). Set `disabled = true` to pause runtime logging while
-	// keeping the sub-message attached (preserving `parent` and
-	// `table_name_prefix` for a later flip back to active). `parent` remains
-	// required either way.
-	Disabled types.Bool `tfsdk:"disabled"`
-	// True when the bound inference TABLE has been deleted but the parent
-	// service still references it. The dangling reference is surfaced (not
-	// silently dropped) so callers can see the broken dependency. AI Gateway
-	// payload logging fails closed in this state.
+	// Whether the referenced inference table has been deleted. The
+	// configuration remains visible so you can identify the broken dependency.
+	// Payload logging cannot continue until the table is restored or the
+	// configuration is updated.
 	IsDeleted types.Bool `tfsdk:"is_deleted"`
-	// Parent UC schema where the inference table is created. Format:
-	// `schemas/{catalog}.{schema}`. Set at create time and immutable
-	// thereafter; changing it on an existing service is rejected.
+	// Parent Unity Catalog schema where the inference table is created, in the
+	// form `schemas/{catalog}.{schema}`. Required when configuring an inference
+	// table. After the inference table is created, this field cannot be
+	// changed.
 	Parent types.String `tfsdk:"parent"`
-	// Resolved UC table for payload logs. Format:
-	// `tables/{catalog}.{schema}.{table}`.
+	// Resource name of the Unity Catalog table that receives the payload logs.
+	// Format: `tables/{catalog}.{schema}.{table}`.
 	Table types.String `tfsdk:"table"`
-	// Prefix for the inference-table's UC-registered name. The actual leaf name
-	// UC stores is `<table_name_prefix>_payload`; the `_payload` suffix is
-	// appended automatically. To find the actual UC table after Create, read
-	// the `table` field on the response. Defaults to
-	// `<model_service_name>_payload` when unset. Set at create time and
-	// immutable thereafter; changing it on an existing service is rejected.
+	// Prefix used to form the inference table's registered name. AI Gateway
+	// appends `_payload`; for example, `table_name_prefix = "orders"` creates
+	// `orders_payload`. If unset, the prefix defaults to the service name. Read
+	// `table` from the response for the resulting resource name. After the
+	// inference table is created, this field cannot be changed.
 	TableNamePrefix types.String `tfsdk:"table_name_prefix"`
 }
 
@@ -20557,7 +21617,6 @@ func (to *InferenceTableConfig_SdkV2) SyncFieldsDuringRead(ctx context.Context, 
 }
 
 func (m InferenceTableConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["disabled"] = attrs["disabled"].SetOptional()
 	attrs["is_deleted"] = attrs["is_deleted"].SetComputed()
 	attrs["parent"] = attrs["parent"].SetRequired()
 	attrs["table"] = attrs["table"].SetComputed()
@@ -20584,7 +21643,6 @@ func (m InferenceTableConfig_SdkV2) ToObjectValue(ctx context.Context) basetypes
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"disabled":          m.Disabled,
 			"is_deleted":        m.IsDeleted,
 			"parent":            m.Parent,
 			"table":             m.Table,
@@ -20596,7 +21654,6 @@ func (m InferenceTableConfig_SdkV2) ToObjectValue(ctx context.Context) basetypes
 func (m InferenceTableConfig_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"disabled":          types.BoolType,
 			"is_deleted":        types.BoolType,
 			"parent":            types.StringType,
 			"table":             types.StringType,
@@ -20952,8 +22009,9 @@ func (m *ListAccountStorageCredentialsResponse_SdkV2) SetStorageCredentials(ctx 
 }
 
 type ListCatalogsRequest_SdkV2 struct {
-	// Whether to include catalogs in the response for which the principal can
-	// only access selective metadata for
+	// Whether to include catalogs for which the principal can only access
+	// selective metadata through the BROWSE privilege. Such catalogs are
+	// returned with browse_only set to true.
 	IncludeBrowse types.Bool `tfsdk:"-"`
 	// Whether to include catalogs not bound to the workspace. Effective only if
 	// the user has permission to update the catalog–workspace binding.
@@ -21908,7 +22966,10 @@ func (m *ListEntityTagAssignmentsResponse_SdkV2) SetTagAssignments(ctx context.C
 }
 
 type ListExternalLineageRelationshipsRequest_SdkV2 struct {
-	// The lineage direction to filter on.
+	// Direction of the relationships to return, relative to `object_info`.
+	// `UPSTREAM` returns the relationships in which the object is the target,
+	// so each result describes a source; `DOWNSTREAM` returns the relationships
+	// in which the object is the source, so each result describes a target.
 	LineageDirection types.String `tfsdk:"-"`
 	// The object to query external lineage relationships for. Since this field
 	// is a query parameter, please flatten the nested fields. For example, if
@@ -22023,8 +23084,13 @@ func (m *ListExternalLineageRelationshipsRequest_SdkV2) SetObjectInfo(ctx contex
 }
 
 type ListExternalLineageRelationshipsResponse_SdkV2 struct {
+	// Relationships that match the query. Each entry describes the object at
+	// the other end of the relationship in one of `table_info`, `file_info`,
+	// `model_info`, or `external_metadata_info`, together with the relationship
+	// itself in `external_lineage_info`.
 	ExternalLineageRelationships types.List `tfsdk:"external_lineage_relationships"`
-
+	// Opaque token to retrieve the next page of results. Omitted when there are
+	// no more results.
 	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
@@ -22143,7 +23209,7 @@ func (m *ListExternalLineageRelationshipsResponse_SdkV2) SetExternalLineageRelat
 
 type ListExternalLocationsRequest_SdkV2 struct {
 	// Whether to include external locations in the response for which the
-	// principal can only access selective metadata for
+	// principal can only access selective metadata.
 	IncludeBrowse types.Bool `tfsdk:"-"`
 	// Whether to include external locations not bound to the workspace.
 	// Effective only if the user has permission to update the
@@ -22704,18 +23770,20 @@ func (m *ListFunctionsResponse_SdkV2) SetFunctions(ctx context.Context, v []Func
 }
 
 type ListMcpServicesRequest_SdkV2 struct {
-	// Maximum number of MCP services to return. Defaults to 100 when unset or
-	// 0; the maximum is 100. Use `page_token` to retrieve additional pages.
+	// Maximum number of MCP services to return. Defaults to 200 when unset or
+	// 0; the maximum is 1000 for `view = BASIC` and 200 for `view = FULL`. Use
+	// `page_token` to retrieve additional pages.
 	PageSize types.Int64 `tfsdk:"-"`
-	// Opaque pagination token from a previous request.
+	// Opaque pagination token from the previous response.
 	PageToken types.String `tfsdk:"-"`
-	// Name of the parent schema to list within, as
-	// `schemas/{catalog}.{schema}`. Each `{...}` component is capped at 255
-	// characters individually.
+	// Parent schema to list within, in the form `schemas/{catalog}.{schema}`.
+	// Required. Each `{...}` component is capped at 255 characters
+	// individually.
 	Parent types.String `tfsdk:"-"`
-	// View selector controlling which fields are populated per row. `FULL`
-	// returns the full representation of the service; `BASIC` returns a more
-	// compact version. Defaults to `BASIC` when unset.
+	// Fields to return for each service. `FULL` includes source-connection
+	// details and rate-limit principal names. `BASIC` omits the source
+	// connection and omits principal names from rate limits. Defaults to
+	// `BASIC` when unset.
 	View types.String `tfsdk:"-"`
 }
 
@@ -22775,7 +23843,8 @@ func (m ListMcpServicesRequest_SdkV2) Type(ctx context.Context) attr.Type {
 type ListMcpServicesResponse_SdkV2 struct {
 	// The list of MCP services.
 	McpServices types.List `tfsdk:"mcp_services"`
-	// Pagination token for retrieving the next page of results.
+	// Pagination token for retrieving the next page. Empty when there are no
+	// more results.
 	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
@@ -23076,18 +24145,20 @@ func (m *ListMetastoresResponse_SdkV2) SetMetastores(ctx context.Context, v []Me
 }
 
 type ListModelProviderServicesRequest_SdkV2 struct {
-	// Maximum number of provider services to return. Defaults to 100 when unset
-	// or 0; the maximum is 100. Use `page_token` to retrieve additional pages.
+	// Maximum number of provider services to return. Defaults to 200 when unset
+	// or 0; the maximum is 1000 for `view = BASIC` and 200 for `view = FULL`.
+	// Use `page_token` to retrieve additional pages.
 	PageSize types.Int64 `tfsdk:"-"`
-	// Opaque pagination token from a previous request.
+	// Opaque pagination token from the previous response.
 	PageToken types.String `tfsdk:"-"`
-	// Name of the parent schema to list within, as
-	// `schemas/{catalog}.{schema}`. Each `{...}` component is capped at 255
-	// characters individually.
+	// Parent schema to list within, in the form `schemas/{catalog}.{schema}`.
+	// Required. Each `{...}` component is capped at 255 characters
+	// individually.
 	Parent types.String `tfsdk:"-"`
-	// View selector controlling which fields are populated per row. `FULL`
-	// returns the full representation of the service; `BASIC` returns a more
-	// compact version. Defaults to `BASIC` when unset.
+	// Fields to return for each service. `FULL` includes resolved
+	// service-credential and inference-table details and rate-limit principal
+	// names. `BASIC` omits those details and principal names from rate limits.
+	// Defaults to `BASIC` when unset.
 	View types.String `tfsdk:"-"`
 }
 
@@ -23147,7 +24218,8 @@ func (m ListModelProviderServicesRequest_SdkV2) Type(ctx context.Context) attr.T
 type ListModelProviderServicesResponse_SdkV2 struct {
 	// The list of model provider services.
 	ModelProviderServices types.List `tfsdk:"model_provider_services"`
-	// Pagination token for retrieving the next page of results.
+	// Pagination token for retrieving the next page. Empty when there are no
+	// more results.
 	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
@@ -23265,18 +24337,20 @@ func (m *ListModelProviderServicesResponse_SdkV2) SetModelProviderServices(ctx c
 }
 
 type ListModelServicesRequest_SdkV2 struct {
-	// Maximum number of model services to return. Defaults to 100 when unset or
-	// 0; the maximum is 100. Use `page_token` to retrieve additional pages.
+	// Maximum number of model services to return. Defaults to 200 when unset or
+	// 0; the maximum is 1000 for `view = BASIC` and 200 for `view = FULL`. Use
+	// `page_token` to retrieve additional pages.
 	PageSize types.Int64 `tfsdk:"-"`
-	// Opaque pagination token from a previous request.
+	// Opaque pagination token from the previous response.
 	PageToken types.String `tfsdk:"-"`
-	// Name of the parent schema to list within, as
-	// `schemas/{catalog}.{schema}`. Each `{...}` component is capped at 255
-	// characters individually.
+	// Parent schema to list within, in the form `schemas/{catalog}.{schema}`.
+	// Required. Each `{...}` component is capped at 255 characters
+	// individually.
 	Parent types.String `tfsdk:"-"`
-	// View selector controlling which fields are populated per row. `FULL`
-	// returns the full representation of the service; `BASIC` returns a more
-	// compact version. Defaults to `BASIC` when unset.
+	// Fields to return for each service. `FULL` includes destinations,
+	// inference-table details, and rate-limit principal names. `BASIC` omits
+	// destinations and inference-table details and omits principal names from
+	// rate limits. Defaults to `BASIC` when unset.
 	View types.String `tfsdk:"-"`
 }
 
@@ -23336,7 +24410,8 @@ func (m ListModelServicesRequest_SdkV2) Type(ctx context.Context) attr.Type {
 type ListModelServicesResponse_SdkV2 struct {
 	// The list of model services.
 	ModelServices types.List `tfsdk:"model_services"`
-	// Pagination token for retrieving the next page of results.
+	// Pagination token for retrieving the next page. Empty when there are no
+	// more results.
 	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
@@ -24859,6 +25934,190 @@ func (m *ListSecretsResponse_SdkV2) SetSecrets(ctx context.Context, v []Secret_S
 	m.Secrets = types.ListValueMust(t, vs)
 }
 
+type ListSkillsRequest_SdkV2 struct {
+	// Maximum number of skills to return. Defaults to 200 when unset or 0; the
+	// maximum is 200. Use `page_token` to retrieve additional pages.
+	PageSize types.Int64 `tfsdk:"-"`
+	// Opaque pagination token from a previous request.
+	PageToken types.String `tfsdk:"-"`
+	// Name of the parent schema. Format: `schemas/{catalog}.{schema}`. Each
+	// `{...}` component is capped at 255 characters individually.
+	//
+	// Required: skill listing is schema-scoped, so `parent` must be set; an
+	// unset or empty `parent` is rejected with INVALID_PARAMETER_VALUE.
+	Parent types.String `tfsdk:"-"`
+}
+
+func (to *ListSkillsRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListSkillsRequest_SdkV2) {
+}
+
+func (to *ListSkillsRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListSkillsRequest_SdkV2) {
+}
+
+func (m ListSkillsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["parent"] = attrs["parent"].SetRequired()
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListSkillsRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ListSkillsRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListSkillsRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (m ListSkillsRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"page_size":  m.PageSize,
+			"page_token": m.PageToken,
+			"parent":     m.Parent,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ListSkillsRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"page_size":  types.Int64Type,
+			"page_token": types.StringType,
+			"parent":     types.StringType,
+		},
+	}
+}
+
+// Response for listing skills.
+type ListSkillsResponse_SdkV2 struct {
+	// Pagination token for retrieving the next page of results.
+	NextPageToken types.String `tfsdk:"next_page_token"`
+	// The list of skills.
+	Skills types.List `tfsdk:"skills"`
+}
+
+func (to *ListSkillsResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListSkillsResponse_SdkV2) {
+	if !from.Skills.IsNull() && !from.Skills.IsUnknown() && to.Skills.IsNull() && len(from.Skills.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Skills, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Skills = from.Skills
+	}
+	if !from.Skills.IsNull() && !from.Skills.IsUnknown() {
+		if toSkills, ok := to.GetSkills(ctx); ok {
+			if fromSkills, ok := from.GetSkills(ctx); ok {
+				// Recursively sync the fields of each Skills element by position.
+				for i := range toSkills {
+					if i < len(fromSkills) {
+						toSkills[i].SyncFieldsDuringCreateOrUpdate(ctx, fromSkills[i])
+					}
+				}
+				to.SetSkills(ctx, toSkills)
+			}
+		}
+	}
+}
+
+func (to *ListSkillsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListSkillsResponse_SdkV2) {
+	if !from.Skills.IsNull() && !from.Skills.IsUnknown() && to.Skills.IsNull() && len(from.Skills.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Skills, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Skills = from.Skills
+	}
+	if !from.Skills.IsNull() && !from.Skills.IsUnknown() {
+		if toSkills, ok := to.GetSkills(ctx); ok {
+			if fromSkills, ok := from.GetSkills(ctx); ok {
+				for i := range toSkills {
+					if i < len(fromSkills) {
+						toSkills[i].SyncFieldsDuringRead(ctx, fromSkills[i])
+					}
+				}
+				to.SetSkills(ctx, toSkills)
+			}
+		}
+	}
+}
+
+func (m ListSkillsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+	attrs["skills"] = attrs["skills"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListSkillsResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ListSkillsResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"skills": reflect.TypeOf(Skill_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListSkillsResponse_SdkV2
+// only implements ToObjectValue() and Type().
+func (m ListSkillsResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"next_page_token": m.NextPageToken,
+			"skills":          m.Skills,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ListSkillsResponse_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"next_page_token": types.StringType,
+			"skills": basetypes.ListType{
+				ElemType: Skill_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetSkills returns the value of the Skills field in ListSkillsResponse_SdkV2 as
+// a slice of Skill_SdkV2 values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ListSkillsResponse_SdkV2) GetSkills(ctx context.Context) ([]Skill_SdkV2, bool) {
+	if m.Skills.IsNull() || m.Skills.IsUnknown() {
+		return nil, false
+	}
+	var v []Skill_SdkV2
+	d := m.Skills.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSkills sets the value of the Skills field in ListSkillsResponse_SdkV2.
+func (m *ListSkillsResponse_SdkV2) SetSkills(ctx context.Context, v []Skill_SdkV2) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["skills"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Skills = types.ListValueMust(t, vs)
+}
+
 type ListStorageCredentialsRequest_SdkV2 struct {
 	// Whether to include credentials not bound to the workspace. Effective only
 	// if the user has permission to update the credential–workspace binding.
@@ -25653,10 +26912,10 @@ func (m *ListTablesResponse_SdkV2) SetTables(ctx context.Context, v []TableInfo_
 }
 
 type ListVolumesRequest_SdkV2 struct {
-	// The identifier of the catalog
+	// The name of the catalog that contains the schema.
 	CatalogName types.String `tfsdk:"-"`
-	// Whether to include volumes in the response for which the principal can
-	// only access selective metadata for
+	// Whether to include volumes for which the principal can only access
+	// selective metadata through the BROWSE privilege.
 	IncludeBrowse types.Bool `tfsdk:"-"`
 	// Maximum number of volumes to return (page length).
 	//
@@ -25674,7 +26933,7 @@ type ListVolumesRequest_SdkV2 struct {
 	// Opaque token returned by a previous request. It must be included in the
 	// request to retrieve the next page of results (pagination).
 	PageToken types.String `tfsdk:"-"`
-	// The identifier of the schema
+	// The name of the schema whose volumes are listed.
 	SchemaName types.String `tfsdk:"-"`
 }
 
@@ -25908,29 +27167,26 @@ func (m MatchColumn_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// A governed MCP server registration in Unity Catalog. Acts as a container
-// securable that references an MCP server -- customer-external via a UC
-// Connection, or Databricks-hosted via an internal server -- and exposes its
-// tools for discovery, authorization, and invocation.
+// A Unity Catalog securable that registers an MCP server through a Unity
+// Catalog connection and exposes its tools for discovery, authorization, and
+// invocation.
 type McpService_SdkV2 struct {
 	// User-provided description.
 	Comment types.String `tfsdk:"comment"`
-	// Operational configuration: connection, tool selectors, rate limit.
-	// Required on CreateMcpService; on UpdateMcpService it is required only
-	// when `config` (or a `config.*` subpath) appears in `update_mask`.
+	// Connection, tool selectors, and rate limits. Required on Create. On
+	// Update, provide this field when `update_mask` contains `config` or one of
+	// its subpaths.
 	Config types.List `tfsdk:"config"`
-	// When the MCP service was created.
+	// Time the MCP service was created.
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
 	// Creator identity.
 	CreatedBy types.String `tfsdk:"created_by"`
-	// The resolved owner of the MCP service. Falls back to the caller's
-	// identity when `owner` is not explicitly set on creation.
+	// Owner of the MCP service.
 	EffectiveOwner types.String `tfsdk:"effective_owner"`
-	// Optimistic concurrency control token. Server-generated from the entity's
-	// state and returned on every read. To use it as an if-match precondition
-	// on a mutation, echo the last-read value back via the dedicated `etag`
-	// field on the Update / Delete request; the server rejects the mutation if
-	// the stored etag differs.
+	// Optimistic concurrency token returned on every read. To make an Update or
+	// Delete conditional, pass the last-read value in that request's `etag`
+	// field. In REST responses, this value is a base64 string; URL-encode it
+	// when setting the `etag` query parameter.
 	Etag types.String `tfsdk:"etag"`
 	// Metastore hosting the MCP service.
 	MetastoreId types.String `tfsdk:"metastore_id"`
@@ -25939,9 +27195,7 @@ type McpService_SdkV2 struct {
 	// is capped at 255 characters individually. Server-derived on Create from
 	// `parent` + `mcp_service_id`; required and immutable on Update/Get/Delete.
 	Name types.String `tfsdk:"name"`
-	// The owner of the MCP service. Write-only; read owner via effective_owner.
-	Owner types.String `tfsdk:"owner"`
-	// When the MCP service was last modified.
+	// Time the MCP service was last modified.
 	UpdateTime timetypes.RFC3339 `tfsdk:"update_time"`
 	// Identity of the last updater.
 	UpdatedBy types.String `tfsdk:"updated_by"`
@@ -25957,10 +27211,6 @@ func (to *McpService_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, 
 			}
 		}
 	}
-	if !from.Owner.IsUnknown() && !from.Owner.IsNull() {
-		// Owner is an input only field and not returned by the service, so we keep the value from the prior state.
-		to.Owner = from.Owner
-	}
 }
 
 func (to *McpService_SdkV2) SyncFieldsDuringRead(ctx context.Context, from McpService_SdkV2) {
@@ -25971,10 +27221,6 @@ func (to *McpService_SdkV2) SyncFieldsDuringRead(ctx context.Context, from McpSe
 				to.SetConfig(ctx, toConfig)
 			}
 		}
-	}
-	if !from.Owner.IsUnknown() && !from.Owner.IsNull() {
-		// Owner is an input only field and not returned by the service, so we keep the value from the prior state.
-		to.Owner = from.Owner
 	}
 }
 
@@ -25989,9 +27235,6 @@ func (m McpService_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.At
 	attrs["metastore_id"] = attrs["metastore_id"].SetComputed()
 	attrs["name"] = attrs["name"].SetOptional()
 	attrs["name"] = attrs["name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
-	attrs["owner"] = attrs["owner"].SetOptional()
-	attrs["owner"] = attrs["owner"].SetComputed()
-	attrs["owner"] = attrs["owner"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["update_time"] = attrs["update_time"].SetComputed()
 	attrs["updated_by"] = attrs["updated_by"].SetComputed()
 
@@ -26026,7 +27269,6 @@ func (m McpService_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 			"etag":            m.Etag,
 			"metastore_id":    m.MetastoreId,
 			"name":            m.Name,
-			"owner":           m.Owner,
 			"update_time":     m.UpdateTime,
 			"updated_by":      m.UpdatedBy,
 		})
@@ -26046,7 +27288,6 @@ func (m McpService_SdkV2) Type(ctx context.Context) attr.Type {
 			"etag":            types.StringType,
 			"metastore_id":    types.StringType,
 			"name":            types.StringType,
-			"owner":           types.StringType,
 			"update_time":     timetypes.RFC3339{}.Type(ctx),
 			"updated_by":      types.StringType,
 		},
@@ -26080,20 +27321,20 @@ func (m *McpService_SdkV2) SetConfig(ctx context.Context, v McpServiceConfig_Sdk
 }
 
 // Operational configuration for an MCP service. Groups the source reference,
-// tool selectors, and rate limit -- the fields that configure how the MCP
+// tool selectors, and rate limits -- the fields that configure how the MCP
 // service behaves at invocation time.
 type McpServiceConfig_SdkV2 struct {
-	// Glob or exact-match patterns selecting which tools from the MCP server to
-	// expose. Prefix match for patterns with `*`, exact match otherwise. An
-	// empty list means all tools are included. Per-element max 256 chars.
+	// Tool names or prefix patterns to expose from the MCP server. Use exact
+	// tool names or prefix patterns such as `read_*`. An empty list exposes all
+	// tools. At most 1,024 selectors are allowed, and each selector can contain
+	// at most 256 characters.
 	IncludeToolSelectors types.List `tfsdk:"include_tool_selectors"`
-	// Per-principal rate limits applied to tool invocations routed through this
-	// MCP service. Repeated to support per-USER / USER_GROUP /
-	// SERVICE_PRINCIPAL / SERVICE / USER_DEFAULT scopes simultaneously,
-	// mirroring the `ModelServiceConfig.rate_limits` shape. Empty when no rate
-	// limit is configured.
+	// Rate limits for tool invocations. Supported scopes are user, group,
+	// service principal, the service as a whole, and each user by default.
+	// Request and token limits are supported. Empty when no rate limit is
+	// configured.
 	RateLimits types.List `tfsdk:"rate_limits"`
-	// UC Connection referencing the MCP server.
+	// Unity Catalog connection referencing the MCP server. Required on Create.
 	SourceConnection types.List `tfsdk:"source_connection"`
 }
 
@@ -26301,15 +27542,25 @@ func (m *McpServiceConfig_SdkV2) SetSourceConnection(ctx context.Context, v McpS
 	m.SourceConnection = types.ListValueMust(t, vs)
 }
 
-// UC Connection that hosts the MCP server. On create, provide `name` in the
-// schema-scoped form `connections/{catalog}.{schema}.{connection}`. On read,
-// the service populates the resolved connection metadata and preserves a
-// dangling source so callers can diagnose a deleted backing connection.
+// Unity Catalog connection that points to the MCP server. On Create, provide
+// `name` in the schema-scoped form
+// `connections/{catalog}.{schema}.{connection}`. On read, the service populates
+// the resolved connection metadata. If the connection is deleted, its reference
+// remains visible so you can identify the broken dependency.
 type McpServiceConfigSourceConnection_SdkV2 struct {
+	// Whether the referenced connection has been deleted. The MCP service keeps
+	// the reference so callers can identify the broken dependency; tool
+	// invocation fails until the source connection is updated.
 	IsDeleted types.Bool `tfsdk:"is_deleted"`
-	// Name of the UC connection that hosts the MCP server, as
-	// `connections/{catalog}.{schema}.{connection}`.
+	// Resource name of the Unity Catalog connection used to access the MCP
+	// server, in the form `connections/{catalog}.{schema}.{connection}`.
 	Name types.String `tfsdk:"name"`
+	// Options needed to build the U2M authorize request, returned as a flat
+	// map. When set, it includes: `authorization_endpoint` (OAuth authorize
+	// URL), `token_endpoint` (token-exchange URL), `oauth_scope`
+	// (space-separated scopes to request), `client_id` (OAuth client id), and
+	// `oauth_provider` (the OAuth provider).
+	Options types.Map `tfsdk:"options"`
 }
 
 func (to *McpServiceConfigSourceConnection_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from McpServiceConfigSourceConnection_SdkV2) {
@@ -26321,6 +27572,7 @@ func (to *McpServiceConfigSourceConnection_SdkV2) SyncFieldsDuringRead(ctx conte
 func (m McpServiceConfigSourceConnection_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["is_deleted"] = attrs["is_deleted"].SetComputed()
 	attrs["name"] = attrs["name"].SetRequired()
+	attrs["options"] = attrs["options"].SetComputed()
 
 	return attrs
 }
@@ -26333,7 +27585,9 @@ func (m McpServiceConfigSourceConnection_SdkV2) ApplySchemaCustomizations(attrs 
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m McpServiceConfigSourceConnection_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+	return map[string]reflect.Type{
+		"options": reflect.TypeOf(types.String{}),
+	}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -26345,6 +27599,7 @@ func (m McpServiceConfigSourceConnection_SdkV2) ToObjectValue(ctx context.Contex
 		map[string]attr.Value{
 			"is_deleted": m.IsDeleted,
 			"name":       m.Name,
+			"options":    m.Options,
 		})
 }
 
@@ -26354,8 +27609,254 @@ func (m McpServiceConfigSourceConnection_SdkV2) Type(ctx context.Context) attr.T
 		AttrTypes: map[string]attr.Type{
 			"is_deleted": types.BoolType,
 			"name":       types.StringType,
+			"options": basetypes.MapType{
+				ElemType: types.StringType,
+			},
 		},
 	}
+}
+
+// GetOptions returns the value of the Options field in McpServiceConfigSourceConnection_SdkV2 as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *McpServiceConfigSourceConnection_SdkV2) GetOptions(ctx context.Context) (map[string]types.String, bool) {
+	if m.Options.IsNull() || m.Options.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := m.Options.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetOptions sets the value of the Options field in McpServiceConfigSourceConnection_SdkV2.
+func (m *McpServiceConfigSourceConnection_SdkV2) SetOptions(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["options"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Options = types.MapValueMust(t, vs)
+}
+
+// A caller's per-user OAuth credential for an MCP service.
+type McpServiceUserMappedCredential_SdkV2 struct {
+	// Token-expiry info for the credential, returned as a flat map:
+	// `access_token_expiration` (always set) and `refresh_token_expiration`
+	// (set when the credential has a refresh token). Both values are
+	// timestamps.
+	Options types.Map `tfsdk:"options"`
+	// Provisioning state of the credential. `ACTIVE` means the caller is logged
+	// in and the credential is usable; any other state means the login has not
+	// completed.
+	ProvisioningInfo types.List `tfsdk:"provisioning_info"`
+}
+
+func (to *McpServiceUserMappedCredential_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from McpServiceUserMappedCredential_SdkV2) {
+	if !from.ProvisioningInfo.IsNull() && !from.ProvisioningInfo.IsUnknown() {
+		if toProvisioningInfo, ok := to.GetProvisioningInfo(ctx); ok {
+			if fromProvisioningInfo, ok := from.GetProvisioningInfo(ctx); ok {
+				// Recursively sync the fields of ProvisioningInfo
+				toProvisioningInfo.SyncFieldsDuringCreateOrUpdate(ctx, fromProvisioningInfo)
+				to.SetProvisioningInfo(ctx, toProvisioningInfo)
+			}
+		}
+	}
+}
+
+func (to *McpServiceUserMappedCredential_SdkV2) SyncFieldsDuringRead(ctx context.Context, from McpServiceUserMappedCredential_SdkV2) {
+	if !from.ProvisioningInfo.IsNull() && !from.ProvisioningInfo.IsUnknown() {
+		if toProvisioningInfo, ok := to.GetProvisioningInfo(ctx); ok {
+			if fromProvisioningInfo, ok := from.GetProvisioningInfo(ctx); ok {
+				toProvisioningInfo.SyncFieldsDuringRead(ctx, fromProvisioningInfo)
+				to.SetProvisioningInfo(ctx, toProvisioningInfo)
+			}
+		}
+	}
+}
+
+func (m McpServiceUserMappedCredential_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["options"] = attrs["options"].SetComputed()
+	attrs["provisioning_info"] = attrs["provisioning_info"].SetComputed()
+	attrs["provisioning_info"] = attrs["provisioning_info"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in McpServiceUserMappedCredential.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m McpServiceUserMappedCredential_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"options":           reflect.TypeOf(types.String{}),
+		"provisioning_info": reflect.TypeOf(ProvisioningInfo_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, McpServiceUserMappedCredential_SdkV2
+// only implements ToObjectValue() and Type().
+func (m McpServiceUserMappedCredential_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"options":           m.Options,
+			"provisioning_info": m.ProvisioningInfo,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m McpServiceUserMappedCredential_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"options": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+			"provisioning_info": basetypes.ListType{
+				ElemType: ProvisioningInfo_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetOptions returns the value of the Options field in McpServiceUserMappedCredential_SdkV2 as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *McpServiceUserMappedCredential_SdkV2) GetOptions(ctx context.Context) (map[string]types.String, bool) {
+	if m.Options.IsNull() || m.Options.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := m.Options.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetOptions sets the value of the Options field in McpServiceUserMappedCredential_SdkV2.
+func (m *McpServiceUserMappedCredential_SdkV2) SetOptions(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["options"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Options = types.MapValueMust(t, vs)
+}
+
+// GetProvisioningInfo returns the value of the ProvisioningInfo field in McpServiceUserMappedCredential_SdkV2 as
+// a ProvisioningInfo_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *McpServiceUserMappedCredential_SdkV2) GetProvisioningInfo(ctx context.Context) (ProvisioningInfo_SdkV2, bool) {
+	var e ProvisioningInfo_SdkV2
+	if m.ProvisioningInfo.IsNull() || m.ProvisioningInfo.IsUnknown() {
+		return e, false
+	}
+	var v []ProvisioningInfo_SdkV2
+	d := m.ProvisioningInfo.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetProvisioningInfo sets the value of the ProvisioningInfo field in McpServiceUserMappedCredential_SdkV2.
+func (m *McpServiceUserMappedCredential_SdkV2) SetProvisioningInfo(ctx context.Context, v ProvisioningInfo_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["provisioning_info"]
+	m.ProvisioningInfo = types.ListValueMust(t, vs)
+}
+
+// Login input for an MCP service user credential. Carries the OAuth exchange
+// fields as a flat map.
+type McpServiceUserMappedCredentialLogin_SdkV2 struct {
+	// OAuth exchange fields: `pkce_verifier`, `authorization_code`, and
+	// `oauth_redirect_uri`.
+	Options types.Map `tfsdk:"options"`
+}
+
+func (to *McpServiceUserMappedCredentialLogin_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from McpServiceUserMappedCredentialLogin_SdkV2) {
+}
+
+func (to *McpServiceUserMappedCredentialLogin_SdkV2) SyncFieldsDuringRead(ctx context.Context, from McpServiceUserMappedCredentialLogin_SdkV2) {
+}
+
+func (m McpServiceUserMappedCredentialLogin_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["options"] = attrs["options"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in McpServiceUserMappedCredentialLogin.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m McpServiceUserMappedCredentialLogin_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"options": reflect.TypeOf(types.String{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, McpServiceUserMappedCredentialLogin_SdkV2
+// only implements ToObjectValue() and Type().
+func (m McpServiceUserMappedCredentialLogin_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"options": m.Options,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m McpServiceUserMappedCredentialLogin_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"options": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+		},
+	}
+}
+
+// GetOptions returns the value of the Options field in McpServiceUserMappedCredentialLogin_SdkV2 as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *McpServiceUserMappedCredentialLogin_SdkV2) GetOptions(ctx context.Context) (map[string]types.String, bool) {
+	if m.Options.IsNull() || m.Options.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := m.Options.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetOptions sets the value of the Options field in McpServiceUserMappedCredentialLogin_SdkV2.
+func (m *McpServiceUserMappedCredentialLogin_SdkV2) SetOptions(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["options"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Options = types.MapValueMust(t, vs)
 }
 
 type MetastoreAssignment_SdkV2 struct {
@@ -26560,36 +28061,32 @@ func (m MetastoreInfo_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// A governed external model-provider connection stored in Unity Catalog (e.g.
-// an OpenAI API account, an Azure OpenAI deployment, an Amazon Bedrock
-// account). Owns the provider type and the auth/configuration the platform
-// needs to invoke that provider, and is referenced from
-// `ExternalModelConfig.model_provider_service` on a ModelService.
+// A Unity Catalog securable that stores authentication and request
+// configuration for an external model provider, such as OpenAI, Azure OpenAI,
+// or Amazon Bedrock. Model service destinations reference it to send requests
+// to that provider.
 //
-// One ModelProviderService can back many ModelServices (e.g. an `openai_prod`
-// provider serving multiple models); a single ModelService can fan out across
-// multiple ModelProviderServices for traffic split or failover.
+// A model provider service can be referenced by multiple model services. A
+// model service can route across multiple model provider services for traffic
+// splitting or failover.
 type ModelProviderService_SdkV2 struct {
 	// User-provided description.
 	Comment types.String `tfsdk:"comment"`
-	// Behavioral configuration: provider connection, model catalog, and
-	// passthrough policy. See `ModelProviderServiceConfig` for the per-field
-	// contract. Required on CreateModelProviderService; on Update it is
-	// required only when `config` (or a `config.*` subpath) appears in
+	// Provider authentication, exposed models, request-forwarding controls,
+	// rate limits, and payload logging. Required on Create. On Update, it is
+	// required only when `config` or one of its subpaths appears in
 	// `update_mask`.
 	Config types.List `tfsdk:"config"`
-	// When the provider service was created.
+	// Time the provider service was created.
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
 	// Creator identity.
 	CreatedBy types.String `tfsdk:"created_by"`
-	// The resolved owner of the model provider service. Falls back to the
-	// caller's identity when `owner` is not explicitly set on creation.
+	// Owner of the model provider service.
 	EffectiveOwner types.String `tfsdk:"effective_owner"`
-	// Optimistic concurrency control token. Server-generated from the entity's
-	// state and returned on every read. To use it as an if-match precondition
-	// on a mutation, echo the last-read value back via the dedicated `etag`
-	// field on the Update / Delete request; the server rejects the mutation if
-	// the stored etag differs.
+	// Optimistic concurrency token returned on every read. To make an Update or
+	// Delete conditional, pass the last-read value in that request's `etag`
+	// field. In REST responses, this value is a base64 string; URL-encode it
+	// when setting the `etag` query parameter.
 	Etag types.String `tfsdk:"etag"`
 	// Metastore hosting the provider service.
 	MetastoreId types.String `tfsdk:"metastore_id"`
@@ -26599,10 +28096,7 @@ type ModelProviderService_SdkV2 struct {
 	// Server-derived on Create from `parent` + `model_provider_service_id`;
 	// required and immutable on Update/Get/Delete.
 	Name types.String `tfsdk:"name"`
-	// The owner of the model provider service. Write-only; read owner via
-	// effective_owner.
-	Owner types.String `tfsdk:"owner"`
-	// When the provider service was last modified.
+	// Time the provider service was last modified.
 	UpdateTime timetypes.RFC3339 `tfsdk:"update_time"`
 	// Identity of the last updater.
 	UpdatedBy types.String `tfsdk:"updated_by"`
@@ -26618,10 +28112,6 @@ func (to *ModelProviderService_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context
 			}
 		}
 	}
-	if !from.Owner.IsUnknown() && !from.Owner.IsNull() {
-		// Owner is an input only field and not returned by the service, so we keep the value from the prior state.
-		to.Owner = from.Owner
-	}
 }
 
 func (to *ModelProviderService_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ModelProviderService_SdkV2) {
@@ -26632,10 +28122,6 @@ func (to *ModelProviderService_SdkV2) SyncFieldsDuringRead(ctx context.Context, 
 				to.SetConfig(ctx, toConfig)
 			}
 		}
-	}
-	if !from.Owner.IsUnknown() && !from.Owner.IsNull() {
-		// Owner is an input only field and not returned by the service, so we keep the value from the prior state.
-		to.Owner = from.Owner
 	}
 }
 
@@ -26650,9 +28136,6 @@ func (m ModelProviderService_SdkV2) ApplySchemaCustomizations(attrs map[string]t
 	attrs["metastore_id"] = attrs["metastore_id"].SetComputed()
 	attrs["name"] = attrs["name"].SetOptional()
 	attrs["name"] = attrs["name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
-	attrs["owner"] = attrs["owner"].SetOptional()
-	attrs["owner"] = attrs["owner"].SetComputed()
-	attrs["owner"] = attrs["owner"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["update_time"] = attrs["update_time"].SetComputed()
 	attrs["updated_by"] = attrs["updated_by"].SetComputed()
 
@@ -26687,7 +28170,6 @@ func (m ModelProviderService_SdkV2) ToObjectValue(ctx context.Context) basetypes
 			"etag":            m.Etag,
 			"metastore_id":    m.MetastoreId,
 			"name":            m.Name,
-			"owner":           m.Owner,
 			"update_time":     m.UpdateTime,
 			"updated_by":      m.UpdatedBy,
 		})
@@ -26707,7 +28189,6 @@ func (m ModelProviderService_SdkV2) Type(ctx context.Context) attr.Type {
 			"etag":            types.StringType,
 			"metastore_id":    types.StringType,
 			"name":            types.StringType,
-			"owner":           types.StringType,
 			"update_time":     timetypes.RFC3339{}.Type(ctx),
 			"updated_by":      types.StringType,
 		},
@@ -26740,15 +28221,17 @@ func (m *ModelProviderService_SdkV2) SetConfig(ctx context.Context, v ModelProvi
 	m.Config = types.ListValueMust(t, vs)
 }
 
-// Behavioral configuration for a ModelProviderService: provider connection
-// (auth + provider-specific fields), the catalog of models this provider
-// service can route to, and the passthrough policy that governs how request
-// headers, query parameters, and unmanaged subpaths cross the trust boundary to
-// the upstream provider.
+// Behavioral configuration for a ModelProviderService: provider authentication
+// and provider-specific fields, the catalog of models this provider service can
+// route to, and the passthrough policy that governs how request headers, query
+// parameters, and unmanaged subpaths cross the trust boundary to the upstream
+// provider.
 type ModelProviderServiceConfig_SdkV2 struct {
-	// When true, accepts any model exposed by the upstream provider; `targets`
-	// is not required and does not restrict routability. When false, only
-	// models listed in `targets` are routable.
+	// When true, allows models from the provider's built-in model catalog in
+	// addition to explicit `targets`. When false, only models listed in
+	// `targets` are routable. Defaults to false. CUSTOM providers have no
+	// built-in model catalog and must leave this false and list their models in
+	// `targets`.
 	AllowAllTargets types.Bool `tfsdk:"allow_all_targets"`
 
 	AmazonBedrock types.List `tfsdk:"amazon_bedrock"`
@@ -26757,52 +28240,54 @@ type ModelProviderServiceConfig_SdkV2 struct {
 
 	AzureOpenai types.List `tfsdk:"azure_openai"`
 
+	BedrockMantle types.List `tfsdk:"bedrock_mantle"`
+
 	Custom types.List `tfsdk:"custom"`
-	// Whether to forward incoming request headers to the upstream provider.
-	// Applies to managed (multi-model) requests as well as passthrough requests
-	// served by this provider service. Governance-level decision by the
-	// provider service owner; not selectable per inference call.
+	// Whether to forward incoming HTTP headers to the upstream provider.
+	// Defaults to false and is configured for the entire provider service, not
+	// per request. Upstream authentication is configured separately in the
+	// provider-specific configuration.
 	ForwardHeaders types.Bool `tfsdk:"forward_headers"`
-	// Whether to forward incoming request query parameters to the upstream
-	// provider. Same trust-boundary semantics as `forward_headers`.
+	// Whether to forward incoming query parameters to the upstream provider.
+	// Defaults to false and is configured for the entire provider service, not
+	// per request.
 	ForwardQueryParameters types.Bool `tfsdk:"forward_query_parameters"`
-	// Whether to forward request paths that fall outside this service's managed
-	// API set to the upstream provider as opaque passthrough. When true,
-	// requests addressed to subpaths not recognized by the managed API surface
-	// are proxied to the upstream provider over the same provider connection.
-	// When false, only managed-API paths are served. Governance-level decision
-	// by the provider service owner; expanding this expands the trust boundary
-	// that the ModelProviderService exposes.
+	// Whether to proxy paths that AI Gateway does not recognize as configured
+	// provider-native API types. Defaults to false. When true, these paths are
+	// forwarded unchanged to the upstream provider. When false, only recognized
+	// API paths are served. Enabling this broadens the upstream API surface
+	// exposed through the provider service. AI Gateway cannot evaluate Service
+	// Policies on opaque unmanaged requests, so unmanaged requests are rejected
+	// whenever Service Policies are attached to this securable.
 	ForwardUnmanagedPaths types.Bool `tfsdk:"forward_unmanaged_paths"`
 
 	GeminiEnterprise types.List `tfsdk:"gemini_enterprise"`
-	// Inference table configuration for payload logging when this provider
-	// service is invoked directly. When it is invoked through a model service,
-	// the model service's own inference table captures the invocation instead.
-	// Mirrors `ModelServiceConfig.inference_table` /
-	// `AgentServiceConfig.inference_table`.
+	// Payload logging configuration for requests sent directly to this provider
+	// service. Requests routed through a model service are captured by that
+	// model service's inference table instead.
 	InferenceTable types.List `tfsdk:"inference_table"`
 
 	MicrosoftFoundry types.List `tfsdk:"microsoft_foundry"`
 
 	Openai types.List `tfsdk:"openai"`
-	// Provider type discriminator. Required at create time; immutable after.
-	// Determines which variant of the `provider` oneof must be set. May not be
-	// changed via Update; attempts to include `config.provider_type` in
-	// `UpdateModelProviderServiceRequest.update_mask` are rejected.
-	//
-	// Required on CreateModelProviderService and immutable thereafter.
+	// Pricing configuration for this provider service. An explicitly empty
+	// configuration is retained on Create and Update and applies no adjustment.
+	Pricing types.List `tfsdk:"pricing"`
+	// External model provider. Required on Create and immutable thereafter. Set
+	// the matching provider-specific configuration, such as `openai`,
+	// `azure_openai`, or `amazon_bedrock`.
 	ProviderType types.String `tfsdk:"provider_type"`
-	// Rate limits applied when this provider service is invoked directly. When
-	// it is invoked through a model service, the model service's own
-	// `rate_limits` apply instead. Mirrors `ModelServiceConfig.rate_limits` /
-	// `McpServiceConfig.rate_limits`.
+	// Rate limits for requests sent directly to this provider service. Requests
+	// routed through a model service use that model service's rate limits
+	// instead.
 	RateLimits types.List `tfsdk:"rate_limits"`
-	// Routing targets this provider service exposes (provider-side model
-	// identifier + unified API types per entry). Required (>=1) when
-	// `allow_all_targets = false`; optional and additive when
-	// `allow_all_targets = true`. References from `ExternalModelConfig.target`
-	// must match an entry here unless `allow_all_targets = true`.
+	// Models and provider-native API types exposed by this provider service.
+	// Each entry must include at least one `native_api_types` value. When
+	// `allow_all_targets` is false, at least one entry is required and model
+	// service destinations can reference only listed models. When
+	// `allow_all_targets` is true, models from the provider's built-in model
+	// catalog are also routable. CUSTOM providers must explicitly list their
+	// models here and cannot enable `allow_all_targets`.
 	Targets types.List `tfsdk:"targets"`
 }
 
@@ -26831,6 +28316,15 @@ func (to *ModelProviderServiceConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx c
 				// Recursively sync the fields of AzureOpenai
 				toAzureOpenai.SyncFieldsDuringCreateOrUpdate(ctx, fromAzureOpenai)
 				to.SetAzureOpenai(ctx, toAzureOpenai)
+			}
+		}
+	}
+	if !from.BedrockMantle.IsNull() && !from.BedrockMantle.IsUnknown() {
+		if toBedrockMantle, ok := to.GetBedrockMantle(ctx); ok {
+			if fromBedrockMantle, ok := from.GetBedrockMantle(ctx); ok {
+				// Recursively sync the fields of BedrockMantle
+				toBedrockMantle.SyncFieldsDuringCreateOrUpdate(ctx, fromBedrockMantle)
+				to.SetBedrockMantle(ctx, toBedrockMantle)
 			}
 		}
 	}
@@ -26876,6 +28370,15 @@ func (to *ModelProviderServiceConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx c
 				// Recursively sync the fields of Openai
 				toOpenai.SyncFieldsDuringCreateOrUpdate(ctx, fromOpenai)
 				to.SetOpenai(ctx, toOpenai)
+			}
+		}
+	}
+	if !from.Pricing.IsNull() && !from.Pricing.IsUnknown() {
+		if toPricing, ok := to.GetPricing(ctx); ok {
+			if fromPricing, ok := from.GetPricing(ctx); ok {
+				// Recursively sync the fields of Pricing
+				toPricing.SyncFieldsDuringCreateOrUpdate(ctx, fromPricing)
+				to.SetPricing(ctx, toPricing)
 			}
 		}
 	}
@@ -26944,6 +28447,14 @@ func (to *ModelProviderServiceConfig_SdkV2) SyncFieldsDuringRead(ctx context.Con
 			}
 		}
 	}
+	if !from.BedrockMantle.IsNull() && !from.BedrockMantle.IsUnknown() {
+		if toBedrockMantle, ok := to.GetBedrockMantle(ctx); ok {
+			if fromBedrockMantle, ok := from.GetBedrockMantle(ctx); ok {
+				toBedrockMantle.SyncFieldsDuringRead(ctx, fromBedrockMantle)
+				to.SetBedrockMantle(ctx, toBedrockMantle)
+			}
+		}
+	}
 	if !from.Custom.IsNull() && !from.Custom.IsUnknown() {
 		if toCustom, ok := to.GetCustom(ctx); ok {
 			if fromCustom, ok := from.GetCustom(ctx); ok {
@@ -26981,6 +28492,14 @@ func (to *ModelProviderServiceConfig_SdkV2) SyncFieldsDuringRead(ctx context.Con
 			if fromOpenai, ok := from.GetOpenai(ctx); ok {
 				toOpenai.SyncFieldsDuringRead(ctx, fromOpenai)
 				to.SetOpenai(ctx, toOpenai)
+			}
+		}
+	}
+	if !from.Pricing.IsNull() && !from.Pricing.IsUnknown() {
+		if toPricing, ok := to.GetPricing(ctx); ok {
+			if fromPricing, ok := from.GetPricing(ctx); ok {
+				toPricing.SyncFieldsDuringRead(ctx, fromPricing)
+				to.SetPricing(ctx, toPricing)
 			}
 		}
 	}
@@ -27030,6 +28549,8 @@ func (m ModelProviderServiceConfig_SdkV2) ApplySchemaCustomizations(attrs map[st
 	attrs["anthropic"] = attrs["anthropic"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["azure_openai"] = attrs["azure_openai"].SetOptional()
 	attrs["azure_openai"] = attrs["azure_openai"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["bedrock_mantle"] = attrs["bedrock_mantle"].SetOptional()
+	attrs["bedrock_mantle"] = attrs["bedrock_mantle"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["custom"] = attrs["custom"].SetOptional()
 	attrs["custom"] = attrs["custom"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["forward_headers"] = attrs["forward_headers"].SetOptional()
@@ -27043,6 +28564,8 @@ func (m ModelProviderServiceConfig_SdkV2) ApplySchemaCustomizations(attrs map[st
 	attrs["microsoft_foundry"] = attrs["microsoft_foundry"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["openai"] = attrs["openai"].SetOptional()
 	attrs["openai"] = attrs["openai"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["pricing"] = attrs["pricing"].SetOptional()
+	attrs["pricing"] = attrs["pricing"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["provider_type"] = attrs["provider_type"].SetOptional()
 	attrs["provider_type"] = attrs["provider_type"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["rate_limits"] = attrs["rate_limits"].SetOptional()
@@ -27063,11 +28586,13 @@ func (m ModelProviderServiceConfig_SdkV2) GetComplexFieldTypes(ctx context.Conte
 		"amazon_bedrock":    reflect.TypeOf(ModelProviderServiceConfigAmazonBedrockProviderConfig_SdkV2{}),
 		"anthropic":         reflect.TypeOf(ModelProviderServiceConfigAnthropicProviderConfig_SdkV2{}),
 		"azure_openai":      reflect.TypeOf(ModelProviderServiceConfigAzureOpenAiProviderConfig_SdkV2{}),
+		"bedrock_mantle":    reflect.TypeOf(ModelProviderServiceConfigAmazonBedrockProviderConfig_SdkV2{}),
 		"custom":            reflect.TypeOf(ModelProviderServiceConfigCustomProviderConfig_SdkV2{}),
 		"gemini_enterprise": reflect.TypeOf(ModelProviderServiceConfigGeminiEnterpriseProviderConfig_SdkV2{}),
 		"inference_table":   reflect.TypeOf(InferenceTableConfig_SdkV2{}),
 		"microsoft_foundry": reflect.TypeOf(ModelProviderServiceConfigMicrosoftFoundryProviderConfig_SdkV2{}),
 		"openai":            reflect.TypeOf(ModelProviderServiceConfigOpenAiProviderConfig_SdkV2{}),
+		"pricing":           reflect.TypeOf(ModelProviderServiceConfigProviderPricingConfig_SdkV2{}),
 		"rate_limits":       reflect.TypeOf(RateLimit_SdkV2{}),
 		"targets":           reflect.TypeOf(ModelProviderServiceConfigModelTargetConfig_SdkV2{}),
 	}
@@ -27084,6 +28609,7 @@ func (m ModelProviderServiceConfig_SdkV2) ToObjectValue(ctx context.Context) bas
 			"amazon_bedrock":           m.AmazonBedrock,
 			"anthropic":                m.Anthropic,
 			"azure_openai":             m.AzureOpenai,
+			"bedrock_mantle":           m.BedrockMantle,
 			"custom":                   m.Custom,
 			"forward_headers":          m.ForwardHeaders,
 			"forward_query_parameters": m.ForwardQueryParameters,
@@ -27092,6 +28618,7 @@ func (m ModelProviderServiceConfig_SdkV2) ToObjectValue(ctx context.Context) bas
 			"inference_table":          m.InferenceTable,
 			"microsoft_foundry":        m.MicrosoftFoundry,
 			"openai":                   m.Openai,
+			"pricing":                  m.Pricing,
 			"provider_type":            m.ProviderType,
 			"rate_limits":              m.RateLimits,
 			"targets":                  m.Targets,
@@ -27112,6 +28639,9 @@ func (m ModelProviderServiceConfig_SdkV2) Type(ctx context.Context) attr.Type {
 			"azure_openai": basetypes.ListType{
 				ElemType: ModelProviderServiceConfigAzureOpenAiProviderConfig_SdkV2{}.Type(ctx),
 			},
+			"bedrock_mantle": basetypes.ListType{
+				ElemType: ModelProviderServiceConfigAmazonBedrockProviderConfig_SdkV2{}.Type(ctx),
+			},
 			"custom": basetypes.ListType{
 				ElemType: ModelProviderServiceConfigCustomProviderConfig_SdkV2{}.Type(ctx),
 			},
@@ -27129,6 +28659,9 @@ func (m ModelProviderServiceConfig_SdkV2) Type(ctx context.Context) attr.Type {
 			},
 			"openai": basetypes.ListType{
 				ElemType: ModelProviderServiceConfigOpenAiProviderConfig_SdkV2{}.Type(ctx),
+			},
+			"pricing": basetypes.ListType{
+				ElemType: ModelProviderServiceConfigProviderPricingConfig_SdkV2{}.Type(ctx),
 			},
 			"provider_type": types.StringType,
 			"rate_limits": basetypes.ListType{
@@ -27217,6 +28750,32 @@ func (m *ModelProviderServiceConfig_SdkV2) SetAzureOpenai(ctx context.Context, v
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["azure_openai"]
 	m.AzureOpenai = types.ListValueMust(t, vs)
+}
+
+// GetBedrockMantle returns the value of the BedrockMantle field in ModelProviderServiceConfig_SdkV2 as
+// a ModelProviderServiceConfigAmazonBedrockProviderConfig_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ModelProviderServiceConfig_SdkV2) GetBedrockMantle(ctx context.Context) (ModelProviderServiceConfigAmazonBedrockProviderConfig_SdkV2, bool) {
+	var e ModelProviderServiceConfigAmazonBedrockProviderConfig_SdkV2
+	if m.BedrockMantle.IsNull() || m.BedrockMantle.IsUnknown() {
+		return e, false
+	}
+	var v []ModelProviderServiceConfigAmazonBedrockProviderConfig_SdkV2
+	d := m.BedrockMantle.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetBedrockMantle sets the value of the BedrockMantle field in ModelProviderServiceConfig_SdkV2.
+func (m *ModelProviderServiceConfig_SdkV2) SetBedrockMantle(ctx context.Context, v ModelProviderServiceConfigAmazonBedrockProviderConfig_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["bedrock_mantle"]
+	m.BedrockMantle = types.ListValueMust(t, vs)
 }
 
 // GetCustom returns the value of the Custom field in ModelProviderServiceConfig_SdkV2 as
@@ -27349,6 +28908,32 @@ func (m *ModelProviderServiceConfig_SdkV2) SetOpenai(ctx context.Context, v Mode
 	m.Openai = types.ListValueMust(t, vs)
 }
 
+// GetPricing returns the value of the Pricing field in ModelProviderServiceConfig_SdkV2 as
+// a ModelProviderServiceConfigProviderPricingConfig_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ModelProviderServiceConfig_SdkV2) GetPricing(ctx context.Context) (ModelProviderServiceConfigProviderPricingConfig_SdkV2, bool) {
+	var e ModelProviderServiceConfigProviderPricingConfig_SdkV2
+	if m.Pricing.IsNull() || m.Pricing.IsUnknown() {
+		return e, false
+	}
+	var v []ModelProviderServiceConfigProviderPricingConfig_SdkV2
+	d := m.Pricing.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetPricing sets the value of the Pricing field in ModelProviderServiceConfig_SdkV2.
+func (m *ModelProviderServiceConfig_SdkV2) SetPricing(ctx context.Context, v ModelProviderServiceConfigProviderPricingConfig_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["pricing"]
+	m.Pricing = types.ListValueMust(t, vs)
+}
+
 // GetRateLimits returns the value of the RateLimits field in ModelProviderServiceConfig_SdkV2 as
 // a slice of RateLimit_SdkV2 values.
 // If the field is unknown or null, the boolean return value is false.
@@ -27403,6 +28988,7 @@ func (m *ModelProviderServiceConfig_SdkV2) SetTargets(ctx context.Context, v []M
 
 // Amazon Bedrock provider configuration.
 type ModelProviderServiceConfigAmazonBedrockProviderConfig_SdkV2 struct {
+	// Amazon Bedrock region and authentication configuration.
 	Direct types.List `tfsdk:"direct"`
 }
 
@@ -27501,25 +29087,25 @@ func (m *ModelProviderServiceConfigAmazonBedrockProviderConfig_SdkV2) SetDirect(
 //
 // Authentication is one of two mutually exclusive modes, exactly one of which
 // must be supplied on Create: - Access keys: set `aws_access_key`, leave
-// `service_credential` unset. - UC service credential: set
-// `service_credential.name` to the AIP-122 resource-name form
-// `credentials/{name}`, leave `aws_access_key` unset. The credential value
-// lives in UC and is referenced by name, not held on this message. Setting more
-// than one mode is rejected.
+// `service_credential` unset. - Unity Catalog service credential: set
+// `service_credential.name` to the resource name `credentials/{name}`, leave
+// `aws_access_key` unset. The credential value lives in Unity Catalog and is
+// referenced by name, not held on this message. Setting more than one mode is
+// rejected.
 type ModelProviderServiceConfigAmazonBedrockProviderDirectConfig_SdkV2 struct {
-	// AWS access-key-pair auth. Mutually exclusive with `service_credential`.
+	// AWS access-key-pair authentication. Set `access_key_id` and
+	// `secret_access_key.plaintext`. Mutually exclusive with
+	// `service_credential`.
 	AwsAccessKey types.List `tfsdk:"aws_access_key"`
 	// AWS region where the Bedrock endpoint is hosted (e.g., `us-east-1`).
 	// Required on Create.
 	Region types.String `tfsdk:"region"`
-	// Reference to a UC service credential authorizing Bedrock requests. On
-	// Create the caller supplies `service_credential.name` in the AIP-122
-	// resource-name form `credentials/{name}`. Required on Create when using
-	// UC-service-credential auth; mutually exclusive with `aws_access_key`. The
-	// credential is referenced by name; its value is not carried here. On read
-	// the resolved `id` and `is_deleted` are also populated. Only supported on
-	// AWS-hosted workspaces; Create requests from other clouds are rejected
-	// with INVALID_PARAMETER_VALUE.
+	// Reference to a Unity Catalog service credential authorizing Bedrock
+	// requests. On Create, supply `service_credential.name` in the form
+	// `credentials/{name}`. Required on Create when using service-credential
+	// authentication; mutually exclusive with `aws_access_key`. The credential
+	// is referenced by name; its value is not carried here. Only supported on
+	// AWS-hosted workspaces.
 	ServiceCredential types.List `tfsdk:"service_credential"`
 }
 
@@ -27670,13 +29256,12 @@ func (m *ModelProviderServiceConfigAmazonBedrockProviderDirectConfig_SdkV2) SetS
 // Anthropic provider configuration. Exactly one of `direct` or `relayed` must
 // be set on Create; the two are mutually exclusive.
 type ModelProviderServiceConfigAnthropicProviderConfig_SdkV2 struct {
-	// Direct (inline-credentials) form: caller supplies the API key in the
-	// request body. Required on Create unless `relayed` is set.
+	// Direct authentication with an API key supplied in
+	// `direct.api_key.plaintext`. Required unless `relayed` is set.
 	Direct types.List `tfsdk:"direct"`
-	// Relayed (credential-less) form: no Anthropic credential is stored. Each
-	// inference request instead carries the caller's own OAuth token, which the
-	// platform forwards to Anthropic on outbound requests. Mutually exclusive
-	// with `direct`; no `api_key` is required or persisted.
+	// Relayed authentication. Each inference request supplies the caller's
+	// OAuth token, which is forwarded to Anthropic. No Anthropic credential is
+	// stored. Mutually exclusive with `direct`.
 	Relayed types.List `tfsdk:"relayed"`
 }
 
@@ -27823,9 +29408,8 @@ func (m *ModelProviderServiceConfigAnthropicProviderConfig_SdkV2) SetRelayed(ctx
 
 // Direct form of Anthropic provider config.
 type ModelProviderServiceConfigAnthropicProviderDirectConfig_SdkV2 struct {
-	// Anthropic API key. Required on Create. Sent as the `x-api-key` header on
-	// outbound requests. Supplied as inline plaintext via
-	// `ProviderSecret.plaintext`.
+	// Anthropic API key. Required when creating the service. Supply the value
+	// in `api_key.plaintext`.
 	ApiKey types.List `tfsdk:"api_key"`
 }
 
@@ -27920,17 +29504,10 @@ func (m *ModelProviderServiceConfigAnthropicProviderDirectConfig_SdkV2) SetApiKe
 	m.ApiKey = types.ListValueMust(t, vs)
 }
 
-// Relayed form of Anthropic provider config: no credential is stored.
-// Authentication is the caller's own OAuth token, forwarded to Anthropic on
-// outbound requests, so there is no persisted secret. Presence of this variant
-// is the signal that the provider service uses relayed auth; `plan_type`
-// further distinguishes which Anthropic subscription tier the token belongs to.
+// Relayed Anthropic provider configuration. Each inference request supplies the
+// caller's OAuth token, which is forwarded to Anthropic. No Anthropic
+// credential is stored.
 type ModelProviderServiceConfigAnthropicProviderRelayedConfig_SdkV2 struct {
-	// Which Anthropic subscription tier the relayed token belongs to. Optional;
-	// when unset the MPS gets the full governance surface (see
-	// TEAM_ENTERPRISE). Immutable after Create, so the tier cannot be flipped
-	// in place.
-	PlanType types.String `tfsdk:"plan_type"`
 }
 
 func (to *ModelProviderServiceConfigAnthropicProviderRelayedConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ModelProviderServiceConfigAnthropicProviderRelayedConfig_SdkV2) {
@@ -27940,8 +29517,6 @@ func (to *ModelProviderServiceConfigAnthropicProviderRelayedConfig_SdkV2) SyncFi
 }
 
 func (m ModelProviderServiceConfigAnthropicProviderRelayedConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["plan_type"] = attrs["plan_type"].SetOptional()
-	attrs["plan_type"] = attrs["plan_type"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 
 	return attrs
 }
@@ -27963,17 +29538,13 @@ func (m ModelProviderServiceConfigAnthropicProviderRelayedConfig_SdkV2) GetCompl
 func (m ModelProviderServiceConfigAnthropicProviderRelayedConfig_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{
-			"plan_type": m.PlanType,
-		})
+		map[string]attr.Value{})
 }
 
 // Type implements basetypes.ObjectValuable.
 func (m ModelProviderServiceConfigAnthropicProviderRelayedConfig_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"plan_type": types.StringType,
-		},
+		AttrTypes: map[string]attr.Type{},
 	}
 }
 
@@ -27983,9 +29554,9 @@ type ModelProviderServiceConfigAwsAccessKey_SdkV2 struct {
 	// as username-equivalent (not a secret value): round-trips on reads and is
 	// scrubbed from audit logs.
 	AccessKeyId types.String `tfsdk:"access_key_id"`
-	// AWS secret access key paired with `access_key_id`. Required on Create
-	// when using access-key auth. Supplied as inline plaintext via
-	// `ProviderSecret.plaintext`.
+	// AWS secret access key paired with `access_key_id`. Required when creating
+	// a service with access-key authentication. Supply the value in
+	// `secret_access_key.plaintext`.
 	SecretAccessKey types.List `tfsdk:"secret_access_key"`
 }
 
@@ -28085,6 +29656,7 @@ func (m *ModelProviderServiceConfigAwsAccessKey_SdkV2) SetSecretAccessKey(ctx co
 
 // Azure OpenAI provider configuration.
 type ModelProviderServiceConfigAzureOpenAiProviderConfig_SdkV2 struct {
+	// Azure OpenAI endpoint and authentication configuration.
 	Direct types.List `tfsdk:"direct"`
 }
 
@@ -28183,31 +29755,29 @@ func (m *ModelProviderServiceConfigAzureOpenAiProviderConfig_SdkV2) SetDirect(ct
 // mutually-exclusive auth modes must be supplied on Create: - API key: set
 // `api_key`, leave `entra_service_principal` and `service_credential` unset. -
 // Entra ID (service principal): set `entra_service_principal`, leave `api_key`
-// and `service_credential` unset. - UC service credential: set
-// `service_credential.name` to the AIP-122 resource-name form
-// `credentials/{name}`, leave `api_key` and `entra_service_principal` unset.
-// The credential value lives in UC and is referenced by name, not held on this
-// message. Only supported on Azure-hosted workspaces. Setting more than one
-// mode is rejected.
+// and `service_credential` unset. - Unity Catalog service credential: set
+// `service_credential.name` to the resource name `credentials/{name}`, leave
+// `api_key` and `entra_service_principal` unset. The credential value lives in
+// Unity Catalog and is referenced by name, not held on this message. Only
+// supported on Azure-hosted workspaces. Setting more than one mode is rejected.
 type ModelProviderServiceConfigAzureOpenAiProviderDirectConfig_SdkV2 struct {
-	// Azure OpenAI API key. Mutually exclusive with the Entra and
-	// service-credential modes. Supplied as inline plaintext via
-	// `ProviderSecret.plaintext`.
+	// Azure OpenAI API key. Supply the value in `api_key.plaintext`. Mutually
+	// exclusive with Entra ID and Unity Catalog service credential
+	// authentication.
 	ApiKey types.List `tfsdk:"api_key"`
 	// Full Azure OpenAI endpoint base URL, e.g.
 	// `https://myresource.openai.azure.com`. Required on Create.
 	BaseUrl types.String `tfsdk:"base_url"`
-	// Entra ID (service principal) auth. Mutually exclusive with `api_key` and
+	// Entra ID service-principal authentication. Set `tenant_id`, `client_id`,
+	// and `client_secret.plaintext`. Mutually exclusive with `api_key` and
 	// `service_credential`.
 	EntraServicePrincipal types.List `tfsdk:"entra_service_principal"`
-	// Reference to a UC service credential authorizing Azure OpenAI requests.
-	// On Create the caller supplies `service_credential.name` in the AIP-122
-	// resource-name form `credentials/{name}`. Required on Create when using
-	// UC-service-credential auth; mutually exclusive with `api_key` and
+	// Reference to a Unity Catalog service credential authorizing Azure OpenAI
+	// requests. On Create, supply `service_credential.name` in the form
+	// `credentials/{name}`. Required on Create when using service-credential
+	// authentication; mutually exclusive with `api_key` and
 	// `entra_service_principal`. The credential is referenced by name; its
-	// value is not carried here. On read the resolved `id` and `is_deleted` are
-	// also populated. Only supported on Azure-hosted workspaces; Create
-	// requests from other clouds are rejected with INVALID_PARAMETER_VALUE.
+	// value is not carried here. Only supported on Azure-hosted workspaces.
 	ServiceCredential types.List `tfsdk:"service_credential"`
 }
 
@@ -28405,9 +29975,116 @@ func (m *ModelProviderServiceConfigAzureOpenAiProviderDirectConfig_SdkV2) SetSer
 	m.ServiceCredential = types.ListValueMust(t, vs)
 }
 
-// Custom provider configuration: arbitrary HTTP endpoint with bearer-token
-// auth.
+// Header-based API-key authentication for a custom provider: the secret is
+// forwarded on outbound requests under a caller-chosen HTTP header, as
+// `<api_key_name>: <api_key_value>`.
+type ModelProviderServiceConfigCustomProviderApiKeyHeaderAuth_SdkV2 struct {
+	// HTTP header name that carries the API key on outbound requests (e.g.,
+	// `Ocp-Apim-Subscription-Key`). The value forwarded under this header is
+	// supplied via `api_key_value`.
+	ApiKeyName types.String `tfsdk:"api_key_name"`
+	// Secret value forwarded under the `api_key_name` header on outbound
+	// requests. Supplied as inline plaintext via `ProviderSecret.plaintext`.
+	ApiKeyValue types.List `tfsdk:"api_key_value"`
+}
+
+func (to *ModelProviderServiceConfigCustomProviderApiKeyHeaderAuth_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ModelProviderServiceConfigCustomProviderApiKeyHeaderAuth_SdkV2) {
+	if !from.ApiKeyValue.IsNull() && !from.ApiKeyValue.IsUnknown() {
+		if toApiKeyValue, ok := to.GetApiKeyValue(ctx); ok {
+			if fromApiKeyValue, ok := from.GetApiKeyValue(ctx); ok {
+				// Recursively sync the fields of ApiKeyValue
+				toApiKeyValue.SyncFieldsDuringCreateOrUpdate(ctx, fromApiKeyValue)
+				to.SetApiKeyValue(ctx, toApiKeyValue)
+			}
+		}
+	}
+}
+
+func (to *ModelProviderServiceConfigCustomProviderApiKeyHeaderAuth_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ModelProviderServiceConfigCustomProviderApiKeyHeaderAuth_SdkV2) {
+	if !from.ApiKeyValue.IsNull() && !from.ApiKeyValue.IsUnknown() {
+		if toApiKeyValue, ok := to.GetApiKeyValue(ctx); ok {
+			if fromApiKeyValue, ok := from.GetApiKeyValue(ctx); ok {
+				toApiKeyValue.SyncFieldsDuringRead(ctx, fromApiKeyValue)
+				to.SetApiKeyValue(ctx, toApiKeyValue)
+			}
+		}
+	}
+}
+
+func (m ModelProviderServiceConfigCustomProviderApiKeyHeaderAuth_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["api_key_name"] = attrs["api_key_name"].SetOptional()
+	attrs["api_key_value"] = attrs["api_key_value"].SetOptional()
+	attrs["api_key_value"] = attrs["api_key_value"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ModelProviderServiceConfigCustomProviderApiKeyHeaderAuth.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ModelProviderServiceConfigCustomProviderApiKeyHeaderAuth_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"api_key_value": reflect.TypeOf(ModelProviderServiceConfigProviderSecret_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ModelProviderServiceConfigCustomProviderApiKeyHeaderAuth_SdkV2
+// only implements ToObjectValue() and Type().
+func (m ModelProviderServiceConfigCustomProviderApiKeyHeaderAuth_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"api_key_name":  m.ApiKeyName,
+			"api_key_value": m.ApiKeyValue,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ModelProviderServiceConfigCustomProviderApiKeyHeaderAuth_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"api_key_name": types.StringType,
+			"api_key_value": basetypes.ListType{
+				ElemType: ModelProviderServiceConfigProviderSecret_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetApiKeyValue returns the value of the ApiKeyValue field in ModelProviderServiceConfigCustomProviderApiKeyHeaderAuth_SdkV2 as
+// a ModelProviderServiceConfigProviderSecret_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ModelProviderServiceConfigCustomProviderApiKeyHeaderAuth_SdkV2) GetApiKeyValue(ctx context.Context) (ModelProviderServiceConfigProviderSecret_SdkV2, bool) {
+	var e ModelProviderServiceConfigProviderSecret_SdkV2
+	if m.ApiKeyValue.IsNull() || m.ApiKeyValue.IsUnknown() {
+		return e, false
+	}
+	var v []ModelProviderServiceConfigProviderSecret_SdkV2
+	d := m.ApiKeyValue.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetApiKeyValue sets the value of the ApiKeyValue field in ModelProviderServiceConfigCustomProviderApiKeyHeaderAuth_SdkV2.
+func (m *ModelProviderServiceConfigCustomProviderApiKeyHeaderAuth_SdkV2) SetApiKeyValue(ctx context.Context, v ModelProviderServiceConfigProviderSecret_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["api_key_value"]
+	m.ApiKeyValue = types.ListValueMust(t, vs)
+}
+
+// Custom OpenAI-compatible provider configuration.
 type ModelProviderServiceConfigCustomProviderConfig_SdkV2 struct {
+	// Endpoint and authentication configuration for the custom provider.
 	Direct types.List `tfsdk:"direct"`
 }
 
@@ -28502,22 +30179,20 @@ func (m *ModelProviderServiceConfigCustomProviderConfig_SdkV2) SetDirect(ctx con
 	m.Direct = types.ListValueMust(t, vs)
 }
 
-// Direct form of custom provider config.
-//
-// Authentication is one of two mutually exclusive modes, exactly one of which
-// must be supplied on Create: - Bearer: set `api_key`, leave `header_auth`
-// unset. The secret is forwarded as `Authorization: Bearer <secret>`. - Header:
-// set `header_auth`, leave `api_key` unset. The secret is forwarded as
-// `<api_key_name>: <api_key_value>`. Setting both modes or neither mode is
-// rejected.
+// Direct form of a custom provider configuration. Set `api_key` to send the
+// secret as an `Authorization` bearer token, or `header_auth` to forward it
+// under a caller-chosen HTTP header.
 type ModelProviderServiceConfigCustomProviderDirectConfig_SdkV2 struct {
-	// Bearer token forwarded as the `Authorization: Bearer ...` header on
-	// outbound requests. Supplied as inline plaintext via
-	// `ProviderSecret.plaintext`. Set this for bearer-token auth.
+	// Bearer token forwarded in the `Authorization` header. Supply the value in
+	// `api_key.plaintext`.
 	ApiKey types.List `tfsdk:"api_key"`
 	// Endpoint URL of the OpenAI-compatible service (e.g.,
 	// `https://api.example.com/v1`). Required on Create.
 	BaseUrl types.String `tfsdk:"base_url"`
+	// Header-based API-key auth: the secret is forwarded on outbound requests
+	// under a caller-chosen HTTP header rather than as an `Authorization`
+	// bearer token. Set this instead of `api_key` for header auth.
+	HeaderAuth types.List `tfsdk:"header_auth"`
 }
 
 func (to *ModelProviderServiceConfigCustomProviderDirectConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ModelProviderServiceConfigCustomProviderDirectConfig_SdkV2) {
@@ -28527,6 +30202,15 @@ func (to *ModelProviderServiceConfigCustomProviderDirectConfig_SdkV2) SyncFields
 				// Recursively sync the fields of ApiKey
 				toApiKey.SyncFieldsDuringCreateOrUpdate(ctx, fromApiKey)
 				to.SetApiKey(ctx, toApiKey)
+			}
+		}
+	}
+	if !from.HeaderAuth.IsNull() && !from.HeaderAuth.IsUnknown() {
+		if toHeaderAuth, ok := to.GetHeaderAuth(ctx); ok {
+			if fromHeaderAuth, ok := from.GetHeaderAuth(ctx); ok {
+				// Recursively sync the fields of HeaderAuth
+				toHeaderAuth.SyncFieldsDuringCreateOrUpdate(ctx, fromHeaderAuth)
+				to.SetHeaderAuth(ctx, toHeaderAuth)
 			}
 		}
 	}
@@ -28541,12 +30225,22 @@ func (to *ModelProviderServiceConfigCustomProviderDirectConfig_SdkV2) SyncFields
 			}
 		}
 	}
+	if !from.HeaderAuth.IsNull() && !from.HeaderAuth.IsUnknown() {
+		if toHeaderAuth, ok := to.GetHeaderAuth(ctx); ok {
+			if fromHeaderAuth, ok := from.GetHeaderAuth(ctx); ok {
+				toHeaderAuth.SyncFieldsDuringRead(ctx, fromHeaderAuth)
+				to.SetHeaderAuth(ctx, toHeaderAuth)
+			}
+		}
+	}
 }
 
 func (m ModelProviderServiceConfigCustomProviderDirectConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["api_key"] = attrs["api_key"].SetOptional()
 	attrs["api_key"] = attrs["api_key"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["base_url"] = attrs["base_url"].SetOptional()
+	attrs["header_auth"] = attrs["header_auth"].SetOptional()
+	attrs["header_auth"] = attrs["header_auth"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
 	return attrs
 }
@@ -28560,7 +30254,8 @@ func (m ModelProviderServiceConfigCustomProviderDirectConfig_SdkV2) ApplySchemaC
 // SDK values.
 func (m ModelProviderServiceConfigCustomProviderDirectConfig_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"api_key": reflect.TypeOf(ModelProviderServiceConfigProviderSecret_SdkV2{}),
+		"api_key":     reflect.TypeOf(ModelProviderServiceConfigProviderSecret_SdkV2{}),
+		"header_auth": reflect.TypeOf(ModelProviderServiceConfigCustomProviderApiKeyHeaderAuth_SdkV2{}),
 	}
 }
 
@@ -28571,8 +30266,9 @@ func (m ModelProviderServiceConfigCustomProviderDirectConfig_SdkV2) ToObjectValu
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"api_key":  m.ApiKey,
-			"base_url": m.BaseUrl,
+			"api_key":     m.ApiKey,
+			"base_url":    m.BaseUrl,
+			"header_auth": m.HeaderAuth,
 		})
 }
 
@@ -28584,6 +30280,9 @@ func (m ModelProviderServiceConfigCustomProviderDirectConfig_SdkV2) Type(ctx con
 				ElemType: ModelProviderServiceConfigProviderSecret_SdkV2{}.Type(ctx),
 			},
 			"base_url": types.StringType,
+			"header_auth": basetypes.ListType{
+				ElemType: ModelProviderServiceConfigCustomProviderApiKeyHeaderAuth_SdkV2{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -28614,16 +30313,40 @@ func (m *ModelProviderServiceConfigCustomProviderDirectConfig_SdkV2) SetApiKey(c
 	m.ApiKey = types.ListValueMust(t, vs)
 }
 
-// Entra ID (Azure AD) service-principal auth: AI Gateway exchanges the
-// `tenant_id` + `client_id` identify the service principal, and the
-// `credential` oneof proves that identity, exchanged for an Entra bearer token
-// on outbound requests via the OAuth2 client-credentials grant. Shared by the
-// Azure OpenAI and Microsoft Foundry provider configs.
+// GetHeaderAuth returns the value of the HeaderAuth field in ModelProviderServiceConfigCustomProviderDirectConfig_SdkV2 as
+// a ModelProviderServiceConfigCustomProviderApiKeyHeaderAuth_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ModelProviderServiceConfigCustomProviderDirectConfig_SdkV2) GetHeaderAuth(ctx context.Context) (ModelProviderServiceConfigCustomProviderApiKeyHeaderAuth_SdkV2, bool) {
+	var e ModelProviderServiceConfigCustomProviderApiKeyHeaderAuth_SdkV2
+	if m.HeaderAuth.IsNull() || m.HeaderAuth.IsUnknown() {
+		return e, false
+	}
+	var v []ModelProviderServiceConfigCustomProviderApiKeyHeaderAuth_SdkV2
+	d := m.HeaderAuth.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetHeaderAuth sets the value of the HeaderAuth field in ModelProviderServiceConfigCustomProviderDirectConfig_SdkV2.
+func (m *ModelProviderServiceConfigCustomProviderDirectConfig_SdkV2) SetHeaderAuth(ctx context.Context, v ModelProviderServiceConfigCustomProviderApiKeyHeaderAuth_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["header_auth"]
+	m.HeaderAuth = types.ListValueMust(t, vs)
+}
+
+// Entra ID (Azure AD) service-principal authentication. The `tenant_id` and
+// `client_id` identify the service principal, and `client_secret` authenticates
+// it. AI Gateway exchanges these credentials for an Entra bearer token for
+// requests to Azure OpenAI or Microsoft Foundry.
 type ModelProviderServiceConfigEntraServicePrincipal_SdkV2 struct {
 	// Entra ID client (application) ID. Required on Create.
 	ClientId types.String `tfsdk:"client_id"`
-	// Entra ID client secret. Supplied as inline plaintext via
-	// `ProviderSecret.plaintext`.
+	// Entra ID client secret. Supply the value in `client_secret.plaintext`.
 	ClientSecret types.List `tfsdk:"client_secret"`
 	// Entra ID (Azure AD) tenant ID. Required on Create.
 	TenantId types.String `tfsdk:"tenant_id"`
@@ -28728,6 +30451,7 @@ func (m *ModelProviderServiceConfigEntraServicePrincipal_SdkV2) SetClientSecret(
 
 // Gemini Enterprise provider configuration.
 type ModelProviderServiceConfigGeminiEnterpriseProviderConfig_SdkV2 struct {
+	// Gemini Enterprise project, region, and authentication configuration.
 	Direct types.List `tfsdk:"direct"`
 }
 
@@ -28822,16 +30546,11 @@ func (m *ModelProviderServiceConfigGeminiEnterpriseProviderConfig_SdkV2) SetDire
 	m.Direct = types.ListValueMust(t, vs)
 }
 
-// Direct form of Gemini Enterprise provider config.
-//
-// Authentication is one of two mutually exclusive modes; exactly one must be
-// supplied on Create: - API key: set `api_key`, leave `service_credential`
-// unset. - UC service credential: set `service_credential`, leave `api_key`
-// unset.
+// Direct Gemini Enterprise provider configuration. An API key is required when
+// creating the service.
 type ModelProviderServiceConfigGeminiEnterpriseProviderDirectConfig_SdkV2 struct {
-	// Google Gemini Enterprise API key. Required on Create when using API-key
-	// auth; mutually exclusive with `service_credential`. Supplied as inline
-	// plaintext via `ProviderSecret.plaintext`.
+	// Google Gemini Enterprise API key. Required when creating the service.
+	// Supply the value in `api_key.plaintext`.
 	ApiKey types.List `tfsdk:"api_key"`
 	// GCP project ID hosting the Gemini Enterprise endpoint. Required on
 	// Create.
@@ -28839,6 +30558,14 @@ type ModelProviderServiceConfigGeminiEnterpriseProviderDirectConfig_SdkV2 struct
 	// GCP region of the Gemini Enterprise endpoint (e.g., `us-central1`).
 	// Required on Create.
 	Region types.String `tfsdk:"region"`
+	// Reference to a Unity Catalog service credential authorizing Gemini
+	// Enterprise requests. On Create, supply `service_credential.name` as
+	// `credentials/{name}`; required when using service-credential
+	// authentication and mutually exclusive with `api_key`. The credential is
+	// referenced by name; its value is not carried here. On read, the resolved
+	// `id` and `is_deleted` are also populated. Supported only on GCP-hosted
+	// workspaces.
+	ServiceCredential types.List `tfsdk:"service_credential"`
 }
 
 func (to *ModelProviderServiceConfigGeminiEnterpriseProviderDirectConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ModelProviderServiceConfigGeminiEnterpriseProviderDirectConfig_SdkV2) {
@@ -28848,6 +30575,15 @@ func (to *ModelProviderServiceConfigGeminiEnterpriseProviderDirectConfig_SdkV2) 
 				// Recursively sync the fields of ApiKey
 				toApiKey.SyncFieldsDuringCreateOrUpdate(ctx, fromApiKey)
 				to.SetApiKey(ctx, toApiKey)
+			}
+		}
+	}
+	if !from.ServiceCredential.IsNull() && !from.ServiceCredential.IsUnknown() {
+		if toServiceCredential, ok := to.GetServiceCredential(ctx); ok {
+			if fromServiceCredential, ok := from.GetServiceCredential(ctx); ok {
+				// Recursively sync the fields of ServiceCredential
+				toServiceCredential.SyncFieldsDuringCreateOrUpdate(ctx, fromServiceCredential)
+				to.SetServiceCredential(ctx, toServiceCredential)
 			}
 		}
 	}
@@ -28862,6 +30598,14 @@ func (to *ModelProviderServiceConfigGeminiEnterpriseProviderDirectConfig_SdkV2) 
 			}
 		}
 	}
+	if !from.ServiceCredential.IsNull() && !from.ServiceCredential.IsUnknown() {
+		if toServiceCredential, ok := to.GetServiceCredential(ctx); ok {
+			if fromServiceCredential, ok := from.GetServiceCredential(ctx); ok {
+				toServiceCredential.SyncFieldsDuringRead(ctx, fromServiceCredential)
+				to.SetServiceCredential(ctx, toServiceCredential)
+			}
+		}
+	}
 }
 
 func (m ModelProviderServiceConfigGeminiEnterpriseProviderDirectConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -28869,6 +30613,8 @@ func (m ModelProviderServiceConfigGeminiEnterpriseProviderDirectConfig_SdkV2) Ap
 	attrs["api_key"] = attrs["api_key"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["project_id"] = attrs["project_id"].SetOptional()
 	attrs["region"] = attrs["region"].SetOptional()
+	attrs["service_credential"] = attrs["service_credential"].SetOptional()
+	attrs["service_credential"] = attrs["service_credential"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
 	return attrs
 }
@@ -28882,7 +30628,8 @@ func (m ModelProviderServiceConfigGeminiEnterpriseProviderDirectConfig_SdkV2) Ap
 // SDK values.
 func (m ModelProviderServiceConfigGeminiEnterpriseProviderDirectConfig_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"api_key": reflect.TypeOf(ModelProviderServiceConfigProviderSecret_SdkV2{}),
+		"api_key":            reflect.TypeOf(ModelProviderServiceConfigProviderSecret_SdkV2{}),
+		"service_credential": reflect.TypeOf(ModelProviderServiceConfigServiceCredential_SdkV2{}),
 	}
 }
 
@@ -28893,9 +30640,10 @@ func (m ModelProviderServiceConfigGeminiEnterpriseProviderDirectConfig_SdkV2) To
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"api_key":    m.ApiKey,
-			"project_id": m.ProjectId,
-			"region":     m.Region,
+			"api_key":            m.ApiKey,
+			"project_id":         m.ProjectId,
+			"region":             m.Region,
+			"service_credential": m.ServiceCredential,
 		})
 }
 
@@ -28908,6 +30656,9 @@ func (m ModelProviderServiceConfigGeminiEnterpriseProviderDirectConfig_SdkV2) Ty
 			},
 			"project_id": types.StringType,
 			"region":     types.StringType,
+			"service_credential": basetypes.ListType{
+				ElemType: ModelProviderServiceConfigServiceCredential_SdkV2{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -28938,8 +30689,35 @@ func (m *ModelProviderServiceConfigGeminiEnterpriseProviderDirectConfig_SdkV2) S
 	m.ApiKey = types.ListValueMust(t, vs)
 }
 
+// GetServiceCredential returns the value of the ServiceCredential field in ModelProviderServiceConfigGeminiEnterpriseProviderDirectConfig_SdkV2 as
+// a ModelProviderServiceConfigServiceCredential_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ModelProviderServiceConfigGeminiEnterpriseProviderDirectConfig_SdkV2) GetServiceCredential(ctx context.Context) (ModelProviderServiceConfigServiceCredential_SdkV2, bool) {
+	var e ModelProviderServiceConfigServiceCredential_SdkV2
+	if m.ServiceCredential.IsNull() || m.ServiceCredential.IsUnknown() {
+		return e, false
+	}
+	var v []ModelProviderServiceConfigServiceCredential_SdkV2
+	d := m.ServiceCredential.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetServiceCredential sets the value of the ServiceCredential field in ModelProviderServiceConfigGeminiEnterpriseProviderDirectConfig_SdkV2.
+func (m *ModelProviderServiceConfigGeminiEnterpriseProviderDirectConfig_SdkV2) SetServiceCredential(ctx context.Context, v ModelProviderServiceConfigServiceCredential_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["service_credential"]
+	m.ServiceCredential = types.ListValueMust(t, vs)
+}
+
 // Microsoft Foundry provider configuration.
 type ModelProviderServiceConfigMicrosoftFoundryProviderConfig_SdkV2 struct {
+	// Microsoft Foundry endpoint and authentication configuration.
 	Direct types.List `tfsdk:"direct"`
 }
 
@@ -29041,30 +30819,29 @@ func (m *ModelProviderServiceConfigMicrosoftFoundryProviderConfig_SdkV2) SetDire
 // `entra_service_principal` and `service_credential` unset. - Entra ID (service
 // principal): set `entra_service_principal`, leave `api_key` and
 // `service_credential` unset. AI Gateway exchanges these for an Entra bearer
-// token on outbound requests via the OAuth2 client-credentials grant. - UC
-// service credential: set `service_credential.name` to the AIP-122
-// resource-name form `credentials/{name}`, leave `api_key` and
-// `entra_service_principal` unset. The credential value lives in UC and is
-// referenced by name, not held on this message. Only supported on Azure-hosted
-// workspaces. Setting more than one mode is rejected.
+// token on outbound requests via the OAuth2 client-credentials grant. - Unity
+// Catalog service credential: set `service_credential.name` to the resource
+// name `credentials/{name}`, leave `api_key` and `entra_service_principal`
+// unset. The credential value lives in Unity Catalog and is referenced by name,
+// not held on this message. Only supported on Azure-hosted workspaces. Setting
+// more than one mode is rejected.
 type ModelProviderServiceConfigMicrosoftFoundryProviderDirectConfig_SdkV2 struct {
-	// Microsoft AI Foundry API key. Mutually exclusive with the Entra and
-	// service-credential modes. Supplied as inline plaintext via
-	// `ProviderSecret.plaintext`.
+	// Microsoft Foundry API key. Supply the value in `api_key.plaintext`.
+	// Mutually exclusive with Entra ID and Unity Catalog service credential
+	// authentication.
 	ApiKey types.List `tfsdk:"api_key"`
-	// Microsoft AI Foundry endpoint URL. Required on Create.
+	// Microsoft Foundry endpoint URL. Required on Create.
 	BaseUrl types.String `tfsdk:"base_url"`
-	// Entra ID (service principal) auth. Mutually exclusive with `api_key` and
+	// Entra ID service-principal authentication. Set `tenant_id`, `client_id`,
+	// and `client_secret.plaintext`. Mutually exclusive with `api_key` and
 	// `service_credential`.
 	EntraServicePrincipal types.List `tfsdk:"entra_service_principal"`
-	// Reference to a UC service credential authorizing Microsoft Foundry
-	// requests. On Create the caller supplies `service_credential.name` in the
-	// AIP-122 resource-name form `credentials/{name}`. Required on Create when
-	// using UC-service-credential auth; mutually exclusive with `api_key` and
+	// Reference to a Unity Catalog service credential authorizing Microsoft
+	// Foundry requests. On Create, supply `service_credential.name` in the form
+	// `credentials/{name}`. Required on Create when using service-credential
+	// authentication; mutually exclusive with `api_key` and
 	// `entra_service_principal`. The credential is referenced by name; its
-	// value is not carried here. On read the resolved `id` and `is_deleted` are
-	// also populated. Only supported on Azure-hosted workspaces; Create
-	// requests from other clouds are rejected with INVALID_PARAMETER_VALUE.
+	// value is not carried here. Only supported on Azure-hosted workspaces.
 	ServiceCredential types.List `tfsdk:"service_credential"`
 }
 
@@ -29262,18 +31039,26 @@ func (m *ModelProviderServiceConfigMicrosoftFoundryProviderDirectConfig_SdkV2) S
 	m.ServiceCredential = types.ListValueMust(t, vs)
 }
 
-// Model target configuration for an external model destination.
+// Model target configuration shared by model provider service targets and
+// external model destinations on model services.
 type ModelProviderServiceConfigModelTargetConfig_SdkV2 struct {
-	// Provider-side model identifier (e.g. "gpt-5", "claude-opus-4-7"). This is
-	// a string on the LLM provider's side, not a UC entity. The UC governance
-	// hook for external destinations is the ModelProviderService referenced by
-	// `ExternalModelConfig.model_provider_service`, not the model itself.
+	// Relative path appended to a custom provider's `base_url` for this model,
+	// such as `serve/openai/chat`. Nonempty values are only supported for
+	// custom model provider service targets; other provider types reject them.
+	// Model service destinations do not support this field. Do not include URI
+	// templates, queries, or fragments. When empty, `base_url` is used
+	// unchanged.
+	EndpointRoute types.String `tfsdk:"endpoint_route"`
+	// Provider-side model identifier, such as `gpt-5` or `claude-opus-4-7`.
+	// This identifies a model at the upstream provider; it is not a Unity
+	// Catalog model resource.
 	Model types.String `tfsdk:"model"`
-	// Provider-native API types the model supports (e.g.
-	// "openai/v1/chat/completions"). Used by the platform for request/response
-	// translation from the unified API type. At most 64 entries of at most 256
-	// characters each; the list is persisted into the destination binding's
-	// bounded storage envelope.
+	// Provider-native API types supported by this model, such as
+	// `openai/v1/chat/completions`. A model provider service target requires at
+	// least one value. A model service destination may omit the list to use the
+	// matching provider service target's types when available. AI Gateway uses
+	// the selected types for translation. At most 64 entries of 256 characters
+	// each are allowed.
 	NativeApiTypes types.List `tfsdk:"native_api_types"`
 }
 
@@ -29296,6 +31081,7 @@ func (to *ModelProviderServiceConfigModelTargetConfig_SdkV2) SyncFieldsDuringRea
 }
 
 func (m ModelProviderServiceConfigModelTargetConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["endpoint_route"] = attrs["endpoint_route"].SetOptional()
 	attrs["model"] = attrs["model"].SetRequired()
 	attrs["native_api_types"] = attrs["native_api_types"].SetOptional()
 
@@ -29322,6 +31108,7 @@ func (m ModelProviderServiceConfigModelTargetConfig_SdkV2) ToObjectValue(ctx con
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"endpoint_route":   m.EndpointRoute,
 			"model":            m.Model,
 			"native_api_types": m.NativeApiTypes,
 		})
@@ -29331,7 +31118,8 @@ func (m ModelProviderServiceConfigModelTargetConfig_SdkV2) ToObjectValue(ctx con
 func (m ModelProviderServiceConfigModelTargetConfig_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"model": types.StringType,
+			"endpoint_route": types.StringType,
+			"model":          types.StringType,
 			"native_api_types": basetypes.ListType{
 				ElemType: types.StringType,
 			},
@@ -29367,6 +31155,7 @@ func (m *ModelProviderServiceConfigModelTargetConfig_SdkV2) SetNativeApiTypes(ct
 
 // OpenAI provider configuration.
 type ModelProviderServiceConfigOpenAiProviderConfig_SdkV2 struct {
+	// OpenAI configuration with an API key supplied in the request.
 	Direct types.List `tfsdk:"direct"`
 }
 
@@ -29463,8 +31252,8 @@ func (m *ModelProviderServiceConfigOpenAiProviderConfig_SdkV2) SetDirect(ctx con
 
 // Direct (inline-credentials) form of the OpenAI provider config.
 type ModelProviderServiceConfigOpenAiProviderDirectConfig_SdkV2 struct {
-	// OpenAI API key. Required on Create. Supplied as inline plaintext via
-	// `ProviderSecret.plaintext`.
+	// OpenAI API key. Required when creating the service. Supply the value in
+	// `api_key.plaintext`.
 	ApiKey types.List `tfsdk:"api_key"`
 	// Optional custom base URL. Defaults to `https://api.openai.com/v1`. Use
 	// for OpenAI-API-compatible third-party endpoints or in-network proxies.
@@ -29571,21 +31360,90 @@ func (m *ModelProviderServiceConfigOpenAiProviderDirectConfig_SdkV2) SetApiKey(c
 	m.ApiKey = types.ListValueMust(t, vs)
 }
 
+// Pricing adjustments applied to this provider service's external-model spend
+// estimates.
+type ModelProviderServiceConfigProviderPricingConfig_SdkV2 struct {
+	// Provider-wide adjustment to external-model spend estimates in basis
+	// points: 2000 = 20% off; -2000 = a 20% markup. Negative values have no
+	// lower bound beyond the int32 range. Values cannot exceed 10000 (100%
+	// off). An omitted value or zero leaves the estimate unchanged.
+	DefaultDiscountBasisPoints types.Int64 `tfsdk:"default_discount_basis_points"`
+}
+
+func (to *ModelProviderServiceConfigProviderPricingConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ModelProviderServiceConfigProviderPricingConfig_SdkV2) {
+}
+
+func (to *ModelProviderServiceConfigProviderPricingConfig_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ModelProviderServiceConfigProviderPricingConfig_SdkV2) {
+}
+
+func (m ModelProviderServiceConfigProviderPricingConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["default_discount_basis_points"] = attrs["default_discount_basis_points"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ModelProviderServiceConfigProviderPricingConfig.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ModelProviderServiceConfigProviderPricingConfig_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ModelProviderServiceConfigProviderPricingConfig_SdkV2
+// only implements ToObjectValue() and Type().
+func (m ModelProviderServiceConfigProviderPricingConfig_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"default_discount_basis_points": m.DefaultDiscountBasisPoints,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ModelProviderServiceConfigProviderPricingConfig_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"default_discount_basis_points": types.Int64Type,
+		},
+	}
+}
+
 // A secret value supplied as part of an inline provider config. The caller
 // supplies the value as inline `plaintext` on writes; the platform stores it
 // encrypted. The `plaintext` field is `INPUT_ONLY` and never round-trips on
 // reads.
 type ModelProviderServiceConfigProviderSecret_SdkV2 struct {
 	// Inline plaintext credential. INPUT_ONLY: the value never round-trips on
-	// reads. Get and List responses omit `plaintext`; the field's presence in
-	// the read shape only indicates that a secret is configured.
+	// reads. Get and List responses omit `plaintext`; the enclosing secret
+	// object remains present to indicate that a secret is configured.
 	Plaintext types.String `tfsdk:"plaintext"`
+	// Reference to a customer-owned UC Secret that carries this secret value.
+	// The value is read at invoke time under the model provider service owner's
+	// access and is never copied onto the model provider service, so rotating
+	// the UC Secret takes effect with no change to the model provider service.
+	// On Create, supply `secret_reference.name` as
+	// `secrets/{catalog}.{schema}.{secret}`.
+	SecretReference types.List `tfsdk:"secret_reference"`
 }
 
 func (to *ModelProviderServiceConfigProviderSecret_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ModelProviderServiceConfigProviderSecret_SdkV2) {
 	if !from.Plaintext.IsUnknown() && !from.Plaintext.IsNull() {
 		// Plaintext is an input only field and not returned by the service, so we keep the value from the prior state.
 		to.Plaintext = from.Plaintext
+	}
+	if !from.SecretReference.IsNull() && !from.SecretReference.IsUnknown() {
+		if toSecretReference, ok := to.GetSecretReference(ctx); ok {
+			if fromSecretReference, ok := from.GetSecretReference(ctx); ok {
+				// Recursively sync the fields of SecretReference
+				toSecretReference.SyncFieldsDuringCreateOrUpdate(ctx, fromSecretReference)
+				to.SetSecretReference(ctx, toSecretReference)
+			}
+		}
 	}
 }
 
@@ -29594,12 +31452,22 @@ func (to *ModelProviderServiceConfigProviderSecret_SdkV2) SyncFieldsDuringRead(c
 		// Plaintext is an input only field and not returned by the service, so we keep the value from the prior state.
 		to.Plaintext = from.Plaintext
 	}
+	if !from.SecretReference.IsNull() && !from.SecretReference.IsUnknown() {
+		if toSecretReference, ok := to.GetSecretReference(ctx); ok {
+			if fromSecretReference, ok := from.GetSecretReference(ctx); ok {
+				toSecretReference.SyncFieldsDuringRead(ctx, fromSecretReference)
+				to.SetSecretReference(ctx, toSecretReference)
+			}
+		}
+	}
 }
 
 func (m ModelProviderServiceConfigProviderSecret_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["plaintext"] = attrs["plaintext"].SetOptional()
 	attrs["plaintext"] = attrs["plaintext"].SetComputed()
 	attrs["plaintext"] = attrs["plaintext"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
+	attrs["secret_reference"] = attrs["secret_reference"].SetOptional()
+	attrs["secret_reference"] = attrs["secret_reference"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
 	return attrs
 }
@@ -29612,7 +31480,9 @@ func (m ModelProviderServiceConfigProviderSecret_SdkV2) ApplySchemaCustomization
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m ModelProviderServiceConfigProviderSecret_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+	return map[string]reflect.Type{
+		"secret_reference": reflect.TypeOf(ModelProviderServiceConfigSecretReference_SdkV2{}),
+	}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -29622,7 +31492,8 @@ func (m ModelProviderServiceConfigProviderSecret_SdkV2) ToObjectValue(ctx contex
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"plaintext": m.Plaintext,
+			"plaintext":        m.Plaintext,
+			"secret_reference": m.SecretReference,
 		})
 }
 
@@ -29631,18 +31502,98 @@ func (m ModelProviderServiceConfigProviderSecret_SdkV2) Type(ctx context.Context
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"plaintext": types.StringType,
+			"secret_reference": basetypes.ListType{
+				ElemType: ModelProviderServiceConfigSecretReference_SdkV2{}.Type(ctx),
+			},
 		},
 	}
 }
 
-// ---- Provider configuration (nested; see the `provider` oneof below) ---- The
-// customer-owned UC service credential a ModelProviderService uses to
-// authenticate to its provider, referenced by name.
+// GetSecretReference returns the value of the SecretReference field in ModelProviderServiceConfigProviderSecret_SdkV2 as
+// a ModelProviderServiceConfigSecretReference_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ModelProviderServiceConfigProviderSecret_SdkV2) GetSecretReference(ctx context.Context) (ModelProviderServiceConfigSecretReference_SdkV2, bool) {
+	var e ModelProviderServiceConfigSecretReference_SdkV2
+	if m.SecretReference.IsNull() || m.SecretReference.IsUnknown() {
+		return e, false
+	}
+	var v []ModelProviderServiceConfigSecretReference_SdkV2
+	d := m.SecretReference.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSecretReference sets the value of the SecretReference field in ModelProviderServiceConfigProviderSecret_SdkV2.
+func (m *ModelProviderServiceConfigProviderSecret_SdkV2) SetSecretReference(ctx context.Context, v ModelProviderServiceConfigSecretReference_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["secret_reference"]
+	m.SecretReference = types.ListValueMust(t, vs)
+}
+
+// Reference to a customer-owned UC Secret backing a secret-bearing provider
+// field, in the `ProviderSecret.secret_reference` arm.
+type ModelProviderServiceConfigSecretReference_SdkV2 struct {
+	// Resource name of the bound UC Secret, in the form
+	// `secrets/{catalog}.{schema}.{secret}`. On Create the caller supplies the
+	// name here. On read it reflects the secret's current name at read time.
+	Name types.String `tfsdk:"name"`
+}
+
+func (to *ModelProviderServiceConfigSecretReference_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ModelProviderServiceConfigSecretReference_SdkV2) {
+}
+
+func (to *ModelProviderServiceConfigSecretReference_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ModelProviderServiceConfigSecretReference_SdkV2) {
+}
+
+func (m ModelProviderServiceConfigSecretReference_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ModelProviderServiceConfigSecretReference.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ModelProviderServiceConfigSecretReference_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ModelProviderServiceConfigSecretReference_SdkV2
+// only implements ToObjectValue() and Type().
+func (m ModelProviderServiceConfigSecretReference_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name": m.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ModelProviderServiceConfigSecretReference_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name": types.StringType,
+		},
+	}
+}
+
+// The customer-owned Unity Catalog service credential a model provider service
+// uses to authenticate to its provider, referenced by name.
 type ModelProviderServiceConfigServiceCredential_SdkV2 struct {
-	// Resource name of the bound UC service credential, in the AIP-122 form
-	// `credentials/{name}` (a metastore-level single-part credential name). On
-	// create the caller supplies the name here. On read it reflects the
-	// credential's current name at read time.
+	// Resource name of the bound Unity Catalog service credential, in the form
+	// `credentials/{name}`. Supply this field when creating the service or
+	// rebinding its credential. On read, it reflects the credential's current
+	// name.
 	Name types.String `tfsdk:"name"`
 }
 
@@ -29690,49 +31641,43 @@ func (m ModelProviderServiceConfigServiceCredential_SdkV2) Type(ctx context.Cont
 }
 
 // A governed AI Gateway endpoint in Unity Catalog that routes inference
-// requests to one or more model destinations (for example a foundation model or
-// an external LLM reached through a ModelProviderService). Applies centralized
-// access control, rate limits, guardrails, and auditing to the traffic it
-// serves.
+// requests to one or more destinations, such as a Databricks foundation model
+// or an external model reached through a model provider service. Applies
+// centralized access control, rate limits, and auditing to its traffic.
 type ModelService_SdkV2 struct {
 	// User-provided description.
 	Comment types.String `tfsdk:"comment"`
-	// Operational configuration: destinations, routing, rate limits, inference
-	// table. Required on CreateModelService; on UpdateModelService it is
-	// required only when `config` (or a `config.*` subpath) appears in
-	// `update_mask`.
+	// Destinations, routing, rate limits, and payload logging configuration.
+	// Required on Create. On Update, provide this field when `update_mask`
+	// contains `config` or one of its subpaths.
 	Config types.List `tfsdk:"config"`
-	// When the model service was created.
+	// Time the model service was created.
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
-	// Creator identity.
+	// Username of the user who created the model service.
 	CreatedBy types.String `tfsdk:"created_by"`
-	// The resolved owner of the ModelService. Falls back to the caller's
-	// identity when `owner` is not explicitly set on creation.
+	// Username or group name of the model service owner.
 	EffectiveOwner types.String `tfsdk:"effective_owner"`
-	// Optimistic concurrency control token. Server-generated from the entity's
-	// state and returned on every read. To use it as an if-match precondition
-	// on a mutation, echo the last-read value back via the dedicated `etag`
-	// field on the Update / Delete request; the server rejects the mutation if
-	// the stored etag differs.
+	// Optimistic concurrency token returned on every read. To make an Update or
+	// Delete conditional, pass the last-read value in that request's `etag`
+	// field. In REST responses, this value is a base64 string; URL-encode it
+	// when setting the `etag` query parameter.
 	Etag types.String `tfsdk:"etag"`
-	// Metastore hosting the model service.
+	// Unique identifier of the metastore that contains the model service.
 	MetastoreId types.String `tfsdk:"metastore_id"`
 	// Resource name of the model service. Format:
 	// `model-services/{catalog}.{schema}.{model_service}`. Each `{...}`
-	// component is capped at 255 characters individually. Server-derived on
-	// Create from `parent` + `model_service_id`; required and immutable on
-	// Update/Get/Delete.
+	// component is capped at 255 characters individually. The server derives
+	// the name on Create from `parent` and `model_service_id`; it is required
+	// and immutable on Update, Get, and Delete.
 	Name types.String `tfsdk:"name"`
-	// The owner of the model service. Write-only; read owner via
-	// effective_owner.
-	Owner types.String `tfsdk:"owner"`
-	// Unified API types this endpoint supports (e.g. "chat", "embeddings",
-	// "completions"). Derived from the destinations' backing models / providers
-	// at read time.
+	// API types supported across this service's destinations, such as
+	// `openai/v1/chat/completions`, `openai/v1/embeddings`, and
+	// `mlflow/v1/chat/completions`. Derived from the backing models and
+	// providers at read time.
 	SupportedApiTypes types.Set `tfsdk:"supported_api_types"`
-	// When the model service was last modified.
+	// Time the model service was last modified.
 	UpdateTime timetypes.RFC3339 `tfsdk:"update_time"`
-	// Identity of the last updater.
+	// Username of the user who last updated the model service.
 	UpdatedBy types.String `tfsdk:"updated_by"`
 }
 
@@ -29745,10 +31690,6 @@ func (to *ModelService_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context
 				to.SetConfig(ctx, toConfig)
 			}
 		}
-	}
-	if !from.Owner.IsUnknown() && !from.Owner.IsNull() {
-		// Owner is an input only field and not returned by the service, so we keep the value from the prior state.
-		to.Owner = from.Owner
 	}
 	if !from.SupportedApiTypes.IsNull() && !from.SupportedApiTypes.IsUnknown() && to.SupportedApiTypes.IsNull() && len(from.SupportedApiTypes.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
@@ -29766,10 +31707,6 @@ func (to *ModelService_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Mod
 				to.SetConfig(ctx, toConfig)
 			}
 		}
-	}
-	if !from.Owner.IsUnknown() && !from.Owner.IsNull() {
-		// Owner is an input only field and not returned by the service, so we keep the value from the prior state.
-		to.Owner = from.Owner
 	}
 	if !from.SupportedApiTypes.IsNull() && !from.SupportedApiTypes.IsUnknown() && to.SupportedApiTypes.IsNull() && len(from.SupportedApiTypes.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
@@ -29790,9 +31727,6 @@ func (m ModelService_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.
 	attrs["metastore_id"] = attrs["metastore_id"].SetComputed()
 	attrs["name"] = attrs["name"].SetOptional()
 	attrs["name"] = attrs["name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
-	attrs["owner"] = attrs["owner"].SetOptional()
-	attrs["owner"] = attrs["owner"].SetComputed()
-	attrs["owner"] = attrs["owner"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["supported_api_types"] = attrs["supported_api_types"].SetComputed()
 	attrs["update_time"] = attrs["update_time"].SetComputed()
 	attrs["updated_by"] = attrs["updated_by"].SetComputed()
@@ -29829,7 +31763,6 @@ func (m ModelService_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectV
 			"etag":                m.Etag,
 			"metastore_id":        m.MetastoreId,
 			"name":                m.Name,
-			"owner":               m.Owner,
 			"supported_api_types": m.SupportedApiTypes,
 			"update_time":         m.UpdateTime,
 			"updated_by":          m.UpdatedBy,
@@ -29850,7 +31783,6 @@ func (m ModelService_SdkV2) Type(ctx context.Context) attr.Type {
 			"etag":            types.StringType,
 			"metastore_id":    types.StringType,
 			"name":            types.StringType,
-			"owner":           types.StringType,
 			"supported_api_types": basetypes.SetType{
 				ElemType: types.StringType,
 			},
@@ -29914,11 +31846,13 @@ func (m *ModelService_SdkV2) SetSupportedApiTypes(ctx context.Context, v []types
 
 // Operational configuration wrapped around the ModelService resource.
 type ModelServiceConfig_SdkV2 struct {
-	// Inference table config for payload logging.
+	// Configuration for logging request and response payloads to a Unity
+	// Catalog inference table. Omit this field to leave payload logging off.
 	InferenceTable types.List `tfsdk:"inference_table"`
 	// Rate limits applied to requests routed through this model service.
 	RateLimits types.List `tfsdk:"rate_limits"`
-	// Routing configuration: destinations, routing strategy, and fallback.
+	// Routing configuration: the primary destinations that receive traffic and
+	// the fallback destinations tried when a primary destination fails.
 	Routing types.List `tfsdk:"routing"`
 }
 
@@ -30136,25 +32070,30 @@ func (m *ModelServiceConfig_SdkV2) SetRouting(ctx context.Context, v ModelServic
 // per-type configs inside `type_config` must be set, and it must match
 // `destination_type`.
 type ModelServiceConfigDestinationConfig_SdkV2 struct {
-	// Backing-model category. Determines which oneof variant is populated.
+	// Backing-model category. Provide the matching type-specific configuration
+	// and leave the other type-specific configurations unset.
 	DestinationType types.String `tfsdk:"destination_type"`
-
+	// Configuration for an external model reached through a model provider
+	// service.
 	ExternalModelConfig types.List `tfsdk:"external_model_config"`
-	// True when the destination's backing UC entity (MODEL for foundation-model
-	// destinations, MODEL_PROVIDER_SERVICE for external destinations) has been
-	// deleted but the destination row still references it. The dangling
-	// destination is surfaced (not silently dropped) so callers can see the
-	// broken routing. Inference traffic through this destination fails closed
-	// (BAD_REQUEST / FAILED_PRECONDITION).
+	// Whether the destination's backing model or model provider service has
+	// been deleted. The destination remains visible so you can identify the
+	// broken dependency. Requests cannot use this destination until the backing
+	// resource is restored or the destination is replaced.
 	IsDeleted types.Bool `tfsdk:"is_deleted"`
-	// User-facing label for this destination, used in routing references.
+	// Label that identifies this destination. Names are compared
+	// case-insensitively and must be unique within the primary destinations and
+	// within the fallback destinations.
 	Name types.String `tfsdk:"name"`
-
+	// Configuration for a pay-per-token Databricks foundation model.
 	PayPerTokenConfig types.List `tfsdk:"pay_per_token_config"`
-
+	// Configuration for a provisioned-throughput Databricks foundation model.
 	ProvisionedThroughputConfig types.List `tfsdk:"provisioned_throughput_config"`
-	// Share of traffic sent to this destination, 0-100. Optional on fallback
-	// destinations; see FallbackConfig.
+	// Percentage of primary traffic sent to this destination, from 0 to 100.
+	// Required when there is more than one primary destination, in which case
+	// the primary percentages must sum to 100; a single primary destination
+	// receives all traffic. Fallback destinations are ordered and do not use
+	// this field.
 	TrafficPercentage types.Int64 `tfsdk:"traffic_percentage"`
 }
 
@@ -30367,9 +32306,7 @@ func (m *ModelServiceConfigDestinationConfig_SdkV2) SetProvisionedThroughputConf
 // platform resolves the provider at invocation time.
 type ModelServiceConfigExternalModelConfig_SdkV2 struct {
 	// Resource name of the governed ModelProviderService that owns provider
-	// auth and provider-specific configuration. The referenced
-	// ModelProviderService also carries the provider type, so this message does
-	// not surface it directly. Format:
+	// auth and provider-specific configuration. Format:
 	// `model-provider-services/{catalog}.{schema}.{model_provider_service}`.
 	// Each `{...}` component is capped at 255 characters individually.
 	ModelProviderService types.String `tfsdk:"model_provider_service"`
@@ -30473,12 +32410,10 @@ func (m *ModelServiceConfigExternalModelConfig_SdkV2) SetTarget(ctx context.Cont
 	m.Target = types.ListValueMust(t, vs)
 }
 
-// Fallback routing, applied after the primary destination returns a retryable
-// error. Traversal is in list order; the attempt count is the length of the
-// list.
+// Fallback routing applied after a primary destination fails. Fallback
+// destinations are tried in the listed order.
 type ModelServiceConfigFallbackConfig_SdkV2 struct {
-	// Ordered list of fallback destinations. Traversal is in list order; the
-	// attempt count is the length of the list. At most 5 are allowed.
+	// Fallback destinations, tried in the listed order. At most 5 are allowed.
 	Destinations types.List `tfsdk:"destinations"`
 }
 
@@ -30596,8 +32531,9 @@ func (m *ModelServiceConfigFallbackConfig_SdkV2) SetDestinations(ctx context.Con
 // the foundation model by its UC resource name; the platform resolves it to a
 // Model Serving endpoint at request time.
 type ModelServiceConfigPayPerTokenConfig_SdkV2 struct {
-	// Resource name of the UC model. Format:
-	// `models/{catalog}.{schema}.{model}`.
+	// Resource name of the Unity Catalog foundation model. Pay-per-token
+	// foundation models live in the `system.ai` schema, so the name has the
+	// form `models/system.ai.{model}`.
 	Model types.String `tfsdk:"model"`
 }
 
@@ -30649,16 +32585,16 @@ func (m ModelServiceConfigPayPerTokenConfig_SdkV2) Type(ctx context.Context) att
 // sizing (provisioned throughput, burst scaling, model version) is owned by the
 // Model Serving endpoint itself, not by this message.
 type ModelServiceConfigProvisionedThroughputConfig_SdkV2 struct {
-	// UC model FQN of the model served by the backing endpoint (e.g.,
-	// `system.ai.databricks-claude-opus-4-6`). Resolved from Model Serving at
-	// Create/Update time.
+	// Resource name of the Unity Catalog model served by the backing endpoint,
+	// in the form `models/{catalog}.{schema}.{model}`. Resolved from Model
+	// Serving when the model service is created or updated.
 	Model types.String `tfsdk:"model"`
 	// Name of the backing Model Serving endpoint serving the provisioned-
-	// throughput foundation model, as the AIP-122 typed resource name
-	// `serving-endpoints/{name}`. The same UC model can be served on multiple
-	// Model Serving endpoints (different throughput / region / config); the
-	// caller picks which one this destination routes to. The endpoint must
-	// exist at create time.
+	// throughput foundation model, in the form `serving-endpoints/{name}`. The
+	// same Unity Catalog model can be served on multiple Model Serving
+	// endpoints with different throughput, regions, or configurations. The
+	// caller selects the endpoint to which this destination routes. The
+	// endpoint must exist at create time.
 	ModelServingEndpoint types.String `tfsdk:"model_serving_endpoint"`
 }
 
@@ -30708,25 +32644,18 @@ func (m ModelServiceConfigProvisionedThroughputConfig_SdkV2) Type(ctx context.Co
 	}
 }
 
-// Routing configuration for a model service, nesting destinations, routing
-// strategy, and fallback under a single sub-message.
+// Routing configuration for a model service, nesting destinations and fallback
+// under a single sub-message.
 type ModelServiceConfigRoutingConfig_SdkV2 struct {
 	// Primary routing destinations. At most 10 are allowed. At least one is
-	// required on CreateModelService; on UpdateModelService it is required only
-	// when `config.routing` (or a `config.routing.*` subpath) appears in
-	// `update_mask`.
+	// required on Create. On Update, provide this list when replacing the full
+	// `config` or updating `config.routing.destinations`; other granular
+	// routing updates do not require resending destinations. The intermediate
+	// `config.routing` mask path is not supported.
 	Destinations types.List `tfsdk:"destinations"`
-	// Fallback routing config, applied after primary destinations fail.
+	// Fallback routing applied after a primary destination fails. Fallback
+	// destinations are tried in the listed order.
 	Fallback types.List `tfsdk:"fallback"`
-	// Timeout for the first token of a streaming response. If a destination
-	// does not return its first token within this duration, AI Gateway aborts
-	// the attempt and fails over to the next destination. Applies to streaming
-	// requests only. Leave unset for no first-token timeout.
-	FirstTokenTimeout timetypes.GoDuration `tfsdk:"first_token_timeout"`
-	// Marker message selecting request-based traffic splitting. Traffic is
-	// distributed according to each destination's traffic_percentage value; no
-	// configuration lives on this message itself.
-	TrafficSplitting types.List `tfsdk:"traffic_splitting"`
 }
 
 func (to *ModelServiceConfigRoutingConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ModelServiceConfigRoutingConfig_SdkV2) {
@@ -30755,15 +32684,6 @@ func (to *ModelServiceConfigRoutingConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(
 				// Recursively sync the fields of Fallback
 				toFallback.SyncFieldsDuringCreateOrUpdate(ctx, fromFallback)
 				to.SetFallback(ctx, toFallback)
-			}
-		}
-	}
-	if !from.TrafficSplitting.IsNull() && !from.TrafficSplitting.IsUnknown() {
-		if toTrafficSplitting, ok := to.GetTrafficSplitting(ctx); ok {
-			if fromTrafficSplitting, ok := from.GetTrafficSplitting(ctx); ok {
-				// Recursively sync the fields of TrafficSplitting
-				toTrafficSplitting.SyncFieldsDuringCreateOrUpdate(ctx, fromTrafficSplitting)
-				to.SetTrafficSplitting(ctx, toTrafficSplitting)
 			}
 		}
 	}
@@ -30796,23 +32716,12 @@ func (to *ModelServiceConfigRoutingConfig_SdkV2) SyncFieldsDuringRead(ctx contex
 			}
 		}
 	}
-	if !from.TrafficSplitting.IsNull() && !from.TrafficSplitting.IsUnknown() {
-		if toTrafficSplitting, ok := to.GetTrafficSplitting(ctx); ok {
-			if fromTrafficSplitting, ok := from.GetTrafficSplitting(ctx); ok {
-				toTrafficSplitting.SyncFieldsDuringRead(ctx, fromTrafficSplitting)
-				to.SetTrafficSplitting(ctx, toTrafficSplitting)
-			}
-		}
-	}
 }
 
 func (m ModelServiceConfigRoutingConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["destinations"] = attrs["destinations"].SetOptional()
 	attrs["fallback"] = attrs["fallback"].SetOptional()
 	attrs["fallback"] = attrs["fallback"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["first_token_timeout"] = attrs["first_token_timeout"].SetOptional()
-	attrs["traffic_splitting"] = attrs["traffic_splitting"].SetOptional()
-	attrs["traffic_splitting"] = attrs["traffic_splitting"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
 	return attrs
 }
@@ -30826,9 +32735,8 @@ func (m ModelServiceConfigRoutingConfig_SdkV2) ApplySchemaCustomizations(attrs m
 // SDK values.
 func (m ModelServiceConfigRoutingConfig_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"destinations":      reflect.TypeOf(ModelServiceConfigDestinationConfig_SdkV2{}),
-		"fallback":          reflect.TypeOf(ModelServiceConfigFallbackConfig_SdkV2{}),
-		"traffic_splitting": reflect.TypeOf(ModelServiceConfigRoutingConfigTrafficSplitting_SdkV2{}),
+		"destinations": reflect.TypeOf(ModelServiceConfigDestinationConfig_SdkV2{}),
+		"fallback":     reflect.TypeOf(ModelServiceConfigFallbackConfig_SdkV2{}),
 	}
 }
 
@@ -30839,10 +32747,8 @@ func (m ModelServiceConfigRoutingConfig_SdkV2) ToObjectValue(ctx context.Context
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"destinations":        m.Destinations,
-			"fallback":            m.Fallback,
-			"first_token_timeout": m.FirstTokenTimeout,
-			"traffic_splitting":   m.TrafficSplitting,
+			"destinations": m.Destinations,
+			"fallback":     m.Fallback,
 		})
 }
 
@@ -30855,10 +32761,6 @@ func (m ModelServiceConfigRoutingConfig_SdkV2) Type(ctx context.Context) attr.Ty
 			},
 			"fallback": basetypes.ListType{
 				ElemType: ModelServiceConfigFallbackConfig_SdkV2{}.Type(ctx),
-			},
-			"first_token_timeout": timetypes.GoDuration{}.Type(ctx),
-			"traffic_splitting": basetypes.ListType{
-				ElemType: ModelServiceConfigRoutingConfigTrafficSplitting_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -30914,76 +32816,6 @@ func (m *ModelServiceConfigRoutingConfig_SdkV2) SetFallback(ctx context.Context,
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["fallback"]
 	m.Fallback = types.ListValueMust(t, vs)
-}
-
-// GetTrafficSplitting returns the value of the TrafficSplitting field in ModelServiceConfigRoutingConfig_SdkV2 as
-// a ModelServiceConfigRoutingConfigTrafficSplitting_SdkV2 value.
-// If the field is unknown or null, the boolean return value is false.
-func (m *ModelServiceConfigRoutingConfig_SdkV2) GetTrafficSplitting(ctx context.Context) (ModelServiceConfigRoutingConfigTrafficSplitting_SdkV2, bool) {
-	var e ModelServiceConfigRoutingConfigTrafficSplitting_SdkV2
-	if m.TrafficSplitting.IsNull() || m.TrafficSplitting.IsUnknown() {
-		return e, false
-	}
-	var v []ModelServiceConfigRoutingConfigTrafficSplitting_SdkV2
-	d := m.TrafficSplitting.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
-}
-
-// SetTrafficSplitting sets the value of the TrafficSplitting field in ModelServiceConfigRoutingConfig_SdkV2.
-func (m *ModelServiceConfigRoutingConfig_SdkV2) SetTrafficSplitting(ctx context.Context, v ModelServiceConfigRoutingConfigTrafficSplitting_SdkV2) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["traffic_splitting"]
-	m.TrafficSplitting = types.ListValueMust(t, vs)
-}
-
-// Marker message selecting request-based traffic splitting across primary
-// destinations. Split weights are read from each
-// DestinationConfig.traffic_percentage.
-type ModelServiceConfigRoutingConfigTrafficSplitting_SdkV2 struct {
-}
-
-func (to *ModelServiceConfigRoutingConfigTrafficSplitting_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ModelServiceConfigRoutingConfigTrafficSplitting_SdkV2) {
-}
-
-func (to *ModelServiceConfigRoutingConfigTrafficSplitting_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ModelServiceConfigRoutingConfigTrafficSplitting_SdkV2) {
-}
-
-func (m ModelServiceConfigRoutingConfigTrafficSplitting_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-
-	return attrs
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in ModelServiceConfigRoutingConfigTrafficSplitting.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (m ModelServiceConfigRoutingConfigTrafficSplitting_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, ModelServiceConfigRoutingConfigTrafficSplitting_SdkV2
-// only implements ToObjectValue() and Type().
-func (m ModelServiceConfigRoutingConfigTrafficSplitting_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (m ModelServiceConfigRoutingConfigTrafficSplitting_SdkV2) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{},
-	}
 }
 
 type ModelVersionInfo_SdkV2 struct {
@@ -33972,12 +35804,20 @@ type PolicyInfo_SdkV2 struct {
 	CreatedAt types.Int64 `tfsdk:"created_at"`
 	// Username of the user who created the policy. Output only.
 	CreatedBy types.String `tfsdk:"created_by"`
+	// Options for deny policies. Valid only if `policy_type` is
+	// `POLICY_TYPE_DENY`. Required on create and optional on update. When
+	// specified on update, the new options will replace the existing options as
+	// a whole.
+	Deny types.List `tfsdk:"deny"`
 	// Optional list of user or group names that should be excluded from the
 	// policy.
 	ExceptPrincipals types.List `tfsdk:"except_principals"`
 	// Type of securables that the policy should take effect on. Required on
 	// create and optional on update.
 	ForSecurableType types.String `tfsdk:"for_securable_type"`
+	// Governed tag keys and values referenced by this policy's conditions and
+	// function arguments. Output only.
+	GovernedTags types.List `tfsdk:"governed_tags"`
 	// Options for grant policies. Valid only if `policy_type` is
 	// `POLICY_TYPE_GRANT`. Required on create and optional on update. When
 	// specified on update, the new options will replace the existing options as
@@ -34028,11 +35868,39 @@ func (to *PolicyInfo_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, 
 			}
 		}
 	}
+	if !from.Deny.IsNull() && !from.Deny.IsUnknown() {
+		if toDeny, ok := to.GetDeny(ctx); ok {
+			if fromDeny, ok := from.GetDeny(ctx); ok {
+				// Recursively sync the fields of Deny
+				toDeny.SyncFieldsDuringCreateOrUpdate(ctx, fromDeny)
+				to.SetDeny(ctx, toDeny)
+			}
+		}
+	}
 	if !from.ExceptPrincipals.IsNull() && !from.ExceptPrincipals.IsUnknown() && to.ExceptPrincipals.IsNull() && len(from.ExceptPrincipals.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for ExceptPrincipals, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.ExceptPrincipals = from.ExceptPrincipals
+	}
+	if !from.GovernedTags.IsNull() && !from.GovernedTags.IsUnknown() && to.GovernedTags.IsNull() && len(from.GovernedTags.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for GovernedTags, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.GovernedTags = from.GovernedTags
+	}
+	if !from.GovernedTags.IsNull() && !from.GovernedTags.IsUnknown() {
+		if toGovernedTags, ok := to.GetGovernedTags(ctx); ok {
+			if fromGovernedTags, ok := from.GetGovernedTags(ctx); ok {
+				// Recursively sync the fields of each GovernedTags element by position.
+				for i := range toGovernedTags {
+					if i < len(fromGovernedTags) {
+						toGovernedTags[i].SyncFieldsDuringCreateOrUpdate(ctx, fromGovernedTags[i])
+					}
+				}
+				to.SetGovernedTags(ctx, toGovernedTags)
+			}
+		}
 	}
 	if !from.Grant.IsNull() && !from.Grant.IsUnknown() {
 		if toGrant, ok := to.GetGrant(ctx); ok {
@@ -34082,11 +35950,37 @@ func (to *PolicyInfo_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Polic
 			}
 		}
 	}
+	if !from.Deny.IsNull() && !from.Deny.IsUnknown() {
+		if toDeny, ok := to.GetDeny(ctx); ok {
+			if fromDeny, ok := from.GetDeny(ctx); ok {
+				toDeny.SyncFieldsDuringRead(ctx, fromDeny)
+				to.SetDeny(ctx, toDeny)
+			}
+		}
+	}
 	if !from.ExceptPrincipals.IsNull() && !from.ExceptPrincipals.IsUnknown() && to.ExceptPrincipals.IsNull() && len(from.ExceptPrincipals.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for ExceptPrincipals, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.ExceptPrincipals = from.ExceptPrincipals
+	}
+	if !from.GovernedTags.IsNull() && !from.GovernedTags.IsUnknown() && to.GovernedTags.IsNull() && len(from.GovernedTags.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for GovernedTags, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.GovernedTags = from.GovernedTags
+	}
+	if !from.GovernedTags.IsNull() && !from.GovernedTags.IsUnknown() {
+		if toGovernedTags, ok := to.GetGovernedTags(ctx); ok {
+			if fromGovernedTags, ok := from.GetGovernedTags(ctx); ok {
+				for i := range toGovernedTags {
+					if i < len(fromGovernedTags) {
+						toGovernedTags[i].SyncFieldsDuringRead(ctx, fromGovernedTags[i])
+					}
+				}
+				to.SetGovernedTags(ctx, toGovernedTags)
+			}
+		}
 	}
 	if !from.Grant.IsNull() && !from.Grant.IsUnknown() {
 		if toGrant, ok := to.GetGrant(ctx); ok {
@@ -34130,8 +36024,11 @@ func (m PolicyInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.At
 	attrs["comment"] = attrs["comment"].SetOptional()
 	attrs["created_at"] = attrs["created_at"].SetComputed()
 	attrs["created_by"] = attrs["created_by"].SetComputed()
+	attrs["deny"] = attrs["deny"].SetOptional()
+	attrs["deny"] = attrs["deny"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["except_principals"] = attrs["except_principals"].SetOptional()
 	attrs["for_securable_type"] = attrs["for_securable_type"].SetRequired()
+	attrs["governed_tags"] = attrs["governed_tags"].SetComputed()
 	attrs["grant"] = attrs["grant"].SetOptional()
 	attrs["grant"] = attrs["grant"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["id"] = attrs["id"].SetComputed()
@@ -34160,7 +36057,9 @@ func (m PolicyInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.At
 func (m PolicyInfo_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"column_mask":       reflect.TypeOf(ColumnMaskOptions_SdkV2{}),
+		"deny":              reflect.TypeOf(DenyOptions_SdkV2{}),
 		"except_principals": reflect.TypeOf(types.String{}),
+		"governed_tags":     reflect.TypeOf(GovernedTagReference_SdkV2{}),
 		"grant":             reflect.TypeOf(GrantOptions_SdkV2{}),
 		"match_columns":     reflect.TypeOf(MatchColumn_SdkV2{}),
 		"row_filter":        reflect.TypeOf(RowFilterOptions_SdkV2{}),
@@ -34179,8 +36078,10 @@ func (m PolicyInfo_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 			"comment":               m.Comment,
 			"created_at":            m.CreatedAt,
 			"created_by":            m.CreatedBy,
+			"deny":                  m.Deny,
 			"except_principals":     m.ExceptPrincipals,
 			"for_securable_type":    m.ForSecurableType,
+			"governed_tags":         m.GovernedTags,
 			"grant":                 m.Grant,
 			"id":                    m.Id,
 			"match_columns":         m.MatchColumns,
@@ -34206,10 +36107,16 @@ func (m PolicyInfo_SdkV2) Type(ctx context.Context) attr.Type {
 			"comment":    types.StringType,
 			"created_at": types.Int64Type,
 			"created_by": types.StringType,
+			"deny": basetypes.ListType{
+				ElemType: DenyOptions_SdkV2{}.Type(ctx),
+			},
 			"except_principals": basetypes.ListType{
 				ElemType: types.StringType,
 			},
 			"for_securable_type": types.StringType,
+			"governed_tags": basetypes.ListType{
+				ElemType: GovernedTagReference_SdkV2{}.Type(ctx),
+			},
 			"grant": basetypes.ListType{
 				ElemType: GrantOptions_SdkV2{}.Type(ctx),
 			},
@@ -34260,6 +36167,32 @@ func (m *PolicyInfo_SdkV2) SetColumnMask(ctx context.Context, v ColumnMaskOption
 	m.ColumnMask = types.ListValueMust(t, vs)
 }
 
+// GetDeny returns the value of the Deny field in PolicyInfo_SdkV2 as
+// a DenyOptions_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *PolicyInfo_SdkV2) GetDeny(ctx context.Context) (DenyOptions_SdkV2, bool) {
+	var e DenyOptions_SdkV2
+	if m.Deny.IsNull() || m.Deny.IsUnknown() {
+		return e, false
+	}
+	var v []DenyOptions_SdkV2
+	d := m.Deny.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetDeny sets the value of the Deny field in PolicyInfo_SdkV2.
+func (m *PolicyInfo_SdkV2) SetDeny(ctx context.Context, v DenyOptions_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["deny"]
+	m.Deny = types.ListValueMust(t, vs)
+}
+
 // GetExceptPrincipals returns the value of the ExceptPrincipals field in PolicyInfo_SdkV2 as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
@@ -34284,6 +36217,32 @@ func (m *PolicyInfo_SdkV2) SetExceptPrincipals(ctx context.Context, v []types.St
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["except_principals"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	m.ExceptPrincipals = types.ListValueMust(t, vs)
+}
+
+// GetGovernedTags returns the value of the GovernedTags field in PolicyInfo_SdkV2 as
+// a slice of GovernedTagReference_SdkV2 values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *PolicyInfo_SdkV2) GetGovernedTags(ctx context.Context) ([]GovernedTagReference_SdkV2, bool) {
+	if m.GovernedTags.IsNull() || m.GovernedTags.IsUnknown() {
+		return nil, false
+	}
+	var v []GovernedTagReference_SdkV2
+	d := m.GovernedTags.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetGovernedTags sets the value of the GovernedTags field in PolicyInfo_SdkV2.
+func (m *PolicyInfo_SdkV2) SetGovernedTags(ctx context.Context, v []GovernedTagReference_SdkV2) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["governed_tags"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.GovernedTags = types.ListValueMust(t, vs)
 }
 
 // GetGrant returns the value of the Grant field in PolicyInfo_SdkV2 as
@@ -34527,7 +36486,8 @@ func (m *PrimaryKeyConstraint_SdkV2) SetTimeseriesColumns(ctx context.Context, v
 type Principal_SdkV2 struct {
 	// Databricks user, group or service principal ID.
 	Id types.String `tfsdk:"id"`
-
+	// The type of principal that **id** identifies: a user, a group, or a
+	// service principal.
 	PrincipalType types.String `tfsdk:"principal_type"`
 }
 
@@ -34959,28 +36919,20 @@ func (m R2Credentials_SdkV2) Type(ctx context.Context) attr.Type {
 // to impose no limit on that dimension; set a value to cap that dimension
 // within the renewal period.
 type RateLimit_SdkV2 struct {
-	// Scope key. Determines whether `principal` is required.
+	// Scope of the rate limit. Depending on this value, the limit applies to a
+	// principal, the service as a whole, or each user by default.
 	Key types.String `tfsdk:"key"`
 	// Principal this limit applies to: user email, group name, or service
-	// principal application ID. Required unless `key` is
-	// `RATE_LIMIT_KEY_SERVICE`, `RATE_LIMIT_KEY_USER_DEFAULT`, or
-	// `RATE_LIMIT_KEY_REQUEST_TAG` (which must not set a principal).
+	// principal application ID. Required when `key` applies to a user, group,
+	// or service principal; otherwise it must be unset.
 	Principal types.String `tfsdk:"principal"`
-	// Renewal period.
+	// Interval after which the request and token counters reset.
 	RenewalPeriod types.String `tfsdk:"renewal_period"`
-	// Request tag key this limit applies to. Required when `key` is
-	// `RATE_LIMIT_KEY_REQUEST_TAG`, forbidden otherwise.
-	RequestTagKey types.String `tfsdk:"request_tag_key"`
-	// Request tag value this limit applies to. Only valid when `key` is
-	// `RATE_LIMIT_KEY_REQUEST_TAG`. Leave unset to apply the limit to every
-	// value of `request_tag_key` (an any-value default); a set value is a
-	// specific override for that value.
-	RequestTagValue types.String `tfsdk:"request_tag_value"`
-	// Max requests allowed within a renewal period. Leave unset for no request
-	// limit.
+	// Maximum requests allowed in one renewal period. Leave unset for no
+	// request limit. Set to `0` to deny all requests.
 	Requests types.Int64 `tfsdk:"requests"`
-	// Max tokens allowed within a renewal period. Leave unset for no token
-	// limit.
+	// Maximum tokens allowed in one renewal period. Leave unset for no token
+	// limit. Set to `0` to deny all requests.
 	Tokens types.Int64 `tfsdk:"tokens"`
 }
 
@@ -34994,8 +36946,6 @@ func (m RateLimit_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 	attrs["key"] = attrs["key"].SetRequired()
 	attrs["principal"] = attrs["principal"].SetOptional()
 	attrs["renewal_period"] = attrs["renewal_period"].SetRequired()
-	attrs["request_tag_key"] = attrs["request_tag_key"].SetOptional()
-	attrs["request_tag_value"] = attrs["request_tag_value"].SetOptional()
 	attrs["requests"] = attrs["requests"].SetOptional()
 	attrs["tokens"] = attrs["tokens"].SetOptional()
 
@@ -35020,13 +36970,11 @@ func (m RateLimit_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"key":               m.Key,
-			"principal":         m.Principal,
-			"renewal_period":    m.RenewalPeriod,
-			"request_tag_key":   m.RequestTagKey,
-			"request_tag_value": m.RequestTagValue,
-			"requests":          m.Requests,
-			"tokens":            m.Tokens,
+			"key":            m.Key,
+			"principal":      m.Principal,
+			"renewal_period": m.RenewalPeriod,
+			"requests":       m.Requests,
+			"tokens":         m.Tokens,
 		})
 }
 
@@ -35034,22 +36982,20 @@ func (m RateLimit_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 func (m RateLimit_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"key":               types.StringType,
-			"principal":         types.StringType,
-			"renewal_period":    types.StringType,
-			"request_tag_key":   types.StringType,
-			"request_tag_value": types.StringType,
-			"requests":          types.Int64Type,
-			"tokens":            types.Int64Type,
+			"key":            types.StringType,
+			"principal":      types.StringType,
+			"renewal_period": types.StringType,
+			"requests":       types.Int64Type,
+			"tokens":         types.Int64Type,
 		},
 	}
 }
 
 type ReadVolumeRequest_SdkV2 struct {
-	// Whether to include volumes in the response for which the principal can
-	// only access selective metadata for
+	// Whether to include volumes for which the principal can only access
+	// selective metadata through the BROWSE privilege.
 	IncludeBrowse types.Bool `tfsdk:"-"`
-	// The three-level (fully qualified) name of the volume
+	// The fully qualified name of the volume.
 	Name types.String `tfsdk:"-"`
 }
 
@@ -36075,7 +38021,8 @@ func (m Securable_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Manifest of a specific securable kind.
+// Manifest of a specific securable kind, or of an Atlas-native securable type,
+// which has no kinds.
 type SecurableKindManifest_SdkV2 struct {
 	// Privileges that can be assigned to the securable.
 	AssignablePrivileges types.List `tfsdk:"assignable_privileges"`
@@ -36083,7 +38030,8 @@ type SecurableKindManifest_SdkV2 struct {
 	Capabilities types.List `tfsdk:"capabilities"`
 	// Detailed specs of allowed options.
 	Options types.List `tfsdk:"options"`
-	// Securable kind to get manifest of.
+	// Securable kind to get manifest of. Unset for Atlas-native securable
+	// types.
 	SecurableKind types.String `tfsdk:"securable_kind"`
 	// Securable Type of the kind.
 	SecurableType types.String `tfsdk:"securable_type"`
@@ -36296,8 +38244,7 @@ func (m *SecurableKindManifest_SdkV2) SetOptions(ctx context.Context, v []Option
 type SecurablePermissions_SdkV2 struct {
 	// List of requested Unity Catalog permissions.
 	Permissions types.List `tfsdk:"permissions"`
-	// The securable for which the access request destinations are being
-	// requested.
+	// The securable on which the permissions are requested.
 	Securable types.List `tfsdk:"securable"`
 }
 
@@ -36617,6 +38564,129 @@ func (m SetRegisteredModelAliasRequest_SdkV2) Type(ctx context.Context) attr.Typ
 	}
 }
 
+// A Skill is an agentskills.io bundle registered in Unity Catalog. Clients
+// transfer bundle bytes through the Files API. FinalizeSkill reads the uploaded
+// SKILL.md and projects its frontmatter onto the Skill metadata.
+type Skill_SdkV2 struct {
+	// Name from the most recently successfully finalized SKILL.md. It may
+	// differ from the final component of the Skill resource name. Unset until
+	// FinalizeSkill succeeds.
+	BundleName types.String `tfsdk:"bundle_name"`
+	// User-provided comment for the skill. Free-text, user-editable via
+	// UpdateSkill (listed in its `update_mask`). DISTINCT from `description`,
+	// which is the server-parsed, OUTPUT_ONLY SKILL.md frontmatter value:
+	// `comment` is the customer's own annotation and is preserved across bundle
+	// re-uploads. When `comment` is in the update mask, omitting it clears the
+	// field, while an explicitly empty string is retained.
+	Comment types.String `tfsdk:"comment"`
+	// Time the skill was created.
+	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
+	// Creator identity.
+	CreatedBy types.String `tfsdk:"created_by"`
+	// Description from the most recently successfully finalized SKILL.md. Unset
+	// until FinalizeSkill succeeds.
+	Description types.String `tfsdk:"description"`
+	// Owner of the skill.
+	EffectiveOwner types.String `tfsdk:"effective_owner"`
+	// Optimistic concurrency token returned on every read. To make an Update or
+	// Delete conditional, pass the last-read value in that request's `etag`
+	// field. In REST responses, this value is a base64 string; URL-encode it
+	// when setting the `etag` query parameter.
+	Etag types.String `tfsdk:"etag"`
+	// Time of the most recent successful FinalizeSkill. Unset until one
+	// succeeds.
+	FinalizeTime timetypes.RFC3339 `tfsdk:"finalize_time"`
+	// Metastore hosting the skill.
+	MetastoreId types.String `tfsdk:"metastore_id"`
+	// Resource name of the skill. Format: `skills/{catalog}.{schema}.{skill}`.
+	// Each `{...}` component is capped at 255 characters individually.
+	// Server-derived on Create from `parent` + `skill_id`; required and
+	// immutable on Update/Get/Delete.
+	Name types.String `tfsdk:"name"`
+	// Time of the most recent Skill metadata mutation. Uploading bundle files
+	// alone does not change this value.
+	UpdateTime timetypes.RFC3339 `tfsdk:"update_time"`
+	// Identity of the last updater.
+	UpdatedBy types.String `tfsdk:"updated_by"`
+}
+
+func (to *Skill_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Skill_SdkV2) {
+}
+
+func (to *Skill_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Skill_SdkV2) {
+}
+
+func (m Skill_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["bundle_name"] = attrs["bundle_name"].SetComputed()
+	attrs["comment"] = attrs["comment"].SetOptional()
+	attrs["create_time"] = attrs["create_time"].SetComputed()
+	attrs["created_by"] = attrs["created_by"].SetComputed()
+	attrs["description"] = attrs["description"].SetComputed()
+	attrs["effective_owner"] = attrs["effective_owner"].SetComputed()
+	attrs["etag"] = attrs["etag"].SetComputed()
+	attrs["finalize_time"] = attrs["finalize_time"].SetComputed()
+	attrs["metastore_id"] = attrs["metastore_id"].SetComputed()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["name"] = attrs["name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["update_time"] = attrs["update_time"].SetComputed()
+	attrs["updated_by"] = attrs["updated_by"].SetComputed()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in Skill.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m Skill_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, Skill_SdkV2
+// only implements ToObjectValue() and Type().
+func (m Skill_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"bundle_name":     m.BundleName,
+			"comment":         m.Comment,
+			"create_time":     m.CreateTime,
+			"created_by":      m.CreatedBy,
+			"description":     m.Description,
+			"effective_owner": m.EffectiveOwner,
+			"etag":            m.Etag,
+			"finalize_time":   m.FinalizeTime,
+			"metastore_id":    m.MetastoreId,
+			"name":            m.Name,
+			"update_time":     m.UpdateTime,
+			"updated_by":      m.UpdatedBy,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m Skill_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"bundle_name":     types.StringType,
+			"comment":         types.StringType,
+			"create_time":     timetypes.RFC3339{}.Type(ctx),
+			"created_by":      types.StringType,
+			"description":     types.StringType,
+			"effective_owner": types.StringType,
+			"etag":            types.StringType,
+			"finalize_time":   timetypes.RFC3339{}.Type(ctx),
+			"metastore_id":    types.StringType,
+			"name":            types.StringType,
+			"update_time":     timetypes.RFC3339{}.Type(ctx),
+			"updated_by":      types.StringType,
+		},
+	}
+}
+
 // Server-Side Encryption properties for clients communicating with AWS s3.
 type SseEncryptionDetails_SdkV2 struct {
 	// Sets the value of the 'x-amz-server-side-encryption' header in S3
@@ -36674,6 +38744,11 @@ func (m SseEncryptionDetails_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// A storage credential represents an authentication and authorization mechanism
+// for accessing data stored on your cloud tenant. It holds exactly one cloud
+// credential, for example an AWS IAM role, an Azure managed identity or service
+// principal, or a GCP service account. Only the field for the selected
+// credential type is set in requests and responses.
 type StorageCredentialInfo_SdkV2 struct {
 	// The AWS IAM role configuration.
 	AwsIamRole types.List `tfsdk:"aws_iam_role"`
@@ -38112,10 +40187,10 @@ func (m *TableInfo_SdkV2) SetViewDependencies(ctx context.Context, v DependencyL
 type TableRowFilter_SdkV2 struct {
 	// The full name of the row filter SQL UDF.
 	FunctionName types.String `tfsdk:"function_name"`
-	// The list of additional table columns or literals to be passed as
-	// additional arguments to a row filter function. This is the replacement of
-	// the deprecated input_column_names field and carries information about the
-	// types (alias or constant) of the arguments to the filter function.
+	// The list of table columns or literals to be passed as additional
+	// arguments to a row filter function, carrying the type (column reference
+	// vs constant literal) of each argument. Deprecated: use input_column_names
+	// instead.
 	InputArguments types.List `tfsdk:"input_arguments"`
 	// The list of table columns to be passed as input to the row filter
 	// function. The column types should match the types of the filter function
@@ -38374,6 +40449,155 @@ func (m *TableSummary_SdkV2) SetSecurableKindManifest(ctx context.Context, v Sec
 	m.SecurableKindManifest = types.ListValueMust(t, vs)
 }
 
+// An expression that introspects tags at query time.
+type TagIntrospectionExpression_SdkV2 struct {
+	// Extracts the value of a column-level tag.
+	ColumnTagValue types.List `tfsdk:"column_tag_value"`
+	// Extracts the value of a securable-level tag.
+	TagValue types.List `tfsdk:"tag_value"`
+}
+
+func (to *TagIntrospectionExpression_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from TagIntrospectionExpression_SdkV2) {
+	if !from.ColumnTagValue.IsNull() && !from.ColumnTagValue.IsUnknown() {
+		if toColumnTagValue, ok := to.GetColumnTagValue(ctx); ok {
+			if fromColumnTagValue, ok := from.GetColumnTagValue(ctx); ok {
+				// Recursively sync the fields of ColumnTagValue
+				toColumnTagValue.SyncFieldsDuringCreateOrUpdate(ctx, fromColumnTagValue)
+				to.SetColumnTagValue(ctx, toColumnTagValue)
+			}
+		}
+	}
+	if !from.TagValue.IsNull() && !from.TagValue.IsUnknown() {
+		if toTagValue, ok := to.GetTagValue(ctx); ok {
+			if fromTagValue, ok := from.GetTagValue(ctx); ok {
+				// Recursively sync the fields of TagValue
+				toTagValue.SyncFieldsDuringCreateOrUpdate(ctx, fromTagValue)
+				to.SetTagValue(ctx, toTagValue)
+			}
+		}
+	}
+}
+
+func (to *TagIntrospectionExpression_SdkV2) SyncFieldsDuringRead(ctx context.Context, from TagIntrospectionExpression_SdkV2) {
+	if !from.ColumnTagValue.IsNull() && !from.ColumnTagValue.IsUnknown() {
+		if toColumnTagValue, ok := to.GetColumnTagValue(ctx); ok {
+			if fromColumnTagValue, ok := from.GetColumnTagValue(ctx); ok {
+				toColumnTagValue.SyncFieldsDuringRead(ctx, fromColumnTagValue)
+				to.SetColumnTagValue(ctx, toColumnTagValue)
+			}
+		}
+	}
+	if !from.TagValue.IsNull() && !from.TagValue.IsUnknown() {
+		if toTagValue, ok := to.GetTagValue(ctx); ok {
+			if fromTagValue, ok := from.GetTagValue(ctx); ok {
+				toTagValue.SyncFieldsDuringRead(ctx, fromTagValue)
+				to.SetTagValue(ctx, toTagValue)
+			}
+		}
+	}
+}
+
+func (m TagIntrospectionExpression_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["column_tag_value"] = attrs["column_tag_value"].SetOptional()
+	attrs["column_tag_value"] = attrs["column_tag_value"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["tag_value"] = attrs["tag_value"].SetOptional()
+	attrs["tag_value"] = attrs["tag_value"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in TagIntrospectionExpression.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m TagIntrospectionExpression_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"column_tag_value": reflect.TypeOf(ColumnTagValueExtraction_SdkV2{}),
+		"tag_value":        reflect.TypeOf(TagValueExtraction_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, TagIntrospectionExpression_SdkV2
+// only implements ToObjectValue() and Type().
+func (m TagIntrospectionExpression_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"column_tag_value": m.ColumnTagValue,
+			"tag_value":        m.TagValue,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m TagIntrospectionExpression_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"column_tag_value": basetypes.ListType{
+				ElemType: ColumnTagValueExtraction_SdkV2{}.Type(ctx),
+			},
+			"tag_value": basetypes.ListType{
+				ElemType: TagValueExtraction_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetColumnTagValue returns the value of the ColumnTagValue field in TagIntrospectionExpression_SdkV2 as
+// a ColumnTagValueExtraction_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *TagIntrospectionExpression_SdkV2) GetColumnTagValue(ctx context.Context) (ColumnTagValueExtraction_SdkV2, bool) {
+	var e ColumnTagValueExtraction_SdkV2
+	if m.ColumnTagValue.IsNull() || m.ColumnTagValue.IsUnknown() {
+		return e, false
+	}
+	var v []ColumnTagValueExtraction_SdkV2
+	d := m.ColumnTagValue.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetColumnTagValue sets the value of the ColumnTagValue field in TagIntrospectionExpression_SdkV2.
+func (m *TagIntrospectionExpression_SdkV2) SetColumnTagValue(ctx context.Context, v ColumnTagValueExtraction_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["column_tag_value"]
+	m.ColumnTagValue = types.ListValueMust(t, vs)
+}
+
+// GetTagValue returns the value of the TagValue field in TagIntrospectionExpression_SdkV2 as
+// a TagValueExtraction_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *TagIntrospectionExpression_SdkV2) GetTagValue(ctx context.Context) (TagValueExtraction_SdkV2, bool) {
+	var e TagValueExtraction_SdkV2
+	if m.TagValue.IsNull() || m.TagValue.IsUnknown() {
+		return e, false
+	}
+	var v []TagValueExtraction_SdkV2
+	d := m.TagValue.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetTagValue sets the value of the TagValue field in TagIntrospectionExpression_SdkV2.
+func (m *TagIntrospectionExpression_SdkV2) SetTagValue(ctx context.Context, v TagValueExtraction_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["tag_value"]
+	m.TagValue = types.ListValueMust(t, vs)
+}
+
 type TagKeyValue_SdkV2 struct {
 	// name of the tag
 	Key types.String `tfsdk:"key"`
@@ -38423,6 +40647,55 @@ func (m TagKeyValue_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"key":   types.StringType,
 			"value": types.StringType,
+		},
+	}
+}
+
+// Extracts the value of a securable-level tag: get_tag_value("tagKey").
+type TagValueExtraction_SdkV2 struct {
+	// 1024 matches the max_length on FunctionArgument.constant above.
+	TagKey types.String `tfsdk:"tag_key"`
+}
+
+func (to *TagValueExtraction_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from TagValueExtraction_SdkV2) {
+}
+
+func (to *TagValueExtraction_SdkV2) SyncFieldsDuringRead(ctx context.Context, from TagValueExtraction_SdkV2) {
+}
+
+func (m TagValueExtraction_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["tag_key"] = attrs["tag_key"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in TagValueExtraction.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m TagValueExtraction_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, TagValueExtraction_SdkV2
+// only implements ToObjectValue() and Type().
+func (m TagValueExtraction_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"tag_key": m.TagKey,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m TagValueExtraction_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"tag_key": types.StringType,
 		},
 	}
 }
@@ -38889,22 +41162,62 @@ func (m UnassignResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// Request to restore a soft-deleted metastore by ID.
+type UndropMetastoreByIdRequest_SdkV2 struct {
+	// Required. Id of the metastore to undrop.
+	Id types.String `tfsdk:"id"`
+}
+
+func (to *UndropMetastoreByIdRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from UndropMetastoreByIdRequest_SdkV2) {
+}
+
+func (to *UndropMetastoreByIdRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from UndropMetastoreByIdRequest_SdkV2) {
+}
+
+func (m UndropMetastoreByIdRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["id"] = attrs["id"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in UndropMetastoreByIdRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m UndropMetastoreByIdRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, UndropMetastoreByIdRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (m UndropMetastoreByIdRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"id": m.Id,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m UndropMetastoreByIdRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"id": types.StringType,
+		},
+	}
+}
+
 type UpdateAccessRequestDestinationsRequest_SdkV2 struct {
 	// The access request destinations to assign to the securable. For each
 	// destination, a **destination_id** and **destination_type** must be
 	// defined.
 	AccessRequestDestinations types.List `tfsdk:"access_request_destinations"`
-	// The field mask must be a single string, with multiple fields separated by
-	// commas (no spaces). The field path is relative to the resource object,
-	// using a dot (`.`) to navigate sub-fields (e.g., `author.given_name`).
-	// Specification of elements in sequence or map fields is not allowed, as
-	// only the entire collection field can be specified. Field names must
-	// exactly match the resource field names.
-	//
-	// A field mask of `*` indicates full replacement. It’s recommended to
-	// always explicitly list the fields being updated and avoid using `*`
-	// wildcards, as it can lead to unintended results if the API changes in the
-	// future.
+	// The paths of the field mask are not evaluated, because an update always
+	// replaces the full list of destinations.
 	UpdateMask types.String `tfsdk:"-"`
 }
 
@@ -39083,6 +41396,11 @@ func (m UpdateAccountsMetastore_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// A storage credential represents an authentication and authorization mechanism
+// for accessing data stored on your cloud tenant. It holds exactly one cloud
+// credential, for example an AWS IAM role, an Azure managed identity or service
+// principal, or a GCP service account. Only the field for the selected
+// credential type is set in requests and responses.
 type UpdateAccountsStorageCredential_SdkV2 struct {
 	// The AWS IAM role configuration.
 	AwsIamRole types.List `tfsdk:"aws_iam_role"`
@@ -39453,15 +41771,27 @@ func (m UpdateAssignmentResponse_SdkV2) Type(ctx context.Context) attr.Type {
 type UpdateCatalog_SdkV2 struct {
 	// User-provided free-form text description.
 	Comment types.String `tfsdk:"comment"`
-	// Custom maximum retention period in hours for the catalog
+	// Dropped objects in the catalog remain recoverable for this number of
+	// hours before they are permanently purged. The value applies to standard
+	// catalogs only, must be 0 or within the range allowed for the metastore,
+	// and is inherited by schemas and tables that do not set their own value.
 	CustomMaxRetentionHours types.Int64 `tfsdk:"custom_max_retention_hours"`
-	// Whether predictive optimization should be enabled for this object and
-	// objects under it.
+	// Whether predictive optimization is enabled for this catalog and the
+	// objects under it. Valid values are ENABLE, DISABLE, and INHERIT, where
+	// INHERIT applies the account-level setting. Standard catalogs start as
+	// INHERIT and other catalog types as DISABLE. It cannot be set when
+	// creating a catalog; use the update method instead.
 	EnablePredictiveOptimization types.String `tfsdk:"enable_predictive_optimization"`
-	// Whether the current securable is accessible from all workspaces or a
-	// specific set of workspaces.
+	// Whether the catalog is accessible from all workspaces attached to the
+	// metastore (OPEN) or only from the workspaces bound to it (ISOLATED). It
+	// cannot be set when creating a catalog; change it with the update method
+	// and manage the bound workspaces with the workspace bindings API. See
+	// [Workspace-catalog binding].
+	//
+	// [Workspace-catalog binding]: https://docs.databricks.com/aws/en/catalogs/binding
 	IsolationMode types.String `tfsdk:"isolation_mode"`
-	// Control CMK encryption for managed catalog data
+	// Customer-managed key (CMK) settings control the encryption at rest of the
+	// catalog's managed data.
 	ManagedEncryptionSettings types.List `tfsdk:"managed_encryption_settings"`
 	// The name of the catalog.
 	Name types.String `tfsdk:"-"`
@@ -39753,6 +42083,10 @@ type UpdateConnection_SdkV2 struct {
 	Options types.Map `tfsdk:"options"`
 	// Username of current owner of the connection.
 	Owner types.String `tfsdk:"owner"`
+	// A map of option names to UC Secret references. Keys are connection option
+	// names (same as in OptionsKVPairs) and values are UC Secret fully
+	// qualified names.
+	Secrets types.Map `tfsdk:"secrets"`
 }
 
 func (to *UpdateConnection_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from UpdateConnection_SdkV2) {
@@ -39784,6 +42118,7 @@ func (m UpdateConnection_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsch
 	attrs["new_name"] = attrs["new_name"].SetOptional()
 	attrs["options"] = attrs["options"].SetRequired()
 	attrs["owner"] = attrs["owner"].SetOptional()
+	attrs["secrets"] = attrs["secrets"].SetOptional()
 	attrs["name"] = attrs["name"].SetRequired()
 
 	return attrs
@@ -39800,6 +42135,7 @@ func (m UpdateConnection_SdkV2) GetComplexFieldTypes(ctx context.Context) map[st
 	return map[string]reflect.Type{
 		"environment_settings": reflect.TypeOf(EnvironmentSettings_SdkV2{}),
 		"options":              reflect.TypeOf(types.String{}),
+		"secrets":              reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -39815,6 +42151,7 @@ func (m UpdateConnection_SdkV2) ToObjectValue(ctx context.Context) basetypes.Obj
 			"new_name":             m.NewName,
 			"options":              m.Options,
 			"owner":                m.Owner,
+			"secrets":              m.Secrets,
 		})
 }
 
@@ -39831,6 +42168,9 @@ func (m UpdateConnection_SdkV2) Type(ctx context.Context) attr.Type {
 				ElemType: types.StringType,
 			},
 			"owner": types.StringType,
+			"secrets": basetypes.MapType{
+				ElemType: types.StringType,
+			},
 		},
 	}
 }
@@ -39885,6 +42225,32 @@ func (m *UpdateConnection_SdkV2) SetOptions(ctx context.Context, v map[string]ty
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["options"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	m.Options = types.MapValueMust(t, vs)
+}
+
+// GetSecrets returns the value of the Secrets field in UpdateConnection_SdkV2 as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *UpdateConnection_SdkV2) GetSecrets(ctx context.Context) (map[string]types.String, bool) {
+	if m.Secrets.IsNull() || m.Secrets.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := m.Secrets.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSecrets sets the value of the Secrets field in UpdateConnection_SdkV2.
+func (m *UpdateConnection_SdkV2) SetSecrets(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["secrets"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Secrets = types.MapValueMust(t, vs)
 }
 
 type UpdateCredentialRequest_SdkV2 struct {
@@ -40315,17 +42681,10 @@ func (m *UpdateEntityTagAssignmentRequest_SdkV2) SetTagAssignment(ctx context.Co
 
 type UpdateExternalLineageRelationshipRequest_SdkV2 struct {
 	ExternalLineageRelationship types.List `tfsdk:"external_lineage_relationship"`
-	// The field mask must be a single string, with multiple fields separated by
-	// commas (no spaces). The field path is relative to the resource object,
-	// using a dot (`.`) to navigate sub-fields (e.g., `author.given_name`).
-	// Specification of elements in sequence or map fields is not allowed, as
-	// only the entire collection field can be specified. Field names must
-	// exactly match the resource field names.
-	//
-	// A field mask of `*` indicates full replacement. It’s recommended to
-	// always explicitly list the fields being updated and avoid using `*`
-	// wildcards, as it can lead to unintended results if the API changes in the
-	// future.
+	// The fields of the relationship to update. The field mask must be a single
+	// string, with multiple fields separated by commas (no spaces), for example
+	// `columns,properties`. The `source` and `target` identify the relationship
+	// and cannot be changed.
 	UpdateMask types.String `tfsdk:"-"`
 }
 
@@ -40436,24 +42795,27 @@ type UpdateExternalLocation_SdkV2 struct {
 	// whether the user explicitly set `enable_file_events`. Use this field
 	// instead of `file_event_queue` for reading the actual queue state.
 	EffectiveFileEventQueue types.List `tfsdk:"effective_file_event_queue"`
-	// Whether to enable file events on this external location. Default to
+	// Whether to enable file events on this external location. Defaults to
 	// `true`. Set to `false` to disable file events. The actual applied value
 	// may differ due to server-side defaults; check
 	// `effective_enable_file_events` for the effective state.
 	EnableFileEvents types.Bool `tfsdk:"enable_file_events"`
-
+	// Encryption options that apply to clients connecting to cloud storage.
 	EncryptionDetails types.List `tfsdk:"encryption_details"`
 	// Indicates whether fallback mode is enabled for this external location.
 	// When fallback mode is enabled, the access to the location falls back to
 	// cluster credentials if UC credentials are not sufficient.
 	Fallback types.Bool `tfsdk:"fallback"`
-	// File event queue settings. If `enable_file_events` is not `false`, must
-	// be defined and have exactly one of the documented properties.
+	// File event queue settings. When `enable_file_events` is `true`, exactly
+	// one of the queue options must be set. Must be omitted when
+	// `enable_file_events` is `false`.
 	FileEventQueue types.List `tfsdk:"file_event_queue"`
 	// Force update even if changing url invalidates dependent external tables
 	// or mounts.
 	Force types.Bool `tfsdk:"force"`
-
+	// Whether the current securable is accessible from all workspaces or a
+	// specific set of workspaces. Cannot be set when creating an external
+	// location.
 	IsolationMode types.String `tfsdk:"isolation_mode"`
 	// Name of the external location.
 	Name types.String `tfsdk:"-"`
@@ -40466,7 +42828,8 @@ type UpdateExternalLocation_SdkV2 struct {
 	// Skips validation of the storage credential associated with the external
 	// location.
 	SkipValidation types.Bool `tfsdk:"skip_validation"`
-	// Path URL of the external location.
+	// URL of the cloud storage path that the external location points to,
+	// including the scheme (for example `s3://`, `abfss://`, or `gs://`).
 	Url types.String `tfsdk:"url"`
 }
 
@@ -40870,8 +43233,10 @@ func (m UpdateFunction_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type UpdateMcpServiceRequest_SdkV2 struct {
-	// If-match precondition: when set, the update proceeds only if the current
-	// server-side etag matches. Empty means an unconditional update.
+	// Optimistic concurrency token from the most recent read. When set, the
+	// update succeeds only if the resource has not changed. Leave unset for an
+	// unconditional update. For REST requests, URL-encode the base64 string
+	// returned by the API when setting the `etag` query parameter.
 	Etag types.String `tfsdk:"-"`
 	// The MCP service with the updated field values. `name` identifies the
 	// resource (`mcp-services/{catalog}.{schema}.{mcp_service}`); only fields
@@ -40882,9 +43247,11 @@ type UpdateMcpServiceRequest_SdkV2 struct {
 	// is capped at 255 characters individually. Server-derived on Create from
 	// `parent` + `mcp_service_id`; required and immutable on Update/Get/Delete.
 	Name types.String `tfsdk:"-"`
-	// The list of fields to update. The framework validates each path against
-	// the `mcp_service` field above. Wildcard paths (`paths: ["*"]`) are not
-	// supported; list each field path explicitly.
+	// Fields to update. Use `config` to replace the entire configuration. The
+	// replacement must include every required field; any optional field you
+	// omit is cleared. To preserve sibling fields, use one or more granular
+	// paths: `comment`, `config.source_connection.name`,
+	// `config.include_tool_selectors`, or `config.rate_limits`.
 	UpdateMask types.String `tfsdk:"-"`
 }
 
@@ -41141,8 +43508,10 @@ func (m UpdateMetastoreAssignment_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type UpdateModelProviderServiceRequest_SdkV2 struct {
-	// If-match precondition: when set, the update proceeds only if the current
-	// server-side etag matches. Empty means an unconditional update.
+	// Optimistic concurrency token from the most recent read. When set, the
+	// update succeeds only if the resource has not changed. Leave unset for an
+	// unconditional update. For REST requests, URL-encode the base64 string
+	// returned by the API when setting the `etag` query parameter.
 	Etag types.String `tfsdk:"-"`
 	// The model provider service with the updated field values. `name`
 	// identifies the resource
@@ -41155,9 +43524,22 @@ type UpdateModelProviderServiceRequest_SdkV2 struct {
 	// Server-derived on Create from `parent` + `model_provider_service_id`;
 	// required and immutable on Update/Get/Delete.
 	Name types.String `tfsdk:"-"`
-	// The list of fields to update. The framework validates each path against
-	// the `model_provider_service` field above. Wildcard paths (`paths: ["*"]`)
-	// are not supported; list each field path explicitly.
+	// Fields to update. Use `config` to replace the entire configuration. The
+	// replacement must include every required field; any optional field you
+	// omit is cleared. To preserve sibling fields, use one or more granular
+	// paths: `comment`; `config.provider` to replace the active
+	// provider-specific value (for example, `config.openai`; the mask path
+	// remains `config.provider`); `config.allow_all_targets`, `config.targets`,
+	// `config.forward_headers`, `config.forward_query_parameters`,
+	// `config.forward_unmanaged_paths`, `config.rate_limits`,
+	// `config.pricing.default_discount_basis_points`, or
+	// `config.inference_table`. For a pricing update, an explicitly empty
+	// `pricing` object clears the discount but retains the object; omitting
+	// `pricing` clears it. `config.pricing` is not a supported mask path. The
+	// provider type is immutable. A `config` or `config.provider` replacement
+	// that carries no authentication material preserves the existing
+	// authentication binding; input-only plaintext does not need to be read
+	// back and re-sent.
 	UpdateMask types.String `tfsdk:"-"`
 }
 
@@ -41263,8 +43645,10 @@ func (m *UpdateModelProviderServiceRequest_SdkV2) SetModelProviderService(ctx co
 }
 
 type UpdateModelServiceRequest_SdkV2 struct {
-	// If-match precondition: when set, the update proceeds only if the current
-	// server-side etag matches. Empty means an unconditional update.
+	// Optimistic concurrency token from the most recent read. When set, the
+	// update succeeds only if the resource has not changed. Leave unset for an
+	// unconditional update. For REST requests, URL-encode the base64 string
+	// returned by the API when setting the `etag` query parameter.
 	Etag types.String `tfsdk:"-"`
 	// The model service with the updated field values. `name` identifies the
 	// resource (`model-services/{catalog}.{schema}.{model_service}`); only
@@ -41272,13 +43656,17 @@ type UpdateModelServiceRequest_SdkV2 struct {
 	ModelService types.List `tfsdk:"model_service"`
 	// Resource name of the model service. Format:
 	// `model-services/{catalog}.{schema}.{model_service}`. Each `{...}`
-	// component is capped at 255 characters individually. Server-derived on
-	// Create from `parent` + `model_service_id`; required and immutable on
-	// Update/Get/Delete.
+	// component is capped at 255 characters individually. The server derives
+	// the name on Create from `parent` and `model_service_id`; it is required
+	// and immutable on Update, Get, and Delete.
 	Name types.String `tfsdk:"-"`
-	// The list of fields to update. The framework validates each path against
-	// the `model_service` field above. Wildcard paths (`paths: ["*"]`) are not
-	// supported; list each field path explicitly.
+	// Fields to update. Use `config` to replace the entire configuration. The
+	// replacement must include every required field; any optional field you
+	// omit is cleared. To preserve sibling fields, use one or more granular
+	// paths: `comment`, `config.routing.destinations`,
+	// `config.routing.fallback.destinations`, `config.rate_limits`, or
+	// `config.inference_table`. Intermediate paths such as `config.routing` and
+	// `config.routing.fallback` are not supported.
 	UpdateMask types.String `tfsdk:"-"`
 }
 
@@ -42714,12 +45102,21 @@ func (m *UpdateRegisteredModelRequest_SdkV2) SetAliases(ctx context.Context, v [
 	m.Aliases = types.ListValueMust(t, vs)
 }
 
+// A lineage relationship between a source object and a target object, where at
+// least one of the two is an external metadata object. The other object can be
+// a Unity Catalog table, a cloud storage path, a model version, or another
+// external metadata object. A relationship is identified by its source and
+// target; optional column mappings and key-value properties describe the data
+// flow between them.
 type UpdateRequestExternalLineage_SdkV2 struct {
-	// List of column relationships between source and target objects.
+	// List of column relationships between source and target objects. The
+	// combined size of all source and target column names is limited.
 	Columns types.List `tfsdk:"columns"`
 	// Unique identifier of the external lineage relationship.
 	Id types.String `tfsdk:"id"`
 	// Key-value properties associated with the external lineage relationship.
+	// The combined length of all keys and values must not exceed 5000
+	// characters.
 	Properties types.Map `tfsdk:"properties"`
 	// Source object of the external lineage relationship.
 	Source types.List `tfsdk:"source"`
@@ -43235,6 +45632,127 @@ func (m *UpdateSecretRequest_SdkV2) SetSecret(ctx context.Context, v Secret_SdkV
 	m.Secret = types.ListValueMust(t, vs)
 }
 
+type UpdateSkillRequest_SdkV2 struct {
+	// Optimistic concurrency token from the most recent read. When set, the
+	// update succeeds only if the resource has not changed. Leave unset for an
+	// unconditional update. For REST requests, URL-encode the base64 string
+	// returned by the API when setting the `etag` query parameter.
+	Etag types.String `tfsdk:"-"`
+	// Resource name of the skill. Format: `skills/{catalog}.{schema}.{skill}`.
+	// Each `{...}` component is capped at 255 characters individually.
+	// Server-derived on Create from `parent` + `skill_id`; required and
+	// immutable on Update/Get/Delete.
+	Name types.String `tfsdk:"-"`
+	// The skill with the updated field values. `name` identifies the resource
+	// (`skills/{catalog}.{schema}.{skill}`); only fields listed in
+	// `update_mask` are applied.
+	Skill types.List `tfsdk:"skill"`
+	// Fields to update; validated against `skill`. REQUIRED, matching the
+	// sibling Update RPCs. `comment` is the only mutable field.
+	UpdateMask types.String `tfsdk:"-"`
+}
+
+func (to *UpdateSkillRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from UpdateSkillRequest_SdkV2) {
+	if !from.Skill.IsNull() && !from.Skill.IsUnknown() {
+		if toSkill, ok := to.GetSkill(ctx); ok {
+			if fromSkill, ok := from.GetSkill(ctx); ok {
+				// Recursively sync the fields of Skill
+				toSkill.SyncFieldsDuringCreateOrUpdate(ctx, fromSkill)
+				to.SetSkill(ctx, toSkill)
+			}
+		}
+	}
+}
+
+func (to *UpdateSkillRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from UpdateSkillRequest_SdkV2) {
+	if !from.Skill.IsNull() && !from.Skill.IsUnknown() {
+		if toSkill, ok := to.GetSkill(ctx); ok {
+			if fromSkill, ok := from.GetSkill(ctx); ok {
+				toSkill.SyncFieldsDuringRead(ctx, fromSkill)
+				to.SetSkill(ctx, toSkill)
+			}
+		}
+	}
+}
+
+func (m UpdateSkillRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["skill"] = attrs["skill"].SetRequired()
+	attrs["skill"] = attrs["skill"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["name"] = attrs["name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["update_mask"] = attrs["update_mask"].SetRequired()
+	attrs["etag"] = attrs["etag"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateSkillRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m UpdateSkillRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"skill": reflect.TypeOf(Skill_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateSkillRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (m UpdateSkillRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"etag":        m.Etag,
+			"name":        m.Name,
+			"skill":       m.Skill,
+			"update_mask": m.UpdateMask,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m UpdateSkillRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"etag": types.StringType,
+			"name": types.StringType,
+			"skill": basetypes.ListType{
+				ElemType: Skill_SdkV2{}.Type(ctx),
+			},
+			"update_mask": types.StringType,
+		},
+	}
+}
+
+// GetSkill returns the value of the Skill field in UpdateSkillRequest_SdkV2 as
+// a Skill_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *UpdateSkillRequest_SdkV2) GetSkill(ctx context.Context) (Skill_SdkV2, bool) {
+	var e Skill_SdkV2
+	if m.Skill.IsNull() || m.Skill.IsUnknown() {
+		return e, false
+	}
+	var v []Skill_SdkV2
+	d := m.Skill.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSkill sets the value of the Skill field in UpdateSkillRequest_SdkV2.
+func (m *UpdateSkillRequest_SdkV2) SetSkill(ctx context.Context, v Skill_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["skill"]
+	m.Skill = types.ListValueMust(t, vs)
+}
+
 type UpdateStorageCredential_SdkV2 struct {
 	// The AWS IAM role configuration.
 	AwsIamRole types.List `tfsdk:"aws_iam_role"`
@@ -43641,9 +46159,10 @@ type UpdateVolumeRequestContent_SdkV2 struct {
 	Comment types.String `tfsdk:"comment"`
 	// The three-level (fully qualified) name of the volume
 	Name types.String `tfsdk:"-"`
-	// New name for the volume.
+	// The new name for the volume. Set it to rename the volume.
 	NewName types.String `tfsdk:"new_name"`
-	// The identifier of the user who owns the volume
+	// The user or group that owns the volume. The user who creates a volume
+	// becomes its owner; the owner can be changed afterwards with an update.
 	Owner types.String `tfsdk:"owner"`
 }
 
@@ -44157,13 +46676,14 @@ func (m *UpdateWorkspaceBindingsResponse_SdkV2) SetBindings(ctx context.Context,
 }
 
 type ValidateCredentialRequest_SdkV2 struct {
+	// Deprecated: create a credential and pass its credential_name instead.
 	AwsIamRole types.List `tfsdk:"aws_iam_role"`
-
+	// Deprecated: create a credential and pass its credential_name instead.
 	AzureManagedIdentity types.List `tfsdk:"azure_managed_identity"`
 	// Required. The name of an existing credential or long-lived cloud
 	// credential to validate.
 	CredentialName types.String `tfsdk:"credential_name"`
-
+	// Deprecated: create a credential and pass its credential_name instead.
 	DatabricksGcpServiceAccount types.List `tfsdk:"databricks_gcp_service_account"`
 	// The name of an existing external location to validate. Only applicable
 	// for storage credentials (purpose is **STORAGE**.)
@@ -44507,15 +47027,23 @@ func (m *ValidateCredentialResponse_SdkV2) SetResults(ctx context.Context, v []C
 }
 
 type ValidateStorageCredential_SdkV2 struct {
-	// The AWS IAM role configuration.
+	// Deprecated: create a storage credential and pass its
+	// storage_credential_name instead. The AWS IAM role configuration.
 	AwsIamRole types.List `tfsdk:"aws_iam_role"`
-	// The Azure managed identity configuration.
+	// Deprecated: create a storage credential and pass its
+	// storage_credential_name instead. The Azure managed identity
+	// configuration.
 	AzureManagedIdentity types.List `tfsdk:"azure_managed_identity"`
-	// The Azure service principal configuration.
+	// Deprecated: create a storage credential and pass its
+	// storage_credential_name instead. The Azure service principal
+	// configuration.
 	AzureServicePrincipal types.List `tfsdk:"azure_service_principal"`
-	// The Cloudflare API token configuration.
+	// Deprecated: create a storage credential and pass its
+	// storage_credential_name instead. The Cloudflare API token configuration.
 	CloudflareApiToken types.List `tfsdk:"cloudflare_api_token"`
-	// The Databricks created GCP service account configuration.
+	// Deprecated: create a storage credential and pass its
+	// storage_credential_name instead. The Databricks created GCP service
+	// account configuration.
 	DatabricksGcpServiceAccount types.List `tfsdk:"databricks_gcp_service_account"`
 	// The name of an existing external location to validate.
 	ExternalLocationName types.String `tfsdk:"external_location_name"`
@@ -45010,7 +47538,8 @@ func (m ValidationResult_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type VolumeInfo_SdkV2 struct {
-	// The AWS access point to use when accesing s3 for this external location.
+	// The AWS access point to use when accessing S3 for the storage location of
+	// this volume.
 	AccessPoint types.String `tfsdk:"access_point"`
 	// Indicates whether the principal is limited to retrieving metadata for the
 	// associated object through the BROWSE privilege when include_browse is
@@ -45020,25 +47549,32 @@ type VolumeInfo_SdkV2 struct {
 	CatalogName types.String `tfsdk:"catalog_name"`
 	// The comment attached to the volume
 	Comment types.String `tfsdk:"comment"`
-
+	// Time at which the volume was created, in epoch milliseconds.
 	CreatedAt types.Int64 `tfsdk:"created_at"`
 	// The identifier of the user who created the volume
 	CreatedBy types.String `tfsdk:"created_by"`
 
 	EncryptionDetails types.List `tfsdk:"encryption_details"`
-	// The three-level (fully qualified) name of the volume
+	// The three-level (fully qualified) name of the volume, in the form
+	// catalog_name.schema_name.name.
 	FullName types.String `tfsdk:"full_name"`
 	// The unique identifier of the metastore
 	MetastoreId types.String `tfsdk:"metastore_id"`
 	// The name of the volume
 	Name types.String `tfsdk:"name"`
-	// The identifier of the user who owns the volume
+	// The user or group that owns the volume. The user who creates a volume
+	// becomes its owner; the owner can be changed afterwards with an update.
 	Owner types.String `tfsdk:"owner"`
 	// The name of the schema where the volume is
 	SchemaName types.String `tfsdk:"schema_name"`
-	// The storage location on the cloud
+	// The cloud storage URL where the files of the volume are stored. For an
+	// external volume, it must be set on creation to a path within an existing
+	// external location. For a managed volume, it must be omitted on creation;
+	// the volume is placed under the managed storage location of the parent
+	// schema, catalog, or metastore, and the assigned path is returned in this
+	// field.
 	StorageLocation types.String `tfsdk:"storage_location"`
-
+	// Time at which the volume was last updated, in epoch milliseconds.
 	UpdatedAt types.Int64 `tfsdk:"updated_at"`
 	// The identifier of the user who updated the volume last time
 	UpdatedBy types.String `tfsdk:"updated_by"`

@@ -1,0 +1,35 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: "workspace"
+  cloud: "AWS"
+  workspace_id: "12345"
+steps:
+  - name: "list_existing_destination"
+    config: |
+      data "databricks_notification_destinations" "this" {}
+    calls:
+      - &get_1
+        request:
+          method: "GET"
+          path: "/api/2.0/notification-destinations"
+          body: null
+        response: &response_1 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              results:
+                - destination_type: "EMAIL"
+                  display_name: "Existing destination"
+                  id: "destination-1"
+      - *get_1
+      - *get_1
+    state:
+      resources:
+        data.databricks_notification_destinations.this:
+          attributes:
+            - path: ["notification_destinations",0,"id"]
+              equals: "destination-1"
+destroy:
+  calls:
+    - *get_1

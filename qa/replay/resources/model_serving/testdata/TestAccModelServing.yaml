@@ -1,0 +1,367 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: "workspace"
+  cloud: "AWS"
+  workspace_id: "12345"
+steps:
+  - name: "create"
+    config: |
+      resource "databricks_model_serving" "endpoint" {
+        name = "terraform-test-model-serving-replay"
+        config {
+          served_models {
+            name                  = "prod_model"
+            model_name            = "experiment-fixture-model"
+            model_version         = "1"
+            workload_size         = "Small"
+            scale_to_zero_enabled = true
+          }
+          served_models {
+            name                  = "candidate_model"
+            model_name            = "experiment-fixture-model"
+            model_version         = "2"
+            workload_size         = "Small"
+            scale_to_zero_enabled = false
+          }
+          traffic_config {
+            routes {
+              served_model_name  = "prod_model"
+              traffic_percentage = 90
+            }
+            routes {
+              served_model_name  = "candidate_model"
+              traffic_percentage = 10
+            }
+          }
+        }
+        tags {
+          key   = "key1"
+          value = "value-should-not-change"
+        }
+        tags {
+          key   = "key2"
+          value = "value-should-change"
+        }
+        tags {
+          key   = "key3"
+          value = "should-be-deleted"
+        }
+      }
+
+      data "databricks_serving_endpoints" "all" {}
+
+      resource "databricks_permissions" "ml_serving_usage" {
+        serving_endpoint_id = databricks_model_serving.endpoint.serving_endpoint_id
+
+        access_control {
+          group_name       = "users"
+          permission_level = "CAN_VIEW"
+        }
+      }
+    calls:
+      - &get_1
+        request: {method: "GET", path: "/api/2.0/serving-endpoints", body: null}
+        response: &response_1 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              endpoints:
+                - config:
+                    served_models:
+                      - model_name: "experiment-fixture-model"
+                        model_version: "1"
+                        name: "prod_model"
+                        scale_to_zero_enabled: true
+                        workload_size: "Small"
+                      - model_name: "experiment-fixture-model"
+                        model_version: "2"
+                        name: "candidate_model"
+                        scale_to_zero_enabled: false
+                        workload_size: "Small"
+                    traffic_config:
+                      routes:
+                        - served_model_name: "prod_model"
+                          traffic_percentage: 90
+                        - served_model_name: "candidate_model"
+                          traffic_percentage: 10
+                  id: "endpoint-1"
+                  name: "terraform-test-model-serving-replay"
+                  state:
+                    config_update: "NOT_UPDATING"
+                    ready: "READY"
+                  tags:
+                    - key: "key1"
+                      value: "value-should-not-change"
+                    - key: "key2"
+                      value: "value-should-change"
+                    - key: "key3"
+                      value: "should-be-deleted"
+      - request:
+          method: "POST"
+          path: "/api/2.0/serving-endpoints"
+          body:
+            json:
+              config:
+                served_models:
+                  - model_name: "experiment-fixture-model"
+                    model_version: "1"
+                    name: "prod_model"
+                    scale_to_zero_enabled: true
+                    workload_size: "Small"
+                  - model_name: "experiment-fixture-model"
+                    model_version: "2"
+                    name: "candidate_model"
+                    scale_to_zero_enabled: false
+                    workload_size: "Small"
+                traffic_config:
+                  routes:
+                    - served_model_name: "prod_model"
+                      traffic_percentage: 90
+                    - served_model_name: "candidate_model"
+                      traffic_percentage: 10
+              name: "terraform-test-model-serving-replay"
+              tags:
+                - key: "key3"
+                  value: "should-be-deleted"
+                - key: "key1"
+                  value: "value-should-not-change"
+                - key: "key2"
+                  value: "value-should-change"
+        response: &response_2 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              config:
+                served_models:
+                  - model_name: "experiment-fixture-model"
+                    model_version: "1"
+                    name: "prod_model"
+                    scale_to_zero_enabled: true
+                    workload_size: "Small"
+                  - model_name: "experiment-fixture-model"
+                    model_version: "2"
+                    name: "candidate_model"
+                    scale_to_zero_enabled: false
+                    workload_size: "Small"
+                traffic_config:
+                  routes:
+                    - served_model_name: "prod_model"
+                      traffic_percentage: 90
+                    - served_model_name: "candidate_model"
+                      traffic_percentage: 10
+              id: "endpoint-1"
+              name: "terraform-test-model-serving-replay"
+              state:
+                config_update: "NOT_UPDATING"
+                ready: "READY"
+              tags:
+                - key: "key1"
+                  value: "value-should-not-change"
+                - key: "key2"
+                  value: "value-should-change"
+                - key: "key3"
+                  value: "should-be-deleted"
+      - &get_2
+        request: {method: "GET", path: "/api/2.0/serving-endpoints/terraform-test-model-serving-replay", body: null}
+        response: *response_2
+      - *get_2
+      - &get_3
+        request: {method: "GET", path: "/api/2.0/preview/scim/v2/Me", query: {"excludedAttributes": ["entitlements"]}, body: null}
+        response: &response_3 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              displayName: "Replay tester"
+              id: "100"
+              schemas: ["urn:ietf:params:scim:schemas:core:2.0:User"]
+              userName: "tester@example.com"
+      - request:
+          method: "PUT"
+          path: "/api/2.0/permissions/serving-endpoints/endpoint-1"
+          body:
+            json:
+              access_control_list:
+                - group_name: "users"
+                  permission_level: "CAN_VIEW"
+                - permission_level: "CAN_MANAGE"
+                  user_name: "tester@example.com"
+        response: &response_4 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              access_control_list:
+                - all_permissions:
+                    - inherited: false
+                      permission_level: "CAN_VIEW"
+                  group_name: "users"
+                - all_permissions:
+                    - inherited: false
+                      permission_level: "CAN_MANAGE"
+                  user_name: "tester@example.com"
+              object_id: "/serving-endpoints/endpoint-1"
+              object_type: "serving-endpoint"
+      - *get_3
+      - &get_4
+        request: {method: "GET", path: "/api/2.0/permissions/serving-endpoints/endpoint-1", body: null}
+        response: *response_4
+      - *get_1
+      - *get_1
+      - *get_2
+      - *get_3
+      - *get_4
+  - name: "update_models_routes_and_tags"
+    config: |
+      resource "databricks_model_serving" "endpoint" {
+        name = "terraform-test-model-serving-replay"
+        config {
+          served_models {
+            name                  = "prod_model"
+            model_name            = "experiment-fixture-model"
+            model_version         = "1"
+            workload_size         = "Small"
+            scale_to_zero_enabled = true
+          }
+          traffic_config {
+            routes {
+              served_model_name  = "prod_model"
+              traffic_percentage = 100
+            }
+          }
+        }
+        tags {
+          key   = "key1"
+          value = "value-should-not-change"
+        }
+        tags {
+          key   = "key2"
+          value = "value-should-change-to-something-new"
+        }
+        tags {
+          key   = "key4"
+          value = "should-be-added"
+        }
+      }
+      data "databricks_serving_endpoints" "all" {}
+    calls:
+      - *get_1
+      - *get_3
+      - *get_4
+      - *get_2
+      - *get_4
+      - *get_3
+      - request:
+          method: "PUT"
+          path: "/api/2.0/permissions/serving-endpoints/endpoint-1"
+          body:
+            json:
+              access_control_list:
+                - permission_level: "CAN_MANAGE"
+                  user_name: "tester@example.com"
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json: {}
+      - request:
+          method: "PUT"
+          path: "/api/2.0/serving-endpoints/terraform-test-model-serving-replay/config"
+          body:
+            json:
+              served_models:
+                - model_name: "experiment-fixture-model"
+                  model_version: "1"
+                  name: "prod_model"
+                  scale_to_zero_enabled: true
+                  workload_size: "Small"
+              traffic_config:
+                routes:
+                  - served_model_name: "prod_model"
+                    traffic_percentage: 100
+        response: &response_5 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              config:
+                served_models:
+                  - model_name: "experiment-fixture-model"
+                    model_version: "1"
+                    name: "prod_model"
+                    scale_to_zero_enabled: true
+                    workload_size: "Small"
+                traffic_config:
+                  routes:
+                    - served_model_name: "prod_model"
+                      traffic_percentage: 100
+              id: "endpoint-1"
+              name: "terraform-test-model-serving-replay"
+              state:
+                config_update: "NOT_UPDATING"
+                ready: "READY"
+              tags:
+                - key: "key1"
+                  value: "value-should-not-change"
+                - key: "key2"
+                  value: "value-should-change-to-something-new"
+                - key: "key4"
+                  value: "should-be-added"
+      - &get_5
+        request: {method: "GET", path: "/api/2.0/serving-endpoints/terraform-test-model-serving-replay", body: null}
+        response: &response_6 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              config:
+                served_models:
+                  - model_name: "experiment-fixture-model"
+                    model_version: "1"
+                    name: "prod_model"
+                    scale_to_zero_enabled: true
+                    workload_size: "Small"
+                traffic_config:
+                  routes:
+                    - served_model_name: "prod_model"
+                      traffic_percentage: 100
+              id: "endpoint-1"
+              name: "terraform-test-model-serving-replay"
+              state:
+                config_update: "NOT_UPDATING"
+                ready: "READY"
+              tags:
+                - key: "key1"
+                  value: "value-should-not-change"
+                - key: "key2"
+                  value: "value-should-change"
+                - key: "key3"
+                  value: "should-be-deleted"
+      - *get_5
+      - request:
+          method: "PATCH"
+          path: "/api/2.0/serving-endpoints/terraform-test-model-serving-replay/tags"
+          body:
+            json:
+              add_tags:
+                - key: "key4"
+                  value: "should-be-added"
+                - key: "key2"
+                  value: "value-should-change-to-something-new"
+              delete_tags: ["key3"]
+        response: # Inferred API response; not recorded.
+          status: 200
+          body: null
+      - &get_6
+        request: {method: "GET", path: "/api/2.0/serving-endpoints/terraform-test-model-serving-replay", body: null}
+        response: *response_5
+      - *get_1
+      - *get_1
+      - *get_6
+destroy:
+  calls:
+    - *get_1
+    - *get_6
+    - request:
+        method: "DELETE"
+        path: "/api/2.0/serving-endpoints/terraform-test-model-serving-replay"
+        body: null
+      response: # Inferred API response; not recorded.
+        status: 200
+        body: null

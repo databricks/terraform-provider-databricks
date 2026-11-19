@@ -2,34 +2,117 @@
 subcategory: "Machine Learning"
 ---
 # databricks_feature_engineering_feature Resource
-[![Private Preview](https://img.shields.io/badge/Release_Stage-Private_Preview-blueviolet)](https://docs.databricks.com/aws/en/release-notes/release-types)
+[![GA](https://img.shields.io/badge/Release_Stage-GA-green)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
+[API Documentation](https://docs.databricks.com/api/workspace/featureengineering)
+
+A feature is a reusable, governed definition of a model input registered in Unity Catalog. Each feature binds a data source to the function that computes its value, so model training and online serving read one definition instead of two implementations that drift apart.
+
+Registering a feature computes nothing on its own. To produce values, materialize the feature to an offline Delta table or an online Lakebase table using the Feature Engineering API.
+
+Only `description` can be changed in place. Changing any other field replaces the feature.
 
 
 ## Example Usage
+A feature needs a source and a function. A Delta table source also requires the entity columns that
+key the feature and a timeseries column; a request source takes neither, because the value arrives
+in the request.
+
+### Aggregation over a sliding window
+
+Count each customer's transactions over the trailing seven days, recomputed daily.
+
+```hcl
+resource "databricks_feature_engineering_feature" "transaction_count_7d" {
+  full_name   = "main.features.transaction_count_7d"
+  description = "Transactions per customer over the trailing seven days."
+
+  source = {
+    delta_table_source = {
+      full_name = "main.retail.transactions"
+    }
+  }
+
+  function = {
+    aggregation_function = {
+      count_function = {
+        input = "transaction_id"
+      }
+
+      time_window = {
+        sliding = {
+          window_duration = "604800s"
+          slide_duration  = "86400s"
+        }
+      }
+    }
+  }
+
+  entities = [
+    {
+      name = "customer_id"
+    },
+  ]
+
+  timeseries_column = {
+    name = "transaction_time"
+  }
+}
+```
+
+### Latest value of a column
+
+Read a column straight from the source with no aggregation, so no time window is needed. The
+timeseries column is still required, because it is what makes the lookup point-in-time correct.
+
+```hcl
+resource "databricks_feature_engineering_feature" "customer_tier" {
+  full_name = "main.features.customer_tier"
+
+  source = {
+    delta_table_source = {
+      full_name = "main.retail.customers"
+    }
+  }
+
+  function = {
+    column_selection = {
+      column = "tier"
+    }
+  }
+
+  entities = [
+    {
+      name = "customer_id"
+    },
+  ]
+
+  timeseries_column = {
+    name = "updated_at"
+  }
+}
+```
 
 
 ## Arguments
 The following arguments are supported:
-* `full_name` (string, required) - The full three-part name (catalog, schema, name) of the feature. This is the
-  feature's resource identifier; the catalog_name, schema_name, and name fields
-  below are OUTPUT_ONLY decomposed views of this value
+* `full_name` (string, required) - The full three-part name (catalog, schema, name) of the feature
 * `function` (Function, required) - The function by which the feature is computed
 * `source` (DataSource, required) - The data source of the feature
 * `description` (string, optional) - The description of the feature
-* `entities` (list of EntityColumn, optional) - The entity columns for the feature, used as aggregation keys and for query-time lookup
-* `filter_condition` (string, optional, deprecated) - Deprecated: Use DeltaTableSource.filter_condition or KafkaSource.filter_condition instead. Kept for backwards compatibility.
-  The filter condition applied to the source data before aggregation
-* `inputs` (list of string, optional, deprecated) - Deprecated: Use AggregationFunction.inputs instead. Kept for backwards compatibility.
-  The input columns from which the feature is computed
+* `entities` (list of EntityColumn, optional) - The entity columns for the feature, used as aggregation keys and for query-time lookup.
+  Optional since entities are not set for RequestSource features or on-demand calculated features
+* `filter_condition` (string, optional, deprecated)
+* `inputs` (list of string, optional, deprecated)
 * `lineage_context` (LineageContext, optional) - Lineage context information for this feature.
   WARNING: This field is primarily intended for internal use by Databricks systems and
   is automatically populated when features are created through Databricks notebooks or jobs.
   Users should not manually set this field as incorrect values may lead to inaccurate lineage tracking or unexpected behavior.
   This field will be set by feature-engineering client and should be left unset by SDK and terraform users
-* `time_window` (TimeWindow, optional, deprecated) - Deprecated: Use Function.aggregation_function.time_window instead. Kept for backwards compatibility.
-  The time window in which the feature is computed
-* `timeseries_column` (TimeseriesColumn, optional) - Column recording time, used for point-in-time joins, backfills, and aggregations
+* `time_window` (TimeWindow, optional, deprecated)
+* `timeseries_column` (TimeseriesColumn, optional) - Column recording time, used for point-in-time joins, backfills, and aggregations.
+  Optional since a timeseries column is not set for RequestSource features or on-demand
+  calculated features
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 
 ### ProviderConfig
@@ -57,12 +140,27 @@ The following arguments are supported:
 
 ### ApproxCountDistinctFunction
 * `input` (string, required) - The input column from which the approximate count of distinct values is computed
-* `relative_sd` (number, optional) - The maximum relative standard deviation allowed (default defined by Spark)
+* `relative_error` (number, optional) - The error the user accepts, as a fraction of the count, between 0.02 (by default) and 0.3.
+  This is one standard error of the estimate, the same meaning as Spark's relativeSD: 0.02 means
+  the result is within ±2% of the true count about 68% of the time (one standard deviation covers
+  68% of the region). Feature Store picks the sketch size that gives this relative error. If
+  neither relative_error nor relative_sd is set, 0.02 is default chosen at feature creation
+* `relative_sd` (number, optional) - The maximum relative standard deviation allowed (default defined by Spark).
+  Deprecated: use relative_error. When relative_error is set, reads return the same value here
+  for clients that don't have relative_error, and a request may only send that value
 
 ### ApproxPercentileFunction
 * `input` (string, required) - The input column from which the approximate percentile is computed
 * `percentile` (number, required) - The percentile value to compute (between 0 and 1)
-* `accuracy` (integer, optional) - The accuracy parameter (higher is more accurate but slower)
+* `accuracy` (integer, optional) - The accuracy parameter (higher is more accurate but slower).
+  Deprecated: use relative_error. When relative_error is set, reads return ceil(1 /
+  relative_error) here for clients that don't have relative_error, and a request may only send
+  that value
+* `relative_error` (number, optional) - The error the user accepts, as a fraction of rank, between 0.01 (by default) and 0.3. The
+  result is within this rank error with 99% confidence: at 0.01, the value returned for p95 is
+  between the true p94 and p96 at least 99% of the time. Feature Store picks the sketch size that
+  gives this error.
+  If neither relative_error nor accuracy is set, 0.01 is default chosen at feature creation
 
 ### AvgFunction
 * `input` (string, required) - The input column from which the average is computed. For Kafka sources, use dot-prefixed path
@@ -71,8 +169,7 @@ The following arguments are supported:
   compatibility but is deprecated; migrate to dot notation
 
 ### ColumnIdentifier
-* `variant_expr_path` (string, required) - String representation of the column name using dot-prefixed path notation. For nested fields, the leaf value is what will be present in materialized tables
-  and expected to match at query time. For example, the leaf node of value.trip_details.location_details.pickup_zip is pickup_zip
+* `variant_expr_path` (string, required) - String representation of the column name using dot-prefixed path notation
 
 ### ColumnSelection
 * `column` (string, required) - Column name from source to select as the feature value
@@ -94,8 +191,13 @@ The following arguments are supported:
 
 ### DataSource
 * `delta_table_source` (DeltaTableSource, optional) - A Delta table data source
+* `feature_view_source` (FeatureViewSource, optional) - A data source composed from registered upstream Features
+* `iceberg_table_source` (IcebergTableSource, optional) - A Unity Catalog managed or foreign Iceberg table source
 * `kafka_source` (KafkaSource, optional) - A Kafka stream data source
+* `lateness` (SourceLateness, optional) - Completeness timing for this Feature's use of the source. This configuration is part of the
+  Feature definition; it does not modify the underlying table or stream
 * `request_source` (RequestSource, optional) - A request-time data source
+* `sdp_source` (SdpSource, optional) - A Spark Declarative Pipeline data source
 * `stream_source` (StreamSource, optional) - A Stream data source
 
 ### DeltaTableSource
@@ -103,13 +205,12 @@ The following arguments are supported:
 * `dataframe_schema` (string, optional) - Schema of the resulting dataframe after transformations, in Spark StructType JSON format (from df.schema.json()).
   Required if transformation_sql is specified.
   Example: {"type":"struct","fields":[{"name":"col_a","type":"integer","nullable":true,"metadata":{}},{"name":"col_c","type":"integer","nullable":true,"metadata":{}}]}
-* `entity_columns` (list of string, optional, deprecated) - Deprecated: Use Feature.entity instead. Kept for backwards compatibility.
-  The entity columns of the Delta table
-* `filter_condition` (string, optional) - Single WHERE clause to filter delta table before applying transformations. Will be row-wise evaluated, so should only include conditionals and projections
-* `timeseries_column` (string, optional, deprecated) - Deprecated: Use Feature.timeseries_column instead. Kept for backwards compatibility.
-  The timeseries column of the Delta table
+* `entity_columns` (list of string, optional, deprecated)
+* `filter_condition` (string, optional) - A single WHERE clause to filter the Delta table before applying transformations.
+  The predicate is evaluated for each row
+* `timeseries_column` (string, optional, deprecated)
 * `transformation_sql` (string, optional) - A single SQL SELECT expression applied after filter_condition.
-  Should contains all the columns needed (eg. "SELECT *, col_a + col_b AS col_c FROM x.y.z WHERE col_a > 0" would have `transformation_sql` "*, col_a + col_b AS col_c")
+  The expression must contain all required columns (e.g., "*, col_a + col_b AS col_c").
   If transformation_sql is not provided, all columns of the delta table are present in the DataSource dataframe
 
 ### EntityColumn
@@ -119,6 +220,12 @@ The following arguments are supported:
   be present in materialized tables and expected to match at query time.
   Colon-prefixed notation (e.g., "value:user_id") is supported for backwards
   compatibility but is deprecated; migrate to dot notation
+
+### FeatureReference
+* `feature` (string, required) - The three-part full name of the upstream Feature
+
+### FeatureViewSource
+* `feature_references` (list of FeatureReference, optional) - The upstream Features this source reads. Must include at least one feature
 
 ### FieldDefinition
 * `data_type` (string, required) - The scalar data type of the field. Possible values are: `BINARY`, `BOOLEAN`, `DATE`, `DECIMAL`, `DOUBLE`, `FLOAT`, `INTEGER`, `LONG`, `SHORT`, `STRING`, `TIMESTAMP`
@@ -142,14 +249,23 @@ The following arguments are supported:
 * `aggregation_function` (AggregationFunction, optional) - An aggregation function applied over a time window
 * `column_selection` (ColumnSelection, optional) - Selects the latest value of a single column in a data source
 * `custom_udf` (CustomUdf, optional) - Applies a registered Unity Catalog function row-wise to source columns
-* `extra_parameters` (list of FunctionExtraParameter, optional, deprecated) - Deprecated: Use the function oneof with AggregationFunction instead. Kept for backwards compatibility.
-  Extra parameters for parameterized functions
-* `function_type` (string, optional, deprecated) - Deprecated: Use the function oneof with AggregationFunction instead. Kept for backwards compatibility.
-  The type of the function. Possible values are: `APPROX_COUNT_DISTINCT`, `APPROX_PERCENTILE`, `AVG`, `COUNT`, `FIRST`, `LAST`, `MAX`, `MIN`, `STDDEV_POP`, `STDDEV_SAMP`, `SUM`, `VAR_POP`, `VAR_SAMP`
+* `extra_parameters` (list of FunctionExtraParameter, optional, deprecated)
+* `function_type` (string, optional, deprecated) - Possible values are: `APPROX_COUNT_DISTINCT`, `APPROX_PERCENTILE`, `AVG`, `COUNT`, `FIRST`, `FUNCTION_TYPE_UNSPECIFIED`, `LAST`, `MAX`, `MIN`, `STDDEV_POP`, `STDDEV_SAMP`, `SUM`, `VAR_POP`, `VAR_SAMP`
 
 ### FunctionExtraParameter
 * `key` (string, required) - The name of the parameter
 * `value` (string, required) - The value of the parameter
+
+### IcebergTableSource
+* `full_name` (string, required) - Full three-part name of the source table. May be omitted on reads when inaccessible
+* `dataframe_schema` (string, optional) - Schema of the resulting dataframe after transformations, in Spark StructType JSON format (from df.schema.json()).
+  Required if transformation_sql is specified.
+  Example: {"type":"struct","fields":[{"name":"col_a","type":"integer","nullable":true,"metadata":{}},{"name":"col_c","type":"integer","nullable":true,"metadata":{}}]}
+* `filter_condition` (string, optional) - A single WHERE clause to filter the Iceberg table before applying transformations.
+  The predicate is evaluated for each row
+* `transformation_sql` (string, optional) - A single SQL SELECT expression applied after filter_condition.
+  The expression must contain all required columns (e.g., "*, col_a + col_b AS col_c").
+  If transformation_sql is not provided, all columns of the Iceberg table are present in the DataSource dataframe
 
 ### InputBinding
 * `column` (string, required) - Source column whose value is passed for this parameter at execution time
@@ -161,11 +277,9 @@ The following arguments are supported:
 
 ### KafkaSource
 * `name` (string, required) - Name of the Kafka source, used to identify it. This is used to look up the corresponding KafkaConfig object. Can be distinct from topic name
-* `entity_column_identifiers` (list of ColumnIdentifier, optional, deprecated) - Deprecated: Use Feature.entity instead. Kept for backwards compatibility.
-  The entity column identifiers of the Kafka source
+* `entity_column_identifiers` (list of ColumnIdentifier, optional, deprecated)
 * `filter_condition` (string, optional) - The filter condition applied to the source data before aggregation
-* `timeseries_column_identifier` (ColumnIdentifier, optional, deprecated) - Deprecated: Use Feature.timeseries_column instead. Kept for backwards compatibility.
-  The timeseries column identifier of the Kafka source
+* `timeseries_column_identifier` (ColumnIdentifier, optional, deprecated)
 
 ### LastDistinctFunction
 * `input` (string, required) - The input column from which the last N distinct values are returned
@@ -189,6 +303,8 @@ The following arguments are supported:
 * `input` (string, required) - The input column from which the minimum is computed
 
 ### RequestSource
+* `dataframe_schema` (string, optional) - A schema containing scalar or nested fields, in Spark StructType JSON format
+  (from df.schema.json()). This preserves field, array-element, and map-value nullability
 * `flat_schema` (FlatSchema, optional) - A flat schema with scalar-typed fields only
 
 ### RollingWindow
@@ -205,10 +321,43 @@ The following arguments are supported:
   need not be a whole number of days (e.g. 3 days 15 minutes is allowed). Absent means lifetime
   (aggregate over the entity's entire history)
 
+### SdpSource
+* `dataframe_schema` (string, optional) - Schema of the resulting dataframe after transformations, in Spark StructType JSON format (from df.schema.json()).
+  Required if transformation_sql is specified.
+  Example: {"type":"struct","fields":[{"name":"col_a","type":"integer","nullable":true,"metadata":{}},{"name":"col_c","type":"integer","nullable":true,"metadata":{}}]}
+* `filter_condition` (string, optional) - Single WHERE clause to filter the pipeline's output table before applying transformations. Will be row-wise evaluated, so should only include conditionals and projections
+* `input_tables` (list of string, optional) - The full three-part names of the tables the pipeline reads from. Required to materialize this
+  feature with a TableTrigger, which starts a run when these tables update. Each table must exist
+  when the feature is created. Feature Store doesn't confirm that the pipeline reads from these
+  tables. At most 25 tables
+* `output_table` (string, optional) - The full three-part (catalog, schema, table) name of the pipeline's output table to read from.
+  The table doesn't need to exist until the pipeline first runs. Required
+* `pipeline_id` (string, optional) - The ID of the Spark Declarative Pipeline that Feature Store runs to produce this source, before
+  each materialization or backfill. The pipeline must already exist when the feature is created,
+  and you need CAN_RUN, CAN_MANAGE, or owner permission on it. It doesn't need to have run yet.
+  Deleting the feature doesn't delete the pipeline. If the pipeline is deleted, this field reads
+  back empty. Required
+* `transformation_sql` (string, optional) - A single SQL SELECT expression applied after filter_condition.
+  Should contain all the columns needed (eg. "SELECT *, col_a + col_b AS col_c FROM x.y.z WHERE col_a > 0" would have `transformation_sql` "*, col_a + col_b AS col_c")
+  If transformation_sql is not provided, all columns of the pipeline's output table are present in the DataSource dataframe
+
 ### SlidingWindow
 * `slide_duration` (string, required) - The slide duration (interval by which windows advance, must be positive and less than duration)
+* `delay` (string, optional) - Non-negative analytic lag that evaluates the window this far in the past. Use this for timing
+  variations unrelated to source lateness, such as a 30-day count as of one week ago. If unset,
+  the analytic lag is zero. It composes with source.lateness when both are set
+* `offset` (string, optional) - Non-negative phase shift from the default midnight UTC alignment. For example, offset=22h on
+  a 24h slide produces boundaries at 22:00 UTC (17:00 New York in standard time) instead of
+  midnight UTC. If unset, the offset is zero. Must be shorter than slide_duration (and therefore
+  window_duration)
 * `window_duration` (string, optional) - The duration of the sliding window. Must be positive when set; absent means lifetime
   (aggregate over the entity's entire history)
+
+### SourceLateness
+* `settling_delay` (string, optional) - Non-negative time to wait after a window ends before treating its source data as complete.
+  Training shifts the eligible evaluation time backwards by this duration so it does not join
+  data that would still have been settling online. Materialization waits for the duration to
+  elapse before publishing the window. If unset, source data is considered settled immediately
 
 ### StddevPopFunction
 * `input` (string, required) - The input column from which the population standard deviation is computed. For Kafka sources,
@@ -239,6 +388,15 @@ The following arguments are supported:
 * `rolling` (RollingWindow, optional)
 * `sawtooth` (SawtoothWindow, optional) - A sawtooth window served via the hybrid batch + streaming path
 * `sliding` (SlidingWindow, optional)
+* `start_time` (string, optional) - Earliest event-time boundary at which the Feature may emit an output. This gates outputs, not
+  the historical inputs read by a window. For example, a 365-day window with
+  start_time=2026-01-01 begins emitting partial-window values on that date instead of waiting
+  for 365 days of data; a lifetime window produces no output before start_time. If unset,
+  tumbling and fixed-duration sliding windows first emit at an offset-aligned boundary after a
+  full window can be formed. If unset, lifetime sliding windows and rolling windows emit as soon as
+  eligible source data exists.
+  For sawtooth windows, start_time must not be later than the time the Feature is created.
+  Not supported for rolling windows on Features with a stream source
 * `tumbling` (TumblingWindow, optional)
 
 ### TimeseriesColumn
@@ -251,6 +409,12 @@ The following arguments are supported:
 
 ### TumblingWindow
 * `window_duration` (string, required) - The duration of each tumbling window (non-overlapping, fixed-duration windows)
+* `delay` (string, optional) - Non-negative analytic lag that evaluates the window this far in the past. Use this for timing
+  variations unrelated to source lateness, such as a 30-day count as of one week ago. If unset,
+  the analytic lag is zero. It composes with source.lateness when both are set
+* `offset` (string, optional) - Non-negative phase shift from the default midnight UTC alignment. For example, offset=22h on
+  a 24h window produces boundaries at 22:00 UTC (17:00 New York in standard time) instead of
+  midnight UTC. If unset, the offset is zero. Must be shorter than window_duration
 
 ### VarPopFunction
 * `input` (string, required) - The input column from which the population variance is computed
@@ -264,7 +428,12 @@ In addition to the above arguments, the following attributes are exported:
 * `created_at` (string) - Time at which this feature was created
 * `created_by` (string) - Username of the feature creator
 * `name` (string) - Name of the feature, extracted from the full three-part name (catalog.schema.name)
+* `output_type_text` (string) - Output type in Databricks SQL DDL (e.g., "BIGINT", "DECIMAL(10,2)", "ARRAY<STRING>", "STRUCT<name:STRING>")
 * `schema_name` (string) - Name of parent schema relative to its parent catalog
+
+### SdpSource
+* `pipeline_state` (string) - State tracking pipeline execution and output table validation. PENDING until the pipeline
+  has run at least once and created the output table; then RESOLVED on success, or ERROR on failure. Possible values are: `ERROR`, `PENDING`, `RESOLVED`
 
 ## Import
 As of Terraform v1.5, resources can be imported through configuration.

@@ -1,0 +1,82 @@
+# API responses are placeholders based on the API models, not recorded.
+version: 1
+host_metadata:
+  cloud: AWS
+  host_type: workspace
+  workspace_id: '12345'
+steps:
+- name: create_identity
+  config: |
+    resource "databricks_user" "first" {
+      user_name             = "replay@example.com"
+      force_delete_home_dir = true
+    }
+  calls:
+  - request:
+      method: POST
+      path: /api/2.0/preview/scim/v2/Users
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body:
+        json:
+          active: true
+          entitlements:
+          - {}
+          schemas:
+          - urn:ietf:params:scim:schemas:core:2.0:User
+          userName: replay@example.com
+    response:
+      status: 200
+      body:
+        json:
+          active: true
+          displayName: replay@example.com
+          id: '101'
+          schemas:
+          - urn:ietf:params:scim:schemas:core:2.0:User
+          userName: replay@example.com
+  - &id001
+    request:
+      method: GET
+      path: /api/2.0/preview/scim/v2/Users/101
+      query:
+        attributes:
+        - userName,displayName,active,externalId,entitlements
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body: null
+    response:
+      status: 200
+      body:
+        json:
+          active: true
+          displayName: replay@example.com
+          id: '101'
+          schemas:
+          - urn:ietf:params:scim:schemas:core:2.0:User
+          userName: replay@example.com
+  - *id001
+destroy:
+  calls:
+  - *id001
+  - request:
+      method: DELETE
+      path: /api/2.0/preview/scim/v2/Users/101
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body: null
+    response:
+      status: 200
+      body: null
+  - request:
+      method: POST
+      path: /api/2.0/workspace/delete
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body:
+        json:
+          path: /Users/replay@example.com
+          recursive: true
+    response:
+      status: 200
+      body: null

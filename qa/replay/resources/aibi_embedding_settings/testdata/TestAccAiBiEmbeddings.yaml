@@ -1,0 +1,136 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: "workspace"
+  cloud: "AWS"
+  workspace_id: "12345"
+steps:
+  - name: "configure_embedding"
+    config: |
+      resource "databricks_aibi_dashboard_embedding_access_policy_setting" "this" {
+        aibi_dashboard_embedding_access_policy {
+          access_policy_type = "ALLOW_APPROVED_DOMAINS"
+        }
+      }
+
+      resource "databricks_aibi_dashboard_embedding_approved_domains_setting" "this" {
+        aibi_dashboard_embedding_approved_domains {
+          approved_domains = ["test.com"]
+        }
+        depends_on = [databricks_aibi_dashboard_embedding_access_policy_setting.this]
+      }
+    calls:
+      - request:
+          method: "PATCH"
+          path: "/api/2.0/settings/types/aibi_dash_embed_ws_acc_policy/names/default"
+          body:
+            json:
+              allow_missing: true
+              field_mask: "aibi_dashboard_embedding_access_policy.access_policy_type"
+              setting:
+                aibi_dashboard_embedding_access_policy:
+                  access_policy_type: "ALLOW_APPROVED_DOMAINS"
+                setting_name: "default"
+        response: &response_1 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              aibi_dashboard_embedding_access_policy:
+                access_policy_type: "ALLOW_APPROVED_DOMAINS"
+              etag: "policy-1"
+              setting_name: "default"
+      - &get_1
+        request: {method: "GET", path: "/api/2.0/settings/types/aibi_dash_embed_ws_acc_policy/names/default", query: {"etag": ["policy-1"]}, body: null}
+        response: *response_1
+      - request:
+          method: "PATCH"
+          path: "/api/2.0/settings/types/aibi_dash_embed_ws_apprvd_domains/names/default"
+          body:
+            json:
+              allow_missing: true
+              field_mask: "aibi_dashboard_embedding_approved_domains.approved_domains"
+              setting:
+                aibi_dashboard_embedding_approved_domains:
+                  approved_domains: ["test.com"]
+                setting_name: "default"
+        response: &response_2 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              aibi_dashboard_embedding_approved_domains:
+                approved_domains: ["test.com"]
+              etag: "domains-1"
+              setting_name: "default"
+      - &get_2
+        request: {method: "GET", path: "/api/2.0/settings/types/aibi_dash_embed_ws_apprvd_domains/names/default", query: {"etag": ["domains-1"]}, body: null}
+        response: *response_2
+      - *get_1
+      - *get_2
+  - name: "approve_another_domain"
+    config: |
+      resource "databricks_aibi_dashboard_embedding_access_policy_setting" "this" {
+        aibi_dashboard_embedding_access_policy {
+          access_policy_type = "ALLOW_APPROVED_DOMAINS"
+        }
+      }
+
+      resource "databricks_aibi_dashboard_embedding_approved_domains_setting" "this" {
+        aibi_dashboard_embedding_approved_domains {
+          approved_domains = ["test.com", "test2.com"]
+        }
+        depends_on = [databricks_aibi_dashboard_embedding_access_policy_setting.this]
+      }
+    calls:
+      - *get_1
+      - *get_2
+      - request:
+          method: "PATCH"
+          path: "/api/2.0/settings/types/aibi_dash_embed_ws_apprvd_domains/names/default"
+          body:
+            json:
+              allow_missing: true
+              field_mask: "aibi_dashboard_embedding_approved_domains.approved_domains"
+              setting:
+                aibi_dashboard_embedding_approved_domains:
+                  approved_domains: ["test.com","test2.com"]
+                etag: "domains-1"
+                setting_name: "default"
+        response: &response_3 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              aibi_dashboard_embedding_approved_domains:
+                approved_domains: ["test.com","test2.com"]
+              etag: "domains-2"
+              setting_name: "default"
+      - &get_3
+        request: {method: "GET", path: "/api/2.0/settings/types/aibi_dash_embed_ws_apprvd_domains/names/default", query: {"etag": ["domains-2"]}, body: null}
+        response: *response_3
+      - *get_1
+      - *get_3
+destroy:
+  calls:
+    - *get_1
+    - *get_3
+    - request:
+        method: "DELETE"
+        path: "/api/2.0/settings/types/aibi_dash_embed_ws_apprvd_domains/names/default"
+        query:
+          etag: ["domains-2"]
+        body: null
+      response: # Inferred API response; not recorded.
+        status: 200
+        body:
+          json:
+            etag: "domains-deleted"
+    - request:
+        method: "DELETE"
+        path: "/api/2.0/settings/types/aibi_dash_embed_ws_acc_policy/names/default"
+        query:
+          etag: ["policy-1"]
+        body: null
+      response: # Inferred API response; not recorded.
+        status: 200
+        body:
+          json:
+            etag: "policy-deleted"

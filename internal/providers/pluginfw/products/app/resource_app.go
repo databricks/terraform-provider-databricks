@@ -32,11 +32,16 @@ const (
 type AppResource struct {
 	apps_tf.App
 	NoCompute types.Bool `tfsdk:"no_compute"`
+	// The thumbnail image can't be read back, so only its path and hash are kept in state.
+	ThumbnailPath types.String `tfsdk:"thumbnail_path"`
+	ThumbnailMd5  types.String `tfsdk:"thumbnail_md5"`
 	tfschema.Namespace
 }
 
 func (a AppResource) ApplySchemaCustomizations(s map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	s["no_compute"] = s["no_compute"].SetOptional()
+	s["thumbnail_path"] = s["thumbnail_path"].SetOptional()
+	s["thumbnail_md5"] = s["thumbnail_md5"].SetComputed()
 	s["provider_config"] = s["provider_config"].SetOptional()
 	s["provider_config"] = s["provider_config"].SetComputed()
 	s["provider_config"] = s["provider_config"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(tfschema.ProviderConfigPlanModifier{})
@@ -51,7 +56,58 @@ func (a AppResource) ApplySchemaCustomizations(s map[string]tfschema.AttributeBu
 	s["compute_size"] = s["compute_size"].SetComputed()
 	s = apps_tf.App{}.ApplySchemaCustomizations(s)
 	s["forward_user_access_token"] = s["forward_user_access_token"].SetComputed()
+
+	// git_source is input_only at the app level: the Apps API accepts it on write but never
+	// echoes it on read (the read-back is the separate OUTPUT_ONLY default_git_source). Its
+	// descendants (git_repository, resolved_commit, and the grandchild
+	// git_repository.caller_credential_id) are generated as Computed because GitSource and
+	// GitRepository are shared messages reused in output contexts; left Computed, a
+	// user-configured git_source carries unknown-after-apply values and the apply fails. Drop
+	// Computed across the whole git_source subtree so a configured value is fully known;
+	// SyncFields then round-trips it across reads.
+	if gs, ok := s["git_source"].(tfschema.SingleNestedAttributeBuilder); ok {
+		gs.Attributes["git_repository"] = clearComputed(gs.Attributes["git_repository"])
+		gs.Attributes["resolved_commit"] = clearComputed(gs.Attributes["resolved_commit"])
+		s["git_source"] = gs
+	}
 	return s
+}
+
+// clearComputed recursively drops the Computed flag (and its now-moot UseStateForUnknown plan
+// modifiers) from an input_only attribute's descendants, turning each into a plain optional.
+// git_source is input_only — SyncFields copies the whole subtree from the plan on every read —
+// so any Computed descendant is left unknown after apply and fails. Recursion reaches
+// grandchildren such as git_repository.caller_credential_id; Required descendants
+// (git_repository url/provider) have Computed unset already and are left as-is.
+func clearComputed(b tfschema.AttributeBuilder) tfschema.AttributeBuilder {
+	switch nb := b.(type) {
+	case tfschema.SingleNestedAttributeBuilder:
+		if nb.Computed {
+			nb.Computed, nb.Optional, nb.PlanModifiers = false, true, nil
+		}
+		cleared := make(map[string]tfschema.AttributeBuilder, len(nb.Attributes))
+		for k, child := range nb.Attributes {
+			cleared[k] = clearComputed(child)
+		}
+		nb.Attributes = cleared
+		return nb
+	case tfschema.StringAttributeBuilder:
+		if nb.Computed {
+			nb.Computed, nb.Optional, nb.PlanModifiers = false, true, nil
+		}
+		return nb
+	case tfschema.Int64AttributeBuilder:
+		if nb.Computed {
+			nb.Computed, nb.Optional, nb.PlanModifiers = false, true, nil
+		}
+		return nb
+	case tfschema.BoolAttributeBuilder:
+		if nb.Computed {
+			nb.Computed, nb.Optional, nb.PlanModifiers = false, true, nil
+		}
+		return nb
+	}
+	return b
 }
 
 func (a AppResource) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
@@ -116,14 +172,11 @@ func (a *resourceApp) ModifyPlan(ctx context.Context, req resource.ModifyPlanReq
 	if req.Plan.Raw.IsNull() {
 		return
 	}
+	planThumbnailMd5(ctx, req, resp)
 	if a.client == nil {
 		return
 	}
 	tfschema.WorkspaceDriftDetection(ctx, a.client, req, resp)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	tfschema.ValidateWorkspaceID(ctx, a.client, req, resp)
 }
 
 // reconcileEmptyUserApiScopes preserves a user-configured empty user_api_scopes list
@@ -191,8 +244,9 @@ func (a *resourceApp) Create(ctx context.Context, req resource.CreateRequest, re
 		return
 	}
 	newApp.NoCompute = app.NoCompute
+	newApp.ThumbnailPath = app.ThumbnailPath
 	newApp.ProviderConfig = app.ProviderConfig
-	newApp.UserApiScopes = reconcileEmptyUserApiScopes(app.UserApiScopes, newApp.UserApiScopes)
+	newApp.App.SyncFieldsDuringCreateOrUpdate(ctx, app.App)
 	resp.Diagnostics.Append(resp.State.Set(ctx, newApp)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -205,13 +259,26 @@ func (a *resourceApp) Create(ctx context.Context, req resource.CreateRequest, re
 		resp.Diagnostics.AddError("error waiting for app to be active or stopped", err.Error())
 		return
 	}
+	// The thumbnail is set once the app is created, since setting it needs the app's permissions.
+	newApp.ThumbnailMd5, err = syncThumbnail(ctx, w.Apps, appGoSdk.Name, app.ThumbnailPath, types.StringNull())
+	if err != nil {
+		resp.Diagnostics.AddError("failed to update app thumbnail", err.Error())
+		return
+	}
+	if !newApp.ThumbnailMd5.IsNull() {
+		// Read the app again for the thumbnail_url the upload created.
+		if finalApp, err = w.Apps.GetByName(ctx, appGoSdk.Name); err != nil {
+			resp.Diagnostics.AddError("failed to read app after updating its thumbnail", err.Error())
+			return
+		}
+	}
 	// Store the final version of the app in state
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, finalApp, &newApp)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 	newApp.ProviderConfig = app.ProviderConfig
-	newApp.UserApiScopes = reconcileEmptyUserApiScopes(app.UserApiScopes, newApp.UserApiScopes)
+	newApp.App.SyncFieldsDuringCreateOrUpdate(ctx, app.App)
 	resp.Diagnostics.Append(resp.State.Set(ctx, newApp)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -297,7 +364,12 @@ func (a *resourceApp) Read(ctx context.Context, req resource.ReadRequest, resp *
 		return
 	}
 	newApp.NoCompute = app.NoCompute
+	newApp.ThumbnailPath = app.ThumbnailPath
+	newApp.ThumbnailMd5 = app.ThumbnailMd5
 	newApp.ProviderConfig = app.ProviderConfig
+	newApp.App.SyncFieldsDuringRead(ctx, app.App)
+	// SyncFieldsDuringRead reconciles the input_only fields (git_source, source_code_path,
+	// git_repository.caller_credential_id) but omits user_api_scopes, so restore it here.
 	newApp.UserApiScopes = reconcileEmptyUserApiScopes(app.UserApiScopes, newApp.UserApiScopes)
 	resp.Diagnostics.Append(resp.State.Set(ctx, newApp)...)
 	if resp.Diagnostics.HasError() {
@@ -330,15 +402,47 @@ func (a *resourceApp) Update(ctx context.Context, req resource.UpdateRequest, re
 		return
 	}
 
-	// Update the app
-	var appGoSdk apps.App
-	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, app, &appGoSdk)...)
+	needsAppUpdate, err := appUpdateRequired(req)
+	if err != nil {
+		resp.Diagnostics.AddError("failed to compare the plan with the state", err.Error())
+		return
+	}
+	if needsAppUpdate {
+		var appGoSdk apps.App
+		resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, app, &appGoSdk)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		updateWaiter, err := w.Apps.CreateUpdate(ctx, apps.AsyncUpdateAppRequest{
+			App:     &appGoSdk,
+			AppName: app.Name.ValueString(),
+			// The backend expands "*" to every updatable field, so fields it adds later are applied
+			// without a provider change. Unset fields are cleared or reset to their backend default.
+			UpdateMask: "*",
+		})
+		if err != nil {
+			resp.Diagnostics.AddError("failed to update app", err.Error())
+			return
+		}
+		if _, err := updateWaiter.Get(); err != nil {
+			resp.Diagnostics.AddError("error waiting for app update to succeed", err.Error())
+			return
+		}
+	}
+	var priorThumbnailMd5 types.String
+	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("thumbnail_md5"), &priorThumbnailMd5)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	response, err := w.Apps.Update(ctx, apps.UpdateAppRequest{App: appGoSdk, Name: app.Name.ValueString()})
+	// On error the prior state, with its thumbnail_md5, is kept, so the next apply retries.
+	thumbnailMd5, err := syncThumbnail(ctx, w.Apps, app.Name.ValueString(), app.ThumbnailPath, priorThumbnailMd5)
 	if err != nil {
-		resp.Diagnostics.AddError("failed to update app", err.Error())
+		resp.Diagnostics.AddError("failed to update app thumbnail", err.Error())
+		return
+	}
+	response, err := w.Apps.GetByName(ctx, app.Name.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError("failed to read app after update", err.Error())
 		return
 	}
 
@@ -350,8 +454,10 @@ func (a *resourceApp) Update(ctx context.Context, req resource.UpdateRequest, re
 	}
 	// Modifying no_compute after creation has no effect.
 	newApp.NoCompute = app.NoCompute
+	newApp.ThumbnailPath = app.ThumbnailPath
+	newApp.ThumbnailMd5 = thumbnailMd5
 	newApp.ProviderConfig = app.ProviderConfig
-	newApp.UserApiScopes = reconcileEmptyUserApiScopes(app.UserApiScopes, newApp.UserApiScopes)
+	newApp.App.SyncFieldsDuringCreateOrUpdate(ctx, app.App)
 	resp.Diagnostics.Append(resp.State.Set(ctx, newApp)...)
 	// No PopulateProviderConfigInState needed for Update: provider_config.workspace_id
 	// is already in state from a previous Create, and if the workspace ID had changed,

@@ -164,9 +164,7 @@ func namespaceForceNew(ctx context.Context, d *schema.ResourceDiff, c *Databrick
 		if err != nil || resolvedID == 0 {
 			// Resolution failed (e.g., account-level host where /Me doesn't work)
 			// or returned zero. Either way, workspace_id is required but missing.
-			return fmt.Errorf("resource has provider_config.workspace_id = %q in state, "+
-				"but managing workspace-level resources requires a workspace_id and "+
-				"none was found in the resource's provider_config block or the provider's workspace_id attribute", oldEffective)
+			return fmt.Errorf("managing a workspace-level resource requires a workspace_id, but the previously configured workspace_id was removed")
 		}
 		newEffective = strconv.FormatInt(resolvedID, 10)
 	}
@@ -371,12 +369,33 @@ func (c *DatabricksClient) DatabricksClientForUnifiedProvider(ctx context.Contex
 // This is used by resources and data sources that are developed
 // over SDKv2 and are not using Go SDK.
 func (c *DatabricksClient) getDatabricksClientForUnifiedProvider(ctx context.Context, workspaceID string) (*DatabricksClient, error) {
+	// Readers and writers must share the lock, including the first map allocation.
+	// Lock ordering is muLegacy before mu, which guards SDK workspace clients.
+	c.muLegacy.Lock()
+	defer c.muLegacy.Unlock()
+
 	parsedID, err := parseWorkspaceID(workspaceID)
 	if err != nil {
 		return nil, err
 	}
 
-	// newDatabricksClient wraps a low-level client.DatabricksClient (Go SDK)
+	dc := c.cachedDatabricksClients[parsedID]
+	if dc == nil {
+		workspaceClient, err := c.GetWorkspaceClientForUnifiedProvider(ctx, workspaceID)
+		if err != nil {
+			return nil, err
+		}
+		dc, err = client.New(workspaceClient.Config)
+		if err != nil {
+			return nil, err
+		}
+		if c.cachedDatabricksClients == nil {
+			c.cachedDatabricksClients = make(map[string]*client.DatabricksClient)
+		}
+		c.cachedDatabricksClients[parsedID] = dc
+	}
+
+	// Wrap the low-level client.DatabricksClient (Go SDK)
 	// into a common.DatabricksClient (provider-level wrapper). A new wrapper is
 	// needed per workspace because:
 	// 1. HTTP-path resources (non-Go-SDK) use common.DatabricksClient's
@@ -385,69 +404,12 @@ func (c *DatabricksClient) getDatabricksClientForUnifiedProvider(ctx context.Con
 	//    differs per workspace ID.
 	// 3. We propagate any already-resolved workspace client from the parent's
 	//    cache so that WorkspaceClient() returns it without recreating.
-	newDatabricksClient := func(dc *client.DatabricksClient) *DatabricksClient {
-		result := &DatabricksClient{
-			DatabricksClient:     dc,
-			commandFactory:       c.commandFactory,
-			httpTimeoutSetByUser: c.httpTimeoutSetByUser,
-		}
-		if wc, ok := c.cachedWorkspaceClients[parsedID]; ok {
-			result.cachedWorkspaceClient = wc
-		}
-		return result
-	}
-
-	// If the Databricks Client is cached, we use it
-	if c.cachedDatabricksClients != nil {
-		if client, ok := c.cachedDatabricksClients[parsedID]; ok && client != nil {
-			return newDatabricksClient(client), nil
-		}
-	}
-
-	// If the Databricks Client is not cached, we create a client
-	// and cache it.
-	err = c.setCachedDatabricksClient(ctx, workspaceID)
-	if err != nil {
-		return nil, err
-	}
-
-	// Return the Databricks Client.
-	return newDatabricksClient(c.cachedDatabricksClients[parsedID]), nil
-}
-
-// setCachedDatabricksClient sets the cached Databricks Client.
-func (c *DatabricksClient) setCachedDatabricksClient(ctx context.Context, workspaceID string) error {
-	// Acquire the lock to avoid race conditions.
-	c.muLegacy.Lock()
-	defer c.muLegacy.Unlock()
-
-	// Initialize the map if it's nil
-	if c.cachedDatabricksClients == nil {
-		c.cachedDatabricksClients = make(map[string]*client.DatabricksClient)
-	}
-
-	parsedID, err := parseWorkspaceID(workspaceID)
-	if err != nil {
-		return err
-	}
-
-	// Double checked locking
-	if existingClient, ok := c.cachedDatabricksClients[parsedID]; ok && existingClient != nil {
-		return nil
-	}
-
-	// Get the workspace client for the workspace ID
-	workspaceClient, err := c.GetWorkspaceClientForUnifiedProvider(ctx, workspaceID)
-	if err != nil {
-		return err
-	}
-
-	// Create a new Databricks Client with the same configuration
-	// as the workspace client
-	newClient, err := client.New(workspaceClient.Config)
-	if err != nil {
-		return err
-	}
-	c.cachedDatabricksClients[parsedID] = newClient
-	return nil
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return &DatabricksClient{
+		DatabricksClient:      dc,
+		commandFactory:        c.commandFactory,
+		httpTimeoutSetByUser:  c.httpTimeoutSetByUser,
+		cachedWorkspaceClient: c.cachedWorkspaceClients[parsedID],
+	}, nil
 }

@@ -1,0 +1,80 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: "account"
+  cloud: "AWS"
+  account_id: "replay-account"
+steps:
+  - name: "lookup_created_config"
+    config: |
+      provider "databricks" {
+        account_id = "replay-account"
+      }
+
+      resource "databricks_mws_network_connectivity_config" "this" {
+        name   = "tf-replay1"
+        region = "us-east-2"
+      }
+
+      data "databricks_mws_network_connectivity_config" "this" {
+        depends_on = [databricks_mws_network_connectivity_config.this]
+        name       = databricks_mws_network_connectivity_config.this.name
+      }
+    calls:
+      - request:
+          method: "POST"
+          path: "/api/2.0/accounts/replay-account/network-connectivity-configs"
+          body:
+            json:
+              name: "tf-replay1"
+              region: "us-east-2"
+        response: &response_1 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              account_id: "replay-account"
+              name: "tf-replay1"
+              network_connectivity_config_id: "ncc-1"
+              region: "us-east-2"
+      - &get_1
+        request:
+          method: "GET"
+          path: "/api/2.0/accounts/replay-account/network-connectivity-configs/ncc-1"
+          body: null
+        response: *response_1
+      - &get_2
+        request:
+          method: "GET"
+          path: "/api/2.0/accounts/replay-account/network-connectivity-configs"
+          body: null
+        response: &response_2 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              items:
+                - account_id: "replay-account"
+                  name: "tf-replay1"
+                  network_connectivity_config_id: "ncc-1"
+                  region: "us-east-2"
+      - *get_2
+      - *get_1
+      - *get_2
+    state:
+      resources:
+        data.databricks_mws_network_connectivity_config.this:
+          attributes:
+            - path: ["name"]
+              equals: "tf-replay1"
+            - path: ["region"]
+              equals: "us-east-2"
+destroy:
+  calls:
+    - *get_1
+    - *get_2
+    - request:
+        method: "DELETE"
+        path: "/api/2.0/accounts/replay-account/network-connectivity-configs/ncc-1"
+        body: null
+      response: # Inferred API response; not recorded.
+        status: 200
+        body: null

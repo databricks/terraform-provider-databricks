@@ -40,14 +40,21 @@ type GroupResource struct {
 
 // Group extends the main model with additional fields.
 type Group struct {
-	// The parent account ID for group in Databricks.
+	// The ID of the account that contains the group.
 	AccountId types.String `tfsdk:"account_id"`
-	// ExternalId of the group in the customer's IdP.
+	// The ID of the group in your identity provider (IdP).
 	ExternalId types.String `tfsdk:"external_id"`
-	// Internal group ID of the group in Databricks.
+	// The Databricks ID of the group.
 	GroupId types.String `tfsdk:"group_id"`
-	// Display name of the group.
+	// The name of the group.
 	GroupName types.String `tfsdk:"group_name"`
+	// The resource name of the group, in one of these formats: - Account APIs:
+	// `accounts/{account_id}/groups/{group_id}` - Workspace APIs:
+	// `groups/{group_id}`
+	Name types.String `tfsdk:"name"`
+	// The resource name of the account that contains the group, in the format
+	// `accounts/{account_id}`. Workspace APIs return the same format.
+	Parent types.String `tfsdk:"parent"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
@@ -74,6 +81,8 @@ func (m Group) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"external_id": m.ExternalId,
 			"group_id":    m.GroupId,
 			"group_name":  m.GroupName,
+			"name":        m.Name,
+			"parent":      m.Parent,
 		},
 	)
 }
@@ -86,6 +95,8 @@ func (m Group) Type(ctx context.Context) attr.Type {
 			"external_id": types.StringType,
 			"group_id":    types.StringType,
 			"group_name":  types.StringType,
+			"name":        types.StringType,
+			"parent":      types.StringType,
 		},
 	}
 }
@@ -104,11 +115,16 @@ func (to *Group) SyncFieldsDuringRead(ctx context.Context, from Group) {
 
 func (m Group) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["account_id"] = attrs["account_id"].SetComputed()
+	attrs["account_id"] = attrs["account_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["external_id"] = attrs["external_id"].SetOptional()
 	attrs["group_id"] = attrs["group_id"].SetComputed()
-	attrs["group_name"] = attrs["group_name"].SetOptional()
-
 	attrs["group_id"] = attrs["group_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
+	attrs["group_name"] = attrs["group_name"].SetOptional()
+	attrs["name"] = attrs["name"].SetComputed()
+	attrs["parent"] = attrs["parent"].SetRequired()
+	attrs["parent"] = attrs["parent"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+
+	attrs["name"] = attrs["name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	return attrs
 }
 
@@ -145,7 +161,8 @@ func (r *GroupResource) Create(ctx context.Context, req resource.CreateRequest, 
 	}
 
 	createRequest := iamv2.CreateGroupRequest{
-		Group: group,
+		Group:  group,
+		Parent: plan.Parent.ValueString(),
 	}
 
 	client, clientDiags := r.Client.GetAccountClient()
@@ -229,7 +246,7 @@ func (r *GroupResource) update(ctx context.Context, plan Group, diags *diag.Diag
 
 	updateRequest := iamv2.UpdateGroupRequest{
 		Group:      group,
-		GroupId:    plan.GroupId.ValueString(),
+		Name:       plan.Name.ValueString(),
 		UpdateMask: "external_id,group_name",
 	}
 
@@ -311,13 +328,13 @@ func (r *GroupResource) ImportState(ctx context.Context, req resource.ImportStat
 		resp.Diagnostics.AddError(
 			"Unexpected Import Identifier",
 			fmt.Sprintf(
-				"Expected import identifier with format: group_id. Got: %q",
+				"Expected import identifier with format: name. Got: %q",
 				req.ID,
 			),
 		)
 		return
 	}
 
-	groupId := parts[0]
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("group_id"), groupId)...)
+	name := parts[0]
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("name"), name)...)
 }

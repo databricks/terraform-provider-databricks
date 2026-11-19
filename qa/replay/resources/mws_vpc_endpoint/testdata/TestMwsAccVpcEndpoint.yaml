@@ -1,0 +1,57 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: "account"
+  cloud: "AWS"
+  account_id: "replay-account"
+steps:
+  - name: "create"
+    config: |
+      provider "databricks" {
+        account_id = "replay-account"
+      }
+
+      resource "databricks_mws_vpc_endpoint" "this" {
+        account_id          = "replay-account"
+        vpc_endpoint_name   = "tf-replay1"
+        region              = "us-east-1"
+        aws_vpc_endpoint_id = "vpce-replay"
+        aws_account_id      = "123456789012"
+      }
+    calls:
+      - request:
+          method: "POST"
+          path: "/api/2.0/accounts/replay-account/vpc-endpoints"
+          body:
+            json:
+              account_id: "replay-account"
+              aws_account_id: "123456789012"
+              aws_vpc_endpoint_id: "vpce-replay"
+              region: "us-east-1"
+              vpc_endpoint_name: "tf-replay1"
+        response: &response_1 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              account_id: "replay-account"
+              aws_account_id: "123456789012"
+              aws_vpc_endpoint_id: "vpce-replay"
+              region: "us-east-1"
+              state: "AVAILABLE"
+              vpc_endpoint_id: "vpce-1"
+              vpc_endpoint_name: "tf-replay1"
+      - &get_1
+        request: {method: "GET", path: "/api/2.0/accounts/replay-account/vpc-endpoints/vpce-1", body: null}
+        response: *response_1
+      - *get_1
+      - *get_1
+destroy:
+  calls:
+    - *get_1
+    - request:
+        method: "DELETE"
+        path: "/api/2.0/accounts/replay-account/vpc-endpoints/vpce-1"
+        body: null
+      response: # Inferred API response; not recorded.
+        status: 200
+        body: null

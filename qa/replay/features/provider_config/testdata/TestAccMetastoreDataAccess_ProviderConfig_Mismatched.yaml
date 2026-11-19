@@ -1,0 +1,24 @@
+# Source: catalog/metastore_data_access_provider_config_test.go#TestAccMetastoreDataAccess_ProviderConfig_Mismatched
+# Generic provider_config validation; the resource is only a schema carrier.
+# Random names are fixed because replay has no shared server.
+version: 1
+# Dummy host metadata, not captured from a live workspace.
+host_metadata:
+  workspace_id: "12345"
+steps:
+  - name: reject_mismatched_workspace_id
+    config: |
+      resource "databricks_metastore_data_access" "this" {
+        metastore_id = "fake-metastore-id"
+        name         = "tf-test-dac"
+        aws_iam_role {
+          role_arn = "arn:aws:iam::123456789012:role/tf-test"
+        }
+        provider_config {
+          workspace_id = "123"
+        }
+      }
+    expect_error: 'workspace_id mismatch.*please check the workspace_id provided in provider_config'
+    calls: []
+destroy:
+  calls: []

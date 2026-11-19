@@ -108,20 +108,16 @@ type FeatureData struct {
 	// The description of the feature.
 	Description types.String `tfsdk:"description"`
 	// The entity columns for the feature, used as aggregation keys and for
-	// query-time lookup.
+	// query-time lookup. Optional since entities are not set for RequestSource
+	// features or on-demand calculated features.
 	Entities types.List `tfsdk:"entities"`
-	// Deprecated: Use DeltaTableSource.filter_condition or
-	// KafkaSource.filter_condition instead. Kept for backwards compatibility.
-	// The filter condition applied to the source data before aggregation.
+
 	FilterCondition types.String `tfsdk:"filter_condition"`
-	// The full three-part name (catalog, schema, name) of the feature. This is
-	// the feature's resource identifier; the catalog_name, schema_name, and
-	// name fields below are OUTPUT_ONLY decomposed views of this value.
+	// The full three-part name (catalog, schema, name) of the feature.
 	FullName types.String `tfsdk:"full_name"`
 	// The function by which the feature is computed.
 	Function types.Object `tfsdk:"function"`
-	// Deprecated: Use AggregationFunction.inputs instead. Kept for backwards
-	// compatibility. The input columns from which the feature is computed.
+
 	Inputs types.List `tfsdk:"inputs"`
 	// Lineage context information for this feature. WARNING: This field is
 	// primarily intended for internal use by Databricks systems and is
@@ -134,16 +130,18 @@ type FeatureData struct {
 	// Name of the feature, extracted from the full three-part name
 	// (catalog.schema.name).
 	Name types.String `tfsdk:"name"`
+	// Output type in Databricks SQL DDL (e.g., "BIGINT", "DECIMAL(10,2)",
+	// "ARRAY<STRING>", "STRUCT<name:STRING>").
+	OutputTypeText types.String `tfsdk:"output_type_text"`
 	// Name of parent schema relative to its parent catalog.
 	SchemaName types.String `tfsdk:"schema_name"`
 	// The data source of the feature.
 	Source types.Object `tfsdk:"source"`
-	// Deprecated: Use Function.aggregation_function.time_window instead. Kept
-	// for backwards compatibility. The time window in which the feature is
-	// computed.
+
 	TimeWindow types.Object `tfsdk:"time_window"`
 	// Column recording time, used for point-in-time joins, backfills, and
-	// aggregations.
+	// aggregations. Optional since a timeseries column is not set for
+	// RequestSource features or on-demand calculated features.
 	TimeseriesColumn   types.Object `tfsdk:"timeseries_column"`
 	ProviderConfigData types.Object `tfsdk:"provider_config"`
 }
@@ -189,6 +187,7 @@ func (m FeatureData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"inputs":            m.Inputs,
 			"lineage_context":   m.LineageContext,
 			"name":              m.Name,
+			"output_type_text":  m.OutputTypeText,
 			"schema_name":       m.SchemaName,
 			"source":            m.Source,
 			"time_window":       m.TimeWindow,
@@ -219,6 +218,7 @@ func (m FeatureData) Type(ctx context.Context) attr.Type {
 			},
 			"lineage_context":   ml_tf.LineageContext{}.Type(ctx),
 			"name":              types.StringType,
+			"output_type_text":  types.StringType,
 			"schema_name":       types.StringType,
 			"source":            ml_tf.DataSource{}.Type(ctx),
 			"time_window":       ml_tf.TimeWindow{}.Type(ctx),
@@ -241,6 +241,7 @@ func (m FeatureData) ApplySchemaCustomizations(attrs map[string]tfschema.Attribu
 	attrs["inputs"] = attrs["inputs"].SetComputed()
 	attrs["lineage_context"] = attrs["lineage_context"].SetComputed()
 	attrs["name"] = attrs["name"].SetComputed()
+	attrs["output_type_text"] = attrs["output_type_text"].SetComputed()
 	attrs["schema_name"] = attrs["schema_name"].SetComputed()
 	attrs["source"] = attrs["source"].SetComputed()
 	attrs["time_window"] = attrs["time_window"].SetComputed()

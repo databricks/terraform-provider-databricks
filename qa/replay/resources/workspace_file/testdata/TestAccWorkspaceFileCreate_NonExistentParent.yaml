@@ -1,0 +1,154 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: workspace
+  cloud: AWS
+  workspace_id: '12345'
+steps:
+  - name: create_missing_parent
+    config: |
+      resource "databricks_workspace_file" "this" {
+        content_base64 = "YWJjCg=="
+        path           = "/Shared/provider-test/workspace-file-parent-replay/test.py"
+      }
+      # The directory data source retains the parent-existence check.
+      data "databricks_directory" "parent" {
+        path       = "/Shared/provider-test/workspace-file-parent-replay"
+        depends_on = [databricks_workspace_file.this]
+      }
+    calls:
+      - request:
+          method: POST
+          path: /api/2.0/workspace/import
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          body:
+            multipart:
+              - name: path
+                body:
+                  text: /Shared/provider-test/workspace-file-parent-replay/test.py
+              - name: content
+                filename: content
+                headers:
+                  Content-Type: application/octet-stream
+                body:
+                  text: |
+                    abc
+              - name: format
+                body:
+                  text: RAW
+              - name: overwrite
+                body:
+                  text: 'true'
+        response: &response_1 # Inferred API response; not recorded.
+          status: 404
+          body:
+            json:
+              error_code: RESOURCE_DOES_NOT_EXIST
+              message: Path does not exist
+      - request:
+          method: GET
+          path: /api/2.0/workspace/get-status
+          query:
+            path: [/Shared/provider-test/workspace-file-parent-replay]
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          body: null
+        response: *response_1 # Inferred API response; not recorded.
+      - request:
+          method: POST
+          path: /api/2.0/workspace/mkdirs
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          body:
+            json:
+              path: /Shared/provider-test/workspace-file-parent-replay
+        response: &response_2 # Inferred API response; not recorded.
+          status: 200
+          body: null
+      - request:
+          method: POST
+          path: /api/2.0/workspace/import
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          body:
+            multipart:
+              - name: path
+                body:
+                  text: /Shared/provider-test/workspace-file-parent-replay/test.py
+              - name: content
+                filename: content
+                headers:
+                  Content-Type: application/octet-stream
+                body:
+                  text: |
+                    abc
+              - name: format
+                body:
+                  text: RAW
+              - name: overwrite
+                body:
+                  text: 'true'
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              object_id: 200
+      - &call_2
+        request:
+          method: GET
+          path: /api/2.0/workspace/get-status
+          query:
+            path: [/Shared/provider-test/workspace-file-parent-replay/test.py]
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              object_id: 200
+              object_type: FILE
+              path: /Shared/provider-test/workspace-file-parent-replay/test.py
+      - &call_1
+        request:
+          method: GET
+          path: /api/2.0/workspace/get-status
+          query:
+            path: [/Shared/provider-test/workspace-file-parent-replay]
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              object_id: 201
+              object_type: DIRECTORY
+              path: /Shared/provider-test/workspace-file-parent-replay
+      - *call_1
+      - *call_2
+      - *call_1
+    state:
+      resources:
+        databricks_workspace_file.this:
+          attributes:
+            - path: [path]
+              equals: /Shared/provider-test/workspace-file-parent-replay/test.py
+        data.databricks_directory.parent:
+          attributes:
+            - path: [path]
+              equals: /Shared/provider-test/workspace-file-parent-replay
+destroy:
+  calls:
+    - *call_2
+    - *call_1
+    - request:
+        method: POST
+        path: /api/2.0/workspace/delete
+        headers:
+          X-Databricks-Workspace-Id: '12345'
+        body:
+          json:
+            path: /Shared/provider-test/workspace-file-parent-replay/test.py
+      response: *response_2 # Inferred API response; not recorded.

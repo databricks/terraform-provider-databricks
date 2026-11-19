@@ -1,0 +1,190 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: "account"
+  cloud: "GCP"
+  account_id: "replay-account"
+steps:
+  - name: "create"
+    config: |
+      provider "databricks" {
+        account_id = "replay-account"
+      }
+
+      resource "databricks_mws_networks" "this" {
+        account_id   = "replay-account"
+        network_name = "replay-network-replay1"
+        gcp_network_info {
+          network_project_id    = "replay-project"
+          vpc_id                = "replay-vpc"
+          subnet_id             = "replay-subnet"
+          subnet_region         = "us-central1"
+          pod_ip_range_name     = "pods"
+          service_ip_range_name = "services"
+        }
+      }
+
+      resource "databricks_mws_private_access_settings" "this" {
+        account_id                   = "replay-account"
+        private_access_settings_name = "tf-pas-replay1"
+        region                       = "us-central1"
+        public_access_enabled        = true
+        private_access_level         = "ACCOUNT"
+      }
+
+      resource "databricks_mws_workspaces" "this" {
+        account_id     = "replay-account"
+        workspace_name = "replay-replay1"
+        location       = "us-central1"
+
+        cloud_resource_container {
+          gcp {
+            project_id = "replay-project"
+          }
+        }
+
+        private_access_settings_id = databricks_mws_private_access_settings.this.private_access_settings_id
+        network_id                 = databricks_mws_networks.this.network_id
+
+        gke_config {
+          connectivity_type = "PRIVATE_NODE_PUBLIC_MASTER"
+          master_ip_range   = "10.3.0.0/28"
+        }
+      }
+    calls:
+      - request:
+          method: "POST"
+          path: "/api/2.0/accounts/replay-account/private-access-settings"
+          body:
+            json:
+              private_access_level: "ACCOUNT"
+              private_access_settings_name: "tf-pas-replay1"
+              public_access_enabled: true
+              region: "us-central1"
+        response: &response_1 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              account_id: "replay-account"
+              private_access_level: "ACCOUNT"
+              private_access_settings_id: "pas-1"
+              private_access_settings_name: "tf-pas-replay1"
+              public_access_enabled: true
+              region: "us-central1"
+      - &get_1
+        request: {method: "GET", path: "/api/2.0/accounts/replay-account/private-access-settings/pas-1", body: null}
+        response: *response_1
+      - request:
+          method: "POST"
+          path: "/api/2.0/accounts/replay-account/networks"
+          body:
+            json:
+              account_id: "replay-account"
+              gcp_network_info:
+                network_project_id: "replay-project"
+                pod_ip_range_name: "pods"
+                service_ip_range_name: "services"
+                subnet_id: "replay-subnet"
+                subnet_region: "us-central1"
+                vpc_id: "replay-vpc"
+              network_name: "replay-network-replay1"
+        response: &response_2 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              account_id: "replay-account"
+              gcp_network_info:
+                network_project_id: "replay-project"
+                pod_ip_range_name: "pods"
+                service_ip_range_name: "services"
+                subnet_id: "replay-subnet"
+                subnet_region: "us-central1"
+                vpc_id: "replay-vpc"
+              network_id: "network-1"
+              network_name: "replay-network-replay1"
+              vpc_status: "VALID"
+      - &get_2
+        request: {method: "GET", path: "/api/2.0/accounts/replay-account/networks/network-1", body: null}
+        response: *response_2
+      - request:
+          method: "POST"
+          path: "/api/2.0/accounts/replay-account/workspaces"
+          body:
+            json:
+              account_id: "replay-account"
+              cloud: "gcp"
+              cloud_resource_container:
+                gcp:
+                  project_id: "replay-project"
+              gke_config:
+                connectivity_type: "PRIVATE_NODE_PUBLIC_MASTER"
+                master_ip_range: "10.3.0.0/28"
+              location: "us-central1"
+              network_id: "network-1"
+              private_access_settings_id: "pas-1"
+              workspace_name: "replay-replay1"
+        response: &response_3 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              account_id: "replay-account"
+              cloud: "gcp"
+              cloud_resource_container:
+                gcp:
+                  project_id: "replay-project"
+              deployment_name: "replay-workspace"
+              gcp_workspace_sa: "workspace@replay-project.iam.gserviceaccount.com"
+              gke_config:
+                connectivity_type: "PRIVATE_NODE_PUBLIC_MASTER"
+                master_ip_range: "10.3.0.0/28"
+              location: "us-central1"
+              network_id: "network-1"
+              private_access_settings_id: "pas-1"
+              workspace_id: 12345
+              workspace_name: "replay-replay1"
+              workspace_status: "RUNNING"
+      - &lookup_workspace_12345
+        request: {method: "GET", path: "/api/2.0/accounts/replay-account/workspaces/12345", body: null}
+        response: *response_3
+      - *lookup_workspace_12345
+      - *lookup_workspace_12345
+      - *get_1
+      - *get_2
+      - *lookup_workspace_12345
+      - *lookup_workspace_12345
+destroy:
+  calls:
+    - *get_1
+    - *get_2
+    - *lookup_workspace_12345
+    - *lookup_workspace_12345
+    - request:
+        method: "DELETE"
+        path: "/api/2.0/accounts/replay-account/workspaces/12345"
+        body: null
+      response: # Inferred API response; not recorded.
+        status: 200
+        body: null
+    - request: {method: "GET", path: "/api/2.0/accounts/replay-account/workspaces/12345", body: null}
+      response: &response_4 # Inferred API response; not recorded.
+        status: 404
+        body:
+          json:
+            error_code: "RESOURCE_DOES_NOT_EXIST"
+            message: "Deleted"
+    - request:
+        method: "DELETE"
+        path: "/api/2.0/accounts/replay-account/private-access-settings/pas-1"
+        body: null
+      response: # Inferred API response; not recorded.
+        status: 200
+        body: null
+    - request:
+        method: "DELETE"
+        path: "/api/2.0/accounts/replay-account/networks/network-1"
+        body: null
+      response: # Inferred API response; not recorded.
+        status: 200
+        body: null
+    - request: {method: "GET", path: "/api/2.0/accounts/replay-account/networks/network-1", body: null}
+      response: *response_4

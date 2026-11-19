@@ -118,8 +118,7 @@ type SyncedTable struct {
 	// "source_table_full_name" attribute.
 	Name types.String `tfsdk:"name"`
 	// Configuration details of the synced table, such as the source table,
-	// scheduling policy, etc. This attribute is specified at creation time and
-	// most fields are returned as is on subsequent queries.
+	// scheduling policy, etc.
 	Spec types.Object `tfsdk:"spec"`
 	// Synced Table data synchronization status.
 	Status types.Object `tfsdk:"status"`
@@ -341,10 +340,6 @@ func (r *SyncedTableResource) ModifyPlan(ctx context.Context, req resource.Modif
 		return
 	}
 	tfschema.WorkspaceDriftDetection(ctx, r.Client, req, resp)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	tfschema.ValidateWorkspaceID(ctx, r.Client, req, resp)
 }
 
 func (r *SyncedTableResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -409,6 +404,9 @@ func (r *SyncedTableResource) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 	resp.Diagnostics.Append(tfschema.PopulateProviderConfigInState(ctx, r.Client, plan.ProviderConfig, &resp.State)...)
+	if !resp.Diagnostics.HasError() {
+		resp.Diagnostics.Append(resp.Private.SetKey(ctx, tfschema.CreationInputsAppliedKey, []byte("true"))...)
+	}
 }
 
 func (r *SyncedTableResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -466,6 +464,12 @@ func (r *SyncedTableResource) Read(ctx context.Context, req resource.ReadRequest
 }
 
 func (r *SyncedTableResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	if tfschema.AdoptImportedCreateFields(ctx, req, resp, "synced_table_id") {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.Append(resp.Private.SetKey(ctx, tfschema.CreationInputsAppliedKey, []byte("true"))...)
+		}
+		return
+	}
 	// VARIANT_IMMUTABLE resources do not support updates - all changes require replacement.
 	resp.Diagnostics.AddError("Update not supported", "This resource does not support updates. All changes require replacement.")
 }

@@ -1,0 +1,55 @@
+# Placeholder API responses; not recorded.
+version: 1
+host_metadata: {workspace_id: "12345"}
+steps:
+  - name: create
+    config: |
+      resource "databricks_app" "this" {
+        name = "replay-import-app"
+        description = "Import example"
+        no_compute = true
+      }
+    calls:
+      - request:
+          method: POST
+          path: /api/2.0/apps
+          query: {no_compute: ["true"]}
+          body:
+            json:
+              name: replay-import-app
+              description: Import example
+        response: &app_response
+          status: 200
+          body:
+            json:
+              name: replay-import-app
+              description: Import example
+              compute_status: {state: STOPPED}
+              create_time: "2026-01-01T00:00:00Z"
+              update_time: "2026-01-01T00:00:00Z"
+      - &read_app
+        request:
+          method: GET
+          path: /api/2.0/apps/replay-import-app
+          body: null
+        response: *app_response
+      - *read_app
+  - name: import_by_name
+    import:
+      resource: databricks_app.this
+      persist: false
+      id: replay-import-app
+      verify: true
+      identifier_attribute: name
+      # This creation-only flag is not returned by the API during import.
+      ignore: [no_compute]
+    calls:
+      - *read_app
+destroy:
+  calls:
+    - *read_app
+    - request:
+        method: DELETE
+        path: /api/2.0/apps/replay-import-app
+        body: null
+      response: *app_response

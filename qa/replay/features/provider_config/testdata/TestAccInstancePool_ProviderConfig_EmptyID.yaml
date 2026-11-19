@@ -1,0 +1,23 @@
+# Source: pools/instance_pool_provider_config_test.go#TestAccInstancePool_ProviderConfig_EmptyID
+# Generic provider_config validation; the resource is only a schema carrier.
+# Random names are fixed because replay has no shared server.
+# The original plan-only case fails in validation, before any apply or API call.
+version: 1
+# Dummy host metadata, not captured from a live workspace.
+host_metadata:
+  workspace_id: "12345"
+steps:
+  - name: reject_empty_workspace_id
+    config: |
+      resource "databricks_instance_pool" "this" {
+        instance_pool_name                    = "test-pool"
+        idle_instance_autotermination_minutes = 10
+        node_type_id                          = "i3.xlarge"
+        provider_config {
+          workspace_id = ""
+        }
+      }
+    expect_error: 'expected "provider_config.0.workspace_id" to not be an empty string'
+    calls: []
+destroy:
+  calls: []

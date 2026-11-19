@@ -253,7 +253,8 @@ func (ti *SqlTableInfo) serializeColumnInfos() string {
 
 func (ti *SqlTableInfo) serializeProperties() string {
 	propsMap := make([]string, 0, len(ti.Properties))
-	for key, value := range ti.Properties {
+	for _, key := range slices.Sorted(maps.Keys(ti.Properties)) {
+		value := ti.Properties[key]
 		propsMap = append(propsMap, fmt.Sprintf("'%s'='%s'", key, value))
 	}
 	return strings.Join(propsMap[:], ", ") // 'foo'='bar', 'this'='that'
@@ -261,7 +262,8 @@ func (ti *SqlTableInfo) serializeProperties() string {
 
 func (ti *SqlTableInfo) serializeOptions() string {
 	optionsMap := make([]string, 0, len(ti.Options))
-	for key, value := range ti.Options {
+	for _, key := range slices.Sorted(maps.Keys(ti.Options)) {
+		value := ti.Options[key]
 		optionsMap = append(optionsMap, fmt.Sprintf("'%s'='%s'", key, value))
 	}
 	return strings.Join(optionsMap[:], ", ") // 'foo'='bar', 'this'='that'
@@ -379,8 +381,9 @@ func (ti *SqlTableInfo) addOrRemoveColumnStatements(oldti *SqlTableInfo, stateme
 
 	removeColumnStatements := make([]string, 0)
 
-	for name, oldCi := range nameToOldColumn {
-		if _, exists := nameToNewColumn[name]; !exists {
+	// Keep removals in the original column order rather than Go map order.
+	for _, oldCi := range oldti.ColumnInfos {
+		if _, exists := nameToNewColumn[oldCi.Name]; !exists {
 			// Remove old column if old column is no longer found in the config.
 			removeColumnStatements = append(removeColumnStatements, oldCi.getWrappedColumnName())
 		}
@@ -465,7 +468,7 @@ func (ti *SqlTableInfo) diff(oldti *SqlTableInfo) ([]string, error) {
 	if !reflect.DeepEqual(ti.Properties, oldti.Properties) {
 		// First handle removal of properties
 		removeProps := make([]string, 0)
-		for key := range oldti.Properties {
+		for _, key := range slices.Sorted(maps.Keys(oldti.Properties)) {
 			if _, ok := ti.Properties[key]; !ok {
 				removeProps = append(removeProps, key)
 			}

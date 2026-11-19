@@ -1,0 +1,111 @@
+# Pins the request paths for a volume name with a space. The classic client puts the
+# full name in the path unescaped, and Go's URL handling sends the space as %20 on the
+# GET, the PATCH and the DELETE. API responses are inferred from the Unity Catalog API
+# contract, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: create
+    config: |
+      resource "databricks_volume" "this" {
+        name         = "raw 2"
+        catalog_name = "main"
+        schema_name  = "replay"
+        volume_type  = "MANAGED"
+      }
+    calls:
+      - request:
+          method: POST
+          path: /api/2.1/unity-catalog/volumes
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay", "name": "raw 2",
+                   "volume_type": "MANAGED"}
+        response:
+          status: 200
+          body:
+            json: &created {"catalog_name": "main", "schema_name": "replay",
+                            "name": "raw 2", "full_name": "main.replay.raw 2",
+                            "volume_type": "MANAGED", "owner": "replay-admin@example.com",
+                            "storage_location": "s3://replay-metastore/volume-161",
+                            "metastore_id": "11111111-1111-1111-1111-111111111111",
+                            "volume_id": "00000000-0000-4000-8000-000000000161"}
+      - &read_created
+        request: &read_request
+          method: GET
+          path: /api/2.1/unity-catalog/volumes/main.replay.raw%202
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 200
+          body:
+            json: *created
+      - *read_created
+    state:
+      resources:
+        databricks_volume.this:
+          attributes:
+            - path: [id]
+              equals: main.replay.raw 2
+            - path: [volume_path]
+              equals: /Volumes/main/replay/raw 2
+  - name: update_comment_patches_the_encoded_path
+    config: |
+      resource "databricks_volume" "this" {
+        name         = "raw 2"
+        catalog_name = "main"
+        schema_name  = "replay"
+        volume_type  = "MANAGED"
+        comment      = "encoded"
+      }
+    calls:
+      - *read_created
+      - request:
+          method: PATCH
+          path: /api/2.1/unity-catalog/volumes/main.replay.raw%202
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"comment": "encoded"}
+        response:
+          status: 200
+          body:
+            json: &commented {"catalog_name": "main", "schema_name": "replay",
+                              "name": "raw 2", "full_name": "main.replay.raw 2",
+                              "volume_type": "MANAGED", "comment": "encoded",
+                              "owner": "replay-admin@example.com",
+                              "storage_location": "s3://replay-metastore/volume-161",
+                              "metastore_id": "11111111-1111-1111-1111-111111111111",
+                              "volume_id": "00000000-0000-4000-8000-000000000161"}
+      - &read_commented
+        request: *read_request
+        response:
+          status: 200
+          body:
+            json: *commented
+      - *read_commented
+  - name: delete_deletes_the_encoded_path
+    config: |
+      provider "databricks" {}
+    calls:
+      - *read_commented
+      - request:
+          method: DELETE
+          path: /api/2.1/unity-catalog/volumes/main.replay.raw%202
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 200
+          body:
+            json: {}
+destroy:
+  calls: []

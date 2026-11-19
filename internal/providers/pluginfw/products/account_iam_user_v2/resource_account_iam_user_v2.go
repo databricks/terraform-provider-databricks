@@ -42,17 +42,26 @@ type UserResource struct {
 
 // User extends the main model with additional fields.
 type User struct {
-	// The accountId parent of the user in Databricks.
+	// The ID of the account that contains the user.
 	AccountId types.String `tfsdk:"account_id"`
-	// The activity status of a user in a Databricks account.
+	// Whether the user is active in the account. New users are active unless
+	// you set this to `INACTIVE`.
 	AccountUserStatus types.String `tfsdk:"account_user_status"`
-	// ExternalId of the user in the customer's IdP.
+	// The ID of the user in your identity provider (IdP).
 	ExternalId types.String `tfsdk:"external_id"`
-
+	// The user's name.
 	FullName types.Object `tfsdk:"full_name"`
-	// Internal userId of the user in Databricks.
+	// The resource name of the user, in one of these formats: - Account APIs:
+	// `accounts/{account_id}/users/{user_id}` - Workspace APIs:
+	// `users/{user_id}`
+	Name types.String `tfsdk:"name"`
+	// The resource name of the account that contains the user, in the format
+	// `accounts/{account_id}`. Workspace APIs return the same format.
+	Parent types.String `tfsdk:"parent"`
+	// The Databricks ID of the user.
 	UserId types.String `tfsdk:"user_id"`
-	// Username/email of the user.
+	// The user's username, which is their email address. It can't be changed
+	// after the user is created.
 	Username types.String `tfsdk:"username"`
 }
 
@@ -82,6 +91,8 @@ func (m User) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"account_user_status": m.AccountUserStatus,
 			"external_id":         m.ExternalId,
 			"full_name":           m.FullName,
+			"name":                m.Name,
+			"parent":              m.Parent,
 			"user_id":             m.UserId,
 			"username":            m.Username,
 		},
@@ -96,6 +107,8 @@ func (m User) Type(ctx context.Context) attr.Type {
 			"account_user_status": types.StringType,
 			"external_id":         types.StringType,
 			"full_name":           iamv2_tf.UserFullName{}.Type(ctx),
+			"name":                types.StringType,
+			"parent":              types.StringType,
 			"user_id":             types.StringType,
 			"username":            types.StringType,
 		},
@@ -133,14 +146,19 @@ func (to *User) SyncFieldsDuringRead(ctx context.Context, from User) {
 
 func (m User) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["account_id"] = attrs["account_id"].SetComputed()
+	attrs["account_id"] = attrs["account_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["account_user_status"] = attrs["account_user_status"].SetRequired()
 	attrs["external_id"] = attrs["external_id"].SetOptional()
 	attrs["full_name"] = attrs["full_name"].SetRequired()
+	attrs["name"] = attrs["name"].SetComputed()
+	attrs["parent"] = attrs["parent"].SetRequired()
+	attrs["parent"] = attrs["parent"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["user_id"] = attrs["user_id"].SetComputed()
+	attrs["user_id"] = attrs["user_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["username"] = attrs["username"].SetRequired()
 	attrs["username"] = attrs["username"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 
-	attrs["user_id"] = attrs["user_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
+	attrs["name"] = attrs["name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	return attrs
 }
 
@@ -202,7 +220,8 @@ func (r *UserResource) Create(ctx context.Context, req resource.CreateRequest, r
 	}
 
 	createRequest := iamv2.CreateUserRequest{
-		User: user,
+		User:   user,
+		Parent: plan.Parent.ValueString(),
 	}
 
 	client, clientDiags := r.Client.GetAccountClient()
@@ -286,7 +305,7 @@ func (r *UserResource) update(ctx context.Context, plan User, diags *diag.Diagno
 
 	updateRequest := iamv2.UpdateUserRequest{
 		User:       user,
-		UserId:     plan.UserId.ValueString(),
+		Name:       plan.Name.ValueString(),
 		UpdateMask: "account_user_status,external_id,full_name",
 	}
 
@@ -368,13 +387,13 @@ func (r *UserResource) ImportState(ctx context.Context, req resource.ImportState
 		resp.Diagnostics.AddError(
 			"Unexpected Import Identifier",
 			fmt.Sprintf(
-				"Expected import identifier with format: user_id. Got: %q",
+				"Expected import identifier with format: name. Got: %q",
 				req.ID,
 			),
 		)
 		return
 	}
 
-	userId := parts[0]
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("user_id"), userId)...)
+	name := parts[0]
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("name"), name)...)
 }

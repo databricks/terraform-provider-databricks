@@ -2,7 +2,7 @@
 subcategory: "Identity and Access Management"
 ---
 # databricks_account_iam_service_principal_v2 Resource
-[![Private Preview](https://img.shields.io/badge/Release_Stage-Private_Preview-blueviolet)](https://docs.databricks.com/aws/en/release-notes/release-types)
+[![GA](https://img.shields.io/badge/Release_Stage-GA-green)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
 [API Documentation](https://docs.databricks.com/api/account/iamv2)
 
@@ -18,6 +18,7 @@ Creates an account-level service principal. When AIM is enabled, the service pri
 
 ```hcl
 resource "databricks_account_iam_service_principal_v2" "this" {
+  parent            = "accounts/00000000-0000-0000-0000-000000000000"
   display_name      = "ci-runner"
   account_sp_status = "ACTIVE"
 }
@@ -26,27 +27,33 @@ resource "databricks_account_iam_service_principal_v2" "this" {
 
 ## Arguments
 The following arguments are supported:
-* `account_sp_status` (string, required) - The activity status of a service principal in a Databricks account. Possible values are: `ACTIVE`, `INACTIVE`
-* `display_name` (string, required) - Display name of the service principal
-* `external_id` (string, optional) - ExternalId of the service principal in the customer's IdP
+* `account_sp_status` (string, required) - Whether the service principal is active in the account. Possible values are: `ACTIVE`, `INACTIVE`
+* `display_name` (string, required) - The service principal's display name
+* `parent` (string, required) - The resource name of the account that contains the service principal, in the format
+  `accounts/{account_id}`. Workspace APIs return the same format
+* `external_id` (string, optional) - The ID of the service principal in your identity provider (IdP)
 
 ## Attributes
 In addition to the above arguments, the following attributes are exported:
-* `account_id` (string) - The parent account ID for the service principal in Databricks
-* `application_id` (string) - Application ID of the service principal. Set at creation time and cannot be changed
-  afterwards; when omitted, the server generates one
-* `service_principal_id` (string) - Internal service principal ID of the service principal in Databricks
+* `account_id` (string) - The ID of the account that contains the service principal
+* `application_id` (string) - The service principal's application ID, a UUID. If you don't set it when you create the
+  service principal, Databricks generates one. It must be unique in the account and can't be
+  changed
+* `name` (string) - The resource name of the service principal, in one of these formats:
+  - Account APIs: `accounts/{account_id}/service-principals/{service_principal_id}`
+  - Workspace APIs: `service-principals/{service_principal_id}`
+* `service_principal_id` (string) - The Databricks ID of the service principal
 
 ## Import
 As of Terraform v1.5, resources can be imported through configuration.
 ```hcl
 import {
-  id = "service_principal_id"
+  id = "name"
   to = databricks_account_iam_service_principal_v2.this
 }
 ```
 
 If you are using an older version of Terraform, import the resource using the `terraform import` command as follows:
 ```sh
-terraform import databricks_account_iam_service_principal_v2.this "service_principal_id"
+terraform import databricks_account_iam_service_principal_v2.this "name"
 ```

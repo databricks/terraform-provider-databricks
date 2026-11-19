@@ -1,5 +1,190 @@
 # Version changelog
 
+## Release v1.144.0 (2026-11-18)
+
+### New Features and Improvements
+* Add `thumbnail_path` to `databricks_app` to set the app's thumbnail from a local PNG or JPEG file ([#6196](https://github.com/databricks/terraform-provider-databricks/pull/6196)).
+* Support `statement_timeout` for all SQL warehouse types; omitting or removing the argument preserves the existing warehouse timeout, while explicit `0` clears the override ([#6144](https://github.com/databricks/terraform-provider-databricks/pull/6144)).
+
+### Exporter
+
+* Preserve `statement_timeout`, including `0`, in exports of all SQL warehouse types ([#6144](https://github.com/databricks/terraform-provider-databricks/pull/6144)).
+
+
+## Release v1.143.0 (2026-11-16)
+
+### Important Changes
+
+* `databricks_app` now updates apps through the asynchronous Apps update API ([#6151](https://github.com/databricks/terraform-provider-databricks/pull/6151)).
+  The synchronous update API ignored `compute_size`, `compute_min_instances`, and
+  `compute_max_instances`, so changes to them never took effect; they are now applied. As
+  before, an update replaces the app's updatable fields with the configuration, so fields
+  omitted from it are cleared. That now also covers the fields the synchronous API skipped: an
+  omitted `compute_size` resets to `MEDIUM`, omitted `compute_min_instances` and
+  `compute_max_instances` disable horizontal scaling, and an omitted `git_source` clears the
+  app's default git source. Updates now wait for the app update to reach `SUCCEEDED`.
+
+### New Features and Improvements
+* Add resource and data sources for `databricks_assume_group_restricted_sharing_group`.
+* Add `personal_access_token_wo` and `personal_access_token_wo_version` write-only attributes to `databricks_git_credential` resource ([#6088](https://github.com/databricks/terraform-provider-databricks/pull/6088)).
+* Add `options_wo` and `options_wo_version` write-only attributes to `databricks_connection` resource ([#6088](https://github.com/databricks/terraform-provider-databricks/pull/6088)).
+
+### Bug Fixes
+* Keep the configured values of the `pem_key_passphrase`, `ssl_keystore_key`, `ssl_key_password` and `schema_registry_api_secret` options of `databricks_connection`, which the API doesn't return, to avoid a perpetual diff ([#6088](https://github.com/databricks/terraform-provider-databricks/pull/6088)).
+* Ignore whitespace-only differences in PEM-encoded options of `databricks_connection`, such as `userProvidedServerCertificate`, to avoid a perpetual diff ([#6088](https://github.com/databricks/terraform-provider-databricks/pull/6088)).
+
+
+## Release v1.142.0 (2026-11-09)
+
+### New Features and Improvements
+* `databricks_connection` now supports referencing Unity Catalog secrets through the `secrets` argument ([#6126](https://github.com/databricks/terraform-provider-databricks/pull/6126)).
+* Add resource and data sources for `databricks_lakewatch_datasource`.
+* Add resource and data source for `databricks_lakewatch_datasource_config`.
+* Add resource and data source for `databricks_lakewatch_rule_config`.
+* Add resource and data source for `databricks_lakewatch_alert_config`.
+* Add resource and data source for `databricks_lakewatch_common_config`.
+* Add resource and data sources for `databricks_lakewatch_rule`.
+
+* Add `databricks_app_slack` and `databricks_app_teams` configuration blocks to `databricks_notification_destination`, and accept `DATABRICKS_APP_SLACK` and `DATABRICKS_APP_TEAMS` as `type` in the `databricks_notification_destinations` data source ([#6131](https://github.com/databricks/terraform-provider-databricks/pull/6131)).
+
+### Bug Fixes
+
+* Fix data races when concurrent resource operations access the unified provider's client caches ([#6120](https://github.com/databricks/terraform-provider-databricks/pull/6120)).
+
+* Preserve `databricks_pipeline.expected_last_modified` during refresh to avoid post-apply drift ([#6133](https://github.com/databricks/terraform-provider-databricks/pull/6133)).
+
+
+## Release v1.141.0 (2026-11-02)
+
+### New Features and Improvements
+* Add resource and data sources for `databricks_genie_agent`.
+
+* Support fixed-size REALTIME warehouses with `max_dbu`, `statement_timeout`, and `customer_version_label` in `databricks_sql_endpoint` and `databricks_sql_warehouse` ([#6092](https://github.com/databricks/terraform-provider-databricks/pull/6092)).
+
+### Documentation
+
+* Fix the Azure Databricks US Gov account console host in the provider authentication docs to `https://accounts.usgov.databricks.azure.us` ([#6071](https://github.com/databricks/terraform-provider-databricks/pull/6071)).
+
+### Exporter
+
+* Preserve `auto_stop_mins`, REALTIME `statement_timeout`, and `max_dbu` in warehouse exports ([#6092](https://github.com/databricks/terraform-provider-databricks/pull/6092)).
+
+
+## Release v1.140.0 (2026-10-26)
+
+### Internal Changes
+
+* Bump Go toolchain from 1.26.8 to 1.26.10 to pick up updated certificates.
+
+
+## Release v1.139.0 (2026-10-22)
+
+### New Features and Improvements
+* [Breaking] Remove resource and data sources for `databricks_mason_managed_memory_store`.
+* [Breaking] Remove resource and data sources for `databricks_mason_managed_memory_entry`.
+* [Breaking] Remove resource and data sources for `databricks_mason_session_store`.
+* [Breaking] Remove resource and data sources for `databricks_mason_session`.
+* Add resource and data sources for `databricks_agent_kit_managed_memory_store`.
+* Add resource and data sources for `databricks_agent_kit_managed_memory_entry`.
+* Add resource and data sources for `databricks_agent_kit_session_store`.
+* Add resource and data sources for `databricks_agent_kit_session`.
+* [Breaking] Remove resource and data sources for `databricks_feature_engineering_materialized_feature`.
+* [Breaking] Remove resource and data sources for `databricks_feature_engineering_kafka_config`.
+
+
+## Release v1.138.0 (2026-10-19)
+
+### Breaking Changes
+
+* Remove the `databricks_mason_managed_memory_entry`, `databricks_mason_managed_memory_store`, `databricks_mason_session`, and `databricks_mason_session_store` resources and their data sources ([#6087](https://github.com/databricks/terraform-provider-databricks/pull/6087)).
+
+  The Databricks Go SDK renamed the Mason API to AgentKit.
+
+* Remove the `databricks_feature_engineering_kafka_config` and `databricks_feature_engineering_materialized_feature` resources and their data sources ([#6087](https://github.com/databricks/terraform-provider-databricks/pull/6087)).
+
+  The API no longer exposes these resources to Terraform.
+
+
+## Release v1.137.0 (2026-10-06)
+
+### New Features and Improvements
+* Add resource and data sources for `databricks_mason_managed_memory_store`.
+* Add resource and data sources for `databricks_mason_managed_memory_entry`.
+* Add resource and data sources for `databricks_mason_session_store`.
+* Add resource and data sources for `databricks_mason_session`.
+* Add resource and data sources for `databricks_private_network_gateway`.
+
+### Exporter
+
+* Export resources referenced by Lakeflow pipeline ingestion and schema transformation settings ([#6038](https://github.com/databricks/terraform-provider-databricks/pull/6038)).
+* Export service credentials, instance profiles, and budget policies referenced by model serving endpoints ([#6037](https://github.com/databricks/terraform-provider-databricks/pull/6037)).
+* Rewrite portable cluster policy attributes for the target cloud and omit attributes that cannot be safely converted ([#6040](https://github.com/databricks/terraform-provider-databricks/pull/6040)).
+* Export dependencies for Databricks Apps telemetry tables and Unity Catalog securables ([#6036](https://github.com/databricks/terraform-provider-databricks/pull/6036)).
+* Add support for exporting dependencies of the `ai_runtime_task`, `clean_rooms_notebook_task`, `dbt_cloud_task`, `dbt_platform_task`, `gen_ai_compute_task`, and `python_operator_task` job task types. ([#6027](https://github.com/databricks/terraform-provider-databricks/pull/6027)).
+
+### Internal Changes
+
+* Bump staticcheck from v0.6.0 to v0.8.1 and the minimum Go toolchain from 1.25.8 to 1.26.8, so `make lint` no longer panics with `unexpected expr: *ast.KeyValueExpr` when run with Go 1.27 ([#6043](https://github.com/databricks/terraform-provider-databricks/pull/6043)).
+
+
+## Release v1.136.0 (2026-10-05)
+
+### New Features and Improvements
+
+* `databricks_connection` now supports schema-level (L3) connections via the new `parent` argument (format `schemas/{catalog}.{schema}`). When set, the connection is created inside that schema and addressed by its `full_name` (`{catalog}.{schema}.{name}`); when omitted, the connection stays metastore-level, so existing configurations and state are unchanged ([#6003](https://github.com/databricks/terraform-provider-databricks/pull/6003)).
+
+### Exporter
+
+* Fixed a nil pointer panic in `emitRfaAccessRequestDestinations` when exporting workspace-level UC securables with an account-level provider ([#6028](https://github.com/databricks/terraform-provider-databricks/issues/6028)).
+
+
+## Release v1.135.0 (2026-09-28)
+
+### New Features and Improvements
+* Add `string_value_wo` and `string_value_wo_version` attributes to `databricks_secret` resource ([#5480](https://github.com/databricks/terraform-provider-databricks/pull/5480)).
+
+
+## Release v1.134.0 (2026-09-23)
+
+### Internal Changes
+
+* Updated the Databricks API definitions to the latest version ([#6020](https://github.com/databricks/terraform-provider-databricks/pull/6020)).
+
+
+## Release v1.133.0 (2026-09-21)
+
+### Bug Fixes
+* Fix `databricks_grant` and `databricks_grants` for the AI Gateway securables (`model_service`, `mcp_service`, `model_provider_service`). Wiring `databricks_ai_gateway_*.<x>.name` into the corresponding grant field previously failed on apply with `No API found for 'GET /unity-catalog/permissions/model_provider_service/model-provider-services/<full_name>'`, because that `name` attribute carries a resource-name prefix (e.g. `model-provider-services/`) that the permissions API does not expect. The prefix is now stripped before it reaches the API path and the resource ID, and a `DiffSuppressFunc` treats the prefixed and bare forms as equal, so both the `.name` reference and a bare full name apply cleanly with no perpetual diff.
+
+
+## Release v1.132.0 (2026-09-14)
+
+### New Features and Improvements
+* Add resource and data sources for `databricks_domain`.
+* Add resource and data sources for `databricks_sandbox`.
+
+* Add support for the `secret` securable in `databricks_grant` and `databricks_grants`. ([#5996](https://github.com/databricks/terraform-provider-databricks/pull/5996))
+
+### Bug Fixes
+* `databricks_app` can now manage `git_source`, `source_code_path`, and `git_repository.caller_credential_id`. These are input_only (the Apps API accepts them on write but does not echo them on read), so the resource now calls the generated `SyncFields` reconciliation to preserve the configured value across reads, and treats the nested `git_source` descendants (`git_repository`, `resolved_commit`) as non-Computed. This prevents the "Provider produced inconsistent result after apply" error and the perpetual diff that previously occurred when any of these fields was set.
+
+### Documentation
+
+* Document the `auto_deploy` and `caller_credential_id` fields of the `databricks_app` `git_repository` block, the `git_source` block, and the top-level `source_code_path` argument. Clarify that `auto_deploy` requires `git_source` to specify a `branch`. These fields become manageable with [#5977](https://github.com/databricks/terraform-provider-databricks/pull/5977).
+
+
+## Release v1.131.0 (2026-09-07)
+
+### New Features and Improvements
+* Add data source for `databricks_account_iam_external_user_v2`.
+* Add data source for `databricks_account_iam_external_service_principal_v2`.
+* Add data source for `databricks_account_iam_external_group_v2`.
+* Add data source for `databricks_workspace_iam_external_user_v2`.
+* Add data source for `databricks_workspace_iam_external_service_principal_v2`.
+* Add data source for `databricks_workspace_iam_external_group_v2`.
+* Add resource and data source for `databricks_postgres_snapshot_schedule`.
+
+
 ## Release v1.130.0 (2026-08-31)
 
 ### Bug Fixes

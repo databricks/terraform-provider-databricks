@@ -1,0 +1,153 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: "workspace"
+  cloud: "AWS"
+  workspace_id: "12345"
+steps:
+  - name: "attach_role"
+    config: |
+      resource "databricks_group" "this" {
+        display_name = "tf-role-group"
+      }
+
+      resource "databricks_group_role" "this" {
+        group_id = databricks_group.this.id
+        role = "arn:aws:iam::999999999999:role/foo"
+      }
+    calls:
+      - request:
+          method: "POST"
+          path: "/api/2.0/preview/scim/v2/Groups"
+          body:
+            json:
+              schemas: ["urn:ietf:params:scim:schemas:core:2.0:Group"]
+              displayName: "tf-role-group"
+              entitlements:
+                - {}
+        response: # Inferred API response; not recorded.
+          status: 201
+          body:
+            json:
+              schemas: ["urn:ietf:params:scim:schemas:core:2.0:Group"]
+              id: "301"
+              displayName: "tf-role-group"
+      - request:
+          method: "GET"
+          path: "/api/2.0/preview/scim/v2/Groups/301"
+          query:
+            attributes: ["displayName,externalId,entitlements"]
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              schemas: ["urn:ietf:params:scim:schemas:core:2.0:Group"]
+              id: "301"
+              displayName: "tf-role-group"
+      - request:
+          method: "PATCH"
+          path: "/api/2.0/preview/scim/v2/Groups/301"
+          body:
+            json:
+              schemas: ["urn:ietf:params:scim:api:messages:2.0:PatchOp"]
+              Operations:
+                - op: "add"
+                  path: "roles"
+                  value:
+                    - value: "arn:aws:iam::999999999999:role/foo"
+        response: # Inferred API response; not recorded.
+          status: 200
+          body: null
+      - request:
+          method: "GET"
+          path: "/api/2.0/preview/scim/v2/Groups/301"
+          query:
+            attributes: ["roles"]
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              schemas: ["urn:ietf:params:scim:schemas:core:2.0:Group"]
+              id: "301"
+              displayName: "tf-role-group"
+              roles:
+                - value: "arn:aws:iam::999999999999:role/foo"
+      - request:
+          method: "GET"
+          path: "/api/2.0/preview/scim/v2/Groups/301"
+          query:
+            attributes: ["displayName,externalId,entitlements"]
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              schemas: ["urn:ietf:params:scim:schemas:core:2.0:Group"]
+              id: "301"
+              displayName: "tf-role-group"
+      - request:
+          method: "GET"
+          path: "/api/2.0/preview/scim/v2/Groups/301"
+          query:
+            attributes: ["roles"]
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              schemas: ["urn:ietf:params:scim:schemas:core:2.0:Group"]
+              id: "301"
+              displayName: "tf-role-group"
+              roles:
+                - value: "arn:aws:iam::999999999999:role/foo"
+destroy:
+  calls:
+    - request:
+        method: "GET"
+        path: "/api/2.0/preview/scim/v2/Groups/301"
+        query:
+          attributes: ["displayName,externalId,entitlements"]
+        body: null
+      response: # Inferred API response; not recorded.
+        status: 200
+        body:
+          json:
+            schemas: ["urn:ietf:params:scim:schemas:core:2.0:Group"]
+            id: "301"
+            displayName: "tf-role-group"
+    - request:
+        method: "GET"
+        path: "/api/2.0/preview/scim/v2/Groups/301"
+        query:
+          attributes: ["roles"]
+        body: null
+      response: # Inferred API response; not recorded.
+        status: 200
+        body:
+          json:
+            schemas: ["urn:ietf:params:scim:schemas:core:2.0:Group"]
+            id: "301"
+            displayName: "tf-role-group"
+            roles:
+              - value: "arn:aws:iam::999999999999:role/foo"
+    - request:
+        method: "PATCH"
+        path: "/api/2.0/preview/scim/v2/Groups/301"
+        body:
+          json:
+            schemas: ["urn:ietf:params:scim:api:messages:2.0:PatchOp"]
+            Operations:
+              - op: "remove"
+                path: "roles[value eq \"arn:aws:iam::999999999999:role/foo\"]"
+      response: # Inferred API response; not recorded.
+        status: 200
+        body: null
+    - request:
+        method: "DELETE"
+        path: "/api/2.0/preview/scim/v2/Groups/301"
+        body: null
+      response: # Inferred API response; not recorded.
+        status: 204
+        body: null

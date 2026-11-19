@@ -32,8 +32,10 @@ The following attributes are exported:
 * `effective_primary_region` (string) - Current effective primary region. Replication flows FROM workspaces in this region.
   Changes after a successful failover
 * `etag` (string) - Opaque version string for optimistic locking. Server-generated and returned in responses
+* `has_replication_point_blocking_errors` (boolean) - True if errors currently block the replication point
 * `initial_primary_region` (string) - Initial primary region. Used only in Create requests to set the starting
   primary region. Not returned in responses
+* `initial_replication_progress` (InitialReplicationProgress) - Initial replication progress of all in-scope assets. Set only when the FailoverGroup is in INITIAL_REPLICATION state
 * `name` (string) - Fully qualified resource name in the format
   accounts/{account_id}/failover-groups/{failover_group_id}
 * `regions` (list of string) - List of all regions participating in this failover group
@@ -42,6 +44,9 @@ The following attributes are exported:
 * `unity_catalog_assets` (UcReplicationConfig) - Unity Catalog replication configuration
 * `update_time` (string) - Time at which this failover group was last modified
 * `workspace_sets` (list of WorkspaceSet) - Workspace sets, each containing workspaces that replicate to each other
+
+### InitialReplicationProgress
+* `completed` (integer) - Percent complete, 0-100
 
 ### LocationMapping
 * `name` (string) - Resource name for this location

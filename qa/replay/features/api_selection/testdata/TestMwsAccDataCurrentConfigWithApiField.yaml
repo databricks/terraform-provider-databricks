@@ -1,0 +1,25 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: "account"
+  cloud: "AWS"
+  account_id: "replay-account"
+steps:
+  - name: "select_api"
+    config: |
+      provider "databricks" {
+        account_id = "replay-account"
+      }
+
+      data "databricks_current_config" "this" {
+        api = "account"
+      }
+    calls: []
+    state:
+      resources:
+        data.databricks_current_config.this:
+          attributes:
+            - path: ["is_account"]
+              equals: true
+destroy:
+  calls: []

@@ -117,14 +117,12 @@ type AccessRequestDestinations struct {
 	DestinationSourceSecurable types.Object `tfsdk:"destination_source_securable"`
 	// The access request destinations for the securable.
 	Destinations types.Set `tfsdk:"destinations"`
-	// The full name of the securable. Redundant with the name in the securable
-	// object, but necessary for Terraform integration
+	// The full name of the securable, repeated from **securable**.
 	FullName types.String `tfsdk:"full_name"`
 	// The securable for which the access request destinations are being
 	// modified or read.
 	Securable types.Object `tfsdk:"securable"`
-	// The type of the securable. Redundant with the type in the securable
-	// object, but necessary for Terraform integration
+	// The type of the securable, repeated from **securable** as a plain string.
 	SecurableType  types.String `tfsdk:"securable_type"`
 	ProviderConfig types.Object `tfsdk:"provider_config"`
 }
@@ -365,10 +363,6 @@ func (r *AccessRequestDestinationResource) ModifyPlan(ctx context.Context, req r
 		return
 	}
 	tfschema.WorkspaceDriftDetection(ctx, r.Client, req, resp)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	tfschema.ValidateWorkspaceID(ctx, r.Client, req, resp)
 }
 
 func (r *AccessRequestDestinationResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {

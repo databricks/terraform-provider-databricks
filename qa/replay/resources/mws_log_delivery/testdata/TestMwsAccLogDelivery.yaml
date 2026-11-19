@@ -1,0 +1,194 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: account
+  cloud: AWS
+  account_id: replay-account
+steps:
+  - name: configure_usage_and_audit_logs
+    config: |
+      provider "databricks" { account_id = "replay-account" }
+      resource "databricks_mws_credentials" "ld" {
+        account_id       = "replay-account"
+        credentials_name = "tf-acceptance-logdelivery-replay"
+        role_arn         = "arn:aws:iam::123456789012:role/replay-log-delivery"
+      }
+
+      resource "databricks_mws_storage_configurations" "ld" {
+        account_id                 = "replay-account"
+        storage_configuration_name = "tf-acceptance-logdelivery-replay"
+        bucket_name                = "replay-logs"
+      }
+
+      resource "databricks_mws_log_delivery" "usage_logs" {
+        account_id               = "replay-account"
+        credentials_id           = databricks_mws_credentials.ld.credentials_id
+        storage_configuration_id = databricks_mws_storage_configurations.ld.storage_configuration_id
+        delivery_path_prefix     = "tf-replay/billable-usage"
+        config_name              = "Usage replay"
+        log_type                 = "BILLABLE_USAGE"
+        output_format            = "CSV"
+      }
+
+      resource "databricks_mws_log_delivery" "audit_logs" {
+        account_id               = "replay-account"
+        credentials_id           = databricks_mws_credentials.ld.credentials_id
+        storage_configuration_id = databricks_mws_storage_configurations.ld.storage_configuration_id
+        delivery_path_prefix     = "tf-replay/audit-logs"
+        config_name              = "Audit replay"
+        log_type                 = "AUDIT_LOGS"
+        output_format            = "JSON"
+      }
+    calls:
+      - request:
+          method: POST
+          path: /api/2.0/accounts/replay-account/credentials
+          body:
+            json:
+              aws_credentials:
+                sts_role:
+                  role_arn: arn:aws:iam::123456789012:role/replay-log-delivery
+              credentials_name: tf-acceptance-logdelivery-replay
+        response: &response_2 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              account_id: replay-account
+              aws_credentials:
+                sts_role:
+                  role_arn: arn:aws:iam::123456789012:role/replay-log-delivery
+              creation_time: 1700000000000
+              credentials_id: credentials-123
+              credentials_name: tf-acceptance-logdelivery-replay
+      - request:
+          method: POST
+          path: /api/2.0/accounts/replay-account/storage-configurations
+          body:
+            json:
+              root_bucket_info:
+                bucket_name: replay-logs
+              storage_configuration_name: tf-acceptance-logdelivery-replay
+        response: &response_1 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              account_id: replay-account
+              creation_time: 1700000000000
+              root_bucket_info:
+                bucket_name: replay-logs
+              storage_configuration_id: storage-123
+              storage_configuration_name: tf-acceptance-logdelivery-replay
+      - &call_2
+        request:
+          method: GET
+          path: /api/2.0/accounts/replay-account/storage-configurations/storage-123
+          body: null
+        response: *response_1 # Inferred API response; not recorded.
+      - &call_1
+        request:
+          method: GET
+          path: /api/2.0/accounts/replay-account/credentials/credentials-123
+          body: null
+        response: *response_2 # Inferred API response; not recorded.
+      - request:
+          method: POST
+          path: /api/2.0/accounts/replay-account/log-delivery
+          body:
+            json:
+              log_delivery_configuration:
+                account_id: replay-account
+                config_name: Usage replay
+                credentials_id: credentials-123
+                delivery_path_prefix: tf-replay/billable-usage
+                log_type: BILLABLE_USAGE
+                output_format: CSV
+                storage_configuration_id: storage-123
+        response: &response_3 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              log_delivery_configuration:
+                account_id: replay-account
+                config_id: usage-1
+                config_name: Usage replay
+                credentials_id: credentials-123
+                delivery_path_prefix: tf-replay/billable-usage
+                log_type: BILLABLE_USAGE
+                output_format: CSV
+                status: ENABLED
+                storage_configuration_id: storage-123
+      - request:
+          method: POST
+          path: /api/2.0/accounts/replay-account/log-delivery
+          body:
+            json:
+              log_delivery_configuration:
+                account_id: replay-account
+                config_name: Audit replay
+                credentials_id: credentials-123
+                delivery_path_prefix: tf-replay/audit-logs
+                log_type: AUDIT_LOGS
+                output_format: JSON
+                storage_configuration_id: storage-123
+        response: &response_4 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              log_delivery_configuration:
+                account_id: replay-account
+                config_id: audit-1
+                config_name: Audit replay
+                credentials_id: credentials-123
+                delivery_path_prefix: tf-replay/audit-logs
+                log_type: AUDIT_LOGS
+                output_format: JSON
+                status: ENABLED
+                storage_configuration_id: storage-123
+      - &call_3
+        request:
+          method: GET
+          path: /api/2.0/accounts/replay-account/log-delivery/usage-1
+          body: null
+        response: *response_3 # Inferred API response; not recorded.
+      - &call_4
+        request:
+          method: GET
+          path: /api/2.0/accounts/replay-account/log-delivery/audit-1
+          body: null
+        response: *response_4 # Inferred API response; not recorded.
+      - *call_1
+      - *call_2
+      - *call_3
+      - *call_4
+destroy:
+  calls:
+    - *call_1
+    - *call_2
+    - *call_4
+    - *call_3
+    - request:
+        method: PATCH
+        path: /api/2.0/accounts/replay-account/log-delivery/usage-1
+        body:
+          json:
+            status: DISABLED
+      response: &response_5 # Inferred API response; not recorded.
+        status: 200
+        body: null
+    - request:
+        method: PATCH
+        path: /api/2.0/accounts/replay-account/log-delivery/audit-1
+        body:
+          json:
+            status: DISABLED
+      response: *response_5 # Inferred API response; not recorded.
+    - request:
+        method: DELETE
+        path: /api/2.0/accounts/replay-account/credentials/credentials-123
+        body: null
+      response: *response_5 # Inferred API response; not recorded.
+    - request:
+        method: DELETE
+        path: /api/2.0/accounts/replay-account/storage-configurations/storage-123
+        body: null
+      response: *response_5 # Inferred API response; not recorded.

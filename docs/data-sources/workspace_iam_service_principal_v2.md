@@ -2,11 +2,11 @@
 subcategory: "Identity and Access Management"
 ---
 # databricks_workspace_iam_service_principal_v2 Data Source
-[![Private Preview](https://img.shields.io/badge/Release_Stage-Private_Preview-blueviolet)](https://docs.databricks.com/aws/en/release-notes/release-types)
+[![GA](https://img.shields.io/badge/Release_Stage-GA-green)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
 [API Documentation](https://docs.databricks.com/api/workspace/iamv2)
 
-Reads a single service principal by its internal ID, using a workspace-scoped provider.
+Reads a single service principal by its resource name, `service-principals/{service_principal_id}`, using a workspace-scoped provider.
 
 
 ## Example Usage
@@ -16,14 +16,16 @@ Look up a service principal by its internal ID, using a workspace-scoped provide
 
 ```hcl
 data "databricks_workspace_iam_service_principal_v2" "this" {
-  service_principal_id = "123456789"
+  name = "service-principals/123456789"
 }
 ```
 
 
 ## Arguments
 The following arguments are supported:
-* `service_principal_id` (string, required) - Internal service principal ID of the service principal in Databricks
+* `name` (string, required) - The resource name of the service principal, in one of these formats:
+  - Account APIs: `accounts/{account_id}/service-principals/{service_principal_id}`
+  - Workspace APIs: `service-principals/{service_principal_id}`
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 
 ### ProviderConfig
@@ -31,10 +33,16 @@ The following arguments are supported:
 
 ## Attributes
 The following attributes are exported:
-* `account_id` (string) - The parent account ID for the service principal in Databricks
-* `account_sp_status` (string) - The activity status of a service principal in a Databricks account. Possible values are: `ACTIVE`, `INACTIVE`
-* `application_id` (string) - Application ID of the service principal. Set at creation time and cannot be changed
-  afterwards; when omitted, the server generates one
-* `display_name` (string) - Display name of the service principal
-* `external_id` (string) - ExternalId of the service principal in the customer's IdP
-* `service_principal_id` (string) - Internal service principal ID of the service principal in Databricks
+* `account_id` (string) - The ID of the account that contains the service principal
+* `account_sp_status` (string) - Whether the service principal is active in the account. Possible values are: `ACTIVE`, `INACTIVE`
+* `application_id` (string) - The service principal's application ID, a UUID. If you don't set it when you create the
+  service principal, Databricks generates one. It must be unique in the account and can't be
+  changed
+* `display_name` (string) - The service principal's display name
+* `external_id` (string) - The ID of the service principal in your identity provider (IdP)
+* `name` (string) - The resource name of the service principal, in one of these formats:
+  - Account APIs: `accounts/{account_id}/service-principals/{service_principal_id}`
+  - Workspace APIs: `service-principals/{service_principal_id}`
+* `parent` (string) - The resource name of the account that contains the service principal, in the format
+  `accounts/{account_id}`. Workspace APIs return the same format
+* `service_principal_id` (string) - The Databricks ID of the service principal

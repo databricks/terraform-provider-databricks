@@ -32,24 +32,30 @@ type WorkspaceAssignmentDataSource struct {
 
 // WorkspaceAssignmentData extends the main model with additional fields.
 type WorkspaceAssignmentData struct {
-	// The account ID parent of the workspace where the principal is assigned
+	// The ID of the account that contains the workspace.
 	AccountId types.String `tfsdk:"account_id"`
-	// Every entitlement the principal holds in this workspace, whether granted
-	// directly or through group membership. Get responses populate this field.
-	// List responses leave it empty.
+	// Every entitlement the principal has in the workspace, granted directly or
+	// through a group. List responses leave it empty.
 	EffectiveEntitlements types.Set `tfsdk:"effective_entitlements"`
-	// Entitlements granted directly to the principal on this workspace. This is
-	// the only client-settable field. Create and update manage exactly this
-	// set, including entitlements the principal also holds through a group.
-	// List responses leave this field empty. Get a single principal to read its
-	// entitlements.
+	// The entitlements granted directly by this assignment. Create and update
+	// set exactly this list, even if the principal also gets some of these
+	// entitlements through a group. List responses leave it empty.
 	Entitlements types.Set `tfsdk:"entitlements"`
-	// The internal ID of the principal (user/sp/group) in Databricks.
+	// The resource name of the assignment, in one of these formats: - Account
+	// APIs:
+	// `accounts/{account_id}/workspaces/{workspace_id}/workspace-assignments/{principal_id}`
+	// - Workspace APIs: `workspace-assignments/{principal_id}`
+	Name types.String `tfsdk:"name"`
+	// The resource name of the workspace, in the format
+	// `accounts/{account_id}/workspaces/{workspace_id}`. Workspace APIs return
+	// the same format.
+	Parent types.String `tfsdk:"parent"`
+	// The Databricks ID of the assigned user, service principal, or group. It
+	// can't be changed after the assignment is created.
 	PrincipalId types.Int64 `tfsdk:"principal_id"`
-	// The type of the principal (user/service principal/group) that is
-	// assigned.
+	// Whether the assigned principal is a user, service principal, or group.
 	PrincipalType types.String `tfsdk:"principal_type"`
-	// The workspace ID where the principal is assigned.
+	// The ID of the workspace.
 	WorkspaceId types.Int64 `tfsdk:"workspace_id"`
 }
 
@@ -80,6 +86,8 @@ func (m WorkspaceAssignmentData) ToObjectValue(ctx context.Context) basetypes.Ob
 			"account_id":             m.AccountId,
 			"effective_entitlements": m.EffectiveEntitlements,
 			"entitlements":           m.Entitlements,
+			"name":                   m.Name,
+			"parent":                 m.Parent,
 			"principal_id":           m.PrincipalId,
 			"principal_type":         m.PrincipalType,
 			"workspace_id":           m.WorkspaceId,
@@ -99,6 +107,8 @@ func (m WorkspaceAssignmentData) Type(ctx context.Context) attr.Type {
 			"entitlements": basetypes.SetType{
 				ElemType: types.StringType,
 			},
+			"name":           types.StringType,
+			"parent":         types.StringType,
 			"principal_id":   types.Int64Type,
 			"principal_type": types.StringType,
 			"workspace_id":   types.Int64Type,
@@ -110,9 +120,11 @@ func (m WorkspaceAssignmentData) ApplySchemaCustomizations(attrs map[string]tfsc
 	attrs["account_id"] = attrs["account_id"].SetComputed()
 	attrs["effective_entitlements"] = attrs["effective_entitlements"].SetComputed()
 	attrs["entitlements"] = attrs["entitlements"].SetComputed()
-	attrs["principal_id"] = attrs["principal_id"].SetRequired()
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["parent"] = attrs["parent"].SetComputed()
+	attrs["principal_id"] = attrs["principal_id"].SetComputed()
 	attrs["principal_type"] = attrs["principal_type"].SetComputed()
-	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
+	attrs["workspace_id"] = attrs["workspace_id"].SetComputed()
 
 	return attrs
 }

@@ -1,10 +1,13 @@
 default: build
 
+# Use the Go version from go.mod so formatting and linting match CI on any machine.
+export GOTOOLCHAIN := go$(shell awk '/^go /{print $$2}' go.mod)
+
 fmt:
 	@echo "✓ Formatting source code with goimports ..."
 	@go tool goimports -w $(shell find . -type f -name '*.go' -not -path "./vendor/*" -not -path "./.git/*")
 	@echo "✓ Formatting source code with gofmt ..."
-	@gofmt -w $(shell find . -type f -name '*.go' -not -path "./vendor/*" -not -path "./.git/*")
+	@"$$(go env GOROOT)/bin/gofmt" -w $(shell find . -type f -name '*.go' -not -path "./vendor/*" -not -path "./.git/*")
 
 fmt-docs:
 	@echo "✓ Formatting code samples in documentation"

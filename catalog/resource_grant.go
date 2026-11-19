@@ -154,11 +154,12 @@ func ResourceGrant() common.Resource {
 			}
 			for field := range permissions.Mappings {
 				m[field] = &schema.Schema{
-					Type:          schema.TypeString,
-					Optional:      true,
-					ForceNew:      true,
-					AtLeastOneOf:  allFields,
-					ConflictsWith: permissions.SliceWithoutString(allFields, field),
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					AtLeastOneOf:     allFields,
+					ConflictsWith:    permissions.SliceWithoutString(allFields, field),
+					DiffSuppressFunc: permissions.SuppressResourceNamePrefixDiff(field),
 				}
 			}
 			common.NamespaceCustomizeSchemaMap(m)

@@ -1,0 +1,66 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: "account"
+  cloud: "GCP"
+  account_id: "replay-account"
+steps:
+  - name: "create"
+    config: |
+      provider "databricks" {
+        account_id = "replay-account"
+      }
+
+      resource "databricks_mws_customer_managed_keys" "this" {
+        account_id = "replay-account"
+        use_cases = ["STORAGE"]
+        gcp_key_info {
+          kms_key_id = "projects/replay/locations/us/keyRings/replay/cryptoKeys/replay"
+        }
+      }
+    calls:
+      - request:
+          method: "POST"
+          path: "/api/2.0/accounts/replay-account/customer-managed-keys"
+          body:
+            json:
+              account_id: "replay-account"
+              gcp_key_info:
+                kms_key_id: "projects/replay/locations/us/keyRings/replay/cryptoKeys/replay"
+              use_cases: ["STORAGE"]
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              account_id: "replay-account"
+              creation_time: 1700000000000
+              customer_managed_key_id: "key-123"
+              gcp_key_info:
+                kms_key_id: "projects/replay/locations/us/keyRings/replay/cryptoKeys/replay"
+              use_cases: ["STORAGE"]
+      - &get_1
+        request:
+          method: "GET"
+          path: "/api/2.0/accounts/replay-account/customer-managed-keys/key-123"
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              account_id: "replay-account"
+              creation_time: 1700000000000
+              customer_managed_key_id: "key-123"
+              gcp_key_info:
+                kms_key_id: "projects/replay/locations/us/keyRings/replay/cryptoKeys/replay"
+              use_cases: ["STORAGE"]
+      - *get_1
+destroy:
+  calls:
+    - *get_1
+    - request:
+        method: "DELETE"
+        path: "/api/2.0/accounts/replay-account/customer-managed-keys/key-123"
+        body: null
+      response: # Inferred API response; not recorded.
+        status: 200
+        body: null

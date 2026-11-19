@@ -361,6 +361,7 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 	schemaMap := schema.InternalMap(f.Resource.Schema)
 	is := &terraform.InstanceState{
 		Attributes: f.InstanceState,
+		RawConfig:  makeResourceRawConfig(resourceConfig, resource),
 	}
 	ctx := context.Background()
 	diff, err := resource.Diff(ctx, is, resourceConfig, client)
@@ -377,6 +378,11 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 	// TODO: f.Resource.Data(is) - check why it doesn't work
 	if err != nil {
 		return nil, err
+	}
+	// Populate diff.RawConfig to allow d.GetRawConfigAt() works in tests
+	// In actual runs terraform's gRPC pipeline will populate this
+	if diff != nil {
+		diff.RawConfig = makeResourceRawConfig(resourceConfig, resource)
 	}
 	if f.Update {
 		err = f.requiresNew(diff)
@@ -403,6 +409,9 @@ func (f ResourceFixture) Apply(t *testing.T) (*schema.ResourceData, error) {
 		return resourceData, fmt.Errorf("resource is not expected to be removed")
 	}
 	newState := resourceData.State()
+	if newState != nil {
+		newState.RawConfig = makeResourceRawConfig(resourceConfig, resource)
+	}
 	diff, err = schemaMap.Diff(ctx, newState, resourceConfig, resource.CustomizeDiff, client, true)
 	if err != nil {
 		return nil, err

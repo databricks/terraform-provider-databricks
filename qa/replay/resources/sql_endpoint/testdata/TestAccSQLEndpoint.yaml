@@ -1,0 +1,182 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: "workspace"
+  cloud: "AWS"
+  workspace_id: "12345"
+steps:
+  - name: "create"
+    config: |
+      resource "databricks_sql_endpoint" "this" {
+        name             = "tf-replay1"
+        cluster_size     = "2X-Small"
+        max_num_clusters = 1
+
+        tags {
+          custom_tags {
+            key   = "Owner"
+            value = "eng-dev-ecosystem-team_at_databricks.com"
+          }
+        }
+      }
+    calls:
+      - request:
+          method: "POST"
+          path: "/api/2.0/sql/warehouses"
+          body:
+            json:
+              auto_stop_mins: 120
+              cluster_size: "2X-Small"
+              enable_photon: true
+              max_num_clusters: 1
+              name: "tf-replay1"
+              spot_instance_policy: "COST_OPTIMIZED"
+              tags:
+                custom_tags:
+                  - key: "Owner"
+                    value: "eng-dev-ecosystem-team_at_databricks.com"
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              id: "warehouse-1"
+      - &get_1
+        request:
+          method: "GET"
+          path: "/api/2.0/sql/warehouses/warehouse-1"
+          body: null
+        response: &response_1 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              auto_stop_mins: 120
+              cluster_size: "2X-Small"
+              enable_photon: true
+              enable_serverless_compute: false
+              id: "warehouse-1"
+              max_num_clusters: 1
+              min_num_clusters: 1
+              name: "tf-replay1"
+              odbc_params:
+                hostname: "replay.cloud.databricks.com"
+                path: "/sql/1.0/warehouses/warehouse-1"
+                port: 443
+                protocol: "https"
+              spot_instance_policy: "COST_OPTIMIZED"
+              state: "RUNNING"
+              tags:
+                custom_tags:
+                  - key: "Owner"
+                    value: "eng-dev-ecosystem-team_at_databricks.com"
+      - *get_1
+      - &get_2
+        request:
+          method: "GET"
+          path: "/api/2.0/preview/sql/data_sources"
+          body: null
+        response: &response_2 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              - id: "datasource-1"
+                warehouse_id: "warehouse-1"
+              - id: "datasource-2"
+                warehouse_id: "warehouse-2"
+      - *get_1
+      - *get_2
+  - name: "replace_with_explicit_serverless_setting"
+    config: |
+      resource "databricks_sql_endpoint" "that" {
+        name             = "tf-replay2"
+        cluster_size     = "2X-Small"
+        max_num_clusters = 1
+
+        enable_serverless_compute = false
+
+        tags {
+          custom_tags {
+            key   = "Owner"
+            value = "eng-dev-ecosystem-team_at_databricks.com"
+          }
+        }
+      }
+    calls:
+      - *get_1
+      - *get_2
+      - request:
+          method: "DELETE"
+          path: "/api/2.0/sql/warehouses/warehouse-1"
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body: null
+      - request:
+          method: "POST"
+          path: "/api/2.0/sql/warehouses"
+          body:
+            json:
+              auto_stop_mins: 120
+              cluster_size: "2X-Small"
+              enable_photon: true
+              enable_serverless_compute: false
+              max_num_clusters: 1
+              name: "tf-replay2"
+              spot_instance_policy: "COST_OPTIMIZED"
+              tags:
+                custom_tags:
+                  - key: "Owner"
+                    value: "eng-dev-ecosystem-team_at_databricks.com"
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              id: "warehouse-2"
+      - &get_3
+        request:
+          method: "GET"
+          path: "/api/2.0/sql/warehouses/warehouse-2"
+          body: null
+        response: &response_3 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              auto_stop_mins: 120
+              cluster_size: "2X-Small"
+              enable_photon: true
+              enable_serverless_compute: false
+              id: "warehouse-2"
+              max_num_clusters: 1
+              min_num_clusters: 1
+              name: "tf-replay2"
+              odbc_params:
+                hostname: "replay.cloud.databricks.com"
+                path: "/sql/1.0/warehouses/warehouse-2"
+                port: 443
+                protocol: "https"
+              spot_instance_policy: "COST_OPTIMIZED"
+              state: "RUNNING"
+              tags:
+                custom_tags:
+                  - key: "Owner"
+                    value: "eng-dev-ecosystem-team_at_databricks.com"
+      - *get_3
+      - *get_2
+      - *get_3
+      - *get_2
+    state:
+      resources:
+        databricks_sql_endpoint.that:
+          attributes:
+            - path: ["enable_serverless_compute"]
+              equals: false
+destroy:
+  calls:
+    - *get_3
+    - *get_2
+    - request:
+        method: "DELETE"
+        path: "/api/2.0/sql/warehouses/warehouse-2"
+        body: null
+      response: # Inferred API response; not recorded.
+        status: 200
+        body: null

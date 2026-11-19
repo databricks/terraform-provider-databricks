@@ -97,14 +97,21 @@ func (r ProviderConfigData) Type(ctx context.Context) attr.Type {
 
 // GroupData extends the main model with additional fields.
 type GroupData struct {
-	// The parent account ID for group in Databricks.
+	// The ID of the account that contains the group.
 	AccountId types.String `tfsdk:"account_id"`
-	// ExternalId of the group in the customer's IdP.
+	// The ID of the group in your identity provider (IdP).
 	ExternalId types.String `tfsdk:"external_id"`
-	// Internal group ID of the group in Databricks.
+	// The Databricks ID of the group.
 	GroupId types.String `tfsdk:"group_id"`
-	// Display name of the group.
-	GroupName          types.String `tfsdk:"group_name"`
+	// The name of the group.
+	GroupName types.String `tfsdk:"group_name"`
+	// The resource name of the group, in one of these formats: - Account APIs:
+	// `accounts/{account_id}/groups/{group_id}` - Workspace APIs:
+	// `groups/{group_id}`
+	Name types.String `tfsdk:"name"`
+	// The resource name of the account that contains the group, in the format
+	// `accounts/{account_id}`. Workspace APIs return the same format.
+	Parent             types.String `tfsdk:"parent"`
 	ProviderConfigData types.Object `tfsdk:"provider_config"`
 }
 
@@ -135,6 +142,8 @@ func (m GroupData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"external_id": m.ExternalId,
 			"group_id":    m.GroupId,
 			"group_name":  m.GroupName,
+			"name":        m.Name,
+			"parent":      m.Parent,
 
 			"provider_config": m.ProviderConfigData,
 		},
@@ -150,6 +159,8 @@ func (m GroupData) Type(ctx context.Context) attr.Type {
 			"external_id": types.StringType,
 			"group_id":    types.StringType,
 			"group_name":  types.StringType,
+			"name":        types.StringType,
+			"parent":      types.StringType,
 
 			"provider_config": ProviderConfigData{}.Type(ctx),
 		},
@@ -159,8 +170,10 @@ func (m GroupData) Type(ctx context.Context) attr.Type {
 func (m GroupData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["account_id"] = attrs["account_id"].SetComputed()
 	attrs["external_id"] = attrs["external_id"].SetComputed()
-	attrs["group_id"] = attrs["group_id"].SetRequired()
+	attrs["group_id"] = attrs["group_id"].SetComputed()
 	attrs["group_name"] = attrs["group_name"].SetComputed()
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["parent"] = attrs["parent"].SetComputed()
 
 	attrs["provider_config"] = attrs["provider_config"].SetOptional()
 

@@ -25,7 +25,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
@@ -113,7 +112,8 @@ func (r ProviderConfig) Type(ctx context.Context) attr.Type {
 type Endpoint struct {
 	// A timestamp indicating when the compute endpoint was created.
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
-	// The part of the name, chosen by the user when the resource was created.
+	// The endpoint ID chosen when the endpoint was created. It is the final
+	// segment of `name`.
 	EndpointId types.String `tfsdk:"endpoint_id"`
 	// Output only. The full resource path of the endpoint. Format:
 	// projects/{project_id}/branches/{branch_id}/endpoints/{endpoint_id}
@@ -122,14 +122,25 @@ type Endpoint struct {
 	// projects/{project_id}/branches/{branch_id}
 	Parent types.String `tfsdk:"parent"`
 	// If true, update the endpoint if it already exists instead of returning an
-	// error.
+	// error. The request's `spec.endpoint_type` must match the existing
+	// endpoint's type, and the other `spec` fields are applied as an update.
+	// Use this to configure the read-write endpoint that was created together
+	// with the branch.
 	ReplaceExisting types.Bool `tfsdk:"replace_existing"`
-	// The spec contains the compute endpoint configuration, including
-	// autoscaling limits, suspend timeout, and disabled state.
+	// The desired configuration of the endpoint. Every field under `spec`
+	// except `endpoint_type` can be changed after creation. See `status` for
+	// the configuration that is currently in effect.
+	//
+	// Read the resource's current values from `status`, rather than `spec`.
+	// `spec` tracks field ownership for infrastructure-as-code tools and may
+	// omit unmanaged fields.
 	Spec types.Object `tfsdk:"spec"`
-	// Current operational status of the compute endpoint.
+	// The configuration and state of the endpoint that are currently in effect,
+	// as reported by the system, including the hostnames to connect to.
 	Status types.Object `tfsdk:"status"`
-	// System-generated unique ID for the endpoint.
+	// A system-generated ID that identifies the endpoint. Unlike `name`, it is
+	// not derived from the user-chosen endpoint ID. The endpoint's connection
+	// hostnames are based on this ID.
 	Uid types.String `tfsdk:"uid"`
 	// A timestamp indicating when the compute endpoint was last updated.
 	UpdateTime     timetypes.RFC3339 `tfsdk:"update_time"`
@@ -201,10 +212,6 @@ func (to *Endpoint) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from End
 	if !from.ReplaceExisting.IsUnknown() {
 		to.ReplaceExisting = from.ReplaceExisting
 	}
-	if !from.Spec.IsUnknown() && !from.Spec.IsNull() {
-		// Spec is an input only field and not returned by the service, so we keep the value from the prior state.
-		to.Spec = from.Spec
-	}
 	if !from.Spec.IsNull() && !from.Spec.IsUnknown() {
 		if toSpec, ok := to.GetSpec(ctx); ok {
 			if fromSpec, ok := from.GetSpec(ctx); ok {
@@ -233,10 +240,6 @@ func (to *Endpoint) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from End
 func (to *Endpoint) SyncFieldsDuringRead(ctx context.Context, from Endpoint) {
 	if !from.ReplaceExisting.IsUnknown() {
 		to.ReplaceExisting = from.ReplaceExisting
-	}
-	if !from.Spec.IsUnknown() && !from.Spec.IsNull() {
-		// Spec is an input only field and not returned by the service, so we keep the value from the prior state.
-		to.Spec = from.Spec
 	}
 	if !from.Spec.IsNull() && !from.Spec.IsUnknown() {
 		if toSpec, ok := to.GetSpec(ctx); ok {
@@ -267,8 +270,6 @@ func (m Endpoint) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeB
 	attrs["parent"] = attrs["parent"].SetRequired()
 	attrs["parent"] = attrs["parent"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["spec"] = attrs["spec"].SetOptional()
-	attrs["spec"] = attrs["spec"].SetComputed()
-	attrs["spec"] = attrs["spec"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["status"] = attrs["status"].SetComputed()
 	attrs["uid"] = attrs["uid"].SetComputed()
 	attrs["update_time"] = attrs["update_time"].SetComputed()
@@ -358,10 +359,6 @@ func (r *EndpointResource) ModifyPlan(ctx context.Context, req resource.ModifyPl
 		return
 	}
 	tfschema.WorkspaceDriftDetection(ctx, r.Client, req, resp)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	tfschema.ValidateWorkspaceID(ctx, r.Client, req, resp)
 }
 
 func (r *EndpointResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -430,6 +427,9 @@ func (r *EndpointResource) Create(ctx context.Context, req resource.CreateReques
 		return
 	}
 	resp.Diagnostics.Append(tfschema.PopulateProviderConfigInState(ctx, r.Client, plan.ProviderConfig, &resp.State)...)
+	if !resp.Diagnostics.HasError() {
+		resp.Diagnostics.Append(resp.Private.SetKey(ctx, tfschema.CreationInputsAppliedKey, []byte("true"))...)
+	}
 }
 
 func (r *EndpointResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -548,6 +548,9 @@ func (r *EndpointResource) Update(ctx context.Context, req resource.UpdateReques
 	}
 
 	r.update(ctx, plan, &resp.Diagnostics, &resp.State)
+	if !resp.Diagnostics.HasError() {
+		resp.Diagnostics.Append(resp.Private.SetKey(ctx, tfschema.CreationInputsAppliedKey, []byte("true"))...)
+	}
 }
 
 func (r *EndpointResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {

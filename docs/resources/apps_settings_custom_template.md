@@ -144,7 +144,7 @@ The following arguments are supported:
 
 ### AppManifestAppResourceUcSecurableSpec
 * `permission` (string, required) - Possible values are: `EXECUTE`, `MANAGE`, `READ_VOLUME`, `SELECT`, `USE_CONNECTION`, `WRITE_VOLUME`
-* `securable_type` (string, required) - Possible values are: `CONNECTION`, `FUNCTION`, `TABLE`, `VOLUME`
+* `securable_type` (string, required) - Possible values are: `CONNECTION`, `FUNCTION`, `MODEL_SERVICE`, `TABLE`, `VOLUME`
 
 ## Attributes
 In addition to the above arguments, the following attributes are exported:

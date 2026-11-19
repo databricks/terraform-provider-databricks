@@ -1,0 +1,138 @@
+# API responses are placeholders based on the API models, not recorded.
+version: 1
+host_metadata:
+  account_id: replay-account
+  cloud: AWS
+  host_type: account
+steps:
+- name: create
+  provider_implementations:
+    databricks_mws_ncc_private_endpoint_rule: plugin_framework
+  config: |
+    provider "databricks" {
+      account_id = "replay-account"
+    }
+
+    resource "databricks_mws_network_connectivity_config" "this" {
+      account_id = "replay-account"
+      name       = "tf-replay1"
+      region     = "us-east-1"
+    }
+
+    resource "databricks_mws_ncc_private_endpoint_rule" "this" {
+      network_connectivity_config_id = databricks_mws_network_connectivity_config.this.network_connectivity_config_id
+      resource_names                 = ["replay-logs"]
+    }
+  calls:
+  - request:
+      method: POST
+      path: /api/2.0/accounts/replay-account/network-connectivity-configs
+      body:
+        json:
+          name: tf-replay1
+          region: us-east-1
+    response:
+      status: 200
+      body:
+        json:
+          account_id: replay-account
+          name: tf-replay1
+          network_connectivity_config_id: ncc-1
+          region: us-east-1
+  - &id001
+    request:
+      method: GET
+      path: /api/2.0/accounts/replay-account/network-connectivity-configs/ncc-1
+      body: null
+    response:
+      status: 200
+      body:
+        json:
+          account_id: replay-account
+          name: tf-replay1
+          network_connectivity_config_id: ncc-1
+          region: us-east-1
+  - request:
+      method: POST
+      path: /api/2.0/accounts/replay-account/network-connectivity-configs/ncc-1/private-endpoint-rules
+      body:
+        json:
+          resource_names:
+          - replay-logs
+    response:
+      status: 200
+      body:
+        json:
+          account_id: replay-account
+          connection_state: ESTABLISHED
+          deactivated: false
+          enabled: true
+          network_connectivity_config_id: ncc-1
+          resource_names:
+          - replay-logs
+          rule_id: rule-1
+  - &id002
+    request:
+      method: GET
+      path: /api/2.0/accounts/replay-account/network-connectivity-configs/ncc-1/private-endpoint-rules/rule-1
+      body: null
+    response:
+      status: 200
+      body:
+        json:
+          account_id: replay-account
+          connection_state: ESTABLISHED
+          deactivated: false
+          enabled: true
+          network_connectivity_config_id: ncc-1
+          resource_names:
+          - replay-logs
+          rule_id: rule-1
+  - *id001
+  - *id002
+- name: switch_implementation
+  provider_implementations:
+    databricks_mws_ncc_private_endpoint_rule: sdkv2
+  config: |
+    provider "databricks" {
+      account_id = "replay-account"
+    }
+
+    resource "databricks_mws_network_connectivity_config" "this" {
+      account_id = "replay-account"
+      name       = "tf-replay1"
+      region     = "us-east-1"
+    }
+
+    resource "databricks_mws_ncc_private_endpoint_rule" "this" {
+      network_connectivity_config_id = databricks_mws_network_connectivity_config.this.network_connectivity_config_id
+      resource_names                 = ["replay-logs"]
+    }
+  calls:
+  - *id001
+  - *id002
+  - *id001
+  - *id002
+  plan:
+    changes:
+      databricks_mws_ncc_private_endpoint_rule.this:
+        actions:
+        - no-op
+destroy:
+  calls:
+  - *id001
+  - *id002
+  - request:
+      method: DELETE
+      path: /api/2.0/accounts/replay-account/network-connectivity-configs/ncc-1/private-endpoint-rules/rule-1
+      body: null
+    response:
+      status: 200
+      body: null
+  - request:
+      method: DELETE
+      path: /api/2.0/accounts/replay-account/network-connectivity-configs/ncc-1
+      body: null
+    response:
+      status: 200
+      body: null

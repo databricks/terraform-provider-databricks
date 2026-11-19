@@ -1,0 +1,158 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: "workspace"
+  cloud: "AWS"
+  workspace_id: "12345"
+steps:
+  - name: "create"
+    config: |
+      resource "databricks_sql_query" "q1" {
+        data_source_id = "datasource-1"
+        name           = "tf-replay1"
+        query          = "SELECT {{ p1 }} AS p1, 2 as p2"
+
+        parameter {
+          name  = "p1"
+          title = "Title for p1"
+          text {
+            value = "default"
+          }
+        }
+
+        tags = [
+          "t1",
+          "t2",
+        ]
+      }
+
+      resource "databricks_sql_visualization" "q1v1" {
+        query_id    = databricks_sql_query.q1.id
+        type        = "chart"
+        name        = "My Chart"
+        description = "Some Description"
+
+        options = jsonencode({
+          columnMapping = {
+            "p1" = "x"
+            "p2" = "y"
+          }
+        })
+      }
+    calls:
+      - request:
+          method: "POST"
+          path: "/api/2.0/preview/sql/queries"
+          body:
+            json:
+              data_source_id: "datasource-1"
+              description: ""
+              name: "tf-replay1"
+              options:
+                parameters:
+                  - name: "p1"
+                    title: "Title for p1"
+                    type: "text"
+                    value: "default"
+              query: "SELECT {{ p1 }} AS p1, 2 as p2"
+              schedule: null
+              tags: ["t1","t2"]
+        response: &response_1 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              data_source_id: "datasource-1"
+              description: ""
+              id: "query-1"
+              name: "tf-replay1"
+              options:
+                parameters:
+                  - name: "p1"
+                    title: "Title for p1"
+                    type: "text"
+                    value: "default"
+              query: "SELECT {{ p1 }} AS p1, 2 as p2"
+              schedule: null
+              tags: ["t1","t2"]
+      - request:
+          method: "GET"
+          path: "/api/2.0/preview/sql/queries/query-1"
+          body: null
+        response: *response_1
+      - request:
+          method: "POST"
+          path: "/api/2.0/preview/sql/visualizations"
+          body:
+            json:
+              description: "Some Description"
+              name: "My Chart"
+              options:
+                columnMapping:
+                  p1: "x"
+                  p2: "y"
+              query_id: "query-1"
+              type: "CHART"
+        response: &response_2 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              description: "Some Description"
+              id: 1
+              name: "My Chart"
+              options:
+                columnMapping:
+                  p1: "x"
+                  p2: "y"
+              query_id: "query-1"
+              type: "CHART"
+      - &get_1
+        request:
+          method: "GET"
+          path: "/api/2.0/preview/sql/queries/query-1"
+          body: null
+        response: &response_3 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              data_source_id: "datasource-1"
+              description: ""
+              id: "query-1"
+              name: "tf-replay1"
+              options:
+                parameters:
+                  - name: "p1"
+                    title: "Title for p1"
+                    type: "text"
+                    value: "default"
+              query: "SELECT {{ p1 }} AS p1, 2 as p2"
+              schedule: null
+              tags: ["t1","t2"]
+              visualizations:
+                - description: "Some Description"
+                  id: 1
+                  name: "My Chart"
+                  options:
+                    columnMapping:
+                      p1: "x"
+                      p2: "y"
+                  type: "CHART"
+      - *get_1
+      - *get_1
+destroy:
+  calls:
+    - *get_1
+    - *get_1
+    - request:
+        method: "DELETE"
+        path: "/api/2.0/preview/sql/visualizations/1"
+        body: null
+      response: # Inferred API response; not recorded.
+        status: 200
+        body: null
+    - request:
+        method: "DELETE"
+        path: "/api/2.0/preview/sql/queries/query-1"
+        body: null
+      response: # Inferred API response; not recorded.
+        status: 200
+        body: null

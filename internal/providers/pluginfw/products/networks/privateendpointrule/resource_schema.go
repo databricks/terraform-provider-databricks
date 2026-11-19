@@ -17,10 +17,12 @@ import (
 // resourceSchema returns the Plugin Framework schema for
 // databricks_mws_ncc_private_endpoint_rule. The attribute set matches the
 // SDKv2 implementation in mws/resource_mws_ncc_private_endpoint_rule.go so
-// opting in needs no config or state change. `make diff-schema` does NOT
+// existing AWS/Azure configurations remain compatible. `make diff-schema` does NOT
 // guard this parity: it dumps the default (SDKv2) provider, and this resource
 // is opt-in, so the PF schema below is never introspected by that gate.
-// TestSchema_MatchesSDKv2 asserts the parity instead.
+// TestSchema_MatchesSDKv2 asserts parity except for the required Google API
+// endpoints list. GCP target validation and service-attachment replacement are
+// Framework-only; SDKv2 keeps its existing behavior.
 //
 // Attribute descriptions are sourced from the SDK struct comments
 // (databricks-sdk-go service/settings) and surfaced through

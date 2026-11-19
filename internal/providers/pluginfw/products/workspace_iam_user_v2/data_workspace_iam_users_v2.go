@@ -29,11 +29,16 @@ func DataSourceUsers() datasource.DataSource {
 // UsersData extends the main model with additional fields.
 type UsersData struct {
 	WorkspaceIamV2 types.List `tfsdk:"users"`
-	// Optional. Allows filtering users by username or external id.
+	// Filters users by `username` or `external_id`, for example `username eq
+	// "someone@example.com"`. Put the value in quotes.
 	Filter types.String `tfsdk:"filter"`
-	// The maximum number of users to return. The service may return fewer than
-	// this value.
-	PageSize           types.Int64  `tfsdk:"page_size"`
+	// The maximum number of users to return, up to 1000. The default is 1000. A
+	// page can contain fewer users.
+	PageSize types.Int64 `tfsdk:"page_size"`
+	// The resource name of the account to list users in, in the format
+	// `accounts/{account_id}`. Defaults to the account that contains this
+	// workspace. Any other account is rejected.
+	Parent             types.String `tfsdk:"parent"`
 	ProviderConfigData types.Object `tfsdk:"provider_config"`
 }
 
@@ -47,6 +52,7 @@ func (UsersData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 func (m UsersData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["page_size"] = attrs["page_size"].SetOptional()
 	attrs["filter"] = attrs["filter"].SetOptional()
+	attrs["parent"] = attrs["parent"].SetOptional()
 
 	attrs["users"] = attrs["users"].SetComputed()
 	attrs["provider_config"] = attrs["provider_config"].SetOptional()

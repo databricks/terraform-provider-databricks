@@ -1,0 +1,52 @@
+version: 1
+host_metadata:
+  workspace_id: "12345"
+steps:
+  - name: preview_multiple_instances
+    plan_only: true
+    config: |
+      resource "databricks_group" "counted" {
+        count        = 2
+        display_name = "count-${count.index}"
+      }
+      resource "databricks_group" "keyed" {
+        for_each     = toset(["a", "b"])
+        display_name = each.key
+      }
+      output "first_id" {
+        value = databricks_group.counted[0].id
+      }
+    plan:
+      expect: non_empty
+      changes:
+        databricks_group.counted[0]:
+          actions: [create]
+          after:
+            - path: [display_name]
+              equals: count-0
+            - path: [id]
+              unknown: true
+        databricks_group.counted[1]:
+          actions: [create]
+          after:
+            - path: [display_name]
+              equals: count-1
+        'databricks_group.keyed["a"]':
+          actions: [create]
+          after:
+            - path: [display_name]
+              equals: a
+        'databricks_group.keyed["b"]':
+          actions: [create]
+          after:
+            - path: [display_name]
+              equals: b
+      outputs:
+        first_id:
+          actions: [create]
+          after:
+            - path: []
+              unknown: true
+    calls: []
+destroy:
+  calls: []

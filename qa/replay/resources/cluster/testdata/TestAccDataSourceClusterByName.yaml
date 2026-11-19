@@ -1,0 +1,58 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: "workspace"
+  cloud: "AWS"
+  workspace_id: "12345"
+steps:
+  - name: "lookup_cluster"
+    config: |
+      data "databricks_cluster_pluginframework" "by_id" {
+        cluster_id = "cluster-1"
+      }
+
+      data "databricks_cluster_pluginframework" "by_name" {
+        cluster_name = data.databricks_cluster_pluginframework.by_id.cluster_name
+      }
+    calls:
+      - &get_1
+        request:
+          method: "GET"
+          path: "/api/2.1/clusters/get"
+          query:
+            cluster_id: ["cluster-1"]
+          body: null
+        response: &response_1 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              cluster_id: "cluster-1"
+              cluster_name: "existing-cluster"
+              node_type_id: "i3.xlarge"
+              num_workers: 1
+              spark_version: "17.3.x-scala2.13"
+              state: "RUNNING"
+      - &get_2
+        request:
+          method: "GET"
+          path: "/api/2.1/clusters/list"
+          body: null
+        response: &response_2 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              clusters:
+                - cluster_id: "cluster-1"
+                  cluster_name: "existing-cluster"
+                  node_type_id: "i3.xlarge"
+                  num_workers: 1
+                  spark_version: "17.3.x-scala2.13"
+                  state: "RUNNING"
+      - *get_1
+      - *get_2
+      - *get_1
+      - *get_2
+destroy:
+  calls:
+    - *get_1
+    - *get_2

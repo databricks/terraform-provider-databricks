@@ -1,8 +1,16 @@
 package app_test
 
 import (
+	"bytes"
 	"context"
+	"crypto/md5"
 	"fmt"
+	"image"
+	"image/color"
+	"image/draw"
+	"image/png"
+	"os"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"testing"
@@ -200,6 +208,99 @@ func TestAccAppResource_NoCompute(t *testing.T) {
 	})
 }
 
+func makeComputeSizeTemplate(description, computeSize string) string {
+	computeSizeLine := ""
+	if computeSize != "" {
+		computeSizeLine = fmt.Sprintf("compute_size = %q", computeSize)
+	}
+	return fmt.Sprintf(`
+	resource "databricks_app" "this" {
+		no_compute = true
+		name = "tf-{var.STICKY_RANDOM}"
+		description = %q
+		%s
+	}`, description, computeSizeLine)
+}
+
+func checkAppComputeSize(t *testing.T, expected string) func(s *terraform.State) error {
+	return func(s *terraform.State) error {
+		assert.Equal(t, expected, s.RootModule().Resources["databricks_app.this"].Primary.Attributes["compute_size"])
+		return nil
+	}
+}
+
+// An omitted compute_size is only sent as unset when another field changes, because it is
+// Optional+Computed; the backend then resets it to MEDIUM.
+func TestAccAppResource_ComputeSize(t *testing.T) {
+	acceptance.LoadWorkspaceEnv(t)
+	acceptance.WorkspaceLevel(t, acceptance.Step{
+		Template: makeComputeSizeTemplate("compute size app", "MEDIUM"),
+		Check:    checkAppComputeSize(t, "MEDIUM"),
+	}, acceptance.Step{
+		Template: makeComputeSizeTemplate("compute size app", "LARGE"),
+		Check:    checkAppComputeSize(t, "LARGE"),
+	}, acceptance.Step{
+		Template: makeComputeSizeTemplate("compute size app reset", ""),
+		Check:    checkAppComputeSize(t, "MEDIUM"),
+	})
+}
+
+func makeThumbnailTemplate(thumbnailPath string) string {
+	thumbnailLine := ""
+	if thumbnailPath != "" {
+		thumbnailLine = fmt.Sprintf("thumbnail_path = %q", thumbnailPath)
+	}
+	return fmt.Sprintf(`
+	resource "databricks_app" "this" {
+		no_compute = true
+		name = "tf-{var.STICKY_RANDOM}"
+		description = "thumbnail app"
+		%s
+	}`, thumbnailLine)
+}
+
+// writeThumbnailPng writes a 16:9 PNG of a single color and returns its MD5 hash.
+func writeThumbnailPng(t *testing.T, thumbnailPath string, c color.Color) string {
+	img := image.NewRGBA(image.Rect(0, 0, 160, 90))
+	draw.Draw(img, img.Bounds(), &image.Uniform{C: c}, image.Point{}, draw.Src)
+	var buf bytes.Buffer
+	require.NoError(t, png.Encode(&buf, img))
+	require.NoError(t, os.WriteFile(thumbnailPath, buf.Bytes(), 0o600))
+	return fmt.Sprintf("%x", md5.Sum(buf.Bytes()))
+}
+
+func checkAppThumbnail(t *testing.T, wantMd5 *string) func(s *terraform.State) error {
+	return func(s *terraform.State) error {
+		attrs := s.RootModule().Resources["databricks_app.this"].Primary.Attributes
+		assert.Equal(t, *wantMd5, attrs["thumbnail_md5"])
+		// Not checked after a delete: the API keeps returning the old URL for some seconds.
+		if *wantMd5 != "" {
+			assert.NotEmpty(t, attrs["thumbnail_url"])
+		}
+		return nil
+	}
+}
+
+// Setting, changing and removing the thumbnail; each step's post-apply plan must be empty.
+func TestAccAppResource_Thumbnail(t *testing.T) {
+	acceptance.LoadWorkspaceEnv(t)
+	thumbnailPath := filepath.Join(t.TempDir(), "thumbnail.png")
+	var wantMd5 string
+	acceptance.WorkspaceLevel(t, acceptance.Step{
+		PreConfig: func() { wantMd5 = writeThumbnailPng(t, thumbnailPath, color.RGBA{R: 255, G: 54, B: 33, A: 255}) },
+		Template:  makeThumbnailTemplate(thumbnailPath),
+		Check:     checkAppThumbnail(t, &wantMd5),
+	}, acceptance.Step{
+		PreConfig: func() { wantMd5 = writeThumbnailPng(t, thumbnailPath, color.RGBA{B: 212, G: 120, A: 255}) },
+		Template:  makeThumbnailTemplate(thumbnailPath),
+		Check:     checkAppThumbnail(t, &wantMd5),
+	}, acceptance.Step{
+		PreConfig: func() { wantMd5 = "" },
+		Template:  makeThumbnailTemplate(""),
+		Check:     checkAppThumbnail(t, &wantMd5),
+	})
+}
+
 // TestAccAppResource_EmptyUserApiScopes is a regression test for ES-1857512 / #4760:
 // setting user_api_scopes = [] (to disable OBO authorization) must not produce
 // "inconsistent result after apply" or a perpetual diff, even though the Apps API omits
@@ -273,6 +374,45 @@ var deletedOutsideTemplate = `
 		}]
 	}
 `
+
+// TestAccAppResource_GitSource is a regression test for git-backed deployment: setting
+// git_source must not produce "inconsistent result after apply" or a perpetual diff, even
+// though the Apps API classifies git_source (and source_code_path) as input_only and omits
+// them from its response (the read-back is the separate default_git_source). The resource
+// preserves the configured value across reads, and the nested git_source descendants are
+// non-Computed so a configured value is fully known after apply.
+func TestAccAppResource_GitSource(t *testing.T) {
+	acceptance.LoadWorkspaceEnv(t)
+	if acceptance.IsGcp(t) {
+		acceptance.Skipf(t)("not available on GCP")
+	}
+	template := `
+	resource "databricks_app" "this" {
+		no_compute  = true
+		name        = "tf-{var.STICKY_RANDOM}"
+		description = "git-backed app"
+		git_repository = {
+			url      = "https://github.com/databricks/app-templates"
+			provider = "gitHub"
+		}
+		git_source = {
+			branch           = "main"
+			source_code_path = "streamlit-data-app"
+		}
+	}`
+	acceptance.WorkspaceLevel(t, acceptance.Step{
+		Template: template,
+		Check: func(s *terraform.State) error {
+			attrs := s.RootModule().Resources["databricks_app.this"].Primary.Attributes
+			assert.Equal(t, "main", attrs["git_source.branch"])
+			assert.Equal(t, "streamlit-data-app", attrs["git_source.source_code_path"])
+			return nil
+		},
+	}, acceptance.Step{
+		// Re-applying the same config must be a no-op (no perpetual diff from the input_only fields).
+		Template: template,
+	})
+}
 
 func TestAccAppResource_DeletedOutsideTerraform(t *testing.T) {
 	var appName string

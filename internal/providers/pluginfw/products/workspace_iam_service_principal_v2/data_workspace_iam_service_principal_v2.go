@@ -97,18 +97,28 @@ func (r ProviderConfigData) Type(ctx context.Context) attr.Type {
 
 // ServicePrincipalData extends the main model with additional fields.
 type ServicePrincipalData struct {
-	// The parent account ID for the service principal in Databricks.
+	// The ID of the account that contains the service principal.
 	AccountId types.String `tfsdk:"account_id"`
-	// The activity status of a service principal in a Databricks account.
+	// Whether the service principal is active in the account.
 	AccountSpStatus types.String `tfsdk:"account_sp_status"`
-	// Application ID of the service principal. Set at creation time and cannot
-	// be changed afterwards; when omitted, the server generates one.
+	// The service principal's application ID, a UUID. If you don't set it when
+	// you create the service principal, Databricks generates one. It must be
+	// unique in the account and can't be changed.
 	ApplicationId types.String `tfsdk:"application_id"`
-	// Display name of the service principal.
+	// The service principal's display name.
 	DisplayName types.String `tfsdk:"display_name"`
-	// ExternalId of the service principal in the customer's IdP.
+	// The ID of the service principal in your identity provider (IdP).
 	ExternalId types.String `tfsdk:"external_id"`
-	// Internal service principal ID of the service principal in Databricks.
+	// The resource name of the service principal, in one of these formats: -
+	// Account APIs:
+	// `accounts/{account_id}/service-principals/{service_principal_id}` -
+	// Workspace APIs: `service-principals/{service_principal_id}`
+	Name types.String `tfsdk:"name"`
+	// The resource name of the account that contains the service principal, in
+	// the format `accounts/{account_id}`. Workspace APIs return the same
+	// format.
+	Parent types.String `tfsdk:"parent"`
+	// The Databricks ID of the service principal.
 	ServicePrincipalId types.String `tfsdk:"service_principal_id"`
 	ProviderConfigData types.Object `tfsdk:"provider_config"`
 }
@@ -141,6 +151,8 @@ func (m ServicePrincipalData) ToObjectValue(ctx context.Context) basetypes.Objec
 			"application_id":       m.ApplicationId,
 			"display_name":         m.DisplayName,
 			"external_id":          m.ExternalId,
+			"name":                 m.Name,
+			"parent":               m.Parent,
 			"service_principal_id": m.ServicePrincipalId,
 
 			"provider_config": m.ProviderConfigData,
@@ -158,6 +170,8 @@ func (m ServicePrincipalData) Type(ctx context.Context) attr.Type {
 			"application_id":       types.StringType,
 			"display_name":         types.StringType,
 			"external_id":          types.StringType,
+			"name":                 types.StringType,
+			"parent":               types.StringType,
 			"service_principal_id": types.StringType,
 
 			"provider_config": ProviderConfigData{}.Type(ctx),
@@ -171,7 +185,9 @@ func (m ServicePrincipalData) ApplySchemaCustomizations(attrs map[string]tfschem
 	attrs["application_id"] = attrs["application_id"].SetComputed()
 	attrs["display_name"] = attrs["display_name"].SetComputed()
 	attrs["external_id"] = attrs["external_id"].SetComputed()
-	attrs["service_principal_id"] = attrs["service_principal_id"].SetRequired()
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["parent"] = attrs["parent"].SetComputed()
+	attrs["service_principal_id"] = attrs["service_principal_id"].SetComputed()
 
 	attrs["provider_config"] = attrs["provider_config"].SetOptional()
 

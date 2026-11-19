@@ -870,3 +870,62 @@ func TestModelGrantCreate(t *testing.T) {
 		}`,
 	}.ApplyNoError(t)
 }
+
+func TestSecretGrantCreate(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/permissions/secret/main.default.mysecret?",
+				Response: catalog.GetPermissionsResponse{
+					PrivilegeAssignments: []catalog.PrivilegeAssignment{},
+				},
+			},
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/permissions/secret/main.default.mysecret",
+				ExpectedRequest: catalog.UpdatePermissions{
+					Changes: []catalog.PermissionsChange{
+						{
+							Principal: "me",
+							Add:       []catalog.Privilege{"READ_SECRET"},
+						},
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/permissions/secret/main.default.mysecret?",
+				Response: catalog.GetPermissionsResponse{
+					PrivilegeAssignments: []catalog.PrivilegeAssignment{
+						{
+							Principal:  "me",
+							Privileges: []catalog.Privilege{"READ_SECRET"},
+						},
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/permissions/secret/main.default.mysecret?",
+				Response: catalog.GetPermissionsResponse{
+					PrivilegeAssignments: []catalog.PrivilegeAssignment{
+						{
+							Principal:  "me",
+							Privileges: []catalog.Privilege{"READ_SECRET"},
+						},
+					},
+				},
+			},
+		},
+		Resource: ResourceGrants(),
+		Create:   true,
+		HCL: `
+		secret = "main.default.mysecret"
+
+		grant {
+			principal = "me"
+			privileges = ["READ_SECRET"]
+		}`,
+	}.ApplyNoError(t)
+}

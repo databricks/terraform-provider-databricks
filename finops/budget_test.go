@@ -8,6 +8,8 @@ import (
 )
 
 var (
+	// The filter's workspace must belong to the test account: the API rejects
+	// budgets that reference any other workspace ID.
 	budgetTemplate = `resource "databricks_budget" "this" {
 			display_name = "tf-{var.RANDOM}"
 
@@ -35,7 +37,7 @@ var (
 				workspace_id {
 					operator = "IN"
 					values   = [
-						1234567890098765
+						{env.TEST_WORKSPACE_ID}
 					]
 				}
 			}

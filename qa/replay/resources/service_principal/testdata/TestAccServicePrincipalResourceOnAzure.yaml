@@ -1,0 +1,178 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+# The original template changes application_id between steps, replacing the service principal.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: "workspace"
+  cloud: "Azure"
+  workspace_id: "12345"
+steps:
+  - name: "create"
+    config: |
+      resource "databricks_service_principal" "this" {
+        application_id = "00000000-0000-4000-8000-000000000001"
+        display_name = "SPN initial"
+        force = true
+      }
+    calls:
+      - request:
+          method: "POST"
+          path: "/api/2.0/preview/scim/v2/ServicePrincipals"
+          body:
+            json:
+              schemas: ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"]
+              displayName: "SPN initial"
+              active: true
+              entitlements:
+                - {}
+              applicationId: "00000000-0000-4000-8000-000000000001"
+        response: # Inferred API response; not recorded.
+          status: 201
+          body:
+            json:
+              schemas: ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"]
+              id: "201"
+              displayName: "SPN initial"
+              active: true
+              entitlements: []
+              applicationId: "00000000-0000-4000-8000-000000000001"
+      - request:
+          method: "GET"
+          path: "/api/2.0/preview/scim/v2/ServicePrincipals/201"
+          query:
+            attributes: ["userName,displayName,active,externalId,entitlements"]
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              schemas: ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"]
+              id: "201"
+              displayName: "SPN initial"
+              active: true
+              entitlements: []
+              applicationId: "00000000-0000-4000-8000-000000000001"
+      - request:
+          method: "GET"
+          path: "/api/2.0/preview/scim/v2/ServicePrincipals/201"
+          query:
+            attributes: ["userName,displayName,active,externalId,entitlements"]
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              schemas: ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"]
+              id: "201"
+              displayName: "SPN initial"
+              active: true
+              entitlements: []
+              applicationId: "00000000-0000-4000-8000-000000000001"
+  - name: "replace_application"
+    config: |
+      resource "databricks_service_principal" "this" {
+        application_id = "00000000-0000-4000-8000-000000000002"
+        display_name = "SPN Renamed updated"
+        force = true
+      }
+    calls:
+      - request:
+          method: "GET"
+          path: "/api/2.0/preview/scim/v2/ServicePrincipals/201"
+          query:
+            attributes: ["userName,displayName,active,externalId,entitlements"]
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              schemas: ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"]
+              id: "201"
+              displayName: "SPN initial"
+              active: true
+              entitlements: []
+              applicationId: "00000000-0000-4000-8000-000000000001"
+      - request:
+          method: "DELETE"
+          path: "/api/2.0/preview/scim/v2/ServicePrincipals/201"
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 204
+          body: null
+      - request:
+          method: "POST"
+          path: "/api/2.0/preview/scim/v2/ServicePrincipals"
+          body:
+            json:
+              schemas: ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"]
+              displayName: "SPN Renamed updated"
+              active: true
+              entitlements:
+                - {}
+              applicationId: "00000000-0000-4000-8000-000000000002"
+        response: # Inferred API response; not recorded.
+          status: 201
+          body:
+            json:
+              schemas: ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"]
+              id: "202"
+              displayName: "SPN Renamed updated"
+              active: true
+              entitlements: []
+              applicationId: "00000000-0000-4000-8000-000000000002"
+      - request:
+          method: "GET"
+          path: "/api/2.0/preview/scim/v2/ServicePrincipals/202"
+          query:
+            attributes: ["userName,displayName,active,externalId,entitlements"]
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              schemas: ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"]
+              id: "202"
+              displayName: "SPN Renamed updated"
+              active: true
+              entitlements: []
+              applicationId: "00000000-0000-4000-8000-000000000002"
+      - request:
+          method: "GET"
+          path: "/api/2.0/preview/scim/v2/ServicePrincipals/202"
+          query:
+            attributes: ["userName,displayName,active,externalId,entitlements"]
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              schemas: ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"]
+              id: "202"
+              displayName: "SPN Renamed updated"
+              active: true
+              entitlements: []
+              applicationId: "00000000-0000-4000-8000-000000000002"
+destroy:
+  calls:
+    - request:
+        method: "GET"
+        path: "/api/2.0/preview/scim/v2/ServicePrincipals/202"
+        query:
+          attributes: ["userName,displayName,active,externalId,entitlements"]
+        body: null
+      response: # Inferred API response; not recorded.
+        status: 200
+        body:
+          json:
+            schemas: ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"]
+            id: "202"
+            displayName: "SPN Renamed updated"
+            active: true
+            entitlements: []
+            applicationId: "00000000-0000-4000-8000-000000000002"
+    - request:
+        method: "DELETE"
+        path: "/api/2.0/preview/scim/v2/ServicePrincipals/202"
+        body: null
+      response: # Inferred API response; not recorded.
+        status: 204
+        body: null

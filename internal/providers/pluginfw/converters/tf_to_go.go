@@ -12,6 +12,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/common/types/fieldmask"
 	sdktime "github.com/databricks/databricks-sdk-go/common/types/time"
 	tfcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/iptypes"
 	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -153,7 +154,7 @@ func tfsdkToGoSdkStructField(
 			d.AddError(tfSdkToGoSdkFieldConversionFailureMessage, fmt.Sprintf("Cannot convert %T to time.Duration. %s", v, common.TerraformBugErrorMessage))
 			return d
 		}
-		destField.Set(reflect.ValueOf(duration.New(dur)))
+		setWellKnownField(destField, reflect.ValueOf(duration.New(dur)))
 	case timetypes.RFC3339:
 		if v.IsNull() || v.IsUnknown() {
 			// Leave the destination field as nil
@@ -164,7 +165,7 @@ func tfsdkToGoSdkStructField(
 			d.AddError(tfSdkToGoSdkFieldConversionFailureMessage, fmt.Sprintf("Cannot convert %T to time.Time. %s", v, common.TerraformBugErrorMessage))
 			return d
 		}
-		destField.Set(reflect.ValueOf(sdktime.New(t)))
+		setWellKnownField(destField, reflect.ValueOf(sdktime.New(t)))
 	case jsontypes.Normalized:
 		if v.IsNull() || v.IsUnknown() {
 			// Leave the destination field as nil (*json.RawMessage)
@@ -177,6 +178,8 @@ func tfsdkToGoSdkStructField(
 		}
 		rawMsg := json.RawMessage(jsonStr)
 		destField.Set(reflect.ValueOf(&rawMsg))
+	case iptypes.IPAddress:
+		d.Append(tfsdkToGoSdkStructField(ctx, v.StringValue, destField, destFieldName, forceSendFieldsField, innerType)...)
 	case types.String:
 		if destField.Type() == reflect.TypeFor[fieldmask.FieldMask]() {
 			// fieldmask.FieldMask is represented as a types.String in the TF SDK.
@@ -252,7 +255,7 @@ func tfsdkToGoSdkStructField(
 			// If the element is a primitive type, we can convert it by recursively calling this function.
 			// Otherwise, it is a TF SDK struct, and we need to call TfSdkToGoSdkStruct to convert it.
 			switch typedVv := vv.(type) {
-			case types.Bool, types.String, types.Int64, types.Float64:
+			case types.Bool, types.String, types.Int64, types.Float64, iptypes.IPAddress:
 				d.Append(tfsdkToGoSdkStructField(ctx, typedVv.(attr.Value), nextDest.Elem(), destFieldName, forceSendFieldsField, innerType)...)
 			default:
 				d.Append(TfSdkToGoSdkStruct(ctx, vv, nextDest.Interface())...)
@@ -293,7 +296,7 @@ func tfsdkToGoSdkStructField(
 			// If the element is a primitive type, we can convert it by recursively calling this function.
 			// Otherwise, it is a TF SDK struct, and we need to call TfSdkToGoSdkStruct to convert it.
 			switch typedVv := vv.(type) {
-			case types.Bool, types.String, types.Int64, types.Float64:
+			case types.Bool, types.String, types.Int64, types.Float64, iptypes.IPAddress:
 				d.Append(tfsdkToGoSdkStructField(ctx, typedVv.(attr.Value), nextDest.Elem(), destFieldName, forceSendFieldsField, innerType)...)
 			default:
 				d.Append(TfSdkToGoSdkStruct(ctx, vv, nextDest.Interface())...)
@@ -335,6 +338,20 @@ func tfsdkToGoSdkStructField(
 		return
 	}
 	return
+}
+
+// setWellKnownField assigns a well-known-type wrapper to destField. The SDK
+// constructors (duration.New, sdktime.New) always return a pointer, but the
+// generated SDK renders a REQUIRED well-known type as a value and an OPTIONAL
+// one as a pointer. Dereference when the destination is a value so both shapes
+// convert without a reflect.Set type mismatch. The constructors never return
+// nil, so Elem is safe.
+func setWellKnownField(destField, ptr reflect.Value) {
+	if destField.Kind() == reflect.Ptr {
+		destField.Set(ptr)
+	} else {
+		destField.Set(ptr.Elem())
+	}
 }
 
 func shouldSetForceSendFields(srcFieldValue attr.Value, destField reflect.Value) bool {

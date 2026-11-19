@@ -1,21 +1,16 @@
 package mws
 
 import (
-	"context"
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
-	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/databricks-sdk-go/experimental/mocks"
 	"github.com/databricks/databricks-sdk-go/service/settings"
-	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"github.com/stretchr/testify/require"
 )
 
 func getTestNccRule() *settings.NccPrivateEndpointRule {
@@ -52,46 +47,6 @@ func TestResourceNccPrivateEndpointRulePrivateEndpointRuleCreate(t *testing.T) {
 		`,
 		Create: true,
 	}.ApplyAndExpectData(t, map[string]any{"id": "ncc_id/rule_id"})
-}
-
-func TestResourceNccPrivateEndpointRuleCreateGcpGoogleApis(t *testing.T) {
-	gcpEndpoint := &settings.GcpEndpoint{
-		GoogleApiEndpoints: &settings.GoogleApiEndpoints{Endpoints: []string{"storage.googleapis.com"}},
-	}
-	serverRule := &settings.NccPrivateEndpointRule{
-		NetworkConnectivityConfigId: "ncc_id",
-		RuleId:                      "rule_id",
-		ConnectionState:             "PENDING",
-		GcpEndpoint: &settings.GcpEndpoint{
-			GoogleApiEndpoints: gcpEndpoint.GoogleApiEndpoints,
-			PscEndpointUri:     "projects/p/regions/us-east4/forwardingRules/rule",
-		},
-	}
-	qa.ResourceFixture{
-		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
-			e := a.GetMockNetworkConnectivityAPI().EXPECT()
-			e.CreatePrivateEndpointRule(mock.Anything, settings.CreatePrivateEndpointRuleRequest{
-				NetworkConnectivityConfigId: "ncc_id",
-				PrivateEndpointRule:         settings.CreatePrivateEndpointRule{GcpEndpoint: gcpEndpoint},
-			}).Return(serverRule, nil)
-			e.GetPrivateEndpointRuleByNetworkConnectivityConfigIdAndPrivateEndpointRuleId(mock.Anything, "ncc_id", "rule_id").Return(serverRule, nil)
-		},
-		Resource:  ResourceMwsNccPrivateEndpointRule(),
-		AccountID: "abc",
-		Host:      "https://accounts.gcp.databricks.com",
-		HCL: `
-		network_connectivity_config_id = "ncc_id"
-		gcp_endpoint {
-			google_api_endpoints {
-				endpoints = ["storage.googleapis.com"]
-			}
-		}`,
-		Create: true,
-	}.ApplyAndExpectData(t, map[string]any{
-		"id":                              "ncc_id/rule_id",
-		"gcp_endpoint.0.psc_endpoint_uri": "projects/p/regions/us-east4/forwardingRules/rule",
-		"gcp_endpoint.0.google_api_endpoints.0.endpoints": []any{"storage.googleapis.com"},
-	})
 }
 
 func TestResourceNccPrivateEndpointRulePrivateEndpointRuleCreate_Error(t *testing.T) {
@@ -304,117 +259,6 @@ func TestResourceNccPrivateEndpointRulePrivateEndpointRuleUpdateEnabled(t *testi
 	})
 }
 
-func TestResourceNccPrivateEndpointRuleUpdateGcpFirstPartyTarget(t *testing.T) {
-	qa.ResourceFixture{
-		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
-			e := a.GetMockNetworkConnectivityAPI().EXPECT()
-			e.UpdatePrivateEndpointRule(mock.Anything, settings.UpdateNccPrivateEndpointRuleRequest{
-				NetworkConnectivityConfigId: "ncc_id",
-				PrivateEndpointRuleId:       "rule_id",
-				PrivateEndpointRule: settings.UpdatePrivateEndpointRule{
-					GcpEndpoint: &settings.GcpEndpoint{AllVpcScServices: true},
-				},
-				UpdateMask: "gcp_endpoint",
-			}).Return(getTestNccRule(), nil)
-			e.GetPrivateEndpointRuleByNetworkConnectivityConfigIdAndPrivateEndpointRuleId(mock.Anything, "ncc_id", "rule_id").Return(
-				&settings.NccPrivateEndpointRule{
-					NetworkConnectivityConfigId: "ncc_id",
-					RuleId:                      "rule_id",
-					ConnectionState:             "ESTABLISHED",
-					GcpEndpoint: &settings.GcpEndpoint{
-						AllVpcScServices: true,
-						PscEndpointUri:   "projects/p/regions/us-east4/forwardingRules/rule",
-					},
-				}, nil)
-		},
-		Resource:  ResourceMwsNccPrivateEndpointRule(),
-		AccountID: "abc",
-		Host:      "https://accounts.gcp.databricks.com",
-		ID:        "ncc_id/rule_id",
-		InstanceState: map[string]string{
-			"network_connectivity_config_id":        "ncc_id",
-			"rule_id":                               "rule_id",
-			"connection_state":                      "ESTABLISHED",
-			"gcp_endpoint.#":                        "1",
-			"gcp_endpoint.0.google_api_endpoints.#": "1",
-			"gcp_endpoint.0.google_api_endpoints.0.endpoints.#": "1",
-			"gcp_endpoint.0.google_api_endpoints.0.endpoints.0": "storage.googleapis.com",
-			"gcp_endpoint.0.psc_endpoint_uri":                   "projects/p/regions/us-east4/forwardingRules/rule",
-		},
-		HCL: `
-		network_connectivity_config_id = "ncc_id"
-		gcp_endpoint {
-			all_vpc_sc_services = true
-		}`,
-		Update: true,
-	}.ApplyAndExpectData(t, map[string]any{
-		"id":                                 "ncc_id/rule_id",
-		"gcp_endpoint.0.all_vpc_sc_services": true,
-	})
-}
-
-func TestResourceNccPrivateEndpointRuleGcpUpdatesIgnoreReadOnlyChanges(t *testing.T) {
-	for _, tt := range []struct {
-		name       string
-		changes    map[string]*terraform.ResourceAttrDiff
-		wantMask   string
-		wantUpdate settings.UpdatePrivateEndpointRule
-	}{
-		{
-			name: "URI and enablement",
-			changes: map[string]*terraform.ResourceAttrDiff{
-				"enabled": {Old: "true", New: "false"},
-			},
-			wantMask:   "enabled",
-			wantUpdate: settings.UpdatePrivateEndpointRule{Enabled: false},
-		},
-		{
-			name: "URI and target",
-			changes: map[string]*terraform.ResourceAttrDiff{
-				"gcp_endpoint.0.all_vpc_sc_services":                {Old: "true", New: "false"},
-				"gcp_endpoint.0.google_api_endpoints.#":             {New: "1"},
-				"gcp_endpoint.0.google_api_endpoints.0.endpoints.#": {New: "1"},
-				"gcp_endpoint.0.google_api_endpoints.0.endpoints.0": {New: "storage.googleapis.com"},
-			},
-			wantMask: "gcp_endpoint",
-			wantUpdate: settings.UpdatePrivateEndpointRule{GcpEndpoint: &settings.GcpEndpoint{
-				GoogleApiEndpoints: &settings.GoogleApiEndpoints{Endpoints: []string{"storage.googleapis.com"}},
-			}},
-		},
-	} {
-		t.Run(tt.name, func(t *testing.T) {
-			resource := ResourceMwsNccPrivateEndpointRule()
-			state := &terraform.InstanceState{
-				ID: "ncc_id/rule_id",
-				Attributes: map[string]string{
-					"network_connectivity_config_id":     "ncc_id",
-					"rule_id":                            "rule_id",
-					"enabled":                            "true",
-					"gcp_endpoint.#":                     "1",
-					"gcp_endpoint.0.all_vpc_sc_services": "true",
-					"gcp_endpoint.0.psc_endpoint_uri":    "old-uri",
-				},
-			}
-			diff := &terraform.InstanceDiff{Attributes: tt.changes}
-			diff.Attributes["gcp_endpoint.0.psc_endpoint_uri"] = &terraform.ResourceAttrDiff{Old: "old-uri", New: "new-uri"}
-			data, err := schema.InternalMap(resource.Schema).Data(state, diff)
-			require.NoError(t, err)
-			require.True(t, data.HasChange("gcp_endpoint"))
-			qa.MockAccountsApply(t, func(a *mocks.MockAccountClient) {
-				a.AccountClient.Config = &config.Config{Host: "https://accounts.gcp.databricks.com"}
-				a.GetMockNetworkConnectivityAPI().EXPECT().UpdatePrivateEndpointRule(mock.Anything, settings.UpdateNccPrivateEndpointRuleRequest{
-					NetworkConnectivityConfigId: "ncc_id",
-					PrivateEndpointRuleId:       "rule_id",
-					UpdateMask:                  tt.wantMask,
-					PrivateEndpointRule:         tt.wantUpdate,
-				}).Return(&settings.NccPrivateEndpointRule{}, nil).Once()
-			}, func(ctx context.Context, client *common.DatabricksClient) {
-				require.NoError(t, resource.Update(ctx, data, client))
-			})
-		})
-	}
-}
-
 func TestResourceNccPrivateEndpointRuleDelete(t *testing.T) {
 	qa.ResourceFixture{
 		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
@@ -462,41 +306,6 @@ func TestResourceNccPrivateEndpointRule_AccountIdIsComputed(t *testing.T) {
 	assert.True(t, ok, "account_id should be present in the schema")
 	assert.True(t, accountID.Computed,
 		"account_id must be Computed; otherwise a backend-populated value triggers spurious drift and an empty-update-mask error")
-}
-
-func TestResourceNccPrivateEndpointRule_GcpServiceAttachmentChangeRequiresNew(t *testing.T) {
-	resource := ResourceMwsNccPrivateEndpointRule().ToResource()
-	state := &terraform.InstanceState{
-		ID: "ncc_id/rule_id",
-		Attributes: map[string]string{
-			"network_connectivity_config_id":     "ncc_id",
-			"gcp_endpoint.#":                     "1",
-			"gcp_endpoint.0.service_attachment":  "projects/p/regions/r/serviceAttachments/a",
-			"gcp_endpoint.0.all_vpc_sc_services": "false",
-		},
-	}
-	diffFor := func(serviceAttachment string) (*terraform.InstanceDiff, error) {
-		config := terraform.NewResourceConfigRaw(map[string]interface{}{
-			"network_connectivity_config_id": "ncc_id",
-			"gcp_endpoint": []interface{}{map[string]interface{}{
-				"service_attachment": serviceAttachment,
-			}},
-		})
-		return resource.Diff(context.Background(), state, config, nil)
-	}
-
-	unchanged, err := diffFor("projects/p/regions/r/serviceAttachments/a")
-	assert.NoError(t, err)
-	assert.Nil(t, unchanged)
-
-	changed, err := diffFor("projects/p/regions/r/serviceAttachments/b")
-	assert.NoError(t, err)
-	if assert.NotNil(t, changed) {
-		serviceAttachment, ok := changed.Attributes["gcp_endpoint.0.service_attachment"]
-		if assert.True(t, ok, "service attachment should be present in the diff") {
-			assert.True(t, serviceAttachment.RequiresNew)
-		}
-	}
 }
 
 // Reproduces the customer-facing symptom of #5347: when a prior Read has

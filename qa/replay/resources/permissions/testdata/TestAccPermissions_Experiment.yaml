@@ -1,0 +1,407 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: workspace
+  cloud: AWS
+  workspace_id: '12345'
+steps:
+  - name: create_permissions
+    config: |
+      resource "databricks_directory" "this" {
+        path = "/permissions_test/replay"
+      }
+      resource "databricks_mlflow_experiment" "this" {
+        name = "${databricks_directory.this.path}/experiment"
+      }
+      data "databricks_current_user" "me" {}
+      resource "databricks_group" "_0" {
+        display_name = "permissions-replay-0"
+      }
+      resource "databricks_permissions" "this" {
+        experiment_id = databricks_mlflow_experiment.this.id
+        access_control {
+          group_name       = databricks_group._0.display_name
+          permission_level = "CAN_READ"
+        }
+      }
+    calls:
+      - &call_2
+        request:
+          method: GET
+          path: /api/2.0/preview/scim/v2/Me
+          body: null
+        response: &response_2 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              active: true
+              displayName: Replay runner
+              groups:
+                - display: admins
+                  value: '901'
+              id: '900'
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:User']
+              userName: 11111111-1111-4111-8111-000000000000
+          headers:
+            X-Databricks-Org-Id: '12345'
+      - request:
+          method: POST
+          path: /api/2.0/workspace/mkdirs
+          body:
+            json:
+              path: /permissions_test/replay
+        response: &response_7 # Inferred API response; not recorded.
+          status: 200
+          body: null
+      - &call_3
+        request:
+          method: GET
+          path: /api/2.0/workspace/get-status
+          body: null
+          query:
+            path: [/permissions_test/replay]
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              object_id: 456
+              object_type: DIRECTORY
+              path: /permissions_test/replay
+      - request:
+          method: POST
+          path: /api/2.0/preview/scim/v2/Groups
+          body:
+            json:
+              displayName: permissions-replay-0
+              entitlements:
+                - {}
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:Group']
+        response: &response_1 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              displayName: permissions-replay-0
+              id: '1000'
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:Group']
+      - &call_4
+        request:
+          method: GET
+          path: /api/2.0/preview/scim/v2/Groups/1000
+          body: null
+          query:
+            attributes: ['displayName,externalId,entitlements']
+        response: *response_1 # Inferred API response; not recorded.
+      - request:
+          method: POST
+          path: /api/2.0/mlflow/experiments/create
+          body:
+            json:
+              name: /permissions_test/replay/experiment
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              experiment_id: '123'
+      - &call_5
+        request:
+          method: GET
+          path: /api/2.0/mlflow/experiments/get
+          body: null
+          query:
+            experiment_id: ['123']
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              experiment:
+                artifact_location: dbfs:/tmp/tf-replay
+                experiment_id: '123'
+                lifecycle_stage: active
+                name: /permissions_test/replay/experiment
+      - &call_1
+        request:
+          method: GET
+          path: /api/2.0/preview/scim/v2/Me
+          body: null
+          query:
+            excludedAttributes: [entitlements]
+        response: *response_2 # Inferred API response; not recorded.
+      - request:
+          method: PUT
+          path: /api/2.0/permissions/experiments/123
+          body:
+            json:
+              access_control_list:
+                - group_name: permissions-replay-0
+                  permission_level: CAN_READ
+        response: &response_3 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              access_control_list:
+                - all_permissions:
+                    - inherited: false
+                      permission_level: CAN_READ
+                  group_name: permissions-replay-0
+              object_id: /experiments/123
+              object_type: mlflowExperiment
+      - *call_1
+      - &call_6
+        request:
+          method: GET
+          path: /api/2.0/permissions/experiments/123
+          body: null
+        response: *response_3 # Inferred API response; not recorded.
+      - *call_2
+      - *call_2
+      - *call_3
+      - *call_4
+      - *call_5
+      - *call_1
+      - *call_6
+  - name: update_permissions
+    config: |
+      resource "databricks_directory" "this" {
+        path = "/permissions_test/replay"
+      }
+      resource "databricks_mlflow_experiment" "this" {
+        name = "${databricks_directory.this.path}/experiment"
+      }
+      data "databricks_current_user" "me" {}
+      resource "databricks_group" "_0" {
+        display_name = "permissions-replay-0"
+      }
+      resource "databricks_group" "_1" {
+        display_name = "permissions-replay-1"
+      }
+      resource "databricks_group" "_2" {
+        display_name = "permissions-replay-2"
+      }
+      resource "databricks_permissions" "this" {
+        experiment_id = databricks_mlflow_experiment.this.id
+        access_control {
+          service_principal_name = data.databricks_current_user.me.user_name
+          permission_level       = "CAN_MANAGE"
+        }
+        access_control {
+          group_name       = databricks_group._0.display_name
+          permission_level = "CAN_READ"
+        }
+        access_control {
+          group_name       = databricks_group._1.display_name
+          permission_level = "CAN_EDIT"
+        }
+        access_control {
+          group_name       = databricks_group._2.display_name
+          permission_level = "CAN_MANAGE"
+        }
+      }
+    calls:
+      - *call_2
+      - *call_3
+      - *call_4
+      - *call_5
+      - *call_1
+      - *call_6
+      - request:
+          method: POST
+          path: /api/2.0/preview/scim/v2/Groups
+          body:
+            json:
+              displayName: permissions-replay-2
+              entitlements:
+                - {}
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:Group']
+        response: &response_4 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              displayName: permissions-replay-2
+              id: '1002'
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:Group']
+      - request:
+          method: POST
+          path: /api/2.0/preview/scim/v2/Groups
+          body:
+            json:
+              displayName: permissions-replay-1
+              entitlements:
+                - {}
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:Group']
+        response: &response_5 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              displayName: permissions-replay-1
+              id: '1001'
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:Group']
+      - &call_7
+        request:
+          method: GET
+          path: /api/2.0/preview/scim/v2/Groups/1002
+          body: null
+          query:
+            attributes: ['displayName,externalId,entitlements']
+        response: *response_4 # Inferred API response; not recorded.
+      - &call_8
+        request:
+          method: GET
+          path: /api/2.0/preview/scim/v2/Groups/1001
+          body: null
+          query:
+            attributes: ['displayName,externalId,entitlements']
+        response: *response_5 # Inferred API response; not recorded.
+      - *call_1
+      - request:
+          method: PUT
+          path: /api/2.0/permissions/experiments/123
+          body:
+            json:
+              access_control_list:
+                - group_name: permissions-replay-1
+                  permission_level: CAN_EDIT
+                - group_name: permissions-replay-2
+                  permission_level: CAN_MANAGE
+                - group_name: permissions-replay-0
+                  permission_level: CAN_READ
+                - permission_level: CAN_MANAGE
+                  service_principal_name: 11111111-1111-4111-8111-000000000000
+        response: &response_6 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              access_control_list:
+                - all_permissions:
+                    - inherited: false
+                      permission_level: CAN_EDIT
+                  group_name: permissions-replay-1
+                - all_permissions:
+                    - inherited: false
+                      permission_level: CAN_MANAGE
+                  group_name: permissions-replay-2
+                - all_permissions:
+                    - inherited: false
+                      permission_level: CAN_READ
+                  group_name: permissions-replay-0
+                - all_permissions:
+                    - inherited: false
+                      permission_level: CAN_MANAGE
+                  service_principal_name: 11111111-1111-4111-8111-000000000000
+              object_id: /experiments/123
+              object_type: mlflowExperiment
+      - *call_1
+      - &call_9
+        request:
+          method: GET
+          path: /api/2.0/permissions/experiments/123
+          body: null
+        response: *response_6 # Inferred API response; not recorded.
+      - *call_2
+      - *call_3
+      - *call_7
+      - *call_2
+      - *call_8
+      - *call_4
+      - *call_5
+      - *call_1
+      - *call_9
+  - name: reject_removing_management
+    config: |
+      resource "databricks_directory" "this" {
+        path = "/permissions_test/replay"
+      }
+      resource "databricks_mlflow_experiment" "this" {
+        name = "${databricks_directory.this.path}/experiment"
+      }
+      data "databricks_current_user" "me" {}
+      resource "databricks_group" "_0" {
+        display_name = "permissions-replay-0"
+      }
+      resource "databricks_group" "_1" {
+        display_name = "permissions-replay-1"
+      }
+      resource "databricks_group" "_2" {
+        display_name = "permissions-replay-2"
+      }
+      resource "databricks_permissions" "this" {
+        experiment_id = databricks_mlflow_experiment.this.id
+        access_control {
+          service_principal_name = data.databricks_current_user.me.user_name
+          permission_level       = "CAN_READ"
+        }
+        access_control {
+          group_name       = databricks_group._0.display_name
+          permission_level = "CAN_READ"
+        }
+        access_control {
+          group_name       = databricks_group._1.display_name
+          permission_level = "CAN_EDIT"
+        }
+        access_control {
+          group_name       = databricks_group._2.display_name
+          permission_level = "CAN_MANAGE"
+        }
+      }
+    calls:
+      - *call_2
+      - *call_3
+      - *call_7
+      - *call_8
+      - *call_4
+      - *call_5
+      - *call_1
+      - *call_9
+      - *call_1
+    expect_error: (?s)cannot\s+remove\s+management\s+permissions\s+for\s+the\s+current\s+user\s+for\s+mlflowExperiment,\s+allowed\s+levels:\s+CAN_MANAGE
+destroy:
+  calls:
+    - *call_2
+    - *call_3
+    - *call_4
+    - *call_8
+    - *call_7
+    - *call_5
+    - *call_1
+    - *call_9
+    - *call_9
+    - request:
+        method: PUT
+        path: /api/2.0/permissions/experiments/123
+        body:
+          json: {}
+      response: # Inferred API response; not recorded.
+        status: 200
+        body:
+          json:
+            access_control_list: []
+            object_id: /experiments/123
+            object_type: mlflowExperiment
+    - request:
+        method: DELETE
+        path: /api/2.0/preview/scim/v2/Groups/1002
+        body: null
+      response: *response_7 # Inferred API response; not recorded.
+    - request:
+        method: DELETE
+        path: /api/2.0/preview/scim/v2/Groups/1001
+        body: null
+      response: *response_7 # Inferred API response; not recorded.
+    - request:
+        method: DELETE
+        path: /api/2.0/preview/scim/v2/Groups/1000
+        body: null
+      response: *response_7 # Inferred API response; not recorded.
+    - request:
+        method: POST
+        path: /api/2.0/mlflow/experiments/delete
+        body:
+          json:
+            experiment_id: '123'
+      response: *response_7 # Inferred API response; not recorded.
+    - request:
+        method: POST
+        path: /api/2.0/workspace/delete
+        body:
+          json:
+            path: /permissions_test/replay
+      response: *response_7 # Inferred API response; not recorded.

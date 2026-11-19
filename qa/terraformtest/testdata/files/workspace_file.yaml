@@ -1,0 +1,119 @@
+version: 1
+# Placeholder host metadata; responses below are handwritten API samples.
+host_metadata:
+  workspace_id: "12345"
+steps:
+  - name: create
+    files:
+      script.py: assets/script.py
+    config: |
+      resource "databricks_workspace_file" "this" {
+        source = abspath("${path.module}/script.py")
+        path   = "/Shared/replay.py"
+      }
+    calls:
+      - request:
+          method: POST
+          path: /api/2.0/workspace/import
+          body:
+            multipart:
+              - name: path
+                body: {text: /Shared/replay.py}
+              - name: content
+                filename: content
+                body:
+                  text: |
+                    # comment
+              - name: format
+                body: {text: RAW}
+              - name: overwrite
+                body: {text: "true"}
+        response: {status: 200}
+      - request:
+          method: GET
+          path: /api/2.0/workspace/get-status
+          query: {path: [/Shared/replay.py]}
+        response:
+          status: 200
+          body:
+            json: {path: /Shared/replay.py, object_type: FILE, object_id: 123}
+      - request:
+          method: GET
+          path: /api/2.0/workspace/get-status
+          query: {path: [/Shared/replay.py]}
+        response:
+          status: 200
+          body:
+            json: {path: /Shared/replay.py, object_type: FILE, object_id: 123}
+    state:
+      resources:
+        databricks_workspace_file.this:
+          attributes:
+            - path: [object_id]
+              equals: 123
+  - name: update_file
+    files:
+      script.py: assets/updated.py
+    config: |
+      resource "databricks_workspace_file" "this" {
+        source = abspath("${path.module}/script.py")
+        path   = "/Shared/replay.py"
+      }
+    calls:
+      - request:
+          method: GET
+          path: /api/2.0/workspace/get-status
+          query: {path: [/Shared/replay.py]}
+        response:
+          status: 200
+          body:
+            json: {path: /Shared/replay.py, object_type: FILE, object_id: 123}
+      - request:
+          method: POST
+          path: /api/2.0/workspace/import
+          body:
+            multipart:
+              - name: path
+                body: {text: /Shared/replay.py}
+              - name: content
+                filename: content
+                body:
+                  text: |
+                    # updated
+              - name: format
+                body: {text: RAW}
+              - name: overwrite
+                body: {text: "true"}
+        response: {status: 200}
+      - request:
+          method: GET
+          path: /api/2.0/workspace/get-status
+          query: {path: [/Shared/replay.py]}
+        response:
+          status: 200
+          body:
+            json: {path: /Shared/replay.py, object_type: FILE, object_id: 123}
+      - request:
+          method: GET
+          path: /api/2.0/workspace/get-status
+          query: {path: [/Shared/replay.py]}
+        response:
+          status: 200
+          body:
+            json: {path: /Shared/replay.py, object_type: FILE, object_id: 123}
+destroy:
+  calls:
+    - request:
+        method: GET
+        path: /api/2.0/workspace/get-status
+        query: {path: [/Shared/replay.py]}
+      response:
+        status: 200
+        body:
+          json: {path: /Shared/replay.py, object_type: FILE, object_id: 123}
+    - request:
+        method: POST
+        path: /api/2.0/workspace/delete
+        body:
+          json: {path: /Shared/replay.py}
+      response: {status: 200}

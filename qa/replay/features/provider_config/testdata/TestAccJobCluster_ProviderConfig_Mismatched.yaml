@@ -1,0 +1,173 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: "workspace"
+  cloud: "AWS"
+  workspace_id: "12345"
+steps:
+  - name: "reject_workspace_id"
+    config: |
+      data "databricks_current_user" "me" {}
+      data "databricks_spark_version" "latest" {}
+      data "databricks_node_type" "smallest" {
+        local_disk = true
+      }
+
+      resource "databricks_notebook" "this" {
+        path     = "${data.databricks_current_user.me.home}/Terraformreplay"
+        language = "PYTHON"
+        content_base64 = base64encode(<<-EOT
+          # created from ${abspath(path.module)}
+          display(spark.range(10))
+          EOT
+        )
+      }
+
+      resource "databricks_job" "this" {
+        name = "replay"
+
+        provider_config { workspace_id = "123" }
+
+        job_cluster {
+          job_cluster_key = "j"
+          new_cluster {
+            num_workers   = 0 // Setting it to zero intentionally to cover edge case.
+            spark_version = data.databricks_spark_version.latest.id
+            node_type_id  = data.databricks_node_type.smallest.id
+            custom_tags = {
+              "ResourceClass" = "SingleNode"
+            }
+            spark_conf = {
+              "spark.databricks.cluster.profile" : "singleNode"
+              "spark.master" : "local[*,4]"
+            }
+          }
+        }
+
+        task {
+          task_key = "a"
+
+          new_cluster {
+            num_workers   = 1
+            spark_version = data.databricks_spark_version.latest.id
+            node_type_id  = data.databricks_node_type.smallest.id
+          }
+
+          notebook_task {
+            notebook_path = databricks_notebook.this.path
+          }
+        }
+
+        task {
+          task_key = "b"
+
+          depends_on {
+            task_key = "a"
+          }
+
+          new_cluster {
+            num_workers   = 8
+            spark_version = data.databricks_spark_version.latest.id
+            node_type_id  = data.databricks_node_type.smallest.id
+          }
+
+          notebook_task {
+            notebook_path = databricks_notebook.this.path
+          }
+        }
+      }
+    calls:
+      - request:
+          method: "GET"
+          path: "/api/2.0/preview/scim/v2/Me"
+          body: null
+        response: &response_1 # Inferred API response; not recorded.
+          status: 200
+          headers:
+            "X-Databricks-Org-Id": "12345"
+          body:
+            json:
+              displayName: "Replay tester"
+              id: "100"
+              schemas: ["urn:ietf:params:scim:schemas:core:2.0:User"]
+              userName: "tester@example.com"
+      - request:
+          method: "GET"
+          path: "/api/2.1/clusters/spark-versions"
+          body: null
+        response: &response_2 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              versions:
+                - key: "17.3.x-scala2.13"
+                  name: "17.3 LTS (includes Apache Spark 4.0.0, Scala 2.13)"
+      - request:
+          method: "GET"
+          path: "/api/2.1/clusters/list-node-types"
+          body: null
+        response: &response_3 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              node_types:
+                - memory_mb: 30500
+                  node_instance_type:
+                    instance_type_id: "i3.xlarge"
+                    local_disk_size_gb: 950
+                    local_disks: 1
+                  node_type_id: "i3.xlarge"
+                  num_cores: 4
+      - request:
+          method: "POST"
+          path: "/api/2.0/workspace/import"
+          body:
+            json:
+              content: "sample"
+              format: "SOURCE"
+              language: "PYTHON"
+              overwrite: true
+              path: "/Users/tester@example.com/Terraformreplay"
+          matchers:
+            json:
+              # The notebook embeds abspath(path.module), which changes with Terraform's working directory.
+              - path: ["content"]
+                type: "any_string"
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              object_id: 200
+    expect_error: "workspace_id mismatch.*please check the workspace_id provided in provider_config"
+destroy:
+  calls:
+    - request:
+        method: "GET"
+        path: "/api/2.0/preview/scim/v2/Me"
+        query:
+          excludedAttributes: ["entitlements"]
+        body: null
+      response: *response_1
+    - request:
+        method: "GET"
+        path: "/api/2.0/workspace/get-status"
+        query:
+          path: ["/Users/tester@example.com/Terraformreplay"]
+        body: null
+      response: &response_4 # Inferred API response; not recorded.
+        status: 200
+        body:
+          json:
+            language: "PYTHON"
+            object_id: 200
+            object_type: "NOTEBOOK"
+            path: "/Users/tester@example.com/Terraformreplay"
+    - request:
+        method: "POST"
+        path: "/api/2.0/workspace/delete"
+        body:
+          json:
+            path: "/Users/tester@example.com/Terraformreplay"
+      response: # Inferred API response; not recorded.
+        status: 200
+        body: null

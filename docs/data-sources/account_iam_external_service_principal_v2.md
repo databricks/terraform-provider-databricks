@@ -1,0 +1,47 @@
+---
+subcategory: "Identity and Access Management"
+---
+# databricks_account_iam_external_service_principal_v2 Data Source
+[![GA](https://img.shields.io/badge/Release_Stage-GA-green)](https://docs.databricks.com/aws/en/release-notes/release-types)
+
+[API Documentation](https://docs.databricks.com/api/account/iamv2)
+
+Retrieves an external service principal — a service principal that can be synced from your identity provider (IdP) — with the given external ID from the customer's IdP. If the service principal does not exist in the account, it will be created. If the customer is not onboarded onto Automatic Identity Management (AIM), this returns an error.
+
+The `name` uses the format `accounts/{account_id}/external-service-principals/{external_service_principal_id}`, where `external_service_principal_id` is the service principal's object ID in the IdP (for example, a Microsoft Entra ID object ID).
+
+~> **Note** Reading this data source has a side effect: it resolves the service principal against the IdP and provisions the service principal in the account if it does not already exist.
+
+-> **Note** This data source can only be used with an account-level provider.
+
+
+## Example Usage
+Referring to an external service principal by its resource name:
+
+```hcl
+data "databricks_account_iam_external_service_principal_v2" "example" {
+  name = "accounts/00000000-0000-0000-0000-000000000000/external-service-principals/11111111-2222-3333-4444-555555555555"
+}
+```
+
+
+## Arguments
+The following arguments are supported:
+* `name` (string, required) - The resource name of the external service principal, in one of these formats:
+  - Account APIs:
+  `accounts/{account_id}/external-service-principals/{external_service_principal_id}`
+  - Workspace APIs: `external-service-principals/{external_service_principal_id}`
+
+## Attributes
+The following attributes are exported:
+* `account_id` (string) - The ID of the account that contains the service principal
+* `account_sp_status` (string) - Whether the service principal is active in the account. Possible values are: `ACTIVE`, `INACTIVE`
+* `application_id` (string) - The service principal's application ID, from your IdP
+* `display_name` (string) - The service principal's display name, from your IdP
+* `external_service_principal_id` (string) - The ID of the service principal in your IdP
+* `internal_id` (string) - The Databricks ID of the service principal. Use it as the `service_principal_id` in the
+  service principal APIs
+* `name` (string) - The resource name of the external service principal, in one of these formats:
+  - Account APIs:
+  `accounts/{account_id}/external-service-principals/{external_service_principal_id}`
+  - Workspace APIs: `external-service-principals/{external_service_principal_id}`

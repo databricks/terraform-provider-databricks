@@ -1,0 +1,195 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: workspace
+  cloud: AWS
+  workspace_id: '12345'
+steps:
+  - name: create
+    config: |
+      resource "databricks_secret_scope" "this" {
+        name = "tf-replay"
+      }
+
+      resource "databricks_secret" "this" {
+        scope        = databricks_secret_scope.this.name
+        key          = "tf-replay"
+        string_value = "secret"
+      }
+      resource "databricks_app" "this" {
+        user_api_scopes = []
+        no_compute      = true
+        name            = "tf-replay"
+        description     = "empty user_api_scopes"
+        resources = [{
+          name        = "secret"
+          description = "secret for app"
+          secret = {
+            scope      = databricks_secret_scope.this.name
+            key        = databricks_secret.this.key
+            permission = "MANAGE"
+          }
+        }]
+      }
+
+      # Null yields -1; an explicitly empty list yields 0.
+      output "user_api_scope_count" {
+        value = try(length(databricks_app.this.user_api_scopes), -1)
+      }
+    calls:
+      - request:
+          method: POST
+          path: /api/2.0/secrets/scopes/create
+          body:
+            json:
+              scope: tf-replay
+              scope_backend_type: DATABRICKS
+        response: &response_1 # Inferred API response; not recorded.
+          status: 200
+          body: null
+      - &call_1
+        request:
+          method: GET
+          path: /api/2.0/secrets/scopes/list
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              scopes:
+                - backend_type: DATABRICKS
+                  name: tf-replay
+      - request:
+          method: POST
+          path: /api/2.0/secrets/put
+          body:
+            json:
+              key: tf-replay
+              scope: tf-replay
+              string_value: secret
+        response: *response_1 # Inferred API response; not recorded.
+      - &call_2
+        request:
+          method: GET
+          path: /api/2.0/secrets/list
+          query:
+            scope: [tf-replay]
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              secrets:
+                - key: tf-replay
+                  last_updated_timestamp: 1700000000000
+      - request:
+          method: POST
+          path: /api/2.0/apps
+          query:
+            no_compute: ['true']
+          body:
+            json:
+              description: empty user_api_scopes
+              name: tf-replay
+              resources:
+                - description: secret for app
+                  name: secret
+                  secret:
+                    key: tf-replay
+                    permission: MANAGE
+                    scope: tf-replay
+        response: &response_2 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              compute_status:
+                state: STOPPED
+              create_time: '2026-01-01T00:00:00Z'
+              description: empty user_api_scopes
+              name: tf-replay
+              resources:
+                - description: secret for app
+                  name: secret
+                  secret:
+                    key: tf-replay
+                    permission: MANAGE
+                    scope: tf-replay
+              update_time: '2026-01-01T00:00:00Z'
+      - &call_3
+        request:
+          method: GET
+          path: /api/2.0/apps/tf-replay
+          body: null
+        response: *response_2 # Inferred API response; not recorded.
+      - *call_1
+      - *call_2
+      - *call_3
+  - name: reapply_preserves_known_empty_scopes
+    config: |
+      resource "databricks_secret_scope" "this" {
+        name = "tf-replay"
+      }
+
+      resource "databricks_secret" "this" {
+        scope        = databricks_secret_scope.this.name
+        key          = "tf-replay"
+        string_value = "secret"
+      }
+      resource "databricks_app" "this" {
+        user_api_scopes = []
+        no_compute      = true
+        name            = "tf-replay"
+        description     = "empty user_api_scopes"
+        resources = [{
+          name        = "secret"
+          description = "secret for app"
+          secret = {
+            scope      = databricks_secret_scope.this.name
+            key        = databricks_secret.this.key
+            permission = "MANAGE"
+          }
+        }]
+      }
+
+      output "user_api_scope_count" {
+        value = try(length(databricks_app.this.user_api_scopes), -1)
+      }
+    calls:
+      - *call_1
+      - *call_2
+      - *call_3
+      - *call_1
+      - *call_2
+      - *call_3
+    plan:
+      expect: empty
+      outputs:
+        user_api_scope_count:
+          after:
+            - path: []
+              equals: 0
+destroy:
+  calls:
+    - *call_1
+    - *call_2
+    - *call_3
+    - request:
+        method: DELETE
+        path: /api/2.0/apps/tf-replay
+        body: null
+      response: *response_2 # Inferred API response; not recorded.
+    - request:
+        method: POST
+        path: /api/2.0/secrets/delete
+        body:
+          json:
+            key: tf-replay
+            scope: tf-replay
+      response: *response_1 # Inferred API response; not recorded.
+    - request:
+        method: POST
+        path: /api/2.0/secrets/scopes/delete
+        body:
+          json:
+            scope: tf-replay
+      response: *response_1 # Inferred API response; not recorded.

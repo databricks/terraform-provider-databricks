@@ -42,30 +42,17 @@ jobs:
       - name: Comment on PR
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          COMMIT_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           gh pr comment ${{ github.event.pull_request.number }} --body \
           "<!-- INTEGRATION_TESTS_MANUAL -->
-          ### Unit tests
+          ### Unit and replay tests, and CodeQL
 
-          If this PR is from a fork, the \`tests\` check runs offline against a pre-warmed Go module cache because fork PRs cannot authenticate to the internal Go module proxy.
+          For fork and Dependabot PRs, the \`tests\` and \`Analyze (go)\` checks run offline against a pre-warmed Go module cache because these PRs cannot authenticate to the internal Go module proxy.
 
-          If this PR changes \`go.mod\` or \`go.sum\`, the \`tests\` check will fail until a maintainer warms the cache for it:
+          If this PR changes \`go.mod\` or \`go.sum\`, both checks will fail until a maintainer warms the cache for it:
 
           Actions -> Warm Go Cache -> Run workflow -> pr_number = ${{github.event.pull_request.number}}
 
-          Re-run the failed check once the cache warming completes.
+          Re-run the failed checks once the cache warming completes.
 
-          ### Integration tests
-
-          Integration tests don't run automatically for external contributors; an authorized user can run them manually by following the instructions below:
-
-          Trigger:
-          [go/deco-tests-run/terraform](https://go/deco-tests-run/terraform)
-
-          Inputs:
-          * PR number: ${{github.event.pull_request.number}}
-          * Commit SHA: \`${{ env.COMMIT_SHA }}\`
-
-          Checks will be approved automatically on success.
           "

@@ -1,0 +1,104 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: "workspace"
+  workspace_id: "1001"
+  cloud: "AWS"
+steps:
+  - name: "create"
+    config: |
+      resource "databricks_notebook" "test" {
+        path = "/Shared/dwsid-test-replay"
+        content_base64 = "IyBEYXRhYnJpY2tzIG5vdGVib29rIHNvdXJjZQpwcmludCgnaGVsbG8nKQ=="
+        language = "PYTHON"
+      }
+    calls:
+      - request:
+          method: "POST"
+          path: "/api/2.0/workspace/import"
+          body:
+            json:
+              content: "IyBEYXRhYnJpY2tzIG5vdGVib29rIHNvdXJjZQpwcmludCgnaGVsbG8nKQ=="
+              path: "/Shared/dwsid-test-replay"
+              language: "PYTHON"
+              format: "SOURCE"
+              overwrite: true
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              object_id: 2001
+      - &get_1
+        request:
+          method: "GET"
+          path: "/api/2.0/workspace/get-status"
+          query:
+            path: ["/Shared/dwsid-test-replay"]
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              path: "/Shared/dwsid-test-replay"
+              object_type: "NOTEBOOK"
+              object_id: 2001
+              language: "PYTHON"
+      - &get_2
+        request:
+          method: "GET"
+          path: "/api/2.0/preview/scim/v2/Me"
+          query:
+            excludedAttributes: ["entitlements"]
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          headers:
+            "X-Databricks-Org-Id": "1001"
+          body:
+            json:
+              id: "100"
+              userName: "replay@example.com"
+    state:
+      resources:
+        databricks_notebook.test:
+          attributes:
+            - path: ["provider_config",0,"workspace_id"]
+              equals: "1001"
+  - name: "keep_workspace"
+    config: |
+      resource "databricks_notebook" "test" {
+        path = "/Shared/dwsid-test-replay"
+        content_base64 = "IyBEYXRhYnJpY2tzIG5vdGVib29rIHNvdXJjZQpwcmludCgnaGVsbG8nKQ=="
+        language = "PYTHON"
+        provider_config {
+          workspace_id = "1001"
+        }
+      }
+    calls:
+      - *get_1
+      - *get_1
+      - *get_2
+      - *get_2
+    state:
+      resources:
+        databricks_notebook.test:
+          attributes:
+            - path: ["provider_config",0,"workspace_id"]
+              equals: "1001"
+    plan:
+      changes:
+        databricks_notebook.test:
+          actions: ["no-op"]
+destroy:
+  calls:
+    - *get_1
+    - request:
+        method: "POST"
+        path: "/api/2.0/workspace/delete"
+        body:
+          json:
+            path: "/Shared/dwsid-test-replay"
+      response: # Inferred API response; not recorded.
+        status: 200
+        body: null
+    - *get_2

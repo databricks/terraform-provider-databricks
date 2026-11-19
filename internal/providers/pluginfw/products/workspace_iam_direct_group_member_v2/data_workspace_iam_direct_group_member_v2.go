@@ -97,17 +97,26 @@ func (r ProviderConfigData) Type(ctx context.Context) attr.Type {
 
 // DirectGroupMemberData extends the main model with additional fields.
 type DirectGroupMemberData struct {
-	// Display name of the principal.
+	// The member's display name.
 	DisplayName types.String `tfsdk:"display_name"`
-	// The external ID of the principal in Databricks.
+	// The ID of the member in your identity provider (IdP).
 	ExternalId types.String `tfsdk:"external_id"`
-	// The internal ID of the group this member belongs to.
+	// The Databricks ID of the group.
 	GroupId types.Int64 `tfsdk:"group_id"`
-	// The source of group membership (internal or from identity provider).
+	// Where the membership comes from.
 	MembershipSource types.String `tfsdk:"membership_source"`
-	// Internal ID of the principal in Databricks.
+	// The resource name of the membership, in one of these formats: - Account
+	// APIs:
+	// `accounts/{account_id}/groups/{group_id}/direct-members/{principal_id}` -
+	// Workspace APIs: `groups/{group_id}/direct-members/{principal_id}`
+	Name types.String `tfsdk:"name"`
+	// The resource name of the group, in one of these formats: - Account APIs:
+	// `accounts/{account_id}/groups/{group_id}` - Workspace APIs:
+	// `groups/{group_id}`
+	Parent types.String `tfsdk:"parent"`
+	// The Databricks ID of the member.
 	PrincipalId types.Int64 `tfsdk:"principal_id"`
-	// The type of the principal (user/service principal/group).
+	// Whether the member is a user, service principal, or group.
 	PrincipalType      types.String `tfsdk:"principal_type"`
 	ProviderConfigData types.Object `tfsdk:"provider_config"`
 }
@@ -139,6 +148,8 @@ func (m DirectGroupMemberData) ToObjectValue(ctx context.Context) basetypes.Obje
 			"external_id":       m.ExternalId,
 			"group_id":          m.GroupId,
 			"membership_source": m.MembershipSource,
+			"name":              m.Name,
+			"parent":            m.Parent,
 			"principal_id":      m.PrincipalId,
 			"principal_type":    m.PrincipalType,
 
@@ -156,6 +167,8 @@ func (m DirectGroupMemberData) Type(ctx context.Context) attr.Type {
 			"external_id":       types.StringType,
 			"group_id":          types.Int64Type,
 			"membership_source": types.StringType,
+			"name":              types.StringType,
+			"parent":            types.StringType,
 			"principal_id":      types.Int64Type,
 			"principal_type":    types.StringType,
 
@@ -167,9 +180,11 @@ func (m DirectGroupMemberData) Type(ctx context.Context) attr.Type {
 func (m DirectGroupMemberData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["display_name"] = attrs["display_name"].SetComputed()
 	attrs["external_id"] = attrs["external_id"].SetComputed()
-	attrs["group_id"] = attrs["group_id"].SetRequired()
+	attrs["group_id"] = attrs["group_id"].SetComputed()
 	attrs["membership_source"] = attrs["membership_source"].SetComputed()
-	attrs["principal_id"] = attrs["principal_id"].SetRequired()
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["parent"] = attrs["parent"].SetComputed()
+	attrs["principal_id"] = attrs["principal_id"].SetComputed()
 	attrs["principal_type"] = attrs["principal_type"].SetComputed()
 
 	attrs["provider_config"] = attrs["provider_config"].SetOptional()

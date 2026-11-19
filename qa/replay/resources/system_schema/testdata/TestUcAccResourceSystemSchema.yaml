@@ -1,0 +1,90 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: "workspace"
+  cloud: "AWS"
+  workspace_id: "12345"
+steps:
+  - name: "enable"
+    config: |
+      resource "databricks_system_schema" "access" {
+        schema = "access"
+      }
+      resource "databricks_system_schema" "billing" {
+        schema = "billing"
+      }
+    calls:
+      - &get_1
+        request:
+          method: "GET"
+          path: "/api/2.1/unity-catalog/metastore_summary"
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              cloud: "aws"
+              metastore_id: "11111111-1111-1111-1111-111111111111"
+              name: "replay-metastore"
+              owner: "account users"
+              region: "us-east-1"
+      - *get_1
+      - request:
+          method: "PUT"
+          path: "/api/2.1/unity-catalog/metastores/11111111-1111-1111-1111-111111111111/systemschemas/access"
+          body:
+            json: {}
+        response: # Inferred API response; not recorded.
+          status: 200
+          body: null
+      - request:
+          method: "PUT"
+          path: "/api/2.1/unity-catalog/metastores/11111111-1111-1111-1111-111111111111/systemschemas/billing"
+          body:
+            json: {}
+        response: # Inferred API response; not recorded.
+          status: 200
+          body: null
+      - *get_1
+      - *get_1
+      - &get_2
+        request:
+          method: "GET"
+          path: "/api/2.1/unity-catalog/metastores/11111111-1111-1111-1111-111111111111/systemschemas"
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              schemas:
+                - schema: "access"
+                  state: "ENABLE_COMPLETED"
+                - schema: "billing"
+                  state: "ENABLE_COMPLETED"
+      - *get_2
+      - *get_1
+      - *get_1
+      - *get_2
+      - *get_2
+destroy:
+  calls:
+    - *get_1
+    - *get_1
+    - *get_2
+    - *get_2
+    - *get_1
+    - *get_1
+    - request:
+        method: "DELETE"
+        path: "/api/2.1/unity-catalog/metastores/11111111-1111-1111-1111-111111111111/systemschemas/billing"
+        body: null
+      response: # Inferred API response; not recorded.
+        status: 200
+        body: null
+    - request:
+        method: "DELETE"
+        path: "/api/2.1/unity-catalog/metastores/11111111-1111-1111-1111-111111111111/systemschemas/access"
+        body: null
+      response: # Inferred API response; not recorded.
+        status: 200
+        body: null

@@ -1,0 +1,79 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: "account"
+  cloud: "AWS"
+  account_id: "replay-account"
+steps:
+  - name: "create"
+    config: |
+      provider "databricks" {
+        account_id = "replay-account"
+      }
+
+      resource "databricks_mws_networks" "my_network" {
+        account_id = "replay-account"
+        network_name = "network-test-replay"
+        vpc_id = "vpc-11111111"
+        subnet_ids = ["subnet-11111111","subnet-99999999"]
+        security_group_ids = ["sg-99999999"]
+      }
+    calls:
+      - request:
+          method: "POST"
+          path: "/api/2.0/accounts/replay-account/networks"
+          body:
+            json:
+              account_id: "replay-account"
+              network_name: "network-test-replay"
+              security_group_ids: ["sg-99999999"]
+              subnet_ids: ["subnet-99999999","subnet-11111111"]
+              vpc_id: "vpc-11111111"
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              account_id: "replay-account"
+              network_id: "network-123"
+              network_name: "network-test-replay"
+              security_group_ids: ["sg-99999999"]
+              subnet_ids: ["subnet-99999999","subnet-11111111"]
+              vpc_id: "vpc-11111111"
+              vpc_status: "VALID"
+      - &get_1
+        request:
+          method: "GET"
+          path: "/api/2.0/accounts/replay-account/networks/network-123"
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              account_id: "replay-account"
+              network_id: "network-123"
+              network_name: "network-test-replay"
+              security_group_ids: ["sg-99999999"]
+              subnet_ids: ["subnet-99999999","subnet-11111111"]
+              vpc_id: "vpc-11111111"
+              vpc_status: "VALID"
+      - *get_1
+destroy:
+  calls:
+    - *get_1
+    - request:
+        method: "DELETE"
+        path: "/api/2.0/accounts/replay-account/networks/network-123"
+        body: null
+      response: # Inferred API response; not recorded.
+        status: 200
+        body: null
+    - request:
+        method: "GET"
+        path: "/api/2.0/accounts/replay-account/networks/network-123"
+        body: null
+      response: # Inferred API response; not recorded.
+        status: 404
+        body:
+          json:
+            error_code: "RESOURCE_DOES_NOT_EXIST"
+            message: "Network not found"

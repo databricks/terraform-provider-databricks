@@ -1,0 +1,89 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: "workspace"
+  cloud: "AWS"
+  workspace_id: "12345"
+steps:
+  - name: "create"
+    config: |
+      resource "databricks_default_namespace_setting" "this" {
+        namespace {
+          value = "namespace_value"
+        }
+
+      }
+    calls:
+      - request:
+          method: "PATCH"
+          path: "/api/2.0/settings/types/default_namespace_ws/names/default"
+          body:
+            json:
+              allow_missing: true
+              field_mask: "namespace.value"
+              setting:
+                namespace:
+                  value: "namespace_value"
+                setting_name: "default"
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              etag: "etag-1"
+              namespace:
+                value: "namespace_value"
+      - &get_1
+        request:
+          method: "GET"
+          path: "/api/2.0/settings/types/default_namespace_ws/names/default"
+          query:
+            etag: ["etag-1"]
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              etag: "etag-1"
+              namespace:
+                value: "namespace_value"
+      - *get_1
+  - name: "change_provider_config"
+    config: |
+      resource "databricks_default_namespace_setting" "this" {
+        namespace {
+          value = "namespace_value"
+        }
+        provider_config { workspace_id = "12345" }
+      }
+    calls:
+      - *get_1
+      - *get_1
+  - name: "change_provider_config"
+    config: |
+      resource "databricks_default_namespace_setting" "this" {
+        namespace {
+          value = "namespace_value"
+        }
+
+      }
+    calls:
+      - *get_1
+      - *get_1
+    plan:
+      changes:
+        databricks_default_namespace_setting.this:
+          actions: ["no-op"]
+destroy:
+  calls:
+    - *get_1
+    - request:
+        method: "DELETE"
+        path: "/api/2.0/settings/types/default_namespace_ws/names/default"
+        query:
+          etag: ["etag-1"]
+        body: null
+      response: # Inferred API response; not recorded.
+        status: 200
+        body:
+          json:
+            etag: "etag-2"

@@ -1,0 +1,82 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: "account"
+  cloud: "AZURE"
+  account_id: "replay-account"
+steps:
+  - name: "create"
+    config: |
+      provider "databricks" {
+        account_id = "replay-account"
+      }
+
+      resource "databricks_metastore" "this" {
+        name = "replay"
+        force_destroy = true
+        region = "eastus"
+      }
+    calls:
+      - request:
+          method: "POST"
+          path: "/api/2.0/accounts/replay-account/metastores"
+          body:
+            json:
+              metastore_info:
+                name: "replay"
+                region: "eastus"
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              metastore_info:
+                delta_sharing_recipient_token_lifetime_in_seconds: 31536000
+                metastore_id: "11111111-1111-1111-1111-111111111111"
+                name: "replay"
+                owner: "replay-admin"
+                region: "eastus"
+      - request:
+          method: "PUT"
+          path: "/api/2.0/accounts/replay-account/metastores/11111111-1111-1111-1111-111111111111"
+          body:
+            json:
+              metastore_info:
+                delta_sharing_recipient_token_lifetime_in_seconds: 31536000
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              metastore_info:
+                delta_sharing_recipient_token_lifetime_in_seconds: 31536000
+                metastore_id: "11111111-1111-1111-1111-111111111111"
+                name: "replay"
+                owner: "replay-admin"
+                region: "eastus"
+      - &get_1
+        request:
+          method: "GET"
+          path: "/api/2.0/accounts/replay-account/metastores/11111111-1111-1111-1111-111111111111"
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              metastore_info:
+                delta_sharing_recipient_token_lifetime_in_seconds: 31536000
+                metastore_id: "11111111-1111-1111-1111-111111111111"
+                name: "replay"
+                owner: "replay-admin"
+                region: "eastus"
+      - *get_1
+destroy:
+  calls:
+    - *get_1
+    - request:
+        method: "DELETE"
+        path: "/api/2.0/accounts/replay-account/metastores/11111111-1111-1111-1111-111111111111"
+        query:
+          force: ["true"]
+        body: null
+      response: # Inferred API response; not recorded.
+        status: 200
+        body: null

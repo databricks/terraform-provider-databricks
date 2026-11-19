@@ -40,6 +40,18 @@ resource "databricks_app" "this" {
 }
 ```
 
+### Setting a thumbnail
+
+The image shown for the app in the Apps UI can be set from a local file:
+
+```hcl
+resource "databricks_app" "this" {
+  name           = "my-custom-app"
+  description    = "My app"
+  thumbnail_path = "${path.module}/thumbnail.png"
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
@@ -50,9 +62,16 @@ The following arguments are required:
 * `usage_policy_id` - (Optional) The Usage Policy ID set for this resource.
 * `resources` - (Optional) A list of resources that the app have access to.
 * `user_api_scopes` - (Optional) A list of api scopes granted to the user access token.  See [REST API docs](https://docs.databricks.com/api/workspace/api/scopes) for full list of supported scopes.
-* `compute_size` - (Optional) A string specifying compute size for the App. Possible values are `MEDIUM`, `LARGE`.
+* `compute_size` - (Optional) A string specifying compute size for the App. Possible values are `MEDIUM`, `LARGE`. If omitted, the app uses `MEDIUM`.
+* `compute_min_instances` - (Optional) Minimum number of app instances the app is configured to run. Must be set together with `compute_max_instances`.
+* `compute_max_instances` - (Optional) Maximum number of app instances the app is configured to run. Must be set together with `compute_min_instances`. Omitting both disables horizontal scaling.
 * `git_repository` - (Optional) Git repository configuration for app deployments (see [below](#git_repository-configuration-attribute)). When specified, deployments can reference code from this repository by providing only the git reference (branch, tag, or commit).
+* `git_source` - (Optional) The Git source to deploy from, specifying the reference to check out and an optional path to the app source code within the repository configured in `git_repository` (see [below](#git_source-configuration-attribute)).
+* `source_code_path` - (Optional) Workspace filesystem path of the source code to deploy from, as an alternative to Git-based deployment (`git_repository`/`git_source`). This value is not returned by the service; the workspace path of the last active deployment is exported as `default_source_code_path`.
 * `telemetry_export_destinations` - (Optional) A list of destinations to which the app's telemetry (logs, metrics, traces) is exported (see [below](#telemetry_export_destinations-configuration-attribute)).
+* `thumbnail_path` - (Optional) Path to a local PNG or JPEG file of at most 250 KB to show as the app's thumbnail in the Apps UI. The provider checks the file the way the Apps UI does and rejects other files at plan time, or at apply time if the file doesn't exist yet when Terraform plans, for example because another resource writes it. The image can't be read back from the service, so the provider keeps the file's MD5 hash in `thumbnail_md5` and uploads the file again when its content changes; changes made to the thumbnail outside of Terraform aren't detected. Removing the argument deletes the thumbnail.
+
+-> Updates apply the whole configuration: an argument removed from the configuration is cleared or reset to its default, even if it was set outside Terraform. Enabling or disabling horizontal scaling (`compute_min_instances`/`compute_max_instances`) cannot be combined with a change to `compute_size` or `git_repository` in the same apply.
 
 ### resources Configuration Attribute
 
@@ -105,6 +124,17 @@ This block configures a Git repository associated with the app, allowing deploym
 
 * `url` - (Required) URL of the Git repository.
 * `provider` - (Required) Git provider. Case insensitive. Supported values: `gitHub`, `gitHubEnterprise`, `bitbucketCloud`, `bitbucketServer`, `azureDevOpsServices`, `gitLab`, `gitLabEnterpriseEdition`, `awsCodeCommit`.
+* `auto_deploy` - (Optional) When `true`, the app is automatically redeployed on push events to the branch configured in `git_source`. This requires `git_source` to specify a `branch`; a `tag` or `commit` cannot be used, because automatic deployment is triggered by pushes to a branch. Automatic deployment is currently supported only for the `gitHub` and `azureDevOpsServices` providers.
+* `caller_credential_id` - (Optional) ID of a personal access token Git credential owned by the caller, used to grant the app's service principal access to this repository. This is only applied when the app is created and is not returned by the service; changing it on an existing app is not supported.
+
+### git_source Configuration Attribute
+
+This block selects the Git reference the app is deployed from. It is used together with `git_repository`. Specify exactly one of `branch`, `tag`, or `commit`:
+
+* `branch` - (Optional) Git branch to check out and deploy from. Required when `git_repository.auto_deploy` is `true`, since automatic deployment tracks pushes to a branch.
+* `tag` - (Optional) Git tag to check out and deploy from.
+* `commit` - (Optional) Git commit SHA to check out and deploy from.
+* `source_code_path` - (Optional) Path to the app source code within the repository. Defaults to the repository root.
 
 ### telemetry_export_destinations Configuration Attribute
 
@@ -141,6 +171,7 @@ In addition to all arguments above, the following attributes are exported:
 * `oauth2_app_client_id` - The OAuth2 client ID of the app's integration, set when the app uses user authorization.
 * `oauth2_app_integration_id` - The unique ID of the OAuth2 integration associated with the app.
 * `thumbnail_url` - The URL of the thumbnail image for the app.
+* `thumbnail_md5` - The MD5 hash of the file in `thumbnail_path` that was last uploaded as the app's thumbnail.
 * `active_deployment` attribute - the active deployment of the app. A deployment is considered active when it has been deployed to the app compute.
   * `deployment_id` - The unique ID of the deployment.
   * `source_code_path` - The workspace file system path of the source code used to create the deployment.
@@ -171,6 +202,8 @@ Alternatively, when using `terraform` version 1.4 or earlier, import using the `
 ```bash
 terraform import databricks_app.this <app_name>
 ```
+
+An imported app has no `thumbnail_md5`, so the next apply uploads the image in `thumbnail_path`, if it is set.
 
 ## Related Resources
 

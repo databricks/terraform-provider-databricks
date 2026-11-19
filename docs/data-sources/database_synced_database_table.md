@@ -8,6 +8,8 @@ subcategory: "Database Instances"
 
 This data source can be used to get a single Synced Database Table.
 
+For new workloads, Databricks recommends the `databricks_postgres_synced_table` data source.
+
 
 ## Example Usage
 Referring to a Database Instance by name:
@@ -29,13 +31,14 @@ The following arguments are supported:
 
 ## Attributes
 The following attributes are exported:
-* `data_synchronization_status` (SyncedTableStatus) - Synced Table data synchronization status
+* `data_synchronization_status` (SyncedTableStatus) - Reports the status of the data synchronization pipeline that keeps this table in sync with its
+  source, including the pipeline ID and the position of the last successful sync
 * `database_instance_name` (string) - Name of the target database instance. This is required when creating synced database tables in standard catalogs.
   This is optional when creating synced database tables in registered catalogs. If this field is specified
   when creating synced database tables in registered catalogs, the database instance name MUST
   match that of the registered catalog (or the request will be rejected)
-* `effective_database_instance_name` (string) - The name of the database instance that this table is registered to. This field is always returned, and for
-  tables inside database catalogs is inferred database instance associated with the catalog.
+* `effective_database_instance_name` (string) - The name of the database instance that this table is registered to. This field is always returned; for
+  tables inside database catalogs it is the database instance associated with the catalog.
   This is an output only field that contains the value computed from the input field combined with
   server side defaults. Use the field without the effective_ prefix to set the value
 * `effective_logical_database_name` (string) - The name of the logical database that this table is registered to.
@@ -50,9 +53,9 @@ The following attributes are exported:
   
   When creating a synced table in a standard catalog, this field is required.
   In this scenario, specifying this field will allow targeting an arbitrary postgres database.
-  Note that this has implications for the `create_database_objects_is_missing` field in `spec`
+  If this database does not exist yet, it is created when `create_database_objects_if_missing` in `spec` is true
 * `name` (string) - Full three-part (catalog, schema, table) name of the table
-* `spec` (SyncedTableSpec)
+* `spec` (SyncedTableSpec) - Specifies the source table, the key columns and how the data synchronization pipeline runs
 * `unity_catalog_provisioning_state` (string) - The provisioning state of the synced table entity in Unity Catalog. This is distinct from the
   state of the data synchronization pipeline (i.e. the table may be in "ACTIVE" but the pipeline
   may be in "PROVISIONING" as it runs asynchronously). Possible values are: `ACTIVE`, `DEGRADED`, `DELETING`, `FAILED`, `PROVISIONING`, `UPDATING`
@@ -81,9 +84,7 @@ The following attributes are exported:
 
 ### SyncedTableFailedStatus
 * `last_processed_commit_version` (integer) - The last source table Delta version that was successfully synced to the synced table.
-  The last source table Delta version that was synced to the synced table.
-  Only populated if the table is still
-  synced and available for serving
+  Only populated if the table is still synced and available for serving
 * `timestamp` (string) - The end timestamp of the last time any data was synchronized from the source table to the synced
   table. Only populated if the table is still synced and available for serving
 
@@ -97,7 +98,7 @@ The following attributes are exported:
 * `total_row_count` (integer) - The total number of rows that need to be synced in this update. This number may be an estimate
 
 ### SyncedTablePosition
-* `delta_table_sync_info` (DeltaTableSyncInfo)
+* `delta_table_sync_info` (DeltaTableSyncInfo) - Identifies the position in the source Delta table at the time of the last successful sync
 * `sync_end_timestamp` (string) - The end timestamp of the most recent successful synchronization.
   This is the time when the data is available in the synced table
 * `sync_start_timestamp` (string) - The starting timestamp of the most recent successful synchronization from the source table
@@ -114,7 +115,8 @@ The following attributes are exported:
   This significantly improves performance for large tables.
   Requires workspace-level enablement
 * `create_database_objects_if_missing` (boolean) - If true, the synced table's logical database and schema resources in PG
-  will be created if they do not already exist
+  will be created if they do not already exist. The request fails if this is false and the database
+  or schema does not exist
 * `existing_pipeline_id` (string) - At most one of existing_pipeline_id and new_pipeline_spec should be defined.
   
   If existing_pipeline_id is defined, the synced table will be bin packed into the existing pipeline
@@ -126,10 +128,18 @@ The following attributes are exported:
   to store intermediate files (checkpoints, event logs etc). The caller must have write permissions to create Delta
   tables in the specified catalog and schema. Again, note this requires write permissions, whereas the source table
   only requires read permissions
-* `primary_key_columns` (list of string) - Primary Key columns to be used for data insert/update in the destination
-* `scheduling_policy` (string) - Scheduling policy of the underlying pipeline. Possible values are: `CONTINUOUS`, `SNAPSHOT`, `TRIGGERED`
+* `primary_key_columns` (list of string) - The primary key columns are used to insert and update rows in the destination table. At least one
+  column is required. Rows whose primary key columns contain null values are not synced, and the primary
+  key cannot be changed after the table is created
+* `scheduling_policy` (string) - Specifies the scheduling policy of the underlying pipeline. With CONTINUOUS, the pipeline keeps running and
+  applies source changes as they happen. With TRIGGERED and SNAPSHOT, the pipeline stops after the
+  initial load and syncs again only when it is run (manually, on a schedule or from a job); TRIGGERED
+  applies source changes incrementally, while SNAPSHOT copies the full source table on every run.
+  CONTINUOUS and TRIGGERED require the source table to provide a change data feed. Possible values are: `CONTINUOUS`, `SNAPSHOT`, `TRIGGERED`
 * `source_table_full_name` (string) - Three-part (catalog, schema, table) name of the source Delta table
-* `timeseries_key` (string) - Time series key to deduplicate (tie-break) rows with the same primary key
+* `timeseries_key` (string) - The time series key deduplicates (tie-breaks) rows with the same primary key. When primary key values
+  can repeat in the source table, the synced table keeps only the row with the latest value of this
+  column for each primary key. The key cannot be changed after the table is created
 * `type_overrides` (list of SyncedTableSpecTypeOverride) - Override the default Delta->PG type mapping for specific columns.
   A TypeOverride with PG_SPECIFIC_TYPE_UNSPECIFIED is rejected; a valid pg_type must be set
 
@@ -140,9 +150,11 @@ The following attributes are exported:
   dimension, varchar length). Required when the chosen pg_type needs a size
 
 ### SyncedTableStatus
-* `continuous_update_status` (SyncedTableContinuousUpdateStatus)
+* `continuous_update_status` (SyncedTableContinuousUpdateStatus) - Provides detailed status for an online table with the CONTINUOUS scheduling policy. It is populated when
+  detailed_state is SYNCED_TABLE_ONLINE_CONTINUOUS_UPDATE or SYNCED_TABLE_ONLINE_UPDATING_PIPELINE_RESOURCES
 * `detailed_state` (string) - The state of the synced table. Possible values are: `SYNCED_TABLED_OFFLINE`, `SYNCED_TABLE_OFFLINE_FAILED`, `SYNCED_TABLE_ONLINE`, `SYNCED_TABLE_ONLINE_CONTINUOUS_UPDATE`, `SYNCED_TABLE_ONLINE_NO_PENDING_UPDATE`, `SYNCED_TABLE_ONLINE_PIPELINE_FAILED`, `SYNCED_TABLE_ONLINE_TRIGGERED_UPDATE`, `SYNCED_TABLE_ONLINE_UPDATING_PIPELINE_RESOURCES`, `SYNCED_TABLE_PROVISIONING`, `SYNCED_TABLE_PROVISIONING_INITIAL_SNAPSHOT`, `SYNCED_TABLE_PROVISIONING_PIPELINE_RESOURCES`
-* `failed_status` (SyncedTableFailedStatus)
+* `failed_status` (SyncedTableFailedStatus) - Provides detailed status for a table whose data synchronization pipeline has failed. It is populated when
+  detailed_state is SYNCED_TABLE_OFFLINE_FAILED or SYNCED_TABLE_ONLINE_PIPELINE_FAILED
 * `last_sync` (SyncedTablePosition) - Summary of the last successful synchronization from source to destination.
   
   Will always be present if there has been a successful sync. Even if the most recent syncs have failed.
@@ -156,8 +168,11 @@ The following attributes are exported:
 * `message` (string) - A text description of the current state of the synced table
 * `pipeline_id` (string) - ID of the associated pipeline. The pipeline ID may have been provided by the client
   (in the case of bin packing), or generated by the server (when creating a new pipeline)
-* `provisioning_status` (SyncedTableProvisioningStatus)
-* `triggered_update_status` (SyncedTableTriggeredUpdateStatus)
+* `provisioning_status` (SyncedTableProvisioningStatus) - Provides detailed status while the table is being provisioned. It is populated when detailed_state is
+  SYNCED_TABLE_PROVISIONING_PIPELINE_RESOURCES or SYNCED_TABLE_PROVISIONING_INITIAL_SNAPSHOT
+* `triggered_update_status` (SyncedTableTriggeredUpdateStatus) - Provides detailed status for an online table with the TRIGGERED or SNAPSHOT scheduling policy. It is
+  populated when detailed_state is SYNCED_TABLE_ONLINE_TRIGGERED_UPDATE, SYNCED_TABLE_ONLINE_NO_PENDING_UPDATE
+  or SYNCED_TABLE_ONLINE_UPDATING_PIPELINE_RESOURCES
 
 ### SyncedTableTriggeredUpdateStatus
 * `last_processed_commit_version` (integer) - The last source table Delta version that was successfully synced to the synced table

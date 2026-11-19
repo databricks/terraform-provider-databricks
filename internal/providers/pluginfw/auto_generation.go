@@ -7,6 +7,12 @@ import (
 
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/account_iam_direct_group_member_v2"
 
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/account_iam_external_group_v2"
+
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/account_iam_external_service_principal_v2"
+
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/account_iam_external_user_v2"
+
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/account_iam_group_v2"
 
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/account_iam_service_principal_v2"
@@ -20,6 +26,14 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/account_setting_user_preference_v2"
 
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/account_setting_v2"
+
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/agent_kit_managed_memory_entry"
+
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/agent_kit_managed_memory_store"
+
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/agent_kit_session"
+
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/agent_kit_session_store"
 
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/ai_gateway_mcp_service"
 
@@ -36,6 +50,8 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/app_space"
 
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/apps_settings_custom_template"
+
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/assume_group_restricted_sharing_group"
 
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/budget_policy"
 
@@ -55,6 +71,8 @@ import (
 
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/disaster_recovery_stable_url"
 
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/domain"
+
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/endpoint"
 
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/entity_tag_assignment"
@@ -67,13 +85,23 @@ import (
 
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/feature_engineering_feature"
 
-	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/feature_engineering_kafka_config"
-
-	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/feature_engineering_materialized_feature"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/genie_agent"
 
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/knowledge_assistant"
 
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/knowledge_assistant_knowledge_source"
+
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/lakewatch_alert_config"
+
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/lakewatch_common_config"
+
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/lakewatch_datasource"
+
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/lakewatch_datasource_config"
+
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/lakewatch_rule"
+
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/lakewatch_rule_config"
 
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/materialized_features_feature_tag"
 
@@ -99,11 +127,17 @@ import (
 
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/postgres_role"
 
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/postgres_snapshot_schedule"
+
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/postgres_synced_table"
+
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/private_network_gateway"
 
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/quality_monitor_v2"
 
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/rfa_access_request_destinations"
+
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/sandbox"
 
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/secret_uc"
 
@@ -120,6 +154,12 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/workspace_entity_tag_assignment"
 
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/workspace_iam_direct_group_member_v2"
+
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/workspace_iam_external_group_v2"
+
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/workspace_iam_external_service_principal_v2"
+
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/workspace_iam_external_user_v2"
 
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/workspace_iam_group_v2"
 
@@ -150,6 +190,10 @@ var autoGeneratedResources = []func() resource.Resource{
 	account_network_policy.ResourceAccountNetworkPolicy,
 	account_setting_user_preference_v2.ResourceUserPreference,
 	account_setting_v2.ResourceSetting,
+	agent_kit_managed_memory_entry.ResourceManagedMemoryEntry,
+	agent_kit_managed_memory_store.ResourceManagedMemoryStore,
+	agent_kit_session.ResourceSession,
+	agent_kit_session_store.ResourceSessionStore,
 	ai_gateway_mcp_service.ResourceMcpService,
 	ai_gateway_model_provider_service.ResourceModelProviderService,
 	ai_gateway_model_service.ResourceModelService,
@@ -158,6 +202,7 @@ var autoGeneratedResources = []func() resource.Resource{
 	alert_v2.ResourceAlertV2,
 	app_space.ResourceSpace,
 	apps_settings_custom_template.ResourceCustomTemplate,
+	assume_group_restricted_sharing_group.ResourceRestrictedSharingGroup,
 	budget_policy.ResourceBudgetPolicy,
 	data_classification_catalog_config.ResourceCatalogConfig,
 	data_quality_monitor.ResourceMonitor,
@@ -167,16 +212,22 @@ var autoGeneratedResources = []func() resource.Resource{
 	database_synced_database_table.ResourceSyncedDatabaseTable,
 	disaster_recovery_failover_group.ResourceFailoverGroup,
 	disaster_recovery_stable_url.ResourceStableUrl,
+	domain.ResourceDomain,
 	endpoint.ResourceEndpoint,
 	entity_tag_assignment.ResourceEntityTagAssignment,
 	environments_default_workspace_base_environment.ResourceDefaultWorkspaceBaseEnvironment,
 	environments_workspace_base_environment.ResourceWorkspaceBaseEnvironment,
 	external_metadata.ResourceExternalMetadata,
 	feature_engineering_feature.ResourceFeature,
-	feature_engineering_kafka_config.ResourceKafkaConfig,
-	feature_engineering_materialized_feature.ResourceMaterializedFeature,
+	genie_agent.ResourceGenieAgent,
 	knowledge_assistant.ResourceKnowledgeAssistant,
 	knowledge_assistant_knowledge_source.ResourceKnowledgeSource,
+	lakewatch_alert_config.ResourceAlertConfig,
+	lakewatch_common_config.ResourceCommonConfig,
+	lakewatch_datasource.ResourceDatasource,
+	lakewatch_datasource_config.ResourceDatasourceConfig,
+	lakewatch_rule.ResourceRule,
+	lakewatch_rule_config.ResourceRuleConfig,
 	materialized_features_feature_tag.ResourceFeatureTag,
 	online_store.ResourceOnlineStore,
 	policy_info.ResourcePolicyInfo,
@@ -188,9 +239,12 @@ var autoGeneratedResources = []func() resource.Resource{
 	postgres_endpoint.ResourceEndpoint,
 	postgres_project.ResourceProject,
 	postgres_role.ResourceRole,
+	postgres_snapshot_schedule.ResourceSnapshotSchedule,
 	postgres_synced_table.ResourceSyncedTable,
+	private_network_gateway.ResourcePrivateNetworkGateway,
 	quality_monitor_v2.ResourceQualityMonitor,
 	rfa_access_request_destinations.ResourceAccessRequestDestination,
+	sandbox.ResourceSandbox,
 	secret_uc.ResourceSecret,
 	service_principal_federation_policy.ResourceFederationPolicy,
 	supervisor_agent.ResourceSupervisorAgent,
@@ -212,6 +266,9 @@ var autoGeneratedResources = []func() resource.Resource{
 var autoGeneratedDataSources = []func() datasource.DataSource{
 	account_federation_policy.DataSourceFederationPolicy,
 	account_iam_direct_group_member_v2.DataSourceDirectGroupMember,
+	account_iam_external_group_v2.DataSourceExternalGroup,
+	account_iam_external_service_principal_v2.DataSourceExternalServicePrincipal,
+	account_iam_external_user_v2.DataSourceExternalUser,
 	account_iam_group_v2.DataSourceGroup,
 	account_iam_service_principal_v2.DataSourceServicePrincipal,
 	account_iam_user_v2.DataSourceUser,
@@ -219,6 +276,10 @@ var autoGeneratedDataSources = []func() datasource.DataSource{
 	account_network_policy.DataSourceAccountNetworkPolicy,
 	account_setting_user_preference_v2.DataSourceUserPreference,
 	account_setting_v2.DataSourceSetting,
+	agent_kit_managed_memory_entry.DataSourceManagedMemoryEntry,
+	agent_kit_managed_memory_store.DataSourceManagedMemoryStore,
+	agent_kit_session.DataSourceSession,
+	agent_kit_session_store.DataSourceSessionStore,
 	ai_gateway_mcp_service.DataSourceMcpService,
 	ai_gateway_model_provider_service.DataSourceModelProviderService,
 	ai_gateway_model_service.DataSourceModelService,
@@ -227,6 +288,7 @@ var autoGeneratedDataSources = []func() datasource.DataSource{
 	alert_v2.DataSourceAlertV2,
 	app_space.DataSourceSpace,
 	apps_settings_custom_template.DataSourceCustomTemplate,
+	assume_group_restricted_sharing_group.DataSourceRestrictedSharingGroup,
 	budget_policy.DataSourceBudgetPolicy,
 	data_classification_catalog_config.DataSourceCatalogConfig,
 	data_quality_monitor.DataSourceMonitor,
@@ -236,16 +298,22 @@ var autoGeneratedDataSources = []func() datasource.DataSource{
 	database_synced_database_table.DataSourceSyncedDatabaseTable,
 	disaster_recovery_failover_group.DataSourceFailoverGroup,
 	disaster_recovery_stable_url.DataSourceStableUrl,
+	domain.DataSourceDomain,
 	endpoint.DataSourceEndpoint,
 	entity_tag_assignment.DataSourceEntityTagAssignment,
 	environments_default_workspace_base_environment.DataSourceDefaultWorkspaceBaseEnvironment,
 	environments_workspace_base_environment.DataSourceWorkspaceBaseEnvironment,
 	external_metadata.DataSourceExternalMetadata,
 	feature_engineering_feature.DataSourceFeature,
-	feature_engineering_kafka_config.DataSourceKafkaConfig,
-	feature_engineering_materialized_feature.DataSourceMaterializedFeature,
+	genie_agent.DataSourceGenieAgent,
 	knowledge_assistant.DataSourceKnowledgeAssistant,
 	knowledge_assistant_knowledge_source.DataSourceKnowledgeSource,
+	lakewatch_alert_config.DataSourceAlertConfig,
+	lakewatch_common_config.DataSourceCommonConfig,
+	lakewatch_datasource.DataSourceDatasource,
+	lakewatch_datasource_config.DataSourceDatasourceConfig,
+	lakewatch_rule.DataSourceRule,
+	lakewatch_rule_config.DataSourceRuleConfig,
 	materialized_features_feature_tag.DataSourceFeatureTag,
 	online_store.DataSourceOnlineStore,
 	policy_info.DataSourcePolicyInfo,
@@ -258,9 +326,12 @@ var autoGeneratedDataSources = []func() datasource.DataSource{
 	postgres_endpoint.DataSourceEndpoint,
 	postgres_project.DataSourceProject,
 	postgres_role.DataSourceRole,
+	postgres_snapshot_schedule.DataSourceSnapshotSchedule,
 	postgres_synced_table.DataSourceSyncedTable,
+	private_network_gateway.DataSourcePrivateNetworkGateway,
 	quality_monitor_v2.DataSourceQualityMonitor,
 	rfa_access_request_destinations.DataSourceAccessRequestDestination,
+	sandbox.DataSourceSandbox,
 	secret_uc.DataSourceSecret,
 	service_principal_federation_policy.DataSourceFederationPolicy,
 	supervisor_agent.DataSourceSupervisorAgent,
@@ -269,6 +340,9 @@ var autoGeneratedDataSources = []func() datasource.DataSource{
 	warehouses_default_warehouse_override.DataSourceDefaultWarehouseOverride,
 	workspace_entity_tag_assignment.DataSourceTagAssignment,
 	workspace_iam_direct_group_member_v2.DataSourceDirectGroupMember,
+	workspace_iam_external_group_v2.DataSourceExternalGroup,
+	workspace_iam_external_service_principal_v2.DataSourceExternalServicePrincipal,
+	workspace_iam_external_user_v2.DataSourceExternalUser,
 	workspace_iam_group_v2.DataSourceGroup,
 	workspace_iam_service_principal_v2.DataSourceServicePrincipal,
 	workspace_iam_user_v2.DataSourceUser,
@@ -283,6 +357,10 @@ var autoGeneratedDataSources = []func() datasource.DataSource{
 	account_iam_user_v2.DataSourceUsers,
 	account_iam_workspace_assignment_v2.DataSourceWorkspaceAssignments,
 	account_network_policy.DataSourceAccountNetworkPolicies,
+	agent_kit_managed_memory_entry.DataSourceManagedMemoryEntries,
+	agent_kit_managed_memory_store.DataSourceManagedMemoryStores,
+	agent_kit_session.DataSourceSessions,
+	agent_kit_session_store.DataSourceSessionStores,
 	ai_gateway_mcp_service.DataSourceMcpServices,
 	ai_gateway_model_provider_service.DataSourceModelProviderServices,
 	ai_gateway_model_service.DataSourceModelServices,
@@ -291,6 +369,7 @@ var autoGeneratedDataSources = []func() datasource.DataSource{
 	alert_v2.DataSourceAlertsV2,
 	app_space.DataSourceSpaces,
 	apps_settings_custom_template.DataSourceCustomTemplates,
+	assume_group_restricted_sharing_group.DataSourceRestrictedSharingGroups,
 	budget_policy.DataSourceBudgetPolicies,
 	data_quality_monitor.DataSourceMonitors,
 	data_quality_refresh.DataSourceRefreshes,
@@ -299,15 +378,17 @@ var autoGeneratedDataSources = []func() datasource.DataSource{
 	database_synced_database_table.DataSourceSyncedDatabaseTables,
 	disaster_recovery_failover_group.DataSourceFailoverGroups,
 	disaster_recovery_stable_url.DataSourceStableUrls,
+	domain.DataSourceDomains,
 	endpoint.DataSourceEndpoints,
 	entity_tag_assignment.DataSourceEntityTagAssignments,
 	environments_workspace_base_environment.DataSourceWorkspaceBaseEnvironments,
 	external_metadata.DataSourceExternalMetadatas,
 	feature_engineering_feature.DataSourceFeatures,
-	feature_engineering_kafka_config.DataSourceKafkaConfigs,
-	feature_engineering_materialized_feature.DataSourceMaterializedFeatures,
+	genie_agent.DataSourceGenieAgents,
 	knowledge_assistant.DataSourceKnowledgeAssistants,
 	knowledge_assistant_knowledge_source.DataSourceKnowledgeSources,
+	lakewatch_datasource.DataSourceDatasources,
+	lakewatch_rule.DataSourceRules,
 	materialized_features_feature_tag.DataSourceFeatureTags,
 	online_store.DataSourceOnlineStores,
 	policy_info.DataSourcePolicyInfos,
@@ -318,7 +399,9 @@ var autoGeneratedDataSources = []func() datasource.DataSource{
 	postgres_endpoint.DataSourceEndpoints,
 	postgres_project.DataSourceProjects,
 	postgres_role.DataSourceRoles,
+	private_network_gateway.DataSourcePrivateNetworkGateways,
 	quality_monitor_v2.DataSourceQualityMonitors,
+	sandbox.DataSourceSandboxes,
 	secret_uc.DataSourceSecrets,
 	service_principal_federation_policy.DataSourceFederationPolicies,
 	supervisor_agent.DataSourceSupervisorAgents,

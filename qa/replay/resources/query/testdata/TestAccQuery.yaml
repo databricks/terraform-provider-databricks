@@ -1,0 +1,105 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: "workspace"
+  cloud: "AWS"
+  workspace_id: "12345"
+steps:
+  - name: "create"
+    config: |
+      resource "databricks_query" "this" {
+        warehouse_id = "warehouse-1"
+        display_name = "tf-replay1"
+        query_text   = "SELECT 1 AS p1, 2 as p2"
+      }
+    calls:
+      - request:
+          method: "POST"
+          path: "/api/2.0/sql/queries"
+          body:
+            json:
+              auto_resolve_display_name: false
+              query:
+                display_name: "tf-replay1"
+                query_text: "SELECT 1 AS p1, 2 as p2"
+                warehouse_id: "warehouse-1"
+        response: &response_1 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              display_name: "tf-replay1"
+              id: "query-1"
+              owner_user_name: "tester@example.com"
+              query_text: "SELECT 1 AS p1, 2 as p2"
+              warehouse_id: "warehouse-1"
+      - &get_1
+        request:
+          method: "GET"
+          path: "/api/2.0/sql/queries/query-1"
+          body: null
+        response: *response_1
+      - *get_1
+  - name: "update"
+    config: |
+      resource "databricks_query" "this" {
+        warehouse_id = "warehouse-1"
+        display_name = "tf-replay2"
+        query_text   = "SELECT 1 AS p1, 2 as p2"
+        parameter {
+          name = "foo"
+          text_value {
+            value = "bar"
+          }
+          title = "foo"
+        }
+      }
+    calls:
+      - *get_1
+      - request:
+          method: "PATCH"
+          path: "/api/2.0/sql/queries/query-1"
+          body:
+            json:
+              auto_resolve_display_name: false
+              query:
+                display_name: "tf-replay2"
+                owner_user_name: "tester@example.com"
+                parameters:
+                  - name: "foo"
+                    text_value:
+                      value: "bar"
+                    title: "foo"
+                query_text: "SELECT 1 AS p1, 2 as p2"
+                warehouse_id: "warehouse-1"
+              update_mask: "display_name,query_text,warehouse_id,parameters"
+        response: &response_2 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              display_name: "tf-replay2"
+              id: "query-1"
+              owner_user_name: "tester@example.com"
+              parameters:
+                - name: "foo"
+                  text_value:
+                    value: "bar"
+                  title: "foo"
+              query_text: "SELECT 1 AS p1, 2 as p2"
+              warehouse_id: "warehouse-1"
+      - &get_2
+        request:
+          method: "GET"
+          path: "/api/2.0/sql/queries/query-1"
+          body: null
+        response: *response_2
+      - *get_2
+destroy:
+  calls:
+    - *get_2
+    - request:
+        method: "DELETE"
+        path: "/api/2.0/sql/queries/query-1"
+        body: null
+      response: # Inferred API response; not recorded.
+        status: 200
+        body: null

@@ -1,0 +1,89 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: "account"
+  cloud: "AWS"
+  account_id: "replay-account"
+steps:
+  - name: "create_in_workspace"
+    config: |
+      provider "databricks" {
+        account_id = "replay-account"
+      }
+
+      resource "databricks_repo" "r1" {
+        url  = "https://github.com/databricks/databricks-sdk-go"
+        path = "/Repos/tf-acc/repo-replay"
+        provider_config { workspace_id = "12345" }
+      }
+    calls:
+      - &lookup_workspace_12345
+        request: {method: "GET", path: "/api/2.0/accounts/replay-account/workspaces/12345", body: null}
+        response: &response_1 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              account_id: "replay-account"
+              deployment_name: "replay-workspace-12345"
+              workspace_id: 12345
+              workspace_name: "replay-workspace-12345"
+              workspace_status: "RUNNING"
+      - request:
+          method: "POST"
+          path: "/api/2.0/workspace/mkdirs"
+          body:
+            json:
+              path: "/Repos/tf-acc"
+          headers:
+            "X-Databricks-Workspace-Id": "12345"
+        response: # Inferred API response; not recorded.
+          status: 200
+          body: null
+      - request:
+          method: "POST"
+          path: "/api/2.0/repos"
+          body:
+            json:
+              path: "/Repos/tf-acc/repo-replay"
+              provider: "gitHub"
+              url: "https://github.com/databricks/databricks-sdk-go"
+          headers:
+            "X-Databricks-Workspace-Id": "12345"
+        response: &response_2 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              id: 301
+              path: "/Repos/tf-acc/repo-replay"
+              provider: "gitHub"
+              url: "https://github.com/databricks/databricks-sdk-go"
+      - &get_1
+        request:
+          method: "GET"
+          path: "/api/2.0/repos/301"
+          body: null
+          headers:
+            "X-Databricks-Workspace-Id": "12345"
+        response: *response_2
+      - *lookup_workspace_12345
+      - *get_1
+    state:
+      resources:
+        databricks_repo.r1:
+          attributes:
+            - path: ["path"]
+              equals: "/Repos/tf-acc/repo-replay"
+destroy:
+  calls:
+    - *lookup_workspace_12345
+    - *get_1
+    - *lookup_workspace_12345
+    - request:
+        method: "DELETE"
+        path: "/api/2.0/repos/301"
+        body: null
+        headers:
+          "X-Databricks-Workspace-Id": "12345"
+      response: # Inferred API response; not recorded.
+        status: 200
+        body: null

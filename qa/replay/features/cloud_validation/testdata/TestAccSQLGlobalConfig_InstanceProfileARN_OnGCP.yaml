@@ -1,0 +1,41 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: "workspace"
+  cloud: "GCP"
+  workspace_id: "12345"
+steps:
+  - name: "reject_unsupported_cloud_setting"
+    config: |
+      resource "databricks_sql_global_config" "this" {
+        instance_profile_arn = "arn:aws:iam::999999999999:instance-profile/fake-profile"
+      }
+    calls:
+      - request:
+          method: "GET"
+          path: "/api/2.0/sql/config/warehouses"
+          body: null
+        response: &response_1 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              enable_serverless_compute: false
+              security_policy: "DATA_ACCESS_CONTROL"
+      - request:
+          method: "PUT"
+          path: "/api/2.0/sql/config/warehouses"
+          body:
+            json:
+              data_access_config: []
+              enable_serverless_compute: false
+              instance_profile_arn: "arn:aws:iam::999999999999:instance-profile/fake-profile"
+              security_policy: "DATA_ACCESS_CONTROL"
+        response: &response_2 # Inferred API response; not recorded.
+          status: 400
+          body:
+            json:
+              error_code: "INVALID_PARAMETER_VALUE"
+              message: "Instance profiles are not supported on GCP"
+    expect_error: "Instance profiles are not supported on GCP"
+destroy:
+  calls: []

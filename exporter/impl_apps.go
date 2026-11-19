@@ -89,12 +89,15 @@ func importApp(ic *importContext, r *resource) error {
 				ID:       res.Secret.Scope,
 			})
 		}
-		// UC Securable - emit volume if type is VOLUME
-		if res.UcSecurable != nil && res.UcSecurable.SecurableType == "VOLUME" && res.UcSecurable.SecurableFullName != "" {
-			ic.Emit(&resource{
-				Resource: "databricks_volume",
-				ID:       res.UcSecurable.SecurableFullName,
-			})
+		if res.UcSecurable != nil && res.UcSecurable.SecurableFullName != "" {
+			resourceType := map[apps.AppResourceUcSecurableUcSecurableType]string{
+				apps.AppResourceUcSecurableUcSecurableTypeConnection: "databricks_connection",
+				apps.AppResourceUcSecurableUcSecurableTypeTable:      "databricks_sql_table",
+				apps.AppResourceUcSecurableUcSecurableTypeVolume:     "databricks_volume",
+			}[res.UcSecurable.SecurableType]
+			if resourceType != "" {
+				ic.Emit(&resource{Resource: resourceType, ID: res.UcSecurable.SecurableFullName})
+			}
 		}
 		// Database Instance (Lakebase)
 		if res.Database != nil && res.Database.InstanceName != "" {
@@ -102,6 +105,18 @@ func importApp(ic *importContext, r *resource) error {
 				Resource: "databricks_database_instance",
 				ID:       res.Database.InstanceName,
 			})
+		}
+	}
+	for _, destination := range app.TelemetryExportDestinations {
+		if destination.UnityCatalog == nil {
+			continue
+		}
+		for _, table := range []string{
+			destination.UnityCatalog.LogsTable,
+			destination.UnityCatalog.MetricsTable,
+			destination.UnityCatalog.TracesTable,
+		} {
+			ic.Emit(&resource{Resource: "databricks_sql_table", ID: table})
 		}
 	}
 
@@ -116,6 +131,13 @@ func importApp(ic *importContext, r *resource) error {
 	// Emit permissions
 	ic.emitPermissionsIfNotIgnored(r, fmt.Sprintf("/apps/%s", app.Name), "app_"+r.Name)
 	return nil
+}
+
+func createIsAppUcSecurableType(expected string) func(*importContext, *resource, *resourceApproximation, string) bool {
+	return func(_ *importContext, res *resource, _ *resourceApproximation, origPath string) bool {
+		typePath := strings.TrimSuffix(origPath, "securable_full_name") + "securable_type"
+		return res.DataWrapper != nil && res.DataWrapper.Get(typePath) == expected
+	}
 }
 
 // createIsMatchingScopeAndKey creates a validation function that matches secret scope and key together

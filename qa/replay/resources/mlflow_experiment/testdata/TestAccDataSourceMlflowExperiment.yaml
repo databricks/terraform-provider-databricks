@@ -1,0 +1,201 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: "workspace"
+  cloud: "AWS"
+  workspace_id: "12345"
+steps:
+  - name: "create"
+    config: |
+      data "databricks_current_user" "me" {}
+      resource "databricks_mlflow_experiment" "this" {
+        name = "${data.databricks_current_user.me.home}/experiment-replay-0"
+        artifact_location = "dbfs:/tmp/my-experiment"
+        description = "My MLflow experiment description"
+      }
+    calls:
+      - &get_1
+        request:
+          method: "GET"
+          path: "/api/2.0/preview/scim/v2/Me"
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              displayName: "Replay User"
+              groups:
+                - display: "users"
+                  value: "1"
+              id: "100"
+              userName: "replay@example.com"
+      - request:
+          method: "POST"
+          path: "/api/2.0/mlflow/experiments/create"
+          body:
+            json:
+              artifact_location: "dbfs:/tmp/my-experiment"
+              name: "/Users/replay@example.com/experiment-replay-0"
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              experiment_id: "123"
+      - &get_2
+        request:
+          method: "GET"
+          path: "/api/2.0/mlflow/experiments/get"
+          query:
+            experiment_id: ["123"]
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              experiment:
+                artifact_location: "dbfs:/tmp/my-experiment"
+                experiment_id: "123"
+                lifecycle_stage: "active"
+                name: "/Users/replay@example.com/experiment-replay-0"
+      - *get_1
+      - *get_1
+      - *get_2
+  - name: "lookup_name"
+    config: |
+      data "databricks_current_user" "me" {}
+      resource "databricks_mlflow_experiment" "this" {
+        name = "${data.databricks_current_user.me.home}/experiment-replay-1"
+        artifact_location = "dbfs:/tmp/my-experiment"
+        description = "My MLflow experiment description"
+      }
+      data "databricks_mlflow_experiment" "by_name" {
+        depends_on = [databricks_mlflow_experiment.this]
+        name = "${data.databricks_current_user.me.home}/experiment-replay-1"
+      }
+    calls:
+      - *get_1
+      - *get_2
+      - request:
+          method: "POST"
+          path: "/api/2.0/mlflow/experiments/update"
+          body:
+            json:
+              experiment_id: "123"
+              new_name: "/Users/replay@example.com/experiment-replay-1"
+        response: # Inferred API response; not recorded.
+          status: 200
+          body: null
+      - &get_3
+        request:
+          method: "GET"
+          path: "/api/2.0/mlflow/experiments/get"
+          query:
+            experiment_id: ["123"]
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              experiment:
+                artifact_location: "dbfs:/tmp/my-experiment"
+                experiment_id: "123"
+                lifecycle_stage: "active"
+                name: "/Users/replay@example.com/experiment-replay-1"
+      - &get_4
+        request:
+          method: "GET"
+          path: "/api/2.0/mlflow/experiments/get-by-name"
+          query:
+            experiment_name: ["/Users/replay@example.com/experiment-replay-1"]
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              experiment:
+                artifact_location: "dbfs:/tmp/my-experiment"
+                experiment_id: "123"
+                lifecycle_stage: "active"
+                name: "/Users/replay@example.com/experiment-replay-1"
+      - *get_1
+      - *get_4
+      - *get_1
+      - *get_3
+      - *get_4
+    state:
+      resources:
+        data.databricks_mlflow_experiment.by_name:
+          attributes:
+            - path: ["id"]
+              equals: "123"
+            - path: ["artifact_location"]
+              equals: "dbfs:/tmp/my-experiment"
+  - name: "lookup_id"
+    config: |
+      data "databricks_current_user" "me" {}
+      resource "databricks_mlflow_experiment" "this" {
+        name = "${data.databricks_current_user.me.home}/experiment-replay-2"
+        artifact_location = "dbfs:/tmp/my-experiment"
+        description = "My MLflow experiment description"
+      }
+      data "databricks_mlflow_experiment" "by_id" {
+        depends_on = [databricks_mlflow_experiment.this]
+        experiment_id = databricks_mlflow_experiment.this.experiment_id
+      }
+    calls:
+      - *get_1
+      - *get_3
+      - request:
+          method: "POST"
+          path: "/api/2.0/mlflow/experiments/update"
+          body:
+            json:
+              experiment_id: "123"
+              new_name: "/Users/replay@example.com/experiment-replay-2"
+        response: # Inferred API response; not recorded.
+          status: 200
+          body: null
+      - &get_5
+        request:
+          method: "GET"
+          path: "/api/2.0/mlflow/experiments/get"
+          query:
+            experiment_id: ["123"]
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              experiment:
+                artifact_location: "dbfs:/tmp/my-experiment"
+                experiment_id: "123"
+                lifecycle_stage: "active"
+                name: "/Users/replay@example.com/experiment-replay-2"
+      - *get_5
+      - *get_1
+      - *get_5
+      - *get_1
+      - *get_5
+      - *get_5
+    state:
+      resources:
+        data.databricks_mlflow_experiment.by_id:
+          attributes:
+            - path: ["id"]
+              equals: "123"
+            - path: ["artifact_location"]
+              equals: "dbfs:/tmp/my-experiment"
+destroy:
+  calls:
+    - *get_1
+    - *get_5
+    - *get_5
+    - request:
+        method: "POST"
+        path: "/api/2.0/mlflow/experiments/delete"
+        body:
+          json:
+            experiment_id: "123"
+      response: # Inferred API response; not recorded.
+        status: 200
+        body: null

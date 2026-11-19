@@ -1,0 +1,53 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: "workspace"
+  cloud: "AWS"
+  workspace_id: "12345"
+steps:
+  - name: "read"
+    config: |
+      data "databricks_sql_warehouse" "this" {
+        id = "warehouse-1"
+      }
+
+      output "warehouse_info" {
+        value = data.databricks_sql_warehouse.this.name
+      }
+    calls:
+      - &get_1
+        request:
+          method: "GET"
+          path: "/api/2.0/preview/sql/data_sources"
+          body: null
+        response: &response_1 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              - id: "datasource-1"
+                name: "existing-warehouse"
+                warehouse_id: "warehouse-1"
+      - &get_2
+        request:
+          method: "GET"
+          path: "/api/2.0/sql/warehouses/warehouse-1"
+          body: null
+        response: &response_2 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              cluster_size: "2X-Small"
+              id: "warehouse-1"
+              max_num_clusters: 1
+              min_num_clusters: 1
+              name: "existing-warehouse"
+              state: "RUNNING"
+              warehouse_type: "PRO"
+      - *get_1
+      - *get_2
+      - *get_1
+      - *get_2
+destroy:
+  calls:
+    - *get_1
+    - *get_2

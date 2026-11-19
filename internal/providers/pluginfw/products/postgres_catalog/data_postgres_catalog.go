@@ -99,7 +99,8 @@ func (r ProviderConfigData) Type(ctx context.Context) attr.Type {
 
 // CatalogData extends the main model with additional fields.
 type CatalogData struct {
-	// The part of the name, chosen by the user when the resource was created.
+	// The ID chosen when the catalog was created, which is also its name in
+	// Unity Catalog. It is the last segment of the name field.
 	CatalogId types.String `tfsdk:"catalog_id"`
 	// A timestamp indicating when the catalog was created.
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
@@ -107,11 +108,13 @@ type CatalogData struct {
 	//
 	// Format: "catalogs/{catalog_id}".
 	Name types.String `tfsdk:"name"`
-	// The desired state of the Catalog.
+	// The desired state of the Catalog. The catalog has no update method, so
+	// the spec is fixed when the catalog is created.
 	Spec types.Object `tfsdk:"spec"`
 	// The observed state of the Catalog.
 	Status types.Object `tfsdk:"status"`
-	// System-generated unique identifier for the catalog.
+	// The immutable UUID that identifies the catalog, assigned when the catalog
+	// is created.
 	Uid types.String `tfsdk:"uid"`
 	// A timestamp indicating when the catalog was last updated.
 	UpdateTime         timetypes.RFC3339 `tfsdk:"update_time"`

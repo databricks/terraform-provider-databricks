@@ -45,7 +45,9 @@ type FederationPolicyData struct {
 	// which does not need to be specified in create or update requests. If
 	// specified in a request, must match the value in the request URL.
 	Name types.String `tfsdk:"name"`
-
+	// audit_mode INCLUDE is required on both this message field and its leaf
+	// fields so the OIDC policy configuration is captured in create/update
+	// audit logs (see go/auditlogs).
 	OidcPolicy types.Object `tfsdk:"oidc_policy"`
 	// The ID of the federation policy. Output only.
 	PolicyId types.String `tfsdk:"policy_id"`

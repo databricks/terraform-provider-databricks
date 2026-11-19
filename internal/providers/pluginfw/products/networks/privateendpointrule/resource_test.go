@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	sdkschema "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/stretchr/testify/require"
 )
 
 // tightBackoff keeps the retrier's sleep between polling attempts negligible.
@@ -810,6 +811,7 @@ func TestSchema_CreateOnlyFieldsRequireReplace(t *testing.T) {
 // only). It compares the Optional/Computed/Required flag of every SDKv2
 // attribute against the PF attribute of the same name, so a future drift
 // (e.g. a Computed flip, or a new field added to one side only) fails here.
+// The Google API endpoints list is intentionally required only in Framework.
 // ForceNew/RequiresReplace, ConflictsWith, and cardinality are covered by the
 // dedicated schema-invariant tests above.
 func TestSchema_MatchesSDKv2(t *testing.T) {
@@ -849,6 +851,11 @@ func TestSchema_MatchesSDKv2(t *testing.T) {
 						pfNested, ok := pfBlock.NestedObject.Attributes[nestedName]
 						if !ok {
 							t.Errorf("gcp_endpoint.%s.%s present in SDKv2 but missing from PF", sub, nestedName)
+							continue
+						}
+						if nestedName == "endpoints" {
+							require.Equal(t, "Optional=false Computed=false Required=true", flags(pfNested))
+							require.Equal(t, "Optional=true Computed=false Required=false", sdkFlags(nestedSchema))
 							continue
 						}
 						if got, want := flags(pfNested), sdkFlags(nestedSchema); got != want {

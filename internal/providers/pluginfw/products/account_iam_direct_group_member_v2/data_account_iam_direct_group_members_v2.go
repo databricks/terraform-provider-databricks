@@ -28,11 +28,12 @@ func DataSourceDirectGroupMembers() datasource.DataSource {
 // DirectGroupMembersData extends the main model with additional fields.
 type DirectGroupMembersData struct {
 	AccountIamV2 types.List `tfsdk:"direct_group_members"`
-	// The maximum number of members to return. The service may return fewer
-	// than this value. If not provided, defaults to 1000 (also the maximum
-	// allowed).
+	// The maximum number of members to return, up to 1000. The default is 1000.
+	// A page can contain fewer members.
 	PageSize types.Int64 `tfsdk:"page_size"`
-	GroupId  types.Int64 `tfsdk:"group_id"`
+	// The resource name of the group, in the format
+	// `accounts/{account_id}/groups/{group_id}`.
+	Parent types.String `tfsdk:"parent"`
 }
 
 func (DirectGroupMembersData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
@@ -42,10 +43,10 @@ func (DirectGroupMembersData) GetComplexFieldTypes(context.Context) map[string]r
 }
 
 func (m DirectGroupMembersData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["parent"] = attrs["parent"].SetRequired()
 	attrs["page_size"] = attrs["page_size"].SetOptional()
 
 	attrs["direct_group_members"] = attrs["direct_group_members"].SetComputed()
-	attrs["group_id"] = attrs["group_id"].SetRequired()
 	return attrs
 }
 

@@ -18,12 +18,947 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 
 	"github.com/databricks/terraform-provider-databricks/internal/service/compute_tf" // .tmpl
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
+
+// Configuration for a task that runs the `ai_classify` function.
+//
+// The label set comes from exactly one of two places: `inline_labels`, which
+// holds up to 10 labels, or a Unity Catalog table named by `label_table`. Use
+// `label_table` for a larger label set.
+type AiClassifyFunction struct {
+	// When true, includes a per-label confidence score in the response.
+	EnableConfidenceScores types.Bool `tfsdk:"enable_confidence_scores"`
+	// When true, includes a rationale explaining each classification in the
+	// response.
+	EnableRationales types.Bool `tfsdk:"enable_rationales"`
+	// Labels listed inline, for a small label set.
+	InlineLabels types.Object `tfsdk:"inline_labels"`
+	// Global description of the task and domain, passed to the model to improve
+	// classification quality.
+	Instructions types.String `tfsdk:"instructions"`
+	// When true, more than one label can be returned for each input.
+	Multilabel types.Bool `tfsdk:"multilabel"`
+	// The ai_classify function version to invoke (for example, `2.1`).
+	Version types.String `tfsdk:"version"`
+}
+
+func (to *AiClassifyFunction) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from AiClassifyFunction) {
+	if !from.InlineLabels.IsNull() && !from.InlineLabels.IsUnknown() {
+		if toInlineLabels, ok := to.GetInlineLabels(ctx); ok {
+			if fromInlineLabels, ok := from.GetInlineLabels(ctx); ok {
+				// Recursively sync the fields of InlineLabels
+				toInlineLabels.SyncFieldsDuringCreateOrUpdate(ctx, fromInlineLabels)
+				to.SetInlineLabels(ctx, toInlineLabels)
+			}
+		}
+	}
+}
+
+func (to *AiClassifyFunction) SyncFieldsDuringRead(ctx context.Context, from AiClassifyFunction) {
+	if !from.InlineLabels.IsNull() && !from.InlineLabels.IsUnknown() {
+		if toInlineLabels, ok := to.GetInlineLabels(ctx); ok {
+			if fromInlineLabels, ok := from.GetInlineLabels(ctx); ok {
+				toInlineLabels.SyncFieldsDuringRead(ctx, fromInlineLabels)
+				to.SetInlineLabels(ctx, toInlineLabels)
+			}
+		}
+	}
+}
+
+func (m AiClassifyFunction) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["enable_confidence_scores"] = attrs["enable_confidence_scores"].SetOptional()
+	attrs["enable_rationales"] = attrs["enable_rationales"].SetOptional()
+	attrs["inline_labels"] = attrs["inline_labels"].SetOptional()
+	attrs["instructions"] = attrs["instructions"].SetOptional()
+	attrs["multilabel"] = attrs["multilabel"].SetOptional()
+	attrs["version"] = attrs["version"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in AiClassifyFunction.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m AiClassifyFunction) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"inline_labels": reflect.TypeOf(AiClassifyFunctionInlineLabels{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, AiClassifyFunction
+// only implements ToObjectValue() and Type().
+func (m AiClassifyFunction) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"enable_confidence_scores": m.EnableConfidenceScores,
+			"enable_rationales":        m.EnableRationales,
+			"inline_labels":            m.InlineLabels,
+			"instructions":             m.Instructions,
+			"multilabel":               m.Multilabel,
+			"version":                  m.Version,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m AiClassifyFunction) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"enable_confidence_scores": types.BoolType,
+			"enable_rationales":        types.BoolType,
+			"inline_labels":            AiClassifyFunctionInlineLabels{}.Type(ctx),
+			"instructions":             types.StringType,
+			"multilabel":               types.BoolType,
+			"version":                  types.StringType,
+		},
+	}
+}
+
+// GetInlineLabels returns the value of the InlineLabels field in AiClassifyFunction as
+// a AiClassifyFunctionInlineLabels value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *AiClassifyFunction) GetInlineLabels(ctx context.Context) (AiClassifyFunctionInlineLabels, bool) {
+	var e AiClassifyFunctionInlineLabels
+	if m.InlineLabels.IsNull() || m.InlineLabels.IsUnknown() {
+		return e, false
+	}
+	var v AiClassifyFunctionInlineLabels
+	d := m.InlineLabels.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetInlineLabels sets the value of the InlineLabels field in AiClassifyFunction.
+func (m *AiClassifyFunction) SetInlineLabels(ctx context.Context, v AiClassifyFunctionInlineLabels) {
+	vs := v.ToObjectValue(ctx)
+	m.InlineLabels = vs
+}
+
+// A label set listed inline.
+type AiClassifyFunctionInlineLabels struct {
+	// The labels an input can be classified as. At least two labels are
+	// required unless `multilabel` is true, which also accepts a single label.
+	Labels types.List `tfsdk:"labels"`
+}
+
+func (to *AiClassifyFunctionInlineLabels) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from AiClassifyFunctionInlineLabels) {
+	if !from.Labels.IsNull() && !from.Labels.IsUnknown() {
+		if toLabels, ok := to.GetLabels(ctx); ok {
+			if fromLabels, ok := from.GetLabels(ctx); ok {
+				// Recursively sync the fields of each Labels element by position.
+				for i := range toLabels {
+					if i < len(fromLabels) {
+						toLabels[i].SyncFieldsDuringCreateOrUpdate(ctx, fromLabels[i])
+					}
+				}
+				to.SetLabels(ctx, toLabels)
+			}
+		}
+	}
+}
+
+func (to *AiClassifyFunctionInlineLabels) SyncFieldsDuringRead(ctx context.Context, from AiClassifyFunctionInlineLabels) {
+	if !from.Labels.IsNull() && !from.Labels.IsUnknown() {
+		if toLabels, ok := to.GetLabels(ctx); ok {
+			if fromLabels, ok := from.GetLabels(ctx); ok {
+				for i := range toLabels {
+					if i < len(fromLabels) {
+						toLabels[i].SyncFieldsDuringRead(ctx, fromLabels[i])
+					}
+				}
+				to.SetLabels(ctx, toLabels)
+			}
+		}
+	}
+}
+
+func (m AiClassifyFunctionInlineLabels) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["labels"] = attrs["labels"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in AiClassifyFunctionInlineLabels.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m AiClassifyFunctionInlineLabels) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"labels": reflect.TypeOf(AiClassifyFunctionLabel{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, AiClassifyFunctionInlineLabels
+// only implements ToObjectValue() and Type().
+func (m AiClassifyFunctionInlineLabels) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"labels": m.Labels,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m AiClassifyFunctionInlineLabels) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"labels": basetypes.ListType{
+				ElemType: AiClassifyFunctionLabel{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetLabels returns the value of the Labels field in AiClassifyFunctionInlineLabels as
+// a slice of AiClassifyFunctionLabel values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *AiClassifyFunctionInlineLabels) GetLabels(ctx context.Context) ([]AiClassifyFunctionLabel, bool) {
+	if m.Labels.IsNull() || m.Labels.IsUnknown() {
+		return nil, false
+	}
+	var v []AiClassifyFunctionLabel
+	d := m.Labels.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetLabels sets the value of the Labels field in AiClassifyFunctionInlineLabels.
+func (m *AiClassifyFunctionInlineLabels) SetLabels(ctx context.Context, v []AiClassifyFunctionLabel) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["labels"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Labels = types.ListValueMust(t, vs)
+}
+
+// One label the input can be classified as.
+type AiClassifyFunctionLabel struct {
+	// Guidance describing what belongs under this label.
+	Description types.String `tfsdk:"description"`
+	// The name returned when an input is classified as this label.
+	Name types.String `tfsdk:"name"`
+}
+
+func (to *AiClassifyFunctionLabel) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from AiClassifyFunctionLabel) {
+}
+
+func (to *AiClassifyFunctionLabel) SyncFieldsDuringRead(ctx context.Context, from AiClassifyFunctionLabel) {
+}
+
+func (m AiClassifyFunctionLabel) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["description"] = attrs["description"].SetOptional()
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in AiClassifyFunctionLabel.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m AiClassifyFunctionLabel) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, AiClassifyFunctionLabel
+// only implements ToObjectValue() and Type().
+func (m AiClassifyFunctionLabel) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"description": m.Description,
+			"name":        m.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m AiClassifyFunctionLabel) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"description": types.StringType,
+			"name":        types.StringType,
+		},
+	}
+}
+
+// Configuration for a task that runs the `ai_extract` function.
+//
+// The fields to extract come from exactly one of two places: an existing AI
+// Extract agent, named by `agent_id`, or the inline `schema` and
+// `instructions`. Set `agent_id` or the inline fields, not both.
+type AiExtractFunction struct {
+	// When true, includes citation metadata locating each extracted value in
+	// the source.
+	EnableCitations types.Bool `tfsdk:"enable_citations"`
+	// When true, includes a per-field confidence score in the response.
+	EnableConfidenceScores types.Bool `tfsdk:"enable_confidence_scores"`
+	// Global description of the task and domain, passed to the model to improve
+	// extraction quality.
+	Instructions types.String `tfsdk:"instructions"`
+	// The extraction mode. Defaults to standard extraction when unspecified.
+	Mode types.String `tfsdk:"mode"`
+	// The extraction schema defining the fields to extract, as a JSON string.
+	// Either an array of field names (e.g. ["company", "valuation"]) or an
+	// object mapping each field name to a type and an optional description.
+	// Supported types are string, integer, number, boolean, enum, object, and
+	// array; all fields are optional.
+	Schema types.String `tfsdk:"schema"`
+	// The ai_extract function version to invoke (for example, `2.1`).
+	Version types.String `tfsdk:"version"`
+}
+
+func (to *AiExtractFunction) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from AiExtractFunction) {
+}
+
+func (to *AiExtractFunction) SyncFieldsDuringRead(ctx context.Context, from AiExtractFunction) {
+}
+
+func (m AiExtractFunction) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["enable_citations"] = attrs["enable_citations"].SetOptional()
+	attrs["enable_confidence_scores"] = attrs["enable_confidence_scores"].SetOptional()
+	attrs["instructions"] = attrs["instructions"].SetOptional()
+	attrs["mode"] = attrs["mode"].SetOptional()
+	attrs["schema"] = attrs["schema"].SetOptional()
+	attrs["version"] = attrs["version"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in AiExtractFunction.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m AiExtractFunction) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, AiExtractFunction
+// only implements ToObjectValue() and Type().
+func (m AiExtractFunction) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"enable_citations":         m.EnableCitations,
+			"enable_confidence_scores": m.EnableConfidenceScores,
+			"instructions":             m.Instructions,
+			"mode":                     m.Mode,
+			"schema":                   m.Schema,
+			"version":                  m.Version,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m AiExtractFunction) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"enable_citations":         types.BoolType,
+			"enable_confidence_scores": types.BoolType,
+			"instructions":             types.StringType,
+			"mode":                     types.StringType,
+			"schema":                   types.StringType,
+			"version":                  types.StringType,
+		},
+	}
+}
+
+// A task that applies an AI function to a set of input documents or rows.
+type AiFunctionTask struct {
+	// Classifies each input document or row into one or more labels.
+	AiClassify types.Object `tfsdk:"ai_classify"`
+	// Extracts structured fields from the input documents or rows.
+	AiExtract types.Object `tfsdk:"ai_extract"`
+	// Parses the input documents into structured text.
+	AiParseDocument types.Object `tfsdk:"ai_parse_document"`
+	// A Unity Catalog Delta table. The function is applied to each row.
+	DeltaTable types.Object `tfsdk:"delta_table"`
+	// Output destination table. When `table` is unset the task generates a
+	// stable name from the function and task identity so a downstream task can
+	// reference it.
+	Output types.Object `tfsdk:"output"`
+	// A Unity Catalog volume. The function is applied to each file.
+	Volume types.Object `tfsdk:"volume"`
+}
+
+func (to *AiFunctionTask) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from AiFunctionTask) {
+	if !from.AiClassify.IsNull() && !from.AiClassify.IsUnknown() {
+		if toAiClassify, ok := to.GetAiClassify(ctx); ok {
+			if fromAiClassify, ok := from.GetAiClassify(ctx); ok {
+				// Recursively sync the fields of AiClassify
+				toAiClassify.SyncFieldsDuringCreateOrUpdate(ctx, fromAiClassify)
+				to.SetAiClassify(ctx, toAiClassify)
+			}
+		}
+	}
+	if !from.AiExtract.IsNull() && !from.AiExtract.IsUnknown() {
+		if toAiExtract, ok := to.GetAiExtract(ctx); ok {
+			if fromAiExtract, ok := from.GetAiExtract(ctx); ok {
+				// Recursively sync the fields of AiExtract
+				toAiExtract.SyncFieldsDuringCreateOrUpdate(ctx, fromAiExtract)
+				to.SetAiExtract(ctx, toAiExtract)
+			}
+		}
+	}
+	if !from.AiParseDocument.IsNull() && !from.AiParseDocument.IsUnknown() {
+		if toAiParseDocument, ok := to.GetAiParseDocument(ctx); ok {
+			if fromAiParseDocument, ok := from.GetAiParseDocument(ctx); ok {
+				// Recursively sync the fields of AiParseDocument
+				toAiParseDocument.SyncFieldsDuringCreateOrUpdate(ctx, fromAiParseDocument)
+				to.SetAiParseDocument(ctx, toAiParseDocument)
+			}
+		}
+	}
+	if !from.DeltaTable.IsNull() && !from.DeltaTable.IsUnknown() {
+		if toDeltaTable, ok := to.GetDeltaTable(ctx); ok {
+			if fromDeltaTable, ok := from.GetDeltaTable(ctx); ok {
+				// Recursively sync the fields of DeltaTable
+				toDeltaTable.SyncFieldsDuringCreateOrUpdate(ctx, fromDeltaTable)
+				to.SetDeltaTable(ctx, toDeltaTable)
+			}
+		}
+	}
+	if !from.Output.IsNull() && !from.Output.IsUnknown() {
+		if toOutput, ok := to.GetOutput(ctx); ok {
+			if fromOutput, ok := from.GetOutput(ctx); ok {
+				// Recursively sync the fields of Output
+				toOutput.SyncFieldsDuringCreateOrUpdate(ctx, fromOutput)
+				to.SetOutput(ctx, toOutput)
+			}
+		}
+	}
+	if !from.Volume.IsNull() && !from.Volume.IsUnknown() {
+		if toVolume, ok := to.GetVolume(ctx); ok {
+			if fromVolume, ok := from.GetVolume(ctx); ok {
+				// Recursively sync the fields of Volume
+				toVolume.SyncFieldsDuringCreateOrUpdate(ctx, fromVolume)
+				to.SetVolume(ctx, toVolume)
+			}
+		}
+	}
+}
+
+func (to *AiFunctionTask) SyncFieldsDuringRead(ctx context.Context, from AiFunctionTask) {
+	if !from.AiClassify.IsNull() && !from.AiClassify.IsUnknown() {
+		if toAiClassify, ok := to.GetAiClassify(ctx); ok {
+			if fromAiClassify, ok := from.GetAiClassify(ctx); ok {
+				toAiClassify.SyncFieldsDuringRead(ctx, fromAiClassify)
+				to.SetAiClassify(ctx, toAiClassify)
+			}
+		}
+	}
+	if !from.AiExtract.IsNull() && !from.AiExtract.IsUnknown() {
+		if toAiExtract, ok := to.GetAiExtract(ctx); ok {
+			if fromAiExtract, ok := from.GetAiExtract(ctx); ok {
+				toAiExtract.SyncFieldsDuringRead(ctx, fromAiExtract)
+				to.SetAiExtract(ctx, toAiExtract)
+			}
+		}
+	}
+	if !from.AiParseDocument.IsNull() && !from.AiParseDocument.IsUnknown() {
+		if toAiParseDocument, ok := to.GetAiParseDocument(ctx); ok {
+			if fromAiParseDocument, ok := from.GetAiParseDocument(ctx); ok {
+				toAiParseDocument.SyncFieldsDuringRead(ctx, fromAiParseDocument)
+				to.SetAiParseDocument(ctx, toAiParseDocument)
+			}
+		}
+	}
+	if !from.DeltaTable.IsNull() && !from.DeltaTable.IsUnknown() {
+		if toDeltaTable, ok := to.GetDeltaTable(ctx); ok {
+			if fromDeltaTable, ok := from.GetDeltaTable(ctx); ok {
+				toDeltaTable.SyncFieldsDuringRead(ctx, fromDeltaTable)
+				to.SetDeltaTable(ctx, toDeltaTable)
+			}
+		}
+	}
+	if !from.Output.IsNull() && !from.Output.IsUnknown() {
+		if toOutput, ok := to.GetOutput(ctx); ok {
+			if fromOutput, ok := from.GetOutput(ctx); ok {
+				toOutput.SyncFieldsDuringRead(ctx, fromOutput)
+				to.SetOutput(ctx, toOutput)
+			}
+		}
+	}
+	if !from.Volume.IsNull() && !from.Volume.IsUnknown() {
+		if toVolume, ok := to.GetVolume(ctx); ok {
+			if fromVolume, ok := from.GetVolume(ctx); ok {
+				toVolume.SyncFieldsDuringRead(ctx, fromVolume)
+				to.SetVolume(ctx, toVolume)
+			}
+		}
+	}
+}
+
+func (m AiFunctionTask) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["ai_classify"] = attrs["ai_classify"].SetOptional()
+	attrs["ai_extract"] = attrs["ai_extract"].SetOptional()
+	attrs["ai_parse_document"] = attrs["ai_parse_document"].SetOptional()
+	attrs["delta_table"] = attrs["delta_table"].SetOptional()
+	attrs["output"] = attrs["output"].SetRequired()
+	attrs["volume"] = attrs["volume"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in AiFunctionTask.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m AiFunctionTask) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"ai_classify":       reflect.TypeOf(AiClassifyFunction{}),
+		"ai_extract":        reflect.TypeOf(AiExtractFunction{}),
+		"ai_parse_document": reflect.TypeOf(AiParseDocumentFunction{}),
+		"delta_table":       reflect.TypeOf(DeltaTableSource{}),
+		"output":            reflect.TypeOf(QualifiedName{}),
+		"volume":            reflect.TypeOf(VolumeSource{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, AiFunctionTask
+// only implements ToObjectValue() and Type().
+func (m AiFunctionTask) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"ai_classify":       m.AiClassify,
+			"ai_extract":        m.AiExtract,
+			"ai_parse_document": m.AiParseDocument,
+			"delta_table":       m.DeltaTable,
+			"output":            m.Output,
+			"volume":            m.Volume,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m AiFunctionTask) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"ai_classify":       AiClassifyFunction{}.Type(ctx),
+			"ai_extract":        AiExtractFunction{}.Type(ctx),
+			"ai_parse_document": AiParseDocumentFunction{}.Type(ctx),
+			"delta_table":       DeltaTableSource{}.Type(ctx),
+			"output":            QualifiedName{}.Type(ctx),
+			"volume":            VolumeSource{}.Type(ctx),
+		},
+	}
+}
+
+// GetAiClassify returns the value of the AiClassify field in AiFunctionTask as
+// a AiClassifyFunction value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *AiFunctionTask) GetAiClassify(ctx context.Context) (AiClassifyFunction, bool) {
+	var e AiClassifyFunction
+	if m.AiClassify.IsNull() || m.AiClassify.IsUnknown() {
+		return e, false
+	}
+	var v AiClassifyFunction
+	d := m.AiClassify.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAiClassify sets the value of the AiClassify field in AiFunctionTask.
+func (m *AiFunctionTask) SetAiClassify(ctx context.Context, v AiClassifyFunction) {
+	vs := v.ToObjectValue(ctx)
+	m.AiClassify = vs
+}
+
+// GetAiExtract returns the value of the AiExtract field in AiFunctionTask as
+// a AiExtractFunction value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *AiFunctionTask) GetAiExtract(ctx context.Context) (AiExtractFunction, bool) {
+	var e AiExtractFunction
+	if m.AiExtract.IsNull() || m.AiExtract.IsUnknown() {
+		return e, false
+	}
+	var v AiExtractFunction
+	d := m.AiExtract.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAiExtract sets the value of the AiExtract field in AiFunctionTask.
+func (m *AiFunctionTask) SetAiExtract(ctx context.Context, v AiExtractFunction) {
+	vs := v.ToObjectValue(ctx)
+	m.AiExtract = vs
+}
+
+// GetAiParseDocument returns the value of the AiParseDocument field in AiFunctionTask as
+// a AiParseDocumentFunction value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *AiFunctionTask) GetAiParseDocument(ctx context.Context) (AiParseDocumentFunction, bool) {
+	var e AiParseDocumentFunction
+	if m.AiParseDocument.IsNull() || m.AiParseDocument.IsUnknown() {
+		return e, false
+	}
+	var v AiParseDocumentFunction
+	d := m.AiParseDocument.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAiParseDocument sets the value of the AiParseDocument field in AiFunctionTask.
+func (m *AiFunctionTask) SetAiParseDocument(ctx context.Context, v AiParseDocumentFunction) {
+	vs := v.ToObjectValue(ctx)
+	m.AiParseDocument = vs
+}
+
+// GetDeltaTable returns the value of the DeltaTable field in AiFunctionTask as
+// a DeltaTableSource value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *AiFunctionTask) GetDeltaTable(ctx context.Context) (DeltaTableSource, bool) {
+	var e DeltaTableSource
+	if m.DeltaTable.IsNull() || m.DeltaTable.IsUnknown() {
+		return e, false
+	}
+	var v DeltaTableSource
+	d := m.DeltaTable.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetDeltaTable sets the value of the DeltaTable field in AiFunctionTask.
+func (m *AiFunctionTask) SetDeltaTable(ctx context.Context, v DeltaTableSource) {
+	vs := v.ToObjectValue(ctx)
+	m.DeltaTable = vs
+}
+
+// GetOutput returns the value of the Output field in AiFunctionTask as
+// a QualifiedName value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *AiFunctionTask) GetOutput(ctx context.Context) (QualifiedName, bool) {
+	var e QualifiedName
+	if m.Output.IsNull() || m.Output.IsUnknown() {
+		return e, false
+	}
+	var v QualifiedName
+	d := m.Output.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetOutput sets the value of the Output field in AiFunctionTask.
+func (m *AiFunctionTask) SetOutput(ctx context.Context, v QualifiedName) {
+	vs := v.ToObjectValue(ctx)
+	m.Output = vs
+}
+
+// GetVolume returns the value of the Volume field in AiFunctionTask as
+// a VolumeSource value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *AiFunctionTask) GetVolume(ctx context.Context) (VolumeSource, bool) {
+	var e VolumeSource
+	if m.Volume.IsNull() || m.Volume.IsUnknown() {
+		return e, false
+	}
+	var v VolumeSource
+	d := m.Volume.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetVolume sets the value of the Volume field in AiFunctionTask.
+func (m *AiFunctionTask) SetVolume(ctx context.Context, v VolumeSource) {
+	vs := v.ToObjectValue(ctx)
+	m.Volume = vs
+}
+
+// The result of an AI function task run. Also reported mid-run, so the counts
+// can be partial.
+type AiFunctionTaskOutput struct {
+	// Coarse estimate of the time left to run the function over the inputs,
+	// from the throughput so far. Covers that work only, not the merge into the
+	// output table that follows it.
+	EstimatedTimeRemaining timetypes.GoDuration `tfsdk:"estimated_time_remaining"`
+	// Inputs permanently failed so far. Each lands in the output table as an
+	// error row, and does not on its own fail the run.
+	FailedRowCount types.Int64 `tfsdk:"failed_row_count"`
+	// The table the run writes its results to. Reported even when
+	// `output.table` is unset and the name is generated, so a client can read
+	// the table.
+	OutputTable types.Object `tfsdk:"output_table"`
+	// Inputs with a result so far. Reported per batch, so it can lag mid-run.
+	SucceededRowCount types.Int64 `tfsdk:"succeeded_row_count"`
+	// Inputs to process: rows for a Delta table source, files for a volume
+	// source. Stays well inside 2^53, so a JavaScript client can hold it
+	// exactly.
+	TotalRowCount types.Int64 `tfsdk:"total_row_count"`
+}
+
+func (to *AiFunctionTaskOutput) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from AiFunctionTaskOutput) {
+	if !from.OutputTable.IsNull() && !from.OutputTable.IsUnknown() {
+		if toOutputTable, ok := to.GetOutputTable(ctx); ok {
+			if fromOutputTable, ok := from.GetOutputTable(ctx); ok {
+				// Recursively sync the fields of OutputTable
+				toOutputTable.SyncFieldsDuringCreateOrUpdate(ctx, fromOutputTable)
+				to.SetOutputTable(ctx, toOutputTable)
+			}
+		}
+	}
+}
+
+func (to *AiFunctionTaskOutput) SyncFieldsDuringRead(ctx context.Context, from AiFunctionTaskOutput) {
+	if !from.OutputTable.IsNull() && !from.OutputTable.IsUnknown() {
+		if toOutputTable, ok := to.GetOutputTable(ctx); ok {
+			if fromOutputTable, ok := from.GetOutputTable(ctx); ok {
+				toOutputTable.SyncFieldsDuringRead(ctx, fromOutputTable)
+				to.SetOutputTable(ctx, toOutputTable)
+			}
+		}
+	}
+}
+
+func (m AiFunctionTaskOutput) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["estimated_time_remaining"] = attrs["estimated_time_remaining"].SetOptional()
+	attrs["failed_row_count"] = attrs["failed_row_count"].SetOptional()
+	attrs["output_table"] = attrs["output_table"].SetOptional()
+	attrs["succeeded_row_count"] = attrs["succeeded_row_count"].SetOptional()
+	attrs["total_row_count"] = attrs["total_row_count"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in AiFunctionTaskOutput.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m AiFunctionTaskOutput) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"output_table": reflect.TypeOf(QualifiedName{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, AiFunctionTaskOutput
+// only implements ToObjectValue() and Type().
+func (m AiFunctionTaskOutput) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"estimated_time_remaining": m.EstimatedTimeRemaining,
+			"failed_row_count":         m.FailedRowCount,
+			"output_table":             m.OutputTable,
+			"succeeded_row_count":      m.SucceededRowCount,
+			"total_row_count":          m.TotalRowCount,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m AiFunctionTaskOutput) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"estimated_time_remaining": timetypes.GoDuration{}.Type(ctx),
+			"failed_row_count":         types.Int64Type,
+			"output_table":             QualifiedName{}.Type(ctx),
+			"succeeded_row_count":      types.Int64Type,
+			"total_row_count":          types.Int64Type,
+		},
+	}
+}
+
+// GetOutputTable returns the value of the OutputTable field in AiFunctionTaskOutput as
+// a QualifiedName value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *AiFunctionTaskOutput) GetOutputTable(ctx context.Context) (QualifiedName, bool) {
+	var e QualifiedName
+	if m.OutputTable.IsNull() || m.OutputTable.IsUnknown() {
+		return e, false
+	}
+	var v QualifiedName
+	d := m.OutputTable.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetOutputTable sets the value of the OutputTable field in AiFunctionTaskOutput.
+func (m *AiFunctionTaskOutput) SetOutputTable(ctx context.Context, v QualifiedName) {
+	vs := v.ToObjectValue(ctx)
+	m.OutputTable = vs
+}
+
+// Configuration for a task that runs the `ai_parse_document` function.
+type AiParseDocumentFunction struct {
+	// Element types to generate AI descriptions for. Leave empty to generate no
+	// descriptions; use ALL for every supported type, or list specific types to
+	// restrict generation to only those.
+	DescriptionElementTypes types.List `tfsdk:"description_element_types"`
+	// Unity Catalog volume path where rendered page and element images are
+	// written.
+	ImageOutputPath types.String `tfsdk:"image_output_path"`
+	// Pages to parse (1-indexed), as a comma-separated list of page numbers or
+	// ranges (e.g. "1,3,5-10").
+	PageRange types.String `tfsdk:"page_range"`
+	// The ai_parse_document output schema version to invoke (for example,
+	// `2.0`).
+	Version types.String `tfsdk:"version"`
+}
+
+func (to *AiParseDocumentFunction) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from AiParseDocumentFunction) {
+	if !from.DescriptionElementTypes.IsNull() && !from.DescriptionElementTypes.IsUnknown() && to.DescriptionElementTypes.IsNull() && len(from.DescriptionElementTypes.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for DescriptionElementTypes, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.DescriptionElementTypes = from.DescriptionElementTypes
+	}
+}
+
+func (to *AiParseDocumentFunction) SyncFieldsDuringRead(ctx context.Context, from AiParseDocumentFunction) {
+	if !from.DescriptionElementTypes.IsNull() && !from.DescriptionElementTypes.IsUnknown() && to.DescriptionElementTypes.IsNull() && len(from.DescriptionElementTypes.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for DescriptionElementTypes, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.DescriptionElementTypes = from.DescriptionElementTypes
+	}
+}
+
+func (m AiParseDocumentFunction) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["description_element_types"] = attrs["description_element_types"].SetOptional()
+	attrs["image_output_path"] = attrs["image_output_path"].SetOptional()
+	attrs["page_range"] = attrs["page_range"].SetOptional()
+	attrs["version"] = attrs["version"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in AiParseDocumentFunction.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m AiParseDocumentFunction) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"description_element_types": reflect.TypeOf(types.String{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, AiParseDocumentFunction
+// only implements ToObjectValue() and Type().
+func (m AiParseDocumentFunction) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"description_element_types": m.DescriptionElementTypes,
+			"image_output_path":         m.ImageOutputPath,
+			"page_range":                m.PageRange,
+			"version":                   m.Version,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m AiParseDocumentFunction) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"description_element_types": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"image_output_path": types.StringType,
+			"page_range":        types.StringType,
+			"version":           types.StringType,
+		},
+	}
+}
+
+// GetDescriptionElementTypes returns the value of the DescriptionElementTypes field in AiParseDocumentFunction as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *AiParseDocumentFunction) GetDescriptionElementTypes(ctx context.Context) ([]types.String, bool) {
+	if m.DescriptionElementTypes.IsNull() || m.DescriptionElementTypes.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := m.DescriptionElementTypes.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetDescriptionElementTypes sets the value of the DescriptionElementTypes field in AiParseDocumentFunction.
+func (m *AiParseDocumentFunction) SetDescriptionElementTypes(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["description_element_types"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.DescriptionElementTypes = types.ListValueMust(t, vs)
+}
 
 // AiRuntimeTask: multi-node GPU compute task definition for Databricks AI
 // Runtime workloads.
@@ -68,6 +1003,15 @@ type AiRuntimeTask struct {
 	// Optional display name for the MLflow run created under `experiment`. If
 	// omitted, MLflow generates a default name.
 	MlflowRun types.String `tfsdk:"mlflow_run"`
+	// Scheduling priority class for the workload. May only be set together with
+	// a GPU Pool (a deployment's `compute.accelerator_pool_id` or legacy
+	// `compute.provisioned_capacity_id`); it is rejected on a workload that
+	// runs on on-demand capacity.
+	PriorityClass types.String `tfsdk:"priority_class"`
+	// Optional Unity Catalog path for a custom container image. When set, the
+	// task runs on the specified container image instead of the default
+	// Databricks client image. Format: `{catalog}.{schema}.{image_name}:{tag}`
+	UnityCatalogImagePath types.String `tfsdk:"unity_catalog_image_path"`
 }
 
 func (to *AiRuntimeTask) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from AiRuntimeTask) {
@@ -109,6 +1053,8 @@ func (m AiRuntimeTask) ApplySchemaCustomizations(attrs map[string]tfschema.Attri
 	attrs["mlflow_artifact_location"] = attrs["mlflow_artifact_location"].SetOptional()
 	attrs["mlflow_experiment_directory"] = attrs["mlflow_experiment_directory"].SetOptional()
 	attrs["mlflow_run"] = attrs["mlflow_run"].SetOptional()
+	attrs["priority_class"] = attrs["priority_class"].SetOptional()
+	attrs["unity_catalog_image_path"] = attrs["unity_catalog_image_path"].SetOptional()
 
 	return attrs
 }
@@ -140,6 +1086,8 @@ func (m AiRuntimeTask) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 			"mlflow_artifact_location":    m.MlflowArtifactLocation,
 			"mlflow_experiment_directory": m.MlflowExperimentDirectory,
 			"mlflow_run":                  m.MlflowRun,
+			"priority_class":              m.PriorityClass,
+			"unity_catalog_image_path":    m.UnityCatalogImagePath,
 		})
 }
 
@@ -156,6 +1104,8 @@ func (m AiRuntimeTask) Type(ctx context.Context) attr.Type {
 			"mlflow_artifact_location":    types.StringType,
 			"mlflow_experiment_directory": types.StringType,
 			"mlflow_run":                  types.StringType,
+			"priority_class":              types.StringType,
+			"unity_catalog_image_path":    types.StringType,
 		},
 	}
 }
@@ -256,6 +1206,15 @@ func (m AiRuntimeTaskOutput) Type(ctx context.Context) attr.Type {
 type AlertTask struct {
 	// The alert_id is the canonical identifier of the alert.
 	AlertId types.String `tfsdk:"alert_id"`
+	// Per-run parameter overrides, keyed by parameter name, applied onto the
+	// alert's stored query parameters before the query is executed. Only scalar
+	// values are supported. Values may reference job parameters with
+	// `{{job.parameters.*}}`, which are resolved before the task runs. An
+	// override whose key does not match a stored parameter fails the task run.
+	// Limited to 10000 characters when serialized as JSON; keys must be 1-100
+	// characters and contain only letters, digits, underscores, dashes, and
+	// periods.
+	Parameters types.Map `tfsdk:"parameters"`
 	// The subscribers receive alert evaluation result notifications after the
 	// alert task is completed. The number of subscriptions is limited to 100.
 	Subscribers types.List `tfsdk:"subscribers"`
@@ -314,6 +1273,7 @@ func (to *AlertTask) SyncFieldsDuringRead(ctx context.Context, from AlertTask) {
 
 func (m AlertTask) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["alert_id"] = attrs["alert_id"].SetOptional()
+	attrs["parameters"] = attrs["parameters"].SetOptional()
 	attrs["subscribers"] = attrs["subscribers"].SetOptional()
 	attrs["warehouse_id"] = attrs["warehouse_id"].SetOptional()
 	attrs["workspace_path"] = attrs["workspace_path"].SetOptional()
@@ -330,6 +1290,7 @@ func (m AlertTask) ApplySchemaCustomizations(attrs map[string]tfschema.Attribute
 // SDK values.
 func (m AlertTask) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
+		"parameters":  reflect.TypeOf(types.String{}),
 		"subscribers": reflect.TypeOf(AlertTaskSubscriber{}),
 	}
 }
@@ -342,6 +1303,7 @@ func (m AlertTask) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"alert_id":       m.AlertId,
+			"parameters":     m.Parameters,
 			"subscribers":    m.Subscribers,
 			"warehouse_id":   m.WarehouseId,
 			"workspace_path": m.WorkspacePath,
@@ -353,6 +1315,9 @@ func (m AlertTask) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"alert_id": types.StringType,
+			"parameters": basetypes.MapType{
+				ElemType: types.StringType,
+			},
 			"subscribers": basetypes.ListType{
 				ElemType: AlertTaskSubscriber{}.Type(ctx),
 			},
@@ -360,6 +1325,32 @@ func (m AlertTask) Type(ctx context.Context) attr.Type {
 			"workspace_path": types.StringType,
 		},
 	}
+}
+
+// GetParameters returns the value of the Parameters field in AlertTask as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *AlertTask) GetParameters(ctx context.Context) (map[string]types.String, bool) {
+	if m.Parameters.IsNull() || m.Parameters.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := m.Parameters.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetParameters sets the value of the Parameters field in AlertTask.
+func (m *AlertTask) SetParameters(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["parameters"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Parameters = types.MapValueMust(t, vs)
 }
 
 // GetSubscribers returns the value of the Subscribers field in AlertTask as
@@ -778,14 +1769,23 @@ type BaseRun struct {
 	DeploymentId types.String `tfsdk:"deployment_id"`
 	// Description of the run
 	Description types.String `tfsdk:"description"`
+	// The window the run aims to finish within, in hours, for a Cost-optimized
+	// serverless run. Required only when `performance_target` is
+	// `COST_OPTIMIZED`. Must be one of the supported values: `NO_FLEXIBILITY`,
+	// `4h`, `12h`, `24h`, `72h`. `NO_FLEXIBILITY` means the run uses the
+	// default cost-optimized performance level without additional cost-saving
+	// optimizations.
+	DurationTarget types.String `tfsdk:"duration_target"`
 	// The actual performance target used by the serverless run during
 	// execution. This can differ from the client-set performance target on the
 	// request depending on whether the performance mode is supported by the job
 	// type.
 	//
-	// * `STANDARD`: Enables cost-efficient execution of serverless workloads. *
-	// `PERFORMANCE_OPTIMIZED`: Prioritizes fast startup and execution times
-	// through rapid scaling and optimized cluster performance.
+	// * `PERFORMANCE_OPTIMIZED`: Prioritizes fast startup and execution times
+	// through rapid scaling and optimized cluster performance. * `STANDARD`:
+	// Enables cost-efficient execution of serverless workloads. *
+	// `COST_OPTIMIZED`: Enables lower job costs by optimizing compute for your
+	// selected target duration time. Must provide a duration target.
 	EffectivePerformanceTarget types.String `tfsdk:"effective_performance_target"`
 	// The id of the usage policy used by this run for cost attribution
 	// purposes.
@@ -793,6 +1793,11 @@ type BaseRun struct {
 	// The time at which this run ended in epoch milliseconds (milliseconds
 	// since 1/1/1970 UTC). This field is set to 0 if the job is still running.
 	EndTime types.Int64 `tfsdk:"end_time"`
+	// Snapshot of `JobSettings.environment_variables` as it was at run launch
+	// — the full list of named environment-variable entries the job defined.
+	// To find which entry a given task ran with, look at
+	// `RunTaskSettings.environment_variables_key`.
+	EnvironmentVariables types.List `tfsdk:"environment_variables"`
 	// The time in milliseconds it took to execute the commands in the JAR or
 	// notebook until they completed, failed, timed out, were cancelled, or
 	// encountered an unexpected error. The duration of a task run is the sum of
@@ -910,6 +1915,25 @@ func (to *BaseRun) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Base
 				// Recursively sync the fields of ClusterSpec
 				toClusterSpec.SyncFieldsDuringCreateOrUpdate(ctx, fromClusterSpec)
 				to.SetClusterSpec(ctx, toClusterSpec)
+			}
+		}
+	}
+	if !from.EnvironmentVariables.IsNull() && !from.EnvironmentVariables.IsUnknown() && to.EnvironmentVariables.IsNull() && len(from.EnvironmentVariables.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for EnvironmentVariables, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.EnvironmentVariables = from.EnvironmentVariables
+	}
+	if !from.EnvironmentVariables.IsNull() && !from.EnvironmentVariables.IsUnknown() {
+		if toEnvironmentVariables, ok := to.GetEnvironmentVariables(ctx); ok {
+			if fromEnvironmentVariables, ok := from.GetEnvironmentVariables(ctx); ok {
+				// Recursively sync the fields of each EnvironmentVariables element by position.
+				for i := range toEnvironmentVariables {
+					if i < len(fromEnvironmentVariables) {
+						toEnvironmentVariables[i].SyncFieldsDuringCreateOrUpdate(ctx, fromEnvironmentVariables[i])
+					}
+				}
+				to.SetEnvironmentVariables(ctx, toEnvironmentVariables)
 			}
 		}
 	}
@@ -1062,6 +2086,24 @@ func (to *BaseRun) SyncFieldsDuringRead(ctx context.Context, from BaseRun) {
 			}
 		}
 	}
+	if !from.EnvironmentVariables.IsNull() && !from.EnvironmentVariables.IsUnknown() && to.EnvironmentVariables.IsNull() && len(from.EnvironmentVariables.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for EnvironmentVariables, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.EnvironmentVariables = from.EnvironmentVariables
+	}
+	if !from.EnvironmentVariables.IsNull() && !from.EnvironmentVariables.IsUnknown() {
+		if toEnvironmentVariables, ok := to.GetEnvironmentVariables(ctx); ok {
+			if fromEnvironmentVariables, ok := from.GetEnvironmentVariables(ctx); ok {
+				for i := range toEnvironmentVariables {
+					if i < len(fromEnvironmentVariables) {
+						toEnvironmentVariables[i].SyncFieldsDuringRead(ctx, fromEnvironmentVariables[i])
+					}
+				}
+				to.SetEnvironmentVariables(ctx, toEnvironmentVariables)
+			}
+		}
+	}
 	if !from.GitSource.IsNull() && !from.GitSource.IsUnknown() {
 		if toGitSource, ok := to.GetGitSource(ctx); ok {
 			if fromGitSource, ok := from.GetGitSource(ctx); ok {
@@ -1192,9 +2234,11 @@ func (m BaseRun) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBu
 	attrs["creator_user_name"] = attrs["creator_user_name"].SetOptional()
 	attrs["deployment_id"] = attrs["deployment_id"].SetOptional()
 	attrs["description"] = attrs["description"].SetOptional()
+	attrs["duration_target"] = attrs["duration_target"].SetOptional()
 	attrs["effective_performance_target"] = attrs["effective_performance_target"].SetOptional()
 	attrs["effective_usage_policy_id"] = attrs["effective_usage_policy_id"].SetComputed()
 	attrs["end_time"] = attrs["end_time"].SetOptional()
+	attrs["environment_variables"] = attrs["environment_variables"].SetComputed()
 	attrs["execution_duration"] = attrs["execution_duration"].SetOptional()
 	attrs["git_source"] = attrs["git_source"].SetOptional()
 	attrs["has_more"] = attrs["has_more"].SetOptional()
@@ -1236,6 +2280,7 @@ func (m BaseRun) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Ty
 	return map[string]reflect.Type{
 		"cluster_instance":      reflect.TypeOf(ClusterInstance{}),
 		"cluster_spec":          reflect.TypeOf(ClusterSpec{}),
+		"environment_variables": reflect.TypeOf(JobEnvironmentVariables{}),
 		"git_source":            reflect.TypeOf(GitSource{}),
 		"job_clusters":          reflect.TypeOf(JobCluster{}),
 		"job_parameters":        reflect.TypeOf(JobParameter{}),
@@ -1263,9 +2308,11 @@ func (m BaseRun) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"creator_user_name":            m.CreatorUserName,
 			"deployment_id":                m.DeploymentId,
 			"description":                  m.Description,
+			"duration_target":              m.DurationTarget,
 			"effective_performance_target": m.EffectivePerformanceTarget,
 			"effective_usage_policy_id":    m.EffectiveUsagePolicyId,
 			"end_time":                     m.EndTime,
+			"environment_variables":        m.EnvironmentVariables,
 			"execution_duration":           m.ExecutionDuration,
 			"git_source":                   m.GitSource,
 			"has_more":                     m.HasMore,
@@ -1306,12 +2353,16 @@ func (m BaseRun) Type(ctx context.Context) attr.Type {
 			"creator_user_name":            types.StringType,
 			"deployment_id":                types.StringType,
 			"description":                  types.StringType,
+			"duration_target":              types.StringType,
 			"effective_performance_target": types.StringType,
 			"effective_usage_policy_id":    types.StringType,
 			"end_time":                     types.Int64Type,
-			"execution_duration":           types.Int64Type,
-			"git_source":                   GitSource{}.Type(ctx),
-			"has_more":                     types.BoolType,
+			"environment_variables": basetypes.ListType{
+				ElemType: JobEnvironmentVariables{}.Type(ctx),
+			},
+			"execution_duration": types.Int64Type,
+			"git_source":         GitSource{}.Type(ctx),
+			"has_more":           types.BoolType,
 			"job_clusters": basetypes.ListType{
 				ElemType: JobCluster{}.Type(ctx),
 			},
@@ -1395,6 +2446,32 @@ func (m *BaseRun) GetClusterSpec(ctx context.Context) (ClusterSpec, bool) {
 func (m *BaseRun) SetClusterSpec(ctx context.Context, v ClusterSpec) {
 	vs := v.ToObjectValue(ctx)
 	m.ClusterSpec = vs
+}
+
+// GetEnvironmentVariables returns the value of the EnvironmentVariables field in BaseRun as
+// a slice of JobEnvironmentVariables values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *BaseRun) GetEnvironmentVariables(ctx context.Context) ([]JobEnvironmentVariables, bool) {
+	if m.EnvironmentVariables.IsNull() || m.EnvironmentVariables.IsUnknown() {
+		return nil, false
+	}
+	var v []JobEnvironmentVariables
+	d := m.EnvironmentVariables.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetEnvironmentVariables sets the value of the EnvironmentVariables field in BaseRun.
+func (m *BaseRun) SetEnvironmentVariables(ctx context.Context, v []JobEnvironmentVariables) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["environment_variables"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.EnvironmentVariables = types.ListValueMust(t, vs)
 }
 
 // GetGitSource returns the value of the GitSource field in BaseRun as
@@ -2342,6 +3419,76 @@ func (m *ClusterSpec) SetNewCluster(ctx context.Context, v compute_tf.ClusterSpe
 	m.NewCluster = vs
 }
 
+// A single upstream completion that contributed to triggering the run, captured
+// at trigger time
+type CompletedJob struct {
+	// The completion time of the upstream run
+	CompletionTime timetypes.RFC3339 `tfsdk:"completion_time"`
+	// The ID of the upstream job
+	JobId types.String `tfsdk:"job_id"`
+	// The ID of the upstream run whose completion contributed to the trigger
+	RunId types.String `tfsdk:"run_id"`
+	// The termination code of the upstream run
+	TerminationCode types.String `tfsdk:"termination_code"`
+	// The ID of the workspace containing the upstream job
+	WorkspaceId types.String `tfsdk:"workspace_id"`
+}
+
+func (to *CompletedJob) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CompletedJob) {
+}
+
+func (to *CompletedJob) SyncFieldsDuringRead(ctx context.Context, from CompletedJob) {
+}
+
+func (m CompletedJob) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["completion_time"] = attrs["completion_time"].SetOptional()
+	attrs["job_id"] = attrs["job_id"].SetOptional()
+	attrs["run_id"] = attrs["run_id"].SetOptional()
+	attrs["termination_code"] = attrs["termination_code"].SetOptional()
+	attrs["workspace_id"] = attrs["workspace_id"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CompletedJob.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m CompletedJob) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CompletedJob
+// only implements ToObjectValue() and Type().
+func (m CompletedJob) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"completion_time":  m.CompletionTime,
+			"job_id":           m.JobId,
+			"run_id":           m.RunId,
+			"termination_code": m.TerminationCode,
+			"workspace_id":     m.WorkspaceId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m CompletedJob) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"completion_time":  timetypes.RFC3339{}.Type(ctx),
+			"job_id":           types.StringType,
+			"run_id":           types.StringType,
+			"termination_code": types.StringType,
+			"workspace_id":     types.StringType,
+		},
+	}
+}
+
 type Compute struct {
 	// Hardware accelerator configuration for Serverless GPU workloads.
 	HardwareAccelerator types.String `tfsdk:"hardware_accelerator"`
@@ -2460,6 +3607,9 @@ type ComputeSpec struct {
 	// number of accelerators per node is encoded in the enum value —
 	// `GPU_8xH100` means 8 H100 GPUs per node.
 	AcceleratorType types.String `tfsdk:"accelerator_type"`
+	// Legacy alias for `accelerator_pool_id`. Use `accelerator_pool_id` for new
+	// configurations. If both fields are set, they must contain the same ID.
+	ProvisionedCapacityId types.String `tfsdk:"provisioned_capacity_id"`
 }
 
 func (to *ComputeSpec) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ComputeSpec) {
@@ -2471,6 +3621,7 @@ func (to *ComputeSpec) SyncFieldsDuringRead(ctx context.Context, from ComputeSpe
 func (m ComputeSpec) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["accelerator_count"] = attrs["accelerator_count"].SetRequired()
 	attrs["accelerator_type"] = attrs["accelerator_type"].SetRequired()
+	attrs["provisioned_capacity_id"] = attrs["provisioned_capacity_id"].SetOptional()
 
 	return attrs
 }
@@ -2493,8 +3644,9 @@ func (m ComputeSpec) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"accelerator_count": m.AcceleratorCount,
-			"accelerator_type":  m.AcceleratorType,
+			"accelerator_count":       m.AcceleratorCount,
+			"accelerator_type":        m.AcceleratorType,
+			"provisioned_capacity_id": m.ProvisionedCapacityId,
 		})
 }
 
@@ -2502,8 +3654,9 @@ func (m ComputeSpec) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (m ComputeSpec) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"accelerator_count": types.Int64Type,
-			"accelerator_type":  types.StringType,
+			"accelerator_count":       types.Int64Type,
+			"accelerator_type":        types.StringType,
+			"provisioned_capacity_id": types.StringType,
 		},
 	}
 }
@@ -2578,6 +3731,9 @@ func (m ConditionTask) Type(ctx context.Context) attr.Type {
 }
 
 type Continuous struct {
+	// Defines when platform-initiated maintenance may run for this job. If
+	// unspecified, maintenance may run at any time.
+	MaintenanceWindow types.Object `tfsdk:"maintenance_window"`
 	// Indicate whether the continuous execution of the job is paused or not.
 	// Defaults to UNPAUSED.
 	PauseStatus types.String `tfsdk:"pause_status"`
@@ -2587,12 +3743,30 @@ type Continuous struct {
 }
 
 func (to *Continuous) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Continuous) {
+	if !from.MaintenanceWindow.IsNull() && !from.MaintenanceWindow.IsUnknown() {
+		if toMaintenanceWindow, ok := to.GetMaintenanceWindow(ctx); ok {
+			if fromMaintenanceWindow, ok := from.GetMaintenanceWindow(ctx); ok {
+				// Recursively sync the fields of MaintenanceWindow
+				toMaintenanceWindow.SyncFieldsDuringCreateOrUpdate(ctx, fromMaintenanceWindow)
+				to.SetMaintenanceWindow(ctx, toMaintenanceWindow)
+			}
+		}
+	}
 }
 
 func (to *Continuous) SyncFieldsDuringRead(ctx context.Context, from Continuous) {
+	if !from.MaintenanceWindow.IsNull() && !from.MaintenanceWindow.IsUnknown() {
+		if toMaintenanceWindow, ok := to.GetMaintenanceWindow(ctx); ok {
+			if fromMaintenanceWindow, ok := from.GetMaintenanceWindow(ctx); ok {
+				toMaintenanceWindow.SyncFieldsDuringRead(ctx, fromMaintenanceWindow)
+				to.SetMaintenanceWindow(ctx, toMaintenanceWindow)
+			}
+		}
+	}
 }
 
 func (m Continuous) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["maintenance_window"] = attrs["maintenance_window"].SetOptional()
 	attrs["pause_status"] = attrs["pause_status"].SetOptional()
 	attrs["task_retry_mode"] = attrs["task_retry_mode"].SetOptional()
 
@@ -2607,7 +3781,9 @@ func (m Continuous) ApplySchemaCustomizations(attrs map[string]tfschema.Attribut
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m Continuous) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+	return map[string]reflect.Type{
+		"maintenance_window": reflect.TypeOf(MaintenanceWindow{}),
+	}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -2617,8 +3793,9 @@ func (m Continuous) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"pause_status":    m.PauseStatus,
-			"task_retry_mode": m.TaskRetryMode,
+			"maintenance_window": m.MaintenanceWindow,
+			"pause_status":       m.PauseStatus,
+			"task_retry_mode":    m.TaskRetryMode,
 		})
 }
 
@@ -2626,27 +3803,74 @@ func (m Continuous) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (m Continuous) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"pause_status":    types.StringType,
-			"task_retry_mode": types.StringType,
+			"maintenance_window": MaintenanceWindow{}.Type(ctx),
+			"pause_status":       types.StringType,
+			"task_retry_mode":    types.StringType,
 		},
 	}
+}
+
+// GetMaintenanceWindow returns the value of the MaintenanceWindow field in Continuous as
+// a MaintenanceWindow value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *Continuous) GetMaintenanceWindow(ctx context.Context) (MaintenanceWindow, bool) {
+	var e MaintenanceWindow
+	if m.MaintenanceWindow.IsNull() || m.MaintenanceWindow.IsUnknown() {
+		return e, false
+	}
+	var v MaintenanceWindow
+	d := m.MaintenanceWindow.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetMaintenanceWindow sets the value of the MaintenanceWindow field in Continuous.
+func (m *Continuous) SetMaintenanceWindow(ctx context.Context, v MaintenanceWindow) {
+	vs := v.ToObjectValue(ctx)
+	m.MaintenanceWindow = vs
 }
 
 // Continuous trigger. Stripped-down counterpart to `ContinuousSettings`:
 // `pause_status` is owned by the enclosing `TriggerConfiguration` and
 // intentionally omitted here.
 type ContinuousTriggerConfiguration struct {
+	// Defines when platform-initiated maintenance may run for this trigger. If
+	// unspecified, maintenance may run at any time.
+	MaintenanceWindow types.Object `tfsdk:"maintenance_window"`
 	// Whether the continuous job applies task-level retries. Defaults to NEVER.
 	TaskRetryMode types.String `tfsdk:"task_retry_mode"`
 }
 
 func (to *ContinuousTriggerConfiguration) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ContinuousTriggerConfiguration) {
+	if !from.MaintenanceWindow.IsNull() && !from.MaintenanceWindow.IsUnknown() {
+		if toMaintenanceWindow, ok := to.GetMaintenanceWindow(ctx); ok {
+			if fromMaintenanceWindow, ok := from.GetMaintenanceWindow(ctx); ok {
+				// Recursively sync the fields of MaintenanceWindow
+				toMaintenanceWindow.SyncFieldsDuringCreateOrUpdate(ctx, fromMaintenanceWindow)
+				to.SetMaintenanceWindow(ctx, toMaintenanceWindow)
+			}
+		}
+	}
 }
 
 func (to *ContinuousTriggerConfiguration) SyncFieldsDuringRead(ctx context.Context, from ContinuousTriggerConfiguration) {
+	if !from.MaintenanceWindow.IsNull() && !from.MaintenanceWindow.IsUnknown() {
+		if toMaintenanceWindow, ok := to.GetMaintenanceWindow(ctx); ok {
+			if fromMaintenanceWindow, ok := from.GetMaintenanceWindow(ctx); ok {
+				toMaintenanceWindow.SyncFieldsDuringRead(ctx, fromMaintenanceWindow)
+				to.SetMaintenanceWindow(ctx, toMaintenanceWindow)
+			}
+		}
+	}
 }
 
 func (m ContinuousTriggerConfiguration) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["maintenance_window"] = attrs["maintenance_window"].SetOptional()
 	attrs["task_retry_mode"] = attrs["task_retry_mode"].SetOptional()
 
 	return attrs
@@ -2660,7 +3884,9 @@ func (m ContinuousTriggerConfiguration) ApplySchemaCustomizations(attrs map[stri
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m ContinuousTriggerConfiguration) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+	return map[string]reflect.Type{
+		"maintenance_window": reflect.TypeOf(MaintenanceWindow{}),
+	}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -2670,7 +3896,8 @@ func (m ContinuousTriggerConfiguration) ToObjectValue(ctx context.Context) baset
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"task_retry_mode": m.TaskRetryMode,
+			"maintenance_window": m.MaintenanceWindow,
+			"task_retry_mode":    m.TaskRetryMode,
 		})
 }
 
@@ -2678,9 +3905,35 @@ func (m ContinuousTriggerConfiguration) ToObjectValue(ctx context.Context) baset
 func (m ContinuousTriggerConfiguration) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"task_retry_mode": types.StringType,
+			"maintenance_window": MaintenanceWindow{}.Type(ctx),
+			"task_retry_mode":    types.StringType,
 		},
 	}
+}
+
+// GetMaintenanceWindow returns the value of the MaintenanceWindow field in ContinuousTriggerConfiguration as
+// a MaintenanceWindow value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ContinuousTriggerConfiguration) GetMaintenanceWindow(ctx context.Context) (MaintenanceWindow, bool) {
+	var e MaintenanceWindow
+	if m.MaintenanceWindow.IsNull() || m.MaintenanceWindow.IsUnknown() {
+		return e, false
+	}
+	var v MaintenanceWindow
+	d := m.MaintenanceWindow.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetMaintenanceWindow sets the value of the MaintenanceWindow field in ContinuousTriggerConfiguration.
+func (m *ContinuousTriggerConfiguration) SetMaintenanceWindow(ctx context.Context, v MaintenanceWindow) {
+	vs := v.ToObjectValue(ctx)
+	m.MaintenanceWindow = vs
 }
 
 type ContinuousTriggerState struct {
@@ -2751,12 +4004,22 @@ type CreateJob struct {
 	// An optional continuous property for this job. The continuous property
 	// will ensure that there is always one run executing. Only one of
 	// `schedule` and `continuous` can be used.
+	//
+	// Pipelines started by a continuous job also run continuously, regardless
+	// of their own pipeline mode setting.
 	Continuous types.Object `tfsdk:"continuous"`
 	// Deployment information for jobs managed by external sources.
 	Deployment types.Object `tfsdk:"deployment"`
 	// An optional description for the job. The maximum length is 27700
 	// characters in UTF-8 encoding.
 	Description types.String `tfsdk:"description"`
+	// The window the run aims to finish within, in hours, for a Cost-optimized
+	// serverless run. Required only when `performance_target` is
+	// `COST_OPTIMIZED`. Must be one of the supported values: `NO_FLEXIBILITY`,
+	// `4h`, `12h`, `24h`, `72h`. `NO_FLEXIBILITY` means the run uses the
+	// default cost-optimized performance level without additional cost-saving
+	// optimizations.
+	DurationTarget types.String `tfsdk:"duration_target"`
 	// Edit mode of the job.
 	//
 	// * `UI_LOCKED`: The job is in a locked UI state and cannot be modified. *
@@ -2765,13 +4028,23 @@ type CreateJob struct {
 	// An optional set of email addresses that is notified when runs of this job
 	// begin or complete as well as when this job is deleted.
 	EmailNotifications types.Object `tfsdk:"email_notifications"`
+	// Named environment-variable entries that tasks can reference by key from
+	// `TaskSettings.environment_variables_key`. Each entry's `spec` holds
+	// inline `variables` and optional `.env` `files`. Maximum 10 entries per
+	// job. A task can reference at most one entry from this list.
+	EnvironmentVariables types.List `tfsdk:"environment_variables"`
 	// A list of task execution environment specifications that can be
-	// referenced by serverless tasks of this job. For serverless notebook
-	// tasks, if the environment_key is not specified, the notebook environment
-	// will be used if present. If a jobs environment is specified, it will
-	// override the notebook environment. For other serverless tasks, the task
-	// environment is required to be specified using environment_key in the task
-	// settings.
+	// referenced by tasks that use serverless compute or a compute resource
+	// that uses Environments mode.
+	//
+	// For notebook tasks that use serverless compute or a compute resource that
+	// uses Environments mode, if the `environment_key` is not specified, the
+	// notebook environment will be used if present. If a jobs environment is
+	// specified, it will override the notebook environment.
+	//
+	// For other tasks that use serverless compute or a compute resource that
+	// uses Environments mode, the task environment is required to be specified
+	// using `environment_key` in the task settings.
 	Environments types.List `tfsdk:"environment"`
 	// Used to tell what is the format of the job. This field is ignored in
 	// Create/Update/Reset calls. When using the Jobs API 2.1 this value is
@@ -2822,9 +4095,11 @@ type CreateJob struct {
 	// of compute performance or cost-efficiency for the run. The performance
 	// target does not apply to tasks that run on Serverless GPU compute.
 	//
-	// * `STANDARD`: Enables cost-efficient execution of serverless workloads. *
-	// `PERFORMANCE_OPTIMIZED`: Prioritizes fast startup and execution times
-	// through rapid scaling and optimized cluster performance.
+	// * `PERFORMANCE_OPTIMIZED`: Prioritizes fast startup and execution times
+	// through rapid scaling and optimized cluster performance. * `STANDARD`:
+	// Enables cost-efficient execution of serverless workloads. *
+	// `COST_OPTIMIZED`: Enables lower job costs by optimizing compute for your
+	// selected target duration time. Must provide a duration target.
 	PerformanceTarget types.String `tfsdk:"performance_target"`
 	// The queue settings of the job.
 	Queue types.Object `tfsdk:"queue"`
@@ -2916,6 +4191,25 @@ func (to *CreateJob) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Cr
 				// Recursively sync the fields of EmailNotifications
 				toEmailNotifications.SyncFieldsDuringCreateOrUpdate(ctx, fromEmailNotifications)
 				to.SetEmailNotifications(ctx, toEmailNotifications)
+			}
+		}
+	}
+	if !from.EnvironmentVariables.IsNull() && !from.EnvironmentVariables.IsUnknown() && to.EnvironmentVariables.IsNull() && len(from.EnvironmentVariables.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for EnvironmentVariables, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.EnvironmentVariables = from.EnvironmentVariables
+	}
+	if !from.EnvironmentVariables.IsNull() && !from.EnvironmentVariables.IsUnknown() {
+		if toEnvironmentVariables, ok := to.GetEnvironmentVariables(ctx); ok {
+			if fromEnvironmentVariables, ok := from.GetEnvironmentVariables(ctx); ok {
+				// Recursively sync the fields of each EnvironmentVariables element by position.
+				for i := range toEnvironmentVariables {
+					if i < len(fromEnvironmentVariables) {
+						toEnvironmentVariables[i].SyncFieldsDuringCreateOrUpdate(ctx, fromEnvironmentVariables[i])
+					}
+				}
+				to.SetEnvironmentVariables(ctx, toEnvironmentVariables)
 			}
 		}
 	}
@@ -3131,6 +4425,24 @@ func (to *CreateJob) SyncFieldsDuringRead(ctx context.Context, from CreateJob) {
 			}
 		}
 	}
+	if !from.EnvironmentVariables.IsNull() && !from.EnvironmentVariables.IsUnknown() && to.EnvironmentVariables.IsNull() && len(from.EnvironmentVariables.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for EnvironmentVariables, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.EnvironmentVariables = from.EnvironmentVariables
+	}
+	if !from.EnvironmentVariables.IsNull() && !from.EnvironmentVariables.IsUnknown() {
+		if toEnvironmentVariables, ok := to.GetEnvironmentVariables(ctx); ok {
+			if fromEnvironmentVariables, ok := from.GetEnvironmentVariables(ctx); ok {
+				for i := range toEnvironmentVariables {
+					if i < len(fromEnvironmentVariables) {
+						toEnvironmentVariables[i].SyncFieldsDuringRead(ctx, fromEnvironmentVariables[i])
+					}
+				}
+				to.SetEnvironmentVariables(ctx, toEnvironmentVariables)
+			}
+		}
+	}
 	if !from.Environments.IsNull() && !from.Environments.IsUnknown() && to.Environments.IsNull() && len(from.Environments.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Environments, and the deserialized field value is Null,
@@ -3293,8 +4605,10 @@ func (m CreateJob) ApplySchemaCustomizations(attrs map[string]tfschema.Attribute
 	attrs["continuous"] = attrs["continuous"].SetOptional()
 	attrs["deployment"] = attrs["deployment"].SetOptional()
 	attrs["description"] = attrs["description"].SetOptional()
+	attrs["duration_target"] = attrs["duration_target"].SetOptional()
 	attrs["edit_mode"] = attrs["edit_mode"].SetOptional()
 	attrs["email_notifications"] = attrs["email_notifications"].SetOptional()
+	attrs["environment_variables"] = attrs["environment_variables"].SetOptional()
 	attrs["environment"] = attrs["environment"].SetOptional()
 	attrs["format"] = attrs["format"].SetOptional()
 	attrs["git_source"] = attrs["git_source"].SetOptional()
@@ -3333,6 +4647,7 @@ func (m CreateJob) GetComplexFieldTypes(ctx context.Context) map[string]reflect.
 		"continuous":            reflect.TypeOf(Continuous{}),
 		"deployment":            reflect.TypeOf(JobDeployment{}),
 		"email_notifications":   reflect.TypeOf(JobEmailNotifications{}),
+		"environment_variables": reflect.TypeOf(JobEnvironmentVariables{}),
 		"environment":           reflect.TypeOf(JobEnvironment{}),
 		"git_source":            reflect.TypeOf(GitSource{}),
 		"health":                reflect.TypeOf(JobsHealthRules{}),
@@ -3362,8 +4677,10 @@ func (m CreateJob) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"continuous":            m.Continuous,
 			"deployment":            m.Deployment,
 			"description":           m.Description,
+			"duration_target":       m.DurationTarget,
 			"edit_mode":             m.EditMode,
 			"email_notifications":   m.EmailNotifications,
+			"environment_variables": m.EnvironmentVariables,
 			"environment":           m.Environments,
 			"format":                m.Format,
 			"git_source":            m.GitSource,
@@ -3399,8 +4716,12 @@ func (m CreateJob) Type(ctx context.Context) attr.Type {
 			"continuous":          Continuous{}.Type(ctx),
 			"deployment":          JobDeployment{}.Type(ctx),
 			"description":         types.StringType,
+			"duration_target":     types.StringType,
 			"edit_mode":           types.StringType,
 			"email_notifications": JobEmailNotifications{}.Type(ctx),
+			"environment_variables": basetypes.ListType{
+				ElemType: JobEnvironmentVariables{}.Type(ctx),
+			},
 			"environment": basetypes.ListType{
 				ElemType: JobEnvironment{}.Type(ctx),
 			},
@@ -3537,6 +4858,32 @@ func (m *CreateJob) GetEmailNotifications(ctx context.Context) (JobEmailNotifica
 func (m *CreateJob) SetEmailNotifications(ctx context.Context, v JobEmailNotifications) {
 	vs := v.ToObjectValue(ctx)
 	m.EmailNotifications = vs
+}
+
+// GetEnvironmentVariables returns the value of the EnvironmentVariables field in CreateJob as
+// a slice of JobEnvironmentVariables values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *CreateJob) GetEnvironmentVariables(ctx context.Context) ([]JobEnvironmentVariables, bool) {
+	if m.EnvironmentVariables.IsNull() || m.EnvironmentVariables.IsUnknown() {
+		return nil, false
+	}
+	var v []JobEnvironmentVariables
+	d := m.EnvironmentVariables.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetEnvironmentVariables sets the value of the EnvironmentVariables field in CreateJob.
+func (m *CreateJob) SetEnvironmentVariables(ctx context.Context, v []JobEnvironmentVariables) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["environment_variables"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.EnvironmentVariables = types.ListValueMust(t, vs)
 }
 
 // GetEnvironments returns the value of the Environments field in CreateJob as
@@ -5322,6 +6669,114 @@ func (m DeleteRun) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// A Unity Catalog Delta table input source. The function is applied to each
+// row.
+type DeltaTableSource struct {
+	// Name of the column holding the content the function is applied to.
+	InputColumn types.String `tfsdk:"input_column"`
+	// Columns that together identify a row across incremental runs, so results
+	// can be matched back to their source rows. When unset, the task derives an
+	// implicit key from Delta row tracking. If row tracking is also disabled
+	// there is no stable key, so each run reprocesses the entire source (a full
+	// refresh) rather than only the changed rows; set a key column or enable
+	// row tracking to keep runs incremental.
+	MergeKeyColumns types.List `tfsdk:"merge_key_columns"`
+	// Fully qualified three-part name of the source table
+	// (catalog.schema.table).
+	TableName types.String `tfsdk:"table_name"`
+}
+
+func (to *DeltaTableSource) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DeltaTableSource) {
+	if !from.MergeKeyColumns.IsNull() && !from.MergeKeyColumns.IsUnknown() && to.MergeKeyColumns.IsNull() && len(from.MergeKeyColumns.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for MergeKeyColumns, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.MergeKeyColumns = from.MergeKeyColumns
+	}
+}
+
+func (to *DeltaTableSource) SyncFieldsDuringRead(ctx context.Context, from DeltaTableSource) {
+	if !from.MergeKeyColumns.IsNull() && !from.MergeKeyColumns.IsUnknown() && to.MergeKeyColumns.IsNull() && len(from.MergeKeyColumns.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for MergeKeyColumns, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.MergeKeyColumns = from.MergeKeyColumns
+	}
+}
+
+func (m DeltaTableSource) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["input_column"] = attrs["input_column"].SetRequired()
+	attrs["merge_key_columns"] = attrs["merge_key_columns"].SetOptional()
+	attrs["table_name"] = attrs["table_name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DeltaTableSource.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m DeltaTableSource) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"merge_key_columns": reflect.TypeOf(types.String{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DeltaTableSource
+// only implements ToObjectValue() and Type().
+func (m DeltaTableSource) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"input_column":      m.InputColumn,
+			"merge_key_columns": m.MergeKeyColumns,
+			"table_name":        m.TableName,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m DeltaTableSource) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"input_column": types.StringType,
+			"merge_key_columns": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"table_name": types.StringType,
+		},
+	}
+}
+
+// GetMergeKeyColumns returns the value of the MergeKeyColumns field in DeltaTableSource as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *DeltaTableSource) GetMergeKeyColumns(ctx context.Context) ([]types.String, bool) {
+	if m.MergeKeyColumns.IsNull() || m.MergeKeyColumns.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := m.MergeKeyColumns.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetMergeKeyColumns sets the value of the MergeKeyColumns field in DeltaTableSource.
+func (m *DeltaTableSource) SetMergeKeyColumns(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["merge_key_columns"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.MergeKeyColumns = types.ListValueMust(t, vs)
+}
+
 // DeploymentSpec: configuration for one deployment within an AiRuntimeTask.
 // Each entry in `AiRuntimeTask.deployments` describes a group of nodes that
 // share the same command and compute. Many single-program training algorithms
@@ -5336,12 +6791,12 @@ type DeploymentSpec struct {
 	//
 	// Example script contents:
 	//
-	// # Plain Python: python train.py --epochs 10
+	// ```bash # Plain Python: python train.py --epochs 10
 	//
 	// # Multi-GPU via accelerate: accelerate launch train.py --config
 	// config.yaml
 	//
-	// # Distributed via torchrun: torchrun --nproc_per_node=8 train.py
+	// # Distributed via torchrun: torchrun --nproc_per_node=8 train.py ```
 	CommandPath types.String `tfsdk:"command_path"`
 	// Compute resources allocated to each node in this deployment.
 	Compute types.Object `tfsdk:"compute"`
@@ -5376,7 +6831,7 @@ func (to *DeploymentSpec) SyncFieldsDuringRead(ctx context.Context, from Deploym
 }
 
 func (m DeploymentSpec) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["command_path"] = attrs["command_path"].SetRequired()
+	attrs["command_path"] = attrs["command_path"].SetOptional()
 	attrs["compute"] = attrs["compute"].SetRequired()
 	attrs["name"] = attrs["name"].SetOptional()
 
@@ -7856,6 +9311,10 @@ type JobCluster struct {
 	JobClusterKey types.String `tfsdk:"job_cluster_key"`
 	// If new_cluster, a description of a cluster that is created for each task.
 	NewCluster types.Object `tfsdk:"new_cluster"`
+	// Serverless compute settings for this cluster. At most one job cluster per
+	// job may set this field; the rate limit defined on the referenced policy
+	// applies across all tasks bound to this cluster.
+	ServerlessCompute types.Object `tfsdk:"serverless_compute"`
 	// The ID of the serverless compute object to bind this cluster to. At most
 	// one JobCluster per job may set this field; the rate limit defined on the
 	// referenced serverless compute applies across all tasks bound to this
@@ -7873,6 +9332,15 @@ func (to *JobCluster) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from J
 			}
 		}
 	}
+	if !from.ServerlessCompute.IsNull() && !from.ServerlessCompute.IsUnknown() {
+		if toServerlessCompute, ok := to.GetServerlessCompute(ctx); ok {
+			if fromServerlessCompute, ok := from.GetServerlessCompute(ctx); ok {
+				// Recursively sync the fields of ServerlessCompute
+				toServerlessCompute.SyncFieldsDuringCreateOrUpdate(ctx, fromServerlessCompute)
+				to.SetServerlessCompute(ctx, toServerlessCompute)
+			}
+		}
+	}
 }
 
 func (to *JobCluster) SyncFieldsDuringRead(ctx context.Context, from JobCluster) {
@@ -7884,11 +9352,20 @@ func (to *JobCluster) SyncFieldsDuringRead(ctx context.Context, from JobCluster)
 			}
 		}
 	}
+	if !from.ServerlessCompute.IsNull() && !from.ServerlessCompute.IsUnknown() {
+		if toServerlessCompute, ok := to.GetServerlessCompute(ctx); ok {
+			if fromServerlessCompute, ok := from.GetServerlessCompute(ctx); ok {
+				toServerlessCompute.SyncFieldsDuringRead(ctx, fromServerlessCompute)
+				to.SetServerlessCompute(ctx, toServerlessCompute)
+			}
+		}
+	}
 }
 
 func (m JobCluster) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["job_cluster_key"] = attrs["job_cluster_key"].SetRequired()
 	attrs["new_cluster"] = attrs["new_cluster"].SetOptional()
+	attrs["serverless_compute"] = attrs["serverless_compute"].SetOptional()
 	attrs["serverless_compute_id"] = attrs["serverless_compute_id"].SetOptional()
 
 	return attrs
@@ -7903,7 +9380,8 @@ func (m JobCluster) ApplySchemaCustomizations(attrs map[string]tfschema.Attribut
 // SDK values.
 func (m JobCluster) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"new_cluster": reflect.TypeOf(compute_tf.ClusterSpec{}),
+		"new_cluster":        reflect.TypeOf(compute_tf.ClusterSpec{}),
+		"serverless_compute": reflect.TypeOf(JobClusterServerlessCompute{}),
 	}
 }
 
@@ -7916,6 +9394,7 @@ func (m JobCluster) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 		map[string]attr.Value{
 			"job_cluster_key":       m.JobClusterKey,
 			"new_cluster":           m.NewCluster,
+			"serverless_compute":    m.ServerlessCompute,
 			"serverless_compute_id": m.ServerlessComputeId,
 		})
 }
@@ -7926,6 +9405,7 @@ func (m JobCluster) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"job_cluster_key":       types.StringType,
 			"new_cluster":           compute_tf.ClusterSpec{}.Type(ctx),
+			"serverless_compute":    JobClusterServerlessCompute{}.Type(ctx),
 			"serverless_compute_id": types.StringType,
 		},
 	}
@@ -7954,6 +9434,573 @@ func (m *JobCluster) GetNewCluster(ctx context.Context) (compute_tf.ClusterSpec,
 func (m *JobCluster) SetNewCluster(ctx context.Context, v compute_tf.ClusterSpec) {
 	vs := v.ToObjectValue(ctx)
 	m.NewCluster = vs
+}
+
+// GetServerlessCompute returns the value of the ServerlessCompute field in JobCluster as
+// a JobClusterServerlessCompute value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *JobCluster) GetServerlessCompute(ctx context.Context) (JobClusterServerlessCompute, bool) {
+	var e JobClusterServerlessCompute
+	if m.ServerlessCompute.IsNull() || m.ServerlessCompute.IsUnknown() {
+		return e, false
+	}
+	var v JobClusterServerlessCompute
+	d := m.ServerlessCompute.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetServerlessCompute sets the value of the ServerlessCompute field in JobCluster.
+func (m *JobCluster) SetServerlessCompute(ctx context.Context, v JobClusterServerlessCompute) {
+	vs := v.ToObjectValue(ctx)
+	m.ServerlessCompute = vs
+}
+
+// Serverless compute settings for a job cluster.
+type JobClusterServerlessCompute struct {
+	// The ID of the serverless compute policy to apply to this cluster.
+	PolicyId types.String `tfsdk:"policy_id"`
+}
+
+func (to *JobClusterServerlessCompute) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from JobClusterServerlessCompute) {
+}
+
+func (to *JobClusterServerlessCompute) SyncFieldsDuringRead(ctx context.Context, from JobClusterServerlessCompute) {
+}
+
+func (m JobClusterServerlessCompute) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["policy_id"] = attrs["policy_id"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in JobClusterServerlessCompute.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m JobClusterServerlessCompute) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, JobClusterServerlessCompute
+// only implements ToObjectValue() and Type().
+func (m JobClusterServerlessCompute) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"policy_id": m.PolicyId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m JobClusterServerlessCompute) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"policy_id": types.StringType,
+		},
+	}
+}
+
+// A trigger that starts a run after every upstream job completes with a
+// configured status.
+type JobCompletionTriggerConfiguration struct {
+	// The status that all upstream jobs must have before this trigger fires.
+	// Defaults to SUCCESS.
+	IfStatus types.String `tfsdk:"if_status"`
+	// The upstream jobs to monitor. Each job must be in a workspace attached to
+	// the same Unity Catalog metastore as the downstream job. A maximum of 10
+	// jobs can be monitored.
+	Jobs types.List `tfsdk:"jobs"`
+}
+
+func (to *JobCompletionTriggerConfiguration) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from JobCompletionTriggerConfiguration) {
+	if !from.Jobs.IsNull() && !from.Jobs.IsUnknown() {
+		if toJobs, ok := to.GetJobs(ctx); ok {
+			if fromJobs, ok := from.GetJobs(ctx); ok {
+				// Recursively sync the fields of each Jobs element by position.
+				for i := range toJobs {
+					if i < len(fromJobs) {
+						toJobs[i].SyncFieldsDuringCreateOrUpdate(ctx, fromJobs[i])
+					}
+				}
+				to.SetJobs(ctx, toJobs)
+			}
+		}
+	}
+}
+
+func (to *JobCompletionTriggerConfiguration) SyncFieldsDuringRead(ctx context.Context, from JobCompletionTriggerConfiguration) {
+	if !from.Jobs.IsNull() && !from.Jobs.IsUnknown() {
+		if toJobs, ok := to.GetJobs(ctx); ok {
+			if fromJobs, ok := from.GetJobs(ctx); ok {
+				for i := range toJobs {
+					if i < len(fromJobs) {
+						toJobs[i].SyncFieldsDuringRead(ctx, fromJobs[i])
+					}
+				}
+				to.SetJobs(ctx, toJobs)
+			}
+		}
+	}
+}
+
+func (m JobCompletionTriggerConfiguration) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["if_status"] = attrs["if_status"].SetOptional()
+	attrs["jobs"] = attrs["jobs"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in JobCompletionTriggerConfiguration.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m JobCompletionTriggerConfiguration) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"jobs": reflect.TypeOf(JobCompletionTriggerConfigurationMonitoredJob{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, JobCompletionTriggerConfiguration
+// only implements ToObjectValue() and Type().
+func (m JobCompletionTriggerConfiguration) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"if_status": m.IfStatus,
+			"jobs":      m.Jobs,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m JobCompletionTriggerConfiguration) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"if_status": types.StringType,
+			"jobs": basetypes.ListType{
+				ElemType: JobCompletionTriggerConfigurationMonitoredJob{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetJobs returns the value of the Jobs field in JobCompletionTriggerConfiguration as
+// a slice of JobCompletionTriggerConfigurationMonitoredJob values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *JobCompletionTriggerConfiguration) GetJobs(ctx context.Context) ([]JobCompletionTriggerConfigurationMonitoredJob, bool) {
+	if m.Jobs.IsNull() || m.Jobs.IsUnknown() {
+		return nil, false
+	}
+	var v []JobCompletionTriggerConfigurationMonitoredJob
+	d := m.Jobs.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetJobs sets the value of the Jobs field in JobCompletionTriggerConfiguration.
+func (m *JobCompletionTriggerConfiguration) SetJobs(ctx context.Context, v []JobCompletionTriggerConfigurationMonitoredJob) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["jobs"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Jobs = types.ListValueMust(t, vs)
+}
+
+// An upstream job to monitor.
+type JobCompletionTriggerConfigurationMonitoredJob struct {
+	// The ID of the upstream job.
+	JobId types.String `tfsdk:"job_id"`
+	// The ID of the workspace containing the upstream job. This can differ from
+	// the caller's workspace and downstream services enforce correct
+	// entitlements and CAN_VIEW permissions for the user + job combination.
+	// SDR: https://databricks.atlassian.net/browse/SDR-5267
+	WorkspaceId types.String `tfsdk:"workspace_id"`
+}
+
+func (to *JobCompletionTriggerConfigurationMonitoredJob) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from JobCompletionTriggerConfigurationMonitoredJob) {
+}
+
+func (to *JobCompletionTriggerConfigurationMonitoredJob) SyncFieldsDuringRead(ctx context.Context, from JobCompletionTriggerConfigurationMonitoredJob) {
+}
+
+func (m JobCompletionTriggerConfigurationMonitoredJob) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["job_id"] = attrs["job_id"].SetRequired()
+	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in JobCompletionTriggerConfigurationMonitoredJob.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m JobCompletionTriggerConfigurationMonitoredJob) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, JobCompletionTriggerConfigurationMonitoredJob
+// only implements ToObjectValue() and Type().
+func (m JobCompletionTriggerConfigurationMonitoredJob) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"job_id":       m.JobId,
+			"workspace_id": m.WorkspaceId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m JobCompletionTriggerConfigurationMonitoredJob) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"job_id":       types.StringType,
+			"workspace_id": types.StringType,
+		},
+	}
+}
+
+// Contains the immutable set of upstream completions that triggered the run, in
+// configured jobs order
+type JobCompletionTriggerRunInfoDetails struct {
+	CompletedJobs types.List `tfsdk:"completed_jobs"`
+}
+
+func (to *JobCompletionTriggerRunInfoDetails) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from JobCompletionTriggerRunInfoDetails) {
+	if !from.CompletedJobs.IsNull() && !from.CompletedJobs.IsUnknown() && to.CompletedJobs.IsNull() && len(from.CompletedJobs.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for CompletedJobs, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.CompletedJobs = from.CompletedJobs
+	}
+	if !from.CompletedJobs.IsNull() && !from.CompletedJobs.IsUnknown() {
+		if toCompletedJobs, ok := to.GetCompletedJobs(ctx); ok {
+			if fromCompletedJobs, ok := from.GetCompletedJobs(ctx); ok {
+				// Recursively sync the fields of each CompletedJobs element by position.
+				for i := range toCompletedJobs {
+					if i < len(fromCompletedJobs) {
+						toCompletedJobs[i].SyncFieldsDuringCreateOrUpdate(ctx, fromCompletedJobs[i])
+					}
+				}
+				to.SetCompletedJobs(ctx, toCompletedJobs)
+			}
+		}
+	}
+}
+
+func (to *JobCompletionTriggerRunInfoDetails) SyncFieldsDuringRead(ctx context.Context, from JobCompletionTriggerRunInfoDetails) {
+	if !from.CompletedJobs.IsNull() && !from.CompletedJobs.IsUnknown() && to.CompletedJobs.IsNull() && len(from.CompletedJobs.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for CompletedJobs, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.CompletedJobs = from.CompletedJobs
+	}
+	if !from.CompletedJobs.IsNull() && !from.CompletedJobs.IsUnknown() {
+		if toCompletedJobs, ok := to.GetCompletedJobs(ctx); ok {
+			if fromCompletedJobs, ok := from.GetCompletedJobs(ctx); ok {
+				for i := range toCompletedJobs {
+					if i < len(fromCompletedJobs) {
+						toCompletedJobs[i].SyncFieldsDuringRead(ctx, fromCompletedJobs[i])
+					}
+				}
+				to.SetCompletedJobs(ctx, toCompletedJobs)
+			}
+		}
+	}
+}
+
+func (m JobCompletionTriggerRunInfoDetails) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["completed_jobs"] = attrs["completed_jobs"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in JobCompletionTriggerRunInfoDetails.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m JobCompletionTriggerRunInfoDetails) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"completed_jobs": reflect.TypeOf(CompletedJob{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, JobCompletionTriggerRunInfoDetails
+// only implements ToObjectValue() and Type().
+func (m JobCompletionTriggerRunInfoDetails) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"completed_jobs": m.CompletedJobs,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m JobCompletionTriggerRunInfoDetails) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"completed_jobs": basetypes.ListType{
+				ElemType: CompletedJob{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetCompletedJobs returns the value of the CompletedJobs field in JobCompletionTriggerRunInfoDetails as
+// a slice of CompletedJob values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *JobCompletionTriggerRunInfoDetails) GetCompletedJobs(ctx context.Context) ([]CompletedJob, bool) {
+	if m.CompletedJobs.IsNull() || m.CompletedJobs.IsUnknown() {
+		return nil, false
+	}
+	var v []CompletedJob
+	d := m.CompletedJobs.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetCompletedJobs sets the value of the CompletedJobs field in JobCompletionTriggerRunInfoDetails.
+func (m *JobCompletionTriggerRunInfoDetails) SetCompletedJobs(ctx context.Context, v []CompletedJob) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["completed_jobs"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.CompletedJobs = types.ListValueMust(t, vs)
+}
+
+// Runtime state for a job completion trigger.
+type JobCompletionTriggerState struct {
+	// State for each configured upstream job, in the same order as `jobs`.
+	MonitoredJobStates types.List `tfsdk:"monitored_job_states"`
+}
+
+func (to *JobCompletionTriggerState) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from JobCompletionTriggerState) {
+	if !from.MonitoredJobStates.IsNull() && !from.MonitoredJobStates.IsUnknown() && to.MonitoredJobStates.IsNull() && len(from.MonitoredJobStates.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for MonitoredJobStates, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.MonitoredJobStates = from.MonitoredJobStates
+	}
+	if !from.MonitoredJobStates.IsNull() && !from.MonitoredJobStates.IsUnknown() {
+		if toMonitoredJobStates, ok := to.GetMonitoredJobStates(ctx); ok {
+			if fromMonitoredJobStates, ok := from.GetMonitoredJobStates(ctx); ok {
+				// Recursively sync the fields of each MonitoredJobStates element by position.
+				for i := range toMonitoredJobStates {
+					if i < len(fromMonitoredJobStates) {
+						toMonitoredJobStates[i].SyncFieldsDuringCreateOrUpdate(ctx, fromMonitoredJobStates[i])
+					}
+				}
+				to.SetMonitoredJobStates(ctx, toMonitoredJobStates)
+			}
+		}
+	}
+}
+
+func (to *JobCompletionTriggerState) SyncFieldsDuringRead(ctx context.Context, from JobCompletionTriggerState) {
+	if !from.MonitoredJobStates.IsNull() && !from.MonitoredJobStates.IsUnknown() && to.MonitoredJobStates.IsNull() && len(from.MonitoredJobStates.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for MonitoredJobStates, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.MonitoredJobStates = from.MonitoredJobStates
+	}
+	if !from.MonitoredJobStates.IsNull() && !from.MonitoredJobStates.IsUnknown() {
+		if toMonitoredJobStates, ok := to.GetMonitoredJobStates(ctx); ok {
+			if fromMonitoredJobStates, ok := from.GetMonitoredJobStates(ctx); ok {
+				for i := range toMonitoredJobStates {
+					if i < len(fromMonitoredJobStates) {
+						toMonitoredJobStates[i].SyncFieldsDuringRead(ctx, fromMonitoredJobStates[i])
+					}
+				}
+				to.SetMonitoredJobStates(ctx, toMonitoredJobStates)
+			}
+		}
+	}
+}
+
+func (m JobCompletionTriggerState) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["monitored_job_states"] = attrs["monitored_job_states"].SetComputed()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in JobCompletionTriggerState.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m JobCompletionTriggerState) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"monitored_job_states": reflect.TypeOf(JobCompletionTriggerStateMonitoredJobState{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, JobCompletionTriggerState
+// only implements ToObjectValue() and Type().
+func (m JobCompletionTriggerState) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"monitored_job_states": m.MonitoredJobStates,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m JobCompletionTriggerState) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"monitored_job_states": basetypes.ListType{
+				ElemType: JobCompletionTriggerStateMonitoredJobState{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetMonitoredJobStates returns the value of the MonitoredJobStates field in JobCompletionTriggerState as
+// a slice of JobCompletionTriggerStateMonitoredJobState values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *JobCompletionTriggerState) GetMonitoredJobStates(ctx context.Context) ([]JobCompletionTriggerStateMonitoredJobState, bool) {
+	if m.MonitoredJobStates.IsNull() || m.MonitoredJobStates.IsUnknown() {
+		return nil, false
+	}
+	var v []JobCompletionTriggerStateMonitoredJobState
+	d := m.MonitoredJobStates.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetMonitoredJobStates sets the value of the MonitoredJobStates field in JobCompletionTriggerState.
+func (m *JobCompletionTriggerState) SetMonitoredJobStates(ctx context.Context, v []JobCompletionTriggerStateMonitoredJobState) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["monitored_job_states"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.MonitoredJobStates = types.ListValueMust(t, vs)
+}
+
+type JobCompletionTriggerStateMonitoredJobState struct {
+	// Whether this job has contributed a matching completion toward the next
+	// trigger fire.
+	HasSeenCompletion types.Bool `tfsdk:"has_seen_completion"`
+	// Whether the upstream job was missing or deleted when last observed by
+	// this trigger. Omitted when deletion status is unknown. This observation
+	// may become stale while the trigger is paused or evaluation cannot access
+	// the upstream job.
+	IsDeleted types.Bool `tfsdk:"is_deleted"`
+	// The ID of the upstream job.
+	JobId types.String `tfsdk:"job_id"`
+	// The completion time of the latest matching upstream run observed by the
+	// trigger.
+	LastSeenCompletionTime timetypes.RFC3339 `tfsdk:"last_seen_completion_time"`
+	// The termination code of the latest matching upstream run observed by the
+	// trigger.
+	LastSeenResult types.String `tfsdk:"last_seen_result"`
+	// The ID of the latest matching upstream run observed by the trigger.
+	LastSeenRunId types.String `tfsdk:"last_seen_run_id"`
+	// The termination code of the latest upstream run if it does not satisfy
+	// `if_status`. Unset when the latest run matches or no run has been
+	// observed.
+	LatestNonMatchingResult types.String `tfsdk:"latest_non_matching_result"`
+	// The ID of the workspace containing the upstream job.
+	WorkspaceId types.String `tfsdk:"workspace_id"`
+}
+
+func (to *JobCompletionTriggerStateMonitoredJobState) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from JobCompletionTriggerStateMonitoredJobState) {
+}
+
+func (to *JobCompletionTriggerStateMonitoredJobState) SyncFieldsDuringRead(ctx context.Context, from JobCompletionTriggerStateMonitoredJobState) {
+}
+
+func (m JobCompletionTriggerStateMonitoredJobState) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["has_seen_completion"] = attrs["has_seen_completion"].SetComputed()
+	attrs["is_deleted"] = attrs["is_deleted"].SetComputed()
+	attrs["job_id"] = attrs["job_id"].SetComputed()
+	attrs["last_seen_completion_time"] = attrs["last_seen_completion_time"].SetComputed()
+	attrs["last_seen_result"] = attrs["last_seen_result"].SetComputed()
+	attrs["last_seen_run_id"] = attrs["last_seen_run_id"].SetComputed()
+	attrs["latest_non_matching_result"] = attrs["latest_non_matching_result"].SetComputed()
+	attrs["workspace_id"] = attrs["workspace_id"].SetComputed()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in JobCompletionTriggerStateMonitoredJobState.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m JobCompletionTriggerStateMonitoredJobState) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, JobCompletionTriggerStateMonitoredJobState
+// only implements ToObjectValue() and Type().
+func (m JobCompletionTriggerStateMonitoredJobState) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"has_seen_completion":        m.HasSeenCompletion,
+			"is_deleted":                 m.IsDeleted,
+			"job_id":                     m.JobId,
+			"last_seen_completion_time":  m.LastSeenCompletionTime,
+			"last_seen_result":           m.LastSeenResult,
+			"last_seen_run_id":           m.LastSeenRunId,
+			"latest_non_matching_result": m.LatestNonMatchingResult,
+			"workspace_id":               m.WorkspaceId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m JobCompletionTriggerStateMonitoredJobState) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"has_seen_completion":        types.BoolType,
+			"is_deleted":                 types.BoolType,
+			"job_id":                     types.StringType,
+			"last_seen_completion_time":  timetypes.RFC3339{}.Type(ctx),
+			"last_seen_result":           types.StringType,
+			"last_seen_run_id":           types.StringType,
+			"latest_non_matching_result": types.StringType,
+			"workspace_id":               types.StringType,
+		},
+	}
 }
 
 type JobCompliance struct {
@@ -8134,6 +10181,12 @@ type JobEmailNotifications struct {
 	// `TIMED_OUT` result_state. If this is not specified on job creation,
 	// reset, or update the list is empty, and notifications are not sent.
 	OnFailure types.List `tfsdk:"on_failure"`
+	// A list of email addresses to notify when platform-initiated maintenance
+	// completes for a continuous job.
+	OnMaintenanceComplete types.List `tfsdk:"on_maintenance_complete"`
+	// A list of email addresses to notify when platform-initiated maintenance
+	// starts for a continuous job.
+	OnMaintenanceStart types.List `tfsdk:"on_maintenance_start"`
 	// A list of email addresses to be notified when a run begins. If not
 	// specified on job creation, reset, or update, the list is empty, and
 	// notifications are not sent.
@@ -8166,6 +10219,18 @@ func (to *JobEmailNotifications) SyncFieldsDuringCreateOrUpdate(ctx context.Cont
 		// If a user specified a non-Null, empty list for OnFailure, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.OnFailure = from.OnFailure
+	}
+	if !from.OnMaintenanceComplete.IsNull() && !from.OnMaintenanceComplete.IsUnknown() && to.OnMaintenanceComplete.IsNull() && len(from.OnMaintenanceComplete.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for OnMaintenanceComplete, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.OnMaintenanceComplete = from.OnMaintenanceComplete
+	}
+	if !from.OnMaintenanceStart.IsNull() && !from.OnMaintenanceStart.IsUnknown() && to.OnMaintenanceStart.IsNull() && len(from.OnMaintenanceStart.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for OnMaintenanceStart, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.OnMaintenanceStart = from.OnMaintenanceStart
 	}
 	if !from.OnStart.IsNull() && !from.OnStart.IsUnknown() && to.OnStart.IsNull() && len(from.OnStart.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
@@ -8200,6 +10265,18 @@ func (to *JobEmailNotifications) SyncFieldsDuringRead(ctx context.Context, from 
 		// set the resulting resource state to the empty list to match the planned value.
 		to.OnFailure = from.OnFailure
 	}
+	if !from.OnMaintenanceComplete.IsNull() && !from.OnMaintenanceComplete.IsUnknown() && to.OnMaintenanceComplete.IsNull() && len(from.OnMaintenanceComplete.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for OnMaintenanceComplete, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.OnMaintenanceComplete = from.OnMaintenanceComplete
+	}
+	if !from.OnMaintenanceStart.IsNull() && !from.OnMaintenanceStart.IsUnknown() && to.OnMaintenanceStart.IsNull() && len(from.OnMaintenanceStart.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for OnMaintenanceStart, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.OnMaintenanceStart = from.OnMaintenanceStart
+	}
 	if !from.OnStart.IsNull() && !from.OnStart.IsUnknown() && to.OnStart.IsNull() && len(from.OnStart.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for OnStart, and the deserialized field value is Null,
@@ -8224,6 +10301,8 @@ func (m JobEmailNotifications) ApplySchemaCustomizations(attrs map[string]tfsche
 	attrs["no_alert_for_skipped_runs"] = attrs["no_alert_for_skipped_runs"].SetOptional()
 	attrs["on_duration_warning_threshold_exceeded"] = attrs["on_duration_warning_threshold_exceeded"].SetOptional()
 	attrs["on_failure"] = attrs["on_failure"].SetOptional()
+	attrs["on_maintenance_complete"] = attrs["on_maintenance_complete"].SetOptional()
+	attrs["on_maintenance_start"] = attrs["on_maintenance_start"].SetOptional()
 	attrs["on_start"] = attrs["on_start"].SetOptional()
 	attrs["on_streaming_backlog_exceeded"] = attrs["on_streaming_backlog_exceeded"].SetOptional()
 	attrs["on_success"] = attrs["on_success"].SetOptional()
@@ -8242,6 +10321,8 @@ func (m JobEmailNotifications) GetComplexFieldTypes(ctx context.Context) map[str
 	return map[string]reflect.Type{
 		"on_duration_warning_threshold_exceeded": reflect.TypeOf(types.String{}),
 		"on_failure":                             reflect.TypeOf(types.String{}),
+		"on_maintenance_complete":                reflect.TypeOf(types.String{}),
+		"on_maintenance_start":                   reflect.TypeOf(types.String{}),
 		"on_start":                               reflect.TypeOf(types.String{}),
 		"on_streaming_backlog_exceeded":          reflect.TypeOf(types.String{}),
 		"on_success":                             reflect.TypeOf(types.String{}),
@@ -8258,6 +10339,8 @@ func (m JobEmailNotifications) ToObjectValue(ctx context.Context) basetypes.Obje
 			"no_alert_for_skipped_runs":              m.NoAlertForSkippedRuns,
 			"on_duration_warning_threshold_exceeded": m.OnDurationWarningThresholdExceeded,
 			"on_failure":                             m.OnFailure,
+			"on_maintenance_complete":                m.OnMaintenanceComplete,
+			"on_maintenance_start":                   m.OnMaintenanceStart,
 			"on_start":                               m.OnStart,
 			"on_streaming_backlog_exceeded":          m.OnStreamingBacklogExceeded,
 			"on_success":                             m.OnSuccess,
@@ -8273,6 +10356,12 @@ func (m JobEmailNotifications) Type(ctx context.Context) attr.Type {
 				ElemType: types.StringType,
 			},
 			"on_failure": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"on_maintenance_complete": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"on_maintenance_start": basetypes.ListType{
 				ElemType: types.StringType,
 			},
 			"on_start": basetypes.ListType{
@@ -8338,6 +10427,58 @@ func (m *JobEmailNotifications) SetOnFailure(ctx context.Context, v []types.Stri
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["on_failure"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	m.OnFailure = types.ListValueMust(t, vs)
+}
+
+// GetOnMaintenanceComplete returns the value of the OnMaintenanceComplete field in JobEmailNotifications as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *JobEmailNotifications) GetOnMaintenanceComplete(ctx context.Context) ([]types.String, bool) {
+	if m.OnMaintenanceComplete.IsNull() || m.OnMaintenanceComplete.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := m.OnMaintenanceComplete.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetOnMaintenanceComplete sets the value of the OnMaintenanceComplete field in JobEmailNotifications.
+func (m *JobEmailNotifications) SetOnMaintenanceComplete(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["on_maintenance_complete"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.OnMaintenanceComplete = types.ListValueMust(t, vs)
+}
+
+// GetOnMaintenanceStart returns the value of the OnMaintenanceStart field in JobEmailNotifications as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *JobEmailNotifications) GetOnMaintenanceStart(ctx context.Context) ([]types.String, bool) {
+	if m.OnMaintenanceStart.IsNull() || m.OnMaintenanceStart.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := m.OnMaintenanceStart.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetOnMaintenanceStart sets the value of the OnMaintenanceStart field in JobEmailNotifications.
+func (m *JobEmailNotifications) SetOnMaintenanceStart(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["on_maintenance_start"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.OnMaintenanceStart = types.ListValueMust(t, vs)
 }
 
 // GetOnStart returns the value of the OnStart field in JobEmailNotifications as
@@ -8513,6 +10654,260 @@ func (m *JobEnvironment) GetSpec(ctx context.Context) (compute_tf.Environment, b
 func (m *JobEnvironment) SetSpec(ctx context.Context, v compute_tf.Environment) {
 	vs := v.ToObjectValue(ctx)
 	m.Spec = vs
+}
+
+// A named environment-variable entry, defined once at the job level and
+// referenced by key from one or more tasks. Entries live on
+// `JobSettings.environment_variables`, and tasks select one via
+// `TaskSettings.environment_variables_key`.
+type JobEnvironmentVariables struct {
+	// Identifier for this entry. Must be unique within
+	// `JobSettings.environment_variables`. Tasks reference it from
+	// `TaskSettings.environment_variables_key`.
+	EnvironmentVariablesKey types.String `tfsdk:"environment_variables_key"`
+	// The environment variable specification.
+	Spec types.Object `tfsdk:"spec"`
+}
+
+func (to *JobEnvironmentVariables) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from JobEnvironmentVariables) {
+	if !from.Spec.IsNull() && !from.Spec.IsUnknown() {
+		if toSpec, ok := to.GetSpec(ctx); ok {
+			if fromSpec, ok := from.GetSpec(ctx); ok {
+				// Recursively sync the fields of Spec
+				toSpec.SyncFieldsDuringCreateOrUpdate(ctx, fromSpec)
+				to.SetSpec(ctx, toSpec)
+			}
+		}
+	}
+}
+
+func (to *JobEnvironmentVariables) SyncFieldsDuringRead(ctx context.Context, from JobEnvironmentVariables) {
+	if !from.Spec.IsNull() && !from.Spec.IsUnknown() {
+		if toSpec, ok := to.GetSpec(ctx); ok {
+			if fromSpec, ok := from.GetSpec(ctx); ok {
+				toSpec.SyncFieldsDuringRead(ctx, fromSpec)
+				to.SetSpec(ctx, toSpec)
+			}
+		}
+	}
+}
+
+func (m JobEnvironmentVariables) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["environment_variables_key"] = attrs["environment_variables_key"].SetRequired()
+	attrs["spec"] = attrs["spec"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in JobEnvironmentVariables.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m JobEnvironmentVariables) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"spec": reflect.TypeOf(JobEnvironmentVariablesSpec{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, JobEnvironmentVariables
+// only implements ToObjectValue() and Type().
+func (m JobEnvironmentVariables) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"environment_variables_key": m.EnvironmentVariablesKey,
+			"spec":                      m.Spec,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m JobEnvironmentVariables) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"environment_variables_key": types.StringType,
+			"spec":                      JobEnvironmentVariablesSpec{}.Type(ctx),
+		},
+	}
+}
+
+// GetSpec returns the value of the Spec field in JobEnvironmentVariables as
+// a JobEnvironmentVariablesSpec value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *JobEnvironmentVariables) GetSpec(ctx context.Context) (JobEnvironmentVariablesSpec, bool) {
+	var e JobEnvironmentVariablesSpec
+	if m.Spec.IsNull() || m.Spec.IsUnknown() {
+		return e, false
+	}
+	var v JobEnvironmentVariablesSpec
+	d := m.Spec.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSpec sets the value of the Spec field in JobEnvironmentVariables.
+func (m *JobEnvironmentVariables) SetSpec(ctx context.Context, v JobEnvironmentVariablesSpec) {
+	vs := v.ToObjectValue(ctx)
+	m.Spec = vs
+}
+
+// The environment variables and files associated with a job environment
+// variable entry. Runtime environment variables override inline `variables`,
+// which override values from `files`, on duplicate keys.
+type JobEnvironmentVariablesSpec struct {
+	// Workspace (`/Workspace/...`) or UC Volumes (`/Volumes/...`) paths to
+	// `.env` files. Maximum 5 files. Files are read, parsed, and merged at task
+	// execution time, not at job creation or update API call time.
+	//
+	// File format: each line containing a variable must be exactly `KEY=VALUE`.
+	// Empty and whitespace-only lines, and lines beginning with `#`, are
+	// ignored. Keys must match the same regex as inlined variable names
+	// (`^[A-Za-z_][A-Za-z0-9_]*$`); the value continues to the end of the line.
+	// No other syntax is supported — no inline comments, no quoted values, no
+	// escape sequences, no variable interpolation. Any other line that does not
+	// match the `KEY=VALUE` shape fails the run.
+	//
+	// Size limits: maximum 32,768 bytes (32 KiB) per file on disk; maximum
+	// 1,024 bytes (1 KiB) per `KEY=VALUE` line combined. Files or lines
+	// exceeding these limits fail the run.
+	//
+	// On a duplicate key, the later file wins; `variables` override values from
+	// any file.
+	Files types.List `tfsdk:"files"`
+	// Environment variables specified directly as key/value pairs. Maximum 20
+	// entries.
+	//
+	// Each key must be 1 to 256 characters and match
+	// `^[A-Za-z_][A-Za-z0-9_]*$`: it must start with an ASCII letter or
+	// underscore and contain only ASCII letters, digits, and underscores. Each
+	// value can be any Unicode string of up to 512 characters, including an
+	// empty string.
+	Variables types.Map `tfsdk:"variables"`
+}
+
+func (to *JobEnvironmentVariablesSpec) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from JobEnvironmentVariablesSpec) {
+	if !from.Files.IsNull() && !from.Files.IsUnknown() && to.Files.IsNull() && len(from.Files.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Files, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Files = from.Files
+	}
+}
+
+func (to *JobEnvironmentVariablesSpec) SyncFieldsDuringRead(ctx context.Context, from JobEnvironmentVariablesSpec) {
+	if !from.Files.IsNull() && !from.Files.IsUnknown() && to.Files.IsNull() && len(from.Files.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Files, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Files = from.Files
+	}
+}
+
+func (m JobEnvironmentVariablesSpec) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["files"] = attrs["files"].SetOptional()
+	attrs["variables"] = attrs["variables"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in JobEnvironmentVariablesSpec.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m JobEnvironmentVariablesSpec) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"files":     reflect.TypeOf(types.String{}),
+		"variables": reflect.TypeOf(types.String{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, JobEnvironmentVariablesSpec
+// only implements ToObjectValue() and Type().
+func (m JobEnvironmentVariablesSpec) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"files":     m.Files,
+			"variables": m.Variables,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m JobEnvironmentVariablesSpec) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"files": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"variables": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+		},
+	}
+}
+
+// GetFiles returns the value of the Files field in JobEnvironmentVariablesSpec as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *JobEnvironmentVariablesSpec) GetFiles(ctx context.Context) ([]types.String, bool) {
+	if m.Files.IsNull() || m.Files.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := m.Files.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetFiles sets the value of the Files field in JobEnvironmentVariablesSpec.
+func (m *JobEnvironmentVariablesSpec) SetFiles(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["files"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Files = types.ListValueMust(t, vs)
+}
+
+// GetVariables returns the value of the Variables field in JobEnvironmentVariablesSpec as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *JobEnvironmentVariablesSpec) GetVariables(ctx context.Context) (map[string]types.String, bool) {
+	if m.Variables.IsNull() || m.Variables.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := m.Variables.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetVariables sets the value of the Variables field in JobEnvironmentVariablesSpec.
+func (m *JobEnvironmentVariablesSpec) SetVariables(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["variables"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Variables = types.MapValueMust(t, vs)
 }
 
 type JobNotificationSettings struct {
@@ -9076,14 +11471,16 @@ func (m *JobPermissionsRequest) SetAccessControlList(ctx context.Context, v []Jo
 	m.AccessControlList = types.ListValueMust(t, vs)
 }
 
-// Write-only setting. Specifies the user or service principal that the job runs
-// as. If not specified, the job runs as the user who created the job.
+// Write-only setting. Specifies the user, service principal, or group that the
+// job runs as. If not specified, the job runs as the user who created the job.
 //
-// Either `user_name` or `service_principal_name` should be specified. If not,
-// an error is thrown.
+// One of `user_name`, `service_principal_name`, or `group_name` should be
+// specified. If not, an error is thrown.
 type JobRunAs struct {
-	// Group name of an account group assigned to the workspace. Setting this
-	// field requires being a member of the group.
+	// Group name of an account group assigned to the workspace. When set, all
+	// tasks run as the group and the group's permissions are used for data
+	// access. Setting this field requires being a member of the group, or
+	// having the `Assume` permission on the group.
 	GroupName types.String `tfsdk:"group_name"`
 	// Application ID of an active service principal. Setting this field
 	// requires the `servicePrincipal/user` role.
@@ -9151,12 +11548,22 @@ type JobSettings struct {
 	// An optional continuous property for this job. The continuous property
 	// will ensure that there is always one run executing. Only one of
 	// `schedule` and `continuous` can be used.
+	//
+	// Pipelines started by a continuous job also run continuously, regardless
+	// of their own pipeline mode setting.
 	Continuous types.Object `tfsdk:"continuous"`
 	// Deployment information for jobs managed by external sources.
 	Deployment types.Object `tfsdk:"deployment"`
 	// An optional description for the job. The maximum length is 27700
 	// characters in UTF-8 encoding.
 	Description types.String `tfsdk:"description"`
+	// The window the run aims to finish within, in hours, for a Cost-optimized
+	// serverless run. Required only when `performance_target` is
+	// `COST_OPTIMIZED`. Must be one of the supported values: `NO_FLEXIBILITY`,
+	// `4h`, `12h`, `24h`, `72h`. `NO_FLEXIBILITY` means the run uses the
+	// default cost-optimized performance level without additional cost-saving
+	// optimizations.
+	DurationTarget types.String `tfsdk:"duration_target"`
 	// Edit mode of the job.
 	//
 	// * `UI_LOCKED`: The job is in a locked UI state and cannot be modified. *
@@ -9165,13 +11572,23 @@ type JobSettings struct {
 	// An optional set of email addresses that is notified when runs of this job
 	// begin or complete as well as when this job is deleted.
 	EmailNotifications types.Object `tfsdk:"email_notifications"`
+	// Named environment-variable entries that tasks can reference by key from
+	// `TaskSettings.environment_variables_key`. Each entry's `spec` holds
+	// inline `variables` and optional `.env` `files`. Maximum 10 entries per
+	// job. A task can reference at most one entry from this list.
+	EnvironmentVariables types.List `tfsdk:"environment_variables"`
 	// A list of task execution environment specifications that can be
-	// referenced by serverless tasks of this job. For serverless notebook
-	// tasks, if the environment_key is not specified, the notebook environment
-	// will be used if present. If a jobs environment is specified, it will
-	// override the notebook environment. For other serverless tasks, the task
-	// environment is required to be specified using environment_key in the task
-	// settings.
+	// referenced by tasks that use serverless compute or a compute resource
+	// that uses Environments mode.
+	//
+	// For notebook tasks that use serverless compute or a compute resource that
+	// uses Environments mode, if the `environment_key` is not specified, the
+	// notebook environment will be used if present. If a jobs environment is
+	// specified, it will override the notebook environment.
+	//
+	// For other tasks that use serverless compute or a compute resource that
+	// uses Environments mode, the task environment is required to be specified
+	// using `environment_key` in the task settings.
 	Environments types.List `tfsdk:"environment"`
 	// Used to tell what is the format of the job. This field is ignored in
 	// Create/Update/Reset calls. When using the Jobs API 2.1 this value is
@@ -9222,9 +11639,11 @@ type JobSettings struct {
 	// of compute performance or cost-efficiency for the run. The performance
 	// target does not apply to tasks that run on Serverless GPU compute.
 	//
-	// * `STANDARD`: Enables cost-efficient execution of serverless workloads. *
-	// `PERFORMANCE_OPTIMIZED`: Prioritizes fast startup and execution times
-	// through rapid scaling and optimized cluster performance.
+	// * `PERFORMANCE_OPTIMIZED`: Prioritizes fast startup and execution times
+	// through rapid scaling and optimized cluster performance. * `STANDARD`:
+	// Enables cost-efficient execution of serverless workloads. *
+	// `COST_OPTIMIZED`: Enables lower job costs by optimizing compute for your
+	// selected target duration time. Must provide a duration target.
 	PerformanceTarget types.String `tfsdk:"performance_target"`
 	// The queue settings of the job.
 	Queue types.Object `tfsdk:"queue"`
@@ -9297,6 +11716,25 @@ func (to *JobSettings) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from 
 				// Recursively sync the fields of EmailNotifications
 				toEmailNotifications.SyncFieldsDuringCreateOrUpdate(ctx, fromEmailNotifications)
 				to.SetEmailNotifications(ctx, toEmailNotifications)
+			}
+		}
+	}
+	if !from.EnvironmentVariables.IsNull() && !from.EnvironmentVariables.IsUnknown() && to.EnvironmentVariables.IsNull() && len(from.EnvironmentVariables.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for EnvironmentVariables, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.EnvironmentVariables = from.EnvironmentVariables
+	}
+	if !from.EnvironmentVariables.IsNull() && !from.EnvironmentVariables.IsUnknown() {
+		if toEnvironmentVariables, ok := to.GetEnvironmentVariables(ctx); ok {
+			if fromEnvironmentVariables, ok := from.GetEnvironmentVariables(ctx); ok {
+				// Recursively sync the fields of each EnvironmentVariables element by position.
+				for i := range toEnvironmentVariables {
+					if i < len(fromEnvironmentVariables) {
+						toEnvironmentVariables[i].SyncFieldsDuringCreateOrUpdate(ctx, fromEnvironmentVariables[i])
+					}
+				}
+				to.SetEnvironmentVariables(ctx, toEnvironmentVariables)
 			}
 		}
 	}
@@ -9494,6 +11932,24 @@ func (to *JobSettings) SyncFieldsDuringRead(ctx context.Context, from JobSetting
 			}
 		}
 	}
+	if !from.EnvironmentVariables.IsNull() && !from.EnvironmentVariables.IsUnknown() && to.EnvironmentVariables.IsNull() && len(from.EnvironmentVariables.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for EnvironmentVariables, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.EnvironmentVariables = from.EnvironmentVariables
+	}
+	if !from.EnvironmentVariables.IsNull() && !from.EnvironmentVariables.IsUnknown() {
+		if toEnvironmentVariables, ok := to.GetEnvironmentVariables(ctx); ok {
+			if fromEnvironmentVariables, ok := from.GetEnvironmentVariables(ctx); ok {
+				for i := range toEnvironmentVariables {
+					if i < len(fromEnvironmentVariables) {
+						toEnvironmentVariables[i].SyncFieldsDuringRead(ctx, fromEnvironmentVariables[i])
+					}
+				}
+				to.SetEnvironmentVariables(ctx, toEnvironmentVariables)
+			}
+		}
+	}
 	if !from.Environments.IsNull() && !from.Environments.IsUnknown() && to.Environments.IsNull() && len(from.Environments.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Environments, and the deserialized field value is Null,
@@ -9655,8 +12111,10 @@ func (m JobSettings) ApplySchemaCustomizations(attrs map[string]tfschema.Attribu
 	attrs["continuous"] = attrs["continuous"].SetOptional()
 	attrs["deployment"] = attrs["deployment"].SetOptional()
 	attrs["description"] = attrs["description"].SetOptional()
+	attrs["duration_target"] = attrs["duration_target"].SetOptional()
 	attrs["edit_mode"] = attrs["edit_mode"].SetOptional()
 	attrs["email_notifications"] = attrs["email_notifications"].SetOptional()
+	attrs["environment_variables"] = attrs["environment_variables"].SetOptional()
 	attrs["environment"] = attrs["environment"].SetOptional()
 	attrs["format"] = attrs["format"].SetOptional()
 	attrs["git_source"] = attrs["git_source"].SetOptional()
@@ -9694,6 +12152,7 @@ func (m JobSettings) GetComplexFieldTypes(ctx context.Context) map[string]reflec
 		"continuous":            reflect.TypeOf(Continuous{}),
 		"deployment":            reflect.TypeOf(JobDeployment{}),
 		"email_notifications":   reflect.TypeOf(JobEmailNotifications{}),
+		"environment_variables": reflect.TypeOf(JobEnvironmentVariables{}),
 		"environment":           reflect.TypeOf(JobEnvironment{}),
 		"git_source":            reflect.TypeOf(GitSource{}),
 		"health":                reflect.TypeOf(JobsHealthRules{}),
@@ -9722,8 +12181,10 @@ func (m JobSettings) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"continuous":            m.Continuous,
 			"deployment":            m.Deployment,
 			"description":           m.Description,
+			"duration_target":       m.DurationTarget,
 			"edit_mode":             m.EditMode,
 			"email_notifications":   m.EmailNotifications,
+			"environment_variables": m.EnvironmentVariables,
 			"environment":           m.Environments,
 			"format":                m.Format,
 			"git_source":            m.GitSource,
@@ -9756,8 +12217,12 @@ func (m JobSettings) Type(ctx context.Context) attr.Type {
 			"continuous":          Continuous{}.Type(ctx),
 			"deployment":          JobDeployment{}.Type(ctx),
 			"description":         types.StringType,
+			"duration_target":     types.StringType,
 			"edit_mode":           types.StringType,
 			"email_notifications": JobEmailNotifications{}.Type(ctx),
+			"environment_variables": basetypes.ListType{
+				ElemType: JobEnvironmentVariables{}.Type(ctx),
+			},
 			"environment": basetypes.ListType{
 				ElemType: JobEnvironment{}.Type(ctx),
 			},
@@ -9868,6 +12333,32 @@ func (m *JobSettings) GetEmailNotifications(ctx context.Context) (JobEmailNotifi
 func (m *JobSettings) SetEmailNotifications(ctx context.Context, v JobEmailNotifications) {
 	vs := v.ToObjectValue(ctx)
 	m.EmailNotifications = vs
+}
+
+// GetEnvironmentVariables returns the value of the EnvironmentVariables field in JobSettings as
+// a slice of JobEnvironmentVariables values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *JobSettings) GetEnvironmentVariables(ctx context.Context) ([]JobEnvironmentVariables, bool) {
+	if m.EnvironmentVariables.IsNull() || m.EnvironmentVariables.IsUnknown() {
+		return nil, false
+	}
+	var v []JobEnvironmentVariables
+	d := m.EnvironmentVariables.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetEnvironmentVariables sets the value of the EnvironmentVariables field in JobSettings.
+func (m *JobSettings) SetEnvironmentVariables(ctx context.Context, v []JobEnvironmentVariables) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["environment_variables"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.EnvironmentVariables = types.ListValueMust(t, vs)
 }
 
 // GetEnvironments returns the value of the Environments field in JobSettings as
@@ -11110,6 +13601,73 @@ func (m *ListRunsResponse) SetRuns(ctx context.Context, v []BaseRun) {
 	m.Runs = types.ListValueMust(t, vs)
 }
 
+// A recurring weekly time window during which platform-initiated maintenance is
+// allowed to run for a continuous job.
+type MaintenanceWindow struct {
+	// The day of week on which maintenance is allowed to happen. This field is
+	// required.
+	DayOfWeek types.String `tfsdk:"day_of_week"`
+	// An integer between 0 and 23 denoting the start hour for the maintenance
+	// window in the 24-hour day. Platform-initiated maintenance is triggered
+	// only within a one-hour window starting at this hour. This field is
+	// required.
+	StartHour types.Int64 `tfsdk:"start_hour"`
+	// A Java timezone ID. The maintenance window is resolved with respect to
+	// this timezone. See [Java TimeZone] for details. This field is required.
+	//
+	// [Java TimeZone]: https://docs.oracle.com/javase/7/docs/api/java/util/TimeZone.html
+	TimezoneId types.String `tfsdk:"timezone_id"`
+}
+
+func (to *MaintenanceWindow) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from MaintenanceWindow) {
+}
+
+func (to *MaintenanceWindow) SyncFieldsDuringRead(ctx context.Context, from MaintenanceWindow) {
+}
+
+func (m MaintenanceWindow) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["day_of_week"] = attrs["day_of_week"].SetRequired()
+	attrs["start_hour"] = attrs["start_hour"].SetRequired()
+	attrs["timezone_id"] = attrs["timezone_id"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in MaintenanceWindow.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m MaintenanceWindow) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, MaintenanceWindow
+// only implements ToObjectValue() and Type().
+func (m MaintenanceWindow) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"day_of_week": m.DayOfWeek,
+			"start_hour":  m.StartHour,
+			"timezone_id": m.TimezoneId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m MaintenanceWindow) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"day_of_week": types.StringType,
+			"start_hour":  types.Int64Type,
+			"timezone_id": types.StringType,
+		},
+	}
+}
+
 type ModelTriggerConfiguration struct {
 	// Aliases of the model versions to monitor. Can only be used in conjunction
 	// with condition MODEL_ALIAS_SET.
@@ -11521,6 +14079,8 @@ type PerTriggerState struct {
 
 	FileArrival types.Object `tfsdk:"file_arrival"`
 
+	JobCompletion types.Object `tfsdk:"job_completion"`
+
 	Model types.Object `tfsdk:"model"`
 	// Whether this trigger is paused or not. Mirrors the configured
 	// pause_status.
@@ -11552,6 +14112,15 @@ func (to *PerTriggerState) SyncFieldsDuringCreateOrUpdate(ctx context.Context, f
 				// Recursively sync the fields of FileArrival
 				toFileArrival.SyncFieldsDuringCreateOrUpdate(ctx, fromFileArrival)
 				to.SetFileArrival(ctx, toFileArrival)
+			}
+		}
+	}
+	if !from.JobCompletion.IsNull() && !from.JobCompletion.IsUnknown() {
+		if toJobCompletion, ok := to.GetJobCompletion(ctx); ok {
+			if fromJobCompletion, ok := from.GetJobCompletion(ctx); ok {
+				// Recursively sync the fields of JobCompletion
+				toJobCompletion.SyncFieldsDuringCreateOrUpdate(ctx, fromJobCompletion)
+				to.SetJobCompletion(ctx, toJobCompletion)
 			}
 		}
 	}
@@ -11619,6 +14188,14 @@ func (to *PerTriggerState) SyncFieldsDuringRead(ctx context.Context, from PerTri
 			}
 		}
 	}
+	if !from.JobCompletion.IsNull() && !from.JobCompletion.IsUnknown() {
+		if toJobCompletion, ok := to.GetJobCompletion(ctx); ok {
+			if fromJobCompletion, ok := from.GetJobCompletion(ctx); ok {
+				toJobCompletion.SyncFieldsDuringRead(ctx, fromJobCompletion)
+				to.SetJobCompletion(ctx, toJobCompletion)
+			}
+		}
+	}
 	if !from.Model.IsNull() && !from.Model.IsUnknown() {
 		if toModel, ok := to.GetModel(ctx); ok {
 			if fromModel, ok := from.GetModel(ctx); ok {
@@ -11664,6 +14241,7 @@ func (to *PerTriggerState) SyncFieldsDuringRead(ctx context.Context, from PerTri
 func (m PerTriggerState) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["continuous"] = attrs["continuous"].SetOptional()
 	attrs["file_arrival"] = attrs["file_arrival"].SetOptional()
+	attrs["job_completion"] = attrs["job_completion"].SetComputed()
 	attrs["model"] = attrs["model"].SetOptional()
 	attrs["pause_status"] = attrs["pause_status"].SetOptional()
 	attrs["periodic"] = attrs["periodic"].SetOptional()
@@ -11683,13 +14261,14 @@ func (m PerTriggerState) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 // SDK values.
 func (m PerTriggerState) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"continuous":    reflect.TypeOf(ContinuousTriggerState{}),
-		"file_arrival":  reflect.TypeOf(FileArrivalTriggerState{}),
-		"model":         reflect.TypeOf(ModelTriggerState{}),
-		"periodic":      reflect.TypeOf(PeriodicTriggerState{}),
-		"schedule":      reflect.TypeOf(ScheduleTriggerState{}),
-		"sql_condition": reflect.TypeOf(SqlConditionState{}),
-		"table_update":  reflect.TypeOf(TableTriggerState{}),
+		"continuous":     reflect.TypeOf(ContinuousTriggerState{}),
+		"file_arrival":   reflect.TypeOf(FileArrivalTriggerState{}),
+		"job_completion": reflect.TypeOf(JobCompletionTriggerState{}),
+		"model":          reflect.TypeOf(ModelTriggerState{}),
+		"periodic":       reflect.TypeOf(PeriodicTriggerState{}),
+		"schedule":       reflect.TypeOf(ScheduleTriggerState{}),
+		"sql_condition":  reflect.TypeOf(SqlConditionState{}),
+		"table_update":   reflect.TypeOf(TableTriggerState{}),
 	}
 }
 
@@ -11700,14 +14279,15 @@ func (m PerTriggerState) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"continuous":    m.Continuous,
-			"file_arrival":  m.FileArrival,
-			"model":         m.Model,
-			"pause_status":  m.PauseStatus,
-			"periodic":      m.Periodic,
-			"schedule":      m.Schedule,
-			"sql_condition": m.SqlCondition,
-			"table_update":  m.TableUpdate,
+			"continuous":     m.Continuous,
+			"file_arrival":   m.FileArrival,
+			"job_completion": m.JobCompletion,
+			"model":          m.Model,
+			"pause_status":   m.PauseStatus,
+			"periodic":       m.Periodic,
+			"schedule":       m.Schedule,
+			"sql_condition":  m.SqlCondition,
+			"table_update":   m.TableUpdate,
 		})
 }
 
@@ -11715,14 +14295,15 @@ func (m PerTriggerState) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 func (m PerTriggerState) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"continuous":    ContinuousTriggerState{}.Type(ctx),
-			"file_arrival":  FileArrivalTriggerState{}.Type(ctx),
-			"model":         ModelTriggerState{}.Type(ctx),
-			"pause_status":  types.StringType,
-			"periodic":      PeriodicTriggerState{}.Type(ctx),
-			"schedule":      ScheduleTriggerState{}.Type(ctx),
-			"sql_condition": SqlConditionState{}.Type(ctx),
-			"table_update":  TableTriggerState{}.Type(ctx),
+			"continuous":     ContinuousTriggerState{}.Type(ctx),
+			"file_arrival":   FileArrivalTriggerState{}.Type(ctx),
+			"job_completion": JobCompletionTriggerState{}.Type(ctx),
+			"model":          ModelTriggerState{}.Type(ctx),
+			"pause_status":   types.StringType,
+			"periodic":       PeriodicTriggerState{}.Type(ctx),
+			"schedule":       ScheduleTriggerState{}.Type(ctx),
+			"sql_condition":  SqlConditionState{}.Type(ctx),
+			"table_update":   TableTriggerState{}.Type(ctx),
 		},
 	}
 }
@@ -11775,6 +14356,31 @@ func (m *PerTriggerState) GetFileArrival(ctx context.Context) (FileArrivalTrigge
 func (m *PerTriggerState) SetFileArrival(ctx context.Context, v FileArrivalTriggerState) {
 	vs := v.ToObjectValue(ctx)
 	m.FileArrival = vs
+}
+
+// GetJobCompletion returns the value of the JobCompletion field in PerTriggerState as
+// a JobCompletionTriggerState value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *PerTriggerState) GetJobCompletion(ctx context.Context) (JobCompletionTriggerState, bool) {
+	var e JobCompletionTriggerState
+	if m.JobCompletion.IsNull() || m.JobCompletion.IsUnknown() {
+		return e, false
+	}
+	var v JobCompletionTriggerState
+	d := m.JobCompletion.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetJobCompletion sets the value of the JobCompletion field in PerTriggerState.
+func (m *PerTriggerState) SetJobCompletion(ctx context.Context, v JobCompletionTriggerState) {
+	vs := v.ToObjectValue(ctx)
+	m.JobCompletion = vs
 }
 
 // GetModel returns the value of the Model field in PerTriggerState as
@@ -13135,6 +15741,66 @@ func (m *PythonWheelTask) SetParameters(ctx context.Context, v []types.String) {
 	m.Parameters = types.ListValueMust(t, vs)
 }
 
+// A three-level Unity Catalog name (catalog.schema.table); any level may be
+// unset.
+type QualifiedName struct {
+	// Unity Catalog catalog.
+	Catalog types.String `tfsdk:"catalog"`
+	// Unity Catalog schema, within the catalog.
+	Schema types.String `tfsdk:"schema"`
+	// Table, within the catalog and schema.
+	Table types.String `tfsdk:"table"`
+}
+
+func (to *QualifiedName) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from QualifiedName) {
+}
+
+func (to *QualifiedName) SyncFieldsDuringRead(ctx context.Context, from QualifiedName) {
+}
+
+func (m QualifiedName) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["catalog"] = attrs["catalog"].SetOptional()
+	attrs["schema"] = attrs["schema"].SetOptional()
+	attrs["table"] = attrs["table"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in QualifiedName.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m QualifiedName) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, QualifiedName
+// only implements ToObjectValue() and Type().
+func (m QualifiedName) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"catalog": m.Catalog,
+			"schema":  m.Schema,
+			"table":   m.Table,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m QualifiedName) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"catalog": types.StringType,
+			"schema":  types.StringType,
+			"table":   types.StringType,
+		},
+	}
+}
+
 type QueueDetails struct {
 	Code types.String `tfsdk:"code"`
 	// A descriptive message with the queuing details. This field is
@@ -13242,9 +15908,11 @@ type RepairHistoryItem struct {
 	// request depending on whether the performance mode is supported by the job
 	// type.
 	//
-	// * `STANDARD`: Enables cost-efficient execution of serverless workloads. *
-	// `PERFORMANCE_OPTIMIZED`: Prioritizes fast startup and execution times
-	// through rapid scaling and optimized cluster performance.
+	// * `PERFORMANCE_OPTIMIZED`: Prioritizes fast startup and execution times
+	// through rapid scaling and optimized cluster performance. * `STANDARD`:
+	// Enables cost-efficient execution of serverless workloads. *
+	// `COST_OPTIMIZED`: Enables lower job costs by optimizing compute for your
+	// selected target duration time. Must provide a duration target.
 	EffectivePerformanceTarget types.String `tfsdk:"effective_performance_target"`
 	// The end time of the (repaired) run.
 	EndTime types.Int64 `tfsdk:"end_time"`
@@ -13467,6 +16135,13 @@ type RepairRun struct {
 	//
 	// [job parameters]: https://docs.databricks.com/jobs/job-parameters.html#job-parameter-pushdown
 	DbtCommands types.List `tfsdk:"dbt_commands"`
+	// The window the run aims to finish within, in hours, for a Cost-optimized
+	// serverless run. Required only when `performance_target` is
+	// `COST_OPTIMIZED`. Must be one of the supported values: `NO_FLEXIBILITY`,
+	// `4h`, `12h`, `24h`, `72h`. `NO_FLEXIBILITY` means the run uses the
+	// default cost-optimized performance level without additional cost-saving
+	// optimizations.
+	DurationTarget types.String `tfsdk:"duration_target"`
 	// A list of parameters for jobs with Spark JAR tasks, for example
 	// `"jar_params": ["john doe", "35"]`. The parameters are used to invoke the
 	// main function of the main class specified in the Spark JAR task. If not
@@ -13512,9 +16187,11 @@ type RepairRun struct {
 	// run. This field overrides the performance target defined on the job
 	// level.
 	//
-	// * `STANDARD`: Enables cost-efficient execution of serverless workloads. *
-	// `PERFORMANCE_OPTIMIZED`: Prioritizes fast startup and execution times
-	// through rapid scaling and optimized cluster performance.
+	// * `PERFORMANCE_OPTIMIZED`: Prioritizes fast startup and execution times
+	// through rapid scaling and optimized cluster performance. * `STANDARD`:
+	// Enables cost-efficient execution of serverless workloads. *
+	// `COST_OPTIMIZED`: Enables lower job costs by optimizing compute for your
+	// selected target duration time. Must provide a duration target.
 	PerformanceTarget types.String `tfsdk:"performance_target"`
 	// Controls whether the pipeline should perform a full refresh
 	PipelineParams types.Object `tfsdk:"pipeline_params"`
@@ -13664,6 +16341,7 @@ func (to *RepairRun) SyncFieldsDuringRead(ctx context.Context, from RepairRun) {
 
 func (m RepairRun) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["dbt_commands"] = attrs["dbt_commands"].SetOptional()
+	attrs["duration_target"] = attrs["duration_target"].SetOptional()
 	attrs["jar_params"] = attrs["jar_params"].SetOptional()
 	attrs["job_parameters"] = attrs["job_parameters"].SetOptional()
 	attrs["latest_repair_id"] = attrs["latest_repair_id"].SetOptional()
@@ -13712,6 +16390,7 @@ func (m RepairRun) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"dbt_commands":           m.DbtCommands,
+			"duration_target":        m.DurationTarget,
 			"jar_params":             m.JarParams,
 			"job_parameters":         m.JobParameters,
 			"latest_repair_id":       m.LatestRepairId,
@@ -13736,6 +16415,7 @@ func (m RepairRun) Type(ctx context.Context) attr.Type {
 			"dbt_commands": basetypes.ListType{
 				ElemType: types.StringType,
 			},
+			"duration_target": types.StringType,
 			"jar_params": basetypes.ListType{
 				ElemType: types.StringType,
 			},
@@ -14878,6 +17558,9 @@ func (m *ResolvedStringParamsValues) SetParameters(ctx context.Context, v []type
 }
 
 type ResolvedValues struct {
+	// Resolved values for an AI Function task: the Delta table input with
+	// upstream-task references replaced by concrete values before the run.
+	AiFunctionTask types.Object `tfsdk:"ai_function_task"`
 	// Resolved values for an AI Runtime task — env_vars with
 	// `{{tasks.<key>.values.<name>}}` references substituted to concrete values
 	// before submission to the training service.
@@ -14907,6 +17590,15 @@ type ResolvedValues struct {
 }
 
 func (to *ResolvedValues) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ResolvedValues) {
+	if !from.AiFunctionTask.IsNull() && !from.AiFunctionTask.IsUnknown() {
+		if toAiFunctionTask, ok := to.GetAiFunctionTask(ctx); ok {
+			if fromAiFunctionTask, ok := from.GetAiFunctionTask(ctx); ok {
+				// Recursively sync the fields of AiFunctionTask
+				toAiFunctionTask.SyncFieldsDuringCreateOrUpdate(ctx, fromAiFunctionTask)
+				to.SetAiFunctionTask(ctx, toAiFunctionTask)
+			}
+		}
+	}
 	if !from.AiRuntimeTask.IsNull() && !from.AiRuntimeTask.IsUnknown() {
 		if toAiRuntimeTask, ok := to.GetAiRuntimeTask(ctx); ok {
 			if fromAiRuntimeTask, ok := from.GetAiRuntimeTask(ctx); ok {
@@ -15018,6 +17710,14 @@ func (to *ResolvedValues) SyncFieldsDuringCreateOrUpdate(ctx context.Context, fr
 }
 
 func (to *ResolvedValues) SyncFieldsDuringRead(ctx context.Context, from ResolvedValues) {
+	if !from.AiFunctionTask.IsNull() && !from.AiFunctionTask.IsUnknown() {
+		if toAiFunctionTask, ok := to.GetAiFunctionTask(ctx); ok {
+			if fromAiFunctionTask, ok := from.GetAiFunctionTask(ctx); ok {
+				toAiFunctionTask.SyncFieldsDuringRead(ctx, fromAiFunctionTask)
+				to.SetAiFunctionTask(ctx, toAiFunctionTask)
+			}
+		}
+	}
 	if !from.AiRuntimeTask.IsNull() && !from.AiRuntimeTask.IsUnknown() {
 		if toAiRuntimeTask, ok := to.GetAiRuntimeTask(ctx); ok {
 			if fromAiRuntimeTask, ok := from.GetAiRuntimeTask(ctx); ok {
@@ -15117,6 +17817,7 @@ func (to *ResolvedValues) SyncFieldsDuringRead(ctx context.Context, from Resolve
 }
 
 func (m ResolvedValues) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["ai_function_task"] = attrs["ai_function_task"].SetOptional()
 	attrs["ai_runtime_task"] = attrs["ai_runtime_task"].SetOptional()
 	attrs["condition_task"] = attrs["condition_task"].SetOptional()
 	attrs["dbt_task"] = attrs["dbt_task"].SetOptional()
@@ -15142,6 +17843,7 @@ func (m ResolvedValues) ApplySchemaCustomizations(attrs map[string]tfschema.Attr
 // SDK values.
 func (m ResolvedValues) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
+		"ai_function_task":  reflect.TypeOf(ResolvedValuesAiFunctionTaskResolvedValues{}),
 		"ai_runtime_task":   reflect.TypeOf(ResolvedValuesAiRuntimeTaskResolvedValues{}),
 		"condition_task":    reflect.TypeOf(ResolvedConditionTaskValues{}),
 		"dbt_task":          reflect.TypeOf(ResolvedDbtTaskValues{}),
@@ -15164,6 +17866,7 @@ func (m ResolvedValues) ToObjectValue(ctx context.Context) basetypes.ObjectValue
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"ai_function_task":  m.AiFunctionTask,
 			"ai_runtime_task":   m.AiRuntimeTask,
 			"condition_task":    m.ConditionTask,
 			"dbt_task":          m.DbtTask,
@@ -15183,6 +17886,7 @@ func (m ResolvedValues) ToObjectValue(ctx context.Context) basetypes.ObjectValue
 func (m ResolvedValues) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"ai_function_task":  ResolvedValuesAiFunctionTaskResolvedValues{}.Type(ctx),
 			"ai_runtime_task":   ResolvedValuesAiRuntimeTaskResolvedValues{}.Type(ctx),
 			"condition_task":    ResolvedConditionTaskValues{}.Type(ctx),
 			"dbt_task":          ResolvedDbtTaskValues{}.Type(ctx),
@@ -15197,6 +17901,31 @@ func (m ResolvedValues) Type(ctx context.Context) attr.Type {
 			"sql_task":          ResolvedParamPairValues{}.Type(ctx),
 		},
 	}
+}
+
+// GetAiFunctionTask returns the value of the AiFunctionTask field in ResolvedValues as
+// a ResolvedValuesAiFunctionTaskResolvedValues value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ResolvedValues) GetAiFunctionTask(ctx context.Context) (ResolvedValuesAiFunctionTaskResolvedValues, bool) {
+	var e ResolvedValuesAiFunctionTaskResolvedValues
+	if m.AiFunctionTask.IsNull() || m.AiFunctionTask.IsUnknown() {
+		return e, false
+	}
+	var v ResolvedValuesAiFunctionTaskResolvedValues
+	d := m.AiFunctionTask.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAiFunctionTask sets the value of the AiFunctionTask field in ResolvedValues.
+func (m *ResolvedValues) SetAiFunctionTask(ctx context.Context, v ResolvedValuesAiFunctionTaskResolvedValues) {
+	vs := v.ToObjectValue(ctx)
+	m.AiFunctionTask = vs
 }
 
 // GetAiRuntimeTask returns the value of the AiRuntimeTask field in ResolvedValues as
@@ -15499,6 +18228,101 @@ func (m *ResolvedValues) SetSqlTask(ctx context.Context, v ResolvedParamPairValu
 	m.SqlTask = vs
 }
 
+// Resolved values for an AI Function task's Delta table input.
+type ResolvedValuesAiFunctionTaskResolvedValues struct {
+	// The Delta table source with any upstream-task references (such as
+	// `{{tasks.<task_key>.values.output_table_name}}`) in the table name
+	// replaced by concrete values before the run.
+	DeltaTable types.Object `tfsdk:"delta_table"`
+}
+
+func (to *ResolvedValuesAiFunctionTaskResolvedValues) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ResolvedValuesAiFunctionTaskResolvedValues) {
+	if !from.DeltaTable.IsNull() && !from.DeltaTable.IsUnknown() {
+		if toDeltaTable, ok := to.GetDeltaTable(ctx); ok {
+			if fromDeltaTable, ok := from.GetDeltaTable(ctx); ok {
+				// Recursively sync the fields of DeltaTable
+				toDeltaTable.SyncFieldsDuringCreateOrUpdate(ctx, fromDeltaTable)
+				to.SetDeltaTable(ctx, toDeltaTable)
+			}
+		}
+	}
+}
+
+func (to *ResolvedValuesAiFunctionTaskResolvedValues) SyncFieldsDuringRead(ctx context.Context, from ResolvedValuesAiFunctionTaskResolvedValues) {
+	if !from.DeltaTable.IsNull() && !from.DeltaTable.IsUnknown() {
+		if toDeltaTable, ok := to.GetDeltaTable(ctx); ok {
+			if fromDeltaTable, ok := from.GetDeltaTable(ctx); ok {
+				toDeltaTable.SyncFieldsDuringRead(ctx, fromDeltaTable)
+				to.SetDeltaTable(ctx, toDeltaTable)
+			}
+		}
+	}
+}
+
+func (m ResolvedValuesAiFunctionTaskResolvedValues) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["delta_table"] = attrs["delta_table"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ResolvedValuesAiFunctionTaskResolvedValues.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ResolvedValuesAiFunctionTaskResolvedValues) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"delta_table": reflect.TypeOf(DeltaTableSource{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ResolvedValuesAiFunctionTaskResolvedValues
+// only implements ToObjectValue() and Type().
+func (m ResolvedValuesAiFunctionTaskResolvedValues) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"delta_table": m.DeltaTable,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ResolvedValuesAiFunctionTaskResolvedValues) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"delta_table": DeltaTableSource{}.Type(ctx),
+		},
+	}
+}
+
+// GetDeltaTable returns the value of the DeltaTable field in ResolvedValuesAiFunctionTaskResolvedValues as
+// a DeltaTableSource value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ResolvedValuesAiFunctionTaskResolvedValues) GetDeltaTable(ctx context.Context) (DeltaTableSource, bool) {
+	var e DeltaTableSource
+	if m.DeltaTable.IsNull() || m.DeltaTable.IsUnknown() {
+		return e, false
+	}
+	var v DeltaTableSource
+	d := m.DeltaTable.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetDeltaTable sets the value of the DeltaTable field in ResolvedValuesAiFunctionTaskResolvedValues.
+func (m *ResolvedValuesAiFunctionTaskResolvedValues) SetDeltaTable(ctx context.Context, v DeltaTableSource) {
+	vs := v.ToObjectValue(ctx)
+	m.DeltaTable = vs
+}
+
 // Resolved values for an AiRuntimeTask after dynamic-value substitution, so
 // Jobs can expand `{{tasks.<key>.values.<name>}}` references before submission.
 type ResolvedValuesAiRuntimeTaskResolvedValues struct {
@@ -15574,14 +18398,23 @@ type Run struct {
 	DeploymentId types.String `tfsdk:"deployment_id"`
 	// Description of the run
 	Description types.String `tfsdk:"description"`
+	// The window the run aims to finish within, in hours, for a Cost-optimized
+	// serverless run. Required only when `performance_target` is
+	// `COST_OPTIMIZED`. Must be one of the supported values: `NO_FLEXIBILITY`,
+	// `4h`, `12h`, `24h`, `72h`. `NO_FLEXIBILITY` means the run uses the
+	// default cost-optimized performance level without additional cost-saving
+	// optimizations.
+	DurationTarget types.String `tfsdk:"duration_target"`
 	// The actual performance target used by the serverless run during
 	// execution. This can differ from the client-set performance target on the
 	// request depending on whether the performance mode is supported by the job
 	// type.
 	//
-	// * `STANDARD`: Enables cost-efficient execution of serverless workloads. *
-	// `PERFORMANCE_OPTIMIZED`: Prioritizes fast startup and execution times
-	// through rapid scaling and optimized cluster performance.
+	// * `PERFORMANCE_OPTIMIZED`: Prioritizes fast startup and execution times
+	// through rapid scaling and optimized cluster performance. * `STANDARD`:
+	// Enables cost-efficient execution of serverless workloads. *
+	// `COST_OPTIMIZED`: Enables lower job costs by optimizing compute for your
+	// selected target duration time. Must provide a duration target.
 	EffectivePerformanceTarget types.String `tfsdk:"effective_performance_target"`
 	// The id of the usage policy used by this run for cost attribution
 	// purposes.
@@ -15589,6 +18422,11 @@ type Run struct {
 	// The time at which this run ended in epoch milliseconds (milliseconds
 	// since 1/1/1970 UTC). This field is set to 0 if the job is still running.
 	EndTime types.Int64 `tfsdk:"end_time"`
+	// Snapshot of `JobSettings.environment_variables` as it was at run launch
+	// — the full list of named environment-variable entries the job defined.
+	// To find which entry a given task ran with, look at
+	// `RunTaskSettings.environment_variables_key`.
+	EnvironmentVariables types.List `tfsdk:"environment_variables"`
 	// The time in milliseconds it took to execute the commands in the JAR or
 	// notebook until they completed, failed, timed out, were cancelled, or
 	// encountered an unexpected error. The duration of a task run is the sum of
@@ -15711,6 +18549,25 @@ func (to *Run) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Run) {
 				// Recursively sync the fields of ClusterSpec
 				toClusterSpec.SyncFieldsDuringCreateOrUpdate(ctx, fromClusterSpec)
 				to.SetClusterSpec(ctx, toClusterSpec)
+			}
+		}
+	}
+	if !from.EnvironmentVariables.IsNull() && !from.EnvironmentVariables.IsUnknown() && to.EnvironmentVariables.IsNull() && len(from.EnvironmentVariables.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for EnvironmentVariables, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.EnvironmentVariables = from.EnvironmentVariables
+	}
+	if !from.EnvironmentVariables.IsNull() && !from.EnvironmentVariables.IsUnknown() {
+		if toEnvironmentVariables, ok := to.GetEnvironmentVariables(ctx); ok {
+			if fromEnvironmentVariables, ok := from.GetEnvironmentVariables(ctx); ok {
+				// Recursively sync the fields of each EnvironmentVariables element by position.
+				for i := range toEnvironmentVariables {
+					if i < len(fromEnvironmentVariables) {
+						toEnvironmentVariables[i].SyncFieldsDuringCreateOrUpdate(ctx, fromEnvironmentVariables[i])
+					}
+				}
+				to.SetEnvironmentVariables(ctx, toEnvironmentVariables)
 			}
 		}
 	}
@@ -15882,6 +18739,24 @@ func (to *Run) SyncFieldsDuringRead(ctx context.Context, from Run) {
 			}
 		}
 	}
+	if !from.EnvironmentVariables.IsNull() && !from.EnvironmentVariables.IsUnknown() && to.EnvironmentVariables.IsNull() && len(from.EnvironmentVariables.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for EnvironmentVariables, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.EnvironmentVariables = from.EnvironmentVariables
+	}
+	if !from.EnvironmentVariables.IsNull() && !from.EnvironmentVariables.IsUnknown() {
+		if toEnvironmentVariables, ok := to.GetEnvironmentVariables(ctx); ok {
+			if fromEnvironmentVariables, ok := from.GetEnvironmentVariables(ctx); ok {
+				for i := range toEnvironmentVariables {
+					if i < len(fromEnvironmentVariables) {
+						toEnvironmentVariables[i].SyncFieldsDuringRead(ctx, fromEnvironmentVariables[i])
+					}
+				}
+				to.SetEnvironmentVariables(ctx, toEnvironmentVariables)
+			}
+		}
+	}
 	if !from.GitSource.IsNull() && !from.GitSource.IsUnknown() {
 		if toGitSource, ok := to.GetGitSource(ctx); ok {
 			if fromGitSource, ok := from.GetGitSource(ctx); ok {
@@ -16030,9 +18905,11 @@ func (m Run) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilde
 	attrs["creator_user_name"] = attrs["creator_user_name"].SetOptional()
 	attrs["deployment_id"] = attrs["deployment_id"].SetOptional()
 	attrs["description"] = attrs["description"].SetOptional()
+	attrs["duration_target"] = attrs["duration_target"].SetOptional()
 	attrs["effective_performance_target"] = attrs["effective_performance_target"].SetOptional()
 	attrs["effective_usage_policy_id"] = attrs["effective_usage_policy_id"].SetComputed()
 	attrs["end_time"] = attrs["end_time"].SetOptional()
+	attrs["environment_variables"] = attrs["environment_variables"].SetComputed()
 	attrs["execution_duration"] = attrs["execution_duration"].SetOptional()
 	attrs["git_source"] = attrs["git_source"].SetOptional()
 	attrs["has_more"] = attrs["has_more"].SetOptional()
@@ -16076,6 +18953,7 @@ func (m Run) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"cluster_instance":      reflect.TypeOf(ClusterInstance{}),
 		"cluster_spec":          reflect.TypeOf(ClusterSpec{}),
+		"environment_variables": reflect.TypeOf(JobEnvironmentVariables{}),
 		"git_source":            reflect.TypeOf(GitSource{}),
 		"iterations":            reflect.TypeOf(RunTask{}),
 		"job_clusters":          reflect.TypeOf(JobCluster{}),
@@ -16104,9 +18982,11 @@ func (m Run) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"creator_user_name":            m.CreatorUserName,
 			"deployment_id":                m.DeploymentId,
 			"description":                  m.Description,
+			"duration_target":              m.DurationTarget,
 			"effective_performance_target": m.EffectivePerformanceTarget,
 			"effective_usage_policy_id":    m.EffectiveUsagePolicyId,
 			"end_time":                     m.EndTime,
+			"environment_variables":        m.EnvironmentVariables,
 			"execution_duration":           m.ExecutionDuration,
 			"git_source":                   m.GitSource,
 			"has_more":                     m.HasMore,
@@ -16149,12 +19029,16 @@ func (m Run) Type(ctx context.Context) attr.Type {
 			"creator_user_name":            types.StringType,
 			"deployment_id":                types.StringType,
 			"description":                  types.StringType,
+			"duration_target":              types.StringType,
 			"effective_performance_target": types.StringType,
 			"effective_usage_policy_id":    types.StringType,
 			"end_time":                     types.Int64Type,
-			"execution_duration":           types.Int64Type,
-			"git_source":                   GitSource{}.Type(ctx),
-			"has_more":                     types.BoolType,
+			"environment_variables": basetypes.ListType{
+				ElemType: JobEnvironmentVariables{}.Type(ctx),
+			},
+			"execution_duration": types.Int64Type,
+			"git_source":         GitSource{}.Type(ctx),
+			"has_more":           types.BoolType,
 			"iterations": basetypes.ListType{
 				ElemType: RunTask{}.Type(ctx),
 			},
@@ -16242,6 +19126,32 @@ func (m *Run) GetClusterSpec(ctx context.Context) (ClusterSpec, bool) {
 func (m *Run) SetClusterSpec(ctx context.Context, v ClusterSpec) {
 	vs := v.ToObjectValue(ctx)
 	m.ClusterSpec = vs
+}
+
+// GetEnvironmentVariables returns the value of the EnvironmentVariables field in Run as
+// a slice of JobEnvironmentVariables values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *Run) GetEnvironmentVariables(ctx context.Context) ([]JobEnvironmentVariables, bool) {
+	if m.EnvironmentVariables.IsNull() || m.EnvironmentVariables.IsUnknown() {
+		return nil, false
+	}
+	var v []JobEnvironmentVariables
+	d := m.EnvironmentVariables.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetEnvironmentVariables sets the value of the EnvironmentVariables field in Run.
+func (m *Run) SetEnvironmentVariables(ctx context.Context, v []JobEnvironmentVariables) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["environment_variables"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.EnvironmentVariables = types.ListValueMust(t, vs)
 }
 
 // GetGitSource returns the value of the GitSource field in Run as
@@ -17304,6 +20214,13 @@ type RunNow struct {
 	//
 	// [job parameters]: https://docs.databricks.com/jobs/job-parameters.html#job-parameter-pushdown
 	DbtCommands types.List `tfsdk:"dbt_commands"`
+	// The window the run aims to finish within, in hours, for a Cost-optimized
+	// serverless run. Required only when `performance_target` is
+	// `COST_OPTIMIZED`. Must be one of the supported values: `NO_FLEXIBILITY`,
+	// `4h`, `12h`, `24h`, `72h`. `NO_FLEXIBILITY` means the run uses the
+	// default cost-optimized performance level without additional cost-saving
+	// optimizations.
+	DurationTarget types.String `tfsdk:"duration_target"`
 	// An optional token to guarantee the idempotency of job run requests. If a
 	// run with the provided token already exists, the request does not create a
 	// new run but returns the ID of the existing run instead. If a run with the
@@ -17367,9 +20284,11 @@ type RunNow struct {
 	// run. This field overrides the performance target defined on the job
 	// level.
 	//
-	// * `STANDARD`: Enables cost-efficient execution of serverless workloads. *
-	// `PERFORMANCE_OPTIMIZED`: Prioritizes fast startup and execution times
-	// through rapid scaling and optimized cluster performance.
+	// * `PERFORMANCE_OPTIMIZED`: Prioritizes fast startup and execution times
+	// through rapid scaling and optimized cluster performance. * `STANDARD`:
+	// Enables cost-efficient execution of serverless workloads. *
+	// `COST_OPTIMIZED`: Enables lower job costs by optimizing compute for your
+	// selected target duration time. Must provide a duration target.
 	PerformanceTarget types.String `tfsdk:"performance_target"`
 	// Controls whether the pipeline should perform a full refresh
 	PipelineParams types.Object `tfsdk:"pipeline_params"`
@@ -17527,6 +20446,7 @@ func (to *RunNow) SyncFieldsDuringRead(ctx context.Context, from RunNow) {
 
 func (m RunNow) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["dbt_commands"] = attrs["dbt_commands"].SetOptional()
+	attrs["duration_target"] = attrs["duration_target"].SetOptional()
 	attrs["idempotency_token"] = attrs["idempotency_token"].SetOptional()
 	attrs["jar_params"] = attrs["jar_params"].SetOptional()
 	attrs["job_id"] = attrs["job_id"].SetRequired()
@@ -17575,6 +20495,7 @@ func (m RunNow) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"dbt_commands":        m.DbtCommands,
+			"duration_target":     m.DurationTarget,
 			"idempotency_token":   m.IdempotencyToken,
 			"jar_params":          m.JarParams,
 			"job_id":              m.JobId,
@@ -17598,6 +20519,7 @@ func (m RunNow) Type(ctx context.Context) attr.Type {
 			"dbt_commands": basetypes.ListType{
 				ElemType: types.StringType,
 			},
+			"duration_target":   types.StringType,
 			"idempotency_token": types.StringType,
 			"jar_params": basetypes.ListType{
 				ElemType: types.StringType,
@@ -17972,6 +20894,8 @@ func (m RunNowResponse) Type(ctx context.Context) attr.Type {
 
 // Run output was retrieved successfully.
 type RunOutput struct {
+	// The output of an AI function task, if available
+	AiFunctionTaskOutput types.Object `tfsdk:"ai_function_task_output"`
 	// The output of an AiRuntimeTask, if available — MLflow identifiers,
 	// artifact paths, and per-replica allocated compute. Run lifecycle /
 	// termination status lives on the surrounding framework `RunTask.status`
@@ -18027,6 +20951,15 @@ type RunOutput struct {
 }
 
 func (to *RunOutput) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from RunOutput) {
+	if !from.AiFunctionTaskOutput.IsNull() && !from.AiFunctionTaskOutput.IsUnknown() {
+		if toAiFunctionTaskOutput, ok := to.GetAiFunctionTaskOutput(ctx); ok {
+			if fromAiFunctionTaskOutput, ok := from.GetAiFunctionTaskOutput(ctx); ok {
+				// Recursively sync the fields of AiFunctionTaskOutput
+				toAiFunctionTaskOutput.SyncFieldsDuringCreateOrUpdate(ctx, fromAiFunctionTaskOutput)
+				to.SetAiFunctionTaskOutput(ctx, toAiFunctionTaskOutput)
+			}
+		}
+	}
 	if !from.AiRuntimeTaskOutput.IsNull() && !from.AiRuntimeTaskOutput.IsUnknown() {
 		if toAiRuntimeTaskOutput, ok := to.GetAiRuntimeTaskOutput(ctx); ok {
 			if fromAiRuntimeTaskOutput, ok := from.GetAiRuntimeTaskOutput(ctx); ok {
@@ -18129,6 +21062,14 @@ func (to *RunOutput) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Ru
 }
 
 func (to *RunOutput) SyncFieldsDuringRead(ctx context.Context, from RunOutput) {
+	if !from.AiFunctionTaskOutput.IsNull() && !from.AiFunctionTaskOutput.IsUnknown() {
+		if toAiFunctionTaskOutput, ok := to.GetAiFunctionTaskOutput(ctx); ok {
+			if fromAiFunctionTaskOutput, ok := from.GetAiFunctionTaskOutput(ctx); ok {
+				toAiFunctionTaskOutput.SyncFieldsDuringRead(ctx, fromAiFunctionTaskOutput)
+				to.SetAiFunctionTaskOutput(ctx, toAiFunctionTaskOutput)
+			}
+		}
+	}
 	if !from.AiRuntimeTaskOutput.IsNull() && !from.AiRuntimeTaskOutput.IsUnknown() {
 		if toAiRuntimeTaskOutput, ok := to.GetAiRuntimeTaskOutput(ctx); ok {
 			if fromAiRuntimeTaskOutput, ok := from.GetAiRuntimeTaskOutput(ctx); ok {
@@ -18220,6 +21161,7 @@ func (to *RunOutput) SyncFieldsDuringRead(ctx context.Context, from RunOutput) {
 }
 
 func (m RunOutput) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["ai_function_task_output"] = attrs["ai_function_task_output"].SetOptional()
 	attrs["ai_runtime_task_output"] = attrs["ai_runtime_task_output"].SetOptional()
 	attrs["alert_output"] = attrs["alert_output"].SetOptional()
 	attrs["clean_rooms_notebook_output"] = attrs["clean_rooms_notebook_output"].SetOptional()
@@ -18249,6 +21191,7 @@ func (m RunOutput) ApplySchemaCustomizations(attrs map[string]tfschema.Attribute
 // SDK values.
 func (m RunOutput) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
+		"ai_function_task_output":     reflect.TypeOf(AiFunctionTaskOutput{}),
 		"ai_runtime_task_output":      reflect.TypeOf(AiRuntimeTaskOutput{}),
 		"alert_output":                reflect.TypeOf(AlertTaskOutput{}),
 		"clean_rooms_notebook_output": reflect.TypeOf(CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput{}),
@@ -18270,6 +21213,7 @@ func (m RunOutput) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"ai_function_task_output":     m.AiFunctionTaskOutput,
 			"ai_runtime_task_output":      m.AiRuntimeTaskOutput,
 			"alert_output":                m.AlertOutput,
 			"clean_rooms_notebook_output": m.CleanRoomsNotebookOutput,
@@ -18293,6 +21237,7 @@ func (m RunOutput) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (m RunOutput) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"ai_function_task_output":     AiFunctionTaskOutput{}.Type(ctx),
 			"ai_runtime_task_output":      AiRuntimeTaskOutput{}.Type(ctx),
 			"alert_output":                AlertTaskOutput{}.Type(ctx),
 			"clean_rooms_notebook_output": CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput{}.Type(ctx),
@@ -18311,6 +21256,31 @@ func (m RunOutput) Type(ctx context.Context) attr.Type {
 			"sql_output":                  SqlOutput{}.Type(ctx),
 		},
 	}
+}
+
+// GetAiFunctionTaskOutput returns the value of the AiFunctionTaskOutput field in RunOutput as
+// a AiFunctionTaskOutput value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *RunOutput) GetAiFunctionTaskOutput(ctx context.Context) (AiFunctionTaskOutput, bool) {
+	var e AiFunctionTaskOutput
+	if m.AiFunctionTaskOutput.IsNull() || m.AiFunctionTaskOutput.IsUnknown() {
+		return e, false
+	}
+	var v AiFunctionTaskOutput
+	d := m.AiFunctionTaskOutput.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAiFunctionTaskOutput sets the value of the AiFunctionTaskOutput field in RunOutput.
+func (m *RunOutput) SetAiFunctionTaskOutput(ctx context.Context, v AiFunctionTaskOutput) {
+	vs := v.ToObjectValue(ctx)
+	m.AiFunctionTaskOutput = vs
 }
 
 // GetAiRuntimeTaskOutput returns the value of the AiRuntimeTaskOutput field in RunOutput as
@@ -19266,6 +22236,8 @@ func (m *RunStatus) SetTerminationDetails(ctx context.Context, v TerminationDeta
 
 // Used when outputting a child run, in GetRun or ListRuns.
 type RunTask struct {
+	// Applies an AI function to a set of input documents or rows.
+	AiFunctionTask types.Object `tfsdk:"ai_function_task"`
 	// The task runs a multi-gpu compute workload on Databricks AI Runtime.
 	// Specify the accelerator type and count, the command to run, and where the
 	// workload's code and MLflow output are stored.
@@ -19331,14 +22303,12 @@ type RunTask struct {
 	// request depending on whether the performance mode is supported by the job
 	// type.
 	//
-	// * `STANDARD`: Enables cost-efficient execution of serverless workloads. *
-	// `PERFORMANCE_OPTIMIZED`: Prioritizes fast startup and execution times
-	// through rapid scaling and optimized cluster performance.
+	// * `PERFORMANCE_OPTIMIZED`: Prioritizes fast startup and execution times
+	// through rapid scaling and optimized cluster performance. * `STANDARD`:
+	// Enables cost-efficient execution of serverless workloads. *
+	// `COST_OPTIMIZED`: Enables lower job costs by optimizing compute for your
+	// selected target duration time. Must provide a duration target.
 	EffectivePerformanceTarget types.String `tfsdk:"effective_performance_target"`
-	// The id of the serverless compute this task ran on, either explicitly
-	// configured on the task or the workspace default. Only set once the
-	// compute has been resolved at run trigger.
-	EffectiveServerlessComputeId types.String `tfsdk:"effective_serverless_compute_id"`
 	// An optional set of email addresses notified when the task run begins or
 	// completes. The default behavior is to not send any emails.
 	EmailNotifications types.Object `tfsdk:"email_notifications"`
@@ -19347,8 +22317,14 @@ type RunTask struct {
 	EndTime types.Int64 `tfsdk:"end_time"`
 	// The key that references an environment spec in a job. This field is
 	// required for Python script, Python wheel and dbt tasks when using
-	// serverless compute.
+	// serverless compute or a compute resource that uses Environments mode.
 	EnvironmentKey types.String `tfsdk:"environment_key"`
+	// Reference to a `JobEnvironmentVariables` entry defined in
+	// `RunSettings.environment_variables` for one-time runs or preserved in
+	// `Run.environment_variables` for run snapshots. The selected entry's
+	// variables are applied to this task at execution time. This field supports
+	// serverless tasks using environment version 5 or later.
+	EnvironmentVariablesKey types.String `tfsdk:"environment_variables_key"`
 	// The time in milliseconds it took to execute the commands in the JAR or
 	// notebook until they completed, failed, timed out, were cancelled, or
 	// encountered an unexpected error. The duration of a task run is the sum of
@@ -19476,6 +22452,15 @@ type RunTask struct {
 }
 
 func (to *RunTask) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from RunTask) {
+	if !from.AiFunctionTask.IsNull() && !from.AiFunctionTask.IsUnknown() {
+		if toAiFunctionTask, ok := to.GetAiFunctionTask(ctx); ok {
+			if fromAiFunctionTask, ok := from.GetAiFunctionTask(ctx); ok {
+				// Recursively sync the fields of AiFunctionTask
+				toAiFunctionTask.SyncFieldsDuringCreateOrUpdate(ctx, fromAiFunctionTask)
+				to.SetAiFunctionTask(ctx, toAiFunctionTask)
+			}
+		}
+	}
 	if !from.AiRuntimeTask.IsNull() && !from.AiRuntimeTask.IsUnknown() {
 		if toAiRuntimeTask, ok := to.GetAiRuntimeTask(ctx); ok {
 			if fromAiRuntimeTask, ok := from.GetAiRuntimeTask(ctx); ok {
@@ -19791,6 +22776,14 @@ func (to *RunTask) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from RunT
 }
 
 func (to *RunTask) SyncFieldsDuringRead(ctx context.Context, from RunTask) {
+	if !from.AiFunctionTask.IsNull() && !from.AiFunctionTask.IsUnknown() {
+		if toAiFunctionTask, ok := to.GetAiFunctionTask(ctx); ok {
+			if fromAiFunctionTask, ok := from.GetAiFunctionTask(ctx); ok {
+				toAiFunctionTask.SyncFieldsDuringRead(ctx, fromAiFunctionTask)
+				to.SetAiFunctionTask(ctx, toAiFunctionTask)
+			}
+		}
+	}
 	if !from.AiRuntimeTask.IsNull() && !from.AiRuntimeTask.IsUnknown() {
 		if toAiRuntimeTask, ok := to.GetAiRuntimeTask(ctx); ok {
 			if fromAiRuntimeTask, ok := from.GetAiRuntimeTask(ctx); ok {
@@ -20074,6 +23067,7 @@ func (to *RunTask) SyncFieldsDuringRead(ctx context.Context, from RunTask) {
 }
 
 func (m RunTask) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["ai_function_task"] = attrs["ai_function_task"].SetOptional()
 	attrs["ai_runtime_task"] = attrs["ai_runtime_task"].SetOptional()
 	attrs["alert_task"] = attrs["alert_task"].SetOptional()
 	attrs["attempt_number"] = attrs["attempt_number"].SetOptional()
@@ -20093,10 +23087,10 @@ func (m RunTask) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBu
 	attrs["disable_auto_optimization"] = attrs["disable_auto_optimization"].SetOptional()
 	attrs["disabled"] = attrs["disabled"].SetOptional()
 	attrs["effective_performance_target"] = attrs["effective_performance_target"].SetComputed()
-	attrs["effective_serverless_compute_id"] = attrs["effective_serverless_compute_id"].SetComputed()
 	attrs["email_notifications"] = attrs["email_notifications"].SetOptional()
 	attrs["end_time"] = attrs["end_time"].SetOptional()
 	attrs["environment_key"] = attrs["environment_key"].SetOptional()
+	attrs["environment_variables_key"] = attrs["environment_variables_key"].SetOptional()
 	attrs["execution_duration"] = attrs["execution_duration"].SetOptional()
 	attrs["existing_cluster_id"] = attrs["existing_cluster_id"].SetOptional()
 	attrs["for_each_task"] = attrs["for_each_task"].SetOptional()
@@ -20145,6 +23139,7 @@ func (m RunTask) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBu
 // SDK values.
 func (m RunTask) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
+		"ai_function_task":          reflect.TypeOf(AiFunctionTask{}),
 		"ai_runtime_task":           reflect.TypeOf(AiRuntimeTask{}),
 		"alert_task":                reflect.TypeOf(AlertTask{}),
 		"clean_rooms_notebook_task": reflect.TypeOf(CleanRoomsNotebookTask{}),
@@ -20187,62 +23182,63 @@ func (m RunTask) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"ai_runtime_task":                 m.AiRuntimeTask,
-			"alert_task":                      m.AlertTask,
-			"attempt_number":                  m.AttemptNumber,
-			"clean_rooms_notebook_task":       m.CleanRoomsNotebookTask,
-			"cleanup_duration":                m.CleanupDuration,
-			"cluster_instance":                m.ClusterInstance,
-			"compute":                         m.Compute,
-			"condition_task":                  m.ConditionTask,
-			"dashboard_task":                  m.DashboardTask,
-			"dbt_cloud_task":                  m.DbtCloudTask,
-			"dbt_platform_task":               m.DbtPlatformTask,
-			"dbt_task":                        m.DbtTask,
-			"depends_on":                      m.DependsOn,
-			"description":                     m.Description,
-			"disable_auto_optimization":       m.DisableAutoOptimization,
-			"disabled":                        m.Disabled,
-			"effective_performance_target":    m.EffectivePerformanceTarget,
-			"effective_serverless_compute_id": m.EffectiveServerlessComputeId,
-			"email_notifications":             m.EmailNotifications,
-			"end_time":                        m.EndTime,
-			"environment_key":                 m.EnvironmentKey,
-			"execution_duration":              m.ExecutionDuration,
-			"existing_cluster_id":             m.ExistingClusterId,
-			"for_each_task":                   m.ForEachTask,
-			"gen_ai_compute_task":             m.GenAiComputeTask,
-			"git_source":                      m.GitSource,
-			"job_cluster_key":                 m.JobClusterKey,
-			"library":                         m.Libraries,
-			"max_retries":                     m.MaxRetries,
-			"min_retry_interval_millis":       m.MinRetryIntervalMillis,
-			"new_cluster":                     m.NewCluster,
-			"notebook_task":                   m.NotebookTask,
-			"notification_settings":           m.NotificationSettings,
-			"pipeline_task":                   m.PipelineTask,
-			"power_bi_task":                   m.PowerBiTask,
-			"python_operator_task":            m.PythonOperatorTask,
-			"python_wheel_task":               m.PythonWheelTask,
-			"queue_duration":                  m.QueueDuration,
-			"resolved_values":                 m.ResolvedValues,
-			"retry_on_timeout":                m.RetryOnTimeout,
-			"run_duration":                    m.RunDuration,
-			"run_id":                          m.RunId,
-			"run_if":                          m.RunIf,
-			"run_job_task":                    m.RunJobTask,
-			"run_page_url":                    m.RunPageUrl,
-			"setup_duration":                  m.SetupDuration,
-			"spark_jar_task":                  m.SparkJarTask,
-			"spark_python_task":               m.SparkPythonTask,
-			"spark_submit_task":               m.SparkSubmitTask,
-			"sql_task":                        m.SqlTask,
-			"start_time":                      m.StartTime,
-			"state":                           m.State,
-			"status":                          m.Status,
-			"task_key":                        m.TaskKey,
-			"timeout_seconds":                 m.TimeoutSeconds,
-			"webhook_notifications":           m.WebhookNotifications,
+			"ai_function_task":             m.AiFunctionTask,
+			"ai_runtime_task":              m.AiRuntimeTask,
+			"alert_task":                   m.AlertTask,
+			"attempt_number":               m.AttemptNumber,
+			"clean_rooms_notebook_task":    m.CleanRoomsNotebookTask,
+			"cleanup_duration":             m.CleanupDuration,
+			"cluster_instance":             m.ClusterInstance,
+			"compute":                      m.Compute,
+			"condition_task":               m.ConditionTask,
+			"dashboard_task":               m.DashboardTask,
+			"dbt_cloud_task":               m.DbtCloudTask,
+			"dbt_platform_task":            m.DbtPlatformTask,
+			"dbt_task":                     m.DbtTask,
+			"depends_on":                   m.DependsOn,
+			"description":                  m.Description,
+			"disable_auto_optimization":    m.DisableAutoOptimization,
+			"disabled":                     m.Disabled,
+			"effective_performance_target": m.EffectivePerformanceTarget,
+			"email_notifications":          m.EmailNotifications,
+			"end_time":                     m.EndTime,
+			"environment_key":              m.EnvironmentKey,
+			"environment_variables_key":    m.EnvironmentVariablesKey,
+			"execution_duration":           m.ExecutionDuration,
+			"existing_cluster_id":          m.ExistingClusterId,
+			"for_each_task":                m.ForEachTask,
+			"gen_ai_compute_task":          m.GenAiComputeTask,
+			"git_source":                   m.GitSource,
+			"job_cluster_key":              m.JobClusterKey,
+			"library":                      m.Libraries,
+			"max_retries":                  m.MaxRetries,
+			"min_retry_interval_millis":    m.MinRetryIntervalMillis,
+			"new_cluster":                  m.NewCluster,
+			"notebook_task":                m.NotebookTask,
+			"notification_settings":        m.NotificationSettings,
+			"pipeline_task":                m.PipelineTask,
+			"power_bi_task":                m.PowerBiTask,
+			"python_operator_task":         m.PythonOperatorTask,
+			"python_wheel_task":            m.PythonWheelTask,
+			"queue_duration":               m.QueueDuration,
+			"resolved_values":              m.ResolvedValues,
+			"retry_on_timeout":             m.RetryOnTimeout,
+			"run_duration":                 m.RunDuration,
+			"run_id":                       m.RunId,
+			"run_if":                       m.RunIf,
+			"run_job_task":                 m.RunJobTask,
+			"run_page_url":                 m.RunPageUrl,
+			"setup_duration":               m.SetupDuration,
+			"spark_jar_task":               m.SparkJarTask,
+			"spark_python_task":            m.SparkPythonTask,
+			"spark_submit_task":            m.SparkSubmitTask,
+			"sql_task":                     m.SqlTask,
+			"start_time":                   m.StartTime,
+			"state":                        m.State,
+			"status":                       m.Status,
+			"task_key":                     m.TaskKey,
+			"timeout_seconds":              m.TimeoutSeconds,
+			"webhook_notifications":        m.WebhookNotifications,
 		})
 }
 
@@ -20250,6 +23246,7 @@ func (m RunTask) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (m RunTask) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"ai_function_task":          AiFunctionTask{}.Type(ctx),
 			"ai_runtime_task":           AiRuntimeTask{}.Type(ctx),
 			"alert_task":                AlertTask{}.Type(ctx),
 			"attempt_number":            types.Int64Type,
@@ -20265,20 +23262,20 @@ func (m RunTask) Type(ctx context.Context) attr.Type {
 			"depends_on": basetypes.ListType{
 				ElemType: TaskDependency{}.Type(ctx),
 			},
-			"description":                     types.StringType,
-			"disable_auto_optimization":       types.BoolType,
-			"disabled":                        types.BoolType,
-			"effective_performance_target":    types.StringType,
-			"effective_serverless_compute_id": types.StringType,
-			"email_notifications":             JobEmailNotifications{}.Type(ctx),
-			"end_time":                        types.Int64Type,
-			"environment_key":                 types.StringType,
-			"execution_duration":              types.Int64Type,
-			"existing_cluster_id":             types.StringType,
-			"for_each_task":                   RunForEachTask{}.Type(ctx),
-			"gen_ai_compute_task":             GenAiComputeTask{}.Type(ctx),
-			"git_source":                      GitSource{}.Type(ctx),
-			"job_cluster_key":                 types.StringType,
+			"description":                  types.StringType,
+			"disable_auto_optimization":    types.BoolType,
+			"disabled":                     types.BoolType,
+			"effective_performance_target": types.StringType,
+			"email_notifications":          JobEmailNotifications{}.Type(ctx),
+			"end_time":                     types.Int64Type,
+			"environment_key":              types.StringType,
+			"environment_variables_key":    types.StringType,
+			"execution_duration":           types.Int64Type,
+			"existing_cluster_id":          types.StringType,
+			"for_each_task":                RunForEachTask{}.Type(ctx),
+			"gen_ai_compute_task":          GenAiComputeTask{}.Type(ctx),
+			"git_source":                   GitSource{}.Type(ctx),
+			"job_cluster_key":              types.StringType,
 			"library": basetypes.ListType{
 				ElemType: compute_tf.Library{}.Type(ctx),
 			},
@@ -20312,6 +23309,31 @@ func (m RunTask) Type(ctx context.Context) attr.Type {
 			"webhook_notifications":     WebhookNotifications{}.Type(ctx),
 		},
 	}
+}
+
+// GetAiFunctionTask returns the value of the AiFunctionTask field in RunTask as
+// a AiFunctionTask value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *RunTask) GetAiFunctionTask(ctx context.Context) (AiFunctionTask, bool) {
+	var e AiFunctionTask
+	if m.AiFunctionTask.IsNull() || m.AiFunctionTask.IsUnknown() {
+		return e, false
+	}
+	var v AiFunctionTask
+	d := m.AiFunctionTask.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAiFunctionTask sets the value of the AiFunctionTask field in RunTask.
+func (m *RunTask) SetAiFunctionTask(ctx context.Context, v AiFunctionTask) {
+	vs := v.ToObjectValue(ctx)
+	m.AiFunctionTask = vs
 }
 
 // GetAiRuntimeTask returns the value of the AiRuntimeTask field in RunTask as
@@ -21781,15 +24803,15 @@ func (m SqlConditionConfiguration) Type(ctx context.Context) attr.Type {
 
 // SQL condition evaluation details captured at the time the run was triggered
 type SqlConditionRunInfoDetails struct {
-	// Whether the last condition evaluation was satisfied (query returned
-	// truthy result).
+	// Whether the last condition evaluation was satisfied. For
+	// QUERY_RETURNS_ROWS, the query returned at least one row. For
+	// RESULT_VALUE_CHANGES, the result value changed.
 	ConditionEvaluationSatisfied types.Bool `tfsdk:"condition_evaluation_satisfied"`
-	// The ID of the SQL session, used by the UI to track session context. Set
-	// for the QUERY_RETURNS_ROWS trigger mode.
+	// The ID of the SQL session of the condition evaluation. Not set by current
+	// evaluations. Use condition_evaluation_sql_statement_id instead.
 	ConditionEvaluationSqlSessionId types.String `tfsdk:"condition_evaluation_sql_session_id"`
-	// The SQL statement ID of the condition evaluation, set when the condition
-	// is evaluated by running a single SQL statement (the RESULT_VALUE_CHANGES
-	// trigger mode). The UI uses it to link to the query execution details.
+	// The SQL statement ID of the condition evaluation. Set for both the
+	// QUERY_RETURNS_ROWS and RESULT_VALUE_CHANGES trigger modes.
 	ConditionEvaluationSqlStatementId types.String `tfsdk:"condition_evaluation_sql_statement_id"`
 }
 
@@ -21843,15 +24865,16 @@ func (m SqlConditionRunInfoDetails) Type(ctx context.Context) attr.Type {
 }
 
 type SqlConditionState struct {
-	// Whether the last condition evaluation was satisfied (query returned
-	// truthy result).
+	// Whether the last condition evaluation was satisfied. For
+	// QUERY_RETURNS_ROWS, the query returned at least one row. For
+	// RESULT_VALUE_CHANGES, the result value changed.
 	LatestConditionEvaluationSatisfied types.Bool `tfsdk:"latest_condition_evaluation_satisfied"`
-	// The ID of the SQL session, used by UI to track session context. Populated
-	// for QUERY_RETURNS_ROWS, which executes the query through Redash.
+	// The ID of the SQL session of the latest condition evaluation. Not set by
+	// current evaluations. Use latest_condition_evaluation_sql_statement_id
+	// instead.
 	LatestConditionEvaluationSqlSessionId types.String `tfsdk:"latest_condition_evaluation_sql_session_id"`
-	// The SEA statement ID of the SQL statement executed for the latest
-	// condition evaluation. Populated for RESULT_VALUE_CHANGES, which executes
-	// the query through the SQL execution API.
+	// The ID of the SQL statement executed for the latest condition evaluation.
+	// Populated for both QUERY_RETURNS_ROWS and RESULT_VALUE_CHANGES.
 	LatestConditionEvaluationSqlStatementId types.String `tfsdk:"latest_condition_evaluation_sql_statement_id"`
 }
 
@@ -22151,6 +25174,8 @@ type SqlOutput struct {
 	AlertOutput types.Object `tfsdk:"alert_output"`
 	// The output of a SQL dashboard task, if available.
 	DashboardOutput types.Object `tfsdk:"dashboard_output"`
+	// The output of a SQL file task, if available.
+	FileOutput types.Object `tfsdk:"file_output"`
 	// The output of a SQL query task, if available.
 	QueryOutput types.Object `tfsdk:"query_output"`
 }
@@ -22171,6 +25196,15 @@ func (to *SqlOutput) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Sq
 				// Recursively sync the fields of DashboardOutput
 				toDashboardOutput.SyncFieldsDuringCreateOrUpdate(ctx, fromDashboardOutput)
 				to.SetDashboardOutput(ctx, toDashboardOutput)
+			}
+		}
+	}
+	if !from.FileOutput.IsNull() && !from.FileOutput.IsUnknown() {
+		if toFileOutput, ok := to.GetFileOutput(ctx); ok {
+			if fromFileOutput, ok := from.GetFileOutput(ctx); ok {
+				// Recursively sync the fields of FileOutput
+				toFileOutput.SyncFieldsDuringCreateOrUpdate(ctx, fromFileOutput)
+				to.SetFileOutput(ctx, toFileOutput)
 			}
 		}
 	}
@@ -22202,6 +25236,14 @@ func (to *SqlOutput) SyncFieldsDuringRead(ctx context.Context, from SqlOutput) {
 			}
 		}
 	}
+	if !from.FileOutput.IsNull() && !from.FileOutput.IsUnknown() {
+		if toFileOutput, ok := to.GetFileOutput(ctx); ok {
+			if fromFileOutput, ok := from.GetFileOutput(ctx); ok {
+				toFileOutput.SyncFieldsDuringRead(ctx, fromFileOutput)
+				to.SetFileOutput(ctx, toFileOutput)
+			}
+		}
+	}
 	if !from.QueryOutput.IsNull() && !from.QueryOutput.IsUnknown() {
 		if toQueryOutput, ok := to.GetQueryOutput(ctx); ok {
 			if fromQueryOutput, ok := from.GetQueryOutput(ctx); ok {
@@ -22215,6 +25257,7 @@ func (to *SqlOutput) SyncFieldsDuringRead(ctx context.Context, from SqlOutput) {
 func (m SqlOutput) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["alert_output"] = attrs["alert_output"].SetOptional()
 	attrs["dashboard_output"] = attrs["dashboard_output"].SetOptional()
+	attrs["file_output"] = attrs["file_output"].SetOptional()
 	attrs["query_output"] = attrs["query_output"].SetOptional()
 
 	return attrs
@@ -22231,6 +25274,7 @@ func (m SqlOutput) GetComplexFieldTypes(ctx context.Context) map[string]reflect.
 	return map[string]reflect.Type{
 		"alert_output":     reflect.TypeOf(SqlAlertOutput{}),
 		"dashboard_output": reflect.TypeOf(SqlDashboardOutput{}),
+		"file_output":      reflect.TypeOf(SqlTaskSqlFileOutput{}),
 		"query_output":     reflect.TypeOf(SqlQueryOutput{}),
 	}
 }
@@ -22244,6 +25288,7 @@ func (m SqlOutput) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 		map[string]attr.Value{
 			"alert_output":     m.AlertOutput,
 			"dashboard_output": m.DashboardOutput,
+			"file_output":      m.FileOutput,
 			"query_output":     m.QueryOutput,
 		})
 }
@@ -22254,6 +25299,7 @@ func (m SqlOutput) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"alert_output":     SqlAlertOutput{}.Type(ctx),
 			"dashboard_output": SqlDashboardOutput{}.Type(ctx),
+			"file_output":      SqlTaskSqlFileOutput{}.Type(ctx),
 			"query_output":     SqlQueryOutput{}.Type(ctx),
 		},
 	}
@@ -22307,6 +25353,31 @@ func (m *SqlOutput) GetDashboardOutput(ctx context.Context) (SqlDashboardOutput,
 func (m *SqlOutput) SetDashboardOutput(ctx context.Context, v SqlDashboardOutput) {
 	vs := v.ToObjectValue(ctx)
 	m.DashboardOutput = vs
+}
+
+// GetFileOutput returns the value of the FileOutput field in SqlOutput as
+// a SqlTaskSqlFileOutput value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *SqlOutput) GetFileOutput(ctx context.Context) (SqlTaskSqlFileOutput, bool) {
+	var e SqlTaskSqlFileOutput
+	if m.FileOutput.IsNull() || m.FileOutput.IsUnknown() {
+		return e, false
+	}
+	var v SqlTaskSqlFileOutput
+	d := m.FileOutput.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetFileOutput sets the value of the FileOutput field in SqlOutput.
+func (m *SqlOutput) SetFileOutput(ctx context.Context, v SqlTaskSqlFileOutput) {
+	vs := v.ToObjectValue(ctx)
+	m.FileOutput = vs
 }
 
 // GetQueryOutput returns the value of the QueryOutput field in SqlOutput as
@@ -22384,7 +25455,8 @@ func (m SqlOutputError) Type(ctx context.Context) attr.Type {
 
 type SqlQueryOutput struct {
 	EndpointId types.String `tfsdk:"endpoint_id"`
-	// The link to find the output results.
+	// Deprecated. The link to find the output results, which are only
+	// accessible from the UI.
 	OutputLink types.String `tfsdk:"output_link"`
 	// The text of the SQL query. Can Run permission of the SQL query is
 	// required to view this field.
@@ -22561,6 +25633,408 @@ func (m SqlStatementOutput) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"lookup_key": types.StringType,
+		},
+	}
+}
+
+type SqlStatementQueryResult struct {
+	// The metadata for each column in the result set.
+	Columns types.List `tfsdk:"columns"`
+	// The rows returned by the query.
+	Rows types.List `tfsdk:"rows"`
+	// Whether the result set was truncated.
+	Truncated types.Bool `tfsdk:"truncated"`
+}
+
+func (to *SqlStatementQueryResult) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from SqlStatementQueryResult) {
+	if !from.Columns.IsNull() && !from.Columns.IsUnknown() && to.Columns.IsNull() && len(from.Columns.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Columns, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Columns = from.Columns
+	}
+	if !from.Columns.IsNull() && !from.Columns.IsUnknown() {
+		if toColumns, ok := to.GetColumns(ctx); ok {
+			if fromColumns, ok := from.GetColumns(ctx); ok {
+				// Recursively sync the fields of each Columns element by position.
+				for i := range toColumns {
+					if i < len(fromColumns) {
+						toColumns[i].SyncFieldsDuringCreateOrUpdate(ctx, fromColumns[i])
+					}
+				}
+				to.SetColumns(ctx, toColumns)
+			}
+		}
+	}
+	if !from.Rows.IsNull() && !from.Rows.IsUnknown() && to.Rows.IsNull() && len(from.Rows.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Rows, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Rows = from.Rows
+	}
+	if !from.Rows.IsNull() && !from.Rows.IsUnknown() {
+		if toRows, ok := to.GetRows(ctx); ok {
+			if fromRows, ok := from.GetRows(ctx); ok {
+				// Recursively sync the fields of each Rows element by position.
+				for i := range toRows {
+					if i < len(fromRows) {
+						toRows[i].SyncFieldsDuringCreateOrUpdate(ctx, fromRows[i])
+					}
+				}
+				to.SetRows(ctx, toRows)
+			}
+		}
+	}
+}
+
+func (to *SqlStatementQueryResult) SyncFieldsDuringRead(ctx context.Context, from SqlStatementQueryResult) {
+	if !from.Columns.IsNull() && !from.Columns.IsUnknown() && to.Columns.IsNull() && len(from.Columns.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Columns, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Columns = from.Columns
+	}
+	if !from.Columns.IsNull() && !from.Columns.IsUnknown() {
+		if toColumns, ok := to.GetColumns(ctx); ok {
+			if fromColumns, ok := from.GetColumns(ctx); ok {
+				for i := range toColumns {
+					if i < len(fromColumns) {
+						toColumns[i].SyncFieldsDuringRead(ctx, fromColumns[i])
+					}
+				}
+				to.SetColumns(ctx, toColumns)
+			}
+		}
+	}
+	if !from.Rows.IsNull() && !from.Rows.IsUnknown() && to.Rows.IsNull() && len(from.Rows.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Rows, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Rows = from.Rows
+	}
+	if !from.Rows.IsNull() && !from.Rows.IsUnknown() {
+		if toRows, ok := to.GetRows(ctx); ok {
+			if fromRows, ok := from.GetRows(ctx); ok {
+				for i := range toRows {
+					if i < len(fromRows) {
+						toRows[i].SyncFieldsDuringRead(ctx, fromRows[i])
+					}
+				}
+				to.SetRows(ctx, toRows)
+			}
+		}
+	}
+}
+
+func (m SqlStatementQueryResult) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["columns"] = attrs["columns"].SetOptional()
+	attrs["rows"] = attrs["rows"].SetOptional()
+	attrs["truncated"] = attrs["truncated"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SqlStatementQueryResult.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m SqlStatementQueryResult) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"columns": reflect.TypeOf(SqlStatementQueryResultColumn{}),
+		"rows":    reflect.TypeOf(SqlStatementQueryResultRow{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SqlStatementQueryResult
+// only implements ToObjectValue() and Type().
+func (m SqlStatementQueryResult) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"columns":   m.Columns,
+			"rows":      m.Rows,
+			"truncated": m.Truncated,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m SqlStatementQueryResult) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"columns": basetypes.ListType{
+				ElemType: SqlStatementQueryResultColumn{}.Type(ctx),
+			},
+			"rows": basetypes.ListType{
+				ElemType: SqlStatementQueryResultRow{}.Type(ctx),
+			},
+			"truncated": types.BoolType,
+		},
+	}
+}
+
+// GetColumns returns the value of the Columns field in SqlStatementQueryResult as
+// a slice of SqlStatementQueryResultColumn values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *SqlStatementQueryResult) GetColumns(ctx context.Context) ([]SqlStatementQueryResultColumn, bool) {
+	if m.Columns.IsNull() || m.Columns.IsUnknown() {
+		return nil, false
+	}
+	var v []SqlStatementQueryResultColumn
+	d := m.Columns.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetColumns sets the value of the Columns field in SqlStatementQueryResult.
+func (m *SqlStatementQueryResult) SetColumns(ctx context.Context, v []SqlStatementQueryResultColumn) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["columns"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Columns = types.ListValueMust(t, vs)
+}
+
+// GetRows returns the value of the Rows field in SqlStatementQueryResult as
+// a slice of SqlStatementQueryResultRow values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *SqlStatementQueryResult) GetRows(ctx context.Context) ([]SqlStatementQueryResultRow, bool) {
+	if m.Rows.IsNull() || m.Rows.IsUnknown() {
+		return nil, false
+	}
+	var v []SqlStatementQueryResultRow
+	d := m.Rows.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetRows sets the value of the Rows field in SqlStatementQueryResult.
+func (m *SqlStatementQueryResult) SetRows(ctx context.Context, v []SqlStatementQueryResultRow) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["rows"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Rows = types.ListValueMust(t, vs)
+}
+
+type SqlStatementQueryResultColumn struct {
+	// The name of the column.
+	Name types.String `tfsdk:"name"`
+}
+
+func (to *SqlStatementQueryResultColumn) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from SqlStatementQueryResultColumn) {
+}
+
+func (to *SqlStatementQueryResultColumn) SyncFieldsDuringRead(ctx context.Context, from SqlStatementQueryResultColumn) {
+}
+
+func (m SqlStatementQueryResultColumn) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SqlStatementQueryResultColumn.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m SqlStatementQueryResultColumn) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SqlStatementQueryResultColumn
+// only implements ToObjectValue() and Type().
+func (m SqlStatementQueryResultColumn) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name": m.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m SqlStatementQueryResultColumn) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name": types.StringType,
+		},
+	}
+}
+
+type SqlStatementQueryResultRow struct {
+	// The values in the row, ordered to match the columns.
+	Values types.List `tfsdk:"values"`
+}
+
+func (to *SqlStatementQueryResultRow) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from SqlStatementQueryResultRow) {
+	if !from.Values.IsNull() && !from.Values.IsUnknown() && to.Values.IsNull() && len(from.Values.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Values, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Values = from.Values
+	}
+	if !from.Values.IsNull() && !from.Values.IsUnknown() {
+		if toValues, ok := to.GetValues(ctx); ok {
+			if fromValues, ok := from.GetValues(ctx); ok {
+				// Recursively sync the fields of each Values element by position.
+				for i := range toValues {
+					if i < len(fromValues) {
+						toValues[i].SyncFieldsDuringCreateOrUpdate(ctx, fromValues[i])
+					}
+				}
+				to.SetValues(ctx, toValues)
+			}
+		}
+	}
+}
+
+func (to *SqlStatementQueryResultRow) SyncFieldsDuringRead(ctx context.Context, from SqlStatementQueryResultRow) {
+	if !from.Values.IsNull() && !from.Values.IsUnknown() && to.Values.IsNull() && len(from.Values.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for Values, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.Values = from.Values
+	}
+	if !from.Values.IsNull() && !from.Values.IsUnknown() {
+		if toValues, ok := to.GetValues(ctx); ok {
+			if fromValues, ok := from.GetValues(ctx); ok {
+				for i := range toValues {
+					if i < len(fromValues) {
+						toValues[i].SyncFieldsDuringRead(ctx, fromValues[i])
+					}
+				}
+				to.SetValues(ctx, toValues)
+			}
+		}
+	}
+}
+
+func (m SqlStatementQueryResultRow) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["values"] = attrs["values"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SqlStatementQueryResultRow.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m SqlStatementQueryResultRow) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"values": reflect.TypeOf(SqlStatementQueryResultRowRowValue{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SqlStatementQueryResultRow
+// only implements ToObjectValue() and Type().
+func (m SqlStatementQueryResultRow) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"values": m.Values,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m SqlStatementQueryResultRow) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"values": basetypes.ListType{
+				ElemType: SqlStatementQueryResultRowRowValue{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetValues returns the value of the Values field in SqlStatementQueryResultRow as
+// a slice of SqlStatementQueryResultRowRowValue values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *SqlStatementQueryResultRow) GetValues(ctx context.Context) ([]SqlStatementQueryResultRowRowValue, bool) {
+	if m.Values.IsNull() || m.Values.IsUnknown() {
+		return nil, false
+	}
+	var v []SqlStatementQueryResultRowRowValue
+	d := m.Values.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetValues sets the value of the Values field in SqlStatementQueryResultRow.
+func (m *SqlStatementQueryResultRow) SetValues(ctx context.Context, v []SqlStatementQueryResultRowRowValue) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["values"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Values = types.ListValueMust(t, vs)
+}
+
+type SqlStatementQueryResultRowRowValue struct {
+	// The value rendered as a string.
+	StringValue types.String `tfsdk:"string_value"`
+}
+
+func (to *SqlStatementQueryResultRowRowValue) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from SqlStatementQueryResultRowRowValue) {
+}
+
+func (to *SqlStatementQueryResultRowRowValue) SyncFieldsDuringRead(ctx context.Context, from SqlStatementQueryResultRowRowValue) {
+}
+
+func (m SqlStatementQueryResultRowRowValue) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["string_value"] = attrs["string_value"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SqlStatementQueryResultRowRowValue.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m SqlStatementQueryResultRowRowValue) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SqlStatementQueryResultRowRowValue
+// only implements ToObjectValue() and Type().
+func (m SqlStatementQueryResultRowRowValue) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"string_value": m.StringValue,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m SqlStatementQueryResultRowRowValue) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"string_value": types.StringType,
 		},
 	}
 }
@@ -23210,6 +26684,179 @@ func (m SqlTaskQuery) Type(ctx context.Context) attr.Type {
 	}
 }
 
+type SqlTaskSqlFileOutput struct {
+	// The result of the executed SQL statement, if available.
+	QueryResult types.Object `tfsdk:"query_result"`
+	// The text of the SQL query.
+	QueryText types.String `tfsdk:"query_text"`
+	// Information about SQL statements executed in the run.
+	SqlStatements types.List `tfsdk:"sql_statements"`
+	// The canonical identifier of the SQL warehouse.
+	WarehouseId types.String `tfsdk:"warehouse_id"`
+}
+
+func (to *SqlTaskSqlFileOutput) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from SqlTaskSqlFileOutput) {
+	if !from.QueryResult.IsNull() && !from.QueryResult.IsUnknown() {
+		if toQueryResult, ok := to.GetQueryResult(ctx); ok {
+			if fromQueryResult, ok := from.GetQueryResult(ctx); ok {
+				// Recursively sync the fields of QueryResult
+				toQueryResult.SyncFieldsDuringCreateOrUpdate(ctx, fromQueryResult)
+				to.SetQueryResult(ctx, toQueryResult)
+			}
+		}
+	}
+	if !from.SqlStatements.IsNull() && !from.SqlStatements.IsUnknown() && to.SqlStatements.IsNull() && len(from.SqlStatements.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for SqlStatements, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.SqlStatements = from.SqlStatements
+	}
+	if !from.SqlStatements.IsNull() && !from.SqlStatements.IsUnknown() {
+		if toSqlStatements, ok := to.GetSqlStatements(ctx); ok {
+			if fromSqlStatements, ok := from.GetSqlStatements(ctx); ok {
+				// Recursively sync the fields of each SqlStatements element by position.
+				for i := range toSqlStatements {
+					if i < len(fromSqlStatements) {
+						toSqlStatements[i].SyncFieldsDuringCreateOrUpdate(ctx, fromSqlStatements[i])
+					}
+				}
+				to.SetSqlStatements(ctx, toSqlStatements)
+			}
+		}
+	}
+}
+
+func (to *SqlTaskSqlFileOutput) SyncFieldsDuringRead(ctx context.Context, from SqlTaskSqlFileOutput) {
+	if !from.QueryResult.IsNull() && !from.QueryResult.IsUnknown() {
+		if toQueryResult, ok := to.GetQueryResult(ctx); ok {
+			if fromQueryResult, ok := from.GetQueryResult(ctx); ok {
+				toQueryResult.SyncFieldsDuringRead(ctx, fromQueryResult)
+				to.SetQueryResult(ctx, toQueryResult)
+			}
+		}
+	}
+	if !from.SqlStatements.IsNull() && !from.SqlStatements.IsUnknown() && to.SqlStatements.IsNull() && len(from.SqlStatements.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for SqlStatements, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.SqlStatements = from.SqlStatements
+	}
+	if !from.SqlStatements.IsNull() && !from.SqlStatements.IsUnknown() {
+		if toSqlStatements, ok := to.GetSqlStatements(ctx); ok {
+			if fromSqlStatements, ok := from.GetSqlStatements(ctx); ok {
+				for i := range toSqlStatements {
+					if i < len(fromSqlStatements) {
+						toSqlStatements[i].SyncFieldsDuringRead(ctx, fromSqlStatements[i])
+					}
+				}
+				to.SetSqlStatements(ctx, toSqlStatements)
+			}
+		}
+	}
+}
+
+func (m SqlTaskSqlFileOutput) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["query_result"] = attrs["query_result"].SetOptional()
+	attrs["query_text"] = attrs["query_text"].SetOptional()
+	attrs["sql_statements"] = attrs["sql_statements"].SetOptional()
+	attrs["warehouse_id"] = attrs["warehouse_id"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SqlTaskSqlFileOutput.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m SqlTaskSqlFileOutput) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"query_result":   reflect.TypeOf(SqlStatementQueryResult{}),
+		"sql_statements": reflect.TypeOf(SqlStatementOutput{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SqlTaskSqlFileOutput
+// only implements ToObjectValue() and Type().
+func (m SqlTaskSqlFileOutput) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"query_result":   m.QueryResult,
+			"query_text":     m.QueryText,
+			"sql_statements": m.SqlStatements,
+			"warehouse_id":   m.WarehouseId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m SqlTaskSqlFileOutput) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"query_result": SqlStatementQueryResult{}.Type(ctx),
+			"query_text":   types.StringType,
+			"sql_statements": basetypes.ListType{
+				ElemType: SqlStatementOutput{}.Type(ctx),
+			},
+			"warehouse_id": types.StringType,
+		},
+	}
+}
+
+// GetQueryResult returns the value of the QueryResult field in SqlTaskSqlFileOutput as
+// a SqlStatementQueryResult value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *SqlTaskSqlFileOutput) GetQueryResult(ctx context.Context) (SqlStatementQueryResult, bool) {
+	var e SqlStatementQueryResult
+	if m.QueryResult.IsNull() || m.QueryResult.IsUnknown() {
+		return e, false
+	}
+	var v SqlStatementQueryResult
+	d := m.QueryResult.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetQueryResult sets the value of the QueryResult field in SqlTaskSqlFileOutput.
+func (m *SqlTaskSqlFileOutput) SetQueryResult(ctx context.Context, v SqlStatementQueryResult) {
+	vs := v.ToObjectValue(ctx)
+	m.QueryResult = vs
+}
+
+// GetSqlStatements returns the value of the SqlStatements field in SqlTaskSqlFileOutput as
+// a slice of SqlStatementOutput values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *SqlTaskSqlFileOutput) GetSqlStatements(ctx context.Context) ([]SqlStatementOutput, bool) {
+	if m.SqlStatements.IsNull() || m.SqlStatements.IsUnknown() {
+		return nil, false
+	}
+	var v []SqlStatementOutput
+	d := m.SqlStatements.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSqlStatements sets the value of the SqlStatements field in SqlTaskSqlFileOutput.
+func (m *SqlTaskSqlFileOutput) SetSqlStatements(ctx context.Context, v []SqlStatementOutput) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["sql_statements"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.SqlStatements = types.ListValueMust(t, vs)
+}
+
 type SqlTaskSubscription struct {
 	// The canonical identifier of the destination to receive email
 	// notification. This parameter is mutually exclusive with user_name. You
@@ -23274,9 +26921,23 @@ type SubmitRun struct {
 	// The user specified id of the budget policy to use for this one-time run.
 	// If not specified, the run will be not be attributed to any budget policy.
 	BudgetPolicyId types.String `tfsdk:"budget_policy_id"`
+	// The window the run aims to finish within, in hours, for a Cost-optimized
+	// serverless run. Required only when `performance_target` is
+	// `COST_OPTIMIZED`. Must be one of the supported values: `NO_FLEXIBILITY`,
+	// `4h`, `12h`, `24h`, `72h`. `NO_FLEXIBILITY` means the run uses the
+	// default cost-optimized performance level without additional cost-saving
+	// optimizations.
+	DurationTarget types.String `tfsdk:"duration_target"`
 	// An optional set of email addresses notified when the run begins or
 	// completes.
 	EmailNotifications types.Object `tfsdk:"email_notifications"`
+	// Named environment-variable entries that tasks of this one-time run can
+	// reference by key from `RunTaskSettings.environment_variables_key`. Each
+	// entry's `spec` holds inline `variables` and optional `.env` `files`.
+	// Handled identically to `JobSettings.environment_variables`. Maximum 10
+	// entries. Entries are independent of one another — there is no
+	// cross-entry merging.
+	EnvironmentVariables types.List `tfsdk:"environment_variables"`
 	// A list of task execution environment specifications that can be
 	// referenced by tasks of this run.
 	Environments types.List `tfsdk:"environments"`
@@ -23314,9 +26975,11 @@ type SubmitRun struct {
 	// performance target does not apply to tasks that run on Serverless GPU
 	// compute.
 	//
-	// * `STANDARD`: Enables cost-efficient execution of serverless workloads. *
-	// `PERFORMANCE_OPTIMIZED`: Prioritizes fast startup and execution times
-	// through rapid scaling and optimized cluster performance.
+	// * `PERFORMANCE_OPTIMIZED`: Prioritizes fast startup and execution times
+	// through rapid scaling and optimized cluster performance. * `STANDARD`:
+	// Enables cost-efficient execution of serverless workloads. *
+	// `COST_OPTIMIZED`: Enables lower job costs by optimizing compute for your
+	// selected target duration time. Must provide a duration target.
 	PerformanceTarget types.String `tfsdk:"performance_target"`
 	// The queue settings of the one-time run.
 	Queue types.Object `tfsdk:"queue"`
@@ -23369,6 +27032,25 @@ func (to *SubmitRun) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Su
 				// Recursively sync the fields of EmailNotifications
 				toEmailNotifications.SyncFieldsDuringCreateOrUpdate(ctx, fromEmailNotifications)
 				to.SetEmailNotifications(ctx, toEmailNotifications)
+			}
+		}
+	}
+	if !from.EnvironmentVariables.IsNull() && !from.EnvironmentVariables.IsUnknown() && to.EnvironmentVariables.IsNull() && len(from.EnvironmentVariables.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for EnvironmentVariables, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.EnvironmentVariables = from.EnvironmentVariables
+	}
+	if !from.EnvironmentVariables.IsNull() && !from.EnvironmentVariables.IsUnknown() {
+		if toEnvironmentVariables, ok := to.GetEnvironmentVariables(ctx); ok {
+			if fromEnvironmentVariables, ok := from.GetEnvironmentVariables(ctx); ok {
+				// Recursively sync the fields of each EnvironmentVariables element by position.
+				for i := range toEnvironmentVariables {
+					if i < len(fromEnvironmentVariables) {
+						toEnvironmentVariables[i].SyncFieldsDuringCreateOrUpdate(ctx, fromEnvironmentVariables[i])
+					}
+				}
+				to.SetEnvironmentVariables(ctx, toEnvironmentVariables)
 			}
 		}
 	}
@@ -23501,6 +27183,24 @@ func (to *SubmitRun) SyncFieldsDuringRead(ctx context.Context, from SubmitRun) {
 			}
 		}
 	}
+	if !from.EnvironmentVariables.IsNull() && !from.EnvironmentVariables.IsUnknown() && to.EnvironmentVariables.IsNull() && len(from.EnvironmentVariables.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for EnvironmentVariables, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.EnvironmentVariables = from.EnvironmentVariables
+	}
+	if !from.EnvironmentVariables.IsNull() && !from.EnvironmentVariables.IsUnknown() {
+		if toEnvironmentVariables, ok := to.GetEnvironmentVariables(ctx); ok {
+			if fromEnvironmentVariables, ok := from.GetEnvironmentVariables(ctx); ok {
+				for i := range toEnvironmentVariables {
+					if i < len(fromEnvironmentVariables) {
+						toEnvironmentVariables[i].SyncFieldsDuringRead(ctx, fromEnvironmentVariables[i])
+					}
+				}
+				to.SetEnvironmentVariables(ctx, toEnvironmentVariables)
+			}
+		}
+	}
 	if !from.Environments.IsNull() && !from.Environments.IsUnknown() && to.Environments.IsNull() && len(from.Environments.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Environments, and the deserialized field value is Null,
@@ -23596,7 +27296,9 @@ func (m SubmitRun) ApplySchemaCustomizations(attrs map[string]tfschema.Attribute
 	attrs["budget_policy_id"] = attrs["budget_policy_id"].SetOptional()
 	attrs["budget_policy_id"] = attrs["budget_policy_id"].SetComputed()
 	attrs["budget_policy_id"] = attrs["budget_policy_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
+	attrs["duration_target"] = attrs["duration_target"].SetOptional()
 	attrs["email_notifications"] = attrs["email_notifications"].SetOptional()
+	attrs["environment_variables"] = attrs["environment_variables"].SetOptional()
 	attrs["environments"] = attrs["environments"].SetOptional()
 	attrs["git_source"] = attrs["git_source"].SetOptional()
 	attrs["health"] = attrs["health"].SetOptional()
@@ -23627,6 +27329,7 @@ func (m SubmitRun) GetComplexFieldTypes(ctx context.Context) map[string]reflect.
 	return map[string]reflect.Type{
 		"access_control_list":   reflect.TypeOf(JobAccessControlRequest{}),
 		"email_notifications":   reflect.TypeOf(JobEmailNotifications{}),
+		"environment_variables": reflect.TypeOf(JobEnvironmentVariables{}),
 		"environments":          reflect.TypeOf(JobEnvironment{}),
 		"git_source":            reflect.TypeOf(GitSource{}),
 		"health":                reflect.TypeOf(JobsHealthRules{}),
@@ -23647,7 +27350,9 @@ func (m SubmitRun) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 		map[string]attr.Value{
 			"access_control_list":   m.AccessControlList,
 			"budget_policy_id":      m.BudgetPolicyId,
+			"duration_target":       m.DurationTarget,
 			"email_notifications":   m.EmailNotifications,
+			"environment_variables": m.EnvironmentVariables,
 			"environments":          m.Environments,
 			"git_source":            m.GitSource,
 			"health":                m.Health,
@@ -23672,7 +27377,11 @@ func (m SubmitRun) Type(ctx context.Context) attr.Type {
 				ElemType: JobAccessControlRequest{}.Type(ctx),
 			},
 			"budget_policy_id":    types.StringType,
+			"duration_target":     types.StringType,
 			"email_notifications": JobEmailNotifications{}.Type(ctx),
+			"environment_variables": basetypes.ListType{
+				ElemType: JobEnvironmentVariables{}.Type(ctx),
+			},
 			"environments": basetypes.ListType{
 				ElemType: JobEnvironment{}.Type(ctx),
 			},
@@ -23743,6 +27452,32 @@ func (m *SubmitRun) GetEmailNotifications(ctx context.Context) (JobEmailNotifica
 func (m *SubmitRun) SetEmailNotifications(ctx context.Context, v JobEmailNotifications) {
 	vs := v.ToObjectValue(ctx)
 	m.EmailNotifications = vs
+}
+
+// GetEnvironmentVariables returns the value of the EnvironmentVariables field in SubmitRun as
+// a slice of JobEnvironmentVariables values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *SubmitRun) GetEnvironmentVariables(ctx context.Context) ([]JobEnvironmentVariables, bool) {
+	if m.EnvironmentVariables.IsNull() || m.EnvironmentVariables.IsUnknown() {
+		return nil, false
+	}
+	var v []JobEnvironmentVariables
+	d := m.EnvironmentVariables.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetEnvironmentVariables sets the value of the EnvironmentVariables field in SubmitRun.
+func (m *SubmitRun) SetEnvironmentVariables(ctx context.Context, v []JobEnvironmentVariables) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["environment_variables"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.EnvironmentVariables = types.ListValueMust(t, vs)
 }
 
 // GetEnvironments returns the value of the Environments field in SubmitRun as
@@ -23997,6 +27732,8 @@ func (m SubmitRunResponse) Type(ctx context.Context) attr.Type {
 }
 
 type SubmitTask struct {
+	// Applies an AI function to a set of input documents or rows.
+	AiFunctionTask types.Object `tfsdk:"ai_function_task"`
 	// The task runs a multi-gpu compute workload on Databricks AI Runtime.
 	// Specify the accelerator type and count, the command to run, and where the
 	// workload's code and MLflow output are stored.
@@ -24044,8 +27781,14 @@ type SubmitTask struct {
 	EmailNotifications types.Object `tfsdk:"email_notifications"`
 	// The key that references an environment spec in a job. This field is
 	// required for Python script, Python wheel and dbt tasks when using
-	// serverless compute.
+	// serverless compute or a compute resource that uses Environments mode.
 	EnvironmentKey types.String `tfsdk:"environment_key"`
+	// Reference to a `JobEnvironmentVariables` entry defined in
+	// `RunSettings.environment_variables` for one-time runs or preserved in
+	// `Run.environment_variables` for run snapshots. The selected entry's
+	// variables are applied to this task at execution time. This field supports
+	// serverless tasks using environment version 5 or later.
+	EnvironmentVariablesKey types.String `tfsdk:"environment_variables_key"`
 	// If existing_cluster_id, the ID of an existing cluster that is used for
 	// all runs. When running jobs or tasks on an existing cluster, you may need
 	// to manually restart the cluster if it stops responding. We suggest
@@ -24127,6 +27870,15 @@ type SubmitTask struct {
 }
 
 func (to *SubmitTask) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from SubmitTask) {
+	if !from.AiFunctionTask.IsNull() && !from.AiFunctionTask.IsUnknown() {
+		if toAiFunctionTask, ok := to.GetAiFunctionTask(ctx); ok {
+			if fromAiFunctionTask, ok := from.GetAiFunctionTask(ctx); ok {
+				// Recursively sync the fields of AiFunctionTask
+				toAiFunctionTask.SyncFieldsDuringCreateOrUpdate(ctx, fromAiFunctionTask)
+				to.SetAiFunctionTask(ctx, toAiFunctionTask)
+			}
+		}
+	}
 	if !from.AiRuntimeTask.IsNull() && !from.AiRuntimeTask.IsUnknown() {
 		if toAiRuntimeTask, ok := to.GetAiRuntimeTask(ctx); ok {
 			if fromAiRuntimeTask, ok := from.GetAiRuntimeTask(ctx); ok {
@@ -24406,6 +28158,14 @@ func (to *SubmitTask) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from S
 }
 
 func (to *SubmitTask) SyncFieldsDuringRead(ctx context.Context, from SubmitTask) {
+	if !from.AiFunctionTask.IsNull() && !from.AiFunctionTask.IsUnknown() {
+		if toAiFunctionTask, ok := to.GetAiFunctionTask(ctx); ok {
+			if fromAiFunctionTask, ok := from.GetAiFunctionTask(ctx); ok {
+				toAiFunctionTask.SyncFieldsDuringRead(ctx, fromAiFunctionTask)
+				to.SetAiFunctionTask(ctx, toAiFunctionTask)
+			}
+		}
+	}
 	if !from.AiRuntimeTask.IsNull() && !from.AiRuntimeTask.IsUnknown() {
 		if toAiRuntimeTask, ok := to.GetAiRuntimeTask(ctx); ok {
 			if fromAiRuntimeTask, ok := from.GetAiRuntimeTask(ctx); ok {
@@ -24657,6 +28417,7 @@ func (to *SubmitTask) SyncFieldsDuringRead(ctx context.Context, from SubmitTask)
 }
 
 func (m SubmitTask) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["ai_function_task"] = attrs["ai_function_task"].SetOptional()
 	attrs["ai_runtime_task"] = attrs["ai_runtime_task"].SetOptional()
 	attrs["alert_task"] = attrs["alert_task"].SetOptional()
 	attrs["clean_rooms_notebook_task"] = attrs["clean_rooms_notebook_task"].SetOptional()
@@ -24674,6 +28435,7 @@ func (m SubmitTask) ApplySchemaCustomizations(attrs map[string]tfschema.Attribut
 	attrs["disabled"] = attrs["disabled"].SetOptional()
 	attrs["email_notifications"] = attrs["email_notifications"].SetOptional()
 	attrs["environment_key"] = attrs["environment_key"].SetOptional()
+	attrs["environment_variables_key"] = attrs["environment_variables_key"].SetOptional()
 	attrs["existing_cluster_id"] = attrs["existing_cluster_id"].SetOptional()
 	attrs["for_each_task"] = attrs["for_each_task"].SetOptional()
 	attrs["gen_ai_compute_task"] = attrs["gen_ai_compute_task"].SetOptional()
@@ -24711,6 +28473,7 @@ func (m SubmitTask) ApplySchemaCustomizations(attrs map[string]tfschema.Attribut
 // SDK values.
 func (m SubmitTask) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
+		"ai_function_task":          reflect.TypeOf(AiFunctionTask{}),
 		"ai_runtime_task":           reflect.TypeOf(AiRuntimeTask{}),
 		"alert_task":                reflect.TypeOf(AlertTask{}),
 		"clean_rooms_notebook_task": reflect.TypeOf(CleanRoomsNotebookTask{}),
@@ -24749,6 +28512,7 @@ func (m SubmitTask) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"ai_function_task":          m.AiFunctionTask,
 			"ai_runtime_task":           m.AiRuntimeTask,
 			"alert_task":                m.AlertTask,
 			"clean_rooms_notebook_task": m.CleanRoomsNotebookTask,
@@ -24764,6 +28528,7 @@ func (m SubmitTask) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"disabled":                  m.Disabled,
 			"email_notifications":       m.EmailNotifications,
 			"environment_key":           m.EnvironmentKey,
+			"environment_variables_key": m.EnvironmentVariablesKey,
 			"existing_cluster_id":       m.ExistingClusterId,
 			"for_each_task":             m.ForEachTask,
 			"gen_ai_compute_task":       m.GenAiComputeTask,
@@ -24795,6 +28560,7 @@ func (m SubmitTask) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (m SubmitTask) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"ai_function_task":          AiFunctionTask{}.Type(ctx),
 			"ai_runtime_task":           AiRuntimeTask{}.Type(ctx),
 			"alert_task":                AlertTask{}.Type(ctx),
 			"clean_rooms_notebook_task": CleanRoomsNotebookTask{}.Type(ctx),
@@ -24812,6 +28578,7 @@ func (m SubmitTask) Type(ctx context.Context) attr.Type {
 			"disabled":                  types.BoolType,
 			"email_notifications":       JobEmailNotifications{}.Type(ctx),
 			"environment_key":           types.StringType,
+			"environment_variables_key": types.StringType,
 			"existing_cluster_id":       types.StringType,
 			"for_each_task":             ForEachTask{}.Type(ctx),
 			"gen_ai_compute_task":       GenAiComputeTask{}.Type(ctx),
@@ -24840,6 +28607,31 @@ func (m SubmitTask) Type(ctx context.Context) attr.Type {
 			"webhook_notifications":     WebhookNotifications{}.Type(ctx),
 		},
 	}
+}
+
+// GetAiFunctionTask returns the value of the AiFunctionTask field in SubmitTask as
+// a AiFunctionTask value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *SubmitTask) GetAiFunctionTask(ctx context.Context) (AiFunctionTask, bool) {
+	var e AiFunctionTask
+	if m.AiFunctionTask.IsNull() || m.AiFunctionTask.IsUnknown() {
+		return e, false
+	}
+	var v AiFunctionTask
+	d := m.AiFunctionTask.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAiFunctionTask sets the value of the AiFunctionTask field in SubmitTask.
+func (m *SubmitTask) SetAiFunctionTask(ctx context.Context, v AiFunctionTask) {
+	vs := v.ToObjectValue(ctx)
+	m.AiFunctionTask = vs
 }
 
 // GetAiRuntimeTask returns the value of the AiRuntimeTask field in SubmitTask as
@@ -25545,6 +29337,12 @@ func (m *SubmitTask) SetWebhookNotifications(ctx context.Context, v WebhookNotif
 }
 
 type Subscription struct {
+	// Optional: The configuration for the files attached to the dashboard
+	// snapshot notification. It controls the underlying data of dashboard
+	// widgets that is attached as data files and which pages are included in
+	// the attached PDF. If not specified, the notification is sent with only
+	// the default snapshot.
+	Attachment types.Object `tfsdk:"attachment"`
 	// Optional: Allows users to specify a custom subject line on the email sent
 	// to subscribers.
 	CustomSubject types.String `tfsdk:"custom_subject"`
@@ -25555,6 +29353,15 @@ type Subscription struct {
 }
 
 func (to *Subscription) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Subscription) {
+	if !from.Attachment.IsNull() && !from.Attachment.IsUnknown() {
+		if toAttachment, ok := to.GetAttachment(ctx); ok {
+			if fromAttachment, ok := from.GetAttachment(ctx); ok {
+				// Recursively sync the fields of Attachment
+				toAttachment.SyncFieldsDuringCreateOrUpdate(ctx, fromAttachment)
+				to.SetAttachment(ctx, toAttachment)
+			}
+		}
+	}
 	if !from.Subscribers.IsNull() && !from.Subscribers.IsUnknown() && to.Subscribers.IsNull() && len(from.Subscribers.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Subscribers, and the deserialized field value is Null,
@@ -25577,6 +29384,14 @@ func (to *Subscription) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from
 }
 
 func (to *Subscription) SyncFieldsDuringRead(ctx context.Context, from Subscription) {
+	if !from.Attachment.IsNull() && !from.Attachment.IsUnknown() {
+		if toAttachment, ok := to.GetAttachment(ctx); ok {
+			if fromAttachment, ok := from.GetAttachment(ctx); ok {
+				toAttachment.SyncFieldsDuringRead(ctx, fromAttachment)
+				to.SetAttachment(ctx, toAttachment)
+			}
+		}
+	}
 	if !from.Subscribers.IsNull() && !from.Subscribers.IsUnknown() && to.Subscribers.IsNull() && len(from.Subscribers.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Subscribers, and the deserialized field value is Null,
@@ -25598,6 +29413,7 @@ func (to *Subscription) SyncFieldsDuringRead(ctx context.Context, from Subscript
 }
 
 func (m Subscription) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["attachment"] = attrs["attachment"].SetOptional()
 	attrs["custom_subject"] = attrs["custom_subject"].SetOptional()
 	attrs["paused"] = attrs["paused"].SetOptional()
 	attrs["subscribers"] = attrs["subscribers"].SetOptional()
@@ -25614,6 +29430,7 @@ func (m Subscription) ApplySchemaCustomizations(attrs map[string]tfschema.Attrib
 // SDK values.
 func (m Subscription) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
+		"attachment":  reflect.TypeOf(SubscriptionAttachment{}),
 		"subscribers": reflect.TypeOf(SubscriptionSubscriber{}),
 	}
 }
@@ -25625,6 +29442,7 @@ func (m Subscription) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"attachment":     m.Attachment,
 			"custom_subject": m.CustomSubject,
 			"paused":         m.Paused,
 			"subscribers":    m.Subscribers,
@@ -25635,6 +29453,7 @@ func (m Subscription) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (m Subscription) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"attachment":     SubscriptionAttachment{}.Type(ctx),
 			"custom_subject": types.StringType,
 			"paused":         types.BoolType,
 			"subscribers": basetypes.ListType{
@@ -25642,6 +29461,31 @@ func (m Subscription) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetAttachment returns the value of the Attachment field in Subscription as
+// a SubscriptionAttachment value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *Subscription) GetAttachment(ctx context.Context) (SubscriptionAttachment, bool) {
+	var e SubscriptionAttachment
+	if m.Attachment.IsNull() || m.Attachment.IsUnknown() {
+		return e, false
+	}
+	var v SubscriptionAttachment
+	d := m.Attachment.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAttachment sets the value of the Attachment field in Subscription.
+func (m *Subscription) SetAttachment(ctx context.Context, v SubscriptionAttachment) {
+	vs := v.ToObjectValue(ctx)
+	m.Attachment = vs
 }
 
 // GetSubscribers returns the value of the Subscribers field in Subscription as
@@ -25668,6 +29512,439 @@ func (m *Subscription) SetSubscribers(ctx context.Context, v []SubscriptionSubsc
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["subscribers"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	m.Subscribers = types.ListValueMust(t, vs)
+}
+
+// The configuration for the files attached to the dashboard snapshot
+// notification sent to subscribers. `data_attachment` describes the underlying
+// data of dashboard widgets attached as data files, and `page_attachment`
+// describes which dashboard pages are included in the attached PDF.
+type SubscriptionAttachment struct {
+	// Optional: The configuration for the underlying data of dashboard widgets
+	// attached as tabular data files. If not specified, no tabular data is
+	// attached.
+	DataAttachment types.Object `tfsdk:"data_attachment"`
+	// Optional: The selection of dashboard pages included in the attached PDF.
+	// If not specified, only the first page is included.
+	PageAttachment types.Object `tfsdk:"page_attachment"`
+}
+
+func (to *SubscriptionAttachment) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from SubscriptionAttachment) {
+	if !from.DataAttachment.IsNull() && !from.DataAttachment.IsUnknown() {
+		if toDataAttachment, ok := to.GetDataAttachment(ctx); ok {
+			if fromDataAttachment, ok := from.GetDataAttachment(ctx); ok {
+				// Recursively sync the fields of DataAttachment
+				toDataAttachment.SyncFieldsDuringCreateOrUpdate(ctx, fromDataAttachment)
+				to.SetDataAttachment(ctx, toDataAttachment)
+			}
+		}
+	}
+	if !from.PageAttachment.IsNull() && !from.PageAttachment.IsUnknown() {
+		if toPageAttachment, ok := to.GetPageAttachment(ctx); ok {
+			if fromPageAttachment, ok := from.GetPageAttachment(ctx); ok {
+				// Recursively sync the fields of PageAttachment
+				toPageAttachment.SyncFieldsDuringCreateOrUpdate(ctx, fromPageAttachment)
+				to.SetPageAttachment(ctx, toPageAttachment)
+			}
+		}
+	}
+}
+
+func (to *SubscriptionAttachment) SyncFieldsDuringRead(ctx context.Context, from SubscriptionAttachment) {
+	if !from.DataAttachment.IsNull() && !from.DataAttachment.IsUnknown() {
+		if toDataAttachment, ok := to.GetDataAttachment(ctx); ok {
+			if fromDataAttachment, ok := from.GetDataAttachment(ctx); ok {
+				toDataAttachment.SyncFieldsDuringRead(ctx, fromDataAttachment)
+				to.SetDataAttachment(ctx, toDataAttachment)
+			}
+		}
+	}
+	if !from.PageAttachment.IsNull() && !from.PageAttachment.IsUnknown() {
+		if toPageAttachment, ok := to.GetPageAttachment(ctx); ok {
+			if fromPageAttachment, ok := from.GetPageAttachment(ctx); ok {
+				toPageAttachment.SyncFieldsDuringRead(ctx, fromPageAttachment)
+				to.SetPageAttachment(ctx, toPageAttachment)
+			}
+		}
+	}
+}
+
+func (m SubscriptionAttachment) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["data_attachment"] = attrs["data_attachment"].SetOptional()
+	attrs["page_attachment"] = attrs["page_attachment"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SubscriptionAttachment.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m SubscriptionAttachment) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"data_attachment": reflect.TypeOf(SubscriptionAttachmentDataAttachment{}),
+		"page_attachment": reflect.TypeOf(SubscriptionAttachmentPageAttachment{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SubscriptionAttachment
+// only implements ToObjectValue() and Type().
+func (m SubscriptionAttachment) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"data_attachment": m.DataAttachment,
+			"page_attachment": m.PageAttachment,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m SubscriptionAttachment) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"data_attachment": SubscriptionAttachmentDataAttachment{}.Type(ctx),
+			"page_attachment": SubscriptionAttachmentPageAttachment{}.Type(ctx),
+		},
+	}
+}
+
+// GetDataAttachment returns the value of the DataAttachment field in SubscriptionAttachment as
+// a SubscriptionAttachmentDataAttachment value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *SubscriptionAttachment) GetDataAttachment(ctx context.Context) (SubscriptionAttachmentDataAttachment, bool) {
+	var e SubscriptionAttachmentDataAttachment
+	if m.DataAttachment.IsNull() || m.DataAttachment.IsUnknown() {
+		return e, false
+	}
+	var v SubscriptionAttachmentDataAttachment
+	d := m.DataAttachment.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetDataAttachment sets the value of the DataAttachment field in SubscriptionAttachment.
+func (m *SubscriptionAttachment) SetDataAttachment(ctx context.Context, v SubscriptionAttachmentDataAttachment) {
+	vs := v.ToObjectValue(ctx)
+	m.DataAttachment = vs
+}
+
+// GetPageAttachment returns the value of the PageAttachment field in SubscriptionAttachment as
+// a SubscriptionAttachmentPageAttachment value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *SubscriptionAttachment) GetPageAttachment(ctx context.Context) (SubscriptionAttachmentPageAttachment, bool) {
+	var e SubscriptionAttachmentPageAttachment
+	if m.PageAttachment.IsNull() || m.PageAttachment.IsUnknown() {
+		return e, false
+	}
+	var v SubscriptionAttachmentPageAttachment
+	d := m.PageAttachment.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetPageAttachment sets the value of the PageAttachment field in SubscriptionAttachment.
+func (m *SubscriptionAttachment) SetPageAttachment(ctx context.Context, v SubscriptionAttachmentPageAttachment) {
+	vs := v.ToObjectValue(ctx)
+	m.PageAttachment = vs
+}
+
+// The configuration for the tabular data files attached to the dashboard
+// snapshot. `widgets` lists the widgets whose data is exported and
+// `file_format` is the output format; each referenced widget's data is exported
+// as a separate file.
+type SubscriptionAttachmentDataAttachment struct {
+	// The file format of the exported tabular data files.
+	FileFormat types.String `tfsdk:"file_format"`
+	// When true, the dashboard's applied filter values are included alongside
+	// the tabular data as an additional attached file.
+	IncludeAppliedFilters types.Bool `tfsdk:"include_applied_filters"`
+	// The widgets whose underlying data is exported. At least one widget must
+	// be referenced.
+	Widgets types.List `tfsdk:"widgets"`
+}
+
+func (to *SubscriptionAttachmentDataAttachment) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from SubscriptionAttachmentDataAttachment) {
+	if !from.Widgets.IsNull() && !from.Widgets.IsUnknown() {
+		if toWidgets, ok := to.GetWidgets(ctx); ok {
+			if fromWidgets, ok := from.GetWidgets(ctx); ok {
+				// Recursively sync the fields of each Widgets element by position.
+				for i := range toWidgets {
+					if i < len(fromWidgets) {
+						toWidgets[i].SyncFieldsDuringCreateOrUpdate(ctx, fromWidgets[i])
+					}
+				}
+				to.SetWidgets(ctx, toWidgets)
+			}
+		}
+	}
+}
+
+func (to *SubscriptionAttachmentDataAttachment) SyncFieldsDuringRead(ctx context.Context, from SubscriptionAttachmentDataAttachment) {
+	if !from.Widgets.IsNull() && !from.Widgets.IsUnknown() {
+		if toWidgets, ok := to.GetWidgets(ctx); ok {
+			if fromWidgets, ok := from.GetWidgets(ctx); ok {
+				for i := range toWidgets {
+					if i < len(fromWidgets) {
+						toWidgets[i].SyncFieldsDuringRead(ctx, fromWidgets[i])
+					}
+				}
+				to.SetWidgets(ctx, toWidgets)
+			}
+		}
+	}
+}
+
+func (m SubscriptionAttachmentDataAttachment) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["file_format"] = attrs["file_format"].SetRequired()
+	attrs["include_applied_filters"] = attrs["include_applied_filters"].SetOptional()
+	attrs["widgets"] = attrs["widgets"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SubscriptionAttachmentDataAttachment.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m SubscriptionAttachmentDataAttachment) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"widgets": reflect.TypeOf(SubscriptionAttachmentDataAttachmentWidget{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SubscriptionAttachmentDataAttachment
+// only implements ToObjectValue() and Type().
+func (m SubscriptionAttachmentDataAttachment) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"file_format":             m.FileFormat,
+			"include_applied_filters": m.IncludeAppliedFilters,
+			"widgets":                 m.Widgets,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m SubscriptionAttachmentDataAttachment) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"file_format":             types.StringType,
+			"include_applied_filters": types.BoolType,
+			"widgets": basetypes.ListType{
+				ElemType: SubscriptionAttachmentDataAttachmentWidget{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetWidgets returns the value of the Widgets field in SubscriptionAttachmentDataAttachment as
+// a slice of SubscriptionAttachmentDataAttachmentWidget values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *SubscriptionAttachmentDataAttachment) GetWidgets(ctx context.Context) ([]SubscriptionAttachmentDataAttachmentWidget, bool) {
+	if m.Widgets.IsNull() || m.Widgets.IsUnknown() {
+		return nil, false
+	}
+	var v []SubscriptionAttachmentDataAttachmentWidget
+	d := m.Widgets.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetWidgets sets the value of the Widgets field in SubscriptionAttachmentDataAttachment.
+func (m *SubscriptionAttachmentDataAttachment) SetWidgets(ctx context.Context, v []SubscriptionAttachmentDataAttachmentWidget) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["widgets"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.Widgets = types.ListValueMust(t, vs)
+}
+
+// Identifies a dashboard widget whose data to attach. `page_id` and `widget_id`
+// are the URL identifiers from the dashboard's serialized definition returned
+// by the Get dashboard API (`serialized_dashboard`), and together they uniquely
+// identify the widget.
+type SubscriptionAttachmentDataAttachmentWidget struct {
+	// The URL identifier of the page containing the widget. This is the value
+	// of the `name` field of the corresponding entry under `pages` in the
+	// serialized dashboard definition. Format: alphanumeric, hyphen, and
+	// underscore characters allowed, max length 63.
+	PageId types.String `tfsdk:"page_id"`
+	// The URL identifier of the widget. This is the value of the `name` field
+	// of the corresponding widget under that page's `layout` in the serialized
+	// dashboard definition. Format: alphanumeric, hyphen, and underscore
+	// characters allowed, max length 63.
+	WidgetId types.String `tfsdk:"widget_id"`
+}
+
+func (to *SubscriptionAttachmentDataAttachmentWidget) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from SubscriptionAttachmentDataAttachmentWidget) {
+}
+
+func (to *SubscriptionAttachmentDataAttachmentWidget) SyncFieldsDuringRead(ctx context.Context, from SubscriptionAttachmentDataAttachmentWidget) {
+}
+
+func (m SubscriptionAttachmentDataAttachmentWidget) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["page_id"] = attrs["page_id"].SetRequired()
+	attrs["widget_id"] = attrs["widget_id"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SubscriptionAttachmentDataAttachmentWidget.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m SubscriptionAttachmentDataAttachmentWidget) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SubscriptionAttachmentDataAttachmentWidget
+// only implements ToObjectValue() and Type().
+func (m SubscriptionAttachmentDataAttachmentWidget) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"page_id":   m.PageId,
+			"widget_id": m.WidgetId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m SubscriptionAttachmentDataAttachmentWidget) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"page_id":   types.StringType,
+			"widget_id": types.StringType,
+		},
+	}
+}
+
+// The selection of dashboard pages included in the attached PDF.
+// `page_selection` chooses between all pages, the first page only, or an
+// explicit subset listed in `page_ids`.
+type SubscriptionAttachmentPageAttachment struct {
+	// The identifiers of the pages to include in the PDF. Only specified when
+	// `page_selection` is `PAGE_SELECTION_SUBSET`. Each value is the identifier
+	// of a page in the dashboard's serialized definition returned by the Get
+	// dashboard API (`serialized_dashboard`): the value of the `name` field of
+	// an entry under `pages`. Format: alphanumeric, hyphen, and underscore
+	// characters allowed, max length 63.
+	PageIds types.List `tfsdk:"page_ids"`
+	// How the attached pages are selected. When set to `PAGE_SELECTION_SUBSET`,
+	// the pages to include are listed in `page_ids`.
+	PageSelection types.String `tfsdk:"page_selection"`
+}
+
+func (to *SubscriptionAttachmentPageAttachment) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from SubscriptionAttachmentPageAttachment) {
+	if !from.PageIds.IsNull() && !from.PageIds.IsUnknown() && to.PageIds.IsNull() && len(from.PageIds.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for PageIds, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.PageIds = from.PageIds
+	}
+}
+
+func (to *SubscriptionAttachmentPageAttachment) SyncFieldsDuringRead(ctx context.Context, from SubscriptionAttachmentPageAttachment) {
+	if !from.PageIds.IsNull() && !from.PageIds.IsUnknown() && to.PageIds.IsNull() && len(from.PageIds.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for PageIds, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.PageIds = from.PageIds
+	}
+}
+
+func (m SubscriptionAttachmentPageAttachment) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["page_ids"] = attrs["page_ids"].SetOptional()
+	attrs["page_selection"] = attrs["page_selection"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SubscriptionAttachmentPageAttachment.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m SubscriptionAttachmentPageAttachment) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"page_ids": reflect.TypeOf(types.String{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SubscriptionAttachmentPageAttachment
+// only implements ToObjectValue() and Type().
+func (m SubscriptionAttachmentPageAttachment) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"page_ids":       m.PageIds,
+			"page_selection": m.PageSelection,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m SubscriptionAttachmentPageAttachment) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"page_ids": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"page_selection": types.StringType,
+		},
+	}
+}
+
+// GetPageIds returns the value of the PageIds field in SubscriptionAttachmentPageAttachment as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *SubscriptionAttachmentPageAttachment) GetPageIds(ctx context.Context) ([]types.String, bool) {
+	if m.PageIds.IsNull() || m.PageIds.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := m.PageIds.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetPageIds sets the value of the PageIds field in SubscriptionAttachmentPageAttachment.
+func (m *SubscriptionAttachmentPageAttachment) SetPageIds(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["page_ids"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.PageIds = types.ListValueMust(t, vs)
 }
 
 type SubscriptionSubscriber struct {
@@ -25999,6 +30276,8 @@ func (m *TableUpdateTriggerConfiguration) SetTableNames(ctx context.Context, v [
 }
 
 type Task struct {
+	// Applies an AI function to a set of input documents or rows.
+	AiFunctionTask types.Object `tfsdk:"ai_function_task"`
 	// The task runs a multi-gpu compute workload on Databricks AI Runtime.
 	// Specify the accelerator type and count, the command to run, and where the
 	// workload's code and MLflow output are stored.
@@ -26047,8 +30326,13 @@ type Task struct {
 	EmailNotifications types.Object `tfsdk:"email_notifications"`
 	// The key that references an environment spec in a job. This field is
 	// required for Python script, Python wheel and dbt tasks when using
-	// serverless compute.
+	// serverless compute or a compute resource that uses Environments mode.
 	EnvironmentKey types.String `tfsdk:"environment_key"`
+	// Reference to a `JobEnvironmentVariables` entry defined in
+	// `JobSettings.environment_variables`. The selected entry's variables are
+	// applied to this task at execution time. This field supports serverless
+	// tasks using environment version 5 or later.
+	EnvironmentVariablesKey types.String `tfsdk:"environment_variables_key"`
 	// If existing_cluster_id, the ID of an existing cluster that is used for
 	// all runs. When running jobs or tasks on an existing cluster, you may need
 	// to manually restart the cluster if it stops responding. We suggest
@@ -26138,6 +30422,15 @@ type Task struct {
 }
 
 func (to *Task) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Task) {
+	if !from.AiFunctionTask.IsNull() && !from.AiFunctionTask.IsUnknown() {
+		if toAiFunctionTask, ok := to.GetAiFunctionTask(ctx); ok {
+			if fromAiFunctionTask, ok := from.GetAiFunctionTask(ctx); ok {
+				// Recursively sync the fields of AiFunctionTask
+				toAiFunctionTask.SyncFieldsDuringCreateOrUpdate(ctx, fromAiFunctionTask)
+				to.SetAiFunctionTask(ctx, toAiFunctionTask)
+			}
+		}
+	}
 	if !from.AiRuntimeTask.IsNull() && !from.AiRuntimeTask.IsUnknown() {
 		if toAiRuntimeTask, ok := to.GetAiRuntimeTask(ctx); ok {
 			if fromAiRuntimeTask, ok := from.GetAiRuntimeTask(ctx); ok {
@@ -26413,6 +30706,14 @@ func (to *Task) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Task) {
 }
 
 func (to *Task) SyncFieldsDuringRead(ctx context.Context, from Task) {
+	if !from.AiFunctionTask.IsNull() && !from.AiFunctionTask.IsUnknown() {
+		if toAiFunctionTask, ok := to.GetAiFunctionTask(ctx); ok {
+			if fromAiFunctionTask, ok := from.GetAiFunctionTask(ctx); ok {
+				toAiFunctionTask.SyncFieldsDuringRead(ctx, fromAiFunctionTask)
+				to.SetAiFunctionTask(ctx, toAiFunctionTask)
+			}
+		}
+	}
 	if !from.AiRuntimeTask.IsNull() && !from.AiRuntimeTask.IsUnknown() {
 		if toAiRuntimeTask, ok := to.GetAiRuntimeTask(ctx); ok {
 			if fromAiRuntimeTask, ok := from.GetAiRuntimeTask(ctx); ok {
@@ -26660,6 +30961,7 @@ func (to *Task) SyncFieldsDuringRead(ctx context.Context, from Task) {
 }
 
 func (m Task) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["ai_function_task"] = attrs["ai_function_task"].SetOptional()
 	attrs["ai_runtime_task"] = attrs["ai_runtime_task"].SetOptional()
 	attrs["alert_task"] = attrs["alert_task"].SetOptional()
 	attrs["clean_rooms_notebook_task"] = attrs["clean_rooms_notebook_task"].SetOptional()
@@ -26675,6 +30977,7 @@ func (m Task) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuild
 	attrs["disabled"] = attrs["disabled"].SetOptional()
 	attrs["email_notifications"] = attrs["email_notifications"].SetOptional()
 	attrs["environment_key"] = attrs["environment_key"].SetOptional()
+	attrs["environment_variables_key"] = attrs["environment_variables_key"].SetOptional()
 	attrs["existing_cluster_id"] = attrs["existing_cluster_id"].SetOptional()
 	attrs["for_each_task"] = attrs["for_each_task"].SetOptional()
 	attrs["gen_ai_compute_task"] = attrs["gen_ai_compute_task"].SetOptional()
@@ -26713,6 +31016,7 @@ func (m Task) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuild
 // SDK values.
 func (m Task) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
+		"ai_function_task":          reflect.TypeOf(AiFunctionTask{}),
 		"ai_runtime_task":           reflect.TypeOf(AiRuntimeTask{}),
 		"alert_task":                reflect.TypeOf(AlertTask{}),
 		"clean_rooms_notebook_task": reflect.TypeOf(CleanRoomsNotebookTask{}),
@@ -26751,6 +31055,7 @@ func (m Task) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"ai_function_task":          m.AiFunctionTask,
 			"ai_runtime_task":           m.AiRuntimeTask,
 			"alert_task":                m.AlertTask,
 			"clean_rooms_notebook_task": m.CleanRoomsNotebookTask,
@@ -26766,6 +31071,7 @@ func (m Task) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"disabled":                  m.Disabled,
 			"email_notifications":       m.EmailNotifications,
 			"environment_key":           m.EnvironmentKey,
+			"environment_variables_key": m.EnvironmentVariablesKey,
 			"existing_cluster_id":       m.ExistingClusterId,
 			"for_each_task":             m.ForEachTask,
 			"gen_ai_compute_task":       m.GenAiComputeTask,
@@ -26798,6 +31104,7 @@ func (m Task) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (m Task) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"ai_function_task":          AiFunctionTask{}.Type(ctx),
 			"ai_runtime_task":           AiRuntimeTask{}.Type(ctx),
 			"alert_task":                AlertTask{}.Type(ctx),
 			"clean_rooms_notebook_task": CleanRoomsNotebookTask{}.Type(ctx),
@@ -26815,6 +31122,7 @@ func (m Task) Type(ctx context.Context) attr.Type {
 			"disabled":                  types.BoolType,
 			"email_notifications":       TaskEmailNotifications{}.Type(ctx),
 			"environment_key":           types.StringType,
+			"environment_variables_key": types.StringType,
 			"existing_cluster_id":       types.StringType,
 			"for_each_task":             ForEachTask{}.Type(ctx),
 			"gen_ai_compute_task":       GenAiComputeTask{}.Type(ctx),
@@ -26844,6 +31152,31 @@ func (m Task) Type(ctx context.Context) attr.Type {
 			"webhook_notifications":     WebhookNotifications{}.Type(ctx),
 		},
 	}
+}
+
+// GetAiFunctionTask returns the value of the AiFunctionTask field in Task as
+// a AiFunctionTask value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *Task) GetAiFunctionTask(ctx context.Context) (AiFunctionTask, bool) {
+	var e AiFunctionTask
+	if m.AiFunctionTask.IsNull() || m.AiFunctionTask.IsUnknown() {
+		return e, false
+	}
+	var v AiFunctionTask
+	d := m.AiFunctionTask.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAiFunctionTask sets the value of the AiFunctionTask field in Task.
+func (m *Task) SetAiFunctionTask(ctx context.Context, v AiFunctionTask) {
+	vs := v.ToObjectValue(ctx)
+	m.AiFunctionTask = vs
 }
 
 // GetAiRuntimeTask returns the value of the AiRuntimeTask field in Task as
@@ -27618,6 +31951,12 @@ type TaskEmailNotifications struct {
 	// `TIMED_OUT` result_state. If this is not specified on job creation,
 	// reset, or update the list is empty, and notifications are not sent.
 	OnFailure types.List `tfsdk:"on_failure"`
+	// A list of email addresses to notify when platform-initiated maintenance
+	// completes for a continuous job.
+	OnMaintenanceComplete types.List `tfsdk:"on_maintenance_complete"`
+	// A list of email addresses to notify when platform-initiated maintenance
+	// starts for a continuous job.
+	OnMaintenanceStart types.List `tfsdk:"on_maintenance_start"`
 	// A list of email addresses to be notified when a run begins. If not
 	// specified on job creation, reset, or update, the list is empty, and
 	// notifications are not sent.
@@ -27650,6 +31989,18 @@ func (to *TaskEmailNotifications) SyncFieldsDuringCreateOrUpdate(ctx context.Con
 		// If a user specified a non-Null, empty list for OnFailure, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.OnFailure = from.OnFailure
+	}
+	if !from.OnMaintenanceComplete.IsNull() && !from.OnMaintenanceComplete.IsUnknown() && to.OnMaintenanceComplete.IsNull() && len(from.OnMaintenanceComplete.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for OnMaintenanceComplete, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.OnMaintenanceComplete = from.OnMaintenanceComplete
+	}
+	if !from.OnMaintenanceStart.IsNull() && !from.OnMaintenanceStart.IsUnknown() && to.OnMaintenanceStart.IsNull() && len(from.OnMaintenanceStart.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for OnMaintenanceStart, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.OnMaintenanceStart = from.OnMaintenanceStart
 	}
 	if !from.OnStart.IsNull() && !from.OnStart.IsUnknown() && to.OnStart.IsNull() && len(from.OnStart.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
@@ -27684,6 +32035,18 @@ func (to *TaskEmailNotifications) SyncFieldsDuringRead(ctx context.Context, from
 		// set the resulting resource state to the empty list to match the planned value.
 		to.OnFailure = from.OnFailure
 	}
+	if !from.OnMaintenanceComplete.IsNull() && !from.OnMaintenanceComplete.IsUnknown() && to.OnMaintenanceComplete.IsNull() && len(from.OnMaintenanceComplete.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for OnMaintenanceComplete, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.OnMaintenanceComplete = from.OnMaintenanceComplete
+	}
+	if !from.OnMaintenanceStart.IsNull() && !from.OnMaintenanceStart.IsUnknown() && to.OnMaintenanceStart.IsNull() && len(from.OnMaintenanceStart.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for OnMaintenanceStart, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.OnMaintenanceStart = from.OnMaintenanceStart
+	}
 	if !from.OnStart.IsNull() && !from.OnStart.IsUnknown() && to.OnStart.IsNull() && len(from.OnStart.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for OnStart, and the deserialized field value is Null,
@@ -27708,6 +32071,8 @@ func (m TaskEmailNotifications) ApplySchemaCustomizations(attrs map[string]tfsch
 	attrs["no_alert_for_skipped_runs"] = attrs["no_alert_for_skipped_runs"].SetOptional()
 	attrs["on_duration_warning_threshold_exceeded"] = attrs["on_duration_warning_threshold_exceeded"].SetOptional()
 	attrs["on_failure"] = attrs["on_failure"].SetOptional()
+	attrs["on_maintenance_complete"] = attrs["on_maintenance_complete"].SetOptional()
+	attrs["on_maintenance_start"] = attrs["on_maintenance_start"].SetOptional()
 	attrs["on_start"] = attrs["on_start"].SetOptional()
 	attrs["on_streaming_backlog_exceeded"] = attrs["on_streaming_backlog_exceeded"].SetOptional()
 	attrs["on_success"] = attrs["on_success"].SetOptional()
@@ -27726,6 +32091,8 @@ func (m TaskEmailNotifications) GetComplexFieldTypes(ctx context.Context) map[st
 	return map[string]reflect.Type{
 		"on_duration_warning_threshold_exceeded": reflect.TypeOf(types.String{}),
 		"on_failure":                             reflect.TypeOf(types.String{}),
+		"on_maintenance_complete":                reflect.TypeOf(types.String{}),
+		"on_maintenance_start":                   reflect.TypeOf(types.String{}),
 		"on_start":                               reflect.TypeOf(types.String{}),
 		"on_streaming_backlog_exceeded":          reflect.TypeOf(types.String{}),
 		"on_success":                             reflect.TypeOf(types.String{}),
@@ -27742,6 +32109,8 @@ func (m TaskEmailNotifications) ToObjectValue(ctx context.Context) basetypes.Obj
 			"no_alert_for_skipped_runs":              m.NoAlertForSkippedRuns,
 			"on_duration_warning_threshold_exceeded": m.OnDurationWarningThresholdExceeded,
 			"on_failure":                             m.OnFailure,
+			"on_maintenance_complete":                m.OnMaintenanceComplete,
+			"on_maintenance_start":                   m.OnMaintenanceStart,
 			"on_start":                               m.OnStart,
 			"on_streaming_backlog_exceeded":          m.OnStreamingBacklogExceeded,
 			"on_success":                             m.OnSuccess,
@@ -27757,6 +32126,12 @@ func (m TaskEmailNotifications) Type(ctx context.Context) attr.Type {
 				ElemType: types.StringType,
 			},
 			"on_failure": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"on_maintenance_complete": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"on_maintenance_start": basetypes.ListType{
 				ElemType: types.StringType,
 			},
 			"on_start": basetypes.ListType{
@@ -27822,6 +32197,58 @@ func (m *TaskEmailNotifications) SetOnFailure(ctx context.Context, v []types.Str
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["on_failure"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	m.OnFailure = types.ListValueMust(t, vs)
+}
+
+// GetOnMaintenanceComplete returns the value of the OnMaintenanceComplete field in TaskEmailNotifications as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *TaskEmailNotifications) GetOnMaintenanceComplete(ctx context.Context) ([]types.String, bool) {
+	if m.OnMaintenanceComplete.IsNull() || m.OnMaintenanceComplete.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := m.OnMaintenanceComplete.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetOnMaintenanceComplete sets the value of the OnMaintenanceComplete field in TaskEmailNotifications.
+func (m *TaskEmailNotifications) SetOnMaintenanceComplete(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["on_maintenance_complete"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.OnMaintenanceComplete = types.ListValueMust(t, vs)
+}
+
+// GetOnMaintenanceStart returns the value of the OnMaintenanceStart field in TaskEmailNotifications as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *TaskEmailNotifications) GetOnMaintenanceStart(ctx context.Context) ([]types.String, bool) {
+	if m.OnMaintenanceStart.IsNull() || m.OnMaintenanceStart.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := m.OnMaintenanceStart.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetOnMaintenanceStart sets the value of the OnMaintenanceStart field in TaskEmailNotifications.
+func (m *TaskEmailNotifications) SetOnMaintenanceStart(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["on_maintenance_start"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.OnMaintenanceStart = types.ListValueMust(t, vs)
 }
 
 // GetOnStart returns the value of the OnStart field in TaskEmailNotifications as
@@ -28024,15 +32451,17 @@ func (m TerminationDetails) Type(ctx context.Context) attr.Type {
 
 // A single trigger attached to a job via `JobSettings.triggers`. Exactly one of
 // the trigger-type fields (`periodic`, `schedule`, `continuous`,
-// `file_arrival`, `table_update`, `model`) must be set; mutual exclusivity is
-// enforced in the API handler rather than via `oneof` so that codegen,
-// validation, and JSON serialization across SDKs and Terraform behave
-// consistently.
+// `file_arrival`, `table_update`, `model`, `job_completion`) must be set;
+// mutual exclusivity is enforced in the API handler rather than via `oneof` so
+// that codegen, validation, and JSON serialization across SDKs and Terraform
+// behave consistently.
 type TriggerConfiguration struct {
 	// Continuous trigger configuration.
 	Continuous types.Object `tfsdk:"continuous"`
 	// File arrival trigger configuration.
 	FileArrival types.Object `tfsdk:"file_arrival"`
+	// Job completion trigger configuration.
+	JobCompletion types.Object `tfsdk:"job_completion"`
 	// Model trigger configuration.
 	Model types.Object `tfsdk:"model"`
 	// Whether this trigger is paused. Defaults to UNPAUSED when unset; the
@@ -28065,6 +32494,15 @@ func (to *TriggerConfiguration) SyncFieldsDuringCreateOrUpdate(ctx context.Conte
 				// Recursively sync the fields of FileArrival
 				toFileArrival.SyncFieldsDuringCreateOrUpdate(ctx, fromFileArrival)
 				to.SetFileArrival(ctx, toFileArrival)
+			}
+		}
+	}
+	if !from.JobCompletion.IsNull() && !from.JobCompletion.IsUnknown() {
+		if toJobCompletion, ok := to.GetJobCompletion(ctx); ok {
+			if fromJobCompletion, ok := from.GetJobCompletion(ctx); ok {
+				// Recursively sync the fields of JobCompletion
+				toJobCompletion.SyncFieldsDuringCreateOrUpdate(ctx, fromJobCompletion)
+				to.SetJobCompletion(ctx, toJobCompletion)
 			}
 		}
 	}
@@ -28132,6 +32570,14 @@ func (to *TriggerConfiguration) SyncFieldsDuringRead(ctx context.Context, from T
 			}
 		}
 	}
+	if !from.JobCompletion.IsNull() && !from.JobCompletion.IsUnknown() {
+		if toJobCompletion, ok := to.GetJobCompletion(ctx); ok {
+			if fromJobCompletion, ok := from.GetJobCompletion(ctx); ok {
+				toJobCompletion.SyncFieldsDuringRead(ctx, fromJobCompletion)
+				to.SetJobCompletion(ctx, toJobCompletion)
+			}
+		}
+	}
 	if !from.Model.IsNull() && !from.Model.IsUnknown() {
 		if toModel, ok := to.GetModel(ctx); ok {
 			if fromModel, ok := from.GetModel(ctx); ok {
@@ -28177,6 +32623,7 @@ func (to *TriggerConfiguration) SyncFieldsDuringRead(ctx context.Context, from T
 func (m TriggerConfiguration) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["continuous"] = attrs["continuous"].SetOptional()
 	attrs["file_arrival"] = attrs["file_arrival"].SetOptional()
+	attrs["job_completion"] = attrs["job_completion"].SetOptional()
 	attrs["model"] = attrs["model"].SetOptional()
 	attrs["pause_status"] = attrs["pause_status"].SetOptional()
 	attrs["periodic"] = attrs["periodic"].SetOptional()
@@ -28196,13 +32643,14 @@ func (m TriggerConfiguration) ApplySchemaCustomizations(attrs map[string]tfschem
 // SDK values.
 func (m TriggerConfiguration) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"continuous":    reflect.TypeOf(ContinuousTriggerConfiguration{}),
-		"file_arrival":  reflect.TypeOf(FileArrivalTriggerConfiguration{}),
-		"model":         reflect.TypeOf(ModelTriggerConfiguration{}),
-		"periodic":      reflect.TypeOf(PeriodicTriggerConfiguration{}),
-		"schedule":      reflect.TypeOf(CronTriggerConfiguration{}),
-		"sql_condition": reflect.TypeOf(SqlConditionConfiguration{}),
-		"table_update":  reflect.TypeOf(TableUpdateTriggerConfiguration{}),
+		"continuous":     reflect.TypeOf(ContinuousTriggerConfiguration{}),
+		"file_arrival":   reflect.TypeOf(FileArrivalTriggerConfiguration{}),
+		"job_completion": reflect.TypeOf(JobCompletionTriggerConfiguration{}),
+		"model":          reflect.TypeOf(ModelTriggerConfiguration{}),
+		"periodic":       reflect.TypeOf(PeriodicTriggerConfiguration{}),
+		"schedule":       reflect.TypeOf(CronTriggerConfiguration{}),
+		"sql_condition":  reflect.TypeOf(SqlConditionConfiguration{}),
+		"table_update":   reflect.TypeOf(TableUpdateTriggerConfiguration{}),
 	}
 }
 
@@ -28213,14 +32661,15 @@ func (m TriggerConfiguration) ToObjectValue(ctx context.Context) basetypes.Objec
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"continuous":    m.Continuous,
-			"file_arrival":  m.FileArrival,
-			"model":         m.Model,
-			"pause_status":  m.PauseStatus,
-			"periodic":      m.Periodic,
-			"schedule":      m.Schedule,
-			"sql_condition": m.SqlCondition,
-			"table_update":  m.TableUpdate,
+			"continuous":     m.Continuous,
+			"file_arrival":   m.FileArrival,
+			"job_completion": m.JobCompletion,
+			"model":          m.Model,
+			"pause_status":   m.PauseStatus,
+			"periodic":       m.Periodic,
+			"schedule":       m.Schedule,
+			"sql_condition":  m.SqlCondition,
+			"table_update":   m.TableUpdate,
 		})
 }
 
@@ -28228,14 +32677,15 @@ func (m TriggerConfiguration) ToObjectValue(ctx context.Context) basetypes.Objec
 func (m TriggerConfiguration) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"continuous":    ContinuousTriggerConfiguration{}.Type(ctx),
-			"file_arrival":  FileArrivalTriggerConfiguration{}.Type(ctx),
-			"model":         ModelTriggerConfiguration{}.Type(ctx),
-			"pause_status":  types.StringType,
-			"periodic":      PeriodicTriggerConfiguration{}.Type(ctx),
-			"schedule":      CronTriggerConfiguration{}.Type(ctx),
-			"sql_condition": SqlConditionConfiguration{}.Type(ctx),
-			"table_update":  TableUpdateTriggerConfiguration{}.Type(ctx),
+			"continuous":     ContinuousTriggerConfiguration{}.Type(ctx),
+			"file_arrival":   FileArrivalTriggerConfiguration{}.Type(ctx),
+			"job_completion": JobCompletionTriggerConfiguration{}.Type(ctx),
+			"model":          ModelTriggerConfiguration{}.Type(ctx),
+			"pause_status":   types.StringType,
+			"periodic":       PeriodicTriggerConfiguration{}.Type(ctx),
+			"schedule":       CronTriggerConfiguration{}.Type(ctx),
+			"sql_condition":  SqlConditionConfiguration{}.Type(ctx),
+			"table_update":   TableUpdateTriggerConfiguration{}.Type(ctx),
 		},
 	}
 }
@@ -28288,6 +32738,31 @@ func (m *TriggerConfiguration) GetFileArrival(ctx context.Context) (FileArrivalT
 func (m *TriggerConfiguration) SetFileArrival(ctx context.Context, v FileArrivalTriggerConfiguration) {
 	vs := v.ToObjectValue(ctx)
 	m.FileArrival = vs
+}
+
+// GetJobCompletion returns the value of the JobCompletion field in TriggerConfiguration as
+// a JobCompletionTriggerConfiguration value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *TriggerConfiguration) GetJobCompletion(ctx context.Context) (JobCompletionTriggerConfiguration, bool) {
+	var e JobCompletionTriggerConfiguration
+	if m.JobCompletion.IsNull() || m.JobCompletion.IsUnknown() {
+		return e, false
+	}
+	var v JobCompletionTriggerConfiguration
+	d := m.JobCompletion.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetJobCompletion sets the value of the JobCompletion field in TriggerConfiguration.
+func (m *TriggerConfiguration) SetJobCompletion(ctx context.Context, v JobCompletionTriggerConfiguration) {
+	vs := v.ToObjectValue(ctx)
+	m.JobCompletion = vs
 }
 
 // GetModel returns the value of the Model field in TriggerConfiguration as
@@ -28811,6 +33286,9 @@ func (m *TriggerHistory) SetLastTriggered(ctx context.Context, v TriggerEvaluati
 
 // Additional details about what triggered the run
 type TriggerInfo struct {
+	// Additional details for job runs triggered by a job completion trigger
+	// (trigger: "JOB_COMPLETION")
+	JobCompletion types.Object `tfsdk:"job_completion"`
 	// The run id of the Run Job task run
 	RunId types.Int64 `tfsdk:"run_id"`
 	// SQL condition evaluation details for this run
@@ -28818,6 +33296,15 @@ type TriggerInfo struct {
 }
 
 func (to *TriggerInfo) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from TriggerInfo) {
+	if !from.JobCompletion.IsNull() && !from.JobCompletion.IsUnknown() {
+		if toJobCompletion, ok := to.GetJobCompletion(ctx); ok {
+			if fromJobCompletion, ok := from.GetJobCompletion(ctx); ok {
+				// Recursively sync the fields of JobCompletion
+				toJobCompletion.SyncFieldsDuringCreateOrUpdate(ctx, fromJobCompletion)
+				to.SetJobCompletion(ctx, toJobCompletion)
+			}
+		}
+	}
 	if !from.SqlCondition.IsNull() && !from.SqlCondition.IsUnknown() {
 		if toSqlCondition, ok := to.GetSqlCondition(ctx); ok {
 			if fromSqlCondition, ok := from.GetSqlCondition(ctx); ok {
@@ -28830,6 +33317,14 @@ func (to *TriggerInfo) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from 
 }
 
 func (to *TriggerInfo) SyncFieldsDuringRead(ctx context.Context, from TriggerInfo) {
+	if !from.JobCompletion.IsNull() && !from.JobCompletion.IsUnknown() {
+		if toJobCompletion, ok := to.GetJobCompletion(ctx); ok {
+			if fromJobCompletion, ok := from.GetJobCompletion(ctx); ok {
+				toJobCompletion.SyncFieldsDuringRead(ctx, fromJobCompletion)
+				to.SetJobCompletion(ctx, toJobCompletion)
+			}
+		}
+	}
 	if !from.SqlCondition.IsNull() && !from.SqlCondition.IsUnknown() {
 		if toSqlCondition, ok := to.GetSqlCondition(ctx); ok {
 			if fromSqlCondition, ok := from.GetSqlCondition(ctx); ok {
@@ -28841,6 +33336,7 @@ func (to *TriggerInfo) SyncFieldsDuringRead(ctx context.Context, from TriggerInf
 }
 
 func (m TriggerInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["job_completion"] = attrs["job_completion"].SetOptional()
 	attrs["run_id"] = attrs["run_id"].SetOptional()
 	attrs["sql_condition"] = attrs["sql_condition"].SetOptional()
 
@@ -28856,7 +33352,8 @@ func (m TriggerInfo) ApplySchemaCustomizations(attrs map[string]tfschema.Attribu
 // SDK values.
 func (m TriggerInfo) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"sql_condition": reflect.TypeOf(SqlConditionRunInfoDetails{}),
+		"job_completion": reflect.TypeOf(JobCompletionTriggerRunInfoDetails{}),
+		"sql_condition":  reflect.TypeOf(SqlConditionRunInfoDetails{}),
 	}
 }
 
@@ -28867,8 +33364,9 @@ func (m TriggerInfo) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"run_id":        m.RunId,
-			"sql_condition": m.SqlCondition,
+			"job_completion": m.JobCompletion,
+			"run_id":         m.RunId,
+			"sql_condition":  m.SqlCondition,
 		})
 }
 
@@ -28876,10 +33374,36 @@ func (m TriggerInfo) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (m TriggerInfo) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"run_id":        types.Int64Type,
-			"sql_condition": SqlConditionRunInfoDetails{}.Type(ctx),
+			"job_completion": JobCompletionTriggerRunInfoDetails{}.Type(ctx),
+			"run_id":         types.Int64Type,
+			"sql_condition":  SqlConditionRunInfoDetails{}.Type(ctx),
 		},
 	}
+}
+
+// GetJobCompletion returns the value of the JobCompletion field in TriggerInfo as
+// a JobCompletionTriggerRunInfoDetails value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *TriggerInfo) GetJobCompletion(ctx context.Context) (JobCompletionTriggerRunInfoDetails, bool) {
+	var e JobCompletionTriggerRunInfoDetails
+	if m.JobCompletion.IsNull() || m.JobCompletion.IsUnknown() {
+		return e, false
+	}
+	var v JobCompletionTriggerRunInfoDetails
+	d := m.JobCompletion.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetJobCompletion sets the value of the JobCompletion field in TriggerInfo.
+func (m *TriggerInfo) SetJobCompletion(ctx context.Context, v JobCompletionTriggerRunInfoDetails) {
+	vs := v.ToObjectValue(ctx)
+	m.JobCompletion = vs
 }
 
 // GetSqlCondition returns the value of the SqlCondition field in TriggerInfo as
@@ -28910,6 +33434,8 @@ func (m *TriggerInfo) SetSqlCondition(ctx context.Context, v SqlConditionRunInfo
 type TriggerSettings struct {
 	// File arrival trigger settings.
 	FileArrival types.Object `tfsdk:"file_arrival"`
+	// Job completion trigger settings.
+	JobCompletion types.Object `tfsdk:"job_completion"`
 
 	Model types.Object `tfsdk:"model"`
 	// Whether this trigger is paused or not.
@@ -28931,6 +33457,15 @@ func (to *TriggerSettings) SyncFieldsDuringCreateOrUpdate(ctx context.Context, f
 				// Recursively sync the fields of FileArrival
 				toFileArrival.SyncFieldsDuringCreateOrUpdate(ctx, fromFileArrival)
 				to.SetFileArrival(ctx, toFileArrival)
+			}
+		}
+	}
+	if !from.JobCompletion.IsNull() && !from.JobCompletion.IsUnknown() {
+		if toJobCompletion, ok := to.GetJobCompletion(ctx); ok {
+			if fromJobCompletion, ok := from.GetJobCompletion(ctx); ok {
+				// Recursively sync the fields of JobCompletion
+				toJobCompletion.SyncFieldsDuringCreateOrUpdate(ctx, fromJobCompletion)
+				to.SetJobCompletion(ctx, toJobCompletion)
 			}
 		}
 	}
@@ -28981,6 +33516,14 @@ func (to *TriggerSettings) SyncFieldsDuringRead(ctx context.Context, from Trigge
 			}
 		}
 	}
+	if !from.JobCompletion.IsNull() && !from.JobCompletion.IsUnknown() {
+		if toJobCompletion, ok := to.GetJobCompletion(ctx); ok {
+			if fromJobCompletion, ok := from.GetJobCompletion(ctx); ok {
+				toJobCompletion.SyncFieldsDuringRead(ctx, fromJobCompletion)
+				to.SetJobCompletion(ctx, toJobCompletion)
+			}
+		}
+	}
 	if !from.Model.IsNull() && !from.Model.IsUnknown() {
 		if toModel, ok := to.GetModel(ctx); ok {
 			if fromModel, ok := from.GetModel(ctx); ok {
@@ -29017,6 +33560,7 @@ func (to *TriggerSettings) SyncFieldsDuringRead(ctx context.Context, from Trigge
 
 func (m TriggerSettings) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["file_arrival"] = attrs["file_arrival"].SetOptional()
+	attrs["job_completion"] = attrs["job_completion"].SetOptional()
 	attrs["model"] = attrs["model"].SetOptional()
 	attrs["pause_status"] = attrs["pause_status"].SetOptional()
 	attrs["periodic"] = attrs["periodic"].SetOptional()
@@ -29035,11 +33579,12 @@ func (m TriggerSettings) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 // SDK values.
 func (m TriggerSettings) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"file_arrival":  reflect.TypeOf(FileArrivalTriggerConfiguration{}),
-		"model":         reflect.TypeOf(ModelTriggerConfiguration{}),
-		"periodic":      reflect.TypeOf(PeriodicTriggerConfiguration{}),
-		"sql_condition": reflect.TypeOf(SqlConditionConfiguration{}),
-		"table_update":  reflect.TypeOf(TableUpdateTriggerConfiguration{}),
+		"file_arrival":   reflect.TypeOf(FileArrivalTriggerConfiguration{}),
+		"job_completion": reflect.TypeOf(JobCompletionTriggerConfiguration{}),
+		"model":          reflect.TypeOf(ModelTriggerConfiguration{}),
+		"periodic":       reflect.TypeOf(PeriodicTriggerConfiguration{}),
+		"sql_condition":  reflect.TypeOf(SqlConditionConfiguration{}),
+		"table_update":   reflect.TypeOf(TableUpdateTriggerConfiguration{}),
 	}
 }
 
@@ -29050,12 +33595,13 @@ func (m TriggerSettings) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"file_arrival":  m.FileArrival,
-			"model":         m.Model,
-			"pause_status":  m.PauseStatus,
-			"periodic":      m.Periodic,
-			"sql_condition": m.SqlCondition,
-			"table_update":  m.TableUpdate,
+			"file_arrival":   m.FileArrival,
+			"job_completion": m.JobCompletion,
+			"model":          m.Model,
+			"pause_status":   m.PauseStatus,
+			"periodic":       m.Periodic,
+			"sql_condition":  m.SqlCondition,
+			"table_update":   m.TableUpdate,
 		})
 }
 
@@ -29063,12 +33609,13 @@ func (m TriggerSettings) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 func (m TriggerSettings) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"file_arrival":  FileArrivalTriggerConfiguration{}.Type(ctx),
-			"model":         ModelTriggerConfiguration{}.Type(ctx),
-			"pause_status":  types.StringType,
-			"periodic":      PeriodicTriggerConfiguration{}.Type(ctx),
-			"sql_condition": SqlConditionConfiguration{}.Type(ctx),
-			"table_update":  TableUpdateTriggerConfiguration{}.Type(ctx),
+			"file_arrival":   FileArrivalTriggerConfiguration{}.Type(ctx),
+			"job_completion": JobCompletionTriggerConfiguration{}.Type(ctx),
+			"model":          ModelTriggerConfiguration{}.Type(ctx),
+			"pause_status":   types.StringType,
+			"periodic":       PeriodicTriggerConfiguration{}.Type(ctx),
+			"sql_condition":  SqlConditionConfiguration{}.Type(ctx),
+			"table_update":   TableUpdateTriggerConfiguration{}.Type(ctx),
 		},
 	}
 }
@@ -29096,6 +33643,31 @@ func (m *TriggerSettings) GetFileArrival(ctx context.Context) (FileArrivalTrigge
 func (m *TriggerSettings) SetFileArrival(ctx context.Context, v FileArrivalTriggerConfiguration) {
 	vs := v.ToObjectValue(ctx)
 	m.FileArrival = vs
+}
+
+// GetJobCompletion returns the value of the JobCompletion field in TriggerSettings as
+// a JobCompletionTriggerConfiguration value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *TriggerSettings) GetJobCompletion(ctx context.Context) (JobCompletionTriggerConfiguration, bool) {
+	var e JobCompletionTriggerConfiguration
+	if m.JobCompletion.IsNull() || m.JobCompletion.IsUnknown() {
+		return e, false
+	}
+	var v JobCompletionTriggerConfiguration
+	d := m.JobCompletion.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetJobCompletion sets the value of the JobCompletion field in TriggerSettings.
+func (m *TriggerSettings) SetJobCompletion(ctx context.Context, v JobCompletionTriggerConfiguration) {
+	vs := v.ToObjectValue(ctx)
+	m.JobCompletion = vs
 }
 
 // GetModel returns the value of the Model field in TriggerSettings as
@@ -29200,6 +33772,8 @@ func (m *TriggerSettings) SetTableUpdate(ctx context.Context, v TableUpdateTrigg
 
 type TriggerStateProto struct {
 	FileArrival types.Object `tfsdk:"file_arrival"`
+
+	JobCompletion types.Object `tfsdk:"job_completion"`
 	// Whether this trigger is paused or not. For continuous schedules, it can
 	// differ from the configured pause_status whenever a paused continuous job
 	// is kickstarted by an operation other than an update, such as a run-now.
@@ -29218,6 +33792,15 @@ func (to *TriggerStateProto) SyncFieldsDuringCreateOrUpdate(ctx context.Context,
 				// Recursively sync the fields of FileArrival
 				toFileArrival.SyncFieldsDuringCreateOrUpdate(ctx, fromFileArrival)
 				to.SetFileArrival(ctx, toFileArrival)
+			}
+		}
+	}
+	if !from.JobCompletion.IsNull() && !from.JobCompletion.IsUnknown() {
+		if toJobCompletion, ok := to.GetJobCompletion(ctx); ok {
+			if fromJobCompletion, ok := from.GetJobCompletion(ctx); ok {
+				// Recursively sync the fields of JobCompletion
+				toJobCompletion.SyncFieldsDuringCreateOrUpdate(ctx, fromJobCompletion)
+				to.SetJobCompletion(ctx, toJobCompletion)
 			}
 		}
 	}
@@ -29250,6 +33833,14 @@ func (to *TriggerStateProto) SyncFieldsDuringRead(ctx context.Context, from Trig
 			}
 		}
 	}
+	if !from.JobCompletion.IsNull() && !from.JobCompletion.IsUnknown() {
+		if toJobCompletion, ok := to.GetJobCompletion(ctx); ok {
+			if fromJobCompletion, ok := from.GetJobCompletion(ctx); ok {
+				toJobCompletion.SyncFieldsDuringRead(ctx, fromJobCompletion)
+				to.SetJobCompletion(ctx, toJobCompletion)
+			}
+		}
+	}
 	if !from.SqlCondition.IsNull() && !from.SqlCondition.IsUnknown() {
 		if toSqlCondition, ok := to.GetSqlCondition(ctx); ok {
 			if fromSqlCondition, ok := from.GetSqlCondition(ctx); ok {
@@ -29270,6 +33861,7 @@ func (to *TriggerStateProto) SyncFieldsDuringRead(ctx context.Context, from Trig
 
 func (m TriggerStateProto) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["file_arrival"] = attrs["file_arrival"].SetOptional()
+	attrs["job_completion"] = attrs["job_completion"].SetComputed()
 	attrs["pause_status"] = attrs["pause_status"].SetOptional()
 	attrs["sql_condition"] = attrs["sql_condition"].SetOptional()
 	attrs["table"] = attrs["table"].SetOptional()
@@ -29286,9 +33878,10 @@ func (m TriggerStateProto) ApplySchemaCustomizations(attrs map[string]tfschema.A
 // SDK values.
 func (m TriggerStateProto) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"file_arrival":  reflect.TypeOf(FileArrivalTriggerState{}),
-		"sql_condition": reflect.TypeOf(SqlConditionState{}),
-		"table":         reflect.TypeOf(TableTriggerState{}),
+		"file_arrival":   reflect.TypeOf(FileArrivalTriggerState{}),
+		"job_completion": reflect.TypeOf(JobCompletionTriggerState{}),
+		"sql_condition":  reflect.TypeOf(SqlConditionState{}),
+		"table":          reflect.TypeOf(TableTriggerState{}),
 	}
 }
 
@@ -29299,10 +33892,11 @@ func (m TriggerStateProto) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"file_arrival":  m.FileArrival,
-			"pause_status":  m.PauseStatus,
-			"sql_condition": m.SqlCondition,
-			"table":         m.Table,
+			"file_arrival":   m.FileArrival,
+			"job_completion": m.JobCompletion,
+			"pause_status":   m.PauseStatus,
+			"sql_condition":  m.SqlCondition,
+			"table":          m.Table,
 		})
 }
 
@@ -29310,10 +33904,11 @@ func (m TriggerStateProto) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 func (m TriggerStateProto) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"file_arrival":  FileArrivalTriggerState{}.Type(ctx),
-			"pause_status":  types.StringType,
-			"sql_condition": SqlConditionState{}.Type(ctx),
-			"table":         TableTriggerState{}.Type(ctx),
+			"file_arrival":   FileArrivalTriggerState{}.Type(ctx),
+			"job_completion": JobCompletionTriggerState{}.Type(ctx),
+			"pause_status":   types.StringType,
+			"sql_condition":  SqlConditionState{}.Type(ctx),
+			"table":          TableTriggerState{}.Type(ctx),
 		},
 	}
 }
@@ -29341,6 +33936,31 @@ func (m *TriggerStateProto) GetFileArrival(ctx context.Context) (FileArrivalTrig
 func (m *TriggerStateProto) SetFileArrival(ctx context.Context, v FileArrivalTriggerState) {
 	vs := v.ToObjectValue(ctx)
 	m.FileArrival = vs
+}
+
+// GetJobCompletion returns the value of the JobCompletion field in TriggerStateProto as
+// a JobCompletionTriggerState value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *TriggerStateProto) GetJobCompletion(ctx context.Context) (JobCompletionTriggerState, bool) {
+	var e JobCompletionTriggerState
+	if m.JobCompletion.IsNull() || m.JobCompletion.IsUnknown() {
+		return e, false
+	}
+	var v JobCompletionTriggerState
+	d := m.JobCompletion.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetJobCompletion sets the value of the JobCompletion field in TriggerStateProto.
+func (m *TriggerStateProto) SetJobCompletion(ctx context.Context, v JobCompletionTriggerState) {
+	vs := v.ToObjectValue(ctx)
+	m.JobCompletion = vs
 }
 
 // GetSqlCondition returns the value of the SqlCondition field in TriggerStateProto as
@@ -29608,6 +34228,56 @@ func (m ViewItem) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// A Unity Catalog volume input source. The function is applied to each file.
+type VolumeSource struct {
+	// Unity Catalog volume path to the input files (e.g.
+	// `/Volumes/<catalog>/<schema>/<volume>/...`).
+	VolumePath types.String `tfsdk:"volume_path"`
+}
+
+func (to *VolumeSource) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from VolumeSource) {
+}
+
+func (to *VolumeSource) SyncFieldsDuringRead(ctx context.Context, from VolumeSource) {
+}
+
+func (m VolumeSource) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["volume_path"] = attrs["volume_path"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in VolumeSource.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m VolumeSource) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, VolumeSource
+// only implements ToObjectValue() and Type().
+func (m VolumeSource) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"volume_path": m.VolumePath,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m VolumeSource) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"volume_path": types.StringType,
+		},
+	}
+}
+
 type Webhook struct {
 	Id types.String `tfsdk:"id"`
 }
@@ -29664,6 +34334,15 @@ type WebhookNotifications struct {
 	// An optional list of system notification IDs to call when the run fails. A
 	// maximum of 3 destinations can be specified for the `on_failure` property.
 	OnFailure types.List `tfsdk:"on_failure"`
+	// An optional list of system notification IDs to call when
+	// platform-initiated maintenance completes for a continuous job. A maximum
+	// of 3 destinations can be specified for the `on_maintenance_complete`
+	// property.
+	OnMaintenanceComplete types.List `tfsdk:"on_maintenance_complete"`
+	// An optional list of system notification IDs to call when
+	// platform-initiated maintenance starts for a continuous job. A maximum of
+	// 3 destinations can be specified for the `on_maintenance_start` property.
+	OnMaintenanceStart types.List `tfsdk:"on_maintenance_start"`
 	// An optional list of system notification IDs to call when the run starts.
 	// A maximum of 3 destinations can be specified for the `on_start` property.
 	OnStart types.List `tfsdk:"on_start"`
@@ -29718,6 +34397,44 @@ func (to *WebhookNotifications) SyncFieldsDuringCreateOrUpdate(ctx context.Conte
 					}
 				}
 				to.SetOnFailure(ctx, toOnFailure)
+			}
+		}
+	}
+	if !from.OnMaintenanceComplete.IsNull() && !from.OnMaintenanceComplete.IsUnknown() && to.OnMaintenanceComplete.IsNull() && len(from.OnMaintenanceComplete.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for OnMaintenanceComplete, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.OnMaintenanceComplete = from.OnMaintenanceComplete
+	}
+	if !from.OnMaintenanceComplete.IsNull() && !from.OnMaintenanceComplete.IsUnknown() {
+		if toOnMaintenanceComplete, ok := to.GetOnMaintenanceComplete(ctx); ok {
+			if fromOnMaintenanceComplete, ok := from.GetOnMaintenanceComplete(ctx); ok {
+				// Recursively sync the fields of each OnMaintenanceComplete element by position.
+				for i := range toOnMaintenanceComplete {
+					if i < len(fromOnMaintenanceComplete) {
+						toOnMaintenanceComplete[i].SyncFieldsDuringCreateOrUpdate(ctx, fromOnMaintenanceComplete[i])
+					}
+				}
+				to.SetOnMaintenanceComplete(ctx, toOnMaintenanceComplete)
+			}
+		}
+	}
+	if !from.OnMaintenanceStart.IsNull() && !from.OnMaintenanceStart.IsUnknown() && to.OnMaintenanceStart.IsNull() && len(from.OnMaintenanceStart.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for OnMaintenanceStart, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.OnMaintenanceStart = from.OnMaintenanceStart
+	}
+	if !from.OnMaintenanceStart.IsNull() && !from.OnMaintenanceStart.IsUnknown() {
+		if toOnMaintenanceStart, ok := to.GetOnMaintenanceStart(ctx); ok {
+			if fromOnMaintenanceStart, ok := from.GetOnMaintenanceStart(ctx); ok {
+				// Recursively sync the fields of each OnMaintenanceStart element by position.
+				for i := range toOnMaintenanceStart {
+					if i < len(fromOnMaintenanceStart) {
+						toOnMaintenanceStart[i].SyncFieldsDuringCreateOrUpdate(ctx, fromOnMaintenanceStart[i])
+					}
+				}
+				to.SetOnMaintenanceStart(ctx, toOnMaintenanceStart)
 			}
 		}
 	}
@@ -29817,6 +34534,42 @@ func (to *WebhookNotifications) SyncFieldsDuringRead(ctx context.Context, from W
 			}
 		}
 	}
+	if !from.OnMaintenanceComplete.IsNull() && !from.OnMaintenanceComplete.IsUnknown() && to.OnMaintenanceComplete.IsNull() && len(from.OnMaintenanceComplete.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for OnMaintenanceComplete, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.OnMaintenanceComplete = from.OnMaintenanceComplete
+	}
+	if !from.OnMaintenanceComplete.IsNull() && !from.OnMaintenanceComplete.IsUnknown() {
+		if toOnMaintenanceComplete, ok := to.GetOnMaintenanceComplete(ctx); ok {
+			if fromOnMaintenanceComplete, ok := from.GetOnMaintenanceComplete(ctx); ok {
+				for i := range toOnMaintenanceComplete {
+					if i < len(fromOnMaintenanceComplete) {
+						toOnMaintenanceComplete[i].SyncFieldsDuringRead(ctx, fromOnMaintenanceComplete[i])
+					}
+				}
+				to.SetOnMaintenanceComplete(ctx, toOnMaintenanceComplete)
+			}
+		}
+	}
+	if !from.OnMaintenanceStart.IsNull() && !from.OnMaintenanceStart.IsUnknown() && to.OnMaintenanceStart.IsNull() && len(from.OnMaintenanceStart.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for OnMaintenanceStart, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.OnMaintenanceStart = from.OnMaintenanceStart
+	}
+	if !from.OnMaintenanceStart.IsNull() && !from.OnMaintenanceStart.IsUnknown() {
+		if toOnMaintenanceStart, ok := to.GetOnMaintenanceStart(ctx); ok {
+			if fromOnMaintenanceStart, ok := from.GetOnMaintenanceStart(ctx); ok {
+				for i := range toOnMaintenanceStart {
+					if i < len(fromOnMaintenanceStart) {
+						toOnMaintenanceStart[i].SyncFieldsDuringRead(ctx, fromOnMaintenanceStart[i])
+					}
+				}
+				to.SetOnMaintenanceStart(ctx, toOnMaintenanceStart)
+			}
+		}
+	}
 	if !from.OnStart.IsNull() && !from.OnStart.IsUnknown() && to.OnStart.IsNull() && len(from.OnStart.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for OnStart, and the deserialized field value is Null,
@@ -29876,6 +34629,8 @@ func (to *WebhookNotifications) SyncFieldsDuringRead(ctx context.Context, from W
 func (m WebhookNotifications) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["on_duration_warning_threshold_exceeded"] = attrs["on_duration_warning_threshold_exceeded"].SetOptional()
 	attrs["on_failure"] = attrs["on_failure"].SetOptional()
+	attrs["on_maintenance_complete"] = attrs["on_maintenance_complete"].SetOptional()
+	attrs["on_maintenance_start"] = attrs["on_maintenance_start"].SetOptional()
 	attrs["on_start"] = attrs["on_start"].SetOptional()
 	attrs["on_streaming_backlog_exceeded"] = attrs["on_streaming_backlog_exceeded"].SetOptional()
 	attrs["on_success"] = attrs["on_success"].SetOptional()
@@ -29894,6 +34649,8 @@ func (m WebhookNotifications) GetComplexFieldTypes(ctx context.Context) map[stri
 	return map[string]reflect.Type{
 		"on_duration_warning_threshold_exceeded": reflect.TypeOf(Webhook{}),
 		"on_failure":                             reflect.TypeOf(Webhook{}),
+		"on_maintenance_complete":                reflect.TypeOf(Webhook{}),
+		"on_maintenance_start":                   reflect.TypeOf(Webhook{}),
 		"on_start":                               reflect.TypeOf(Webhook{}),
 		"on_streaming_backlog_exceeded":          reflect.TypeOf(Webhook{}),
 		"on_success":                             reflect.TypeOf(Webhook{}),
@@ -29909,6 +34666,8 @@ func (m WebhookNotifications) ToObjectValue(ctx context.Context) basetypes.Objec
 		map[string]attr.Value{
 			"on_duration_warning_threshold_exceeded": m.OnDurationWarningThresholdExceeded,
 			"on_failure":                             m.OnFailure,
+			"on_maintenance_complete":                m.OnMaintenanceComplete,
+			"on_maintenance_start":                   m.OnMaintenanceStart,
 			"on_start":                               m.OnStart,
 			"on_streaming_backlog_exceeded":          m.OnStreamingBacklogExceeded,
 			"on_success":                             m.OnSuccess,
@@ -29923,6 +34682,12 @@ func (m WebhookNotifications) Type(ctx context.Context) attr.Type {
 				ElemType: Webhook{}.Type(ctx),
 			},
 			"on_failure": basetypes.ListType{
+				ElemType: Webhook{}.Type(ctx),
+			},
+			"on_maintenance_complete": basetypes.ListType{
+				ElemType: Webhook{}.Type(ctx),
+			},
+			"on_maintenance_start": basetypes.ListType{
 				ElemType: Webhook{}.Type(ctx),
 			},
 			"on_start": basetypes.ListType{
@@ -29988,6 +34753,58 @@ func (m *WebhookNotifications) SetOnFailure(ctx context.Context, v []Webhook) {
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["on_failure"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	m.OnFailure = types.ListValueMust(t, vs)
+}
+
+// GetOnMaintenanceComplete returns the value of the OnMaintenanceComplete field in WebhookNotifications as
+// a slice of Webhook values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *WebhookNotifications) GetOnMaintenanceComplete(ctx context.Context) ([]Webhook, bool) {
+	if m.OnMaintenanceComplete.IsNull() || m.OnMaintenanceComplete.IsUnknown() {
+		return nil, false
+	}
+	var v []Webhook
+	d := m.OnMaintenanceComplete.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetOnMaintenanceComplete sets the value of the OnMaintenanceComplete field in WebhookNotifications.
+func (m *WebhookNotifications) SetOnMaintenanceComplete(ctx context.Context, v []Webhook) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["on_maintenance_complete"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.OnMaintenanceComplete = types.ListValueMust(t, vs)
+}
+
+// GetOnMaintenanceStart returns the value of the OnMaintenanceStart field in WebhookNotifications as
+// a slice of Webhook values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *WebhookNotifications) GetOnMaintenanceStart(ctx context.Context) ([]Webhook, bool) {
+	if m.OnMaintenanceStart.IsNull() || m.OnMaintenanceStart.IsUnknown() {
+		return nil, false
+	}
+	var v []Webhook
+	d := m.OnMaintenanceStart.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetOnMaintenanceStart sets the value of the OnMaintenanceStart field in WebhookNotifications.
+func (m *WebhookNotifications) SetOnMaintenanceStart(ctx context.Context, v []Webhook) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["on_maintenance_start"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.OnMaintenanceStart = types.ListValueMust(t, vs)
 }
 
 // GetOnStart returns the value of the OnStart field in WebhookNotifications as

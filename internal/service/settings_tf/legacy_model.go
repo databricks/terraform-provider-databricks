@@ -1572,19 +1572,46 @@ func (m *ComplianceSecurityProfileSetting_SdkV2) SetComplianceSecurityProfileWor
 	m.ComplianceSecurityProfileWorkspace = types.ListValueMust(t, vs)
 }
 
+// Holds the destination-specific configuration. Exactly one of the nested
+// configs is set.
 type Config_SdkV2 struct {
+	// Configures a Slack channel reached through the Databricks Genie app for
+	// Slack.
+	DatabricksAppSlack types.List `tfsdk:"databricks_app_slack"`
+	// Configures a Microsoft Teams channel reached through the Databricks Genie
+	// app for Microsoft Teams.
+	DatabricksAppTeams types.List `tfsdk:"databricks_app_teams"`
+	// Configures an email destination.
 	Email types.List `tfsdk:"email"`
-
+	// Configures a generic HTTPS webhook destination.
 	GenericWebhook types.List `tfsdk:"generic_webhook"`
-
+	// Configures a Microsoft Teams incoming webhook destination.
 	MicrosoftTeams types.List `tfsdk:"microsoft_teams"`
-
+	// Configures a PagerDuty destination.
 	Pagerduty types.List `tfsdk:"pagerduty"`
-
+	// Configures a Slack incoming webhook destination.
 	Slack types.List `tfsdk:"slack"`
 }
 
 func (to *Config_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Config_SdkV2) {
+	if !from.DatabricksAppSlack.IsNull() && !from.DatabricksAppSlack.IsUnknown() {
+		if toDatabricksAppSlack, ok := to.GetDatabricksAppSlack(ctx); ok {
+			if fromDatabricksAppSlack, ok := from.GetDatabricksAppSlack(ctx); ok {
+				// Recursively sync the fields of DatabricksAppSlack
+				toDatabricksAppSlack.SyncFieldsDuringCreateOrUpdate(ctx, fromDatabricksAppSlack)
+				to.SetDatabricksAppSlack(ctx, toDatabricksAppSlack)
+			}
+		}
+	}
+	if !from.DatabricksAppTeams.IsNull() && !from.DatabricksAppTeams.IsUnknown() {
+		if toDatabricksAppTeams, ok := to.GetDatabricksAppTeams(ctx); ok {
+			if fromDatabricksAppTeams, ok := from.GetDatabricksAppTeams(ctx); ok {
+				// Recursively sync the fields of DatabricksAppTeams
+				toDatabricksAppTeams.SyncFieldsDuringCreateOrUpdate(ctx, fromDatabricksAppTeams)
+				to.SetDatabricksAppTeams(ctx, toDatabricksAppTeams)
+			}
+		}
+	}
 	if !from.Email.IsNull() && !from.Email.IsUnknown() {
 		if toEmail, ok := to.GetEmail(ctx); ok {
 			if fromEmail, ok := from.GetEmail(ctx); ok {
@@ -1633,6 +1660,22 @@ func (to *Config_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from
 }
 
 func (to *Config_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Config_SdkV2) {
+	if !from.DatabricksAppSlack.IsNull() && !from.DatabricksAppSlack.IsUnknown() {
+		if toDatabricksAppSlack, ok := to.GetDatabricksAppSlack(ctx); ok {
+			if fromDatabricksAppSlack, ok := from.GetDatabricksAppSlack(ctx); ok {
+				toDatabricksAppSlack.SyncFieldsDuringRead(ctx, fromDatabricksAppSlack)
+				to.SetDatabricksAppSlack(ctx, toDatabricksAppSlack)
+			}
+		}
+	}
+	if !from.DatabricksAppTeams.IsNull() && !from.DatabricksAppTeams.IsUnknown() {
+		if toDatabricksAppTeams, ok := to.GetDatabricksAppTeams(ctx); ok {
+			if fromDatabricksAppTeams, ok := from.GetDatabricksAppTeams(ctx); ok {
+				toDatabricksAppTeams.SyncFieldsDuringRead(ctx, fromDatabricksAppTeams)
+				to.SetDatabricksAppTeams(ctx, toDatabricksAppTeams)
+			}
+		}
+	}
 	if !from.Email.IsNull() && !from.Email.IsUnknown() {
 		if toEmail, ok := to.GetEmail(ctx); ok {
 			if fromEmail, ok := from.GetEmail(ctx); ok {
@@ -1676,6 +1719,10 @@ func (to *Config_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Config_Sd
 }
 
 func (m Config_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["databricks_app_slack"] = attrs["databricks_app_slack"].SetOptional()
+	attrs["databricks_app_slack"] = attrs["databricks_app_slack"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["databricks_app_teams"] = attrs["databricks_app_teams"].SetOptional()
+	attrs["databricks_app_teams"] = attrs["databricks_app_teams"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["email"] = attrs["email"].SetOptional()
 	attrs["email"] = attrs["email"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["generic_webhook"] = attrs["generic_webhook"].SetOptional()
@@ -1699,11 +1746,13 @@ func (m Config_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attrib
 // SDK values.
 func (m Config_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"email":           reflect.TypeOf(EmailConfig_SdkV2{}),
-		"generic_webhook": reflect.TypeOf(GenericWebhookConfig_SdkV2{}),
-		"microsoft_teams": reflect.TypeOf(MicrosoftTeamsConfig_SdkV2{}),
-		"pagerduty":       reflect.TypeOf(PagerdutyConfig_SdkV2{}),
-		"slack":           reflect.TypeOf(SlackConfig_SdkV2{}),
+		"databricks_app_slack": reflect.TypeOf(DatabricksAppSlackConfig_SdkV2{}),
+		"databricks_app_teams": reflect.TypeOf(DatabricksAppTeamsConfig_SdkV2{}),
+		"email":                reflect.TypeOf(EmailConfig_SdkV2{}),
+		"generic_webhook":      reflect.TypeOf(GenericWebhookConfig_SdkV2{}),
+		"microsoft_teams":      reflect.TypeOf(MicrosoftTeamsConfig_SdkV2{}),
+		"pagerduty":            reflect.TypeOf(PagerdutyConfig_SdkV2{}),
+		"slack":                reflect.TypeOf(SlackConfig_SdkV2{}),
 	}
 }
 
@@ -1714,11 +1763,13 @@ func (m Config_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"email":           m.Email,
-			"generic_webhook": m.GenericWebhook,
-			"microsoft_teams": m.MicrosoftTeams,
-			"pagerduty":       m.Pagerduty,
-			"slack":           m.Slack,
+			"databricks_app_slack": m.DatabricksAppSlack,
+			"databricks_app_teams": m.DatabricksAppTeams,
+			"email":                m.Email,
+			"generic_webhook":      m.GenericWebhook,
+			"microsoft_teams":      m.MicrosoftTeams,
+			"pagerduty":            m.Pagerduty,
+			"slack":                m.Slack,
 		})
 }
 
@@ -1726,6 +1777,12 @@ func (m Config_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (m Config_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"databricks_app_slack": basetypes.ListType{
+				ElemType: DatabricksAppSlackConfig_SdkV2{}.Type(ctx),
+			},
+			"databricks_app_teams": basetypes.ListType{
+				ElemType: DatabricksAppTeamsConfig_SdkV2{}.Type(ctx),
+			},
 			"email": basetypes.ListType{
 				ElemType: EmailConfig_SdkV2{}.Type(ctx),
 			},
@@ -1743,6 +1800,58 @@ func (m Config_SdkV2) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetDatabricksAppSlack returns the value of the DatabricksAppSlack field in Config_SdkV2 as
+// a DatabricksAppSlackConfig_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *Config_SdkV2) GetDatabricksAppSlack(ctx context.Context) (DatabricksAppSlackConfig_SdkV2, bool) {
+	var e DatabricksAppSlackConfig_SdkV2
+	if m.DatabricksAppSlack.IsNull() || m.DatabricksAppSlack.IsUnknown() {
+		return e, false
+	}
+	var v []DatabricksAppSlackConfig_SdkV2
+	d := m.DatabricksAppSlack.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetDatabricksAppSlack sets the value of the DatabricksAppSlack field in Config_SdkV2.
+func (m *Config_SdkV2) SetDatabricksAppSlack(ctx context.Context, v DatabricksAppSlackConfig_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["databricks_app_slack"]
+	m.DatabricksAppSlack = types.ListValueMust(t, vs)
+}
+
+// GetDatabricksAppTeams returns the value of the DatabricksAppTeams field in Config_SdkV2 as
+// a DatabricksAppTeamsConfig_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *Config_SdkV2) GetDatabricksAppTeams(ctx context.Context) (DatabricksAppTeamsConfig_SdkV2, bool) {
+	var e DatabricksAppTeamsConfig_SdkV2
+	if m.DatabricksAppTeams.IsNull() || m.DatabricksAppTeams.IsUnknown() {
+		return e, false
+	}
+	var v []DatabricksAppTeamsConfig_SdkV2
+	d := m.DatabricksAppTeams.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetDatabricksAppTeams sets the value of the DatabricksAppTeams field in Config_SdkV2.
+func (m *Config_SdkV2) SetDatabricksAppTeams(ctx context.Context, v DatabricksAppTeamsConfig_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["databricks_app_teams"]
+	m.DatabricksAppTeams = types.ListValueMust(t, vs)
 }
 
 // GetEmail returns the value of the Email field in Config_SdkV2 as
@@ -3387,6 +3496,8 @@ func (m *CspEnablementAccountSetting_SdkV2) SetCspEnablementAccount(ctx context.
 
 // The network policies applying for ingress traffic.
 type CustomerFacingIngressNetworkPolicy_SdkV2 struct {
+	// The network policy restrictions for cross-workspace access: which other
+	// workspaces may access this workspace.
 	CrossWorkspaceAccess types.List `tfsdk:"cross_workspace_access"`
 	// The network policy restrictions for private access. Configures how
 	// requests arriving over private connectivity are governed.
@@ -4003,10 +4114,15 @@ func (m CustomerFacingIngressNetworkPolicyAuthenticationIdentity_SdkV2) Type(ctx
 }
 
 type CustomerFacingIngressNetworkPolicyCrossWorkspaceAccess_SdkV2 struct {
+	// Allow rules are evaluated after deny rules. A request matching any allow
+	// rule is allowed; a request matching no rule is denied by default. Only
+	// applies when restriction_mode is RESTRICTED_ACCESS.
 	AllowRules types.List `tfsdk:"allow_rules"`
-
+	// Deny rules are evaluated first. A request matching any deny rule is
+	// denied, regardless of allow rules. Only applies when restriction_mode is
+	// RESTRICTED_ACCESS.
 	DenyRules types.List `tfsdk:"deny_rules"`
-
+	// The restriction mode for cross-workspace access.
 	RestrictionMode types.String `tfsdk:"restriction_mode"`
 }
 
@@ -4192,13 +4308,20 @@ func (m *CustomerFacingIngressNetworkPolicyCrossWorkspaceAccess_SdkV2) SetDenyRu
 	m.DenyRules = types.ListValueMust(t, vs)
 }
 
+// An ingress rule is enforced when a request satisfies all specified attributes
+// — including request origin, destination, and authentication.
 type CustomerFacingIngressNetworkPolicyCrossWorkspaceIngressRule_SdkV2 struct {
+	// The authenticated identity the request must match. When unset, the rule
+	// matches all users and service principals.
 	Authentication types.List `tfsdk:"authentication"`
-
+	// The destination the request must match — the resource being accessed,
+	// for example the workspace UI or workspace APIs. See RequestDestination.
 	Destination types.List `tfsdk:"destination"`
 	// The label for this ingress rule.
 	Label types.String `tfsdk:"label"`
-
+	// The origin the request must match — the source workspace the request
+	// comes from, either specific source workspaces or any source workspace in
+	// any account. See CrossWorkspaceRequestOrigin.
 	Origin types.List `tfsdk:"origin"`
 }
 
@@ -6229,6 +6352,10 @@ func (m *CustomerFacingIngressNetworkPolicyRequestDestination_SdkV2) SetWorkspac
 // Matches workspace-level Databricks API endpoints for an ingress network
 // policy rule.
 type CustomerFacingIngressNetworkPolicyWorkspaceApiDestination_SdkV2 struct {
+	// Inverse of `scopes`: matches every API scope EXCEPT those listed here
+	// ("allow all except"). Mutually exclusive with `scopes` — a single
+	// destination may set at most one of the two.
+	ExcludedScopes types.List `tfsdk:"excluded_scopes"`
 	// Qualifies the breadth of API access for the listed scopes. See
 	// ApiScopeQualifier.
 	ScopeQualifier types.String `tfsdk:"scope_qualifier"`
@@ -6237,6 +6364,12 @@ type CustomerFacingIngressNetworkPolicyWorkspaceApiDestination_SdkV2 struct {
 }
 
 func (to *CustomerFacingIngressNetworkPolicyWorkspaceApiDestination_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CustomerFacingIngressNetworkPolicyWorkspaceApiDestination_SdkV2) {
+	if !from.ExcludedScopes.IsNull() && !from.ExcludedScopes.IsUnknown() && to.ExcludedScopes.IsNull() && len(from.ExcludedScopes.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for ExcludedScopes, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.ExcludedScopes = from.ExcludedScopes
+	}
 	if !from.Scopes.IsNull() && !from.Scopes.IsUnknown() && to.Scopes.IsNull() && len(from.Scopes.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Scopes, and the deserialized field value is Null,
@@ -6246,6 +6379,12 @@ func (to *CustomerFacingIngressNetworkPolicyWorkspaceApiDestination_SdkV2) SyncF
 }
 
 func (to *CustomerFacingIngressNetworkPolicyWorkspaceApiDestination_SdkV2) SyncFieldsDuringRead(ctx context.Context, from CustomerFacingIngressNetworkPolicyWorkspaceApiDestination_SdkV2) {
+	if !from.ExcludedScopes.IsNull() && !from.ExcludedScopes.IsUnknown() && to.ExcludedScopes.IsNull() && len(from.ExcludedScopes.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for ExcludedScopes, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.ExcludedScopes = from.ExcludedScopes
+	}
 	if !from.Scopes.IsNull() && !from.Scopes.IsUnknown() && to.Scopes.IsNull() && len(from.Scopes.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for Scopes, and the deserialized field value is Null,
@@ -6255,6 +6394,7 @@ func (to *CustomerFacingIngressNetworkPolicyWorkspaceApiDestination_SdkV2) SyncF
 }
 
 func (m CustomerFacingIngressNetworkPolicyWorkspaceApiDestination_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["excluded_scopes"] = attrs["excluded_scopes"].SetOptional()
 	attrs["scope_qualifier"] = attrs["scope_qualifier"].SetOptional()
 	attrs["scopes"] = attrs["scopes"].SetOptional()
 
@@ -6270,7 +6410,8 @@ func (m CustomerFacingIngressNetworkPolicyWorkspaceApiDestination_SdkV2) ApplySc
 // SDK values.
 func (m CustomerFacingIngressNetworkPolicyWorkspaceApiDestination_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"scopes": reflect.TypeOf(types.String{}),
+		"excluded_scopes": reflect.TypeOf(types.String{}),
+		"scopes":          reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -6281,6 +6422,7 @@ func (m CustomerFacingIngressNetworkPolicyWorkspaceApiDestination_SdkV2) ToObjec
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"excluded_scopes": m.ExcludedScopes,
 			"scope_qualifier": m.ScopeQualifier,
 			"scopes":          m.Scopes,
 		})
@@ -6290,12 +6432,41 @@ func (m CustomerFacingIngressNetworkPolicyWorkspaceApiDestination_SdkV2) ToObjec
 func (m CustomerFacingIngressNetworkPolicyWorkspaceApiDestination_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"excluded_scopes": basetypes.ListType{
+				ElemType: types.StringType,
+			},
 			"scope_qualifier": types.StringType,
 			"scopes": basetypes.ListType{
 				ElemType: types.StringType,
 			},
 		},
 	}
+}
+
+// GetExcludedScopes returns the value of the ExcludedScopes field in CustomerFacingIngressNetworkPolicyWorkspaceApiDestination_SdkV2 as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *CustomerFacingIngressNetworkPolicyWorkspaceApiDestination_SdkV2) GetExcludedScopes(ctx context.Context) ([]types.String, bool) {
+	if m.ExcludedScopes.IsNull() || m.ExcludedScopes.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := m.ExcludedScopes.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetExcludedScopes sets the value of the ExcludedScopes field in CustomerFacingIngressNetworkPolicyWorkspaceApiDestination_SdkV2.
+func (m *CustomerFacingIngressNetworkPolicyWorkspaceApiDestination_SdkV2) SetExcludedScopes(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["excluded_scopes"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.ExcludedScopes = types.ListValueMust(t, vs)
 }
 
 // GetScopes returns the value of the Scopes field in CustomerFacingIngressNetworkPolicyWorkspaceApiDestination_SdkV2 as
@@ -6800,6 +6971,149 @@ func (m *DashboardEmailSubscriptions_SdkV2) SetBooleanVal(ctx context.Context, v
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["boolean_val"]
 	m.BooleanVal = types.ListValueMust(t, vs)
+}
+
+// Slack channel reached through the Databricks app. The app must already be
+// installed in the Slack workspace and connected to this Databricks workspace.
+type DatabricksAppSlackConfig_SdkV2 struct {
+	// [Input-Only] Slack channel ID notifications are posted to.
+	ChannelId types.String `tfsdk:"channel_id"`
+	// [Output-Only] Whether channel ID is set.
+	ChannelIdSet types.Bool `tfsdk:"channel_id_set"`
+	// [Input-Only] Slack workspace (team) ID the Databricks app is installed
+	// in.
+	TeamId types.String `tfsdk:"team_id"`
+	// [Output-Only] Whether team ID is set.
+	TeamIdSet types.Bool `tfsdk:"team_id_set"`
+}
+
+func (to *DatabricksAppSlackConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DatabricksAppSlackConfig_SdkV2) {
+}
+
+func (to *DatabricksAppSlackConfig_SdkV2) SyncFieldsDuringRead(ctx context.Context, from DatabricksAppSlackConfig_SdkV2) {
+}
+
+func (m DatabricksAppSlackConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["channel_id"] = attrs["channel_id"].SetOptional()
+	attrs["channel_id_set"] = attrs["channel_id_set"].SetOptional()
+	attrs["team_id"] = attrs["team_id"].SetOptional()
+	attrs["team_id_set"] = attrs["team_id_set"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DatabricksAppSlackConfig.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m DatabricksAppSlackConfig_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DatabricksAppSlackConfig_SdkV2
+// only implements ToObjectValue() and Type().
+func (m DatabricksAppSlackConfig_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"channel_id":     m.ChannelId,
+			"channel_id_set": m.ChannelIdSet,
+			"team_id":        m.TeamId,
+			"team_id_set":    m.TeamIdSet,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m DatabricksAppSlackConfig_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"channel_id":     types.StringType,
+			"channel_id_set": types.BoolType,
+			"team_id":        types.StringType,
+			"team_id_set":    types.BoolType,
+		},
+	}
+}
+
+// Microsoft Teams channel reached through the Databricks app. The app must
+// already be installed in the Microsoft 365 tenant and connected to this
+// Databricks workspace.
+type DatabricksAppTeamsConfig_SdkV2 struct {
+	// [Input-Only] Teams channel ID notifications are posted to.
+	ChannelId types.String `tfsdk:"channel_id"`
+	// [Output-Only] Whether channel ID is set.
+	ChannelIdSet types.Bool `tfsdk:"channel_id_set"`
+	// [Input-Only] Microsoft Entra group ID of the team that owns the channel.
+	TeamId types.String `tfsdk:"team_id"`
+	// [Output-Only] Whether team ID is set.
+	TeamIdSet types.Bool `tfsdk:"team_id_set"`
+	// [Input-Only] Microsoft Entra tenant ID of the Microsoft 365 tenant the
+	// app is installed in.
+	TenantId types.String `tfsdk:"tenant_id"`
+	// [Output-Only] Whether tenant ID is set.
+	TenantIdSet types.Bool `tfsdk:"tenant_id_set"`
+}
+
+func (to *DatabricksAppTeamsConfig_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DatabricksAppTeamsConfig_SdkV2) {
+}
+
+func (to *DatabricksAppTeamsConfig_SdkV2) SyncFieldsDuringRead(ctx context.Context, from DatabricksAppTeamsConfig_SdkV2) {
+}
+
+func (m DatabricksAppTeamsConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["channel_id"] = attrs["channel_id"].SetOptional()
+	attrs["channel_id_set"] = attrs["channel_id_set"].SetOptional()
+	attrs["team_id"] = attrs["team_id"].SetOptional()
+	attrs["team_id_set"] = attrs["team_id_set"].SetOptional()
+	attrs["tenant_id"] = attrs["tenant_id"].SetOptional()
+	attrs["tenant_id_set"] = attrs["tenant_id_set"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DatabricksAppTeamsConfig.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m DatabricksAppTeamsConfig_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DatabricksAppTeamsConfig_SdkV2
+// only implements ToObjectValue() and Type().
+func (m DatabricksAppTeamsConfig_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"channel_id":     m.ChannelId,
+			"channel_id_set": m.ChannelIdSet,
+			"team_id":        m.TeamId,
+			"team_id_set":    m.TeamIdSet,
+			"tenant_id":      m.TenantId,
+			"tenant_id_set":  m.TenantIdSet,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m DatabricksAppTeamsConfig_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"channel_id":     types.StringType,
+			"channel_id_set": types.BoolType,
+			"team_id":        types.StringType,
+			"team_id_set":    types.BoolType,
+			"tenant_id":      types.StringType,
+			"tenant_id_set":  types.BoolType,
+		},
+	}
 }
 
 // This represents the setting configuration for the default namespace in the
@@ -8331,6 +8645,7 @@ func (m DeleteNetworkPolicyRequest_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type DeleteNotificationDestinationRequest_SdkV2 struct {
+	// A UUID identifying the notification destination.
 	Id types.String `tfsdk:"-"`
 }
 
@@ -10482,8 +10797,9 @@ func (m EgressNetworkPolicyNetworkAccessPolicyStorageDestination_SdkV2) Type(ctx
 	}
 }
 
+// Configures an email destination.
 type EmailConfig_SdkV2 struct {
-	// Email addresses to notify.
+	// Email addresses to notify. At least one address is required.
 	Addresses types.List `tfsdk:"addresses"`
 }
 
@@ -11855,16 +12171,21 @@ func (m *GcpEndpoint_SdkV2) SetGoogleApiEndpoints(ctx context.Context, v GoogleA
 	m.GoogleApiEndpoints = types.ListValueMust(t, vs)
 }
 
+// Configures a generic webhook destination. Notifications are delivered as
+// HTTPS POST requests to url, optionally authenticated with HTTP Basic
+// authentication.
 type GenericWebhookConfig_SdkV2 struct {
-	// [Input-Only][Optional] Password for webhook.
+	// [Input-Only][Optional] Password for HTTP Basic authentication. Set it
+	// together with username.
 	Password types.String `tfsdk:"password"`
 	// [Output-Only] Whether password is set.
 	PasswordSet types.Bool `tfsdk:"password_set"`
-	// [Input-Only] URL for webhook.
+	// [Input-Only] HTTPS URL that notifications are posted to.
 	Url types.String `tfsdk:"url"`
 	// [Output-Only] Whether URL is set.
 	UrlSet types.Bool `tfsdk:"url_set"`
-	// [Input-Only][Optional] Username for webhook.
+	// [Input-Only][Optional] Username for HTTP Basic authentication. Set it
+	// together with password.
 	Username types.String `tfsdk:"username"`
 	// [Output-Only] Whether username is set.
 	UsernameSet types.Bool `tfsdk:"username_set"`
@@ -13381,6 +13702,7 @@ func (m GetNetworkPolicyRequest_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type GetNotificationDestinationRequest_SdkV2 struct {
+	// A UUID identifying the notification destination.
 	Id types.String `tfsdk:"-"`
 }
 
@@ -14808,8 +15130,11 @@ func (m *ListNetworkPoliciesResponse_SdkV2) SetItems(ctx context.Context, v []Ac
 }
 
 type ListNotificationDestinationsRequest_SdkV2 struct {
+	// Maximum number of notification destinations to return per page. Defaults
+	// to 20.
 	PageSize types.Int64 `tfsdk:"-"`
-
+	// Opaque token returned as next_page_token by a previous call. Omit it to
+	// request the first page.
 	PageToken types.String `tfsdk:"-"`
 }
 
@@ -14860,9 +15185,10 @@ func (m ListNotificationDestinationsRequest_SdkV2) Type(ctx context.Context) att
 }
 
 type ListNotificationDestinationsResponse_SdkV2 struct {
-	// Page token for next of results.
+	// Token to pass as page_token to fetch the next page of results. Absent
+	// when there are no more results.
 	NextPageToken types.String `tfsdk:"next_page_token"`
-
+	// Notification destinations in the current page.
 	Results types.List `tfsdk:"results"`
 }
 
@@ -14979,13 +15305,22 @@ func (m *ListNotificationDestinationsResponse_SdkV2) SetResults(ctx context.Cont
 	m.Results = types.ListValueMust(t, vs)
 }
 
+// A reusable definition of where a workspace sends notifications, such as a
+// Slack channel, a set of email addresses, a PagerDuty service, a Microsoft
+// Teams channel or a generic webhook. Job notifications, SQL alerts and other
+// workspace features reference a destination by its id. Only workspace admins
+// can create, update and delete destinations; once created, a destination is
+// available to all users in the workspace. Secret values such as webhook URLs
+// and tokens are write-only: responses report whether each one is set, never
+// its value.
 type ListNotificationDestinationsResult_SdkV2 struct {
-	// [Output-only] The type of the notification destination. The type can not
-	// be changed once set.
+	// [Output-only] The type of the notification destination, determined by
+	// which nested config was provided on creation. The type can not be changed
+	// once set.
 	DestinationType types.String `tfsdk:"destination_type"`
 	// The display name for the notification destination.
 	DisplayName types.String `tfsdk:"display_name"`
-	// UUID identifying notification destination.
+	// A UUID identifying the notification destination.
 	Id types.String `tfsdk:"id"`
 }
 
@@ -15883,24 +16218,35 @@ func (m *LlmProxyPartnerPoweredWorkspace_SdkV2) SetBooleanVal(ctx context.Contex
 	m.BooleanVal = types.ListValueMust(t, vs)
 }
 
+// Configures a Microsoft Teams destination. Notifications are posted to the
+// incoming webhook url, which is required. The app_id, auth_secret, channel_url
+// and tenant_id fields can optionally be set together to post through a
+// Microsoft Teams app.
 type MicrosoftTeamsConfig_SdkV2 struct {
-	// [Input-Only] App ID for Microsoft Teams App.
+	// [Input-Only] Application (client) ID of the Microsoft Teams app, as a
+	// UUID. Optional; set it together with auth_secret, channel_url and
+	// tenant_id.
 	AppId types.String `tfsdk:"app_id"`
 	// [Output-Only] Whether App ID is set.
 	AppIdSet types.Bool `tfsdk:"app_id_set"`
-	// [Input-Only] Secret for Microsoft Teams App authentication.
+	// [Input-Only] Client secret of the Microsoft Teams app. Optional; set it
+	// together with app_id, channel_url and tenant_id.
 	AuthSecret types.String `tfsdk:"auth_secret"`
 	// [Output-Only] Whether secret is set.
 	AuthSecretSet types.Bool `tfsdk:"auth_secret_set"`
-	// [Input-Only] Channel URL for Microsoft Teams App.
+	// [Input-Only] URL of the Microsoft Teams channel that the app posts to.
+	// Optional; set it together with app_id, auth_secret and tenant_id.
 	ChannelUrl types.String `tfsdk:"channel_url"`
 	// [Output-Only] Whether Channel URL is set.
 	ChannelUrlSet types.Bool `tfsdk:"channel_url_set"`
-	// [Input-Only] Tenant ID for Microsoft Teams App.
+	// [Input-Only] Microsoft Entra tenant ID of the Microsoft Teams app, as a
+	// UUID. Optional; set it together with app_id, auth_secret and channel_url.
 	TenantId types.String `tfsdk:"tenant_id"`
 	// [Output-Only] Whether Tenant ID is set.
 	TenantIdSet types.Bool `tfsdk:"tenant_id_set"`
-	// [Input-Only] URL for Microsoft Teams webhook.
+	// [Input-Only] Microsoft Teams incoming webhook URL that notifications are
+	// posted to. Must be an HTTPS URL. The URL is required even when the app
+	// fields are set.
 	Url types.String `tfsdk:"url"`
 	// [Output-Only] Whether URL is set.
 	UrlSet types.Bool `tfsdk:"url_set"`
@@ -17170,6 +17516,10 @@ type NetworkConnectivityConfiguration_SdkV2 struct {
 	// Your Databricks account ID. You can find your account ID in your
 	// Databricks accounts console.
 	AccountId types.String `tfsdk:"account_id"`
+	// The workspace to which charges for this network connectivity
+	// configuration are attributed. The workspace must be active and attached
+	// to this network connectivity configuration when set.
+	BillingWorkspaceId types.Int64 `tfsdk:"billing_workspace_id"`
 	// Time in epoch milliseconds when this object was created.
 	CreationTime types.Int64 `tfsdk:"creation_time"`
 	// The network connectivity rules that apply to network traffic from your
@@ -17215,6 +17565,7 @@ func (to *NetworkConnectivityConfiguration_SdkV2) SyncFieldsDuringRead(ctx conte
 
 func (m NetworkConnectivityConfiguration_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["account_id"] = attrs["account_id"].SetOptional()
+	attrs["billing_workspace_id"] = attrs["billing_workspace_id"].SetOptional()
 	attrs["creation_time"] = attrs["creation_time"].SetOptional()
 	attrs["egress_config"] = attrs["egress_config"].SetOptional()
 	attrs["egress_config"] = attrs["egress_config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
@@ -17247,6 +17598,7 @@ func (m NetworkConnectivityConfiguration_SdkV2) ToObjectValue(ctx context.Contex
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"account_id":                     m.AccountId,
+			"billing_workspace_id":           m.BillingWorkspaceId,
 			"creation_time":                  m.CreationTime,
 			"egress_config":                  m.EgressConfig,
 			"name":                           m.Name,
@@ -17260,8 +17612,9 @@ func (m NetworkConnectivityConfiguration_SdkV2) ToObjectValue(ctx context.Contex
 func (m NetworkConnectivityConfiguration_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"account_id":    types.StringType,
-			"creation_time": types.Int64Type,
+			"account_id":           types.StringType,
+			"billing_workspace_id": types.Int64Type,
+			"creation_time":        types.Int64Type,
 			"egress_config": basetypes.ListType{
 				ElemType: NccEgressConfig_SdkV2{}.Type(ctx),
 			},
@@ -17396,17 +17749,26 @@ func (m *NetworkPolicyEgress_SdkV2) SetNetworkAccess(ctx context.Context, v Egre
 	m.NetworkAccess = types.ListValueMust(t, vs)
 }
 
+// A reusable definition of where a workspace sends notifications, such as a
+// Slack channel, a set of email addresses, a PagerDuty service, a Microsoft
+// Teams channel or a generic webhook. Job notifications, SQL alerts and other
+// workspace features reference a destination by its id. Only workspace admins
+// can create, update and delete destinations; once created, a destination is
+// available to all users in the workspace. Secret values such as webhook URLs
+// and tokens are write-only: responses report whether each one is set, never
+// its value.
 type NotificationDestination_SdkV2 struct {
 	// The configuration for the notification destination. Will be exactly one
-	// of the nested configs. Only returns for users with workspace admin
+	// of the nested configs. Only returned to users with workspace admin
 	// permissions.
 	Config types.List `tfsdk:"config"`
-	// [Output-only] The type of the notification destination. The type can not
-	// be changed once set.
+	// [Output-only] The type of the notification destination, determined by
+	// which nested config was provided on creation. The type can not be changed
+	// once set.
 	DestinationType types.String `tfsdk:"destination_type"`
 	// The display name for the notification destination.
 	DisplayName types.String `tfsdk:"display_name"`
-	// UUID identifying notification destination.
+	// A UUID identifying the notification destination.
 	Id types.String `tfsdk:"id"`
 }
 
@@ -17510,8 +17872,11 @@ func (m *NotificationDestination_SdkV2) SetConfig(ctx context.Context, v Config_
 	m.Config = types.ListValueMust(t, vs)
 }
 
+// Configures a PagerDuty destination. Notifications are sent as events to the
+// PagerDuty Events API v2.
 type PagerdutyConfig_SdkV2 struct {
-	// [Input-Only] Integration key for PagerDuty.
+	// [Input-Only] Integration key from an Events API v2 integration on the
+	// PagerDuty service that receives the notifications.
 	IntegrationKey types.String `tfsdk:"integration_key"`
 	// [Output-Only] Whether integration key is set.
 	IntegrationKeySet types.Bool `tfsdk:"integration_key_set"`
@@ -18355,16 +18720,24 @@ func (m RevokeTokenResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// Configures a Slack destination. Notifications are posted to the incoming
+// webhook url, which is required. A bot oauth_token and channel_id can
+// optionally be set together to post to the channel through the Slack API.
 type SlackConfig_SdkV2 struct {
-	// [Input-Only] Slack channel ID for notifications.
+	// [Input-Only] ID of the Slack channel that notifications are posted to
+	// through the Slack API. Optional; set it together with oauth_token.
 	ChannelId types.String `tfsdk:"channel_id"`
 	// [Output-Only] Whether channel ID is set.
 	ChannelIdSet types.Bool `tfsdk:"channel_id_set"`
-	// [Input-Only] OAuth token for Slack authentication.
+	// [Input-Only] Slack bot OAuth token (xoxb-...). Optional; when set
+	// together with channel_id, notifications are posted to that channel
+	// through the Slack API.
 	OauthToken types.String `tfsdk:"oauth_token"`
 	// [Output-Only] Whether OAuth token is set.
 	OauthTokenSet types.Bool `tfsdk:"oauth_token_set"`
-	// [Input-Only] URL for Slack destination.
+	// [Input-Only] Slack incoming webhook URL that notifications are posted to.
+	// Must be an HTTPS URL. The URL is required even when oauth_token and
+	// channel_id are set.
 	Url types.String `tfsdk:"url"`
 	// [Output-Only] Whether URL is set.
 	UrlSet types.Bool `tfsdk:"url_set"`
@@ -22009,6 +22382,113 @@ func (m *UpdateNccPrivateEndpointRuleRequest_SdkV2) SetPrivateEndpointRule(ctx c
 	m.PrivateEndpointRule = types.ListValueMust(t, vs)
 }
 
+type UpdateNetworkConnectivityConfigRequest_SdkV2 struct {
+	// The network connectivity configuration fields to update.
+	NetworkConnectivityConfig types.List `tfsdk:"network_connectivity_config"`
+	// Your Network Connectivity Configuration ID.
+	NetworkConnectivityConfigId types.String `tfsdk:"-"`
+	// Must contain at least one of `name` or `billing_workspace_id`.
+	UpdateMask types.String `tfsdk:"-"`
+}
+
+func (to *UpdateNetworkConnectivityConfigRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from UpdateNetworkConnectivityConfigRequest_SdkV2) {
+	if !from.NetworkConnectivityConfig.IsNull() && !from.NetworkConnectivityConfig.IsUnknown() {
+		if toNetworkConnectivityConfig, ok := to.GetNetworkConnectivityConfig(ctx); ok {
+			if fromNetworkConnectivityConfig, ok := from.GetNetworkConnectivityConfig(ctx); ok {
+				// Recursively sync the fields of NetworkConnectivityConfig
+				toNetworkConnectivityConfig.SyncFieldsDuringCreateOrUpdate(ctx, fromNetworkConnectivityConfig)
+				to.SetNetworkConnectivityConfig(ctx, toNetworkConnectivityConfig)
+			}
+		}
+	}
+}
+
+func (to *UpdateNetworkConnectivityConfigRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from UpdateNetworkConnectivityConfigRequest_SdkV2) {
+	if !from.NetworkConnectivityConfig.IsNull() && !from.NetworkConnectivityConfig.IsUnknown() {
+		if toNetworkConnectivityConfig, ok := to.GetNetworkConnectivityConfig(ctx); ok {
+			if fromNetworkConnectivityConfig, ok := from.GetNetworkConnectivityConfig(ctx); ok {
+				toNetworkConnectivityConfig.SyncFieldsDuringRead(ctx, fromNetworkConnectivityConfig)
+				to.SetNetworkConnectivityConfig(ctx, toNetworkConnectivityConfig)
+			}
+		}
+	}
+}
+
+func (m UpdateNetworkConnectivityConfigRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["network_connectivity_config"] = attrs["network_connectivity_config"].SetRequired()
+	attrs["network_connectivity_config"] = attrs["network_connectivity_config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["account_id"] = attrs["account_id"].SetRequired()
+	attrs["network_connectivity_config_id"] = attrs["network_connectivity_config_id"].SetRequired()
+	attrs["update_mask"] = attrs["update_mask"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateNetworkConnectivityConfigRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m UpdateNetworkConnectivityConfigRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"network_connectivity_config": reflect.TypeOf(NetworkConnectivityConfiguration_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateNetworkConnectivityConfigRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (m UpdateNetworkConnectivityConfigRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"network_connectivity_config":    m.NetworkConnectivityConfig,
+			"network_connectivity_config_id": m.NetworkConnectivityConfigId,
+			"update_mask":                    m.UpdateMask,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m UpdateNetworkConnectivityConfigRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"network_connectivity_config": basetypes.ListType{
+				ElemType: NetworkConnectivityConfiguration_SdkV2{}.Type(ctx),
+			},
+			"network_connectivity_config_id": types.StringType,
+			"update_mask":                    types.StringType,
+		},
+	}
+}
+
+// GetNetworkConnectivityConfig returns the value of the NetworkConnectivityConfig field in UpdateNetworkConnectivityConfigRequest_SdkV2 as
+// a NetworkConnectivityConfiguration_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *UpdateNetworkConnectivityConfigRequest_SdkV2) GetNetworkConnectivityConfig(ctx context.Context) (NetworkConnectivityConfiguration_SdkV2, bool) {
+	var e NetworkConnectivityConfiguration_SdkV2
+	if m.NetworkConnectivityConfig.IsNull() || m.NetworkConnectivityConfig.IsUnknown() {
+		return e, false
+	}
+	var v []NetworkConnectivityConfiguration_SdkV2
+	d := m.NetworkConnectivityConfig.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetNetworkConnectivityConfig sets the value of the NetworkConnectivityConfig field in UpdateNetworkConnectivityConfigRequest_SdkV2.
+func (m *UpdateNetworkConnectivityConfigRequest_SdkV2) SetNetworkConnectivityConfig(ctx context.Context, v NetworkConnectivityConfiguration_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["network_connectivity_config"]
+	m.NetworkConnectivityConfig = types.ListValueMust(t, vs)
+}
+
 type UpdateNetworkPolicyRequest_SdkV2 struct {
 	// Updated network policy configuration details.
 	NetworkPolicy types.List `tfsdk:"network_policy"`
@@ -22117,7 +22597,7 @@ type UpdateNotificationDestinationRequest_SdkV2 struct {
 	Config types.List `tfsdk:"config"`
 	// The display name for the notification destination.
 	DisplayName types.String `tfsdk:"display_name"`
-	// UUID identifying notification destination.
+	// A UUID identifying the notification destination.
 	Id types.String `tfsdk:"-"`
 }
 

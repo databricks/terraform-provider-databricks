@@ -1,0 +1,27 @@
+version: 1
+host_metadata:
+  workspace_id: "12345"
+steps:
+  - name: rejected_create
+    config: |
+      resource "databricks_group" "this" {
+        display_name = "Example group"
+      }
+    expect_error: 'group rejected by fixture'
+    calls:
+      - request:
+          method: POST
+          path: /api/2.0/preview/scim/v2/Groups
+          body:
+            json:
+              displayName: Example group
+              schemas: [urn:ietf:params:scim:schemas:core:2.0:Group]
+              entitlements: [{}]
+        response:
+          status: 400
+          body:
+            json:
+              error_code: INVALID_PARAMETER_VALUE
+              message: group rejected by fixture
+destroy:
+  calls: []

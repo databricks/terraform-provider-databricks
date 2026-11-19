@@ -1,0 +1,42 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: "account"
+  cloud: "AWS"
+  account_id: "replay-account"
+steps:
+  - name: "read"
+    config: |
+      provider "databricks" {
+        account_id = "replay-account"
+      }
+
+      data "databricks_metastore" "this" {
+        metastore_id = "11111111-1111-1111-1111-111111111111"
+      }
+    calls:
+      - &get_1
+        request:
+          method: "GET"
+          path: "/api/2.0/accounts/replay-account/metastores/11111111-1111-1111-1111-111111111111"
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              metastore_info:
+                metastore_id: "11111111-1111-1111-1111-111111111111"
+                name: "replay-metastore"
+                owner: "account users"
+                region: "us-east-1"
+      - *get_1
+      - *get_1
+    state:
+      resources:
+        data.databricks_metastore.this:
+          attributes:
+            - path: ["metastore_info",0,"metastore_id"]
+              equals: "11111111-1111-1111-1111-111111111111"
+destroy:
+  calls:
+    - *get_1

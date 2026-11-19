@@ -2,11 +2,11 @@
 subcategory: "Identity and Access Management"
 ---
 # databricks_workspace_iam_group_v2 Data Source
-[![Private Preview](https://img.shields.io/badge/Release_Stage-Private_Preview-blueviolet)](https://docs.databricks.com/aws/en/release-notes/release-types)
+[![GA](https://img.shields.io/badge/Release_Stage-GA-green)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
 [API Documentation](https://docs.databricks.com/api/workspace/iamv2)
 
-Reads a single group by its internal ID, using a workspace-scoped provider.
+Reads a single group by its resource name, `groups/{group_id}`, using a workspace-scoped provider.
 
 
 ## Example Usage
@@ -16,14 +16,16 @@ Look up a group by its internal ID, using a workspace-scoped provider.
 
 ```hcl
 data "databricks_workspace_iam_group_v2" "this" {
-  group_id = "123456789"
+  name = "groups/123456789"
 }
 ```
 
 
 ## Arguments
 The following arguments are supported:
-* `group_id` (string, required) - Internal group ID of the group in Databricks
+* `name` (string, required) - The resource name of the group, in one of these formats:
+  - Account APIs: `accounts/{account_id}/groups/{group_id}`
+  - Workspace APIs: `groups/{group_id}`
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 
 ### ProviderConfig
@@ -31,7 +33,12 @@ The following arguments are supported:
 
 ## Attributes
 The following attributes are exported:
-* `account_id` (string) - The parent account ID for group in Databricks
-* `external_id` (string) - ExternalId of the group in the customer's IdP
-* `group_id` (string) - Internal group ID of the group in Databricks
-* `group_name` (string) - Display name of the group
+* `account_id` (string) - The ID of the account that contains the group
+* `external_id` (string) - The ID of the group in your identity provider (IdP)
+* `group_id` (string) - The Databricks ID of the group
+* `group_name` (string) - The name of the group
+* `name` (string) - The resource name of the group, in one of these formats:
+  - Account APIs: `accounts/{account_id}/groups/{group_id}`
+  - Workspace APIs: `groups/{group_id}`
+* `parent` (string) - The resource name of the account that contains the group, in the format
+  `accounts/{account_id}`. Workspace APIs return the same format

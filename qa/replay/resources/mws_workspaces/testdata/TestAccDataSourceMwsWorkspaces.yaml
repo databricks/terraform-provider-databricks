@@ -1,0 +1,39 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: "account"
+  cloud: "AWS"
+  account_id: "replay-account"
+steps:
+  - name: "read"
+    config: |
+      provider "databricks" {
+        account_id = "replay-account"
+      }
+
+      data "databricks_mws_workspaces" "this" {
+      }
+    calls:
+      - &get_1
+        request:
+          method: "GET"
+          path: "/api/2.0/accounts/replay-account/workspaces"
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              - workspace_id: 12345
+                workspace_name: "replay-workspace"
+                workspace_status: "RUNNING"
+      - *get_1
+      - *get_1
+    state:
+      resources:
+        data.databricks_mws_workspaces.this:
+          attributes:
+            - path: ["ids","replay-workspace"]
+              equals: 12345
+destroy:
+  calls:
+    - *get_1

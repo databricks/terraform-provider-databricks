@@ -155,7 +155,7 @@ The `host` argument configures the endpoint that the Terraform Provider for Data
 | Databricks Account on AWS GovCloud     | `https://accounts.cloud.databricks.us`     |
 | Databricks Account on AWS GovCloud DOD | `https://accounts-dod.cloud.databricks.mil`|
 | Azure Databricks Account               | `https://accounts.azuredatabricks.net`     |
-| Azure Databricks Account (US Gov)      | `https://accounts.azuredatabricks.us`      |
+| Azure Databricks Account (US Gov)      | `https://accounts.usgov.databricks.azure.us` |
 | Azure Databricks Account (China)       | `https://accounts.azuredatabricks.cn`      |
 | Databricks Account on GCP              | `https://accounts.gcp.databricks.com`      |
 | Databricks Workspace (any cloud)       | `https://<workspace hostname>`             |

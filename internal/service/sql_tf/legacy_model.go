@@ -1013,21 +1013,20 @@ func (m *AlertQuery_SdkV2) SetTags(ctx context.Context, v []types.String) {
 	m.Tags = types.ListValueMust(t, vs)
 }
 
-// Redash-owned copy of the internal StatementParameter for the external AlertV2
-// API. The internal `ordinal` and `args` fields are intentionally omitted: the
-// public API supports only flat, named scalar parameters; complex types (ARRAY,
-// MAP, STRUCT) are not supported. This mirrors SEA's public StatementParameter
-// schema, see: cmdexec/sql-exec-api/proto/sql_exec_api_service.proto:763-779
+// A named parameter bound to the alert query. Only flat, named scalar
+// parameters are supported; complex types such as ARRAY, MAP, and STRUCT are
+// not.
 type AlertStatementParameter_SdkV2 struct {
-	// The name of the parameter, referenced in the query as `:name`.
+	// The name of the parameter. Reference it in the query text as `:name`.
+	// Required, must be non-empty, and must be unique across the alert's
+	// parameters.
 	Name types.String `tfsdk:"name"`
-	// The SQL data type of the parameter, e.g. STRING, INT, or DATE. Defaults
-	// to STRING. This is a string rather than an enum because scalar subtypes
-	// such as DECIMAL(10, 4) cannot be enumerated. Complex types such as ARRAY,
-	// MAP, and STRUCT are not supported.
+	// The SQL data type of the parameter, for example `STRING`, `INT`, or
+	// `DECIMAL(10, 2)`. If no type is given the type is assumed to be `STRING`.
+	// Complex types such as `ARRAY`, `MAP`, and `STRUCT` are not supported.
 	Type_ types.String `tfsdk:"type"`
-	// The bound value for the parameter, given as a string. If omitted, the
-	// value is interpreted as NULL.
+	// The value bound to the parameter, represented as a string. If omitted,
+	// the value is interpreted as NULL.
 	Value types.String `tfsdk:"value"`
 }
 
@@ -1080,30 +1079,65 @@ func (m AlertStatementParameter_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// A SQL alert. An alert runs a query on a schedule, evaluates the result
+// against a condition, and notifies users or notification destinations when the
+// condition is met.
 type AlertV2_SdkV2 struct {
 	// The timestamp indicating when the alert was created.
 	CreateTime types.String `tfsdk:"create_time"`
-	// Custom description for the alert. support mustache template.
+	// Custom description for the alert, used as the notification body.
+	// Interpreted according to `custom_template_format`. The available template
+	// variables are listed at
+	// https://docs.databricks.com/aws/en/sql/user/alerts/create#notification-templates.
 	CustomDescription types.String `tfsdk:"custom_description"`
-	// Custom summary for the alert. support mustache template.
+	// Custom summary for the alert, used as the notification subject.
+	// Interpreted according to `custom_template_format`.
 	CustomSummary types.String `tfsdk:"custom_summary"`
+	// The format used to interpret the `custom_summary` and
+	// `custom_description` templates.
+	//
+	// `HTML` treats both templates as HTML with Mustache `{{VARIABLE_NAME}}`
+	// placeholders. `MARKDOWN` treats them as Markdown with allowlisted
+	// `@VARIABLE_NAME` placeholders and converts them to the format each
+	// notification destination expects, so a single template renders correctly
+	// in email, Slack, and Microsoft Teams.
+	//
+	// When unset, the API applies no default. Responses omit the field unless a
+	// format is stored, and a template with no format is rendered as HTML.
+	CustomTemplateFormat types.String `tfsdk:"custom_template_format"`
 	// The display name of the alert.
 	DisplayName types.String `tfsdk:"display_name"`
 	// The actual identity that will be used to execute the alert. This is an
 	// output-only field that shows the resolved run-as identity after applying
 	// permissions and defaults.
 	EffectiveRunAs types.List `tfsdk:"effective_run_as"`
-
+	// Condition evaluated against the query result, and who is notified when it
+	// is met.
 	Evaluation types.List `tfsdk:"evaluation"`
-	// UUID identifying the alert.
+	// The canonical identifier of the alert to retrieve information about.
 	Id types.String `tfsdk:"id"`
-	// Indicates whether the query is trashed.
+	// Indicates whether the alert is active (`ACTIVE`) or has been moved to the
+	// trash (`DELETED`).
 	LifecycleState types.String `tfsdk:"lifecycle_state"`
 	// The owner's username. This field is set to "Unavailable" if the user has
 	// been deleted.
 	OwnerUserName types.String `tfsdk:"owner_user_name"`
-	// Query parameters bound when executing the alert query, referenced in the
-	// query text with `:name` syntax. Static values only.
+	// A list of parameters to pass into the alert SQL query statement
+	// containing parameter markers. Static values only.
+	//
+	// Reference a parameter in the query text as `:name`. Each parameter must
+	// have a unique, non-empty name. Each parameter consists of a name, a
+	// value, and optionally a type. To represent a NULL value, the `value`
+	// field may be omitted or set to `null` explicitly. If the `type` field is
+	// omitted, the value is interpreted as a string.
+	//
+	// If the type is given, parameters will be checked for type correctness
+	// according to the given type. A value is correct if the provided string
+	// can be converted to the requested type using the `cast` function. The
+	// exact semantics are described in the section [`cast` function] of the SQL
+	// language reference.
+	//
+	// [`cast` function]: https://docs.databricks.com/sql/language-manual/functions/cast.html
 	Parameters types.Set `tfsdk:"parameters"`
 	// The workspace path of the folder containing the alert. Can only be set on
 	// create, and cannot be updated.
@@ -1118,13 +1152,13 @@ type AlertV2_SdkV2 struct {
 	// the `servicePrincipal/user` role. If not specified, the alert will run as
 	// the request user.
 	RunAs types.List `tfsdk:"run_as"`
-	// The run as username or application ID of service principal. On Create and
-	// Update, this field can be set to application ID of an active service
-	// principal. Setting this field requires the servicePrincipal/user role.
 	// Deprecated: Use `run_as` field instead. This field will be removed in a
-	// future release.
+	// future release. The run as username or application ID of service
+	// principal. On Create and Update, this field can be set to application ID
+	// of an active service principal. Setting this field requires the
+	// servicePrincipal/user role.
 	RunAsUserName types.String `tfsdk:"run_as_user_name"`
-
+	// Schedule on which the alert runs its query and evaluates the condition.
 	Schedule types.List `tfsdk:"schedule"`
 	// The timestamp indicating when the alert was updated.
 	UpdateTime types.String `tfsdk:"update_time"`
@@ -1222,6 +1256,7 @@ func (m AlertV2_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attri
 	attrs["create_time"] = attrs["create_time"].SetComputed()
 	attrs["custom_description"] = attrs["custom_description"].SetOptional()
 	attrs["custom_summary"] = attrs["custom_summary"].SetOptional()
+	attrs["custom_template_format"] = attrs["custom_template_format"].SetOptional()
 	attrs["display_name"] = attrs["display_name"].SetRequired()
 	attrs["effective_run_as"] = attrs["effective_run_as"].SetComputed()
 	attrs["effective_run_as"] = attrs["effective_run_as"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
@@ -1268,23 +1303,24 @@ func (m AlertV2_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"create_time":        m.CreateTime,
-			"custom_description": m.CustomDescription,
-			"custom_summary":     m.CustomSummary,
-			"display_name":       m.DisplayName,
-			"effective_run_as":   m.EffectiveRunAs,
-			"evaluation":         m.Evaluation,
-			"id":                 m.Id,
-			"lifecycle_state":    m.LifecycleState,
-			"owner_user_name":    m.OwnerUserName,
-			"parameters":         m.Parameters,
-			"parent_path":        m.ParentPath,
-			"query_text":         m.QueryText,
-			"run_as":             m.RunAs,
-			"run_as_user_name":   m.RunAsUserName,
-			"schedule":           m.Schedule,
-			"update_time":        m.UpdateTime,
-			"warehouse_id":       m.WarehouseId,
+			"create_time":            m.CreateTime,
+			"custom_description":     m.CustomDescription,
+			"custom_summary":         m.CustomSummary,
+			"custom_template_format": m.CustomTemplateFormat,
+			"display_name":           m.DisplayName,
+			"effective_run_as":       m.EffectiveRunAs,
+			"evaluation":             m.Evaluation,
+			"id":                     m.Id,
+			"lifecycle_state":        m.LifecycleState,
+			"owner_user_name":        m.OwnerUserName,
+			"parameters":             m.Parameters,
+			"parent_path":            m.ParentPath,
+			"query_text":             m.QueryText,
+			"run_as":                 m.RunAs,
+			"run_as_user_name":       m.RunAsUserName,
+			"schedule":               m.Schedule,
+			"update_time":            m.UpdateTime,
+			"warehouse_id":           m.WarehouseId,
 		})
 }
 
@@ -1292,10 +1328,11 @@ func (m AlertV2_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 func (m AlertV2_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"create_time":        types.StringType,
-			"custom_description": types.StringType,
-			"custom_summary":     types.StringType,
-			"display_name":       types.StringType,
+			"create_time":            types.StringType,
+			"custom_description":     types.StringType,
+			"custom_summary":         types.StringType,
+			"custom_template_format": types.StringType,
+			"display_name":           types.StringType,
 			"effective_run_as": basetypes.ListType{
 				ElemType: AlertV2RunAs_SdkV2{}.Type(ctx),
 			},
@@ -1454,10 +1491,13 @@ func (m *AlertV2_SdkV2) SetSchedule(ctx context.Context, v CronSchedule_SdkV2) {
 }
 
 type AlertV2Evaluation_SdkV2 struct {
-	// Operator used for comparison in alert evaluation.
+	// Operator used for comparison in alert evaluation. The alert is triggered
+	// when the comparison of the source value with the threshold is true.
+	// `IS_NULL` and `IS_NOT_NULL` take no threshold.
 	ComparisonOperator types.String `tfsdk:"comparison_operator"`
-	// Alert state if result is empty. Please avoid setting this field to be
-	// `UNKNOWN` because `UNKNOWN` state is planned to be deprecated.
+	// Alert state if result is empty. If not set, an empty result sets the
+	// state to `ERROR`. Please avoid setting this field to be `UNKNOWN` because
+	// `UNKNOWN` state is planned to be deprecated.
 	EmptyResultState types.String `tfsdk:"empty_result_state"`
 	// Timestamp of the last evaluation.
 	LastEvaluatedAt types.String `tfsdk:"last_evaluated_at"`
@@ -1465,9 +1505,12 @@ type AlertV2Evaluation_SdkV2 struct {
 	Notification types.List `tfsdk:"notification"`
 	// Source column from result to use to evaluate alert
 	Source types.List `tfsdk:"source"`
-	// Latest state of alert evaluation.
+	// Latest state of alert evaluation: `TRIGGERED` when the condition was met,
+	// `OK` when it was not, and `ERROR` when the evaluation failed.
 	State types.String `tfsdk:"state"`
-	// Threshold to user for alert evaluation, can be a column or a value.
+	// Threshold to compare the source column against, either another column or
+	// a fixed value. Not needed when `comparison_operator` is `IS_NULL` or
+	// `IS_NOT_NULL`.
 	Threshold types.List `tfsdk:"threshold"`
 }
 
@@ -1686,7 +1729,7 @@ type AlertV2Notification_SdkV2 struct {
 	// retrigger for notification purposes.
 	RetriggerSeconds          types.Int64 `tfsdk:"retrigger_seconds"`
 	EffectiveRetriggerSeconds types.Int64 `tfsdk:"effective_retrigger_seconds"`
-
+	// Users and notification destinations that receive notifications.
 	Subscriptions types.Set `tfsdk:"subscriptions"`
 }
 
@@ -1798,8 +1841,9 @@ func (m *AlertV2Notification_SdkV2) SetSubscriptions(ctx context.Context, v []Al
 }
 
 type AlertV2Operand_SdkV2 struct {
+	// Compare the source against another column of the query result.
 	Column types.List `tfsdk:"column"`
-
+	// Compare the source against a fixed value.
 	Value types.List `tfsdk:"value"`
 }
 
@@ -1945,11 +1989,14 @@ func (m *AlertV2Operand_SdkV2) SetValue(ctx context.Context, v AlertV2OperandVal
 }
 
 type AlertV2OperandColumn_SdkV2 struct {
-	// If not set, the behavior is equivalent to using `First row` in the UI.
+	// Aggregation applied to the column across all rows of the query result:
+	// `SUM`, `COUNT`, `COUNT_DISTINCT`, `AVG`, `MEDIAN`, `MIN`, `MAX` or
+	// `STDDEV`. If not set, the value in the first row is used, which is
+	// equivalent to using `First row` in the UI.
 	Aggregation types.String `tfsdk:"aggregation"`
-
+	// Label for the column in notifications. Defaults to `name`.
 	Display types.String `tfsdk:"display"`
-
+	// Name of the column in the query result.
 	Name types.String `tfsdk:"name"`
 }
 
@@ -2003,10 +2050,11 @@ func (m AlertV2OperandColumn_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type AlertV2OperandValue_SdkV2 struct {
+	// Boolean threshold, for boolean columns.
 	BoolValue types.Bool `tfsdk:"bool_value"`
-
+	// Numeric threshold, for numeric columns.
 	DoubleValue types.Float64 `tfsdk:"double_value"`
-
+	// String threshold, for string or timestamp columns.
 	StringValue types.String `tfsdk:"string_value"`
 }
 
@@ -2115,8 +2163,10 @@ func (m AlertV2RunAs_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type AlertV2Subscription_SdkV2 struct {
+	// ID of the notification destination to notify, as returned by the
+	// Notification Destinations API.
 	DestinationId types.String `tfsdk:"destination_id"`
-
+	// Email address of the workspace user to notify.
 	UserEmail types.String `tfsdk:"user_email"`
 }
 
@@ -3124,7 +3174,7 @@ type CreateQueryRequest_SdkV2 struct {
 	// fail the request if the query's display name conflicts with an existing
 	// query's display name.
 	AutoResolveDisplayName types.Bool `tfsdk:"auto_resolve_display_name"`
-
+	// The query to create. A display name and query text are required.
 	Query types.List `tfsdk:"query"`
 }
 
@@ -3222,6 +3272,9 @@ func (m *CreateQueryRequest_SdkV2) SetQuery(ctx context.Context, v CreateQueryRe
 	m.Query = types.ListValueMust(t, vs)
 }
 
+// A saved Databricks SQL query. A query stores the SQL text, the SQL warehouse
+// it runs on, its parameters, and metadata such as the display name,
+// description, owner, and tags.
 type CreateQueryRequestQuery_SdkV2 struct {
 	// Whether to apply a 1000 row limit to the query result.
 	ApplyAutoLimit types.Bool `tfsdk:"apply_auto_limit"`
@@ -3239,11 +3292,16 @@ type CreateQueryRequestQuery_SdkV2 struct {
 	ParentPath types.String `tfsdk:"parent_path"`
 	// Text of the query to be run.
 	QueryText types.String `tfsdk:"query_text"`
-	// Sets the "Run as" role for the object.
+	// Whose credentials the query runs with when it is shared. `VIEWER` uses
+	// the credentials of the user running the query. `OWNER` uses the owner's
+	// credentials where the product supports that, such as for legacy alerts
+	// and jobs. When omitted on create, the workspace default applies. A
+	// workspace admin can disallow `OWNER`.
 	RunAsMode types.String `tfsdk:"run_as_mode"`
 	// Name of the schema where this query will be executed.
 	Schema types.String `tfsdk:"schema"`
-
+	// Tags attached to the query. Tags appear in the query list and can be used
+	// to filter it.
 	Tags types.List `tfsdk:"tags"`
 	// ID of the SQL warehouse attached to the query.
 	WarehouseId types.String `tfsdk:"warehouse_id"`
@@ -3690,6 +3748,9 @@ type CreateWarehouseRequest_SdkV2 struct {
 	ClusterSize types.String `tfsdk:"cluster_size"`
 	// warehouse creator name
 	CreatorName types.String `tfsdk:"creator_name"`
+	// Compute version label for a REALTIME warehouse. This field is output
+	// only.
+	CustomerVersionLabel types.String `tfsdk:"customer_version_label"`
 	// Configures whether the warehouse should use Photon optimized clusters.
 	//
 	// Defaults to true.
@@ -3698,6 +3759,11 @@ type CreateWarehouseRequest_SdkV2 struct {
 	EnableServerlessCompute types.Bool `tfsdk:"enable_serverless_compute"`
 	// Deprecated. Instance profile used to pass IAM role to the cluster
 	InstanceProfileArn types.String `tfsdk:"instance_profile_arn"`
+	// Maximum compute capacity of a real-time SQL warehouse, in DBU per hour.
+	// Must be at least the minimum DBU for the selected warehouse size and no
+	// greater than the configured DBU limit. Actual capacity may be below this
+	// ceiling.
+	MaxDbu types.Int64 `tfsdk:"max_dbu"`
 	// Maximum number of clusters that the autoscaler will create to handle
 	// concurrent queries.
 	//
@@ -3720,8 +3786,19 @@ type CreateWarehouseRequest_SdkV2 struct {
 	// Supported values: - Must be unique within an org. - Must be less than 100
 	// characters.
 	Name types.String `tfsdk:"name"`
+	// Cluster size multiplier for Reyden warehouses. Scales the effective
+	// compute capacity relative to the nominal virtual cluster size. Only
+	// meaningful when the warehouse is of Reyden type.
+	//
+	// Accepted range: 1.0 to the workspace-configured maximum (decimals
+	// allowed). The default maximum is 100.0. - Values below 1.0 are normalized
+	// to 1.0. - Values above the configured maximum are capped at that maximum.
+	// - When absent, the warehouse is treated as having a multiplier of 1.0.
+	ReydenClusterSizeMultiplier types.Float64 `tfsdk:"reyden_cluster_size_multiplier"`
 	// Configurations whether the endpoint should use spot instances.
 	SpotInstancePolicy types.String `tfsdk:"spot_instance_policy"`
+	// Warehouse statement timeout in seconds.
+	StatementTimeout types.Int64 `tfsdk:"statement_timeout"`
 	// A set of key-value pairs that will be tagged on all resources (e.g., AWS
 	// instances and EBS volumes) associated with this SQL warehouse.
 	//
@@ -3779,13 +3856,17 @@ func (m CreateWarehouseRequest_SdkV2) ApplySchemaCustomizations(attrs map[string
 	attrs["channel"] = attrs["channel"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["cluster_size"] = attrs["cluster_size"].SetOptional()
 	attrs["creator_name"] = attrs["creator_name"].SetOptional()
+	attrs["customer_version_label"] = attrs["customer_version_label"].SetComputed()
 	attrs["enable_photon"] = attrs["enable_photon"].SetOptional()
 	attrs["enable_serverless_compute"] = attrs["enable_serverless_compute"].SetOptional()
 	attrs["instance_profile_arn"] = attrs["instance_profile_arn"].SetOptional()
+	attrs["max_dbu"] = attrs["max_dbu"].SetOptional()
 	attrs["max_num_clusters"] = attrs["max_num_clusters"].SetOptional()
 	attrs["min_num_clusters"] = attrs["min_num_clusters"].SetOptional()
 	attrs["name"] = attrs["name"].SetOptional()
+	attrs["reyden_cluster_size_multiplier"] = attrs["reyden_cluster_size_multiplier"].SetOptional()
 	attrs["spot_instance_policy"] = attrs["spot_instance_policy"].SetOptional()
+	attrs["statement_timeout"] = attrs["statement_timeout"].SetOptional()
 	attrs["tags"] = attrs["tags"].SetOptional()
 	attrs["tags"] = attrs["tags"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["warehouse_type"] = attrs["warehouse_type"].SetOptional()
@@ -3814,19 +3895,23 @@ func (m CreateWarehouseRequest_SdkV2) ToObjectValue(ctx context.Context) basetyp
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"auto_stop_mins":            m.AutoStopMins,
-			"channel":                   m.Channel,
-			"cluster_size":              m.ClusterSize,
-			"creator_name":              m.CreatorName,
-			"enable_photon":             m.EnablePhoton,
-			"enable_serverless_compute": m.EnableServerlessCompute,
-			"instance_profile_arn":      m.InstanceProfileArn,
-			"max_num_clusters":          m.MaxNumClusters,
-			"min_num_clusters":          m.MinNumClusters,
-			"name":                      m.Name,
-			"spot_instance_policy":      m.SpotInstancePolicy,
-			"tags":                      m.Tags,
-			"warehouse_type":            m.WarehouseType,
+			"auto_stop_mins":                 m.AutoStopMins,
+			"channel":                        m.Channel,
+			"cluster_size":                   m.ClusterSize,
+			"creator_name":                   m.CreatorName,
+			"customer_version_label":         m.CustomerVersionLabel,
+			"enable_photon":                  m.EnablePhoton,
+			"enable_serverless_compute":      m.EnableServerlessCompute,
+			"instance_profile_arn":           m.InstanceProfileArn,
+			"max_dbu":                        m.MaxDbu,
+			"max_num_clusters":               m.MaxNumClusters,
+			"min_num_clusters":               m.MinNumClusters,
+			"name":                           m.Name,
+			"reyden_cluster_size_multiplier": m.ReydenClusterSizeMultiplier,
+			"spot_instance_policy":           m.SpotInstancePolicy,
+			"statement_timeout":              m.StatementTimeout,
+			"tags":                           m.Tags,
+			"warehouse_type":                 m.WarehouseType,
 		})
 }
 
@@ -3838,15 +3923,19 @@ func (m CreateWarehouseRequest_SdkV2) Type(ctx context.Context) attr.Type {
 			"channel": basetypes.ListType{
 				ElemType: Channel_SdkV2{}.Type(ctx),
 			},
-			"cluster_size":              types.StringType,
-			"creator_name":              types.StringType,
-			"enable_photon":             types.BoolType,
-			"enable_serverless_compute": types.BoolType,
-			"instance_profile_arn":      types.StringType,
-			"max_num_clusters":          types.Int64Type,
-			"min_num_clusters":          types.Int64Type,
-			"name":                      types.StringType,
-			"spot_instance_policy":      types.StringType,
+			"cluster_size":                   types.StringType,
+			"creator_name":                   types.StringType,
+			"customer_version_label":         types.StringType,
+			"enable_photon":                  types.BoolType,
+			"enable_serverless_compute":      types.BoolType,
+			"instance_profile_arn":           types.StringType,
+			"max_dbu":                        types.Int64Type,
+			"max_num_clusters":               types.Int64Type,
+			"min_num_clusters":               types.Int64Type,
+			"name":                           types.StringType,
+			"reyden_cluster_size_multiplier": types.Float64Type,
+			"spot_instance_policy":           types.StringType,
+			"statement_timeout":              types.Int64Type,
 			"tags": basetypes.ListType{
 				ElemType: EndpointTags_SdkV2{}.Type(ctx),
 			},
@@ -4074,10 +4163,11 @@ func (m *CreateWidget_SdkV2) SetOptions(ctx context.Context, v WidgetOptions_Sdk
 }
 
 type CronSchedule_SdkV2 struct {
-	// Indicate whether this schedule is paused or not.
+	// Indicates whether this schedule is paused. While paused, the alert is not
+	// evaluated.
 	PauseStatus types.String `tfsdk:"pause_status"`
 	// A cron expression using quartz syntax that specifies the schedule for
-	// this pipeline. Should use the quartz format described here:
+	// this alert. Should use the quartz format described here:
 	// http://www.quartz-scheduler.org/documentation/quartz-2.1.7/tutorials/tutorial-lesson-06.html
 	QuartzCronSchedule types.String `tfsdk:"quartz_cron_schedule"`
 	// A Java timezone id. The schedule will be resolved using this timezone.
@@ -4732,8 +4822,10 @@ func (m DataSource_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type DateRange_SdkV2 struct {
+	// End of the range, in the same format as `start`.
 	End types.String `tfsdk:"end"`
-
+	// Start of the range in the format `yyyy-MM-dd`, optionally followed by a
+	// time as ` HH:mm` or ` HH:mm:ss`.
 	Start types.String `tfsdk:"start"`
 }
 
@@ -4791,7 +4883,8 @@ type DateRangeValue_SdkV2 struct {
 	// Date-time precision to format the value into when the query is run.
 	// Defaults to DAY_PRECISION (YYYY-MM-DD).
 	Precision types.String `tfsdk:"precision"`
-
+	// Day the week starts on for week-based dynamic ranges such as `THIS_WEEK`
+	// and `LAST_WEEK`, from 0 (Sunday) to 6 (Saturday). Defaults to 0.
 	StartDayOfWeek types.Int64 `tfsdk:"start_day_of_week"`
 }
 
@@ -4896,7 +4989,8 @@ func (m *DateRangeValue_SdkV2) SetDateRangeValue(ctx context.Context, v DateRang
 }
 
 type DateValue_SdkV2 struct {
-	// Manually specified date-time value.
+	// Manually specified date-time value in the format `yyyy-MM-dd`, optionally
+	// followed by a time as ` HH:mm` or ` HH:mm:ss`.
 	DateValue types.String `tfsdk:"date_value"`
 	// Dynamic date-time value based on current date-time.
 	DynamicDateValue types.String `tfsdk:"dynamic_date_value"`
@@ -5628,6 +5722,9 @@ type EditWarehouseRequest_SdkV2 struct {
 	ClusterSize types.String `tfsdk:"cluster_size"`
 	// warehouse creator name
 	CreatorName types.String `tfsdk:"creator_name"`
+	// Compute version label for a REALTIME warehouse. This field is output
+	// only.
+	CustomerVersionLabel types.String `tfsdk:"customer_version_label"`
 	// Configures whether the warehouse should use Photon optimized clusters.
 	//
 	// Defaults to true.
@@ -5638,6 +5735,11 @@ type EditWarehouseRequest_SdkV2 struct {
 	Id types.String `tfsdk:"-"`
 	// Deprecated. Instance profile used to pass IAM role to the cluster
 	InstanceProfileArn types.String `tfsdk:"instance_profile_arn"`
+	// Maximum compute capacity of a real-time SQL warehouse, in DBU per hour.
+	// Must be at least the minimum DBU for the selected warehouse size and no
+	// greater than the configured DBU limit. Actual capacity may be below this
+	// ceiling.
+	MaxDbu types.Int64 `tfsdk:"max_dbu"`
 	// Maximum number of clusters that the autoscaler will create to handle
 	// concurrent queries.
 	//
@@ -5660,8 +5762,19 @@ type EditWarehouseRequest_SdkV2 struct {
 	// Supported values: - Must be unique within an org. - Must be less than 100
 	// characters.
 	Name types.String `tfsdk:"name"`
+	// Cluster size multiplier for Reyden warehouses. Scales the effective
+	// compute capacity relative to the nominal virtual cluster size. Only
+	// meaningful when the warehouse is of Reyden type.
+	//
+	// Accepted range: 1.0 to the workspace-configured maximum (decimals
+	// allowed). The default maximum is 100.0. - Values below 1.0 are normalized
+	// to 1.0. - Values above the configured maximum are capped at that maximum.
+	// - When absent, the warehouse is treated as having a multiplier of 1.0.
+	ReydenClusterSizeMultiplier types.Float64 `tfsdk:"reyden_cluster_size_multiplier"`
 	// Configurations whether the endpoint should use spot instances.
 	SpotInstancePolicy types.String `tfsdk:"spot_instance_policy"`
+	// Warehouse statement timeout in seconds.
+	StatementTimeout types.Int64 `tfsdk:"statement_timeout"`
 	// A set of key-value pairs that will be tagged on all resources (e.g., AWS
 	// instances and EBS volumes) associated with this SQL warehouse.
 	//
@@ -5719,13 +5832,17 @@ func (m EditWarehouseRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]t
 	attrs["channel"] = attrs["channel"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["cluster_size"] = attrs["cluster_size"].SetOptional()
 	attrs["creator_name"] = attrs["creator_name"].SetOptional()
+	attrs["customer_version_label"] = attrs["customer_version_label"].SetComputed()
 	attrs["enable_photon"] = attrs["enable_photon"].SetOptional()
 	attrs["enable_serverless_compute"] = attrs["enable_serverless_compute"].SetOptional()
 	attrs["instance_profile_arn"] = attrs["instance_profile_arn"].SetOptional()
+	attrs["max_dbu"] = attrs["max_dbu"].SetOptional()
 	attrs["max_num_clusters"] = attrs["max_num_clusters"].SetOptional()
 	attrs["min_num_clusters"] = attrs["min_num_clusters"].SetOptional()
 	attrs["name"] = attrs["name"].SetOptional()
+	attrs["reyden_cluster_size_multiplier"] = attrs["reyden_cluster_size_multiplier"].SetOptional()
 	attrs["spot_instance_policy"] = attrs["spot_instance_policy"].SetOptional()
+	attrs["statement_timeout"] = attrs["statement_timeout"].SetOptional()
 	attrs["tags"] = attrs["tags"].SetOptional()
 	attrs["tags"] = attrs["tags"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["warehouse_type"] = attrs["warehouse_type"].SetOptional()
@@ -5755,20 +5872,24 @@ func (m EditWarehouseRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"auto_stop_mins":            m.AutoStopMins,
-			"channel":                   m.Channel,
-			"cluster_size":              m.ClusterSize,
-			"creator_name":              m.CreatorName,
-			"enable_photon":             m.EnablePhoton,
-			"enable_serverless_compute": m.EnableServerlessCompute,
-			"id":                        m.Id,
-			"instance_profile_arn":      m.InstanceProfileArn,
-			"max_num_clusters":          m.MaxNumClusters,
-			"min_num_clusters":          m.MinNumClusters,
-			"name":                      m.Name,
-			"spot_instance_policy":      m.SpotInstancePolicy,
-			"tags":                      m.Tags,
-			"warehouse_type":            m.WarehouseType,
+			"auto_stop_mins":                 m.AutoStopMins,
+			"channel":                        m.Channel,
+			"cluster_size":                   m.ClusterSize,
+			"creator_name":                   m.CreatorName,
+			"customer_version_label":         m.CustomerVersionLabel,
+			"enable_photon":                  m.EnablePhoton,
+			"enable_serverless_compute":      m.EnableServerlessCompute,
+			"id":                             m.Id,
+			"instance_profile_arn":           m.InstanceProfileArn,
+			"max_dbu":                        m.MaxDbu,
+			"max_num_clusters":               m.MaxNumClusters,
+			"min_num_clusters":               m.MinNumClusters,
+			"name":                           m.Name,
+			"reyden_cluster_size_multiplier": m.ReydenClusterSizeMultiplier,
+			"spot_instance_policy":           m.SpotInstancePolicy,
+			"statement_timeout":              m.StatementTimeout,
+			"tags":                           m.Tags,
+			"warehouse_type":                 m.WarehouseType,
 		})
 }
 
@@ -5780,16 +5901,20 @@ func (m EditWarehouseRequest_SdkV2) Type(ctx context.Context) attr.Type {
 			"channel": basetypes.ListType{
 				ElemType: Channel_SdkV2{}.Type(ctx),
 			},
-			"cluster_size":              types.StringType,
-			"creator_name":              types.StringType,
-			"enable_photon":             types.BoolType,
-			"enable_serverless_compute": types.BoolType,
-			"id":                        types.StringType,
-			"instance_profile_arn":      types.StringType,
-			"max_num_clusters":          types.Int64Type,
-			"min_num_clusters":          types.Int64Type,
-			"name":                      types.StringType,
-			"spot_instance_policy":      types.StringType,
+			"cluster_size":                   types.StringType,
+			"creator_name":                   types.StringType,
+			"customer_version_label":         types.StringType,
+			"enable_photon":                  types.BoolType,
+			"enable_serverless_compute":      types.BoolType,
+			"id":                             types.StringType,
+			"instance_profile_arn":           types.StringType,
+			"max_dbu":                        types.Int64Type,
+			"max_num_clusters":               types.Int64Type,
+			"min_num_clusters":               types.Int64Type,
+			"name":                           types.StringType,
+			"reyden_cluster_size_multiplier": types.Float64Type,
+			"spot_instance_policy":           types.StringType,
+			"statement_timeout":              types.Int64Type,
 			"tags": basetypes.ListType{
 				ElemType: EndpointTags_SdkV2{}.Type(ctx),
 			},
@@ -6123,6 +6248,9 @@ type EndpointInfo_SdkV2 struct {
 	ClusterSize types.String `tfsdk:"cluster_size"`
 	// warehouse creator name
 	CreatorName types.String `tfsdk:"creator_name"`
+	// Compute version label for a REALTIME warehouse. This field is output
+	// only.
+	CustomerVersionLabel types.String `tfsdk:"customer_version_label"`
 	// Configures whether the warehouse should use Photon optimized clusters.
 	//
 	// Defaults to true.
@@ -6138,6 +6266,11 @@ type EndpointInfo_SdkV2 struct {
 	InstanceProfileArn types.String `tfsdk:"instance_profile_arn"`
 	// the jdbc connection string for this warehouse
 	JdbcUrl types.String `tfsdk:"jdbc_url"`
+	// Maximum compute capacity of a real-time SQL warehouse, in DBU per hour.
+	// Must be at least the minimum DBU for the selected warehouse size and no
+	// greater than the configured DBU limit. Actual capacity may be below this
+	// ceiling.
+	MaxDbu types.Int64 `tfsdk:"max_dbu"`
 	// Maximum number of clusters that the autoscaler will create to handle
 	// concurrent queries.
 	//
@@ -6166,10 +6299,21 @@ type EndpointInfo_SdkV2 struct {
 	NumClusters types.Int64 `tfsdk:"num_clusters"`
 	// ODBC parameters for the SQL warehouse
 	OdbcParams types.List `tfsdk:"odbc_params"`
+	// Cluster size multiplier for Reyden warehouses. Scales the effective
+	// compute capacity relative to the nominal virtual cluster size. Only
+	// meaningful when the warehouse is of Reyden type.
+	//
+	// Accepted range: 1.0 to the workspace-configured maximum (decimals
+	// allowed). The default maximum is 100.0. - Values below 1.0 are normalized
+	// to 1.0. - Values above the configured maximum are capped at that maximum.
+	// - When absent, the warehouse is treated as having a multiplier of 1.0.
+	ReydenClusterSizeMultiplier types.Float64 `tfsdk:"reyden_cluster_size_multiplier"`
 	// Configurations whether the endpoint should use spot instances.
 	SpotInstancePolicy types.String `tfsdk:"spot_instance_policy"`
 	// state of the endpoint
 	State types.String `tfsdk:"state"`
+	// Warehouse statement timeout in seconds.
+	StatementTimeout types.Int64 `tfsdk:"statement_timeout"`
 	// A set of key-value pairs that will be tagged on all resources (e.g., AWS
 	// instances and EBS volumes) associated with this SQL warehouse.
 	//
@@ -6261,6 +6405,7 @@ func (m EndpointInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.
 	attrs["channel"] = attrs["channel"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["cluster_size"] = attrs["cluster_size"].SetOptional()
 	attrs["creator_name"] = attrs["creator_name"].SetOptional()
+	attrs["customer_version_label"] = attrs["customer_version_label"].SetComputed()
 	attrs["enable_photon"] = attrs["enable_photon"].SetOptional()
 	attrs["enable_serverless_compute"] = attrs["enable_serverless_compute"].SetOptional()
 	attrs["health"] = attrs["health"].SetComputed()
@@ -6269,6 +6414,7 @@ func (m EndpointInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.
 	attrs["id"] = attrs["id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["instance_profile_arn"] = attrs["instance_profile_arn"].SetOptional()
 	attrs["jdbc_url"] = attrs["jdbc_url"].SetOptional()
+	attrs["max_dbu"] = attrs["max_dbu"].SetOptional()
 	attrs["max_num_clusters"] = attrs["max_num_clusters"].SetOptional()
 	attrs["min_num_clusters"] = attrs["min_num_clusters"].SetOptional()
 	attrs["name"] = attrs["name"].SetOptional()
@@ -6276,8 +6422,10 @@ func (m EndpointInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.
 	attrs["num_clusters"] = attrs["num_clusters"].SetOptional()
 	attrs["odbc_params"] = attrs["odbc_params"].SetOptional()
 	attrs["odbc_params"] = attrs["odbc_params"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["reyden_cluster_size_multiplier"] = attrs["reyden_cluster_size_multiplier"].SetOptional()
 	attrs["spot_instance_policy"] = attrs["spot_instance_policy"].SetOptional()
 	attrs["state"] = attrs["state"].SetOptional()
+	attrs["statement_timeout"] = attrs["statement_timeout"].SetOptional()
 	attrs["tags"] = attrs["tags"].SetOptional()
 	attrs["tags"] = attrs["tags"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["warehouse_type"] = attrs["warehouse_type"].SetOptional()
@@ -6308,26 +6456,30 @@ func (m EndpointInfo_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectV
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"auto_stop_mins":            m.AutoStopMins,
-			"channel":                   m.Channel,
-			"cluster_size":              m.ClusterSize,
-			"creator_name":              m.CreatorName,
-			"enable_photon":             m.EnablePhoton,
-			"enable_serverless_compute": m.EnableServerlessCompute,
-			"health":                    m.Health,
-			"id":                        m.Id,
-			"instance_profile_arn":      m.InstanceProfileArn,
-			"jdbc_url":                  m.JdbcUrl,
-			"max_num_clusters":          m.MaxNumClusters,
-			"min_num_clusters":          m.MinNumClusters,
-			"name":                      m.Name,
-			"num_active_sessions":       m.NumActiveSessions,
-			"num_clusters":              m.NumClusters,
-			"odbc_params":               m.OdbcParams,
-			"spot_instance_policy":      m.SpotInstancePolicy,
-			"state":                     m.State,
-			"tags":                      m.Tags,
-			"warehouse_type":            m.WarehouseType,
+			"auto_stop_mins":                 m.AutoStopMins,
+			"channel":                        m.Channel,
+			"cluster_size":                   m.ClusterSize,
+			"creator_name":                   m.CreatorName,
+			"customer_version_label":         m.CustomerVersionLabel,
+			"enable_photon":                  m.EnablePhoton,
+			"enable_serverless_compute":      m.EnableServerlessCompute,
+			"health":                         m.Health,
+			"id":                             m.Id,
+			"instance_profile_arn":           m.InstanceProfileArn,
+			"jdbc_url":                       m.JdbcUrl,
+			"max_dbu":                        m.MaxDbu,
+			"max_num_clusters":               m.MaxNumClusters,
+			"min_num_clusters":               m.MinNumClusters,
+			"name":                           m.Name,
+			"num_active_sessions":            m.NumActiveSessions,
+			"num_clusters":                   m.NumClusters,
+			"odbc_params":                    m.OdbcParams,
+			"reyden_cluster_size_multiplier": m.ReydenClusterSizeMultiplier,
+			"spot_instance_policy":           m.SpotInstancePolicy,
+			"state":                          m.State,
+			"statement_timeout":              m.StatementTimeout,
+			"tags":                           m.Tags,
+			"warehouse_type":                 m.WarehouseType,
 		})
 }
 
@@ -6341,6 +6493,7 @@ func (m EndpointInfo_SdkV2) Type(ctx context.Context) attr.Type {
 			},
 			"cluster_size":              types.StringType,
 			"creator_name":              types.StringType,
+			"customer_version_label":    types.StringType,
 			"enable_photon":             types.BoolType,
 			"enable_serverless_compute": types.BoolType,
 			"health": basetypes.ListType{
@@ -6349,6 +6502,7 @@ func (m EndpointInfo_SdkV2) Type(ctx context.Context) attr.Type {
 			"id":                   types.StringType,
 			"instance_profile_arn": types.StringType,
 			"jdbc_url":             types.StringType,
+			"max_dbu":              types.Int64Type,
 			"max_num_clusters":     types.Int64Type,
 			"min_num_clusters":     types.Int64Type,
 			"name":                 types.StringType,
@@ -6357,8 +6511,10 @@ func (m EndpointInfo_SdkV2) Type(ctx context.Context) attr.Type {
 			"odbc_params": basetypes.ListType{
 				ElemType: OdbcParams_SdkV2{}.Type(ctx),
 			},
-			"spot_instance_policy": types.StringType,
-			"state":                types.StringType,
+			"reyden_cluster_size_multiplier": types.Float64Type,
+			"spot_instance_policy":           types.StringType,
+			"state":                          types.StringType,
+			"statement_timeout":              types.Int64Type,
 			"tags": basetypes.ListType{
 				ElemType: EndpointTags_SdkV2{}.Type(ctx),
 			},
@@ -6820,8 +6976,9 @@ type ExecuteStatementRequest_SdkV2 struct {
 	// access token, OAuth token, or similar) _must be removed_ when fetching
 	// from these links.
 	//
-	// 2. These are URLs with a specific expiration, indicated in the response.
-	// The behavior when attempting to use an expired link is cloud specific.
+	// 2. These are short-lived cloud-storage URLs with a specific expiration,
+	// indicated in the response. The behavior when attempting to use an expired
+	// link is cloud specific.
 	Disposition types.String `tfsdk:"disposition"`
 	// Statement execution supports three result formats: `JSON_ARRAY`
 	// (default), `ARROW_STREAM`, and `CSV`.
@@ -7165,10 +7322,10 @@ type ExternalLink_SdkV2 struct {
 	// becomes invalid, after which point a new `external_link` must be
 	// requested.
 	Expiration types.String `tfsdk:"expiration"`
-	// A URL pointing to a chunk of result data, hosted by an external service,
-	// with a short expiration time (<= 15 minutes). As this URL contains a
-	// temporary credential, it should be considered sensitive and the client
-	// should not expose this URL in a log.
+	// A short-lived cloud-storage URL pointing to a chunk of result data,
+	// hosted by an external service, with a short expiration time (<= 15
+	// minutes). As this URL contains a temporary credential, it should be
+	// considered sensitive and the client should not expose this URL in a log.
 	ExternalLink types.String `tfsdk:"external_link"`
 	// HTTP headers that must be included with a GET request to the
 	// `external_link`. Each header is provided as a key-value pair. Headers are
@@ -7521,6 +7678,7 @@ func (m GetAlertRequest_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type GetAlertV2Request_SdkV2 struct {
+	// ID of the alert to retrieve, as returned in the alert's `id` field.
 	Id types.String `tfsdk:"-"`
 }
 
@@ -7855,6 +8013,7 @@ func (m GetQueriesLegacyRequest_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type GetQueryRequest_SdkV2 struct {
+	// UUID of the query to fetch.
 	Id types.String `tfsdk:"-"`
 }
 
@@ -8405,6 +8564,9 @@ type GetWarehouseResponse_SdkV2 struct {
 	ClusterSize types.String `tfsdk:"cluster_size"`
 	// warehouse creator name
 	CreatorName types.String `tfsdk:"creator_name"`
+	// Compute version label for a REALTIME warehouse. This field is output
+	// only.
+	CustomerVersionLabel types.String `tfsdk:"customer_version_label"`
 	// Configures whether the warehouse should use Photon optimized clusters.
 	//
 	// Defaults to true.
@@ -8420,6 +8582,11 @@ type GetWarehouseResponse_SdkV2 struct {
 	InstanceProfileArn types.String `tfsdk:"instance_profile_arn"`
 	// the jdbc connection string for this warehouse
 	JdbcUrl types.String `tfsdk:"jdbc_url"`
+	// Maximum compute capacity of a real-time SQL warehouse, in DBU per hour.
+	// Must be at least the minimum DBU for the selected warehouse size and no
+	// greater than the configured DBU limit. Actual capacity may be below this
+	// ceiling.
+	MaxDbu types.Int64 `tfsdk:"max_dbu"`
 	// Maximum number of clusters that the autoscaler will create to handle
 	// concurrent queries.
 	//
@@ -8448,10 +8615,21 @@ type GetWarehouseResponse_SdkV2 struct {
 	NumClusters types.Int64 `tfsdk:"num_clusters"`
 	// ODBC parameters for the SQL warehouse
 	OdbcParams types.List `tfsdk:"odbc_params"`
+	// Cluster size multiplier for Reyden warehouses. Scales the effective
+	// compute capacity relative to the nominal virtual cluster size. Only
+	// meaningful when the warehouse is of Reyden type.
+	//
+	// Accepted range: 1.0 to the workspace-configured maximum (decimals
+	// allowed). The default maximum is 100.0. - Values below 1.0 are normalized
+	// to 1.0. - Values above the configured maximum are capped at that maximum.
+	// - When absent, the warehouse is treated as having a multiplier of 1.0.
+	ReydenClusterSizeMultiplier types.Float64 `tfsdk:"reyden_cluster_size_multiplier"`
 	// Configurations whether the endpoint should use spot instances.
 	SpotInstancePolicy types.String `tfsdk:"spot_instance_policy"`
 	// state of the endpoint
 	State types.String `tfsdk:"state"`
+	// Warehouse statement timeout in seconds.
+	StatementTimeout types.Int64 `tfsdk:"statement_timeout"`
 	// A set of key-value pairs that will be tagged on all resources (e.g., AWS
 	// instances and EBS volumes) associated with this SQL warehouse.
 	//
@@ -8543,6 +8721,7 @@ func (m GetWarehouseResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]t
 	attrs["channel"] = attrs["channel"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["cluster_size"] = attrs["cluster_size"].SetOptional()
 	attrs["creator_name"] = attrs["creator_name"].SetOptional()
+	attrs["customer_version_label"] = attrs["customer_version_label"].SetComputed()
 	attrs["enable_photon"] = attrs["enable_photon"].SetOptional()
 	attrs["enable_serverless_compute"] = attrs["enable_serverless_compute"].SetOptional()
 	attrs["health"] = attrs["health"].SetComputed()
@@ -8551,6 +8730,7 @@ func (m GetWarehouseResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]t
 	attrs["id"] = attrs["id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["instance_profile_arn"] = attrs["instance_profile_arn"].SetOptional()
 	attrs["jdbc_url"] = attrs["jdbc_url"].SetOptional()
+	attrs["max_dbu"] = attrs["max_dbu"].SetOptional()
 	attrs["max_num_clusters"] = attrs["max_num_clusters"].SetOptional()
 	attrs["min_num_clusters"] = attrs["min_num_clusters"].SetOptional()
 	attrs["name"] = attrs["name"].SetOptional()
@@ -8558,8 +8738,10 @@ func (m GetWarehouseResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]t
 	attrs["num_clusters"] = attrs["num_clusters"].SetOptional()
 	attrs["odbc_params"] = attrs["odbc_params"].SetOptional()
 	attrs["odbc_params"] = attrs["odbc_params"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["reyden_cluster_size_multiplier"] = attrs["reyden_cluster_size_multiplier"].SetOptional()
 	attrs["spot_instance_policy"] = attrs["spot_instance_policy"].SetOptional()
 	attrs["state"] = attrs["state"].SetOptional()
+	attrs["statement_timeout"] = attrs["statement_timeout"].SetOptional()
 	attrs["tags"] = attrs["tags"].SetOptional()
 	attrs["tags"] = attrs["tags"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["warehouse_type"] = attrs["warehouse_type"].SetOptional()
@@ -8590,26 +8772,30 @@ func (m GetWarehouseResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"auto_stop_mins":            m.AutoStopMins,
-			"channel":                   m.Channel,
-			"cluster_size":              m.ClusterSize,
-			"creator_name":              m.CreatorName,
-			"enable_photon":             m.EnablePhoton,
-			"enable_serverless_compute": m.EnableServerlessCompute,
-			"health":                    m.Health,
-			"id":                        m.Id,
-			"instance_profile_arn":      m.InstanceProfileArn,
-			"jdbc_url":                  m.JdbcUrl,
-			"max_num_clusters":          m.MaxNumClusters,
-			"min_num_clusters":          m.MinNumClusters,
-			"name":                      m.Name,
-			"num_active_sessions":       m.NumActiveSessions,
-			"num_clusters":              m.NumClusters,
-			"odbc_params":               m.OdbcParams,
-			"spot_instance_policy":      m.SpotInstancePolicy,
-			"state":                     m.State,
-			"tags":                      m.Tags,
-			"warehouse_type":            m.WarehouseType,
+			"auto_stop_mins":                 m.AutoStopMins,
+			"channel":                        m.Channel,
+			"cluster_size":                   m.ClusterSize,
+			"creator_name":                   m.CreatorName,
+			"customer_version_label":         m.CustomerVersionLabel,
+			"enable_photon":                  m.EnablePhoton,
+			"enable_serverless_compute":      m.EnableServerlessCompute,
+			"health":                         m.Health,
+			"id":                             m.Id,
+			"instance_profile_arn":           m.InstanceProfileArn,
+			"jdbc_url":                       m.JdbcUrl,
+			"max_dbu":                        m.MaxDbu,
+			"max_num_clusters":               m.MaxNumClusters,
+			"min_num_clusters":               m.MinNumClusters,
+			"name":                           m.Name,
+			"num_active_sessions":            m.NumActiveSessions,
+			"num_clusters":                   m.NumClusters,
+			"odbc_params":                    m.OdbcParams,
+			"reyden_cluster_size_multiplier": m.ReydenClusterSizeMultiplier,
+			"spot_instance_policy":           m.SpotInstancePolicy,
+			"state":                          m.State,
+			"statement_timeout":              m.StatementTimeout,
+			"tags":                           m.Tags,
+			"warehouse_type":                 m.WarehouseType,
 		})
 }
 
@@ -8623,6 +8809,7 @@ func (m GetWarehouseResponse_SdkV2) Type(ctx context.Context) attr.Type {
 			},
 			"cluster_size":              types.StringType,
 			"creator_name":              types.StringType,
+			"customer_version_label":    types.StringType,
 			"enable_photon":             types.BoolType,
 			"enable_serverless_compute": types.BoolType,
 			"health": basetypes.ListType{
@@ -8631,6 +8818,7 @@ func (m GetWarehouseResponse_SdkV2) Type(ctx context.Context) attr.Type {
 			"id":                   types.StringType,
 			"instance_profile_arn": types.StringType,
 			"jdbc_url":             types.StringType,
+			"max_dbu":              types.Int64Type,
 			"max_num_clusters":     types.Int64Type,
 			"min_num_clusters":     types.Int64Type,
 			"name":                 types.StringType,
@@ -8639,8 +8827,10 @@ func (m GetWarehouseResponse_SdkV2) Type(ctx context.Context) attr.Type {
 			"odbc_params": basetypes.ListType{
 				ElemType: OdbcParams_SdkV2{}.Type(ctx),
 			},
-			"spot_instance_policy": types.StringType,
-			"state":                types.StringType,
+			"reyden_cluster_size_multiplier": types.Float64Type,
+			"spot_instance_policy":           types.StringType,
+			"state":                          types.StringType,
+			"statement_timeout":              types.Int64Type,
 			"tags": basetypes.ListType{
 				ElemType: EndpointTags_SdkV2{}.Type(ctx),
 			},
@@ -10378,8 +10568,11 @@ func (m *ListAlertsResponseAlert_SdkV2) SetCondition(ctx context.Context, v Aler
 }
 
 type ListAlertsV2Request_SdkV2 struct {
+	// Maximum number of alerts to return per page. Values above 100 are coerced
+	// to 100.
 	PageSize types.Int64 `tfsdk:"-"`
-
+	// Page token returned as `next_page_token` by a previous call. Omit it to
+	// retrieve the first page.
 	PageToken types.String `tfsdk:"-"`
 }
 
@@ -10870,8 +11063,11 @@ func (m ListQueriesLegacyRequest_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type ListQueriesRequest_SdkV2 struct {
+	// Maximum number of queries to return per page. Values above 100 are
+	// coerced to 100.
 	PageSize types.Int64 `tfsdk:"-"`
-
+	// Token from the `next_page_token` of a previous response. Omit it to fetch
+	// the first page.
 	PageToken types.String `tfsdk:"-"`
 }
 
@@ -11166,8 +11362,10 @@ func (m *ListQueryHistoryRequest_SdkV2) SetFilterBy(ctx context.Context, v Query
 }
 
 type ListQueryObjectsResponse_SdkV2 struct {
+	// Token to pass as `page_token` to fetch the next page. Omitted when there
+	// are no more pages.
 	NextPageToken types.String `tfsdk:"next_page_token"`
-
+	// Queries on this page.
 	Results types.List `tfsdk:"results"`
 }
 
@@ -11284,6 +11482,9 @@ func (m *ListQueryObjectsResponse_SdkV2) SetResults(ctx context.Context, v []Lis
 	m.Results = types.ListValueMust(t, vs)
 }
 
+// A saved Databricks SQL query. A query stores the SQL text, the SQL warehouse
+// it runs on, its parameters, and metadata such as the display name,
+// description, owner, and tags.
 type ListQueryObjectsResponseQuery_SdkV2 struct {
 	// Whether to apply a 1000 row limit to the query result.
 	ApplyAutoLimit types.Bool `tfsdk:"apply_auto_limit"`
@@ -11309,11 +11510,16 @@ type ListQueryObjectsResponseQuery_SdkV2 struct {
 	Parameters types.List `tfsdk:"parameters"`
 	// Text of the query to be run.
 	QueryText types.String `tfsdk:"query_text"`
-	// Sets the "Run as" role for the object.
+	// Whose credentials the query runs with when it is shared. `VIEWER` uses
+	// the credentials of the user running the query. `OWNER` uses the owner's
+	// credentials where the product supports that, such as for legacy alerts
+	// and jobs. When omitted on create, the workspace default applies. A
+	// workspace admin can disallow `OWNER`.
 	RunAsMode types.String `tfsdk:"run_as_mode"`
 	// Name of the schema where this query will be executed.
 	Schema types.String `tfsdk:"schema"`
-
+	// Tags attached to the query. Tags appear in the query list and can be used
+	// to filter it.
 	Tags types.List `tfsdk:"tags"`
 	// Timestamp when this query was last updated.
 	UpdateTime types.String `tfsdk:"update_time"`
@@ -12110,6 +12316,7 @@ func (m MultiValuesOptions_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type NumericValue_SdkV2 struct {
+	// Number substituted for the parameter marker when the query runs.
 	Value types.Float64 `tfsdk:"value"`
 }
 
@@ -12348,6 +12555,9 @@ func (m *Parameter_SdkV2) SetMultiValuesOptions(ctx context.Context, v MultiValu
 	m.MultiValuesOptions = types.ListValueMust(t, vs)
 }
 
+// A saved Databricks SQL query. A query stores the SQL text, the SQL warehouse
+// it runs on, its parameters, and metadata such as the display name,
+// description, owner, and tags.
 type Query_SdkV2 struct {
 	// Whether to apply a 1000 row limit to the query result.
 	ApplyAutoLimit types.Bool `tfsdk:"apply_auto_limit"`
@@ -12375,11 +12585,16 @@ type Query_SdkV2 struct {
 	ParentPath types.String `tfsdk:"parent_path"`
 	// Text of the query to be run.
 	QueryText types.String `tfsdk:"query_text"`
-	// Sets the "Run as" role for the object.
+	// Whose credentials the query runs with when it is shared. `VIEWER` uses
+	// the credentials of the user running the query. `OWNER` uses the owner's
+	// credentials where the product supports that, such as for legacy alerts
+	// and jobs. When omitted on create, the workspace default applies. A
+	// workspace admin can disallow `OWNER`.
 	RunAsMode types.String `tfsdk:"run_as_mode"`
 	// Name of the schema where this query will be executed.
 	Schema types.String `tfsdk:"schema"`
-
+	// Tags attached to the query. Tags appear in the query list and can be used
+	// to filter it.
 	Tags types.List `tfsdk:"tags"`
 	// Timestamp when this query was last updated.
 	UpdateTime types.String `tfsdk:"update_time"`
@@ -14951,10 +15166,10 @@ func (m RestoreResponse_SdkV2) Type(ctx context.Context) attr.Type {
 
 // Contains the result data of a single chunk when using `INLINE` disposition.
 // When using `EXTERNAL_LINKS` disposition, the array `external_links` is used
-// instead to provide URLs to the result data in cloud storage. Exactly one of
-// these alternatives is used. (While the `external_links` array prepares the
-// API to return multiple links in a single response. Currently only a single
-// link is returned.)
+// instead to provide short-lived cloud-storage URLs to the result data in cloud
+// storage. Exactly one of these alternatives is used. (While the
+// `external_links` array prepares the API to return multiple links in a single
+// response. Currently only a single link is returned.)
 type ResultData_SdkV2 struct {
 	// The number of bytes in the result chunk. This field is not available when
 	// using `INLINE` disposition.
@@ -16396,6 +16611,10 @@ func (m StatementParameterListItem_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// Statement Execution works with all SQL warehouse types, including
+// Lakehouse//RT. Statement Execution (Lakehouse//RT) is optimized for
+// Lakehouse//RT warehouses, with lower latency and higher concurrency, and
+// takes `warehouse_id` as a path parameter.
 type StatementResponse_SdkV2 struct {
 	Manifest types.List `tfsdk:"manifest"`
 
@@ -17112,6 +17331,8 @@ func (m *TerminationReason_SdkV2) SetParameters(ctx context.Context, v map[strin
 }
 
 type TextValue_SdkV2 struct {
+	// Text substituted for the parameter marker when the query runs. Quotation
+	// marks are added around the value automatically.
 	Value types.String `tfsdk:"value"`
 }
 
@@ -17413,6 +17634,7 @@ func (m TrashAlertRequest_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type TrashAlertV2Request_SdkV2 struct {
+	// ID of the alert to move to the trash.
 	Id types.String `tfsdk:"-"`
 	// Whether to permanently delete the alert. If not set, the alert will only
 	// be soft deleted.
@@ -17466,6 +17688,7 @@ func (m TrashAlertV2Request_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type TrashQueryRequest_SdkV2 struct {
+	// UUID of the query to move to the trash.
 	Id types.String `tfsdk:"-"`
 }
 
@@ -17777,19 +18000,12 @@ func (m *UpdateAlertRequestAlert_SdkV2) SetCondition(ctx context.Context, v Aler
 
 type UpdateAlertV2Request_SdkV2 struct {
 	Alert types.List `tfsdk:"alert"`
-	// UUID identifying the alert.
+	// The canonical identifier of the alert to retrieve information about.
 	Id types.String `tfsdk:"-"`
-	// The field mask must be a single string, with multiple fields separated by
-	// commas (no spaces). The field path is relative to the resource object,
-	// using a dot (`.`) to navigate sub-fields (e.g., `author.given_name`).
-	// Specification of elements in sequence or map fields is not allowed, as
-	// only the entire collection field can be specified. Field names must
-	// exactly match the resource field names.
-	//
-	// A field mask of `*` indicates full replacement. It’s recommended to
-	// always explicitly list the fields being updated and avoid using `*`
-	// wildcards, as it can lead to unintended results if the API changes in the
-	// future.
+	// Comma-separated list of the alert fields to update, for example
+	// `display_name,query_text` or `schedule.pause_status`. Only the listed
+	// fields are changed; all other fields keep their current values.
+	// `parent_path` cannot be updated.
 	UpdateMask types.String `tfsdk:"-"`
 }
 
@@ -18011,14 +18227,18 @@ func (m *UpdateDefaultWarehouseOverrideRequest_SdkV2) SetDefaultWarehouseOverrid
 }
 
 type UpdateQueryRequest_SdkV2 struct {
-	// If true, automatically resolve alert display name conflicts. Otherwise,
-	// fail the request if the alert's display name conflicts with an existing
-	// alert's display name.
+	// If true, automatically resolve query display name conflicts. Otherwise,
+	// fail the request if the query's display name conflicts with an existing
+	// query's display name.
 	AutoResolveDisplayName types.Bool `tfsdk:"auto_resolve_display_name"`
-
+	// UUID of the query to update.
 	Id types.String `tfsdk:"-"`
-
+	// Query fields to update. Only the fields named in `update_mask` are
+	// changed.
 	Query types.List `tfsdk:"query"`
+	// Comma-separated list of the query fields to update, such as the display
+	// name or query text. Fields not listed keep their current values.
+	//
 	// The field mask must be a single string, with multiple fields separated by
 	// commas (no spaces). The field path is relative to the resource object,
 	// using a dot (`.`) to navigate sub-fields (e.g., `author.given_name`).
@@ -18133,6 +18353,9 @@ func (m *UpdateQueryRequest_SdkV2) SetQuery(ctx context.Context, v UpdateQueryRe
 	m.Query = types.ListValueMust(t, vs)
 }
 
+// A saved Databricks SQL query. A query stores the SQL text, the SQL warehouse
+// it runs on, its parameters, and metadata such as the display name,
+// description, owner, and tags.
 type UpdateQueryRequestQuery_SdkV2 struct {
 	// Whether to apply a 1000 row limit to the query result.
 	ApplyAutoLimit types.Bool `tfsdk:"apply_auto_limit"`
@@ -18150,11 +18373,16 @@ type UpdateQueryRequestQuery_SdkV2 struct {
 	Parameters types.List `tfsdk:"parameters"`
 	// Text of the query to be run.
 	QueryText types.String `tfsdk:"query_text"`
-	// Sets the "Run as" role for the object.
+	// Whose credentials the query runs with when it is shared. `VIEWER` uses
+	// the credentials of the user running the query. `OWNER` uses the owner's
+	// credentials where the product supports that, such as for legacy alerts
+	// and jobs. When omitted on create, the workspace default applies. A
+	// workspace admin can disallow `OWNER`.
 	RunAsMode types.String `tfsdk:"run_as_mode"`
 	// Name of the schema where this query will be executed.
 	Schema types.String `tfsdk:"schema"`
-
+	// Tags attached to the query. Tags appear in the query list and can be used
+	// to filter it.
 	Tags types.List `tfsdk:"tags"`
 	// ID of the SQL warehouse attached to the query.
 	WarehouseId types.String `tfsdk:"warehouse_id"`

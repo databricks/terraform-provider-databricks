@@ -1,0 +1,70 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: "workspace"
+  cloud: "AWS"
+  workspace_id: "12345"
+steps:
+  - name: "list_profiles"
+    config: |
+      data "databricks_instance_profiles" "this" {
+      }
+
+      output "instance_profiles" {
+        value = data.databricks_instance_profiles.this.instance_profiles
+      }
+
+      output "instance_profile" {
+        value = data.databricks_instance_profiles.this.instance_profiles[0]
+      }
+    calls:
+      - request:
+          method: "GET"
+          path: "/api/2.0/instance-profiles/list"
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              instance_profiles:
+                - instance_profile_arn: "arn:aws:iam::999999999999:instance-profile/replay"
+                  iam_role_arn: "arn:aws:iam::999999999999:role/replay"
+                  is_meta_instance_profile: false
+      - request:
+          method: "GET"
+          path: "/api/2.0/instance-profiles/list"
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              instance_profiles:
+                - instance_profile_arn: "arn:aws:iam::999999999999:instance-profile/replay"
+                  iam_role_arn: "arn:aws:iam::999999999999:role/replay"
+                  is_meta_instance_profile: false
+      - request:
+          method: "GET"
+          path: "/api/2.0/instance-profiles/list"
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              instance_profiles:
+                - instance_profile_arn: "arn:aws:iam::999999999999:instance-profile/replay"
+                  iam_role_arn: "arn:aws:iam::999999999999:role/replay"
+                  is_meta_instance_profile: false
+destroy:
+  calls:
+    - request:
+        method: "GET"
+        path: "/api/2.0/instance-profiles/list"
+        body: null
+      response: # Inferred API response; not recorded.
+        status: 200
+        body:
+          json:
+            instance_profiles:
+              - instance_profile_arn: "arn:aws:iam::999999999999:instance-profile/replay"
+                iam_role_arn: "arn:aws:iam::999999999999:role/replay"
+                is_meta_instance_profile: false

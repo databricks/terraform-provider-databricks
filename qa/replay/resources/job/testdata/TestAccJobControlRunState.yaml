@@ -1,0 +1,551 @@
+# API responses are placeholders based on the API models, not recorded.
+version: 1
+host_metadata:
+  cloud: AWS
+  host_type: workspace
+  workspace_id: '12345'
+steps:
+- name: create_continuous
+  config: |
+    data "databricks_current_user" "me" {}
+    data "databricks_spark_version" "latest" {}
+    data "databricks_node_type" "smallest" {
+      local_disk = true
+    }
+    resource "databricks_notebook" "this" {
+      path           = "${data.databricks_current_user.me.home}/Terraformfirst"
+      language       = "PYTHON"
+      content_base64 = base64encode("# replay\n")
+    }
+    resource "databricks_job" "this" {
+      name = "continuous-job-replay"
+      task {
+        task_key = "a"
+        new_cluster {
+          num_workers   = 1
+          spark_version = data.databricks_spark_version.latest.id
+          node_type_id  = data.databricks_node_type.smallest.id
+        }
+        notebook_task {
+          notebook_path = databricks_notebook.this.path
+        }
+      }
+      continuous {
+
+      }
+      control_run_state = true
+    }
+  calls:
+  - &id001
+    request:
+      method: GET
+      path: /api/2.0/preview/scim/v2/Me
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body: null
+    response:
+      status: 200
+      headers:
+        X-Databricks-Org-Id: '12345'
+      body:
+        json:
+          displayName: Replay tester
+          groups:
+          - display: admins
+            value: admins
+          id: '100'
+          userName: replay@example.com
+  - &id002
+    request:
+      method: GET
+      path: /api/2.1/clusters/list-node-types
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body: null
+    response:
+      status: 200
+      body:
+        json:
+          node_types:
+          - memory_mb: 30500
+            node_instance_type:
+              instance_type_id: i3.xlarge
+              local_disk_size_gb: 950
+              local_disks: 1
+            node_type_id: i3.xlarge
+            num_cores: 4
+  - &id003
+    request:
+      method: GET
+      path: /api/2.1/clusters/spark-versions
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body: null
+    response:
+      status: 200
+      body:
+        json:
+          versions:
+          - key: 17.3.x-scala2.13
+            name: 17.3 LTS (includes Apache Spark 4.0.0, Scala 2.13)
+  - request:
+      method: POST
+      path: /api/2.0/workspace/import
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body:
+        json:
+          content: IyByZXBsYXkK
+          format: SOURCE
+          language: PYTHON
+          overwrite: true
+          path: /Users/replay@example.com/Terraformfirst
+    response:
+      status: 200
+      body: null
+  - request:
+      method: POST
+      path: /api/2.2/jobs/create
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body:
+        json:
+          continuous:
+            pause_status: UNPAUSED
+          max_concurrent_runs: 1
+          name: continuous-job-replay
+          queue:
+            enabled: false
+          tasks:
+          - new_cluster:
+              node_type_id: i3.xlarge
+              num_workers: 1
+              spark_version: 17.3.x-scala2.13
+            notebook_task:
+              notebook_path: /Users/replay@example.com/Terraformfirst
+            task_key: a
+    response:
+      status: 200
+      body:
+        json:
+          job_id: 701
+  - &id004
+    request:
+      method: GET
+      path: /api/2.2/jobs/get
+      query:
+        job_id:
+        - '701'
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body: null
+    response:
+      status: 200
+      body:
+        json:
+          creator_user_name: replay@example.com
+          job_id: 701
+          settings:
+            continuous:
+              pause_status: UNPAUSED
+            format: MULTI_TASK
+            max_concurrent_runs: 1
+            name: continuous-job-replay
+            tasks:
+            - new_cluster:
+                node_type_id: i3.xlarge
+                num_workers: 1
+                spark_version: 17.3.x-scala2.13
+              notebook_task:
+                notebook_path: /Users/replay@example.com/Terraformfirst
+                source: WORKSPACE
+              task_key: a
+  - *id001
+  - *id002
+  - *id003
+  - *id001
+  - *id002
+  - *id003
+  - &id005
+    request:
+      method: GET
+      path: /api/2.0/preview/scim/v2/Me
+      query:
+        excludedAttributes:
+        - entitlements
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body: null
+    response:
+      status: 200
+      headers:
+        X-Databricks-Org-Id: '12345'
+      body:
+        json:
+          displayName: Replay tester
+          groups:
+          - display: admins
+            value: admins
+          id: '100'
+          userName: replay@example.com
+  - request:
+      method: GET
+      path: /api/2.0/workspace/get-status
+      query:
+        path:
+        - /Users/replay@example.com/Terraformfirst
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body: null
+    response:
+      status: 200
+      body:
+        json:
+          language: PYTHON
+          object_id: 201
+          object_type: NOTEBOOK
+          path: /Users/replay@example.com/Terraformfirst
+  - *id004
+  state:
+    resources:
+      databricks_job.this:
+        attributes:
+        - path:
+          - continuous
+          - 0
+          - pause_status
+          equals: UNPAUSED
+        - path:
+          - task
+          - 0
+          - notebook_task
+          - 0
+          - notebook_path
+          equals: /Users/replay@example.com/Terraformfirst
+- name: change_notebook
+  config: |
+    data "databricks_current_user" "me" {}
+    data "databricks_spark_version" "latest" {}
+    data "databricks_node_type" "smallest" {
+      local_disk = true
+    }
+    resource "databricks_notebook" "this" {
+      path           = "${data.databricks_current_user.me.home}/Terraformsecond"
+      language       = "PYTHON"
+      content_base64 = base64encode("# replay\n")
+    }
+    resource "databricks_job" "this" {
+      name = "continuous-job-replay"
+      task {
+        task_key = "a"
+        new_cluster {
+          num_workers   = 1
+          spark_version = data.databricks_spark_version.latest.id
+          node_type_id  = data.databricks_node_type.smallest.id
+        }
+        notebook_task {
+          notebook_path = databricks_notebook.this.path
+        }
+      }
+      continuous {
+        pause_status = "UNPAUSED"
+      }
+      control_run_state = true
+    }
+  calls:
+  - *id003
+  - *id002
+  - *id001
+  - *id005
+  - &id006
+    request:
+      method: GET
+      path: /api/2.0/workspace/get-status
+      query:
+        path:
+        - /Users/replay@example.com/Terraformfirst
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body: null
+    response:
+      status: 200
+      body:
+        json:
+          language: PYTHON
+          object_id: 202
+          object_type: NOTEBOOK
+          path: /Users/replay@example.com/Terraformsecond
+  - &id007
+    request:
+      method: GET
+      path: /api/2.2/jobs/get
+      query:
+        job_id:
+        - '701'
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body: null
+    response:
+      status: 200
+      body:
+        json:
+          creator_user_name: replay@example.com
+          job_id: 701
+          settings:
+            continuous:
+              pause_status: UNPAUSED
+            format: MULTI_TASK
+            max_concurrent_runs: 1
+            name: continuous-job-replay
+            tasks:
+            - new_cluster:
+                node_type_id: i3.xlarge
+                num_workers: 1
+                spark_version: 17.3.x-scala2.13
+              notebook_task:
+                notebook_path: /Users/replay@example.com/Terraformsecond
+                source: WORKSPACE
+              task_key: a
+  - *id001
+  - *id003
+  - *id002
+  - *id001
+  - *id003
+  - *id002
+  - *id005
+  - *id006
+  - *id007
+  state:
+    resources:
+      databricks_job.this:
+        attributes:
+        - path:
+          - continuous
+          - 0
+          - pause_status
+          equals: UNPAUSED
+        - path:
+          - task
+          - 0
+          - notebook_task
+          - 0
+          - notebook_path
+          equals: /Users/replay@example.com/Terraformsecond
+- name: pause
+  config: |
+    data "databricks_current_user" "me" {}
+    data "databricks_spark_version" "latest" {}
+    data "databricks_node_type" "smallest" {
+      local_disk = true
+    }
+    resource "databricks_notebook" "this" {
+      path           = "${data.databricks_current_user.me.home}/Terraformsecond"
+      language       = "PYTHON"
+      content_base64 = base64encode("# replay\n")
+    }
+    resource "databricks_job" "this" {
+      name = "continuous-job-replay"
+      task {
+        task_key = "a"
+        new_cluster {
+          num_workers   = 1
+          spark_version = data.databricks_spark_version.latest.id
+          node_type_id  = data.databricks_node_type.smallest.id
+        }
+        notebook_task {
+          notebook_path = databricks_notebook.this.path
+        }
+      }
+      continuous {
+        pause_status = "PAUSED"
+      }
+      control_run_state = true
+    }
+  calls:
+  - *id001
+  - *id002
+  - *id003
+  - *id005
+  - &id008
+    request:
+      method: GET
+      path: /api/2.0/workspace/get-status
+      query:
+        path:
+        - /Users/replay@example.com/Terraformfirst
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body: null
+    response:
+      status: 200
+      body:
+        json:
+          language: PYTHON
+          object_id: 203
+          object_type: NOTEBOOK
+          path: /Users/replay@example.com/Terraformsecond
+  - &id009
+    request:
+      method: GET
+      path: /api/2.2/jobs/get
+      query:
+        job_id:
+        - '701'
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body: null
+    response:
+      status: 200
+      body:
+        json:
+          creator_user_name: replay@example.com
+          job_id: 701
+          settings:
+            continuous:
+              pause_status: PAUSED
+            format: MULTI_TASK
+            max_concurrent_runs: 1
+            name: continuous-job-replay
+            tasks:
+            - new_cluster:
+                node_type_id: i3.xlarge
+                num_workers: 1
+                spark_version: 17.3.x-scala2.13
+              notebook_task:
+                notebook_path: /Users/replay@example.com/Terraformsecond
+                source: WORKSPACE
+              task_key: a
+  - *id003
+  - *id002
+  - *id001
+  - *id001
+  - *id003
+  - *id002
+  - *id005
+  - *id008
+  - *id009
+  state:
+    resources:
+      databricks_job.this:
+        attributes:
+        - path:
+          - continuous
+          - 0
+          - pause_status
+          equals: PAUSED
+        - path:
+          - task
+          - 0
+          - notebook_task
+          - 0
+          - notebook_path
+          equals: /Users/replay@example.com/Terraformsecond
+- name: unpause
+  config: |
+    data "databricks_current_user" "me" {}
+    data "databricks_spark_version" "latest" {}
+    data "databricks_node_type" "smallest" {
+      local_disk = true
+    }
+    resource "databricks_notebook" "this" {
+      path           = "${data.databricks_current_user.me.home}/Terraformsecond"
+      language       = "PYTHON"
+      content_base64 = base64encode("# replay\n")
+    }
+    resource "databricks_job" "this" {
+      name = "continuous-job-replay"
+      task {
+        task_key = "a"
+        new_cluster {
+          num_workers   = 1
+          spark_version = data.databricks_spark_version.latest.id
+          node_type_id  = data.databricks_node_type.smallest.id
+        }
+        notebook_task {
+          notebook_path = databricks_notebook.this.path
+        }
+      }
+      continuous {
+        pause_status = "UNPAUSED"
+      }
+      control_run_state = true
+    }
+  calls:
+  - *id002
+  - *id003
+  - *id001
+  - *id005
+  - &id010
+    request:
+      method: GET
+      path: /api/2.0/workspace/get-status
+      query:
+        path:
+        - /Users/replay@example.com/Terraformfirst
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body: null
+    response:
+      status: 200
+      body:
+        json:
+          language: PYTHON
+          object_id: 204
+          object_type: NOTEBOOK
+          path: /Users/replay@example.com/Terraformsecond
+  - *id007
+  - *id001
+  - *id003
+  - *id002
+  - *id003
+  - *id001
+  - *id002
+  - *id005
+  - *id010
+  - *id007
+  state:
+    resources:
+      databricks_job.this:
+        attributes:
+        - path:
+          - continuous
+          - 0
+          - pause_status
+          equals: UNPAUSED
+        - path:
+          - task
+          - 0
+          - notebook_task
+          - 0
+          - notebook_path
+          equals: /Users/replay@example.com/Terraformsecond
+destroy:
+  calls:
+  - *id001
+  - *id003
+  - *id002
+  - *id005
+  - *id010
+  - *id007
+  - request:
+      method: POST
+      path: /api/2.2/jobs/delete
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body:
+        json:
+          job_id: 701
+    response:
+      status: 200
+      body: null
+  - request:
+      method: POST
+      path: /api/2.0/workspace/delete
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body:
+        json:
+          path: /Users/replay@example.com/Terraformfirst
+    response:
+      status: 200
+      body: null

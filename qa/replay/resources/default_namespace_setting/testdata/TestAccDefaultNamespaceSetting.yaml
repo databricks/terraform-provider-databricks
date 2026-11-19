@@ -1,0 +1,84 @@
+# API responses are placeholders based on the API models, not recorded.
+version: 1
+host_metadata:
+  cloud: AWS
+  host_type: workspace
+  workspace_id: '12345'
+steps:
+- name: configure_setting
+  config: |
+    resource "databricks_default_namespace_setting" "this" {
+      namespace {
+        value = "namespace_value"
+      }
+    }
+  calls:
+  - request:
+      method: PATCH
+      path: /api/2.0/settings/types/default_namespace_ws/names/default
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body:
+        json:
+          allow_missing: true
+          field_mask: namespace.value
+          setting:
+            namespace:
+              value: namespace_value
+            setting_name: default
+    response:
+      status: 200
+      body:
+        json:
+          etag: setting-v1
+          namespace:
+            value: namespace_value
+          setting_name: default
+  - &id001
+    request:
+      method: GET
+      path: /api/2.0/settings/types/default_namespace_ws/names/default
+      query:
+        etag:
+        - setting-v1
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body: null
+    response:
+      status: 200
+      body:
+        json:
+          etag: setting-v1
+          namespace:
+            value: namespace_value
+          setting_name: default
+  - *id001
+  state:
+    resources:
+      databricks_default_namespace_setting.this:
+        attributes:
+        - path:
+          - namespace
+          - 0
+          - value
+          equals: namespace_value
+        - path:
+          - etag
+          equals: setting-v1
+destroy:
+  calls:
+  - *id001
+  - request:
+      method: DELETE
+      path: /api/2.0/settings/types/default_namespace_ws/names/default
+      query:
+        etag:
+        - setting-v1
+      headers:
+        X-Databricks-Workspace-Id: '12345'
+      body: null
+    response:
+      status: 200
+      body:
+        json:
+          etag: setting-v2

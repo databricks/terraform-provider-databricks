@@ -124,8 +124,13 @@ type CdfConfig struct {
 	PostgresSchema types.String `tfsdk:"postgres_schema"`
 	// The Unity Catalog schema that replicated tables are written into. Set at
 	// creation; the CdfConfig is immutable.
-	Schema         types.String `tfsdk:"schema"`
-	ProviderConfig types.Object `tfsdk:"provider_config"`
+	Schema types.String `tfsdk:"schema"`
+	// The service principal (application id) whose identity authorizes this
+	// change data feed's ongoing writes to Unity Catalog. When unset, writes
+	// are authorized as the creating identity. Changing it requires a new
+	// CdfConfig, which writes to new Delta tables.
+	ServicePrincipal types.String `tfsdk:"service_principal"`
+	ProviderConfig   types.Object `tfsdk:"provider_config"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
@@ -151,12 +156,13 @@ func (m CdfConfig) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{"catalog": m.Catalog,
-			"cdf_config_id":   m.CdfConfigId,
-			"create_time":     m.CreateTime,
-			"name":            m.Name,
-			"parent":          m.Parent,
-			"postgres_schema": m.PostgresSchema,
-			"schema":          m.Schema,
+			"cdf_config_id":     m.CdfConfigId,
+			"create_time":       m.CreateTime,
+			"name":              m.Name,
+			"parent":            m.Parent,
+			"postgres_schema":   m.PostgresSchema,
+			"schema":            m.Schema,
+			"service_principal": m.ServicePrincipal,
 
 			"provider_config": m.ProviderConfig,
 		},
@@ -168,12 +174,13 @@ func (m CdfConfig) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (m CdfConfig) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{"catalog": types.StringType,
-			"cdf_config_id":   types.StringType,
-			"create_time":     timetypes.RFC3339{}.Type(ctx),
-			"name":            types.StringType,
-			"parent":          types.StringType,
-			"postgres_schema": types.StringType,
-			"schema":          types.StringType,
+			"cdf_config_id":     types.StringType,
+			"create_time":       timetypes.RFC3339{}.Type(ctx),
+			"name":              types.StringType,
+			"parent":            types.StringType,
+			"postgres_schema":   types.StringType,
+			"schema":            types.StringType,
+			"service_principal": types.StringType,
 
 			"provider_config": ProviderConfig{}.Type(ctx),
 		},
@@ -217,8 +224,11 @@ func (m CdfConfig) ApplySchemaCustomizations(attrs map[string]tfschema.Attribute
 	attrs["postgres_schema"] = attrs["postgres_schema"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["schema"] = attrs["schema"].SetRequired()
 	attrs["schema"] = attrs["schema"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["service_principal"] = attrs["service_principal"].SetOptional()
+	attrs["service_principal"] = attrs["service_principal"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["parent"] = attrs["parent"].SetRequired()
-	attrs["parent"] = attrs["parent"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["parent"] = attrs["parent"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
+	attrs["parent"] = attrs["parent"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplaceIf(tfschema.RequiresReplaceIfKnownChange, "", "")).(tfschema.AttributeBuilder)
 
 	attrs["name"] = attrs["name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["provider_config"] = attrs["provider_config"].SetOptional()
@@ -254,10 +264,6 @@ func (r *CdfConfigResource) ModifyPlan(ctx context.Context, req resource.ModifyP
 		return
 	}
 	tfschema.WorkspaceDriftDetection(ctx, r.Client, req, resp)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	tfschema.ValidateWorkspaceID(ctx, r.Client, req, resp)
 }
 
 func (r *CdfConfigResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -323,6 +329,9 @@ func (r *CdfConfigResource) Create(ctx context.Context, req resource.CreateReque
 		return
 	}
 	resp.Diagnostics.Append(tfschema.PopulateProviderConfigInState(ctx, r.Client, plan.ProviderConfig, &resp.State)...)
+	if !resp.Diagnostics.HasError() {
+		resp.Diagnostics.Append(resp.Private.SetKey(ctx, tfschema.CreationInputsAppliedKey, []byte("true"))...)
+	}
 }
 
 func (r *CdfConfigResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -380,6 +389,12 @@ func (r *CdfConfigResource) Read(ctx context.Context, req resource.ReadRequest, 
 }
 
 func (r *CdfConfigResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	if tfschema.AdoptImportedCreateFields(ctx, req, resp, "cdf_config_id", "parent") {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.Append(resp.Private.SetKey(ctx, tfschema.CreationInputsAppliedKey, []byte("true"))...)
+		}
+		return
+	}
 	// VARIANT_IMMUTABLE resources do not support updates - all changes require replacement.
 	resp.Diagnostics.AddError("Update not supported", "This resource does not support updates. All changes require replacement.")
 }

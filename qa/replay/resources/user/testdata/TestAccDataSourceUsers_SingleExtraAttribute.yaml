@@ -1,0 +1,128 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: account
+  cloud: AWS
+  account_id: replay-account
+steps:
+  - name: lookup_active_user
+    config: |
+      provider "databricks" {
+        account_id = "replay-account"
+      }
+
+      resource "databricks_user" "user1" {
+        user_name = "tf-replay-1@databricks.com"
+      }
+
+      data "databricks_users" "this" {
+        filter           = "userName eq \"tf-replay-1@databricks.com\""
+        extra_attributes = "active"
+        depends_on       = [databricks_user.user1]
+      }
+    calls:
+      - request:
+          method: POST
+          path: /api/2.0/accounts/replay-account/scim/v2/Users
+          body:
+            json:
+              active: true
+              entitlements:
+                - {}
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:User']
+              userName: tf-replay-1@databricks.com
+        response: &response_1 # Inferred API response; not recorded.
+          body:
+            json:
+              active: true
+              displayName: tf-replay-1@databricks.com
+              entitlements: []
+              id: '101'
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:User']
+              userName: tf-replay-1@databricks.com
+          status: 200
+      - &call_3
+        request:
+          method: GET
+          path: /api/2.0/accounts/replay-account/scim/v2/Users/101
+          query:
+            attributes: ['userName,displayName,active,externalId,entitlements']
+          body: null
+        response: *response_1 # Inferred API response; not recorded.
+      - &call_1
+        request:
+          method: GET
+          path: /api/2.0/accounts/replay-account/scim/v2/Users
+          query:
+            attributes: ['id,userName,displayName,externalId,active']
+            count: ['10000']
+            filter: [userName eq "tf-replay-1@databricks.com"]
+            startIndex: ['1']
+          body: null
+        response: # Inferred API response; not recorded.
+          body:
+            json:
+              Resources:
+                - active: true
+                  displayName: tf-replay-1@databricks.com
+                  entitlements: []
+                  id: '101'
+                  schemas: ['urn:ietf:params:scim:schemas:core:2.0:User']
+                  userName: tf-replay-1@databricks.com
+              itemsPerPage: 100
+              startIndex: 1
+              totalResults: 1
+          status: 200
+      - &call_2
+        request:
+          method: GET
+          path: /api/2.0/accounts/replay-account/scim/v2/Users
+          query:
+            attributes: ['id,userName,displayName,externalId,active']
+            count: ['10000']
+            filter: [userName eq "tf-replay-1@databricks.com"]
+            startIndex: ['2']
+          body: null
+        response: # Inferred API response; not recorded.
+          body:
+            json:
+              Resources: []
+              startIndex: 2
+              totalResults: 1
+          status: 200
+      - *call_1
+      - *call_2
+      - *call_3
+      - *call_1
+      - *call_2
+    state:
+      resources:
+        databricks_user.user1:
+          attributes:
+            - path: [id]
+              equals: '101'
+        data.databricks_users.this:
+          attributes:
+            - path: [users, 0, id]
+              equals: '101'
+            - path: [users, 0, active]
+              equals: true
+destroy:
+  calls:
+    - *call_3
+    - *call_1
+    - *call_2
+    - request:
+        method: PATCH
+        path: /api/2.0/accounts/replay-account/scim/v2/Users/101
+        body:
+          json:
+            Operations:
+              - op: replace
+                path: active
+                value:
+                  - value: 'false'
+            schemas: ['urn:ietf:params:scim:api:messages:2.0:PatchOp']
+      response: # Inferred API response; not recorded.
+        body: null
+        status: 200

@@ -1,0 +1,106 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: "workspace"
+  cloud: "AWS"
+  workspace_id: "12345"
+steps:
+  - name: "list_clusters"
+    config: |
+      data "databricks_clusters" "this" {
+      }
+    calls:
+      - request:
+          method: "GET"
+          path: "/api/2.1/clusters/list"
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              clusters:
+                - cluster_id: "0123-456789-replay"
+                  cluster_name: "Default"
+                  spark_version: "17.3.x-scala2.13"
+                  node_type_id: "i3.xlarge"
+                  num_workers: 1
+                  state: "RUNNING"
+                  cluster_source: "API"
+                - cluster_id: "0123-456789-other"
+                  cluster_name: "Other"
+                  spark_version: "17.3.x-scala2.13"
+                  node_type_id: "i3.xlarge"
+                  num_workers: 1
+                  state: "RUNNING"
+                  cluster_source: "API"
+      - request:
+          method: "GET"
+          path: "/api/2.1/clusters/list"
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              clusters:
+                - cluster_id: "0123-456789-replay"
+                  cluster_name: "Default"
+                  spark_version: "17.3.x-scala2.13"
+                  node_type_id: "i3.xlarge"
+                  num_workers: 1
+                  state: "RUNNING"
+                  cluster_source: "API"
+                - cluster_id: "0123-456789-other"
+                  cluster_name: "Other"
+                  spark_version: "17.3.x-scala2.13"
+                  node_type_id: "i3.xlarge"
+                  num_workers: 1
+                  state: "RUNNING"
+                  cluster_source: "API"
+      - request:
+          method: "GET"
+          path: "/api/2.1/clusters/list"
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              clusters:
+                - cluster_id: "0123-456789-replay"
+                  cluster_name: "Default"
+                  spark_version: "17.3.x-scala2.13"
+                  node_type_id: "i3.xlarge"
+                  num_workers: 1
+                  state: "RUNNING"
+                  cluster_source: "API"
+                - cluster_id: "0123-456789-other"
+                  cluster_name: "Other"
+                  spark_version: "17.3.x-scala2.13"
+                  node_type_id: "i3.xlarge"
+                  num_workers: 1
+                  state: "RUNNING"
+                  cluster_source: "API"
+destroy:
+  calls:
+    - request:
+        method: "GET"
+        path: "/api/2.1/clusters/list"
+        body: null
+      response: # Inferred API response; not recorded.
+        status: 200
+        body:
+          json:
+            clusters:
+              - cluster_id: "0123-456789-replay"
+                cluster_name: "Default"
+                spark_version: "17.3.x-scala2.13"
+                node_type_id: "i3.xlarge"
+                num_workers: 1
+                state: "RUNNING"
+                cluster_source: "API"
+              - cluster_id: "0123-456789-other"
+                cluster_name: "Other"
+                spark_version: "17.3.x-scala2.13"
+                node_type_id: "i3.xlarge"
+                num_workers: 1
+                state: "RUNNING"
+                cluster_source: "API"

@@ -1,0 +1,81 @@
+# API responses are placeholders based on the API models, not recorded.
+version: 1
+host_metadata:
+  account_id: replay-account
+  cloud: AWS
+  host_type: account
+steps:
+- name: configure_setting
+  config: |
+    provider "databricks" {
+      account_id = "replay-account"
+    }
+    resource "databricks_disable_legacy_features_setting" "this" {
+      disable_legacy_features {
+        value = true
+      }
+    }
+  calls:
+  - request:
+      method: PATCH
+      path: /api/2.0/accounts/replay-account/settings/types/disable_legacy_features/names/default
+      body:
+        json:
+          allow_missing: true
+          field_mask: disable_legacy_features.value
+          setting:
+            disable_legacy_features:
+              value: true
+            setting_name: disable_legacy_features
+    response:
+      status: 200
+      body:
+        json:
+          disable_legacy_features:
+            value: true
+          etag: setting-v1
+          setting_name: disable_legacy_features
+  - &id001
+    request:
+      method: GET
+      path: /api/2.0/accounts/replay-account/settings/types/disable_legacy_features/names/default
+      query:
+        etag:
+        - setting-v1
+      body: null
+    response:
+      status: 200
+      body:
+        json:
+          disable_legacy_features:
+            value: true
+          etag: setting-v1
+          setting_name: disable_legacy_features
+  - *id001
+  state:
+    resources:
+      databricks_disable_legacy_features_setting.this:
+        attributes:
+        - path:
+          - disable_legacy_features
+          - 0
+          - value
+          equals: true
+        - path:
+          - etag
+          equals: setting-v1
+destroy:
+  calls:
+  - *id001
+  - request:
+      method: DELETE
+      path: /api/2.0/accounts/replay-account/settings/types/disable_legacy_features/names/default
+      query:
+        etag:
+        - setting-v1
+      body: null
+    response:
+      status: 200
+      body:
+        json:
+          etag: setting-v2

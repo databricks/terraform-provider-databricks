@@ -1,0 +1,513 @@
+# API responses are placeholders based on the API models, not recorded.
+version: 1
+host_metadata:
+  account_id: replay-account
+  cloud: AWS
+  host_type: account
+steps:
+- name: create_workspace
+  config: |
+    provider "databricks" {
+      account_id = "replay-account"
+    }
+    resource "databricks_mws_credentials" "this" {
+      account_id       = "replay-account"
+      credentials_name = "creds-test-replay"
+      role_arn         = "arn:aws:iam::123456789012:role/replay-crossaccount"
+    }
+
+    resource "databricks_mws_customer_managed_keys" "this" {
+      account_id = "replay-account"
+      use_cases  = ["MANAGED_SERVICES"]
+      aws_key_info {
+        key_arn   = "arn:aws:kms:us-east-1:123456789012:key/replay-key"
+        key_alias = "alias/replay"
+      }
+    }
+
+    resource "databricks_mws_storage_configurations" "this" {
+      account_id                 = "replay-account"
+      storage_configuration_name = "terraform-replay"
+      bucket_name                = "terraform-replay"
+    }
+
+    resource "databricks_mws_networks" "my_network" {
+      account_id         = "replay-account"
+      network_name       = "network-test-replay"
+      vpc_id             = "vpc-11111111"
+      subnet_ids         = ["subnet-11111111", "subnet-99999999"]
+      security_group_ids = ["sg-99999999"]
+    }
+    resource "databricks_mws_workspaces" "this" {
+      account_id                               = "replay-account"
+      workspace_name                           = "terra-replay"
+      aws_region                               = "us-east-1"
+      network_id                               = databricks_mws_networks.my_network.network_id
+      credentials_id                           = databricks_mws_credentials.this.credentials_id
+      storage_configuration_id                 = databricks_mws_storage_configurations.this.storage_configuration_id
+      managed_services_customer_managed_key_id = databricks_mws_customer_managed_keys.this.customer_managed_key_id
+      token { comment = "test foo" }
+    }
+  calls:
+  - request:
+      method: POST
+      path: /api/2.0/accounts/replay-account/storage-configurations
+      body:
+        json:
+          root_bucket_info:
+            bucket_name: terraform-replay
+          storage_configuration_name: terraform-replay
+    response:
+      status: 200
+      body:
+        json:
+          account_id: replay-account
+          creation_time: 1700000000000
+          root_bucket_info:
+            bucket_name: terraform-replay
+          storage_configuration_id: storage-123
+          storage_configuration_name: terraform-replay
+  - &id004
+    request:
+      method: GET
+      path: /api/2.0/accounts/replay-account/storage-configurations/storage-123
+      body: null
+    response:
+      status: 200
+      body:
+        json:
+          account_id: replay-account
+          creation_time: 1700000000000
+          root_bucket_info:
+            bucket_name: terraform-replay
+          storage_configuration_id: storage-123
+          storage_configuration_name: terraform-replay
+  - request:
+      method: POST
+      path: /api/2.0/accounts/replay-account/credentials
+      body:
+        json:
+          aws_credentials:
+            sts_role:
+              role_arn: arn:aws:iam::123456789012:role/replay-crossaccount
+          credentials_name: creds-test-replay
+    response:
+      status: 200
+      body:
+        json:
+          account_id: replay-account
+          aws_credentials:
+            sts_role:
+              role_arn: arn:aws:iam::123456789012:role/replay-crossaccount
+          creation_time: 1700000000000
+          credentials_id: credentials-123
+          credentials_name: creds-test-replay
+  - request:
+      method: POST
+      path: /api/2.0/accounts/replay-account/customer-managed-keys
+      body:
+        json:
+          account_id: replay-account
+          aws_key_info:
+            key_alias: alias/replay
+            key_arn: arn:aws:kms:us-east-1:123456789012:key/replay-key
+          use_cases:
+          - MANAGED_SERVICES
+    response:
+      status: 200
+      body:
+        json:
+          account_id: replay-account
+          aws_key_info:
+            key_alias: alias/replay
+            key_arn: arn:aws:kms:us-east-1:123456789012:key/replay-key
+          creation_time: 1700000000000
+          customer_managed_key_id: key-123
+          use_cases:
+          - MANAGED_SERVICES
+  - &id005
+    request:
+      method: GET
+      path: /api/2.0/accounts/replay-account/credentials/credentials-123
+      body: null
+    response:
+      status: 200
+      body:
+        json:
+          account_id: replay-account
+          aws_credentials:
+            sts_role:
+              role_arn: arn:aws:iam::123456789012:role/replay-crossaccount
+          creation_time: 1700000000000
+          credentials_id: credentials-123
+          credentials_name: creds-test-replay
+  - &id006
+    request:
+      method: GET
+      path: /api/2.0/accounts/replay-account/customer-managed-keys/key-123
+      body: null
+    response:
+      status: 200
+      body:
+        json:
+          account_id: replay-account
+          aws_key_info:
+            key_alias: alias/replay
+            key_arn: arn:aws:kms:us-east-1:123456789012:key/replay-key
+          creation_time: 1700000000000
+          customer_managed_key_id: key-123
+          use_cases:
+          - MANAGED_SERVICES
+  - request:
+      method: POST
+      path: /api/2.0/accounts/replay-account/networks
+      body:
+        json:
+          account_id: replay-account
+          network_name: network-test-replay
+          security_group_ids:
+          - sg-99999999
+          subnet_ids:
+          - subnet-99999999
+          - subnet-11111111
+          vpc_id: vpc-11111111
+    response:
+      status: 200
+      body:
+        json:
+          account_id: replay-account
+          network_id: network-123
+          network_name: network-test-replay
+          security_group_ids:
+          - sg-99999999
+          subnet_ids:
+          - subnet-99999999
+          - subnet-11111111
+          vpc_id: vpc-11111111
+          vpc_status: VALID
+  - &id007
+    request:
+      method: GET
+      path: /api/2.0/accounts/replay-account/networks/network-123
+      body: null
+    response:
+      status: 200
+      body:
+        json:
+          account_id: replay-account
+          network_id: network-123
+          network_name: network-test-replay
+          security_group_ids:
+          - sg-99999999
+          subnet_ids:
+          - subnet-99999999
+          - subnet-11111111
+          vpc_id: vpc-11111111
+          vpc_status: VALID
+  - request:
+      method: POST
+      path: /api/2.0/accounts/replay-account/workspaces
+      body:
+        json:
+          account_id: replay-account
+          aws_region: us-east-1
+          credentials_id: credentials-123
+          effective_compute_mode: ''
+          is_no_public_ip_enabled: true
+          managed_services_customer_managed_key_id: key-123
+          network_id: network-123
+          storage_configuration_id: storage-123
+          workspace_name: terra-replay
+    response:
+      status: 200
+      body:
+        json:
+          account_id: replay-account
+          aws_region: us-east-1
+          credentials_id: credentials-123
+          deployment_name: replay-workspace
+          is_no_public_ip_enabled: true
+          managed_services_customer_managed_key_id: key-123
+          network_id: network-123
+          storage_configuration_id: storage-123
+          workspace_id: 12345
+          workspace_name: terra-replay
+          workspace_status: RUNNING
+          workspace_url: http://workspace.replay.invalid
+  - &id001
+    request:
+      method: GET
+      path: /api/2.0/accounts/replay-account/workspaces/12345
+      body: null
+    response:
+      status: 200
+      body:
+        json:
+          account_id: replay-account
+          aws_region: us-east-1
+          credentials_id: credentials-123
+          deployment_name: replay-workspace
+          is_no_public_ip_enabled: true
+          managed_services_customer_managed_key_id: key-123
+          network_id: network-123
+          storage_configuration_id: storage-123
+          workspace_id: 12345
+          workspace_name: terra-replay
+          workspace_status: RUNNING
+          workspace_url: http://workspace.replay.invalid
+  - &id002
+    request:
+      method: GET
+      path: /api/2.0/preview/scim/v2/Me
+      query:
+        excludedAttributes:
+        - entitlements
+      body: null
+    response:
+      status: 200
+      body:
+        json:
+          id: '100'
+          userName: replay@example.com
+  - request:
+      method: POST
+      path: /api/2.0/token/create
+      body:
+        json:
+          comment: test foo
+          lifetime_seconds: 2592000.0
+    response:
+      status: 200
+      body:
+        json:
+          token_info:
+            comment: test foo
+            creation_time: 1700000000000
+            token_id: token-1
+          token_value: dummy-token-value-1
+  - *id001
+  - *id001
+  - *id002
+  - &id003
+    request:
+      method: GET
+      path: /api/2.0/token/list
+      body: null
+    response:
+      status: 200
+      body:
+        json:
+          token_infos:
+          - comment: test foo
+            creation_time: 1700000000000
+            token_id: token-1
+  - *id003
+  - *id004
+  - *id005
+  - *id006
+  - *id007
+  - *id001
+  - *id001
+  - *id002
+  - *id003
+  state:
+    resources:
+      databricks_mws_workspaces.this:
+        attributes:
+        - path:
+          - token
+          - 0
+          - comment
+          equals: test foo
+- name: replace_token
+  config: |
+    provider "databricks" {
+      account_id = "replay-account"
+    }
+    resource "databricks_mws_credentials" "this" {
+      account_id       = "replay-account"
+      credentials_name = "creds-test-replay"
+      role_arn         = "arn:aws:iam::123456789012:role/replay-crossaccount"
+    }
+
+    resource "databricks_mws_customer_managed_keys" "this" {
+      account_id = "replay-account"
+      use_cases  = ["MANAGED_SERVICES"]
+      aws_key_info {
+        key_arn   = "arn:aws:kms:us-east-1:123456789012:key/replay-key"
+        key_alias = "alias/replay"
+      }
+    }
+
+    resource "databricks_mws_storage_configurations" "this" {
+      account_id                 = "replay-account"
+      storage_configuration_name = "terraform-replay"
+      bucket_name                = "terraform-replay"
+    }
+
+    resource "databricks_mws_networks" "my_network" {
+      account_id         = "replay-account"
+      network_name       = "network-test-replay"
+      vpc_id             = "vpc-11111111"
+      subnet_ids         = ["subnet-11111111", "subnet-99999999"]
+      security_group_ids = ["sg-99999999"]
+    }
+    resource "databricks_mws_workspaces" "this" {
+      account_id                               = "replay-account"
+      workspace_name                           = "terra-replay"
+      aws_region                               = "us-east-1"
+      network_id                               = databricks_mws_networks.my_network.network_id
+      credentials_id                           = databricks_mws_credentials.this.credentials_id
+      storage_configuration_id                 = databricks_mws_storage_configurations.this.storage_configuration_id
+      managed_services_customer_managed_key_id = databricks_mws_customer_managed_keys.this.customer_managed_key_id
+      token { comment = "test bar" }
+    }
+  calls:
+  - *id005
+  - *id006
+  - *id007
+  - *id004
+  - *id001
+  - *id001
+  - *id002
+  - &id008
+    request:
+      method: GET
+      path: /api/2.0/token/list
+      body: null
+    response:
+      status: 200
+      body:
+        json:
+          token_infos:
+          - comment: test bar
+            creation_time: 1700000000000
+            token_id: token-2
+  - request:
+      method: POST
+      path: /api/2.0/token/create
+      body:
+        json:
+          comment: test foo
+          lifetime_seconds: 2592000.0
+    response:
+      status: 200
+      body:
+        json:
+          token_info:
+            comment: test bar
+            creation_time: 1700000000000
+            token_id: token-2
+          token_value: dummy-token-value-2
+  - request:
+      method: POST
+      path: /api/2.0/token/delete
+      body:
+        json:
+          token_id: token-2
+    response:
+      status: 200
+      body: null
+  - request:
+      method: POST
+      path: /api/2.0/token/create
+      body:
+        json:
+          comment: test bar
+          lifetime_seconds: 2592000.0
+    response:
+      status: 200
+      body:
+        json:
+          token_info:
+            comment: test bar
+            creation_time: 1700000000000
+            token_id: token-2
+          token_value: dummy-token-value-2
+  - *id001
+  - *id001
+  - *id002
+  - *id008
+  - *id008
+  - *id005
+  - *id004
+  - *id006
+  - *id007
+  - *id001
+  - *id001
+  - *id002
+  - *id008
+  state:
+    resources:
+      databricks_mws_workspaces.this:
+        attributes:
+        - path:
+          - token
+          - 0
+          - comment
+          equals: test bar
+destroy:
+  calls:
+  - *id005
+  - *id004
+  - *id007
+  - *id006
+  - *id001
+  - *id001
+  - *id002
+  - *id008
+  - request:
+      method: DELETE
+      path: /api/2.0/accounts/replay-account/workspaces/12345
+      body: null
+    response:
+      status: 200
+      body: null
+  - request:
+      method: GET
+      path: /api/2.0/accounts/replay-account/workspaces/12345
+      body: null
+    response:
+      status: 404
+      body:
+        json:
+          error_code: RESOURCE_DOES_NOT_EXIST
+          message: Workspace deleted
+  - request:
+      method: DELETE
+      path: /api/2.0/accounts/replay-account/credentials/credentials-123
+      body: null
+    response:
+      status: 200
+      body: null
+  - request:
+      method: DELETE
+      path: /api/2.0/accounts/replay-account/storage-configurations/storage-123
+      body: null
+    response:
+      status: 200
+      body: null
+  - request:
+      method: DELETE
+      path: /api/2.0/accounts/replay-account/customer-managed-keys/key-123
+      body: null
+    response:
+      status: 200
+      body: null
+  - request:
+      method: DELETE
+      path: /api/2.0/accounts/replay-account/networks/network-123
+      body: null
+    response:
+      status: 200
+      body: null
+  - request:
+      method: GET
+      path: /api/2.0/accounts/replay-account/networks/network-123
+      body: null
+    response:
+      status: 404
+      body:
+        json:
+          error_code: RESOURCE_DOES_NOT_EXIST
+          message: Network not found

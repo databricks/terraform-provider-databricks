@@ -1,0 +1,49 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: "workspace"
+  cloud: "AWS"
+  workspace_id: "12345"
+steps:
+  - name: "reject_invalid_workspace"
+    config: |
+      resource "databricks_catalog" "sandbox" {
+        name = "sandbox-replay"
+        comment = "this catalog is managed by terraform"
+        properties = { purpose = "testing" }
+      }
+      resource "databricks_schema" "schema1" {
+        catalog_name = databricks_catalog.sandbox.id
+        name = "schema1-replay"
+        comment = "this database is managed by terraform"
+        properties = { kind = "various" }
+      }
+      resource "databricks_schema" "schema2" {
+        catalog_name = databricks_catalog.sandbox.id
+        name = "schema2-replay"
+        comment = "this database is managed by terraform"
+        properties = { kind = "various" }
+      }
+      resource "databricks_schema" "schema3" {
+        catalog_name = databricks_catalog.sandbox.id
+        name = "schema3-replay"
+        comment = "this database is managed by terraform"
+        properties = { kind = "various" }
+      }
+      resource "databricks_share" "myshare" {
+        name = "replay-share-config"
+        provider_config {
+          workspace_id = "123"
+        }
+        object {
+          name = databricks_schema.schema1.id
+          data_object_type = "SCHEMA"
+        }
+        provider_config {
+          workspace_id = "456"
+        }
+      }
+    calls: []
+    expect_error: "Attribute provider_config list must contain at most 1 element"
+destroy:
+  calls: []

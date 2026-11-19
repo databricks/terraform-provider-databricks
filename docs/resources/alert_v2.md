@@ -20,6 +20,18 @@ When an alert is triggered, notifications can be sent to:
 
 You can also configure alerts to notify subscribers when the alert returns to normal state and set a retrigger interval to control how frequently the alert can be triggered.
 
+### Custom Notification Templates
+`custom_summary` and `custom_description` override the default notification subject and body.
+`custom_template_format` selects how those templates are interpreted:
+
+- `HTML` treats both templates as HTML with Mustache `{{VARIABLE_NAME}}` placeholders.
+- `MARKDOWN` treats them as Markdown with allowlisted `@VARIABLE_NAME` placeholders and converts
+  them to the format each notification destination expects, so one template renders correctly in
+  email, Slack, and Microsoft Teams.
+
+When `custom_template_format` is unset, the API applies no default; responses omit it unless a
+format is stored, and a template with no format is rendered as HTML.
+
 ### Scheduling
 Alerts use Quartz cron syntax for scheduling. You can specify the timezone and pause status for the schedule.
 
@@ -70,14 +82,33 @@ resource "databricks_alert_v2" "basic_alert" {
 ## Arguments
 The following arguments are supported:
 * `display_name` (string, required) - The display name of the alert
-* `evaluation` (AlertV2Evaluation, required)
+* `evaluation` (AlertV2Evaluation, required) - Condition evaluated against the query result, and who is notified when it is met
 * `query_text` (string, required) - Text of the query to be run
-* `schedule` (CronSchedule, required)
+* `schedule` (CronSchedule, required) - Schedule on which the alert runs its query and evaluates the condition
 * `warehouse_id` (string, required) - ID of the SQL warehouse attached to the alert
-* `custom_description` (string, optional) - Custom description for the alert. support mustache template
-* `custom_summary` (string, optional) - Custom summary for the alert. support mustache template
-* `parameters` (list of AlertStatementParameter, optional) - Query parameters bound when executing the alert query, referenced in the
-  query text with `:name` syntax. Static values only
+* `custom_description` (string, optional) - Custom description for the alert, used as the notification body. Interpreted according to `custom_template_format`.
+  The available template variables are listed at https://docs.databricks.com/aws/en/sql/user/alerts/create#notification-templates
+* `custom_summary` (string, optional) - Custom summary for the alert, used as the notification subject. Interpreted according to `custom_template_format`
+* `custom_template_format` (string, optional) - The format used to interpret the `custom_summary` and `custom_description` templates.
+  
+  `HTML` treats both templates as HTML with Mustache `{{VARIABLE_NAME}}` placeholders.
+  `MARKDOWN` treats them as Markdown with allowlisted `@VARIABLE_NAME` placeholders and converts
+  them to the format each notification destination expects, so a single template renders
+  correctly in email, Slack, and Microsoft Teams.
+  
+  When unset, the API applies no default. Responses omit the field unless a format is stored,
+  and a template with no format is rendered as HTML. Possible values are: `HTML`, `MARKDOWN`
+* `parameters` (list of AlertStatementParameter, optional) - A list of parameters to pass into the alert SQL query statement containing parameter markers. Static values only.
+  
+  Reference a parameter in the query text as `:name`. Each parameter must have a unique, non-empty name.
+  Each parameter consists of a name, a value, and optionally a type. To represent a NULL
+  value, the `value` field may be omitted or set to `null` explicitly. If the `type` field
+  is omitted, the value is interpreted as a string.
+  
+  If the type is given, parameters will be checked for type correctness according
+  to the given type. A value is correct if the provided string can be converted to
+  the requested type using the `cast` function. The exact semantics are described in
+  the section [`cast` function](https://docs.databricks.com/sql/language-manual/functions/cast.html) of the SQL language reference
 * `parent_path` (string, optional) - The workspace path of the folder containing the alert. Can only be set on create, and cannot be updated
 * `purge_on_delete` (boolean, optional) - Whether to permanently delete the alert. If not set, the alert will only be soft deleted
 * `run_as` (AlertV2RunAs, optional) - Specifies the identity that will be used to run the alert.
@@ -85,64 +116,65 @@ The following arguments are supported:
   - For user identity: Set `user_name` to the email of an active workspace user. Users can only set this to their own email.
   - For service principal: Set `service_principal_name` to the application ID. Requires the `servicePrincipal/user` role.
   If not specified, the alert will run as the request user
-* `run_as_user_name` (string, optional, deprecated) - The run as username or application ID of service principal.
-  On Create and Update, this field can be set to application ID of an active service principal. Setting this field requires the servicePrincipal/user role.
-  Deprecated: Use `run_as` field instead. This field will be removed in a future release
+* `run_as_user_name` (string, optional, deprecated) - Deprecated: Use `run_as` field instead. This field will be removed in a future release.
+  The run as username or application ID of service principal.
+  On Create and Update, this field can be set to application ID of an active service principal. Setting this field requires the servicePrincipal/user role
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 
 ### ProviderConfig
 * `workspace_id` (string,optional) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ### AlertStatementParameter
-* `name` (string, required) - The name of the parameter, referenced in the query as `:name`
-* `type` (string, optional) - The SQL data type of the parameter, e.g. STRING, INT, or DATE. Defaults to STRING. This is a
-  string rather than an enum because scalar subtypes such as DECIMAL(10, 4) cannot be enumerated.
-  Complex types such as ARRAY, MAP, and STRUCT are not supported
-* `value` (string, optional) - The bound value for the parameter, given as a string. If omitted, the value is interpreted as NULL
+* `name` (string, required) - The name of the parameter. Reference it in the query text as `:name`. Required, must be
+  non-empty, and must be unique across the alert's parameters
+* `type` (string, optional) - The SQL data type of the parameter, for example `STRING`, `INT`, or `DECIMAL(10, 2)`. If no type is given
+  the type is assumed to be `STRING`. Complex types such as `ARRAY`, `MAP`, and `STRUCT` are not supported
+* `value` (string, optional) - The value bound to the parameter, represented as a string. If omitted, the value is interpreted as NULL
 
 ### AlertV2Evaluation
-* `comparison_operator` (string, required) - Operator used for comparison in alert evaluation. Possible values are: `EQUAL`, `GREATER_THAN`, `GREATER_THAN_OR_EQUAL`, `IS_NOT_NULL`, `IS_NULL`, `LESS_THAN`, `LESS_THAN_OR_EQUAL`, `NOT_EQUAL`
+* `comparison_operator` (string, required) - Operator used for comparison in alert evaluation. The alert is triggered when the comparison of the source value with the threshold is true. `IS_NULL` and `IS_NOT_NULL` take no threshold. Possible values are: `EQUAL`, `GREATER_THAN`, `GREATER_THAN_OR_EQUAL`, `IS_NOT_NULL`, `IS_NULL`, `LESS_THAN`, `LESS_THAN_OR_EQUAL`, `NOT_EQUAL`
 * `source` (AlertV2OperandColumn, required) - Source column from result to use to evaluate alert
-* `empty_result_state` (string, optional) - Alert state if result is empty. Please avoid setting this field to be `UNKNOWN` because `UNKNOWN` state is planned to be deprecated. Possible values are: `ERROR`, `OK`, `TRIGGERED`, `UNKNOWN`
+* `empty_result_state` (string, optional) - Alert state if result is empty. If not set, an empty result sets the state to `ERROR`. Please avoid setting this field to be `UNKNOWN` because `UNKNOWN` state is planned to be deprecated. Possible values are: `ERROR`, `OK`, `TRIGGERED`, `UNKNOWN`
 * `notification` (AlertV2Notification, optional) - User or Notification Destination to notify when alert is triggered
-* `threshold` (AlertV2Operand, optional) - Threshold to user for alert evaluation, can be a column or a value
+* `threshold` (AlertV2Operand, optional) - Threshold to compare the source column against, either another column or a fixed value. Not needed when `comparison_operator` is `IS_NULL` or `IS_NOT_NULL`
 
 ### AlertV2Notification
 * `notify_on_ok` (boolean, optional) - Whether to notify alert subscribers when alert returns back to normal
 * `retrigger_seconds` (integer, optional) - Number of seconds an alert waits after being triggered before it is allowed to send another notification.
   If set to 0 or omitted, the alert will not send any further notifications after the first trigger
   Setting this value to 1 allows the alert to send a notification on every evaluation where the condition is met, effectively making it always retrigger for notification purposes
-* `subscriptions` (list of AlertV2Subscription, optional)
+* `subscriptions` (list of AlertV2Subscription, optional) - Users and notification destinations that receive notifications
 
 ### AlertV2Operand
-* `column` (AlertV2OperandColumn, optional)
-* `value` (AlertV2OperandValue, optional)
+* `column` (AlertV2OperandColumn, optional) - Compare the source against another column of the query result
+* `value` (AlertV2OperandValue, optional) - Compare the source against a fixed value
 
 ### AlertV2OperandColumn
-* `name` (string, required)
-* `aggregation` (string, optional) - If not set, the behavior is equivalent to using `First row` in the UI. Possible values are: `AVG`, `COUNT`, `COUNT_DISTINCT`, `MAX`, `MEDIAN`, `MIN`, `STDDEV`, `SUM`
-* `display` (string, optional)
+* `name` (string, required) - Name of the column in the query result
+* `aggregation` (string, optional) - Aggregation applied to the column across all rows of the query result: `SUM`, `COUNT`, `COUNT_DISTINCT`, `AVG`, `MEDIAN`, `MIN`, `MAX` or `STDDEV`.
+  If not set, the value in the first row is used, which is equivalent to using `First row` in the UI. Possible values are: `AVG`, `COUNT`, `COUNT_DISTINCT`, `MAX`, `MEDIAN`, `MIN`, `STDDEV`, `SUM`
+* `display` (string, optional) - Label for the column in notifications. Defaults to `name`
 
 ### AlertV2OperandValue
-* `bool_value` (boolean, optional)
-* `double_value` (number, optional)
-* `string_value` (string, optional)
+* `bool_value` (boolean, optional) - Boolean threshold, for boolean columns
+* `double_value` (number, optional) - Numeric threshold, for numeric columns
+* `string_value` (string, optional) - String threshold, for string or timestamp columns
 
 ### AlertV2RunAs
 * `service_principal_name` (string, optional) - Application ID of an active service principal. Setting this field requires the `servicePrincipal/user` role
 * `user_name` (string, optional) - The email of an active workspace user. Can only set this field to their own email
 
 ### AlertV2Subscription
-* `destination_id` (string, optional)
-* `user_email` (string, optional)
+* `destination_id` (string, optional) - ID of the notification destination to notify, as returned by the Notification Destinations API
+* `user_email` (string, optional) - Email address of the workspace user to notify
 
 ### CronSchedule
-* `quartz_cron_schedule` (string, required) - A cron expression using quartz syntax that specifies the schedule for this pipeline.
+* `quartz_cron_schedule` (string, required) - A cron expression using quartz syntax that specifies the schedule for this alert.
   Should use the quartz format described here: http://www.quartz-scheduler.org/documentation/quartz-2.1.7/tutorials/tutorial-lesson-06.html
 * `timezone_id` (string, required) - A Java timezone id. The schedule will be resolved using this timezone.
   This will be combined with the quartz_cron_schedule to determine the schedule.
   See https://docs.databricks.com/sql/language-manual/sql-ref-syntax-aux-conf-mgmt-set-timezone.html for details
-* `pause_status` (string, optional) - Indicate whether this schedule is paused or not. Possible values are: `PAUSED`, `UNPAUSED`
+* `pause_status` (string, optional) - Indicates whether this schedule is paused. While paused, the alert is not evaluated. Possible values are: `PAUSED`, `UNPAUSED`
 
 ## Attributes
 In addition to the above arguments, the following attributes are exported:
@@ -150,14 +182,14 @@ In addition to the above arguments, the following attributes are exported:
 * `effective_run_as` (AlertV2RunAs) - The actual identity that will be used to execute the alert.
   This is an output-only field that shows the resolved run-as identity after applying
   permissions and defaults
-* `id` (string) - UUID identifying the alert
-* `lifecycle_state` (string) - Indicates whether the query is trashed. Possible values are: `ACTIVE`, `DELETED`
+* `id` (string) - The canonical identifier of the alert to retrieve information about
+* `lifecycle_state` (string) - Indicates whether the alert is active (`ACTIVE`) or has been moved to the trash (`DELETED`). Possible values are: `ACTIVE`, `DELETED`
 * `owner_user_name` (string) - The owner's username. This field is set to "Unavailable" if the user has been deleted
 * `update_time` (string) - The timestamp indicating when the alert was updated
 
 ### AlertV2Evaluation
 * `last_evaluated_at` (string) - Timestamp of the last evaluation
-* `state` (string) - Latest state of alert evaluation. Possible values are: `ERROR`, `OK`, `TRIGGERED`, `UNKNOWN`
+* `state` (string) - Latest state of alert evaluation: `TRIGGERED` when the condition was met, `OK` when it was not, and `ERROR` when the evaluation failed. Possible values are: `ERROR`, `OK`, `TRIGGERED`, `UNKNOWN`
 
 ## Import
 As of Terraform v1.5, resources can be imported through configuration.

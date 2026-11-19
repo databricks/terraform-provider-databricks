@@ -24,9 +24,9 @@ import (
 
 // A local Terraform CLI exercises real plan/apply/state handling; only the
 // account API is mocked so these tests need neither preview access nor cloud resources.
-func TestGcpTerraformProviderHandoff(t *testing.T) {
+func TestGcpTerraformPluginFrameworkMigration(t *testing.T) {
 	const pscURI = "projects/p/regions/r/forwardingRules/endpoint"
-	for _, first := range []string{"SDKv2", "Plugin Framework"} {
+	for _, first := range []string{"Plugin Framework", "SDKv2", "SDKv2 with explicit defaults"} {
 		for _, tt := range []struct {
 			name    string
 			target  string
@@ -75,17 +75,15 @@ func TestGcpTerraformProviderHandoff(t *testing.T) {
 							DomainNames: tt.domains,
 						},
 					}).Return(rule, nil).Once()
-					e.GetPrivateEndpointRuleByNetworkConnectivityConfigIdAndPrivateEndpointRuleId(mock.Anything, "ncc_id", "rule_id").Return(rule, nil)
+					if first != "Plugin Framework" {
+						e.GetPrivateEndpointRuleByNetworkConnectivityConfigIdAndPrivateEndpointRuleId(mock.Anything, "ncc_id", "rule_id").Return(rule, nil)
+					}
 					e.GetPrivateEndpointRule(mock.Anything, settings.GetPrivateEndpointRuleRequest{
 						NetworkConnectivityConfigId: "ncc_id", PrivateEndpointRuleId: "rule_id",
 					}).Return(rule, nil)
-					if first == "SDKv2" {
-						e.DeletePrivateEndpointRuleByNetworkConnectivityConfigIdAndPrivateEndpointRuleId(mock.Anything, "ncc_id", "rule_id").Return(nil, nil).Once()
-					} else {
-						e.DeletePrivateEndpointRule(mock.Anything, settings.DeletePrivateEndpointRuleRequest{
-							NetworkConnectivityConfigId: "ncc_id", PrivateEndpointRuleId: "rule_id",
-						}).Return(nil, nil).Once()
-					}
+					e.DeletePrivateEndpointRule(mock.Anything, settings.DeletePrivateEndpointRuleRequest{
+						NetworkConnectivityConfigId: "ncc_id", PrivateEndpointRuleId: "rule_id",
+					}).Return(nil, nil).Once()
 					if tt.gcp.ServiceAttachment == "" {
 						for _, enabled := range []bool{false, true} {
 							e.UpdatePrivateEndpointRule(mock.Anything, settings.UpdateNccPrivateEndpointRuleRequest{
@@ -101,9 +99,9 @@ func TestGcpTerraformProviderHandoff(t *testing.T) {
 					pfFactories := map[string]func() (tfprotov6.ProviderServer, error){
 						"databricks": providerserver.NewProtocol6WithError(&privateEndpointRuleTestProvider{api: account.AccountClient.NetworkConnectivity}),
 					}
-					firstFactories, secondFactories := sdkFactories, pfFactories
+					firstFactories := sdkFactories
 					if first == "Plugin Framework" {
-						firstFactories, secondFactories = pfFactories, sdkFactories
+						firstFactories = pfFactories
 					}
 					config := `resource "databricks_mws_ncc_private_endpoint_rule" "this" {
 					network_connectivity_config_id = "ncc_id"
@@ -114,6 +112,19 @@ func TestGcpTerraformProviderHandoff(t *testing.T) {
 					if len(tt.domains) > 0 {
 						config = strings.Replace(config, "network_connectivity_config_id", "domain_names = [\""+tt.domains[0]+"\"]\nnetwork_connectivity_config_id", 1)
 					}
+					initialConfig := config
+					if first == "SDKv2 with explicit defaults" {
+						// Legacy configurations may set unused selectors to their defaults.
+						// Omit them when opting into Framework, without editing the state.
+						defaults := ""
+						if !tt.gcp.AllVpcScServices {
+							defaults += "all_vpc_sc_services = false\n"
+						}
+						if tt.gcp.ServiceAttachment == "" {
+							defaults += "service_attachment = \"\"\n"
+						}
+						initialConfig = strings.Replace(config, "gcp_endpoint {", "gcp_endpoint {\n"+defaults, 1)
+					}
 					const address = "databricks_mws_ncc_private_endpoint_rule.this"
 					noChange := tfresource.ConfigPlanChecks{
 						PreApply: []plancheck.PlanCheck{plancheck.ExpectResourceAction(address, plancheck.ResourceActionNoop)},
@@ -121,38 +132,34 @@ func TestGcpTerraformProviderHandoff(t *testing.T) {
 					steps := []tfresource.TestStep{
 						{
 							ProtoV6ProviderFactories: firstFactories,
-							Config:                   config,
+							Config:                   initialConfig,
 							Check: tfresource.ComposeTestCheckFunc(
 								tfresource.TestCheckResourceAttr(address, "id", "ncc_id/rule_id"),
 								tfresource.TestCheckResourceAttr(address, "gcp_endpoint.0.psc_endpoint_uri", pscURI),
 							),
 						},
 						{
-							ProtoV6ProviderFactories: secondFactories,
+							ProtoV6ProviderFactories: pfFactories,
 							Config:                   config,
 							ConfigPlanChecks:         noChange,
 						},
 						{
-							ProtoV6ProviderFactories: secondFactories,
+							ProtoV6ProviderFactories: pfFactories,
 							ResourceName:             address,
 							ImportState:              true,
 							ImportStateId:            "ncc_id/rule_id",
 							ImportStateVerify:        true,
 						},
 						{
-							ProtoV6ProviderFactories: firstFactories,
+							ProtoV6ProviderFactories: pfFactories,
 							Config:                   config,
 							ConfigPlanChecks:         noChange,
 						},
 					}
 					if tt.gcp.ServiceAttachment == "" {
-						for i, enabled := range []string{"false", "true"} {
-							factories := firstFactories
-							if i == 1 {
-								factories = secondFactories
-							}
+						for _, enabled := range []string{"false", "true"} {
 							steps = append(steps, tfresource.TestStep{
-								ProtoV6ProviderFactories: factories,
+								ProtoV6ProviderFactories: pfFactories,
 								Config:                   strings.Replace(config, "network_connectivity_config_id", "enabled = "+enabled+"\nnetwork_connectivity_config_id", 1),
 								Check: tfresource.ComposeTestCheckFunc(
 									tfresource.TestCheckResourceAttr(address, "id", "ncc_id/rule_id"),
@@ -161,10 +168,10 @@ func TestGcpTerraformProviderHandoff(t *testing.T) {
 								),
 							})
 						}
-						steps = append(steps, tfresource.TestStep{ProtoV6ProviderFactories: firstFactories, Config: config, ConfigPlanChecks: noChange})
+						steps = append(steps, tfresource.TestStep{ProtoV6ProviderFactories: pfFactories, Config: config, ConfigPlanChecks: noChange})
 					} else {
 						steps = append(steps, tfresource.TestStep{
-							ProtoV6ProviderFactories: firstFactories,
+							ProtoV6ProviderFactories: pfFactories,
 							Config:                   strings.Replace(config, "serviceAttachments/a", "serviceAttachments/b", 1),
 							PlanOnly:                 true, ExpectNonEmptyPlan: true,
 							ConfigPlanChecks: tfresource.ConfigPlanChecks{PostApplyPreRefresh: []plancheck.PlanCheck{

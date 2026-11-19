@@ -650,9 +650,13 @@ def get_next_tag_info_from_nextchanges(package: Package) -> Optional[TagInfo]:
     ``.codegen.json`` — matching the ``NEXT_CHANGELOG.md`` skip behavior.
     """
     body = render_nextchanges(package.path)
-    if body is None and not _load_codegen_config(package.path).get("allow_empty_changelog", False):
-        print(f"No {_nextchanges_dir()}/ entries. No changes will be made to the changelog.")
-        return None
+    if body is None:
+        if not _load_codegen_config(package.path).get("allow_empty_changelog", False):
+            print(f"No {_nextchanges_dir()}/ entries. No changes will be made to the changelog.")
+            return None
+        if not _source_changed_since_last_release(package):
+            print(f"No {_nextchanges_dir()}/ entries and no source changes since the last release; skipping.")
+            return None
 
     version = read_nextchanges_version(package)
     # write_changelog() keys off the "## Release v…" header, so include it.
@@ -710,12 +714,15 @@ def get_next_tag_info(package: Package) -> Optional[TagInfo]:
     # By default, packages whose NEXT_CHANGELOG.md has no populated
     # sections are skipped — there's nothing meaningful to release.
     # Repos like sdk-js which are still in development can opt in
-    # by setting ``allow_empty_changelog: true`` in .codegen.json.
-    if not re.search(r"###", next_changelog) and not _load_codegen_config(package.path).get(
-        "allow_empty_changelog", False
-    ):
-        print("All sections are empty. No changes will be made to the changelog.")
-        return None
+    # by setting ``allow_empty_changelog: true`` in .codegen.json — but
+    # even then, only when the package's source actually changed.
+    if not re.search(r"###", next_changelog):
+        if not _load_codegen_config(package.path).get("allow_empty_changelog", False):
+            print("All sections are empty. No changes will be made to the changelog.")
+            return None
+        if not _source_changed_since_last_release(package):
+            print("All sections are empty and no source changes since the last release; skipping.")
+            return None
 
     version_match = re.search(rf"## Release v({Version.PATTERN})", next_changelog)
 
@@ -832,9 +839,10 @@ def find_last_release_tag(package: Package) -> Optional[str]:
 def has_commits_since_tag(tag: str, path: str) -> bool:
     """
     Returns True iff at least one commit reachable from HEAD but not from
-    ``tag`` touches ``path``. Used to detect that a sibling dependency has
-    unreleased changes that would ship stale if we tagged a dependent
-    without re-tagging the dependency.
+    ``tag`` touches ``path``. Detects both that a sibling dependency has
+    unreleased changes that would ship stale (freshness) and, via
+    ``_source_changed_since_last_release``, whether a package has anything to
+    release under allow_empty_changelog.
 
     :raises Exception: If the git command fails.
     """
@@ -844,6 +852,25 @@ def has_commits_since_tag(tag: str, path: str) -> bool:
     except subprocess.CalledProcessError as e:
         raise Exception(f"Git command failed: {e.stderr.strip() or e}") from e
     return bool(output)
+
+
+def _source_changed_since_last_release(package: Package) -> bool:
+    """
+    True when the package has any commits since its last release tag. A
+    never-released package (no tag) counts as changed. Gates the
+    ``allow_empty_changelog`` path so a package with no changelog entries
+    releases only when something actually changed since it was last released.
+
+    Uses the same commit-based check as ``check_dependency_freshness`` — a
+    package's release bookkeeping is committed *at* its release tag, not after
+    it, so it never falls in the ``tag..HEAD`` window. Sharing the check keeps
+    the two consistent: a package this skips is exactly one freshness will not
+    flag as stale.
+    """
+    tag = find_last_release_tag(package)
+    if tag is None:
+        return True
+    return has_commits_since_tag(tag, package.path)
 
 
 def check_dependency_freshness(tag_infos: List[TagInfo], all_packages: List[Package]) -> None:

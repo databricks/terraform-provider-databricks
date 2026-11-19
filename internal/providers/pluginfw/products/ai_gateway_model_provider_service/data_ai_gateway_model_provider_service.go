@@ -101,24 +101,21 @@ func (r ProviderConfigData) Type(ctx context.Context) attr.Type {
 type ModelProviderServiceData struct {
 	// User-provided description.
 	Comment types.String `tfsdk:"comment"`
-	// Behavioral configuration: provider connection, model catalog, and
-	// passthrough policy. See `ModelProviderServiceConfig` for the per-field
-	// contract. Required on CreateModelProviderService; on Update it is
-	// required only when `config` (or a `config.*` subpath) appears in
+	// Provider authentication, exposed models, request-forwarding controls,
+	// rate limits, and payload logging. Required on Create. On Update, it is
+	// required only when `config` or one of its subpaths appears in
 	// `update_mask`.
 	Config types.Object `tfsdk:"config"`
-	// When the provider service was created.
+	// Time the provider service was created.
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
 	// Creator identity.
 	CreatedBy types.String `tfsdk:"created_by"`
-	// The resolved owner of the model provider service. Falls back to the
-	// caller's identity when `owner` is not explicitly set on creation.
+	// Owner of the model provider service.
 	EffectiveOwner types.String `tfsdk:"effective_owner"`
-	// Optimistic concurrency control token. Server-generated from the entity's
-	// state and returned on every read. To use it as an if-match precondition
-	// on a mutation, echo the last-read value back via the dedicated `etag`
-	// field on the Update / Delete request; the server rejects the mutation if
-	// the stored etag differs.
+	// Optimistic concurrency token returned on every read. To make an Update or
+	// Delete conditional, pass the last-read value in that request's `etag`
+	// field. In REST responses, this value is a base64 string; URL-encode it
+	// when setting the `etag` query parameter.
 	Etag types.String `tfsdk:"etag"`
 	// Metastore hosting the provider service.
 	MetastoreId types.String `tfsdk:"metastore_id"`
@@ -128,10 +125,7 @@ type ModelProviderServiceData struct {
 	// Server-derived on Create from `parent` + `model_provider_service_id`;
 	// required and immutable on Update/Get/Delete.
 	Name types.String `tfsdk:"name"`
-	// The owner of the model provider service. Write-only; read owner via
-	// effective_owner.
-	Owner types.String `tfsdk:"owner"`
-	// When the provider service was last modified.
+	// Time the provider service was last modified.
 	UpdateTime timetypes.RFC3339 `tfsdk:"update_time"`
 	// Identity of the last updater.
 	UpdatedBy          types.String `tfsdk:"updated_by"`
@@ -170,7 +164,6 @@ func (m ModelProviderServiceData) ToObjectValue(ctx context.Context) basetypes.O
 			"etag":            m.Etag,
 			"metastore_id":    m.MetastoreId,
 			"name":            m.Name,
-			"owner":           m.Owner,
 			"update_time":     m.UpdateTime,
 			"updated_by":      m.UpdatedBy,
 
@@ -192,7 +185,6 @@ func (m ModelProviderServiceData) Type(ctx context.Context) attr.Type {
 			"etag":            types.StringType,
 			"metastore_id":    types.StringType,
 			"name":            types.StringType,
-			"owner":           types.StringType,
 			"update_time":     timetypes.RFC3339{}.Type(ctx),
 			"updated_by":      types.StringType,
 
@@ -210,7 +202,6 @@ func (m ModelProviderServiceData) ApplySchemaCustomizations(attrs map[string]tfs
 	attrs["etag"] = attrs["etag"].SetComputed()
 	attrs["metastore_id"] = attrs["metastore_id"].SetComputed()
 	attrs["name"] = attrs["name"].SetRequired()
-	attrs["owner"] = attrs["owner"].SetComputed()
 	attrs["update_time"] = attrs["update_time"].SetComputed()
 	attrs["updated_by"] = attrs["updated_by"].SetComputed()
 

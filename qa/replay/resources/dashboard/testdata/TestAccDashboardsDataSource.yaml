@@ -1,0 +1,113 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: workspace
+  cloud: AWS
+  workspace_id: '12345'
+steps:
+  - name: list_created_dashboard
+    config: |
+      resource "databricks_dashboard" "dashboard" {
+        display_name         = "dashboard-replay"
+        warehouse_id         = "warehouse-1"
+        serialized_dashboard = "{\"pages\":[{\"name\":\"new_name\",\"displayName\":\"New Page\"}]}"
+        embed_credentials    = false // Optional
+        parent_path          = "/Shared/provider-test"
+      }
+
+      data "databricks_dashboards" "this" {
+        depends_on = [databricks_dashboard.dashboard]
+      }
+    calls:
+      - request:
+          method: POST
+          path: /api/2.0/lakeview/dashboards
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          body:
+            json:
+              display_name: dashboard-replay
+              parent_path: /Shared/provider-test
+              serialized_dashboard: '{"pages":[{"name":"new_name","displayName":"New Page"}]}'
+              warehouse_id: warehouse-1
+        response: &response_1 # Inferred API response; not recorded.
+          body:
+            json:
+              create_time: '2025-01-01T00:00:00Z'
+              dashboard_id: dashboard-1
+              display_name: dashboard-replay
+              etag: dashboard-1
+              lifecycle_state: ACTIVE
+              parent_path: /Shared/provider-test
+              path: /Shared/provider-test/dashboard-1.lvdash.json
+              serialized_dashboard: '{"pages":[{"name":"new_name","displayName":"New Page"}]}'
+              update_time: '2025-01-01T00:00:00Z'
+              warehouse_id: warehouse-1
+          status: 200
+      - request:
+          method: POST
+          path: /api/2.0/lakeview/dashboards/dashboard-1/published
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          body:
+            json:
+              embed_credentials: false
+              warehouse_id: warehouse-1
+        response: # Inferred API response; not recorded.
+          body:
+            json:
+              dashboard_id: dashboard-1
+              warehouse_id: warehouse-1
+          status: 200
+      - &call_2
+        request:
+          method: GET
+          path: /api/2.0/lakeview/dashboards/dashboard-1
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          body: null
+        response: *response_1 # Inferred API response; not recorded.
+      - &call_1
+        request:
+          method: GET
+          path: /api/2.0/lakeview/dashboards
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          body: null
+        response: # Inferred API response; not recorded.
+          body:
+            json:
+              dashboards:
+                - create_time: '2025-01-01T00:00:00Z'
+                  dashboard_id: dashboard-1
+                  display_name: dashboard-replay
+                  etag: dashboard-1
+                  lifecycle_state: ACTIVE
+                  parent_path: /Shared/provider-test
+                  path: /Shared/provider-test/dashboard-1.lvdash.json
+                  serialized_dashboard: '{"pages":[{"name":"new_name","displayName":"New Page"}]}'
+                  update_time: '2025-01-01T00:00:00Z'
+                  warehouse_id: warehouse-1
+          status: 200
+      - *call_1
+      - *call_2
+      - *call_1
+    state:
+      resources:
+        data.databricks_dashboards.this:
+          attributes:
+            - path: [dashboards, 0, dashboard_id]
+              equals: dashboard-1
+destroy:
+  calls:
+    - *call_2
+    - *call_1
+    - request:
+        method: DELETE
+        path: /api/2.0/lakeview/dashboards/dashboard-1
+        headers:
+          X-Databricks-Workspace-Id: '12345'
+        body: null
+      response: # Inferred API response; not recorded.
+        body: null
+        status: 200

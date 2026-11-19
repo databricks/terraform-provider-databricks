@@ -1,0 +1,193 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: "account"
+  cloud: "AWS"
+  account_id: "replay-account"
+steps:
+  - name: "lookup_user"
+    config: |
+      provider "databricks" {
+        account_id = "replay-account"
+      }
+
+      resource "databricks_user" "this" {
+        user_name = "tf-user@example.com"
+        api = "account"
+      }
+
+      data "databricks_user" "this" {
+        user_name = databricks_user.this.user_name
+        api = "account"
+      }
+    calls:
+      - request:
+          method: "POST"
+          path: "/api/2.0/accounts/replay-account/scim/v2/Users"
+          body:
+            json:
+              schemas: ["urn:ietf:params:scim:schemas:core:2.0:User"]
+              userName: "tf-user@example.com"
+              active: true
+              entitlements:
+                - {}
+        response: # Inferred API response; not recorded.
+          status: 201
+          body:
+            json:
+              schemas: ["urn:ietf:params:scim:schemas:core:2.0:User"]
+              id: "101"
+              userName: "tf-user@example.com"
+              active: true
+              entitlements: []
+              displayName: "tf-user@example.com"
+      - request:
+          method: "GET"
+          path: "/api/2.0/accounts/replay-account/scim/v2/Users/101"
+          query:
+            attributes: ["userName,displayName,active,externalId,entitlements"]
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              schemas: ["urn:ietf:params:scim:schemas:core:2.0:User"]
+              id: "101"
+              userName: "tf-user@example.com"
+              active: true
+              entitlements: []
+              displayName: "tf-user@example.com"
+      - request:
+          method: "GET"
+          path: "/api/2.0/accounts/replay-account/scim/v2/Users"
+          query:
+            filter: ["userName eq \"tf-user@example.com\""]
+            excludedAttributes: ["roles"]
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              totalResults: 1
+              Resources:
+                - schemas: ["urn:ietf:params:scim:schemas:core:2.0:User"]
+                  id: "101"
+                  userName: "tf-user@example.com"
+                  active: true
+                  entitlements: []
+                  displayName: "tf-user@example.com"
+      - request:
+          method: "GET"
+          path: "/api/2.0/accounts/replay-account/scim/v2/Users/101"
+          query:
+            attributes: ["userName,displayName,active,externalId,entitlements"]
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              schemas: ["urn:ietf:params:scim:schemas:core:2.0:User"]
+              id: "101"
+              userName: "tf-user@example.com"
+              active: true
+              entitlements: []
+              displayName: "tf-user@example.com"
+      - request:
+          method: "GET"
+          path: "/api/2.0/accounts/replay-account/scim/v2/Users"
+          query:
+            filter: ["userName eq \"tf-user@example.com\""]
+            excludedAttributes: ["roles"]
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              totalResults: 1
+              Resources:
+                - schemas: ["urn:ietf:params:scim:schemas:core:2.0:User"]
+                  id: "101"
+                  userName: "tf-user@example.com"
+                  active: true
+                  entitlements: []
+                  displayName: "tf-user@example.com"
+      - request:
+          method: "GET"
+          path: "/api/2.0/accounts/replay-account/scim/v2/Users"
+          query:
+            filter: ["userName eq \"tf-user@example.com\""]
+            excludedAttributes: ["roles"]
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              totalResults: 1
+              Resources:
+                - schemas: ["urn:ietf:params:scim:schemas:core:2.0:User"]
+                  id: "101"
+                  userName: "tf-user@example.com"
+                  active: true
+                  entitlements: []
+                  displayName: "tf-user@example.com"
+    state:
+      resources:
+        databricks_user.this:
+          attributes:
+            - path: ["id"]
+              equals: "101"
+        data.databricks_user.this:
+          attributes:
+            - path: ["id"]
+              equals: "101"
+destroy:
+  calls:
+    - request:
+        method: "GET"
+        path: "/api/2.0/accounts/replay-account/scim/v2/Users"
+        query:
+          filter: ["userName eq \"tf-user@example.com\""]
+          excludedAttributes: ["roles"]
+        body: null
+      response: # Inferred API response; not recorded.
+        status: 200
+        body:
+          json:
+            totalResults: 1
+            Resources:
+              - schemas: ["urn:ietf:params:scim:schemas:core:2.0:User"]
+                id: "101"
+                userName: "tf-user@example.com"
+                active: true
+                entitlements: []
+                displayName: "tf-user@example.com"
+    - request:
+        method: "GET"
+        path: "/api/2.0/accounts/replay-account/scim/v2/Users/101"
+        query:
+          attributes: ["userName,displayName,active,externalId,entitlements"]
+        body: null
+      response: # Inferred API response; not recorded.
+        status: 200
+        body:
+          json:
+            schemas: ["urn:ietf:params:scim:schemas:core:2.0:User"]
+            id: "101"
+            userName: "tf-user@example.com"
+            active: true
+            entitlements: []
+            displayName: "tf-user@example.com"
+    - request:
+        method: "PATCH"
+        path: "/api/2.0/accounts/replay-account/scim/v2/Users/101"
+        body:
+          json:
+            schemas: ["urn:ietf:params:scim:api:messages:2.0:PatchOp"]
+            Operations:
+              - op: "replace"
+                path: "active"
+                value:
+                  - value: "false"
+      response: # Inferred API response; not recorded.
+        status: 200
+        body: null

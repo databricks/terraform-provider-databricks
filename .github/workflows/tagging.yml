@@ -37,13 +37,13 @@ jobs:
       github.repository == 'databricks/databricks-sdk-java'
     env:
       # Ref the release is cut from. Releasing from a branch is currently
-      # supported in the terraform repository only: for
-      # terraform-provider-databricks this follows the dispatched branch
+      # supported in the terraform-provider-databricks and cli repositories:
+      # for those two this follows the dispatched branch
       # (``github.ref_name``), so a release can be cut from a branch other
       # than main; every other synced repo (SDK go/py/java, …) stays pinned
       # to main, preserving the pre-existing hardcoded-main behaviour and
       # blocking branch releases even via a manual non-main dispatch.
-      RELEASE_REF: ${{ github.repository == 'databricks/terraform-provider-databricks' && github.ref_name || 'main' }}
+      RELEASE_REF: ${{ (github.repository == 'databricks/terraform-provider-databricks' || github.repository == 'databricks/cli') && github.ref_name || 'main' }}
       # Changelog source. databricks/cli builds the release changelog from
       # per-PR ``.nextchanges/<section>/*.md`` fragments and a
       # ``.nextchanges/version`` file rather than a single hand-maintained
@@ -67,10 +67,10 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           # Check out the release ref. ``RELEASE_REF`` is the dispatched
-          # branch for terraform-provider-databricks and ``main`` for every
+          # branch for terraform-provider-databricks and cli, and ``main`` for every
           # other repo (see the job-level ``env``). For scheduled runs and
           # manual dispatches left at defaults this is the default branch
-          # (main); dispatching terraform with ``--ref <branch>`` cuts the
+          # (main); dispatching terraform or cli with ``--ref <branch>`` cuts the
           # release from that branch instead.
           #
           # Naming the ref explicitly (rather than omitting ``ref:``)
@@ -100,7 +100,7 @@ jobs:
           # changelog bump and creates the tag on this branch, and its
           # concurrent-advance guard checks this branch. Matches the ref
           # checked out above (``RELEASE_REF``): the dispatched branch for
-          # terraform, main everywhere else.
+          # terraform and cli, main everywhere else.
           DECO_TAGGING_REF: ${{ env.RELEASE_REF }}
           # Non-empty only for databricks/cli (see job-level env). When set,
           # tagging.py renders the changelog from ``$NEXTCHANGES_DIR/`` fragments

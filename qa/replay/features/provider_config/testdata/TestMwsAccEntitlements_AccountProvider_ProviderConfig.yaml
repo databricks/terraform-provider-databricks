@@ -1,0 +1,216 @@
+# Responses are inferred from the acceptance scenario and API models, not recorded.
+# Metadata responses are dummy account/workspace configuration.
+version: 1
+steps:
+  - name: account_provider_with_workspace_entitlements
+    config: |
+      provider "databricks" {
+        account_id = "dummy-account"
+      }
+
+      resource "databricks_service_principal" "this" {
+        display_name = "tf-entitlements-replay"
+      }
+
+      resource "databricks_mws_permission_assignment" "this" {
+        workspace_id = "1001"
+        principal_id = databricks_service_principal.this.id
+        permissions  = ["USER"]
+      }
+
+      resource "databricks_entitlements" "this" {
+        service_principal_id  = databricks_service_principal.this.id
+        databricks_sql_access = true
+
+        provider_config {
+          workspace_id = "1001"
+        }
+
+        depends_on = [databricks_mws_permission_assignment.this]
+      }
+    calls:
+      # The account provider and its derived workspace client initialize separately.
+      # Identical metadata requests consume these responses FIFO.
+      # YAML aliases repeat consumable calls; they do not make fixtures reusable.
+      - &account_metadata
+        request:
+          method: GET
+          path: /.well-known/databricks-config
+          body: null
+        response:
+          status: 200
+          body:
+            json:
+              host_type: account
+              account_id: dummy-account
+              cloud: AWS
+      - *account_metadata
+      - *account_metadata
+      - *account_metadata
+      - &workspace_metadata
+        request:
+          method: GET
+          path: /.well-known/databricks-config
+          body: null
+        response:
+          status: 200
+          body:
+            json:
+              host_type: workspace
+              workspace_id: "1001"
+              account_id: dummy-account
+              cloud: AWS
+      - *account_metadata
+      - *account_metadata
+      - *account_metadata
+      - *account_metadata
+      - *workspace_metadata
+      - request:
+          method: POST
+          path: /api/2.0/accounts/dummy-account/scim/v2/ServicePrincipals
+          body:
+            json:
+              schemas: ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"]
+              displayName: tf-entitlements-replay
+              active: true
+              entitlements: [{}]
+        response: &service_principal
+          status: 200
+          body:
+            json:
+              id: "2001"
+              applicationId: "00000000-0000-4000-8000-000000000001"
+              displayName: tf-entitlements-replay
+              active: true
+      - &read_service_principal
+        request:
+          method: GET
+          path: /api/2.0/accounts/dummy-account/scim/v2/ServicePrincipals/2001
+          query:
+            attributes: ["userName,displayName,active,externalId,entitlements"]
+          body: null
+        response: *service_principal
+      - request:
+          method: PUT
+          path: /api/2.0/accounts/dummy-account/workspaces/1001/permissionassignments/principals/2001
+          body:
+            json:
+              permissions: [USER]
+        response:
+          status: 200
+          body:
+            json:
+              permissions: [USER]
+              principal:
+                principal_id: 2001
+      - &read_permission_assignment
+        request:
+          method: GET
+          path: /api/2.0/accounts/dummy-account/workspaces/1001/permissionassignments
+          body: null
+        response:
+          status: 200
+          body:
+            json:
+              permission_assignments:
+                - permissions: [USER]
+                  principal:
+                    principal_id: 2001
+      - &read_workspace
+        request:
+          method: GET
+          path: /api/2.0/accounts/dummy-account/workspaces/1001
+          body: null
+        response:
+          status: 200
+          body:
+            json:
+              account_id: dummy-account
+              workspace_id: 1001
+              deployment_name: dummy-workspace
+              workspace_name: dummy-workspace
+              workspace_status: RUNNING
+      - request:
+          method: PATCH
+          path: /api/2.0/preview/scim/v2/ServicePrincipals/2001
+          headers:
+            X-Databricks-Workspace-Id: "1001"
+          body:
+            json:
+              schemas: ["urn:ietf:params:scim:api:messages:2.0:PatchOp"]
+              Operations:
+                - op: replace
+                  path: entitlements
+                  value:
+                    - value: databricks-sql-access
+        response:
+          status: 200
+      - &read_entitlements
+        request:
+          method: GET
+          path: /api/2.0/preview/scim/v2/ServicePrincipals/2001
+          query:
+            attributes: [entitlements]
+          headers:
+            X-Databricks-Workspace-Id: "1001"
+          body: null
+        response:
+          status: 200
+          body:
+            json:
+              id: "2001"
+              entitlements:
+                - value: databricks-sql-access
+      - *read_service_principal
+      - *read_permission_assignment
+      - *read_workspace
+      - *read_entitlements
+destroy:
+  calls:
+    - *account_metadata
+    - *account_metadata
+    - *workspace_metadata
+    - *account_metadata
+    - *account_metadata
+    - *account_metadata
+    - *account_metadata
+    - *workspace_metadata
+    - *read_service_principal
+    - *read_permission_assignment
+    - *read_workspace
+    - *read_entitlements
+    - *read_workspace
+    - request:
+        method: PATCH
+        path: /api/2.0/preview/scim/v2/ServicePrincipals/2001
+        headers:
+          X-Databricks-Workspace-Id: "1001"
+        body:
+          json:
+            schemas: ["urn:ietf:params:scim:api:messages:2.0:PatchOp"]
+            Operations:
+              - op: remove
+                path: entitlements
+                value:
+                  - value: databricks-sql-access
+      response:
+        status: 200
+    - request:
+        method: DELETE
+        path: /api/2.0/accounts/dummy-account/workspaces/1001/permissionassignments/principals/2001
+        body: null
+      response:
+        status: 200
+    - request:
+        method: PATCH
+        path: /api/2.0/accounts/dummy-account/scim/v2/ServicePrincipals/2001
+        body:
+          json:
+            schemas: ["urn:ietf:params:scim:api:messages:2.0:PatchOp"]
+            Operations:
+              - op: replace
+                path: active
+                value:
+                  - value: "false"
+      response:
+        status: 200

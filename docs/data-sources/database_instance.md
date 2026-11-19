@@ -8,6 +8,8 @@ subcategory: "Database Instances"
 
 This data source can be used to get a single Database Instance.
 
+For new workloads, Databricks recommends the `databricks_postgres_project` data source.
+
 
 ## Example Usage
 Referring to a Database Instance by name:
@@ -21,7 +23,9 @@ data "databricks_database_instance" "this" {
 
 ## Arguments
 The following arguments are supported:
-* `name` (string, required) - The name of the instance. This is the unique identifier for the instance
+* `name` (string, required) - The name of the instance. This is the unique identifier for the instance. Must be 1 to 63
+  characters long, contain only letters, digits and hyphens, start with a letter, and not contain
+  consecutive hyphens
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 
 ### ProviderConfig
@@ -29,13 +33,15 @@ The following arguments are supported:
 
 ## Attributes
 The following attributes are exported:
-* `capacity` (string) - The sku of the instance. Valid values are "CU_1", "CU_2", "CU_4", "CU_8"
+* `capacity` (string) - The sku of the instance. Valid values are "CU_1", "CU_2", "CU_4", "CU_8". Must be set when
+  creating an instance
 * `child_instance_refs` (list of DatabaseInstanceRef) - The refs of the child instances. This is only available if the instance is
   parent instance
 * `creation_time` (string) - The timestamp when the instance was created
 * `creator` (string) - The email of the creator of the instance
-* `custom_tags` (list of CustomTag) - Custom tags associated with the instance. This field is only included on create and update responses
-* `effective_capacity` (string, deprecated) - Deprecated. The sku of the instance; this field will always match the value of capacity.
+* `custom_tags` (list of CustomTag) - Custom tags associated with the instance. This field is only included on create and update responses.
+  An instance can have at most 10 tags; keys must be unique ignoring case
+* `effective_capacity` (string, deprecated) - Deprecated: this field always matches the value of capacity; read capacity instead.
   This is an output only field that contains the value computed from the input field combined with
   server side defaults. Use the field without the effective_ prefix to set the value
 * `effective_custom_tags` (list of CustomTag) - The recorded custom tags associated with the instance.
@@ -62,12 +68,16 @@ The following attributes are exported:
   This is an output only field that contains the value computed from the input field combined with
   server side defaults. Use the field without the effective_ prefix to set the value
 * `enable_pg_native_login` (boolean) - Whether to enable PG native password login on the instance. Defaults to false
-* `enable_readable_secondaries` (boolean) - Whether to enable secondaries to serve read-only traffic. Defaults to false
-* `name` (string) - The name of the instance. This is the unique identifier for the instance
+* `enable_readable_secondaries` (boolean) - Whether to enable secondaries to serve read-only traffic. Defaults to false. Requires a
+  node_count greater than 1
+* `name` (string) - The name of the instance. This is the unique identifier for the instance. Must be 1 to 63
+  characters long, contain only letters, digits and hyphens, start with a letter, and not contain
+  consecutive hyphens
 * `node_count` (integer) - The number of nodes in the instance, composed of 1 primary and 0 or more secondaries. Defaults to
   1 primary and 0 secondaries. This field is input only, see effective_node_count for the output
-* `parent_instance_ref` (DatabaseInstanceRef) - The ref of the parent instance. This is only available if the instance is
-  child instance.
+* `parent_instance_ref` (DatabaseInstanceRef) - The ref of the parent instance. This is only available if the instance is a
+  child instance. A child instance inherits custom_tags and usage_policy_id from
+  its parent and cannot set them.
   Input: For specifying the parent instance to create a child instance. Optional.
   Output: Only populated if provided as input to create a child instance
 * `pg_version` (string) - The version of Postgres running on the instance
@@ -78,7 +88,9 @@ The following attributes are exported:
   for which the historical data is retained. The default value is 7 days.
   Valid values are 2 to 35 days
 * `state` (string) - The current state of the instance. Possible values are: `AVAILABLE`, `DELETING`, `FAILING_OVER`, `STARTING`, `STOPPED`, `UPDATING`
-* `stopped` (boolean) - Whether to stop the instance. An input only param, see effective_stopped for the output
+* `stopped` (boolean) - Whether to stop the instance. An input only param, see effective_stopped for the output. An
+  instance cannot be created in the stopped state; set this field on update to stop or start
+  the instance
 * `uid` (string) - An immutable UUID identifier for the instance
 * `usage_policy_id` (string) - The desired usage policy to associate with the instance
 

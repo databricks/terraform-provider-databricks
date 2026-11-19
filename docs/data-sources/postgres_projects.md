@@ -23,7 +23,8 @@ output "project_names" {
 
 ## Arguments
 The following arguments are supported:
-* `page_size` (integer, optional) - Upper bound for items returned. Cannot be negative. The maximum value is 100
+* `page_size` (integer, optional) - Upper bound for the number of projects returned. Cannot be negative. Values above the maximum
+  page size are reduced to that maximum
 * `show_deleted` (boolean, optional) - Whether to include soft-deleted projects in the response.
   When true, soft-deleted projects are included alongside active projects.
   Hard-deleted and already-purged projects are never returned
@@ -47,17 +48,25 @@ This data source exports a single attribute, `projects`. It is a list of resourc
   spec.default_endpoint_settings to configure default settings for endpoints created after project creation
 * `name` (string) - Output only. The full resource path of the project.
   Format: projects/{project_id}
-* `project_id` (string) - The part of the name, chosen by the user when the resource was created
+* `project_id` (string) - The project ID chosen when the project was created. It is the final segment of `name`
 * `purge_time` (string) - A timestamp indicating when the project is scheduled for permanent deletion.
   Empty if the project is not deleted, otherwise set to a timestamp in the future
-* `spec` (ProjectSpec) - The spec contains the project configuration, including display_name, pg_version (Postgres version), history_retention_duration, and default_endpoint_settings
-* `status` (ProjectStatus) - The current status of a Project
-* `uid` (string) - System-generated unique ID for the project
+* `spec` (ProjectSpec) - The desired configuration of the project. The fields under `spec` are the ones that can be
+  changed after creation, except `pg_version`, which is fixed when the project is created. See
+  `status` for the configuration that is currently in effect.
+  
+  Read the resource's current values from `status`, rather than `spec`.
+  `spec` tracks field ownership for infrastructure-as-code tools and may omit
+  unmanaged fields
+* `status` (ProjectStatus) - The configuration and state of the project that are currently in effect, as reported by the
+  system
+* `uid` (string) - A system-generated UUID that identifies the project. Unlike `name`, it is not derived from the
+  user-chosen project ID
 * `update_time` (string) - A timestamp indicating when the project was last updated
 
 ### EndpointGroupSpec
 * `enable_readable_secondaries` (boolean) - Whether to allow read-only connections to read-write endpoints. Only relevant for read-write endpoints where
-  size.max > 1
+  `max` is greater than 1. When enabled, the endpoint also reports a read-only host in `status.hosts`
 * `max` (integer) - The maximum number of computes in the endpoint group. Currently, this must be equal to min. Set to 1 for single
   compute endpoints, to disable HA. To manually suspend all computes in an endpoint group, set disabled to
   true on the EndpointSpec
@@ -68,8 +77,9 @@ This data source exports a single attribute, `projects`. It is a list of resourc
 * `is_protected` (boolean) - Whether the initial default branch should be protected from deletion
 
 ### InitialEndpointSpec
-* `autoscaling_limit_max_cu` (number) - The maximum number of Compute Units for the initial endpoint
-* `autoscaling_limit_min_cu` (number) - The minimum number of Compute Units for the initial endpoint
+* `autoscaling_limit_max_cu` (number) - The maximum number of Compute Units for the initial endpoint. Minimum value is 0.5
+* `autoscaling_limit_min_cu` (number) - The minimum number of Compute Units for the initial endpoint. Minimum value is 0.5, and it must
+  not exceed autoscaling_limit_max_cu
 * `group` (EndpointGroupSpec) - Settings for HA configuration of the endpoint
 * `no_suspension` (boolean) - When set to true, explicitly disables automatic suspension (never suspend).
   Should be set to true when provided.
@@ -87,26 +97,32 @@ This data source exports a single attribute, `projects`. It is a list of resourc
 * `autoscaling_limit_min_cu` (number) - The minimum number of Compute Units. Minimum value is 0.5
 * `no_suspension` (boolean) - When set to true, explicitly disables automatic suspension (never suspend).
   Should be set to true when provided.
-  Mutually exclusive with `suspend_timeout_duration`. When updating, use `spec.project_default_settings.suspension` in the update_mask
+  Mutually exclusive with `suspend_timeout_duration`
 * `pg_settings` (object) - A raw representation of Postgres settings
 * `suspend_timeout_duration` (string) - Duration of inactivity after which the compute endpoint is automatically suspended.
   If specified should be between 60s and 604800s (1 minute to 1 week).
-  Mutually exclusive with `no_suspension`. When updating, use `spec.project_default_settings.suspension` in the update_mask
+  Mutually exclusive with `no_suspension`
 
 ### ProjectSpec
 * `budget_policy_id` (string) - The desired budget policy to associate with the project.
   See status.budget_policy_id for the policy that is actually applied to the project
-* `custom_tags` (list of ProjectCustomTag) - Custom tags to associate with the project. Forwarded to LBM for billing and cost tracking.
+* `custom_tags` (list of ProjectCustomTag) - Custom tags to associate with the project, used for billing and cost tracking.
   To update tags, provide the new tag list and include "spec.custom_tags" in the update_mask.
   To clear all tags, provide an empty list and include "spec.custom_tags" in the update_mask.
   To preserve existing tags, omit this field from the update_mask (or use wildcard "*" which auto-excludes empty tags)
-* `default_branch` (string) - The full resource path for the default branch of the project
+* `default_branch` (string) - The full resource path of the default branch of the project.
   Format: projects/{project_id}/branches/{branch_id}
-* `default_endpoint_settings` (ProjectDefaultEndpointSettings)
+  At creation time, the branch ID in this path names the initial branch, which is called
+  `production` when the field is omitted. On update, the path must name an existing branch of this
+  project, which then becomes the default branch
+* `default_endpoint_settings` (ProjectDefaultEndpointSettings) - Settings applied by default to compute endpoints created in this project. The initial endpoint
+  also takes these values for any setting that initial_endpoint_spec does not provide
 * `display_name` (string) - Human-readable project name. Length should be between 1 and 256 characters
 * `enable_pg_native_login` (boolean) - Whether to enable PG native password login on all endpoints in this project. Defaults to false
-* `history_retention_duration` (string) - The number of seconds to retain the shared history for point in time recovery for all branches in this project. Value should be between 172800s (2 days) and 3024000s (35 days)
-* `pg_version` (integer) - The major Postgres version number. The set of supported versions may vary; consult the API documentation for currently accepted values
+* `history_retention_duration` (string) - The number of seconds to retain the shared history for point in time recovery for all branches in this project. Value should be between 172800s (2 days) and 3024000s (35 days).
+  Defaults to 604800s (7 days) when omitted
+* `pg_version` (integer) - The major Postgres version number. Defaults to 17 when omitted. The set of versions that new
+  projects can use may change over time
 
 ### ProjectStatus
 * `branch_logical_size_limit_bytes` (integer) - The logical size limit for a branch
@@ -120,5 +136,5 @@ This data source exports a single attribute, `projects`. It is a list of resourc
 * `history_retention_duration` (string) - The effective number of seconds to retain the shared history for point in time recovery
 * `owner` (string) - The email of the project owner
 * `pg_version` (integer) - The effective major Postgres version number
-* `project_id` (string) - Part of the resource name
+* `project_id` (string) - The project ID, which is the final segment of the project's resource name
 * `synthetic_storage_size_bytes` (integer) - The current space occupied by the project in storage

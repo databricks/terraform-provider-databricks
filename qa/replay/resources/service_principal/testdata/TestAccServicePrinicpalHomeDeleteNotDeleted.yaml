@@ -1,0 +1,95 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: workspace
+  cloud: Azure
+  workspace_id: '12345'
+steps:
+  # The home directory already exists in the inferred server environment.
+  - name: create_with_prepared_home
+    config: |
+      resource "databricks_service_principal" "a" {
+        application_id        = "11111111-1111-4111-8111-111111111111"
+        force_delete_home_dir = false
+      }
+    calls:
+      - request:
+          body:
+            json:
+              active: true
+              applicationId: 11111111-1111-4111-8111-111111111111
+              entitlements:
+                - {}
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal']
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          method: POST
+          path: /api/2.0/preview/scim/v2/ServicePrincipals
+        response: &response_1 # Inferred API response; not recorded.
+          body:
+            json:
+              active: true
+              applicationId: 11111111-1111-4111-8111-111111111111
+              displayName: 11111111-1111-4111-8111-111111111111
+              id: '102'
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal']
+          status: 200
+      - &call_1
+        request:
+          body: null
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          method: GET
+          path: /api/2.0/preview/scim/v2/ServicePrincipals/102
+          query:
+            attributes: ['userName,displayName,active,externalId,entitlements']
+        response: *response_1 # Inferred API response; not recorded.
+      - *call_1
+  - name: delete_identity
+    config: |
+      provider "databricks" {}
+    calls:
+      - *call_1
+      - request:
+          body: null
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          method: DELETE
+          path: /api/2.0/preview/scim/v2/ServicePrincipals/102
+        response: # Inferred API response; not recorded.
+          body: null
+          status: 200
+  # Keep the post-deletion existence check through a read-only data source.
+  - name: home_survives_identity_deletion
+    config: |
+      data "databricks_directory" "home" {
+        path = "/Users/11111111-1111-4111-8111-111111111111"
+      }
+    calls:
+      - &call_2
+        request:
+          body: null
+          headers:
+            X-Databricks-Workspace-Id: '12345'
+          method: GET
+          path: /api/2.0/workspace/get-status
+          query:
+            path: [/Users/11111111-1111-4111-8111-111111111111]
+        response: # Inferred API response; not recorded.
+          body:
+            json:
+              object_id: 301
+              object_type: DIRECTORY
+              path: /Users/11111111-1111-4111-8111-111111111111
+          status: 200
+      - *call_2
+      - *call_2
+    state:
+      resources:
+        data.databricks_directory.home:
+          attributes:
+            - path: [path]
+              equals: /Users/11111111-1111-4111-8111-111111111111
+destroy:
+  calls:
+    - *call_2

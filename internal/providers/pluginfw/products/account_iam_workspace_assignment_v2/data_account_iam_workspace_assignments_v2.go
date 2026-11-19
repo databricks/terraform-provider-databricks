@@ -28,10 +28,12 @@ func DataSourceWorkspaceAssignments() datasource.DataSource {
 // WorkspaceAssignmentsData extends the main model with additional fields.
 type WorkspaceAssignmentsData struct {
 	AccountIamV2 types.List `tfsdk:"workspace_assignments"`
-	// The maximum number of workspace assignments to return. The service may
-	// return fewer than this value.
-	PageSize    types.Int64 `tfsdk:"page_size"`
-	WorkspaceId types.Int64 `tfsdk:"workspace_id"`
+	// The maximum number of assignments to return, up to 1000. The default is
+	// 1000. A page can contain fewer assignments.
+	PageSize types.Int64 `tfsdk:"page_size"`
+	// The resource name of the workspace, in the format
+	// `accounts/{account_id}/workspaces/{workspace_id}`.
+	Parent types.String `tfsdk:"parent"`
 }
 
 func (WorkspaceAssignmentsData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
@@ -41,10 +43,10 @@ func (WorkspaceAssignmentsData) GetComplexFieldTypes(context.Context) map[string
 }
 
 func (m WorkspaceAssignmentsData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["parent"] = attrs["parent"].SetRequired()
 	attrs["page_size"] = attrs["page_size"].SetOptional()
 
 	attrs["workspace_assignments"] = attrs["workspace_assignments"].SetComputed()
-	attrs["workspace_id"] = attrs["workspace_id"].SetRequired()
 	return attrs
 }
 

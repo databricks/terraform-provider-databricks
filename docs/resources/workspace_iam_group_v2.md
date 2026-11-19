@@ -2,7 +2,7 @@
 subcategory: "Identity and Access Management"
 ---
 # databricks_workspace_iam_group_v2 Resource
-[![Private Preview](https://img.shields.io/badge/Release_Stage-Private_Preview-blueviolet)](https://docs.databricks.com/aws/en/release-notes/release-types)
+[![GA](https://img.shields.io/badge/Release_Stage-GA-green)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
 [API Documentation](https://docs.databricks.com/api/workspace/iamv2)
 
@@ -25,8 +25,8 @@ resource "databricks_workspace_iam_group_v2" "this" {
 
 ## Arguments
 The following arguments are supported:
-* `external_id` (string, optional) - ExternalId of the group in the customer's IdP
-* `group_name` (string, optional) - Display name of the group
+* `external_id` (string, optional) - The ID of the group in your identity provider (IdP)
+* `group_name` (string, optional) - The name of the group
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 
 ### ProviderConfig
@@ -34,19 +34,24 @@ The following arguments are supported:
 
 ## Attributes
 In addition to the above arguments, the following attributes are exported:
-* `account_id` (string) - The parent account ID for group in Databricks
-* `group_id` (string) - Internal group ID of the group in Databricks
+* `account_id` (string) - The ID of the account that contains the group
+* `group_id` (string) - The Databricks ID of the group
+* `name` (string) - The resource name of the group, in one of these formats:
+  - Account APIs: `accounts/{account_id}/groups/{group_id}`
+  - Workspace APIs: `groups/{group_id}`
+* `parent` (string) - The resource name of the account that contains the group, in the format
+  `accounts/{account_id}`. Workspace APIs return the same format
 
 ## Import
 As of Terraform v1.5, resources can be imported through configuration.
 ```hcl
 import {
-  id = "group_id"
+  id = "name"
   to = databricks_workspace_iam_group_v2.this
 }
 ```
 
 If you are using an older version of Terraform, import the resource using the `terraform import` command as follows:
 ```sh
-terraform import databricks_workspace_iam_group_v2.this "group_id"
+terraform import databricks_workspace_iam_group_v2.this "name"
 ```

@@ -1,0 +1,20 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: workspace
+  cloud: AWS
+  workspace_id: '12345'
+steps:
+  - name: reject_mismatch
+    config: |
+      resource "databricks_notebook" "this" {
+        provider_config { workspace_id = "123" }
+        source = abspath("${path.module}/notebook.ipynb")
+        path   = "/Shared/provider-test/jupiter_replay"
+      }
+    calls: []
+    files:
+      notebook.ipynb: ../../../testdata/files/notebook.ipynb
+    expect_error: workspace_id mismatch.*please check the workspace_id provided in provider_config
+destroy:
+  calls: []

@@ -1,0 +1,113 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: "workspace"
+  cloud: "AWS"
+  workspace_id: "12345"
+steps:
+  - name: "create_and_grant_use"
+    config: |
+      resource "databricks_vector_search_endpoint" "this" {
+        name          = "terraform-test-vector-search-replay"
+        endpoint_type = "STANDARD"
+      }
+
+      resource "databricks_permissions" "this" {
+        vector_search_endpoint_id = databricks_vector_search_endpoint.this.endpoint_id
+
+        access_control {
+          group_name       = "users"
+          permission_level = "CAN_USE"
+        }
+      }
+    calls:
+      - request:
+          method: "POST"
+          path: "/api/2.0/vector-search/endpoints"
+          body:
+            json:
+              endpoint_type: "STANDARD"
+              name: "terraform-test-vector-search-replay"
+        response: &response_1 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              endpoint_status:
+                state: "ONLINE"
+              endpoint_type: "STANDARD"
+              id: "vector-1"
+              name: "terraform-test-vector-search-replay"
+      - &get_1
+        request: {method: "GET", path: "/api/2.0/vector-search/endpoints/terraform-test-vector-search-replay", body: null}
+        response: *response_1
+      - *get_1
+      - &get_2
+        request: {method: "GET", path: "/api/2.0/preview/scim/v2/Me", query: {"excludedAttributes": ["entitlements"]}, body: null}
+        response: &response_2 # Inferred API response; not recorded.
+          status: 200
+          headers:
+            "X-Databricks-Org-Id": "12345"
+          body:
+            json:
+              displayName: "Replay tester"
+              id: "100"
+              schemas: ["urn:ietf:params:scim:schemas:core:2.0:User"]
+              userName: "tester@example.com"
+      - request:
+          method: "PUT"
+          path: "/api/2.0/permissions/vector-search-endpoints/vector-1"
+          body:
+            json:
+              access_control_list:
+                - group_name: "users"
+                  permission_level: "CAN_USE"
+                - permission_level: "CAN_MANAGE"
+                  user_name: "tester@example.com"
+        response: &response_3 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              access_control_list:
+                - all_permissions:
+                    - inherited: false
+                      permission_level: "CAN_USE"
+                  group_name: "users"
+                - all_permissions:
+                    - inherited: false
+                      permission_level: "CAN_MANAGE"
+                  user_name: "tester@example.com"
+              object_id: "/vector-search-endpoints/vector-1"
+              object_type: "vector-search-endpoints"
+      - *get_2
+      - &get_3
+        request: {method: "GET", path: "/api/2.0/permissions/vector-search-endpoints/vector-1", body: null}
+        response: *response_3
+      - *get_1
+      - *get_2
+      - *get_3
+destroy:
+  calls:
+    - *get_1
+    - *get_2
+    - *get_3
+    - *get_3
+    - *get_2
+    - request:
+        method: "PUT"
+        path: "/api/2.0/permissions/vector-search-endpoints/vector-1"
+        body:
+          json:
+            access_control_list:
+              - permission_level: "CAN_MANAGE"
+                user_name: "tester@example.com"
+      response: # Inferred API response; not recorded.
+        status: 200
+        body:
+          json: {}
+    - request:
+        method: "DELETE"
+        path: "/api/2.0/vector-search/endpoints/terraform-test-vector-search-replay"
+        body: null
+      response: # Inferred API response; not recorded.
+        status: 200
+        body: null

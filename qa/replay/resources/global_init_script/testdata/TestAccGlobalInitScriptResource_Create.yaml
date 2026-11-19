@@ -1,0 +1,88 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: "workspace"
+  cloud: "AWS"
+  workspace_id: "12345"
+steps:
+  - name: "create_script"
+    config: |
+      resource "databricks_global_init_script" "this" {
+        name = "init-replay"
+        enabled = true
+        content_base64 = "ZWNobyBoZWxsbw=="
+      }
+    calls:
+      - request:
+          method: "POST"
+          path: "/api/2.0/global-init-scripts"
+          body:
+            json:
+              name: "init-replay"
+              enabled: true
+              script: "ZWNobyBoZWxsbw=="
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              script_id: "00000000-0000-4000-8000-000000000001"
+      - request:
+          method: "GET"
+          path: "/api/2.0/global-init-scripts/00000000-0000-4000-8000-000000000001"
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              script_id: "00000000-0000-4000-8000-000000000001"
+              name: "init-replay"
+              enabled: true
+              position: 0
+              script: "ZWNobyBoZWxsbw=="
+              created_by: "replay@example.com"
+              updated_by: "replay@example.com"
+              created_at: 1700000000000
+              updated_at: 1700000000000
+      - request:
+          method: "GET"
+          path: "/api/2.0/global-init-scripts/00000000-0000-4000-8000-000000000001"
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              script_id: "00000000-0000-4000-8000-000000000001"
+              name: "init-replay"
+              enabled: true
+              position: 0
+              script: "ZWNobyBoZWxsbw=="
+              created_by: "replay@example.com"
+              updated_by: "replay@example.com"
+              created_at: 1700000000000
+              updated_at: 1700000000000
+destroy:
+  calls:
+    - request:
+        method: "GET"
+        path: "/api/2.0/global-init-scripts/00000000-0000-4000-8000-000000000001"
+        body: null
+      response: # Inferred API response; not recorded.
+        status: 200
+        body:
+          json:
+            script_id: "00000000-0000-4000-8000-000000000001"
+            name: "init-replay"
+            enabled: true
+            position: 0
+            script: "ZWNobyBoZWxsbw=="
+            created_by: "replay@example.com"
+            updated_by: "replay@example.com"
+            created_at: 1700000000000
+            updated_at: 1700000000000
+    - request:
+        method: "DELETE"
+        path: "/api/2.0/global-init-scripts/00000000-0000-4000-8000-000000000001"
+        body: null
+      response: # Inferred API response; not recorded.
+        status: 200
+        body: null

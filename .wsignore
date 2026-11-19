@@ -11,6 +11,7 @@ tagging.py
 **/*.zip
 **/*.dbc
 **/*.png
+**/*.gif
 
 # Test fixtures
 workspace/acceptance/testdata/*

@@ -119,8 +119,7 @@ resource "databricks_postgres_synced_table" "this" {
 ## Arguments
 The following arguments are supported:
 * `synced_table_id` (string, required) - The part of the name, chosen by the user when the resource was created
-* `spec` (SyncedTableSyncedTableSpec, optional) - Configuration details of the synced table, such as the source table, scheduling policy, etc.
-  This attribute is specified at creation time and most fields are returned as is on subsequent queries
+* `spec` (SyncedTableSyncedTableSpec, optional) - Configuration details of the synced table, such as the source table, scheduling policy, etc
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 
 ### ProviderConfig

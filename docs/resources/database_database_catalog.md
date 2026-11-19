@@ -8,6 +8,8 @@ subcategory: "Database Instances"
 
 Database Catalogs are databases inside a Lakebase Database Instance which are synced into a Postgres Catalog inside Unity Catalog.
 
+For new workloads, Databricks recommends the `databricks_postgres_catalog` resource.
+
 ### Use Cases
 
 Database Catalogs can be used to achieve governance of Postgres databases in Unity Catalog. It also allows access to underlying data via REST APIs and Feature Stores.
@@ -56,9 +58,12 @@ resource "databricks_database_database_catalog" "catalog" {
 ## Arguments
 The following arguments are supported:
 * `database_instance_name` (string, required) - The name of the DatabaseInstance housing the database
-* `database_name` (string, required) - The name of the database (in an instance) associated with the catalog
-* `name` (string, required) - The name of the catalog in UC
-* `create_database_if_not_exists` (boolean, optional)
+* `database_name` (string, required) - The name of the Postgres database in the instance that the catalog registers. The database must
+  already exist unless create_database_if_not_exists is true. The system databases postgres,
+  databricks_system, template0 and template1 cannot be registered
+* `name` (string, required) - The name of the catalog in Unity Catalog
+* `create_database_if_not_exists` (boolean, optional) - If true, the database named in database_name is created in the instance when it does not already
+  exist, with the calling user as its owner. Defaults to false
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 
 ### ProviderConfig
@@ -66,7 +71,7 @@ The following arguments are supported:
 
 ## Attributes
 In addition to the above arguments, the following attributes are exported:
-* `uid` (string)
+* `uid` (string) - An immutable UUID identifier for the catalog, assigned when the catalog is created
 
 ## Import
 As of Terraform v1.5, resources can be imported through configuration.

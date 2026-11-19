@@ -1,0 +1,33 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: "workspace"
+  cloud: "AWS"
+  workspace_id: "12345"
+steps:
+  - name: "reject_ambiguous_resource"
+    config: |
+      resource "databricks_app" "this" {
+        name        = "tf-replay"
+        description = "My app"
+        resources = [{
+          name        = "invalid resource"
+          description = "invalid resource for app"
+          secret = {
+            permission = "CAN_MANAGE"
+            key        = "test"
+            scope      = "test"
+          }
+          sql_warehouse = {
+            id         = "123"
+            permission = "CAN_MANAGE"
+          }
+        }]
+      }
+    calls: []
+    expect_error: |-
+      2 attributes specified when one \(and only one\) of
+      \[.*resources\[0\].*<\.job,.*\.<\.serving_endpoint,.*\.<\.sql_warehouse,.*\.<\.uc_securable.*\]
+      is required
+destroy:
+  calls: []

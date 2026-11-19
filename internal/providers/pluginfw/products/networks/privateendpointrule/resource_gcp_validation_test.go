@@ -82,7 +82,7 @@ func (p *privateEndpointRuleTestProvider) Resources(context.Context) []func() re
 	}
 }
 
-func TestGcpTargetValidationMatchesSDKv2(t *testing.T) {
+func TestGcpTargetValidationIsFrameworkOnly(t *testing.T) {
 	googleAPIs := []any{map[string]any{"endpoints": []any{"storage.googleapis.com"}}}
 	attachment := "projects/p/regions/r/serviceAttachments/a"
 	tests := []struct {
@@ -116,7 +116,8 @@ func TestGcpTargetValidationMatchesSDKv2(t *testing.T) {
 				config["group_id"] = "blob"
 			}
 			diags := mws.ResourceMwsNccPrivateEndpointRule().ToResource().Validate(terraform.NewResourceConfigRaw(config))
-			require.Equal(t, tt.valid, !diags.HasError(), "SDKv2 diagnostics: %v", diags)
+			// Opting into Framework must not tighten the default SDKv2 contract.
+			require.False(t, diags.HasError(), "SDKv2 diagnostics: %v", diags)
 
 			// Terraform represents an omitted nested block as an empty list.
 			if tt.gcp != nil && tt.gcp["google_api_endpoints"] == nil {

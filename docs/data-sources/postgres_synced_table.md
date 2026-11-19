@@ -45,8 +45,7 @@ The following attributes are exported:
   Format "synced_tables/{catalog}.{schema}.{table}"
   
   For the corresponding source table in the Unity catalog look for the "source_table_full_name" attribute
-* `spec` (SyncedTableSyncedTableSpec) - Configuration details of the synced table, such as the source table, scheduling policy, etc.
-  This attribute is specified at creation time and most fields are returned as is on subsequent queries
+* `spec` (SyncedTableSyncedTableSpec) - Configuration details of the synced table, such as the source table, scheduling policy, etc
 * `status` (SyncedTableSyncedTableStatus) - Synced Table data synchronization status
 * `synced_table_id` (string) - The part of the name, chosen by the user when the resource was created
 * `uid` (string) - The Unity Catalog table ID for this synced table

@@ -1,0 +1,385 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: workspace
+  cloud: AWS
+  workspace_id: '12345'
+steps:
+  - name: create_mixed_members
+    config: |
+      resource "databricks_user" "this" {
+        user_name = "tf-replay@example.com"
+      }
+      resource "databricks_service_principal" "this" {
+        application_id = "11111111-1111-4111-8111-111111111111"
+        display_name   = "tf-spn-replay"
+        force          = true
+      }
+      resource "databricks_group" "child" {
+        display_name = "tf-child-replay"
+      }
+      resource "databricks_group" "parent" {
+        display_name = "tf-parent-replay"
+      }
+      resource "databricks_group_member" "m01" {
+        group_id  = databricks_group.parent.id
+        member_id = databricks_group.child.id
+      }
+      resource "databricks_group_member" "m02" {
+        group_id  = databricks_group.parent.id
+        member_id = databricks_service_principal.this.id
+      }
+      resource "databricks_group_member" "m03" {
+        group_id  = databricks_group.parent.id
+        member_id = databricks_user.this.id
+      }
+      data "databricks_group" "this" {
+        display_name = databricks_group.parent.display_name
+        depends_on = [
+          databricks_group_member.m01,
+          databricks_group_member.m02,
+          databricks_group_member.m03
+        ]
+      }
+      output "user_id" { value = one(data.databricks_group.this.users) }
+      output "service_principal_id" { value = one(data.databricks_group.this.service_principals) }
+      output "child_group_id" { value = one(data.databricks_group.this.child_groups) }
+    calls:
+      - request:
+          method: POST
+          path: /api/2.0/preview/scim/v2/Groups
+          body:
+            json:
+              displayName: tf-parent-replay
+              entitlements:
+                - {}
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:Group']
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              displayName: tf-parent-replay
+              id: '9301'
+              members: []
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:Group']
+      - request:
+          method: POST
+          path: /api/2.0/preview/scim/v2/Users
+          body:
+            json:
+              active: true
+              entitlements:
+                - {}
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:User']
+              userName: tf-replay@example.com
+        response: &response_1 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              active: true
+              displayName: tf-replay@example.com
+              id: '101'
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:User']
+              userName: tf-replay@example.com
+      - request:
+          method: POST
+          path: /api/2.0/preview/scim/v2/Groups
+          body:
+            json:
+              displayName: tf-child-replay
+              entitlements:
+                - {}
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:Group']
+        response: &response_2 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              displayName: tf-child-replay
+              id: '9302'
+              members: []
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:Group']
+      - request:
+          method: POST
+          path: /api/2.0/preview/scim/v2/ServicePrincipals
+          body:
+            json:
+              active: true
+              applicationId: 11111111-1111-4111-8111-111111111111
+              displayName: tf-spn-replay
+              entitlements:
+                - {}
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal']
+        response: &response_3 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              active: true
+              applicationId: 11111111-1111-4111-8111-111111111111
+              displayName: tf-spn-replay
+              id: '102'
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal']
+      - &call_4
+        request:
+          method: GET
+          path: /api/2.0/preview/scim/v2/Groups/9301
+          body: null
+          query:
+            attributes: ['displayName,externalId,entitlements']
+        response: &response_4 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              displayName: tf-parent-replay
+              id: '9301'
+              members:
+                - $ref: Users/101
+                  value: '101'
+                - $ref: ServicePrincipals/102
+                  value: '102'
+                - $ref: Groups/9302
+                  value: '9302'
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:Group']
+      - &call_5
+        request:
+          method: GET
+          path: /api/2.0/preview/scim/v2/Users/101
+          body: null
+          query:
+            attributes: ['userName,displayName,active,externalId,entitlements']
+        response: *response_1 # Inferred API response; not recorded.
+      - &call_3
+        request:
+          method: GET
+          path: /api/2.0/preview/scim/v2/Groups/9302
+          body: null
+          query:
+            attributes: ['displayName,externalId,entitlements']
+        response: *response_2 # Inferred API response; not recorded.
+      - &call_6
+        request:
+          method: GET
+          path: /api/2.0/preview/scim/v2/ServicePrincipals/102
+          body: null
+          query:
+            attributes: ['userName,displayName,active,externalId,entitlements']
+        response: *response_3 # Inferred API response; not recorded.
+      - request:
+          method: PATCH
+          path: /api/2.0/preview/scim/v2/Groups/9301
+          body:
+            json:
+              Operations:
+                - op: add
+                  path: members
+                  value:
+                    - value: '9302'
+              schemas: ['urn:ietf:params:scim:api:messages:2.0:PatchOp']
+        response: &response_5 # Inferred API response; not recorded.
+          status: 200
+          body: null
+      - request:
+          method: GET
+          path: /api/2.0/preview/scim/v2/Groups/9301
+          body: null
+          query:
+            attributes: [members]
+        response: *response_4 # Inferred API response; not recorded.
+      - request:
+          method: PATCH
+          path: /api/2.0/preview/scim/v2/Groups/9301
+          body:
+            json:
+              Operations:
+                - op: add
+                  path: members
+                  value:
+                    - value: '102'
+              schemas: ['urn:ietf:params:scim:api:messages:2.0:PatchOp']
+        response: *response_5 # Inferred API response; not recorded.
+      - request:
+          method: PATCH
+          path: /api/2.0/preview/scim/v2/Groups/9301
+          body:
+            json:
+              Operations:
+                - op: add
+                  path: members
+                  value:
+                    - value: '101'
+              schemas: ['urn:ietf:params:scim:api:messages:2.0:PatchOp']
+        response: *response_5 # Inferred API response; not recorded.
+      - &call_1
+        request:
+          method: GET
+          path: /api/2.0/preview/scim/v2/Groups
+          body: null
+          query:
+            filter: [displayName eq "tf-parent-replay"]
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              Resources:
+                - displayName: tf-parent-replay
+                  id: '9301'
+                  members:
+                    - $ref: Users/101
+                      value: '101'
+                    - $ref: ServicePrincipals/102
+                      value: '102'
+                    - $ref: Groups/9302
+                      value: '9302'
+                  schemas: ['urn:ietf:params:scim:schemas:core:2.0:Group']
+              totalResults: 1
+      - &call_2
+        request:
+          method: GET
+          path: /api/2.0/preview/scim/v2/Groups/9302
+          body: null
+          query:
+            attributes: ['displayName,members,roles,entitlements,externalId,groups']
+        response: *response_2 # Inferred API response; not recorded.
+      - *call_1
+      - *call_2
+      - *call_3
+      - *call_4
+      - *call_5
+      - *call_6
+      - *call_1
+      - *call_2
+    state:
+      resources:
+        databricks_user.this:
+          attributes:
+            - path: [id]
+              equals: '101'
+        databricks_service_principal.this:
+          attributes:
+            - path: [id]
+              equals: '102'
+        databricks_group.child:
+          attributes:
+            - path: [id]
+              equals: '9302'
+  - name: check_member_types
+    config: |
+      resource "databricks_user" "this" {
+        user_name = "tf-replay@example.com"
+      }
+      resource "databricks_service_principal" "this" {
+        application_id = "11111111-1111-4111-8111-111111111111"
+        display_name   = "tf-spn-replay"
+        force          = true
+      }
+      resource "databricks_group" "child" {
+        display_name = "tf-child-replay"
+      }
+      resource "databricks_group" "parent" {
+        display_name = "tf-parent-replay"
+      }
+      resource "databricks_group_member" "m01" {
+        group_id  = databricks_group.parent.id
+        member_id = databricks_group.child.id
+      }
+      resource "databricks_group_member" "m02" {
+        group_id  = databricks_group.parent.id
+        member_id = databricks_service_principal.this.id
+      }
+      resource "databricks_group_member" "m03" {
+        group_id  = databricks_group.parent.id
+        member_id = databricks_user.this.id
+      }
+      data "databricks_group" "this" {
+        display_name = databricks_group.parent.display_name
+        depends_on = [
+          databricks_group_member.m01,
+          databricks_group_member.m02,
+          databricks_group_member.m03
+        ]
+      }
+      output "user_id" { value = one(data.databricks_group.this.users) }
+      output "service_principal_id" { value = one(data.databricks_group.this.service_principals) }
+      output "child_group_id" { value = one(data.databricks_group.this.child_groups) }
+    calls:
+      - *call_1
+      - *call_2
+      - *call_3
+      - *call_4
+      - *call_6
+      - *call_5
+      - *call_1
+      - *call_2
+    plan_only: true
+    plan:
+      expect: empty
+      outputs:
+        user_id:
+          after:
+            - path: []
+              equals: '101'
+        service_principal_id:
+          after:
+            - path: []
+              equals: '102'
+        child_group_id:
+          after:
+            - path: []
+              equals: '9302'
+destroy:
+  calls:
+    - *call_4
+    - *call_3
+    - *call_5
+    - *call_6
+    - *call_1
+    - *call_2
+    - request:
+        method: PATCH
+        path: /api/2.0/preview/scim/v2/Groups/9301
+        body:
+          json:
+            Operations:
+              - op: remove
+                path: members[value eq "102"]
+            schemas: ['urn:ietf:params:scim:api:messages:2.0:PatchOp']
+      response: *response_5 # Inferred API response; not recorded.
+    - request:
+        method: PATCH
+        path: /api/2.0/preview/scim/v2/Groups/9301
+        body:
+          json:
+            Operations:
+              - op: remove
+                path: members[value eq "9302"]
+            schemas: ['urn:ietf:params:scim:api:messages:2.0:PatchOp']
+      response: *response_5 # Inferred API response; not recorded.
+    - request:
+        method: PATCH
+        path: /api/2.0/preview/scim/v2/Groups/9301
+        body:
+          json:
+            Operations:
+              - op: remove
+                path: members[value eq "101"]
+            schemas: ['urn:ietf:params:scim:api:messages:2.0:PatchOp']
+      response: *response_5 # Inferred API response; not recorded.
+    - request:
+        method: DELETE
+        path: /api/2.0/preview/scim/v2/Groups/9302
+        body: null
+      response: *response_5 # Inferred API response; not recorded.
+    - request:
+        method: DELETE
+        path: /api/2.0/preview/scim/v2/ServicePrincipals/102
+        body: null
+      response: *response_5 # Inferred API response; not recorded.
+    - request:
+        method: DELETE
+        path: /api/2.0/preview/scim/v2/Groups/9301
+        body: null
+      response: *response_5 # Inferred API response; not recorded.
+    - request:
+        method: DELETE
+        path: /api/2.0/preview/scim/v2/Users/101
+        body: null
+      response: *response_5 # Inferred API response; not recorded.

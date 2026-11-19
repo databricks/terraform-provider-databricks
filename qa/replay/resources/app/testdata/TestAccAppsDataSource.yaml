@@ -1,0 +1,30 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: "workspace"
+  cloud: "AWS"
+  workspace_id: "12345"
+steps:
+  - name: "list_apps"
+    config: |
+      data "databricks_apps" "this" {}
+    calls:
+      - &get_1
+        request:
+          method: "GET"
+          path: "/api/2.0/apps"
+          body: null
+        response: &response_1 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              apps:
+                - compute_status:
+                    state: "ACTIVE"
+                  description: "Existing app"
+                  name: "existing-app"
+      - *get_1
+      - *get_1
+destroy:
+  calls:
+    - *get_1

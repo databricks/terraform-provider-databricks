@@ -77,16 +77,24 @@ func (m ColumnInfo_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type CreateEndpoint_SdkV2 struct {
-	// The budget policy id to be applied
+	// Budget policy to attribute the endpoint's usage to. If omitted, the
+	// default budget policy applies.
 	BudgetPolicyId types.String `tfsdk:"budget_policy_id"`
-	// Type of endpoint
+	// Type of endpoint to create. STANDARD endpoints are optimized for
+	// low-latency queries and support Target QPS scaling. STORAGE_OPTIMIZED
+	// endpoints hold much larger indexes and index faster, with higher query
+	// latency. See
+	// https://docs.databricks.com/aws/en/ai-search/ai-search#endpoint-options.
 	EndpointType types.String `tfsdk:"endpoint_type"`
-	// Name of the AI Search endpoint
+	// Name of the AI Search endpoint. The name must be unique within the
+	// workspace, have at most 50 characters, contain only lowercase letters,
+	// digits, hyphens, underscores and periods, and start and end with a letter
+	// or digit.
 	Name types.String `tfsdk:"name"`
-	// Target QPS for the endpoint. Mutually exclusive with num_replicas. The
-	// actual replica count is calculated at index creation/sync time based on
-	// this value. Best-effort target; the system does not guarantee this QPS
-	// will be achieved.
+	// Target queries per second (QPS) for the endpoint. Supported for STANDARD
+	// endpoints only. The actual replica count is calculated at index
+	// creation/sync time based on this value. Best-effort target; the system
+	// does not guarantee this QPS will be achieved.
 	TargetQps types.Int64 `tfsdk:"target_qps"`
 	// The usage policy id to be applied once we've migrated to usage policies
 	UsagePolicyId types.String `tfsdk:"usage_policy_id"`
@@ -1764,29 +1772,37 @@ func (m EmbeddingVectorColumn_SdkV2) Type(ctx context.Context) attr.Type {
 type EndpointInfo_SdkV2 struct {
 	// The user-selected budget policy id for the endpoint.
 	BudgetPolicyId types.String `tfsdk:"budget_policy_id"`
-	// Timestamp of endpoint creation
+	// Time at which the endpoint was created, in milliseconds since the Unix
+	// epoch.
 	CreationTimestamp types.Int64 `tfsdk:"creation_timestamp"`
-	// Creator of the endpoint
+	// User or service principal that created the endpoint. Users are identified
+	// by username and service principals by application ID.
 	Creator types.String `tfsdk:"creator"`
 	// The custom tags assigned to the endpoint
 	CustomTags types.List `tfsdk:"custom_tags"`
-	// The budget policy id applied to the endpoint
+	// Budget policy ID in effect for the endpoint. This is the policy set on
+	// the endpoint when one was set, and otherwise the default budget policy.
 	EffectiveBudgetPolicyId types.String `tfsdk:"effective_budget_policy_id"`
 	// Current status of the endpoint
 	EndpointStatus types.List `tfsdk:"endpoint_status"`
-	// Type of endpoint
+	// Type of the endpoint. See
+	// https://docs.databricks.com/aws/en/ai-search/ai-search#endpoint-options
+	// for how the types differ.
 	EndpointType types.String `tfsdk:"endpoint_type"`
 	// Unique identifier of the endpoint
 	Id types.String `tfsdk:"id"`
-	// Timestamp of last update to the endpoint
+	// Time at which the endpoint was last updated, in milliseconds since the
+	// Unix epoch.
 	LastUpdatedTimestamp types.Int64 `tfsdk:"last_updated_timestamp"`
-	// User who last updated the endpoint
+	// User or service principal that last updated the endpoint, in the same
+	// form as creator.
 	LastUpdatedUser types.String `tfsdk:"last_updated_user"`
 	// Name of the AI Search endpoint
 	Name types.String `tfsdk:"name"`
 	// Number of indexes on the endpoint
 	NumIndexes types.Int64 `tfsdk:"num_indexes"`
-	// Scaling information for the endpoint
+	// Scaling information for the endpoint. Present only for STANDARD endpoints
+	// that have a Target QPS set.
 	ScalingInfo types.List `tfsdk:"scaling_info"`
 }
 
@@ -2030,12 +2046,36 @@ func (m *EndpointInfo_SdkV2) SetScalingInfo(ctx context.Context, v EndpointScali
 	m.ScalingInfo = types.ListValueMust(t, vs)
 }
 
+// Scaling information for a Standard endpoint: the current scaling state, the
+// requested QPS target, and the progress of an in-progress scaling change.
 type EndpointScalingInfo_SdkV2 struct {
+	// Reason the in-progress scaling change is delayed. When set,
+	// `estimated_completion_timestamp` is unset. Unset when the change is not
+	// delayed or no scaling change is in progress.
+	DelayedReason types.String `tfsdk:"delayed_reason"`
+	// Estimated time at which the in-progress scaling change will complete, in
+	// milliseconds since the Unix epoch. The estimate may change as the scaling
+	// change progresses. Unset when no scaling change is in progress, when no
+	// estimate is available, or when the change is delayed (see
+	// `delayed_reason`).
+	EstimatedCompletionTimestamp types.Int64 `tfsdk:"estimated_completion_timestamp"`
+	// Percentage of index initialization completed, from 0 to 100. Set only
+	// during the `INITIALIZING_INDEX` phase; unset in other phases or when
+	// progress is not available.
+	IndexInitializationPercentage types.Int64 `tfsdk:"index_initialization_percentage"`
+	// Current phase of the in-progress scaling change. Unset when no scaling
+	// change is in progress or the phase is not available.
+	Phase types.String `tfsdk:"phase"`
 	// The requested QPS target for the endpoint. Best-effort; the system does
 	// not guarantee this QPS will be achieved.
 	RequestedTargetQps types.Int64 `tfsdk:"requested_target_qps"`
 	// The current state of the scaling change request.
 	State types.String `tfsdk:"state"`
+	// Earliest time a new Target QPS change is accepted, in milliseconds since
+	// the Unix epoch. Set only while a scaling change is in progress, the
+	// change lock is on, and the endpoint has a recorded last throughput
+	// change; may be in the past once the lock has expired.
+	TargetQpsChangeAllowedAfterTimestamp types.Int64 `tfsdk:"target_qps_change_allowed_after_timestamp"`
 }
 
 func (to *EndpointScalingInfo_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from EndpointScalingInfo_SdkV2) {
@@ -2045,8 +2085,13 @@ func (to *EndpointScalingInfo_SdkV2) SyncFieldsDuringRead(ctx context.Context, f
 }
 
 func (m EndpointScalingInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["delayed_reason"] = attrs["delayed_reason"].SetOptional()
+	attrs["estimated_completion_timestamp"] = attrs["estimated_completion_timestamp"].SetOptional()
+	attrs["index_initialization_percentage"] = attrs["index_initialization_percentage"].SetOptional()
+	attrs["phase"] = attrs["phase"].SetOptional()
 	attrs["requested_target_qps"] = attrs["requested_target_qps"].SetOptional()
 	attrs["state"] = attrs["state"].SetOptional()
+	attrs["target_qps_change_allowed_after_timestamp"] = attrs["target_qps_change_allowed_after_timestamp"].SetOptional()
 
 	return attrs
 }
@@ -2069,8 +2114,13 @@ func (m EndpointScalingInfo_SdkV2) ToObjectValue(ctx context.Context) basetypes.
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"requested_target_qps": m.RequestedTargetQps,
-			"state":                m.State,
+			"delayed_reason":                  m.DelayedReason,
+			"estimated_completion_timestamp":  m.EstimatedCompletionTimestamp,
+			"index_initialization_percentage": m.IndexInitializationPercentage,
+			"phase":                           m.Phase,
+			"requested_target_qps":            m.RequestedTargetQps,
+			"state":                           m.State,
+			"target_qps_change_allowed_after_timestamp": m.TargetQpsChangeAllowedAfterTimestamp,
 		})
 }
 
@@ -2078,15 +2128,21 @@ func (m EndpointScalingInfo_SdkV2) ToObjectValue(ctx context.Context) basetypes.
 func (m EndpointScalingInfo_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"requested_target_qps": types.Int64Type,
-			"state":                types.StringType,
+			"delayed_reason":                  types.StringType,
+			"estimated_completion_timestamp":  types.Int64Type,
+			"index_initialization_percentage": types.Int64Type,
+			"phase":                           types.StringType,
+			"requested_target_qps":            types.Int64Type,
+			"state":                           types.StringType,
+			"target_qps_change_allowed_after_timestamp": types.Int64Type,
 		},
 	}
 }
 
 // Status information of an endpoint
 type EndpointStatus_SdkV2 struct {
-	// Additional status message
+	// Additional detail about the state, such as the reason the endpoint is
+	// OFFLINE. Absent when there is nothing to report.
 	Message types.String `tfsdk:"message"`
 	// Current state of the endpoint
 	State types.String `tfsdk:"state"`
@@ -3646,6 +3702,8 @@ func (m PatchEndpointBudgetPolicyRequest_SdkV2) Type(ctx context.Context) attr.T
 }
 
 type PatchEndpointBudgetPolicyResponse_SdkV2 struct {
+	// The requested budget policy ID, returned when the endpoint was already
+	// using it.
 	BudgetPolicyId types.String `tfsdk:"budget_policy_id"`
 	// The budget policy applied to the AI Search endpoint.
 	EffectiveBudgetPolicyId types.String `tfsdk:"effective_budget_policy_id"`
@@ -3701,7 +3759,8 @@ type PatchEndpointRequest_SdkV2 struct {
 	// Name of the AI Search endpoint
 	EndpointName types.String `tfsdk:"-"`
 	// Target QPS for the endpoint. Best-effort; the system does not guarantee
-	// this QPS will be achieved.
+	// this QPS will be achieved. Set to -1 to clear the Target QPS, as if it
+	// had never been set.
 	TargetQps types.Int64 `tfsdk:"target_qps"`
 }
 
@@ -5358,6 +5417,102 @@ func (m *ScanVectorIndexResponse_SdkV2) SetData(ctx context.Context, v []Struct_
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["data"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	m.Data = types.ListValueMust(t, vs)
+}
+
+type StartEndpointRequest_SdkV2 struct {
+	// Name of the AI Search endpoint
+	EndpointName types.String `tfsdk:"-"`
+}
+
+func (to *StartEndpointRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from StartEndpointRequest_SdkV2) {
+}
+
+func (to *StartEndpointRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from StartEndpointRequest_SdkV2) {
+}
+
+func (m StartEndpointRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["endpoint_name"] = attrs["endpoint_name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in StartEndpointRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m StartEndpointRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, StartEndpointRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (m StartEndpointRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"endpoint_name": m.EndpointName,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m StartEndpointRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"endpoint_name": types.StringType,
+		},
+	}
+}
+
+type StopEndpointRequest_SdkV2 struct {
+	// Name of the AI Search endpoint
+	EndpointName types.String `tfsdk:"-"`
+}
+
+func (to *StopEndpointRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from StopEndpointRequest_SdkV2) {
+}
+
+func (to *StopEndpointRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from StopEndpointRequest_SdkV2) {
+}
+
+func (m StopEndpointRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["endpoint_name"] = attrs["endpoint_name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in StopEndpointRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m StopEndpointRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, StopEndpointRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (m StopEndpointRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"endpoint_name": m.EndpointName,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m StopEndpointRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"endpoint_name": types.StringType,
+		},
+	}
 }
 
 type Struct_SdkV2 struct {

@@ -112,47 +112,44 @@ func (r ProviderConfig) Type(ctx context.Context) attr.Type {
 type ModelService struct {
 	// User-provided description.
 	Comment types.String `tfsdk:"comment"`
-	// Operational configuration: destinations, routing, rate limits, inference
-	// table. Required on CreateModelService; on UpdateModelService it is
-	// required only when `config` (or a `config.*` subpath) appears in
-	// `update_mask`.
+	// Destinations, routing, rate limits, and payload logging configuration.
+	// Required on Create. On Update, provide this field when `update_mask`
+	// contains `config` or one of its subpaths.
 	Config types.Object `tfsdk:"config"`
-	// When the model service was created.
+	// Time the model service was created.
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
-	// Creator identity.
+	// Username of the user who created the model service.
 	CreatedBy types.String `tfsdk:"created_by"`
-	// The resolved owner of the ModelService. Falls back to the caller's
-	// identity when `owner` is not explicitly set on creation.
+	// Username or group name of the model service owner.
 	EffectiveOwner types.String `tfsdk:"effective_owner"`
-	// Optimistic concurrency control token. Server-generated from the entity's
-	// state and returned on every read. To use it as an if-match precondition
-	// on a mutation, echo the last-read value back via the dedicated `etag`
-	// field on the Update / Delete request; the server rejects the mutation if
-	// the stored etag differs.
+	// Optimistic concurrency token returned on every read. To make an Update or
+	// Delete conditional, pass the last-read value in that request's `etag`
+	// field. In REST responses, this value is a base64 string; URL-encode it
+	// when setting the `etag` query parameter.
 	Etag types.String `tfsdk:"etag"`
-	// Metastore hosting the model service.
+	// Unique identifier of the metastore that contains the model service.
 	MetastoreId types.String `tfsdk:"metastore_id"`
-	// Name for the model service, e.g. "my_model_service".
+	// Name of the model service within the parent schema. The name must not
+	// contain periods, spaces, forward slashes, percent signs, or control
+	// characters, and it is stored in lowercase.
 	ModelServiceId types.String `tfsdk:"model_service_id"`
 	// Resource name of the model service. Format:
 	// `model-services/{catalog}.{schema}.{model_service}`. Each `{...}`
-	// component is capped at 255 characters individually. Server-derived on
-	// Create from `parent` + `model_service_id`; required and immutable on
-	// Update/Get/Delete.
+	// component is capped at 255 characters individually. The server derives
+	// the name on Create from `parent` and `model_service_id`; it is required
+	// and immutable on Update, Get, and Delete.
 	Name types.String `tfsdk:"name"`
-	// The owner of the model service. Write-only; read owner via
-	// effective_owner.
-	Owner types.String `tfsdk:"owner"`
 	// Name of the parent schema. Format: `schemas/{catalog}.{schema}`. Each
 	// `{...}` component is capped at 255 characters individually.
 	Parent types.String `tfsdk:"parent"`
-	// Unified API types this endpoint supports (e.g. "chat", "embeddings",
-	// "completions"). Derived from the destinations' backing models / providers
-	// at read time.
+	// API types supported across this service's destinations, such as
+	// `openai/v1/chat/completions`, `openai/v1/embeddings`, and
+	// `mlflow/v1/chat/completions`. Derived from the backing models and
+	// providers at read time.
 	SupportedApiTypes types.Set `tfsdk:"supported_api_types"`
-	// When the model service was last modified.
+	// Time the model service was last modified.
 	UpdateTime timetypes.RFC3339 `tfsdk:"update_time"`
-	// Identity of the last updater.
+	// Username of the user who last updated the model service.
 	UpdatedBy      types.String `tfsdk:"updated_by"`
 	ProviderConfig types.Object `tfsdk:"provider_config"`
 }
@@ -190,7 +187,6 @@ func (m ModelService) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"metastore_id":        m.MetastoreId,
 			"model_service_id":    m.ModelServiceId,
 			"name":                m.Name,
-			"owner":               m.Owner,
 			"parent":              m.Parent,
 			"supported_api_types": m.SupportedApiTypes,
 			"update_time":         m.UpdateTime,
@@ -214,7 +210,6 @@ func (m ModelService) Type(ctx context.Context) attr.Type {
 			"metastore_id":     types.StringType,
 			"model_service_id": types.StringType,
 			"name":             types.StringType,
-			"owner":            types.StringType,
 			"parent":           types.StringType,
 			"supported_api_types": basetypes.SetType{
 				ElemType: types.StringType,
@@ -242,10 +237,6 @@ func (to *ModelService) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from
 	}
 	if !from.ModelServiceId.IsUnknown() {
 		to.ModelServiceId = from.ModelServiceId
-	}
-	if !from.Owner.IsUnknown() && !from.Owner.IsNull() {
-		// Owner is an input only field and not returned by the service, so we keep the value from the prior state.
-		to.Owner = from.Owner
 	}
 	if !from.Parent.IsUnknown() {
 		to.Parent = from.Parent
@@ -275,10 +266,6 @@ func (to *ModelService) SyncFieldsDuringRead(ctx context.Context, from ModelServ
 	if !from.ModelServiceId.IsUnknown() {
 		to.ModelServiceId = from.ModelServiceId
 	}
-	if !from.Owner.IsUnknown() && !from.Owner.IsNull() {
-		// Owner is an input only field and not returned by the service, so we keep the value from the prior state.
-		to.Owner = from.Owner
-	}
 	if !from.Parent.IsUnknown() {
 		to.Parent = from.Parent
 	}
@@ -302,9 +289,6 @@ func (m ModelService) ApplySchemaCustomizations(attrs map[string]tfschema.Attrib
 	attrs["metastore_id"] = attrs["metastore_id"].SetComputed()
 	attrs["name"] = attrs["name"].SetComputed()
 	attrs["name"] = attrs["name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
-	attrs["owner"] = attrs["owner"].SetOptional()
-	attrs["owner"] = attrs["owner"].SetComputed()
-	attrs["owner"] = attrs["owner"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["supported_api_types"] = attrs["supported_api_types"].SetComputed()
 	attrs["update_time"] = attrs["update_time"].SetComputed()
 	attrs["updated_by"] = attrs["updated_by"].SetComputed()
@@ -312,7 +296,8 @@ func (m ModelService) ApplySchemaCustomizations(attrs map[string]tfschema.Attrib
 	attrs["model_service_id"] = attrs["model_service_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["model_service_id"] = attrs["model_service_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplaceIf(tfschema.RequiresReplaceIfKnownChange, "", "")).(tfschema.AttributeBuilder)
 	attrs["parent"] = attrs["parent"].SetRequired()
-	attrs["parent"] = attrs["parent"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["parent"] = attrs["parent"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
+	attrs["parent"] = attrs["parent"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplaceIf(tfschema.RequiresReplaceIfKnownChange, "", "")).(tfschema.AttributeBuilder)
 
 	attrs["name"] = attrs["name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["provider_config"] = attrs["provider_config"].SetOptional()
@@ -399,10 +384,6 @@ func (r *ModelServiceResource) ModifyPlan(ctx context.Context, req resource.Modi
 		return
 	}
 	tfschema.WorkspaceDriftDetection(ctx, r.Client, req, resp)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	tfschema.ValidateWorkspaceID(ctx, r.Client, req, resp)
 }
 
 func (r *ModelServiceResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -462,6 +443,9 @@ func (r *ModelServiceResource) Create(ctx context.Context, req resource.CreateRe
 		return
 	}
 	resp.Diagnostics.Append(tfschema.PopulateProviderConfigInState(ctx, r.Client, plan.ProviderConfig, &resp.State)...)
+	if !resp.Diagnostics.HasError() {
+		resp.Diagnostics.Append(resp.Private.SetKey(ctx, tfschema.CreationInputsAppliedKey, []byte("true"))...)
+	}
 }
 
 func (r *ModelServiceResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -529,7 +513,7 @@ func (r *ModelServiceResource) update(ctx context.Context, plan ModelService, di
 	updateRequest := catalog.UpdateModelServiceRequest{
 		ModelService: model_service,
 		Name:         plan.Name.ValueString(),
-		UpdateMask:   *fieldmask.New(strings.Split("comment,config,owner", ",")),
+		UpdateMask:   *fieldmask.New(strings.Split("comment,config", ",")),
 	}
 
 	var namespace ProviderConfig
@@ -574,6 +558,9 @@ func (r *ModelServiceResource) Update(ctx context.Context, req resource.UpdateRe
 	}
 
 	r.update(ctx, plan, &resp.Diagnostics, &resp.State)
+	if !resp.Diagnostics.HasError() {
+		resp.Diagnostics.Append(resp.Private.SetKey(ctx, tfschema.CreationInputsAppliedKey, []byte("true"))...)
+	}
 }
 
 func (r *ModelServiceResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {

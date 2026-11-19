@@ -2,13 +2,21 @@
 subcategory: "Apps"
 ---
 # databricks_app_space Data Source
-[![Private Preview](https://img.shields.io/badge/Release_Stage-Private_Preview-blueviolet)](https://docs.databricks.com/aws/en/release-notes/release-types)
+[![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
 [API Documentation](https://docs.databricks.com/api/workspace/apps)
 
+This data source can be used to get a single app space.
 
 
 ## Example Usage
+Referring to an app space by name:
+
+```hcl
+data "databricks_app_space" "this" {
+  name = "my-space"
+}
+```
 
 
 ## Arguments
@@ -22,6 +30,9 @@ The following arguments are supported:
 
 ## Attributes
 The following attributes are exported:
+* `assume_group_id` (string) - The group whose permissions users assume via Role Authorization for apps in this space. When
+  set, user tokens assume the role of this group instead of doing regular obo token downscoping.
+  Set only at space creation
 * `create_time` (string) - The creation time of the app space. Formatted timestamp in ISO 6801
 * `creator` (string) - The email of the user that created the app space
 * `description` (string) - The description of the app space
@@ -41,45 +52,49 @@ The following attributes are exported:
 * `user_api_scopes` (list of string) - OAuth scopes for apps in the space
 
 ### AppResource
-* `app` (AppResourceApp)
-* `database` (AppResourceDatabase)
+* `app` (AppResourceApp) - Another app in the workspace that this app is granted access to
+* `database` (AppResourceDatabase) - Lakebase Provisioned database the app is granted access to
 * `description` (string) - Description of the App Resource
-* `experiment` (AppResourceExperiment)
-* `genie_space` (AppResourceGenieSpace)
-* `job` (AppResourceJob)
-* `name` (string) - Name of the App Resource
-* `postgres` (AppResourcePostgres)
-* `secret` (AppResourceSecret)
-* `serving_endpoint` (AppResourceServingEndpoint)
-* `sql_warehouse` (AppResourceSqlWarehouse)
-* `uc_securable` (AppResourceUcSecurable)
+* `experiment` (AppResourceExperiment) - MLflow experiment the app is granted access to
+* `genie_space` (AppResourceGenieSpace) - Genie space the app is granted access to
+* `job` (AppResourceJob) - Lakeflow job the app is granted access to
+* `name` (string) - Key that identifies the resource within the app. The app configuration (app.yaml) references
+  the resource by this key
+* `postgres` (AppResourcePostgres) - Lakebase Autoscaling Postgres database the app is granted access to
+* `secret` (AppResourceSecret) - Secret the app is granted access to
+* `serving_endpoint` (AppResourceServingEndpoint) - Model serving endpoint the app is granted access to
+* `sql_warehouse` (AppResourceSqlWarehouse) - SQL warehouse the app is granted access to
+* `uc_securable` (AppResourceUcSecurable) - Unity Catalog securable (volume, table, function, connection or model service) the app is
+  granted a privilege on
 
 ### AppResourceApp
-* `name` (string)
-* `permission` (string) - Possible values are: `CAN_USE`
+* `name` (string) - Name of the app to grant access to
+* `permission` (string) - Permission to grant on that app. Possible values are: `CAN_USE`
 
 ### AppResourceDatabase
-* `database_name` (string)
-* `instance_name` (string)
-* `permission` (string) - Possible values are: `CAN_CONNECT_AND_CREATE`
+* `database_name` (string) - Name of the database within the instance
+* `instance_name` (string) - Name of the Lakebase database instance
+* `permission` (string) - Permission to grant the app on the database. Possible values are: `CAN_CONNECT_AND_CREATE`
 
 ### AppResourceExperiment
-* `experiment_id` (string)
-* `permission` (string) - Possible values are: `CAN_EDIT`, `CAN_MANAGE`, `CAN_READ`
+* `experiment_id` (string) - ID of the MLflow experiment
+* `permission` (string) - Permission to grant the app on the experiment. Possible values are: `CAN_EDIT`, `CAN_MANAGE`, `CAN_READ`
 
 ### AppResourceGenieSpace
 * `name` (string)
-* `permission` (string) - Possible values are: `CAN_EDIT`, `CAN_MANAGE`, `CAN_RUN`, `CAN_VIEW`
-* `space_id` (string)
+* `permission` (string) - Permission to grant the app on the Genie space. Possible values are: `CAN_EDIT`, `CAN_MANAGE`, `CAN_RUN`, `CAN_VIEW`
+* `space_id` (string) - ID of the Genie space
 
 ### AppResourceJob
 * `id` (string) - Id of the job to grant permission on
 * `permission` (string) - Permissions to grant on the Job. Supported permissions are: "CAN_MANAGE", "IS_OWNER", "CAN_MANAGE_RUN", "CAN_VIEW". Possible values are: `CAN_MANAGE`, `CAN_MANAGE_RUN`, `CAN_VIEW`, `IS_OWNER`
 
 ### AppResourcePostgres
-* `branch` (string)
-* `database` (string)
-* `permission` (string) - Possible values are: `CAN_CONNECT_AND_CREATE`
+* `branch` (string) - Resource name of the Lakebase Autoscaling branch, in the form
+  `projects/{project}/branches/{branch}`
+* `database` (string) - Resource name of the database within the branch, in the form
+  `projects/{project}/branches/{branch}/databases/{database}`
+* `permission` (string) - Permission to grant the app on the database. Possible values are: `CAN_CONNECT_AND_CREATE`
 
 ### AppResourceSecret
 * `key` (string) - Key of the secret to grant permission on
@@ -95,11 +110,13 @@ The following attributes are exported:
 * `permission` (string) - Permission to grant on the SQL warehouse. Supported permissions are: "CAN_MANAGE", "CAN_USE", "IS_OWNER". Possible values are: `CAN_MANAGE`, `CAN_USE`, `IS_OWNER`
 
 ### AppResourceUcSecurable
-* `permission` (string) - Possible values are: `EXECUTE`, `MODIFY`, `READ_VOLUME`, `SELECT`, `USE_CONNECTION`, `WRITE_VOLUME`
-* `securable_full_name` (string)
+* `permission` (string) - Privilege to grant the app on the securable. The privilege must be valid for the securable
+  type, such as READ_VOLUME for a volume or SELECT for a table. Possible values are: `EXECUTE`, `MODIFY`, `READ_VOLUME`, `SELECT`, `USE_CONNECTION`, `WRITE_VOLUME`
+* `securable_full_name` (string) - Full name of the Unity Catalog securable. For volumes, tables and functions this is the
+  three-level catalog.schema.object name
 * `securable_kind` (string) - The securable kind from Unity Catalog.
   See https://docs.databricks.com/api/workspace/tables/get#securable_kind_manifest-securable_kind
-* `securable_type` (string) - Possible values are: `CONNECTION`, `FUNCTION`, `TABLE`, `VOLUME`
+* `securable_type` (string) - Kind of Unity Catalog securable that `securable_full_name` refers to. Possible values are: `CONNECTION`, `FUNCTION`, `MODEL_SERVICE`, `TABLE`, `VOLUME`
 
 ### SpaceStatus
 * `message` (string) - Message providing context about the current state

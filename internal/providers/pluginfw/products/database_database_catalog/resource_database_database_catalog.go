@@ -107,14 +107,21 @@ func (r ProviderConfig) Type(ctx context.Context) attr.Type {
 
 // DatabaseCatalog extends the main model with additional fields.
 type DatabaseCatalog struct {
+	// If true, the database named in database_name is created in the instance
+	// when it does not already exist, with the calling user as its owner.
+	// Defaults to false.
 	CreateDatabaseIfNotExists types.Bool `tfsdk:"create_database_if_not_exists"`
 	// The name of the DatabaseInstance housing the database.
 	DatabaseInstanceName types.String `tfsdk:"database_instance_name"`
-	// The name of the database (in an instance) associated with the catalog.
+	// The name of the Postgres database in the instance that the catalog
+	// registers. The database must already exist unless
+	// create_database_if_not_exists is true. The system databases postgres,
+	// databricks_system, template0 and template1 cannot be registered.
 	DatabaseName types.String `tfsdk:"database_name"`
-	// The name of the catalog in UC.
+	// The name of the catalog in Unity Catalog.
 	Name types.String `tfsdk:"name"`
-
+	// An immutable UUID identifier for the catalog, assigned when the catalog
+	// is created.
 	Uid            types.String `tfsdk:"uid"`
 	ProviderConfig types.Object `tfsdk:"provider_config"`
 }
@@ -234,10 +241,6 @@ func (r *DatabaseCatalogResource) ModifyPlan(ctx context.Context, req resource.M
 		return
 	}
 	tfschema.WorkspaceDriftDetection(ctx, r.Client, req, resp)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	tfschema.ValidateWorkspaceID(ctx, r.Client, req, resp)
 }
 
 func (r *DatabaseCatalogResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {

@@ -1,0 +1,204 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: account
+  cloud: AWS
+  account_id: replay-account
+steps:
+  - name: grant_manager_role
+    config: |
+      provider "databricks" {
+        account_id = "replay-account"
+      }
+
+      resource "databricks_user" "this" {
+        user_name = "replay@example.com"
+      }
+      resource "databricks_group" "this" {
+        display_name = "Group replay"
+      }
+      resource "databricks_access_control_rule_set" "group_rule_set" {
+        name = "accounts/replay-account/groups/${databricks_group.this.id}/ruleSets/default"
+        grant_rules {
+          principals = [
+            databricks_user.this.acl_principal_id
+          ]
+          role = "roles/group.manager"
+        }
+      }
+      output "grant_rule_count" { value = length(databricks_access_control_rule_set.group_rule_set.grant_rules) }
+    calls:
+      - request:
+          body:
+            json:
+              displayName: Group replay
+              entitlements:
+                - {}
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:Group']
+          method: POST
+          path: /api/2.0/accounts/replay-account/scim/v2/Groups
+        response: &response_1 # Inferred API response; not recorded.
+          body:
+            json:
+              displayName: Group replay
+              id: '201'
+              members: []
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:Group']
+          status: 200
+      - request:
+          body:
+            json:
+              active: true
+              entitlements:
+                - {}
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:User']
+              userName: replay@example.com
+          method: POST
+          path: /api/2.0/accounts/replay-account/scim/v2/Users
+        response: &response_2 # Inferred API response; not recorded.
+          body:
+            json:
+              active: true
+              displayName: replay@example.com
+              id: '101'
+              schemas: ['urn:ietf:params:scim:schemas:core:2.0:User']
+              userName: replay@example.com
+          status: 200
+      - &call_1
+        request:
+          body: null
+          method: GET
+          path: /api/2.0/accounts/replay-account/scim/v2/Groups/201
+          query:
+            attributes: ['displayName,externalId,entitlements']
+        response: *response_1 # Inferred API response; not recorded.
+      - &call_2
+        request:
+          body: null
+          method: GET
+          path: /api/2.0/accounts/replay-account/scim/v2/Users/101
+          query:
+            attributes: ['userName,displayName,active,externalId,entitlements']
+        response: *response_2 # Inferred API response; not recorded.
+      - request:
+          body: null
+          method: GET
+          path: /api/2.0/preview/accounts/replay-account/access-control/rule-sets
+          query:
+            etag: ['']
+            name: [accounts/replay-account/groups/201/ruleSets/default]
+        response: # Inferred API response; not recorded.
+          body:
+            json:
+              etag: etag-1
+              grant_rules: []
+              name: accounts/replay-account/groups/201/ruleSets/default
+          status: 200
+      - request:
+          body:
+            json:
+              name: accounts/replay-account/groups/201/ruleSets/default
+              rule_set:
+                etag: etag-1
+                grant_rules:
+                  - principals: [users/replay@example.com]
+                    role: roles/group.manager
+                name: accounts/replay-account/groups/201/ruleSets/default
+          method: PUT
+          path: /api/2.0/preview/accounts/replay-account/access-control/rule-sets
+        response: &response_3 # Inferred API response; not recorded.
+          body:
+            json:
+              etag: etag-2
+              grant_rules:
+                - principals: [users/replay@example.com]
+                  role: roles/group.manager
+              name: accounts/replay-account/groups/201/ruleSets/default
+          status: 200
+      - *call_1
+      - *call_2
+      - &call_3
+        request:
+          body: null
+          method: GET
+          path: /api/2.0/preview/accounts/replay-account/access-control/rule-sets
+          query:
+            etag: ['']
+            name: [accounts/replay-account/groups/201/ruleSets/default]
+        response: *response_3 # Inferred API response; not recorded.
+  - name: check_grant_rule_count
+    config: |
+      provider "databricks" {
+        account_id = "replay-account"
+      }
+
+      resource "databricks_user" "this" {
+        user_name = "replay@example.com"
+      }
+      resource "databricks_group" "this" {
+        display_name = "Group replay"
+      }
+      resource "databricks_access_control_rule_set" "group_rule_set" {
+        name = "accounts/replay-account/groups/${databricks_group.this.id}/ruleSets/default"
+        grant_rules {
+          principals = [
+            databricks_user.this.acl_principal_id
+          ]
+          role = "roles/group.manager"
+        }
+      }
+      output "grant_rule_count" { value = length(databricks_access_control_rule_set.group_rule_set.grant_rules) }
+    calls:
+      - *call_1
+      - *call_2
+      - *call_3
+    # A no-op plan exposes computed set values as scalar output assertions.
+    plan_only: true
+    plan:
+      expect: empty
+      outputs:
+        grant_rule_count:
+          after:
+            - path: []
+              equals: 1
+destroy:
+  calls:
+    - *call_1
+    - *call_2
+    - *call_3
+    - *call_3
+    - request:
+        body:
+          json:
+            name: accounts/replay-account/groups/201/ruleSets/default
+            rule_set:
+              etag: etag-2
+              name: accounts/replay-account/groups/201/ruleSets/default
+        method: PUT
+        path: /api/2.0/preview/accounts/replay-account/access-control/rule-sets
+      response: # Inferred API response; not recorded.
+        body:
+          json:
+            etag: etag-3
+            grant_rules: []
+            name: accounts/replay-account/groups/201/ruleSets/default
+        status: 200
+    - request:
+        body: null
+        method: DELETE
+        path: /api/2.0/accounts/replay-account/scim/v2/Groups/201
+      response: &response_4 # Inferred API response; not recorded.
+        body: null
+        status: 200
+    - request:
+        body:
+          json:
+            Operations:
+              - op: replace
+                path: active
+                value:
+                  - value: 'false'
+            schemas: ['urn:ietf:params:scim:api:messages:2.0:PatchOp']
+        method: PATCH
+        path: /api/2.0/accounts/replay-account/scim/v2/Users/101
+      response: *response_4 # Inferred API response; not recorded.

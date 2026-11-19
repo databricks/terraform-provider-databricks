@@ -1,0 +1,101 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: "workspace"
+  cloud: "AWS"
+  workspace_id: "12345"
+steps:
+  - name: "create_from_family"
+    config: |
+      resource "databricks_cluster_policy" "policyoverrideempty" {
+        name = "Policy Override replay"
+        policy_family_id = "personal-vm"
+      }
+    calls:
+      - request:
+          method: "GET"
+          path: "/api/2.0/policy-families"
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              policy_families:
+                - policy_family_id: "personal-vm"
+                  name: "Personal Compute"
+      - request:
+          method: "POST"
+          path: "/api/2.0/policies/clusters/create"
+          body:
+            json:
+              name: "Policy Override replay"
+              policy_family_id: "personal-vm"
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              policy_id: "policy-id"
+      - request:
+          method: "GET"
+          path: "/api/2.0/policies/clusters/get"
+          query:
+            policy_id: ["policy-id"]
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              policy_id: "policy-id"
+              name: "Policy Override replay"
+              policy_family_id: "personal-vm"
+              definition: "{\"cluster_type\":{\"type\":\"fixed\",\"value\":\"all-purpose\"}}"
+      - request:
+          method: "GET"
+          path: "/api/2.0/policies/clusters/get"
+          query:
+            policy_id: ["policy-id"]
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              policy_id: "policy-id"
+              name: "Policy Override replay"
+              policy_family_id: "personal-vm"
+              definition: "{\"cluster_type\":{\"type\":\"fixed\",\"value\":\"all-purpose\"}}"
+destroy:
+  calls:
+    - request:
+        method: "GET"
+        path: "/api/2.0/policies/clusters/get"
+        query:
+          policy_id: ["policy-id"]
+        body: null
+      response: # Inferred API response; not recorded.
+        status: 200
+        body:
+          json:
+            policy_id: "policy-id"
+            name: "Policy Override replay"
+            policy_family_id: "personal-vm"
+            definition: "{\"cluster_type\":{\"type\":\"fixed\",\"value\":\"all-purpose\"}}"
+    - request:
+        method: "GET"
+        path: "/api/2.0/policy-families"
+        body: null
+      response: # Inferred API response; not recorded.
+        status: 200
+        body:
+          json:
+            policy_families:
+              - policy_family_id: "personal-vm"
+                name: "Personal Compute"
+    - request:
+        method: "POST"
+        path: "/api/2.0/policies/clusters/delete"
+        body:
+          json:
+            policy_id: "policy-id"
+      response: # Inferred API response; not recorded.
+        status: 200
+        body: null

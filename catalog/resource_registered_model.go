@@ -114,7 +114,9 @@ func ResourceRegisteredModel() common.Resource {
 				if d.HasChange("owner") {
 					// Rollback
 					old, new := d.GetChange("owner")
-					_, rollbackErr := w.RegisteredModels.Update(ctx, catalog.UpdateRegisteredModelRequest{
+					rollbackCtx, cancel := common.OwnerRollbackContext(ctx)
+					defer cancel()
+					_, rollbackErr := w.RegisteredModels.Update(rollbackCtx, catalog.UpdateRegisteredModelRequest{
 						FullName: u.FullName,
 						Owner:    old.(string),
 					})

@@ -215,7 +215,9 @@ func ResourceMetastore() common.Resource {
 						rollbackUpdate := catalog.UpdateAccountsMetastore{
 							Owner: old.(string),
 						}
-						_, rollbackErr := acc.Metastores.Update(ctx, catalog.AccountsUpdateMetastore{
+						rollbackCtx, cancel := common.OwnerRollbackContext(ctx)
+						defer cancel()
+						_, rollbackErr := acc.Metastores.Update(rollbackCtx, catalog.AccountsUpdateMetastore{
 							MetastoreId:   d.Id(),
 							MetastoreInfo: &rollbackUpdate,
 						})
@@ -251,7 +253,9 @@ func ResourceMetastore() common.Resource {
 					if d.HasChange("owner") {
 						// Rollback
 						old, new := d.GetChange("owner")
-						_, rollbackErr := w.Metastores.Update(ctx, catalog.UpdateMetastore{
+						rollbackCtx, cancel := common.OwnerRollbackContext(ctx)
+						defer cancel()
+						_, rollbackErr := w.Metastores.Update(rollbackCtx, catalog.UpdateMetastore{
 							Id:    update.Id,
 							Owner: old.(string),
 						})

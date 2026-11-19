@@ -164,7 +164,9 @@ func ResourceCredential() common.Resource {
 				if d.HasChange("owner") {
 					// Rollback
 					old, new := d.GetChange("owner")
-					_, rollbackErr := w.Credentials.UpdateCredential(ctx, catalog.UpdateCredentialRequest{
+					rollbackCtx, cancel := common.OwnerRollbackContext(ctx)
+					defer cancel()
+					_, rollbackErr := w.Credentials.UpdateCredential(rollbackCtx, catalog.UpdateCredentialRequest{
 						NameArg: updateCredRequest.NameArg,
 						Owner:   old.(string),
 					})

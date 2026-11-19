@@ -120,7 +120,9 @@ func ResourceRecipient() common.Resource {
 				if d.HasChange("owner") {
 					// Rollback
 					old, new := d.GetChange("owner")
-					_, rollbackErr := w.Recipients.Update(ctx, sharing.UpdateRecipient{
+					rollbackCtx, cancel := common.OwnerRollbackContext(ctx)
+					defer cancel()
+					_, rollbackErr := w.Recipients.Update(rollbackCtx, sharing.UpdateRecipient{
 						Name:  updateRecipientRequest.Name,
 						Owner: old.(string),
 					})

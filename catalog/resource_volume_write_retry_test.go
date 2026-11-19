@@ -447,7 +447,7 @@ func TestVolumeOwnerRollbackPersistent429AfterCancellationStopsAtTimeout(t *test
 	synctest.Test(t, func(t *testing.T) {
 		// The SDK backs off over a second between attempts, so a 429 for each second of
 		// the timeout outlasts the rollback.
-		throttled := make([]volumeResponse, volumeOwnerRollbackTimeout/time.Second)
+		throttled := make([]volumeResponse, common.OwnerRollbackTimeout/time.Second)
 		for i := range throttled {
 			throttled[i] = volumeResponse{
 				status: http.StatusTooManyRequests, body: tooManyRequestsJSON,
@@ -456,7 +456,7 @@ func TestVolumeOwnerRollbackPersistent429AfterCancellationStopsAtTimeout(t *test
 
 		api, d, diags, elapsed := updateCancelledInFieldsPatchBackoff(t, throttled...)
 
-		assert.Equal(t, volumeOwnerRollbackTimeout, elapsed)
+		assert.Equal(t, common.OwnerRollbackTimeout, elapsed)
 		rollbacks := len(api.requests()) - 2
 		require.Greater(t, rollbacks, 1, "the rollback must be retried")
 		expected := []volumeRequest{updateOwnerPatch, updateFieldsPatch}

@@ -183,7 +183,9 @@ func ResourceExternalLocation() common.Resource {
 				if d.HasChange("owner") {
 					// Rollback
 					old, new := d.GetChange("owner")
-					_, rollbackErr := w.ExternalLocations.Update(ctx, catalog.UpdateExternalLocation{
+					rollbackCtx, cancel := common.OwnerRollbackContext(ctx)
+					defer cancel()
+					_, rollbackErr := w.ExternalLocations.Update(rollbackCtx, catalog.UpdateExternalLocation{
 						Name:  updateExternalLocationRequest.Name,
 						Owner: old.(string),
 					})

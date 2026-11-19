@@ -256,7 +256,9 @@ func ResourceShare() common.Resource {
 				if d.HasChange("owner") {
 					// Rollback
 					old, new := d.GetChange("owner")
-					_, rollbackErr := client.Shares.Update(ctx, sharing.UpdateShare{
+					rollbackCtx, cancel := common.OwnerRollbackContext(ctx)
+					defer cancel()
+					_, rollbackErr := client.Shares.Update(rollbackCtx, sharing.UpdateShare{
 						Name:  beforeSi.Name,
 						Owner: old.(string),
 					})

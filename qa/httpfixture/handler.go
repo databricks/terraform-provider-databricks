@@ -70,9 +70,8 @@ type Handler struct {
 	reusable         []exchange
 	failures         []error
 	enforceCallOrder bool
-	// lastArrival and lastCall describe the step's previous matched call.
-	lastArrival time.Time
-	lastCall    string
+	// arrivals lists the step's matched calls, in the order they took the lock.
+	arrivals []arrival
 }
 
 // NewHandler returns an empty handler; fixture sets are configured separately.
@@ -119,7 +118,7 @@ func (h *Handler) StartStep(label string, calls []Call) error {
 	defer h.mu.Unlock()
 	err = h.verify()
 	h.label, h.calls, h.failures = label, compiled, nil
-	h.lastArrival, h.lastCall = time.Time{}, ""
+	h.arrivals = nil
 	return err
 }
 
@@ -308,27 +307,16 @@ func (h *Handler) nextRequired() int {
 	return -1
 }
 
-// record consumes call i at its arrival time. A gap out of bounds is reported
-// but still answered, so the step fails with the gap rather than a later error.
-// Ordered replay closes the earlier calls, which can no longer repeat.
-func (h *Handler) record(i int, req *http.Request, arrival time.Time) {
-	e := &h.calls[i]
-	if err := e.checkGap(arrival, h.lastArrival, h.lastCall); err != nil {
-		h.failures = append(h.failures, fmt.Errorf("%s: call %d: %s %s %w", h.label, i+1, req.Method, req.URL.RequestURI(), err))
-	}
+// record consumes call i at its arrival time. Ordered replay closes the
+// earlier calls, which can no longer repeat.
+func (h *Handler) record(i int, req *http.Request, at time.Time) {
 	if h.enforceCallOrder {
 		for j := range h.calls[:i] {
 			h.calls[j].closed = true
 		}
 	}
-	e.count++
-	e.lastArrival = arrival
-	// Concurrent requests can take the lock out of arrival order; the latest
-	// arrival stays the reference.
-	if !arrival.Before(h.lastArrival) {
-		h.lastArrival = arrival
-		h.lastCall = fmt.Sprintf("call %d (%s %s)", i+1, req.Method, req.URL.RequestURI())
-	}
+	h.calls[i].count++
+	h.arrivals = append(h.arrivals, arrival{call: i, at: at, request: req.Method + " " + req.URL.RequestURI()})
 }
 
 func writeResponse(w http.ResponseWriter, e *exchange) {
@@ -371,5 +359,6 @@ func (h *Handler) verify() error {
 			failures = append(failures, fmt.Errorf("%s: unconsumed call %d: %s %s%s", h.label, i+1, e.call.Request.Method, e.call.Request.Path, e.countDetail()))
 		}
 	}
+	failures = append(failures, h.gapFailures()...)
 	return errors.Join(failures...)
 }

@@ -212,27 +212,39 @@ func TestGapBoundsMeasureArrivalBeforeTheBody(t *testing.T) {
 	}
 }
 
-// Concurrent requests can take the lock out of arrival order. The latest
-// arrival stays the reference, so a later call is not measured from an earlier one.
-func TestGapBoundsMeasureFromTheLatestArrival(t *testing.T) {
-	h := NewHandler()
-	require.NoError(t, h.StartStep("step 1 (create)", []Call{
-		call("GET", "/a", nil, "a"),
-		call("GET", "/b", nil, "b"),
-		repeated(call("GET", "/c", nil, "c"), Times{}, "1s", ""),
-	}))
-	start := time.Now()
-	for _, arrival := range []struct {
-		path  string
-		after time.Duration
-	}{{"/b", time.Second}, {"/a", 0}, {"/c", 1500 * time.Millisecond}} {
-		w := httptest.NewRecorder()
-		e, _ := h.consume(w, httptest.NewRequest("GET", arrival.path, nil), start.Add(arrival.after))
-		require.NotNil(t, e, arrival.path)
+// Concurrent requests can take the lock out of arrival order after reading
+// their bodies. Gaps follow arrival order, so a later request that locks first
+// neither hides a gap nor becomes an earlier call's reference.
+func TestGapBoundsFollowArrivalOrderNotLockOrder(t *testing.T) {
+	for _, tc := range []struct {
+		name     string
+		calls    []Call
+		arrivals []string
+		after    []time.Duration
+		message  string
+	}{
+		{"repetitions", []Call{repeated(call("GET", "/retry", nil, "busy"), Exactly(2), "", "1s")},
+			[]string{"/retry", "/retry"}, []time.Duration{2 * time.Second, 0},
+			"step 1 (create): call 1: GET /retry repetition 2 arrived 2s after repetition 1, above max_gap 1s"},
+		{"previous matched call", []Call{
+			call("GET", "/a", nil, "a"), call("GET", "/b", nil, "b"),
+			repeated(call("GET", "/c", nil, "c"), Times{}, "1s", ""),
+		}, []string{"/b", "/a", "/c"}, []time.Duration{time.Second, 0, 1500 * time.Millisecond},
+			"step 1 (create): call 3: GET /c arrived 500ms after call 2 (GET /b), below min_gap 1s"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			h := NewHandler()
+			require.NoError(t, h.StartStep("step 1 (create)", tc.calls))
+			start := time.Now()
+			for i, path := range tc.arrivals {
+				e, _ := h.consume(httptest.NewRecorder(), httptest.NewRequest("GET", path, nil), start.Add(tc.after[i]))
+				require.NotNil(t, e, path)
+			}
+			err := h.Verify()
+			require.Error(t, err)
+			require.Equal(t, tc.message, err.Error())
+		})
 	}
-	err := h.Verify()
-	require.Error(t, err)
-	require.Equal(t, "step 1 (create): call 3: GET /c arrived 500ms after call 2 (GET /b), below min_gap 1s", err.Error())
 }
 
 func TestGapBoundsNeedAnEarlierCallInTheStep(t *testing.T) {

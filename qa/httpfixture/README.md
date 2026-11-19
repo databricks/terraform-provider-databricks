@@ -98,8 +98,9 @@ Under ordering, a call must reach `Min` before a later call matches, and closes
 once one does. `Call.MinGap` and `Call.MaxGap` are Go durations bounding the
 time since the previous matched step call's arrival or, with `Times`, since the
 call's previous repetition; the first repetition is not bounded. Arrival is
-taken when `ServeHTTP` starts, before the body is read. An out-of-bounds gap is
-answered normally and reported by `Verify` with the observed gap. Reusable
+taken when `ServeHTTP` starts, before the body is read. `Verify` checks gaps in
+arrival order, whatever order concurrent requests took the lock in, and reports
+an out-of-bounds gap with the observed gap; the call is still answered. Reusable
 fixtures reject these fields.
 
 ## Files and non-JSON bodies

@@ -31,11 +31,16 @@ The following arguments are available:
 * `confidential` - Indicates whether an OAuth client secret is required to authenticate this client. Default to `false`. Change requires a new resource.
 * `redirect_urls` - List of OAuth redirect urls.
 * `scopes` - OAuth scopes granted to the application. Supported scopes: `all-apis`, `sql`, `offline_access`, `openid`, `profile`, `email`.
+* `user_authorized_scopes` - (Optional) Scopes that the end user has to consent to before an access token is minted. Must be a subset of `scopes`. Once set, this list can be changed but not removed or emptied, because the API keeps the current scopes when an empty list is sent; Terraform returns an error at plan time instead. To remove it, recreate the integration, which issues a new client ID and secret.
 
 ### token_access_policy Configuration Block (Optional)
 
 * `access_token_ttl_in_minutes` - access token time to live (TTL) in minutes.
 * `refresh_token_ttl_in_minutes` - refresh token TTL in minutes. The TTL of refresh token cannot be lower than TTL of access token.
+* `enable_single_use_refresh_tokens` - (Optional) Whether to enable single-use refresh tokens (refresh token rotation). Default to `false`.
+* `absolute_session_lifetime_in_minutes` - (Optional) Absolute OAuth session TTL in minutes. Can only be set when `enable_single_use_refresh_tokens` is `true`, and must be at least `refresh_token_ttl_in_minutes`.
+
+If the block is omitted, the integration uses the default policy: an access token TTL of 60 minutes, a refresh token TTL of 10080 minutes (7 days), and single-use refresh tokens disabled. Removing the block from an existing integration resets it to this default policy.
 
 ## Attribute Reference
 

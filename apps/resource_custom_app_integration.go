@@ -2,12 +2,21 @@ package apps
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/databricks/databricks-sdk-go/service/oauth2"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
+
+// Token access policy that the account API applies to an integration created
+// without one. Removing the token_access_policy block resets the integration to it.
+var defaultTokenAccessPolicy = map[string]any{
+	"access_token_ttl_in_minutes":      60,
+	"refresh_token_ttl_in_minutes":     10080,
+	"enable_single_use_refresh_tokens": false,
+}
 
 type CustomAppIntegration struct {
 	oauth2.GetCustomAppIntegrationOutput
@@ -28,6 +37,8 @@ func ResourceCustomAppIntegration() common.Resource {
 		common.CustomizeSchemaPath(m, "token_access_policy", "access_token_ttl_in_minutes").SetValidateFunc(validation.IntBetween(5, 1440))
 		common.CustomizeSchemaPath(m, "token_access_policy", "refresh_token_ttl_in_minutes").SetValidateFunc(validation.IntBetween(5, 129600))
 		common.CustomizeSchemaPath(m, "token_access_policy", "absolute_session_lifetime_in_minutes").SetComputed()
+		// The API always returns a token access policy, even for integrations created without one.
+		common.CustomizeSchemaPath(m, "token_access_policy").SetComputed()
 		return m
 	})
 	return common.Resource{
@@ -68,6 +79,12 @@ func ResourceCustomAppIntegration() common.Resource {
 			// We need to clear it unless enable_single_use_refresh_tokens is true
 			if update.TokenAccessPolicy != nil && !update.TokenAccessPolicy.EnableSingleUseRefreshTokens {
 				update.TokenAccessPolicy.AbsoluteSessionLifetimeInMinutes = 0
+				// The API keeps the current value of enable_single_use_refresh_tokens when it's omitted,
+				// so false has to be sent explicitly to turn refresh token rotation off.
+				if d.HasChange("token_access_policy.0.enable_single_use_refresh_tokens") {
+					update.TokenAccessPolicy.ForceSendFields = append(update.TokenAccessPolicy.ForceSendFields,
+						"EnableSingleUseRefreshTokens")
+				}
 			}
 			acc, err := c.AccountClient()
 			if err != nil {
@@ -82,6 +99,47 @@ func ResourceCustomAppIntegration() common.Resource {
 			}
 			return acc.CustomAppIntegration.DeleteByIntegrationId(ctx, d.Id())
 		},
-		Schema: s,
+		CustomizeDiff: customAppIntegrationCustomizeDiff,
+		Schema:        s,
 	}
+}
+
+func customAppIntegrationCustomizeDiff(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
+	// Both checks below compare against the current state, so they're no-ops on create.
+	// The API ignores an empty user_authorized_scopes list in an update and keeps the old scopes,
+	// so clearing it would report success without changing anything.
+	if d.HasChange("user_authorized_scopes") {
+		old, new := d.GetChange("user_authorized_scopes")
+		if len(old.([]any)) > 0 && len(new.([]any)) == 0 {
+			return fmt.Errorf("user_authorized_scopes can't be removed from an existing custom app integration, "+
+				"because the API keeps the current scopes %v when an empty list is sent. "+
+				"Keep at least one scope, or recreate the integration (this issues a new client ID and secret)", old)
+		}
+	}
+	// token_access_policy is computed, so removing the block wouldn't show up in the plan.
+	// Reset the policy to the API defaults instead.
+	raw := d.GetRawConfig()
+	if raw.IsNull() || !raw.IsKnown() {
+		return nil
+	}
+	if policyConfig := raw.GetAttr("token_access_policy"); policyConfig.IsKnown() &&
+		(policyConfig.IsNull() || policyConfig.LengthInt() == 0) {
+		old := d.Get("token_access_policy").([]any)
+		if len(old) == 0 || old[0] == nil {
+			return nil
+		}
+		policy := old[0].(map[string]any)
+		reset := map[string]any{"absolute_session_lifetime_in_minutes": policy["absolute_session_lifetime_in_minutes"]}
+		changed := false
+		for k, v := range defaultTokenAccessPolicy {
+			reset[k] = v
+			if policy[k] != v {
+				changed = true
+			}
+		}
+		if changed {
+			return d.SetNew("token_access_policy", []any{reset})
+		}
+	}
+	return nil
 }

@@ -1,0 +1,138 @@
+# Pins that error details do not change what a refresh GET error does. One details list
+# carries every type the classic SDK parses (ErrorInfo, RequestInfo, RetryInfo,
+# DebugInfo, QuotaFailure, PreconditionFailure, BadRequest, ResourceInfo and Help), a
+# type it does not know, an object without @type and a value that is not an object. The
+# diagnostic shows only the message, the RetryInfo delay does not make the 400 retried,
+# and the 404 still removes the volume from state without a retry. The 404's error code
+# NOT_FOUND has no SDK mapping, so its status alone makes the volume missing. API
+# responses are inferred from the Unity Catalog API contract and google.rpc error
+# details, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: create
+    config: &config |
+      resource "databricks_volume" "this" {
+        name         = "details_volume"
+        catalog_name = "main"
+        schema_name  = "replay"
+        volume_type  = "MANAGED"
+      }
+    calls:
+      - request:
+          method: POST
+          path: /api/2.1/unity-catalog/volumes
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "details_volume", "volume_type": "MANAGED"}
+        response:
+          status: 200
+          body:
+            json: &created {"catalog_name": "main", "schema_name": "replay",
+                            "name": "details_volume",
+                            "full_name": "main.replay.details_volume",
+                            "volume_type": "MANAGED", "owner": "replay-admin@example.com",
+                            "storage_location": "s3://replay-metastore/volume-172",
+                            "metastore_id": "11111111-1111-1111-1111-111111111111",
+                            "volume_id": "00000000-0000-4000-8000-000000000172"}
+      - &read_created
+        request: &read_request
+          method: GET
+          path: /api/2.1/unity-catalog/volumes/main.replay.details_volume
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 200
+          body:
+            json: *created
+      - *read_created
+  - name: refresh_answered_400_with_every_detail_type_fails_with_message_only
+    config: *config
+    expect_error: 'Error: cannot read volume: Volume main\.replay\.details_volume cannot
+      be read\.\n'
+    calls:
+      - request: *read_request
+        response:
+          status: 400
+          body:
+            json:
+              error_code: INVALID_STATE
+              message: Volume main.replay.details_volume cannot be read.
+              details: &every_detail_type
+                - "@type": type.googleapis.com/google.rpc.ErrorInfo
+                  reason: VOLUME_LOCKED
+                  domain: unity-catalog.databricks.com
+                  metadata: {volume: main.replay.details_volume}
+                - "@type": type.googleapis.com/google.rpc.RequestInfo
+                  request_id: 00000000-0000-4000-8000-000000000173
+                  serving_data: replay-serving-data
+                - "@type": type.googleapis.com/google.rpc.RetryInfo
+                  retry_delay: 1s
+                - "@type": type.googleapis.com/google.rpc.DebugInfo
+                  stack_entries: [VolumeService.getVolume, VolumeStore.read]
+                  detail: The volume is locked by a running operation.
+                - "@type": type.googleapis.com/google.rpc.QuotaFailure
+                  violations:
+                    - subject: workspace:12345
+                      description: Daily limit for volume reads exceeded.
+                - "@type": type.googleapis.com/google.rpc.PreconditionFailure
+                  violations:
+                    - type: VOLUME_STATE
+                      subject: main.replay.details_volume
+                      description: The volume is locked.
+                - "@type": type.googleapis.com/google.rpc.BadRequest
+                  field_violations:
+                    - field: full_name
+                      description: The volume cannot be read while it is locked.
+                - "@type": type.googleapis.com/google.rpc.ResourceInfo
+                  resource_type: volume
+                  resource_name: main.replay.details_volume
+                  owner: replay-admin@example.com
+                  description: The volume is locked.
+                - "@type": type.googleapis.com/google.rpc.Help
+                  links:
+                    - description: Unity Catalog volumes
+                      url: https://docs.databricks.com/
+                - "@type": type.googleapis.com/google.rpc.LocalizedMessage
+                  locale: en-US
+                  message: Volume main.replay.details_volume cannot be read.
+                - reason: VOLUME_LOCKED
+                - The volume is locked.
+  - name: refresh_answered_404_with_every_detail_type_plans_create
+    plan_only: true
+    config: *config
+    plan:
+      expect: non_empty
+      changes:
+        databricks_volume.this:
+          actions: [create]
+    calls:
+      - request: *read_request
+        response:
+          status: 404
+          body:
+            json:
+              error_code: NOT_FOUND
+              message: Volume main.replay.details_volume was not found.
+              details: *every_detail_type
+destroy:
+  calls:
+    - *read_created
+    - request:
+        method: DELETE
+        path: /api/2.1/unity-catalog/volumes/main.replay.details_volume
+        headers:
+          X-Databricks-Workspace-Id: "12345"
+        body: null
+      response:
+        status: 200
+        body:
+          json: {}

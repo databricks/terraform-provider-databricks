@@ -14,6 +14,7 @@ import (
 
 	"github.com/databricks/databricks-sdk-go/apierr"
 	sdkcommon "github.com/databricks/databricks-sdk-go/common"
+	"github.com/databricks/databricks-sdk-go/httpclient"
 	"github.com/databricks/databricks-sdk-go/logger"
 	sdkapierr "github.com/databricks/sdk-go/core/apierr"
 	"golang.org/x/time/rate"
@@ -21,9 +22,9 @@ import (
 
 // classicError returns the error the classic client returns for the same failure. API
 // errors are parsed again from the response, so apierr.IsMissing, the retry rules and
-// the messages stay the same. req is the last request sent, if any.
+// the messages stay the same.
 func (b *sdkGoBridge) classicError(ctx context.Context, err error,
-	req *http.Request) error {
+	attempt *sdkGoAttempt) error {
 	// http.Client wraps transport failures in a url.Error, which the classic client
 	// doesn't add to these.
 	if visitorErr, ok := errors.AsType[*visitorError](err); ok {
@@ -37,13 +38,9 @@ func (b *sdkGoBridge) classicError(ctx context.Context, err error,
 	}
 	apiErr, ok := errors.AsType[*sdkapierr.APIError](err)
 	if !ok || apiErr.HTTPStatusCode() < 0 {
-		var syntaxErr *json.SyntaxError
-		var typeErr *json.UnmarshalTypeError
-		if errors.As(err, &syntaxErr) || errors.As(err, &typeErr) {
-			return fmt.Errorf("failed to unmarshal response body: %w", err)
-		}
-		return err
+		return classicDecodeError(err, attempt.responseBody)
 	}
+	req := attempt.request
 	if req == nil {
 		req = &http.Request{URL: &url.URL{}}
 	}
@@ -63,6 +60,21 @@ func (b *sdkGoBridge) classicError(ctx context.Context, err error,
 		return err
 	}
 	return mapped
+}
+
+// classicDecodeError returns the error httpclient.WithResponseUnmarshal returns when
+// body, a successful response's body, fails to decode with err.
+func classicDecodeError(err error, body []byte) error {
+	var syntaxErr *json.SyntaxError
+	var typeErr *json.UnmarshalTypeError
+	// Mirrors the unexported httpclient.isHTMLContent.
+	if errors.As(err, &syntaxErr) && bytes.HasPrefix(body, []byte("<")) {
+		return httpclient.ErrHTMLContent
+	}
+	if errors.As(err, &syntaxErr) || errors.As(err, &typeErr) {
+		return fmt.Errorf("failed to unmarshal response body: %w", err)
+	}
+	return err
 }
 
 // visitorError is a failure before a request is sent: in authentication or in a request
@@ -137,7 +149,7 @@ func (b *sdkGoBridge) newRetrier(ctx context.Context,
 }
 
 func (r *classicRetrier) IsRetriable(err error) (time.Duration, bool) {
-	classic := r.bridge.classicError(r.ctx, err, r.attempt.request)
+	classic := r.bridge.classicError(r.ctx, err, r.attempt)
 	if !r.bridge.isRetriable(r.ctx, classic) {
 		logger.Debugf(r.ctx, "non-retriable error: %s", classic)
 		return 0, false

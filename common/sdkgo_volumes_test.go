@@ -10,7 +10,10 @@ import (
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/config"
+	"github.com/databricks/databricks-sdk-go/httpclient"
+	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/databricks-sdk-go/useragent"
+	"github.com/databricks/sdk-go/options/call"
 	sdkvolumes "github.com/databricks/sdk-go/uc/volumes/v1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -193,4 +196,56 @@ func TestSdkGoVolumesClientRejectsEmptySuccessBody(t *testing.T) {
 		"failed to unmarshal response body: unexpected end of JSON input")
 	assert.NoError(t, r.classicErr)
 	assert.Equal(t, r.classicCalls, r.calls)
+}
+
+// A successful response with an HTML body, such as the login page a misconfigured Private
+// Link workspace serves, fails reads and writes with the classic HTML error.
+func TestSdkGoVolumesClientReportsHTMLBodiesLikeClassicClient(t *testing.T) {
+	name, comment := sdkGoTestVolumeName, "updated"
+	for _, tc := range []struct {
+		name    string
+		sdkGo   func(context.Context, *SdkGoVolumes) error
+		classic func(context.Context, *databricks.WorkspaceClient) error
+	}{
+		{"read", func(ctx context.Context, vc *SdkGoVolumes) error {
+			_, err := CallSdkGoVolumes(ctx, vc, func(ctx context.Context,
+				opts ...call.Option) (*sdkvolumes.VolumeInfo, error) {
+				req := sdkvolumes.GetVolumeRequest{FullNameArg: &name}
+				return vc.GetVolume(ctx, req, opts...)
+			})
+			return err
+		}, func(ctx context.Context, w *databricks.WorkspaceClient) error {
+			_, err := w.Volumes.ReadByName(ctx, name)
+			return err
+		}},
+		{"update", func(ctx context.Context, vc *SdkGoVolumes) error {
+			_, err := CallSdkGoVolumes(ctx, vc, func(ctx context.Context,
+				opts ...call.Option) (*sdkvolumes.VolumeInfo, error) {
+				req := sdkvolumes.UpdateVolumeRequest{FullNameArg: &name, Comment: &comment}
+				return vc.UpdateVolume(ctx, req, opts...)
+			})
+			return err
+		}, func(ctx context.Context, w *databricks.WorkspaceClient) error {
+			_, err := w.Volumes.Update(ctx,
+				catalog.UpdateVolumeRequestContent{Name: name, Comment: comment})
+			return err
+		}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			ctx := context.Background()
+			html := respond(http.StatusOK, "<html><body>Sign in</body></html>")
+			server, calls := serveSequence(t, html)
+			vc, err := SdkGoVolumesClient(ctx, newVolumesTestWorkspaceClient(t, server, nil))
+			require.NoError(t, err)
+			err = tc.sdkGo(ctx, vc)
+			classicServer, classicCalls := serveSequence(t, html)
+			classicErr := tc.classic(ctx,
+				newVolumesTestWorkspaceClient(t, classicServer, nil))
+			assert.EqualError(t, err, "received HTML response instead of JSON")
+			assert.ErrorIs(t, err, httpclient.ErrHTMLContent)
+			assert.ErrorIs(t, classicErr, httpclient.ErrHTMLContent)
+			assert.EqualError(t, classicErr, err.Error())
+			assert.Equal(t, classicCalls.Load(), calls.Load())
+		})
+	}
 }

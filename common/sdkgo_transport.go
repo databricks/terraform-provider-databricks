@@ -75,7 +75,7 @@ func (t *sdkGoTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	requestBody := debugRequestBody(r)
 	resp, responseBody, err := t.exchange(req.Context(), r, timeout)
 	if attempt != nil {
-		attempt.request = r
+		attempt.request, attempt.responseBody = r, responseBody
 		if resp != nil {
 			attempt.request = resp.Request
 		}

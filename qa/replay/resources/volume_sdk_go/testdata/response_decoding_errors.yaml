@@ -5,12 +5,11 @@
 # its path, because sdk-go serializes the path field into the body. Malformed JSON on the
 # POST, GET or PATCH fails with the same unmarshal error, but without the existing
 # client's request log, so those patterns end at the error and the step names say so. An
-# HTML body fails with sdk-go's JSON decode error, "invalid character '<' looking for
-# beginning of value", instead of the SDK's HTML error. An empty GET body fails the
-# refresh with "unexpected end of JSON input" instead of blanking the state and planning a
-# replacement, so that step expects the error instead of a plan, and the later steps show
-# that the volume keeps its ID. A PATCH answered {} or without full_name has the same
-# empty-ID defect as on the existing path. The original's description:
+# empty GET body fails the refresh with "unexpected end of JSON input" instead of blanking
+# the state and planning a replacement, so that step expects the error instead of a plan,
+# and the later steps show that the volume keeps its ID. A PATCH answered {} or without
+# full_name has the same empty-ID defect as on the existing path. The original's
+# description:
 #
 # Pins how the classic client decodes 200 responses. Malformed JSON on the POST, GET or
 # PATCH fails with the SDK's unmarshal error and a request log; the pattern checks its
@@ -91,12 +90,11 @@ steps:
           body:
             json: *created
       - *read_created
-  - name: refresh_answered_200_with_html_fails_with_a_decode_error
+  - name: refresh_answered_200_with_html_fails_with_html_error
     sdk_implementations:
       databricks_volume: sdk_go
     config: *config
-    expect_error: 'Error: cannot read volume: failed to unmarshal response body: invalid
-      character ''<'' looking for beginning of value\n'
+    expect_error: 'Error: cannot read volume: received HTML response instead of JSON\n'
     calls:
       - request: *read_request
         response:

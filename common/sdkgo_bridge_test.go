@@ -204,5 +204,6 @@ func TestClassicErrorKeepsTransportErrors(t *testing.T) {
 	cfg := newCredentialsTestConfig(t, &countingCredentials{})
 	b := newTestBridge(t, cfg)
 	transportErr := errors.New("dial tcp: connection refused")
-	assert.Same(t, transportErr, b.classicError(context.Background(), transportErr, nil))
+	assert.Same(t, transportErr,
+		b.classicError(context.Background(), transportErr, &sdkGoAttempt{}))
 }

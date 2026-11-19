@@ -140,7 +140,8 @@ func NamespaceCustomizeSchemaMapImmutable(m map[string]*schema.Schema) map[strin
 // When the config sets workspace_id to a value that is unknown at plan time, such as
 // another resource's attribute, the planned value stays unknown and apply resolves it,
 // so no fallback is looked up. With forceNewOnChange, an existing resource is replaced,
-// because the new workspace may differ.
+// because the new workspace may differ, except on a workspace host: apply rejects any
+// workspace but the host's own there, so the resource can't move.
 func namespaceForceNew(ctx context.Context, d *schema.ResourceDiff, c *DatabricksClient, forceNewOnChange bool) error {
 	workspaceIDKey := workspaceIDSchemaKey
 
@@ -153,7 +154,7 @@ func namespaceForceNew(ctx context.Context, d *schema.ResourceDiff, c *Databrick
 	// rather than reflecting the actual config, so we check the raw config directly.
 	configWsID, configHasProviderConfig, configWsIDKnown := workspaceIDFromRawDiffConfig(d)
 	if !configWsIDKnown {
-		if forceNewOnChange && oldEffective != "" {
+		if forceNewOnChange && oldEffective != "" && c.HostTypeForTerraform() != config.WorkspaceHost {
 			return forceNewOnUnknownWorkspaceID(d)
 		}
 		return nil

@@ -18,12 +18,12 @@ import (
 
 type namespaceCustomizeDiffFunc func(context.Context, *schema.ResourceDiff, *DatabricksClient) error
 
-// diffWithUnknownWorkspaceID runs the SDKv2 diff of a resource whose config sets
-// provider_config.workspace_id to a value that is unknown at plan time. A nil state
-// plans a create. The provider has no workspace_id, and its host rejects every request,
-// so a lookup of a fallback workspace ID fails the diff.
-func diffWithUnknownWorkspaceID(t *testing.T, customizeDiff namespaceCustomizeDiffFunc,
-	state map[string]string) (*terraform.InstanceDiff, error) {
+// diffWithUnknownWorkspaceID runs the plan diff, as PlanResourceChange does, of a resource
+// whose config sets provider_config.workspace_id to a value that is unknown at plan time.
+// A nil state plans a create. The provider's server rejects every request, so a lookup of
+// a fallback workspace ID fails the diff.
+func diffWithUnknownWorkspaceID(t *testing.T, hostType config.HostType, providerWorkspaceID string,
+	customizeDiff namespaceCustomizeDiffFunc, state map[string]string) (*terraform.InstanceDiff, error) {
 	t.Helper()
 	var requests atomic.Int32
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -34,8 +34,18 @@ func diffWithUnknownWorkspaceID(t *testing.T, customizeDiff namespaceCustomizeDi
 		server.Close()
 		assert.Zero(t, requests.Load(), "the diff should not call the API")
 	})
-	cfg := &config.Config{Host: server.URL, Token: "test-token"}
-	c := &DatabricksClient{DatabricksClient: &client.DatabricksClient{Config: cfg.WithTesting()}}
+	cfg := &config.Config{
+		Host:        server.URL,
+		Token:       "test-token",
+		AccountID:   "test-account",
+		WorkspaceID: providerWorkspaceID,
+		HostMetadataResolver: func(context.Context, string) (*config.HostMetadata, error) {
+			return &config.HostMetadata{HostType: hostType}, nil
+		},
+	}
+	require.NoError(t, cfg.EnsureResolved())
+	require.Equal(t, hostType, cfg.HostType())
+	c := &DatabricksClient{DatabricksClient: &client.DatabricksClient{Config: cfg}}
 
 	testSchema := map[string]*schema.Schema{
 		"name": {Type: schema.TypeString, Required: true},
@@ -60,7 +70,7 @@ func diffWithUnknownWorkspaceID(t *testing.T, customizeDiff namespaceCustomizeDi
 	if state != nil {
 		is.ID = "test-resource-id"
 	}
-	return r.Diff(context.Background(), is, rc, c)
+	return r.SimpleDiff(context.Background(), is, rc, c)
 }
 
 func TestNamespaceCustomizeDiff_UnknownWorkspaceID(t *testing.T) {
@@ -70,36 +80,73 @@ func TestNamespaceCustomizeDiff_UnknownWorkspaceID(t *testing.T) {
 		"provider_config.0.workspace_id": "100",
 	}
 	tests := []struct {
-		name            string
-		customizeDiff   namespaceCustomizeDiffFunc
-		state           map[string]string
-		wantRequiresNew bool
+		name                string
+		hostType            config.HostType
+		providerWorkspaceID string
+		customizeDiff       namespaceCustomizeDiffFunc
+		state               map[string]string
+		wantReplace         bool
 	}{
 		{
 			name:          "create",
+			hostType:      config.AccountHost,
 			customizeDiff: NamespaceCustomizeDiff,
 		},
 		{
-			name:            "workspace-scoped resource is replaced",
-			customizeDiff:   NamespaceCustomizeDiff,
-			state:           existing,
-			wantRequiresNew: true,
+			name:          "workspace-scoped resource on an account host is replaced",
+			hostType:      config.AccountHost,
+			customizeDiff: NamespaceCustomizeDiff,
+			state:         existing,
+			wantReplace:   true,
 		},
 		{
-			name:          "metastore-scoped resource is updated in place",
+			name:                "workspace-scoped resource on an account host with the provider's workspace_id is replaced",
+			hostType:            config.AccountHost,
+			providerWorkspaceID: "100",
+			customizeDiff:       NamespaceCustomizeDiff,
+			state:               existing,
+			wantReplace:         true,
+		},
+		{
+			name:          "workspace-scoped resource on a unified host is replaced",
+			hostType:      config.UnifiedHost,
+			customizeDiff: NamespaceCustomizeDiff,
+			state:         existing,
+			wantReplace:   true,
+		},
+		{
+			name:          "workspace-scoped resource on a workspace host is updated in place",
+			hostType:      config.WorkspaceHost,
+			customizeDiff: NamespaceCustomizeDiff,
+			state:         existing,
+		},
+		{
+			name:          "metastore-scoped resource on an account host is updated in place",
+			hostType:      config.AccountHost,
 			customizeDiff: NamespaceCustomizeDiffNoForceNew,
 			state:         existing,
 		},
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			diff, err := diffWithUnknownWorkspaceID(t, tc.customizeDiff, tc.state)
+			diff, err := diffWithUnknownWorkspaceID(t, tc.hostType, tc.providerWorkspaceID,
+				tc.customizeDiff, tc.state)
 			require.NoError(t, err)
 			require.NotNil(t, diff)
+			assert.Equal(t, tc.wantReplace, diff.RequiresNew())
+			if tc.wantReplace {
+				// Terraform plans the replacement's create separately, which leaves
+				// workspace_id unknown.
+				attr, ok := diff.Attributes["provider_config.#"]
+				require.True(t, ok, "provider_config should be in the diff")
+				assert.True(t, attr.NewComputed, "provider_config should be unknown")
+				assert.True(t, attr.RequiresNew, "provider_config should force a replacement")
+				return
+			}
 			attr, ok := diff.Attributes[workspaceIDSchemaKey]
 			require.True(t, ok, "workspace_id should be in the diff")
 			assert.True(t, attr.NewComputed, "workspace_id should stay unknown")
-			assert.Equal(t, tc.wantRequiresNew, diff.RequiresNew())
+			assert.False(t, attr.RequiresNew)
 		})
 	}
 }

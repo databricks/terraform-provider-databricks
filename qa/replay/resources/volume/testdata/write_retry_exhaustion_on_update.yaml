@@ -1,11 +1,11 @@
 # This journey pins each Update PATCH getting a 429 or 503 until retry_timeout_seconds
-# ends, for an owner change made together with a comment change. One second is shorter
-# than the SDK's first backoff (1.05 to 1.75 seconds), so each exhausted PATCH is sent
-# exactly once. An exhausted owner PATCH stops Update before the fields PATCH and sends
-# no rollback. An exhausted fields PATCH restores the old owner and fails with its own
-# error. When the rollback PATCH is exhausted too, apply fails with the owner-rollback
-# message that joins both errors. API responses are inferred from the Unity Catalog API
-# contract, not recorded.
+# ends, for an owner change made together with a comment change. Three seconds fit the
+# retry after the SDK's first backoff (1.05 to 1.75 seconds) but end during its second
+# (2.05 to 2.75 seconds), so each exhausted PATCH is sent exactly twice. An exhausted
+# owner PATCH stops Update before the fields PATCH and sends no rollback. An exhausted
+# fields PATCH restores the old owner and fails with its own error. When the rollback
+# PATCH is exhausted too, apply fails with the owner-rollback message that joins both
+# errors. API responses are inferred from the Unity Catalog API contract, not recorded.
 version: 1
 enforce_call_order: true
 host_metadata:
@@ -16,7 +16,7 @@ steps:
   - name: create_with_owner_and_comment
     config: |
       provider "databricks" {
-        retry_timeout_seconds = 1
+        retry_timeout_seconds = 3
       }
       resource "databricks_volume" "this" {
         name         = "write_retry_volume"
@@ -79,7 +79,7 @@ steps:
   - name: exhausted_owner_patch_sends_no_fields_patch_or_rollback
     config: &config_owner_b |
       provider "databricks" {
-        retry_timeout_seconds = 1
+        retry_timeout_seconds = 3
       }
       resource "databricks_volume" "this" {
         name         = "write_retry_volume"
@@ -106,6 +106,9 @@ steps:
           body:
             json: {"error_code": "TEMPORARILY_UNAVAILABLE",
                    "message": "The service is temporarily unavailable."}
+        times: 2
+        min_gap: 1s
+        max_gap: 3s
   - name: plan_after_exhausted_owner_patch_shows_the_whole_update
     plan_only: true
     config: *config_owner_b
@@ -163,6 +166,9 @@ steps:
           body:
             json: {"error_code": "TOO_MANY_REQUESTS",
                    "message": "Too many requests. Please wait a moment and try again."}
+        times: 2
+        min_gap: 1s
+        max_gap: 3s
       - request: &rollback_patch
           method: PATCH
           path: /api/2.1/unity-catalog/volumes/main.replay.write_retry_volume
@@ -196,8 +202,14 @@ steps:
         response: *volume_owner_b_comment_first
       - request: *fields_patch
         response: *unavailable
+        times: 2
+        min_gap: 1s
+        max_gap: 3s
       - request: *rollback_patch
         response: *too_many_requests
+        times: 2
+        min_gap: 1s
+        max_gap: 3s
   - name: plan_after_exhausted_rollback_shows_only_the_comment_update
     plan_only: true
     config: *config_owner_b

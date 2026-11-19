@@ -1,9 +1,9 @@
 # This journey pins an owner PATCH after a successful create POST that gets a 429 until
-# retry_timeout_seconds ends. One second is shorter than the SDK's first backoff (1.05
-# to 1.75 seconds), so exactly one PATCH is sent. Apply fails with the 429's message,
-# but the volume stays in state under its full name and is tainted, so the next plan
-# replaces it. API responses are inferred from the Unity Catalog API contract, not
-# recorded.
+# retry_timeout_seconds ends. Three seconds fit the retry after the SDK's first backoff
+# (1.05 to 1.75 seconds) but end during its second (2.05 to 2.75 seconds), so exactly
+# two identical PATCHes are sent. Apply fails with the last 429's message, but the
+# volume stays in state under its full name and is tainted, so the next plan replaces
+# it. API responses are inferred from the Unity Catalog API contract, not recorded.
 version: 1
 enforce_call_order: true
 host_metadata:
@@ -14,7 +14,7 @@ steps:
   - name: owner_patch_after_create_retries_until_the_retry_timeout_ends
     config: &config |
       provider "databricks" {
-        retry_timeout_seconds = 1
+        retry_timeout_seconds = 3
       }
       resource "databricks_volume" "this" {
         name         = "write_retry_volume"
@@ -59,6 +59,9 @@ steps:
           body:
             json: {"error_code": "TOO_MANY_REQUESTS",
                    "message": "Too many requests. Please wait a moment and try again."}
+        times: 2
+        min_gap: 1s
+        max_gap: 3s
   - name: plan_after_exhausted_owner_patch_replaces_the_tainted_volume
     plan_only: true
     config: *config

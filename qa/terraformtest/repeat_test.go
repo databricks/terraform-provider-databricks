@@ -22,8 +22,9 @@ func TestRepeatJourneysPinRetriesAndTiming(t *testing.T) {
 		s.Config = "provider \"databricks\" {\n  rate_limit = 1\n}\n" + s.Config
 		readAfterCreate(s)
 	}
+	const groups = `/api/2\.0/preview/scim/v2/Groups`
 	for _, tc := range []struct {
-		name, journey, message string
+		name, journey, failure string
 		edit                   func(*step)
 	}{
 		{"429 twice in a 2 s retry timeout", "retry_429_until_timeout", "", func(s *step) {
@@ -31,14 +32,14 @@ func TestRepeatJourneysPinRetriesAndTiming(t *testing.T) {
 			s.Calls[0].Times = httpfixture.Exactly(2)
 		}},
 		{"429 retried past the range without a retry timeout", "retry_429_until_timeout",
-			"step 1 (create_gives_up_at_retry_timeout): unexpected HTTP call: POST /api/2.0/preview/scim/v2/Groups",
+			`step 1 \(create_gives_up_at_retry_timeout\): unexpected HTTP call: POST ` + groups,
 			func(s *step) { s.Config = strings.Replace(s.Config, "retry_timeout_seconds = 5", "", 1) }},
 		{"retry later than max_gap", "retry_503",
-			"step 1 (create_retries_503): call 2: POST /api/2.0/preview/scim/v2/Groups arrived 2",
+			`step 1 \(create_retries_503\): call 2: POST ` + groups + ` arrived [0-9.]+s after call 1 \(POST ` + groups + `\), above max_gap 1s`,
 			func(s *step) { s.Calls[1].MinGap, s.Calls[1].MaxGap = "", "1s" }},
 		{"rate_limit delays the read after the create", "retry_503", "", withRateLimit},
 		{"read without rate_limit is sooner than min_gap", "retry_503",
-			"step 1 (create_retries_503): call 2: GET /api/2.0/preview/scim/v2/Groups/group-id?attributes=displayName%2CexternalId%2Centitlements arrived",
+			`step 1 \(create_retries_503\): call 2: GET ` + groups + `/group-id\?attributes=displayName,externalId,entitlements arrived [0-9.]+m?s after call 1 \(POST ` + groups + `\), below min_gap 900ms`,
 			readAfterCreate},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
@@ -50,12 +51,12 @@ func TestRepeatJourneysPinRetriesAndTiming(t *testing.T) {
 			directory := t.TempDir()
 			writeDiscoveryFile(t, directory, tc.journey+".yaml", string(contents))
 			output, err := discoverySubprocess(t, directory, "^TestDirectoryRunnerHelper$")
-			if tc.message == "" {
+			if tc.failure == "" {
 				require.NoError(t, err, output)
 				return
 			}
 			require.Error(t, err, output)
-			require.Contains(t, output, tc.message)
+			require.Regexp(t, tc.failure, output)
 		})
 	}
 }

@@ -181,6 +181,7 @@ func TestRepeatFieldsValidateOnLoad(t *testing.T) {
 		{"times: [1, 2]", "call 1: times must be a positive count or {min, max}"},
 		{"times: {min: 2}", "call 1: times range requires both min and max"},
 		{"times: {min: 1, max: 2, step: 1}", `call 1: unknown times field "step"; expected min and max`},
+		{"times: {min: 1, min: 2, max: 3}", "call 1: times.min is set twice"},
 		{"times: {min: one, max: 2}", `call 1: times.min "one" must be an integer`},
 		{"times: {min: 3, max: 2}", "call 1: times {min: 3, max: 2} needs 0 <= min <= max and max >= 1"},
 		{"times: {min: 0, max: 0}", "call 1: times {min: 0, max: 0} needs 0 <= min <= max and max >= 1"},
@@ -227,4 +228,10 @@ func TestTimesYAMLRoundTrip(t *testing.T) {
 		require.NoError(t, yaml.Unmarshal(encoded, &decoded))
 		require.Equal(t, tc.times, decoded.Times)
 	}
+	var aliased struct {
+		Base  Times `yaml:"base"`
+		Times Times `yaml:"times"`
+	}
+	require.NoError(t, yaml.Unmarshal([]byte("base: &retries {min: 2, max: 3}\ntimes: *retries\n"), &aliased))
+	require.Equal(t, Times{Min: 2, Max: 3}, aliased.Times, "journeys reuse values through YAML anchors")
 }

@@ -52,10 +52,12 @@ func (t *Times) decodeRange(node *yaml.Node) error {
 		if value.Kind != yaml.ScalarNode || err != nil {
 			return fmt.Errorf("times.%s %q must be an integer", key, value.Value)
 		}
-		switch key {
-		case "min":
+		switch {
+		case seen[key]:
+			return fmt.Errorf("times.%s is set twice", key)
+		case key == "min":
 			t.Min = n
-		case "max":
+		case key == "max":
 			t.Max = n
 		default:
 			return fmt.Errorf("unknown times field %q; expected min and max", key)
@@ -71,7 +73,8 @@ func (t *Times) decodeRange(node *yaml.Node) error {
 
 func (t Times) validate() error {
 	if t.Min < 0 || t.Max < 1 || t.Min > t.Max {
-		return fmt.Errorf("times {min: %d, max: %d} needs 0 <= min <= max and max >= 1", t.Min, t.Max)
+		return fmt.Errorf("times {min: %d, max: %d} needs 0 <= min <= max and max >= 1",
+			t.Min, t.Max)
 	}
 	return nil
 }
@@ -120,7 +123,8 @@ func compileRepeat(c Call) (repeat, error) {
 		return r, fmt.Errorf("min_gap %s exceeds max_gap %s", c.MinGap, c.MaxGap)
 	}
 	if r.hasGap() && r.repeated && r.max < 2 {
-		return r, errors.New("with times, min_gap and max_gap bound the gaps between repetitions, so times needs a max of at least 2")
+		return r, errors.New("with times, min_gap and max_gap bound the gaps between " +
+			"repetitions, so times needs a max of at least 2")
 	}
 	return r, nil
 }
@@ -156,7 +160,8 @@ func (r *repeat) checkGap(arrival, previous time.Time, previousCall string) erro
 		reference, from = r.lastArrival, fmt.Sprintf("repetition %d", r.count)
 	}
 	if reference.IsZero() {
-		return errors.New("arrived first in its step, so min_gap and max_gap have no earlier call to measure from")
+		return errors.New("arrived first in its step, so min_gap and max_gap have no " +
+			"earlier call to measure from")
 	}
 	gap := arrival.Sub(reference)
 	observed := fmt.Sprintf("%s %s after %s", arrived, gap.Round(time.Millisecond), from)

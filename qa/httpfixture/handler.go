@@ -276,7 +276,7 @@ func (h *Handler) consume(w http.ResponseWriter, req *http.Request) (*exchange, 
 		if !h.calls[i].open() || !h.calls[i].matches(req, body) {
 			continue
 		}
-		if next := h.nextRequired(); h.enforceCallOrder && next != -1 && i > next {
+		if next := h.nextRequired(); next != -1 && i > next {
 			expected := h.calls[next].call.Request
 			h.fail(w, fmt.Errorf("%s: out-of-order HTTP call: %s %s body=%s matched call %d; next expected call %d: %s %s", h.label, req.Method, req.URL.RequestURI(), body.raw, i+1, next+1, expected.Method, expected.Path))
 			return nil, ""
@@ -294,8 +294,12 @@ func (h *Handler) consume(w http.ResponseWriter, req *http.Request) (*exchange, 
 }
 
 // nextRequired returns the first open call matched fewer than its minimum
-// number of times, or -1. Ordered replay cannot skip past it.
+// number of times, which ordered replay cannot skip past. It returns -1 when
+// nothing is required or calls are unordered.
 func (h *Handler) nextRequired() int {
+	if !h.enforceCallOrder {
+		return -1
+	}
 	for i := range h.calls {
 		if h.calls[i].open() && !h.calls[i].satisfied() {
 			return i

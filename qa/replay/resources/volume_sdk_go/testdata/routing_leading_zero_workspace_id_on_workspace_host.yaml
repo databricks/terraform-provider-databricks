@@ -1,0 +1,48 @@
+# Runs volume/testdata/routing_leading_zero_workspace_id_on_workspace_host.yaml with
+# databricks_volume on sdk-go uc/volumes/v1 in every step, and expects the same behavior.
+# Its fixtures match the requests of both paths unchanged. The original's description:
+#
+# Pins a leading-zero provider_config.workspace_id on a workspace-level provider whose
+# host metadata names the same workspace without the zero. The plan succeeds without
+# any call and keeps the literal "0123", and apply compares the strings, so it fails
+# with a workspace_id mismatch before any volume call.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "123"
+steps:
+  - name: plan_keeps_leading_zero
+    sdk_implementations:
+      databricks_volume: sdk_go
+    plan_only: true
+    config: &config |
+      resource "databricks_volume" "this" {
+        name         = "leading_zero_volume"
+        catalog_name = "main"
+        schema_name  = "replay"
+        volume_type  = "MANAGED"
+        provider_config {
+          workspace_id = "0123"
+        }
+      }
+    plan:
+      expect: non_empty
+      changes:
+        databricks_volume.this:
+          actions: [create]
+          after:
+            - path: [provider_config, 0, workspace_id]
+              equals: "0123"
+    calls: []
+  - name: apply_rejects_leading_zero_as_mismatch
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: *config
+    expect_error: 'cannot create volume: failed to validate workspace_id: workspace_id
+      mismatch: provider is configured for workspace 123 but got 0123 in
+      provider_config\. please check the workspace_id provided in provider_config'
+    calls: []
+destroy:
+  calls: []

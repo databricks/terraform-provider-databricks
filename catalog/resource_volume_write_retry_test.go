@@ -67,8 +67,7 @@ type volumeResponse struct {
 	body   string
 	// hold withholds the response until the request is cancelled.
 	hold bool
-	// reset reads the request and then resets the connection, so it needs a real
-	// server.
+	// reset reads the request and then resets the connection.
 	reset bool
 	// eof reads the request and then closes the connection without responding.
 	eof bool
@@ -95,8 +94,8 @@ func newScriptedVolumeAPI(t *testing.T, responses ...volumeResponse) *scriptedVo
 	return &scriptedVolumeAPI{t: t, responses: responses, released: make(chan struct{})}
 }
 
-// newScriptedVolumeServer serves the API over HTTP, which the hold and reset responses
-// need.
+// newScriptedVolumeServer serves the API over HTTP, which the hold, reset, eof and
+// truncated responses need.
 func newScriptedVolumeServer(
 	t *testing.T, responses ...volumeResponse,
 ) (*scriptedVolumeAPI, *httptest.Server) {

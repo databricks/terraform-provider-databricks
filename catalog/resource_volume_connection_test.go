@@ -28,9 +28,9 @@ import (
 //
 // The SDK retries a request whose error contains one of a few connection messages,
 // until its retry timeout ends. Independently, net/http resends a GET once, without
-// backoff, when it fails on a reused keep-alive connection. A volume refresh always
-// reuses the connection of the host metadata request the client makes when it is
-// built, so a refresh GET that fails gets one more request than the other calls.
+// backoff, when it fails on a reused keep-alive connection. Here the first volume
+// request reuses the connection of the host metadata request the client makes when it
+// is built, so a refresh GET that fails is sent once more than the other calls.
 
 // retryTwiceSeconds is a retry timeout that allows exactly two attempts: the SDK backs
 // off 1.05 to 1.75 s before the second and at least 2.05 s before the third.
@@ -86,8 +86,8 @@ func TestVolumeCallsRetryConnectionReset(t *testing.T) {
 		id string
 	}{
 		{
-			// The server already created the volume when it reset the connection, so in
-			// production the retry gets RESOURCE_ALREADY_EXISTS, as
+			// If the server created the volume before it reset the connection, the
+			// retry gets RESOURCE_ALREADY_EXISTS, as
 			// TestVolumeCreateRetriedAfterConnectionResetFailsWithAlreadyExists pins.
 			name:      "create POST",
 			run:       createVolumeWithOwner,
@@ -394,8 +394,8 @@ func TestVolumeRefreshRetriesOtherTransientConnectionErrors(t *testing.T) {
 			attemptError: func(string) string { return "net/http: TLS handshake timeout" },
 		},
 		{
-			// No Go package returns this message, so a dial function stands in for
-			// the network stack or proxy that would.
+			// No Go standard library package returns this message, so a dial
+			// function stands in for the network stack or proxy that would.
 			name: "Unexpected error",
 			fault: func(*testing.T) func(context.Context, string, string) (net.Conn, error) {
 				return func(context.Context, string, string) (net.Conn, error) {

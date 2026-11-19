@@ -1,7 +1,7 @@
-# Runs volume/testdata/retry_after_header_is_ignored.yaml with databricks_volume on sdk-go
-# uc/volumes/v1 in every step, and expects the same behavior. The volume POST and GET
-# requests carry no Accept header, which an empty header expectation pins. The original's
-# description:
+# Runs volume_retries/testdata/retry_after_header_is_ignored.yaml with databricks_volume
+# on sdk-go uc/volumes/v1 in every step, and expects the same behavior. The volume POST
+# and GET requests carry no Accept header, which an empty header expectation pins. The
+# original's description:
 #
 # This journey pins that the classic SDK client ignores Retry-After. A 429 on the refresh
 # GET asks for an hour's wait, yet the identical retry follows after the SDK's own short

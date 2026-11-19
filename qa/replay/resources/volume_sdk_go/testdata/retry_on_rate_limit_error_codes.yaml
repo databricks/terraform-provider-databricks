@@ -1,7 +1,7 @@
-# Runs volume/testdata/retry_on_rate_limit_error_codes.yaml with databricks_volume on sdk-
-# go uc/volumes/v1 in every step, and expects the same behavior. The volume POST and GET
-# requests carry no Accept header, which an empty header expectation pins. The original's
-# description:
+# Runs volume_retries/testdata/retry_on_rate_limit_error_codes.yaml with databricks_volume
+# on sdk-go uc/volumes/v1 in every step, and expects the same behavior. The volume POST
+# and GET requests carry no Accept header, which an empty header expectation pins. The
+# original's description:
 #
 # This journey pins that the classic SDK client retries the refresh GET once when a 400
 # carries an error code that the SDK maps to "too many requests": REQUEST_LIMIT_EXCEEDED

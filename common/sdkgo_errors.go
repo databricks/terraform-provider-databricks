@@ -23,7 +23,7 @@ import (
 
 // classicError returns the error the classic client returns for the same failure. API
 // errors are parsed again from the response, so apierr.IsMissing, the retry rules and
-// the messages stay the same. attempt holds the last exchange of the call, if any.
+// the messages stay the same. attempt holds the last request and response, if any.
 func (b *sdkGoBridge) classicError(ctx context.Context, err error,
 	attempt *sdkGoAttempt) error {
 	// http.Client wraps transport failures in a url.Error, which the classic client
@@ -46,16 +46,19 @@ func (b *sdkGoBridge) classicError(ctx context.Context, err error,
 		}
 		return err
 	}
-	req := &http.Request{URL: &url.URL{}}
-	if attempt != nil && attempt.request != nil {
-		req = attempt.request
-	}
 	body := apiErr.HTTPBody()
 	resp := &http.Response{
 		StatusCode: apiErr.HTTPStatusCode(),
 		Header:     apiErr.HTTPHeader(),
 		Body:       io.NopCloser(bytes.NewReader(body)),
-		Request:    req,
+		Request:    &http.Request{URL: &url.URL{}},
+	}
+	// The classic client classifies HTML error pages by the status text.
+	if attempt != nil && attempt.request != nil {
+		resp.Request = attempt.request
+		if attempt.response != nil {
+			resp.Status = attempt.response.Status
+		}
 	}
 	mapped := b.httpConfig.ErrorMapper(ctx, sdkcommon.ResponseWrapper{
 		Response:   resp,

@@ -1,10 +1,7 @@
 # Runs volume/testdata/redirect_loop_stops_after_ten_redirects.yaml with databricks_volume
-# on sdk-go uc/volumes/v1 in every step, and expects the same behavior except for the
-# refresh error. It names the volume's URL on the fixture server instead of the last
-# Location, /loop, because the sdk-go bridge drops the url.Error of the redirect policy
-# and sdk-go's client wraps the error in one with the request URL. The volume requests and
-# the requests that follow their redirects carry no Accept header, which an empty header
-# expectation pins. The original's description:
+# on sdk-go uc/volumes/v1 in every step, and expects the same behavior. The volume
+# requests and the requests that follow their redirects carry no Accept header, which an
+# empty header expectation pins. The original's description:
 #
 # Pins a refresh caught in a redirect loop. The GET is redirected to /loop, which keeps
 # redirecting to itself. Go's client sends ten requests, then stops with its
@@ -66,9 +63,7 @@ steps:
     sdk_implementations:
       databricks_volume: sdk_go
     config: *config
-    expect_error: 'Error: cannot read volume: Get
-      "http://[^"/]+/api/2\.1/unity-catalog/volumes/main\.replay\.redirect_loop_volume":
-      stopped after 10 redirects\n'
+    expect_error: 'Error: cannot read volume: Get "/loop": stopped after 10 redirects\n'
     calls:
       - request: *read_request
         response: &redirect_to_loop

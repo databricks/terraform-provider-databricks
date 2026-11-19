@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"slices"
 	"strings"
 	"sync/atomic"
 	"testing"
@@ -314,6 +315,36 @@ func TestSdkGoClientReportsRefusedConnectionsLikeClassicClient(t *testing.T) {
 	classicMessage := strings.Replace(err.Error(), sdkGoTestVolumePath+`"`,
 		sdkGoTestVolumePath+`?"`, 1)
 	assert.EqualError(t, classicErr, classicMessage)
+}
+
+func TestSdkGoClientStopsRedirectLoopsLikeClassicClient(t *testing.T) {
+	toLoop := func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, "/loop", http.StatusFound)
+	}
+	loop := slices.Repeat([]handler{toLoop}, 10)
+	r := readBothWays(t, context.Background, nil, loop...)
+	assert.EqualError(t, r.classicErr, `Get "/loop": stopped after 10 redirects`)
+	assert.EqualError(t, r.err, r.classicErr.Error())
+	assert.EqualValues(t, 10, r.calls)
+	assert.Equal(t, r.classicCalls, r.calls)
+}
+
+func TestSdkGoClientRetriesRefusedRedirectsLikeClassicClient(t *testing.T) {
+	closed := httptest.NewServer(http.NotFoundHandler())
+	closed.Close()
+	toClosed := func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, closed.URL+"/elsewhere", http.StatusFound)
+	}
+	// The second backoff, at least two seconds, passes the retry timeout.
+	r := readBothWays(t, context.Background,
+		func(cfg *config.Config) { cfg.RetryTimeoutSeconds = 3 }, toClosed, toClosed)
+	require.Error(t, r.classicErr)
+	assert.True(t, strings.HasPrefix(r.classicErr.Error(),
+		`Get "`+closed.URL+`/elsewhere": `), r.classicErr.Error())
+	assert.Contains(t, r.classicErr.Error(), "connection refused")
+	assert.EqualError(t, r.err, r.classicErr.Error())
+	assert.EqualValues(t, 2, r.calls)
+	assert.Equal(t, r.classicCalls, r.calls)
 }
 
 // blockingCredentials authenticate only when the request's context ends, like a token

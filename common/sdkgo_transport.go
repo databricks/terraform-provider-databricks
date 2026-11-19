@@ -106,13 +106,18 @@ func (t *sdkGoTransport) exchange(parent context.Context, r *http.Request,
 	}
 	resp, err := t.client.Do(r)
 	if err != nil {
-		if timeout.timer.expired() && parent.Err() == nil {
-			return nil, nil, fmt.Errorf("request timed out after %s of inactivity",
-				t.httpTimeout)
-		}
-		// sdk-go's http.Client adds the url.Error that the classic client returns.
-		if urlErr, ok := errors.AsType[*url.Error](err); ok {
+		// sdk-go's http.Client wraps the error in a url.Error that names r, which the
+		// classic client's url.Error names too unless a redirect was followed.
+		urlErr, _ := errors.AsType[*url.Error](err)
+		if urlErr != nil {
 			err = urlErr.Err
+		}
+		if timeout.timer.expired() && parent.Err() == nil {
+			err = fmt.Errorf("request timed out after %s of inactivity", t.httpTimeout)
+		}
+		if urlErr != nil && urlErr.URL != r.URL.String() {
+			urlErr.Err = err
+			return nil, nil, &redirectError{urlErr}
 		}
 		return nil, nil, err
 	}
@@ -188,6 +193,20 @@ func (e *responseBodyError) Error() string {
 }
 
 func (e *responseBodyError) Unwrap() error {
+	return e.err
+}
+
+// redirectError is a failure after a redirect, which the classic client reports with
+// err, the url.Error that names the last Location or request instead of the first one.
+type redirectError struct {
+	err *url.Error
+}
+
+func (e *redirectError) Error() string {
+	return e.err.Error()
+}
+
+func (e *redirectError) Unwrap() error {
 	return e.err
 }
 

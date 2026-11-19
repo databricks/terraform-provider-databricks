@@ -25,12 +25,15 @@ import (
 func (b *sdkGoBridge) classicError(ctx context.Context, err error,
 	attempt *sdkGoAttempt) error {
 	// http.Client wraps transport failures in a url.Error, which the classic client
-	// doesn't add to these.
+	// doesn't add to these. After a redirect, the classic url.Error is the inner one.
 	if visitorErr, ok := errors.AsType[*visitorError](err); ok {
 		return visitorErr
 	}
 	if bodyErr, ok := errors.AsType[*responseBodyError](err); ok {
 		return bodyErr
+	}
+	if redirectErr, ok := errors.AsType[*redirectError](err); ok {
+		return redirectErr.err
 	}
 	if classicErr, ok := errors.AsType[*apierr.APIError](err); ok {
 		return classicErr

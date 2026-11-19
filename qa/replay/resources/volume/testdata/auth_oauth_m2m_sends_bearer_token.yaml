@@ -1,0 +1,174 @@
+# Pins the token calls and credentials of every databricks_volume call with OAuth M2M.
+# Each Terraform operation configures a new provider, whose first volume call looks up
+# the workspace's token endpoint without credentials and exchanges the client ID and
+# secret, sent as basic auth, for a token. The POST, GET, PATCH and DELETE then send
+# that token as one Authorization: Bearer header and no cloud credential header. A
+# pattern matcher requires exactly one value, so a lost or duplicated header fails. The
+# token endpoint is an absolute URL, so the provider uses a named host. Token and API
+# responses are inferred from the OAuth and Unity Catalog API contracts, not recorded.
+version: 1
+enforce_call_order: true
+provider_host: workspace
+hosts:
+  workspace:
+    url: https://replay-workspace.cloud.databricks.com
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+auth:
+  type: oauth-m2m
+  client_id: replay-sp
+  client_secret: replay-secret
+steps:
+  - name: create
+    config: |
+      resource "databricks_volume" "this" {
+        name         = "auth_m2m_volume"
+        catalog_name = "main"
+        schema_name  = "replay"
+        volume_type  = "MANAGED"
+      }
+    calls:
+      - &discovery
+        request:
+          method: GET
+          path: /oidc/.well-known/oauth-authorization-server
+          matchers:
+            headers:
+              Authorization: absent
+          body: null
+        response:
+          status: 200
+          body:
+            json:
+              authorization_endpoint: https://replay-workspace.cloud.databricks.com/oidc/v1/authorize
+              token_endpoint: https://replay-workspace.cloud.databricks.com/oidc/v1/token
+      - &token
+        request:
+          method: POST
+          path: /oidc/v1/token
+          headers:
+            Content-Type: application/x-www-form-urlencoded
+          matchers:
+            headers:
+              # base64 of replay-sp:replay-secret.
+              Authorization: {pattern: 'Basic cmVwbGF5LXNwOnJlcGxheS1zZWNyZXQ='}
+          body:
+            text: grant_type=client_credentials&scope=all-apis
+        response:
+          status: 200
+          body:
+            json: {"access_token": "m2m-token", "token_type": "Bearer",
+                   "expires_in": 3600}
+      - request:
+          method: POST
+          path: /api/2.1/unity-catalog/volumes
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          matchers: &credentials
+            headers:
+              Authorization: {pattern: 'Bearer m2m-token'}
+              X-Databricks-Azure-Sp-Management-Token: absent
+              X-Databricks-Azure-Workspace-Resource-Id: absent
+              X-Databricks-Gcp-Sa-Access-Token: absent
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "auth_m2m_volume", "volume_type": "MANAGED"}
+        response:
+          status: 200
+          body:
+            json: &created {"catalog_name": "main", "schema_name": "replay",
+                            "name": "auth_m2m_volume",
+                            "full_name": "main.replay.auth_m2m_volume",
+                            "volume_type": "MANAGED", "owner": "replay-admin@example.com",
+                            "storage_location": "s3://replay-metastore/volume-302",
+                            "metastore_id": "11111111-1111-1111-1111-111111111111",
+                            "volume_id": "00000000-0000-4000-8000-000000000302"}
+      - &read_created
+        request: &read_request
+          method: GET
+          path: /api/2.1/unity-catalog/volumes/main.replay.auth_m2m_volume
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          matchers: *credentials
+          body: null
+        response:
+          status: 200
+          body:
+            json: *created
+      # Terraform's post-apply plan.
+      - *discovery
+      - *token
+      - *read_created
+    state:
+      resources:
+        databricks_volume.this:
+          attributes:
+            - path: [id]
+              equals: main.replay.auth_m2m_volume
+  - name: update
+    config: |
+      resource "databricks_volume" "this" {
+        name         = "auth_m2m_volume"
+        catalog_name = "main"
+        schema_name  = "replay"
+        volume_type  = "MANAGED"
+        comment      = "m2m"
+      }
+    calls:
+      # The plan's refresh.
+      - *discovery
+      - *token
+      - *read_created
+      # The apply.
+      - *discovery
+      - *token
+      - request:
+          method: PATCH
+          path: /api/2.1/unity-catalog/volumes/main.replay.auth_m2m_volume
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          matchers: *credentials
+          body:
+            json: {"comment": "m2m"}
+        response:
+          status: 200
+          body:
+            json: &commented {"catalog_name": "main", "schema_name": "replay",
+                              "name": "auth_m2m_volume",
+                              "full_name": "main.replay.auth_m2m_volume",
+                              "volume_type": "MANAGED", "comment": "m2m",
+                              "owner": "replay-admin@example.com",
+                              "storage_location": "s3://replay-metastore/volume-302",
+                              "metastore_id": "11111111-1111-1111-1111-111111111111",
+                              "volume_id": "00000000-0000-4000-8000-000000000302"}
+      - &read_commented
+        request: *read_request
+        response:
+          status: 200
+          body:
+            json: *commented
+      # Terraform's post-apply plan.
+      - *discovery
+      - *token
+      - *read_commented
+destroy:
+  calls:
+    # The refresh, then the destroy.
+    - *discovery
+    - *token
+    - *read_commented
+    - *discovery
+    - *token
+    - request:
+        method: DELETE
+        path: /api/2.1/unity-catalog/volumes/main.replay.auth_m2m_volume
+        headers:
+          X-Databricks-Workspace-Id: "12345"
+        matchers: *credentials
+        body: null
+      response:
+        status: 200
+        body:
+          json: {}

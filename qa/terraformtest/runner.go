@@ -21,6 +21,11 @@ import (
 // run keeps the fixture server alive through the framework's deferred destroy,
 // then checks for requests or fixtures left over after cleanup.
 func run(t *testing.T, definition *testDefinition) {
+	t.Helper()
+	if definition.processStartVariable() != "" && os.Getenv(journeyProcessEnv) != t.Name() {
+		runOwnProcess(t, definition.Environment)
+		return
+	}
 	runNative(t, definition, nil)
 }
 
@@ -34,13 +39,19 @@ func RunNative(t *testing.T, path string, configure func(*resource.TestCase, fun
 	if err != nil {
 		t.Fatal(err)
 	}
+	// The Go checks run in this process, so the journey cannot start its own.
+	if name := definition.processStartVariable(); name != "" {
+		t.Fatalf("%s: environment.%s: the provider reads it when its process starts, "+
+			"which only Run supports", path, name)
+	}
 	runNative(t, definition, configure)
 }
 
 func runNative(t *testing.T, definition *testDefinition, configure func(*resource.TestCase, func(*config.Config) error)) {
 	t.Helper()
+	applyEnvironment(t, definition.Environment)
 	handler, server := replayBoundary(t, definition)
-	customize := definition.replayHosts(server).fixtureConfig()
+	customize := definition.Auth.withCredentials(definition.replayHosts(server).fixtureConfig())
 	runTerraform(t, definition, handler, customize, configure)
 }
 

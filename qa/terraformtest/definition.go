@@ -28,7 +28,11 @@ type testDefinition struct {
 	// the one the provider is configured with. Calls without a host expect it.
 	Hosts        map[string]namedHost `yaml:"hosts,omitempty"`
 	ProviderHost string               `yaml:"provider_host,omitempty"`
-	checkpoint   []byte
+	// Auth chooses the credentials in place of the fixture PAT. Environment sets
+	// variables after clearing those that change the User-Agent or configuration.
+	Auth        journeyAuth       `yaml:"auth,omitempty"`
+	Environment map[string]string `yaml:"environment,omitempty"`
+	checkpoint  []byte
 }
 
 // Setup is recorder-only. Replay never creates background resources or regenerates
@@ -131,6 +135,12 @@ func (d *testDefinition) validate() error {
 		return fmt.Errorf("at least one step is required")
 	}
 	if err := d.validateHosts(); err != nil {
+		return err
+	}
+	if err := d.Auth.validate(); err != nil {
+		return err
+	}
+	if err := validateEnvironment(d.Environment); err != nil {
 		return err
 	}
 	if d.InitialState != nil {

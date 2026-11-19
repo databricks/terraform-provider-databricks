@@ -1,0 +1,130 @@
+# Runs volume/testdata/redirect_private_link_on_create_owner_patch.yaml with
+# databricks_volume on sdk-go uc/volumes/v1 in every step, and expects the same behavior.
+# The volume requests carry no Accept header, which an empty header expectation pins. Each
+# PATCH body also carries full_name_arg, the full name in its path, because sdk-go
+# serializes the path field into the body. The original's description:
+#
+# Pins a private-link login redirect on the owner PATCH that follows a successful POST.
+# The client follows the 302 with a GET that drops Content-Type, and apply fails with
+# the exact AWS PrivateLink message. The volume stays in state under its full name and
+# is planned for replacement, as after any other owner PATCH failure. API responses are
+# inferred from the private-link redirect contract, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: owner_patch_redirected_to_login_fails_with_private_link_error
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: &config |
+      resource "databricks_volume" "this" {
+        name         = "redirect_create_volume"
+        catalog_name = "main"
+        schema_name  = "replay"
+        volume_type  = "MANAGED"
+        owner        = "data-engineers"
+      }
+    expect_error: 'Error: cannot create volume: The requested workspace has AWS
+      PrivateLink enabled and is not accessible from the current network\. Ensure that
+      AWS PrivateLink is properly configured and that your device has access to the AWS
+      VPC endpoint\. For more information, see
+      https://docs\.databricks\.com/en/security/network/classic/privatelink\.html\.\n'
+    calls:
+      - request:
+          method: POST
+          path: /api/2.1/unity-catalog/volumes
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+            Accept: ""
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "redirect_create_volume", "volume_type": "MANAGED"}
+        response:
+          status: 200
+          body:
+            json: &created {"catalog_name": "main", "schema_name": "replay",
+                            "name": "redirect_create_volume",
+                            "full_name": "main.replay.redirect_create_volume",
+                            "volume_type": "MANAGED", "owner": "replay-admin@example.com",
+                            "storage_location": "s3://replay-metastore/volume-1931",
+                            "metastore_id": "11111111-1111-1111-1111-111111111111",
+                            "volume_id": "00000000-0000-4000-8000-000000001931"}
+      - request:
+          method: PATCH
+          path: /api/2.1/unity-catalog/volumes/main.replay.redirect_create_volume
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+            Accept: ""
+          body:
+            json: {"full_name_arg": "main.replay.redirect_create_volume",
+                   "owner": "data-engineers"}
+        response:
+          status: 302
+          headers:
+            Location: /login.html?error=private-link-validation-error
+          body: null
+      - request:
+          method: GET
+          path: /login.html
+          query:
+            error: [private-link-validation-error]
+          headers:
+            Content-Type: ""
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 200
+          headers:
+            Content-Type: text/html; charset=utf-8
+          body:
+            text: <html><body>Sign in</body></html>
+  - name: redirected_owner_patch_leaves_volume_in_state_for_replacement
+    sdk_implementations:
+      databricks_volume: sdk_go
+    plan_only: true
+    config: *config
+    plan:
+      expect: non_empty
+      changes:
+        databricks_volume.this:
+          actions: [delete, create]
+    state:
+      resources:
+        databricks_volume.this:
+          attributes:
+            - path: [id]
+              equals: main.replay.redirect_create_volume
+            - path: [owner]
+              equals: replay-admin@example.com
+    calls:
+      - &read_created
+        request:
+          method: GET
+          path: /api/2.1/unity-catalog/volumes/main.replay.redirect_create_volume
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+            Accept: ""
+          body: null
+        response:
+          status: 200
+          body:
+            json: *created
+destroy:
+  calls:
+    - *read_created
+    - request:
+        method: DELETE
+        path: /api/2.1/unity-catalog/volumes/main.replay.redirect_create_volume
+        headers:
+          X-Databricks-Workspace-Id: "12345"
+          Accept: ""
+        body: null
+      response:
+        status: 200
+        body:
+          json: {}

@@ -1,0 +1,151 @@
+# Runs volume/testdata/import_importer_read_error_is_dropped.yaml with databricks_volume
+# on sdk-go uc/volumes/v1 in every step, and expects the same behavior. The volume
+# requests carry no Accept header, which an empty header expectation pins. The original's
+# description:
+#
+# Pins a suspected defect: the default importer in common/resource.go drops its own read
+# error, because it returns diags[0].Validate(), which is nil for any diagnostic with a
+# summary. When the importer's GET answers 404, 403 or 500 and the refresh GET after
+# import answers 200, the import succeeds. That refresh doesn't read a new resource, so
+# StructToData sets only computed fields and leaves name, catalog_name, schema_name and
+# volume_type null in state, and the next plan replaces the volume. API responses are
+# inferred from the Unity Catalog API contract, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: importer_get_404_is_dropped
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: &config |
+      resource "databricks_volume" "this" {
+        name         = "dropped_error_volume"
+        catalog_name = "main"
+        schema_name  = "replay"
+        volume_type  = "MANAGED"
+      }
+    import:
+      resource: databricks_volume.this
+      id: main.replay.dropped_error_volume
+      persist: false
+    calls:
+      # The importer's GET, then the refresh GET after import.
+      - request: &read_request
+          method: GET
+          path: /api/2.1/unity-catalog/volumes/main.replay.dropped_error_volume
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+            Accept: ""
+          body: null
+        response:
+          status: 404
+          body:
+            json: {"error_code": "RESOURCE_DOES_NOT_EXIST",
+                   "message": "Volume 'main.replay.dropped_error_volume' does not exist."}
+      - &read_volume
+        request: *read_request
+        response:
+          status: 200
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "dropped_error_volume",
+                   "full_name": "main.replay.dropped_error_volume",
+                   "volume_type": "MANAGED", "owner": "replay-admin@example.com",
+                   "storage_location": "s3://replay-metastore/volume-191",
+                   "metastore_id": "11111111-1111-1111-1111-111111111111",
+                   "volume_id": "00000000-0000-4000-8000-000000000191"}
+  - name: importer_get_403_is_dropped
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: *config
+    import:
+      resource: databricks_volume.this
+      id: main.replay.dropped_error_volume
+      persist: false
+    calls:
+      - request: *read_request
+        response:
+          status: 403
+          body:
+            json: {"error_code": "PERMISSION_DENIED",
+                   "message": "User does not have READ VOLUME on Volume
+                     'main.replay.dropped_error_volume'."}
+      - *read_volume
+  - name: importer_get_500_is_dropped_and_the_refresh_imports
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: *config
+    import:
+      resource: databricks_volume.this
+      id: main.replay.dropped_error_volume
+      persist: true
+    calls:
+      - request: *read_request
+        response:
+          status: 500
+          body:
+            json: {"error_code": "INTERNAL_ERROR",
+                   "message": "Internal error while reading volume
+                     'main.replay.dropped_error_volume'."}
+      - *read_volume
+  - name: partial_import_plans_a_replacement
+    sdk_implementations:
+      databricks_volume: sdk_go
+    plan_only: true
+    config: *config
+    plan:
+      expect: non_empty
+      changes:
+        databricks_volume.this:
+          actions: [delete, create]
+          before:
+            - path: [name]
+              equals: null
+            - path: [catalog_name]
+              equals: null
+            - path: [schema_name]
+              equals: null
+            - path: [volume_type]
+              equals: null
+          after:
+            - path: [name]
+              equals: dropped_error_volume
+            - path: [catalog_name]
+              equals: main
+            - path: [schema_name]
+              equals: replay
+            - path: [volume_type]
+              equals: MANAGED
+    state:
+      resources:
+        databricks_volume.this:
+          attributes:
+            - path: [id]
+              equals: main.replay.dropped_error_volume
+            - path: [name]
+              equals: null
+            - path: [owner]
+              equals: replay-admin@example.com
+            - path: [volume_path]
+              equals: /Volumes/main/replay/dropped_error_volume
+            - path: [provider_config, 0, workspace_id]
+              equals: "12345"
+    calls:
+      - *read_volume
+destroy:
+  calls:
+    - *read_volume
+    - request:
+        method: DELETE
+        path: /api/2.1/unity-catalog/volumes/main.replay.dropped_error_volume
+        headers:
+          X-Databricks-Workspace-Id: "12345"
+          Accept: ""
+        body: null
+      response:
+        status: 200
+        body:
+          json: {}

@@ -70,9 +70,8 @@ type Handler struct {
 	reusable         []exchange
 	failures         []error
 	enforceCallOrder bool
-	// lastArrival and lastCall describe the step's previous matched call.
-	lastArrival time.Time
-	lastCall    string
+	// arrivals lists the step's matched calls, in the order they took the lock.
+	arrivals []arrival
 }
 
 // NewHandler returns an empty handler; fixture sets are configured separately.
@@ -99,7 +98,8 @@ func (h *Handler) SetReusableFixtures(calls []Call) error {
 	}
 	for i, e := range compiled {
 		if e.repeated || e.hasGap() {
-			return fmt.Errorf("reusable call %d: times, min_gap and max_gap apply only to step calls", i+1)
+			return fmt.Errorf("reusable call %d: times, min_gap and max_gap apply "+
+				"only to step calls", i+1)
 		}
 	}
 	h.mu.Lock()
@@ -119,7 +119,7 @@ func (h *Handler) StartStep(label string, calls []Call) error {
 	defer h.mu.Unlock()
 	err = h.verify()
 	h.label, h.calls, h.failures = label, compiled, nil
-	h.lastArrival, h.lastCall = time.Time{}, ""
+	h.arrivals = nil
 	return err
 }
 
@@ -249,7 +249,9 @@ func (e *exchange) matches(req *http.Request, body requestBody) bool {
 
 // ServeHTTP prefers consumable step fixtures over reusable fallbacks.
 func (h *Handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	e, label := h.consume(w, req)
+	// Gaps are measured between arrivals, before reading the body or taking the lock.
+	arrival := time.Now()
+	e, label := h.consume(w, req, arrival)
 	if e == nil {
 		return
 	}
@@ -262,7 +264,9 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 // consume matches and consumes a fixture under the lock, so concurrent requests
 // cannot consume a call twice. It returns nil after reporting a failure.
-func (h *Handler) consume(w http.ResponseWriter, req *http.Request) (*exchange, string) {
+func (h *Handler) consume(
+	w http.ResponseWriter, req *http.Request, arrival time.Time,
+) (*exchange, string) {
 	body, err := parseRequestBody(req)
 	h.mu.Lock()
 	defer h.mu.Unlock()
@@ -276,10 +280,13 @@ func (h *Handler) consume(w http.ResponseWriter, req *http.Request) (*exchange, 
 		}
 		if next := h.nextRequired(); next != -1 && i > next {
 			expected := h.calls[next].call.Request
-			h.fail(w, fmt.Errorf("%s: out-of-order HTTP call: %s %s body=%s matched call %d; next expected call %d: %s %s", h.label, req.Method, req.URL.RequestURI(), body.raw, i+1, next+1, expected.Method, expected.Path))
+			h.fail(w, fmt.Errorf("%s: out-of-order HTTP call: %s %s body=%s "+
+				"matched call %d; next expected call %d: %s %s",
+				h.label, req.Method, req.URL.RequestURI(), body.raw,
+				i+1, next+1, expected.Method, expected.Path))
 			return nil, ""
 		}
-		h.record(i, req)
+		h.record(i, req, arrival)
 		return &h.calls[i], h.label
 	}
 	for i := range h.reusable {
@@ -306,23 +313,17 @@ func (h *Handler) nextRequired() int {
 	return -1
 }
 
-// record consumes call i at its arrival time. A gap out of bounds is reported
-// but still answered, so the step fails with the gap rather than a later error.
-// Ordered replay closes the earlier calls, which can no longer repeat.
-func (h *Handler) record(i int, req *http.Request) {
-	arrival := time.Now()
-	e := &h.calls[i]
-	if err := e.checkGap(arrival, h.lastArrival, h.lastCall); err != nil {
-		h.failures = append(h.failures, fmt.Errorf("%s: call %d: %s %s %w", h.label, i+1, req.Method, req.URL.RequestURI(), err))
-	}
+// record consumes call i at its arrival time. Ordered replay closes the
+// earlier calls, which can no longer repeat.
+func (h *Handler) record(i int, req *http.Request, at time.Time) {
 	if h.enforceCallOrder {
 		for j := range h.calls[:i] {
 			h.calls[j].closed = true
 		}
 	}
-	e.count++
-	e.lastArrival, h.lastArrival = arrival, arrival
-	h.lastCall = fmt.Sprintf("call %d (%s %s)", i+1, req.Method, req.URL.RequestURI())
+	h.calls[i].count++
+	request := req.Method + " " + req.URL.RequestURI()
+	h.arrivals = append(h.arrivals, arrival{call: i, at: at, request: request})
 }
 
 func writeResponse(w http.ResponseWriter, e *exchange) {
@@ -362,8 +363,11 @@ func (h *Handler) verify() error {
 	failures := append([]error(nil), h.failures...)
 	for i, e := range h.calls {
 		if !e.satisfied() {
-			failures = append(failures, fmt.Errorf("%s: unconsumed call %d: %s %s%s", h.label, i+1, e.call.Request.Method, e.call.Request.Path, e.countDetail()))
+			failures = append(failures, fmt.Errorf("%s: unconsumed call %d: %s %s%s",
+				h.label, i+1, e.call.Request.Method, e.call.Request.Path,
+				e.countDetail()))
 		}
 	}
+	failures = append(failures, h.gapFailures()...)
 	return errors.Join(failures...)
 }

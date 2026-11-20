@@ -3,6 +3,7 @@ package common
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -75,10 +76,12 @@ func (t *sdkGoTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	requestBody := debugRequestBody(r)
 	resp, responseBody, err := t.exchange(req.Context(), r, timeout)
 	if attempt != nil {
-		attempt.record(r, requestBody, resp, responseBody)
+		attempt.request, attempt.status = r, ""
+		if resp != nil {
+			attempt.request, attempt.status = resp.Request, resp.Status
+		}
 	}
-	success := err == nil && resp.StatusCode < http.StatusBadRequest
-	if success {
+	if err == nil && resp.StatusCode < http.StatusBadRequest {
 		// A Private Link redirect ends in a successful login page.
 		err = t.errorMapper(r.Context(), sdkcommon.ResponseWrapper{
 			Response:   resp,
@@ -87,16 +90,64 @@ func (t *sdkGoTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 		})
 	}
 	t.log(r, resp, err, requestBody, responseBody)
+	if err == nil {
+		err = attempt.decodeLikeClassicClient(resp, requestBody, responseBody)
+	}
 	if err != nil {
 		return nil, err
 	}
-	if success && len(responseBody) == 0 {
-		// The classic client doesn't decode an empty body, so its response stays empty.
-		// sdk-go fails to decode one, but decodes "{}" into the same empty response, as
-		// every uc/volumes/v1 response is a JSON object.
-		resp.Body = io.NopCloser(strings.NewReader("{}"))
-	}
 	return resp, nil
+}
+
+// decodeLikeClassicClient decodes a successful response into the classic type of the
+// call, as httpclient.WithResponseUnmarshal does, and gives sdk-go that value's encoding.
+// So sdk-go reads the values the classic client reads, such as "123" for a string field
+// that the response sets to the number 123.
+func (a *sdkGoAttempt) decodeLikeClassicClient(resp *http.Response,
+	requestBody, responseBody []byte) error {
+	if a == nil || a.classicResponse == nil || resp.StatusCode >= http.StatusBadRequest {
+		return nil
+	}
+	response := a.classicResponse()
+	// Like the classic client, an empty body leaves the response empty.
+	if len(responseBody) > 0 {
+		if err := json.Unmarshal(responseBody, &response); err != nil {
+			return &responseDecodeError{
+				classicDecodeError(err, resp, requestBody, responseBody)}
+		}
+	}
+	body, err := json.Marshal(response)
+	if err != nil {
+		return &responseDecodeError{err}
+	}
+	resp.Body = io.NopCloser(bytes.NewReader(body))
+	return nil
+}
+
+// Mirrors the unexported httpclient.makeUnexpectedResponse.
+const classicDecodeErrorRequestLog = "This is likely a bug in the Databricks SDK for " +
+	"Go or the underlying REST API. Please report this issue with the following " +
+	"debugging information to the SDK issue tracker at " +
+	"https://github.com/databricks/databricks-sdk-go/issues. Request log:\n```\n%s\n```"
+
+// classicDecodeError returns the error of httpclient.WithResponseUnmarshal for err, the
+// failure to decode the successful response resp.
+func classicDecodeError(err error, resp *http.Response,
+	requestBody, responseBody []byte) error {
+	// The classic client asserts the error's type rather than unwrapping it.
+	if _, ok := err.(*json.SyntaxError); ok && bytes.HasPrefix(responseBody, []byte("<")) {
+		return httpclient.ErrHTMLContent
+	}
+	requestLog := httplog.RoundTripStringer{
+		Request:            resp.Request,
+		Response:           resp,
+		RequestBody:        requestBody,
+		ResponseBody:       responseBody,
+		DebugHeaders:       true,
+		DebugTruncateBytes: 10 * 1024,
+	}
+	return fmt.Errorf("failed to unmarshal response body: %w. "+
+		classicDecodeErrorRequestLog, err, requestLog.String())
 }
 
 // exchange sends r, whose context ends with timeout, follows redirects and reads the

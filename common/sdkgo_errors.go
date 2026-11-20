@@ -9,15 +9,12 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"strconv"
 	"strings"
 	"time"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
 	sdkcommon "github.com/databricks/databricks-sdk-go/common"
-	"github.com/databricks/databricks-sdk-go/httpclient"
 	"github.com/databricks/databricks-sdk-go/logger"
-	"github.com/databricks/databricks-sdk-go/logger/httplog"
 	sdkapierr "github.com/databricks/sdk-go/core/apierr"
 	"golang.org/x/time/rate"
 )
@@ -35,15 +32,18 @@ func (b *sdkGoBridge) classicError(ctx context.Context, err error,
 	if bodyErr, ok := errors.AsType[*responseBodyError](err); ok {
 		return bodyErr
 	}
+	if decodeErr, ok := errors.AsType[*responseDecodeError](err); ok {
+		return decodeErr
+	}
 	if classicErr, ok := errors.AsType[*apierr.APIError](err); ok {
 		return classicErr
 	}
 	apiErr, ok := errors.AsType[*sdkapierr.APIError](err)
 	if !ok || apiErr.HTTPStatusCode() < 0 {
-		// After a successful response, only decoding it can fail, whatever error the
-		// sdk-go wire types return.
-		if attempt.succeeded() {
-			return &responseDecodeError{classicDecodeError(err, attempt)}
+		var syntaxErr *json.SyntaxError
+		var typeErr *json.UnmarshalTypeError
+		if errors.As(err, &syntaxErr) || errors.As(err, &typeErr) {
+			return fmt.Errorf("failed to unmarshal response body: %w", err)
 		}
 		return err
 	}
@@ -56,10 +56,7 @@ func (b *sdkGoBridge) classicError(ctx context.Context, err error,
 	}
 	// The classic client classifies HTML error pages by the status text.
 	if attempt != nil && attempt.request != nil {
-		resp.Request = attempt.request
-		if attempt.response != nil {
-			resp.Status = attempt.response.Status
-		}
+		resp.Request, resp.Status = attempt.request, attempt.status
 	}
 	mapped := b.httpConfig.ErrorMapper(ctx, sdkcommon.ResponseWrapper{
 		Response:   resp,
@@ -84,36 +81,6 @@ func (e *responseDecodeError) Error() string {
 
 func (e *responseDecodeError) Unwrap() error {
 	return e.err
-}
-
-// Mirrors the unexported httpclient.makeUnexpectedResponse.
-const classicDecodeErrorRequestLog = "This is likely a bug in the Databricks SDK for " +
-	"Go or the underlying REST API. Please report this issue with the following " +
-	"debugging information to the SDK issue tracker at " +
-	"https://github.com/databricks/databricks-sdk-go/issues. Request log:\n```\n%s\n```"
-
-// classicDecodeError mirrors the error of httpclient.WithResponseUnmarshal for err, the
-// failure to decode the successful response of attempt.
-func classicDecodeError(err error, attempt *sdkGoAttempt) error {
-	if _, ok := errors.AsType[*json.SyntaxError](err); ok &&
-		bytes.HasPrefix(attempt.responseBody, []byte("<")) {
-		return httpclient.ErrHTMLContent
-	}
-	// sdk-go adds the text to the error for a quoted integer it can't parse, where the
-	// classic decoder reports the parse error alone.
-	if numErr, ok := errors.AsType[*strconv.NumError](err); ok {
-		err = numErr
-	}
-	requestLog := httplog.RoundTripStringer{
-		Request:            attempt.request,
-		Response:           attempt.response,
-		RequestBody:        attempt.requestBody,
-		ResponseBody:       attempt.responseBody,
-		DebugHeaders:       true,
-		DebugTruncateBytes: 10 * 1024,
-	}
-	return fmt.Errorf("failed to unmarshal response body: %w. "+
-		classicDecodeErrorRequestLog, err, requestLog.String())
 }
 
 // visitorError is a failure before a request is sent: in authentication or in a request

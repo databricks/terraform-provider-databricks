@@ -12,6 +12,8 @@
 * Add data sources for `databricks_lakewatch_builtin_parser`.
 * Add data sources for `databricks_lakewatch_builtin_parser_version`.
 
+ * Added `warehouse_id` support to `databricks_sql_permissions` resource, allowing `GRANT`/`REVOKE`/`SHOW GRANT` to execute via a SQL warehouse instead of a cluster.
+
 ### Bug Fixes
 
 ### Documentation

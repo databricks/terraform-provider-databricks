@@ -276,6 +276,7 @@ func (m DeleteTagAssignmentRequest_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type DeleteTagPolicyRequest_SdkV2 struct {
+	// The key of the governed tag whose policy to delete.
 	TagKey types.String `tfsdk:"-"`
 }
 
@@ -384,6 +385,7 @@ func (m GetTagAssignmentRequest_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type GetTagPolicyRequest_SdkV2 struct {
+	// The key of the governed tag whose policy to get.
 	TagKey types.String `tfsdk:"-"`
 }
 
@@ -791,6 +793,12 @@ func (m *ListTagPoliciesResponse_SdkV2) SetTagPolicies(ctx context.Context, v []
 	m.TagPolicies = types.ListValueMust(t, vs)
 }
 
+// A tag assignment attaches a tag, which is a key with an optional value, to a
+// workspace object such as a dashboard, notebook, Genie space or app. An object
+// can have at most one assignment for each tag key. If the key belongs to a
+// governed tag, the caller needs the ASSIGN permission on that governed tag,
+// and the value must be one of its allowed values. See
+// https://docs.databricks.com/aws/en/admin/governed-tags/.
 type TagAssignment_SdkV2 struct {
 	// The identifier of the entity to which the tag is assigned. For apps, the
 	// entity_id is the app name
@@ -801,7 +809,8 @@ type TagAssignment_SdkV2 struct {
 	// The key of the tag. The characters , . : / - = and leading/trailing
 	// spaces are not allowed
 	TagKey types.String `tfsdk:"tag_key"`
-	// The value of the tag
+	// The value of the tag. If the value is omitted, the tag is assigned with
+	// its key only.
 	TagValue types.String `tfsdk:"tag_value"`
 }
 
@@ -860,18 +869,26 @@ func (m TagAssignment_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// A tag policy makes a tag key governed and defines the values that can be
+// assigned to it. Governed tags are enforced across all workspaces in the
+// account, and only users with the ASSIGN permission on the governed tag can
+// assign it. See https://docs.databricks.com/aws/en/admin/governed-tags/.
 type TagPolicy_SdkV2 struct {
 	// Timestamp when the tag policy was created
 	CreateTime types.String `tfsdk:"create_time"`
-
+	// A description of the governed tag, such as its purpose or the meaning of
+	// its values.
 	Description types.String `tfsdk:"description"`
-
+	// The unique identifier of the tag policy, generated when the policy is
+	// created.
 	Id types.String `tfsdk:"id"`
-
+	// The tag key that this policy governs. Tag keys are case-sensitive.
 	TagKey types.String `tfsdk:"tag_key"`
 	// Timestamp when the tag policy was last updated
 	UpdateTime types.String `tfsdk:"update_time"`
-
+	// The allowed values of the governed tag. Only these values can be assigned
+	// to the tag key, and each value must be unique. A policy without values
+	// defines a key-only governed tag.
 	Values types.Set `tfsdk:"values"`
 }
 
@@ -990,17 +1007,9 @@ type UpdateTagAssignmentRequest_SdkV2 struct {
 	// The key of the tag. The characters , . : / - = and leading/trailing
 	// spaces are not allowed
 	TagKey types.String `tfsdk:"-"`
-	// The field mask must be a single string, with multiple fields separated by
-	// commas (no spaces). The field path is relative to the resource object,
-	// using a dot (`.`) to navigate sub-fields (e.g., `author.given_name`).
-	// Specification of elements in sequence or map fields is not allowed, as
-	// only the entire collection field can be specified. Field names must
-	// exactly match the resource field names.
-	//
-	// A field mask of `*` indicates full replacement. It’s recommended to
-	// always explicitly list the fields being updated and avoid using `*`
-	// wildcards, as it can lead to unintended results if the API changes in the
-	// future.
+	// The comma-separated list of fields to update. Only `tag_value` can be
+	// updated, because the entity type, entity ID and tag key identify the tag
+	// assignment.
 	UpdateMask types.String `tfsdk:"-"`
 }
 
@@ -1111,20 +1120,13 @@ func (m *UpdateTagAssignmentRequest_SdkV2) SetTagAssignment(ctx context.Context,
 }
 
 type UpdateTagPolicyRequest_SdkV2 struct {
+	// The tag key that this policy governs. Tag keys are case-sensitive.
 	TagKey types.String `tfsdk:"-"`
 
 	TagPolicy types.List `tfsdk:"tag_policy"`
-	// The field mask must be a single string, with multiple fields separated by
-	// commas (no spaces). The field path is relative to the resource object,
-	// using a dot (`.`) to navigate sub-fields (e.g., `author.given_name`).
-	// Specification of elements in sequence or map fields is not allowed, as
-	// only the entire collection field can be specified. Field names must
-	// exactly match the resource field names.
-	//
-	// A field mask of `*` indicates full replacement. It’s recommended to
-	// always explicitly list the fields being updated and avoid using `*`
-	// wildcards, as it can lead to unintended results if the API changes in the
-	// future.
+	// The comma-separated list of tag policy fields to update. When the mask
+	// includes `values`, the values in the request replace all existing allowed
+	// values.
 	UpdateMask types.String `tfsdk:"-"`
 }
 
@@ -1226,7 +1228,9 @@ func (m *UpdateTagPolicyRequest_SdkV2) SetTagPolicy(ctx context.Context, v TagPo
 	m.TagPolicy = types.ListValueMust(t, vs)
 }
 
+// An allowed value of a governed tag.
 type Value_SdkV2 struct {
+	// The value that can be assigned to the tag key. Values are case-sensitive.
 	Name types.String `tfsdk:"name"`
 }
 

@@ -99,7 +99,7 @@ func (r ProviderConfigData) Type(ctx context.Context) attr.Type {
 
 // WorkspaceBaseEnvironmentData extends the main model with additional fields.
 type WorkspaceBaseEnvironmentData struct {
-	// The type of base environment (CPU or GPU).
+	// The type of base environment (CPU or GPU). The default is `CPU`.
 	BaseEnvironmentType          types.String `tfsdk:"base_environment_type"`
 	EffectiveBaseEnvironmentType types.String `tfsdk:"effective_base_environment_type"`
 	// Timestamp when the environment was created.
@@ -108,20 +108,29 @@ type WorkspaceBaseEnvironmentData struct {
 	CreatorUserId types.String `tfsdk:"creator_user_id"`
 	// Human-readable display name for the workspace base environment.
 	DisplayName types.String `tfsdk:"display_name"`
-	// The WSFS or UC Volumes path to the environment YAML file.
+	// The workspace file or Unity Catalog volume path to the YAML file that
+	// defines the environment version and dependencies. The file name must end
+	// in `.yaml` or `.yml`. Create and update requests must set this field.
 	Filepath types.String `tfsdk:"filepath"`
 	// Whether this is the default environment for the workspace.
 	IsDefault types.Bool `tfsdk:"is_default"`
 	// User ID of the last user who updated the environment.
 	LastUpdatedUserId types.String `tfsdk:"last_updated_user_id"`
 	// Status message providing additional details about the environment status.
+	// When the status is `FAILED`, the message contains the build error.
 	Message types.String `tfsdk:"message"`
 	// The resource name of the workspace base environment. Format:
-	// workspace-base-environments/{workspace-base-environment}
+	// workspace-base-environments/{workspace-base-environment} The server
+	// ignores this field on create and builds the name from
+	// `workspace_base_environment_id`, or from `display_name` plus a random
+	// suffix when no ID is given.
 	Name types.String `tfsdk:"name"`
-	// The environment specification containing version and dependencies.
+	// The environment specification containing version and dependencies, read
+	// from the YAML file at `filepath`.
 	Spec types.Object `tfsdk:"spec"`
-	// The status of the materialized workspace base environment.
+	// The status of the materialized workspace base environment, which the
+	// server builds from the YAML file. The status is `CREATED` once the build
+	// has succeeded.
 	Status types.String `tfsdk:"status"`
 	// Timestamp when the environment was last updated.
 	UpdateTime         timetypes.RFC3339 `tfsdk:"update_time"`

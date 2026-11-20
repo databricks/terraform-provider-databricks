@@ -1,0 +1,90 @@
+# Directory calls must reach the workspace's own host. The account-level provider looks
+# up workspace 1002 through the account API on its provider host, and the SDK builds
+# the workspace host from the deployment name. Calls without a host expect the provider
+# host, so the lookup needs no host field.
+version: 1
+provider_host: account
+hosts:
+  account:
+    url: https://accounts.cloud.databricks.com
+    metadata:
+      host_type: account
+      cloud: AWS
+      account_id: replay-account
+  workspace:
+    url: https://replay-workspace-1002.cloud.databricks.com
+    metadata:
+      host_type: workspace
+      cloud: AWS
+      workspace_id: "1002"
+steps:
+  - name: create
+    config: |
+      provider "databricks" {
+        account_id = "replay-account"
+      }
+
+      resource "databricks_directory" "this" {
+        path = "/Shared/replay-hosts"
+        provider_config {
+          workspace_id = "1002"
+        }
+      }
+    calls:
+      - &lookup
+        request:
+          method: GET
+          path: /api/2.0/accounts/replay-account/workspaces/1002
+          body: null
+        response:
+          status: 200
+          body:
+            json:
+              account_id: replay-account
+              workspace_id: 1002
+              deployment_name: replay-workspace-1002
+              workspace_status: RUNNING
+      - request:
+          method: POST
+          host: workspace
+          path: /api/2.0/workspace/mkdirs
+          body:
+            json:
+              path: /Shared/replay-hosts
+        response:
+          status: 200
+          body:
+            json: {}
+      - &read
+        request:
+          method: GET
+          host: workspace
+          path: /api/2.0/workspace/get-status
+          query:
+            path: [/Shared/replay-hosts]
+          body: null
+        response:
+          status: 200
+          body:
+            json:
+              path: /Shared/replay-hosts
+              object_type: DIRECTORY
+              object_id: 2002
+      - *lookup
+      - *read
+destroy:
+  calls:
+    - *lookup
+    - *read
+    - *lookup
+    - request:
+        method: POST
+        host: workspace
+        path: /api/2.0/workspace/delete
+        body:
+          json:
+            path: /Shared/replay-hosts
+      response:
+        status: 200
+        body:
+          json: {}

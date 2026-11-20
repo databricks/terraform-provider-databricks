@@ -1,8 +1,8 @@
-# Runs volume/testdata/update_shape_rename_to_empty.yaml with databricks_volume on sdk-go
-# uc/volumes/v1 in every step, and expects the same behavior. The volume POST, GET, PATCH
-# and DELETE requests carry no Accept header, which an empty header expectation pins. Each
-# PATCH body also carries full_name_arg, the full name in its path, because sdk-go
-# serializes the path field into the body. The original's description:
+# Runs volume_updates/testdata/update_shape_rename_to_empty.yaml with databricks_volume on
+# sdk-go uc/volumes/v1 in every step, and expects the same behavior. The volume POST, GET,
+# PATCH and DELETE requests carry no Accept header, which an empty header expectation
+# pins. Each PATCH body also carries full_name_arg, the full name in its path, because
+# sdk-go serializes the path field into the body. The original's description:
 #
 # Pins renaming to "". The PATCH omits new_name, so its body is {} and the volume keeps
 # its name. The read back skips the remote name because name is empty in the applied

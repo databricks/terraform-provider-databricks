@@ -1,4 +1,4 @@
-# Runs volume/testdata/call_site_fields_patch_after_owner_patch.yaml with
+# Runs volume_call_sites/testdata/call_site_fields_patch_after_owner_patch.yaml with
 # databricks_volume on sdk-go uc/volumes/v1 in every step, and expects the same behavior,
 # except where noted. The volume POST, GET, PATCH and DELETE requests carry no Accept
 # header, which an empty header expectation pins. Each PATCH body also carries

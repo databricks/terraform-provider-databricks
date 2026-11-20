@@ -1,8 +1,8 @@
-# Runs volume/testdata/call_site_read_after_update.yaml with databricks_volume on sdk-go
-# uc/volumes/v1 in every step, and expects the same behavior. The volume POST, GET, PATCH
-# and DELETE requests carry no Accept header, which an empty header expectation pins. Each
-# PATCH body also carries full_name_arg, the full name in its path, because sdk-go
-# serializes the path field into the body. The original's description:
+# Runs volume_call_sites/testdata/call_site_read_after_update.yaml with databricks_volume
+# on sdk-go uc/volumes/v1 in every step, and expects the same behavior. The volume POST,
+# GET, PATCH and DELETE requests carry no Accept header, which an empty header expectation
+# pins. Each PATCH body also carries full_name_arg, the full name in its path, because
+# sdk-go serializes the path field into the body. The original's description:
 #
 # Pins the GET that follows a successful update PATCH. A 404 after a rename whose PATCH
 # returned the new full name, a 403 and a 500 each fail apply with "cannot read volume"

@@ -1,4 +1,4 @@
-# Runs volume/testdata/error_bodies_on_create.yaml with databricks_volume on sdk-go
+# Runs volume_errors/testdata/error_bodies_on_create.yaml with databricks_volume on sdk-go
 # uc/volumes/v1 in every step, and expects the same behavior. The volume POST request
 # carries no Accept header, which an empty header expectation pins. The original's
 # description:

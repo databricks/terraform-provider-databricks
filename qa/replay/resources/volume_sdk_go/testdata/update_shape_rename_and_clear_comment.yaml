@@ -1,8 +1,9 @@
-# Runs volume/testdata/update_shape_rename_and_clear_comment.yaml with databricks_volume
-# on sdk-go uc/volumes/v1 in every step, and expects the same behavior. The volume POST,
-# GET, PATCH and DELETE requests carry no Accept header, which an empty header expectation
-# pins. Each PATCH body also carries full_name_arg, the full name in its path, because
-# sdk-go serializes the path field into the body. The original's description:
+# Runs volume_updates/testdata/update_shape_rename_and_clear_comment.yaml with
+# databricks_volume on sdk-go uc/volumes/v1 in every step, and expects the same behavior.
+# The volume POST, GET, PATCH and DELETE requests carry no Accept header, which an empty
+# header expectation pins. Each PATCH body also carries full_name_arg, the full name in
+# its path, because sdk-go serializes the path field into the body. The original's
+# description:
 #
 # Pins a rename and a cleared comment in one update: one PATCH to the old full name
 # carries new_name and the forced "comment": "", and the ID becomes the new full name.

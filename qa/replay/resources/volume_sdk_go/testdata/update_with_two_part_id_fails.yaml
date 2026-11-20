@@ -1,7 +1,7 @@
-# Runs volume/testdata/update_with_two_part_id_fails.yaml with databricks_volume on sdk-go
-# uc/volumes/v1 in every step, and expects the same behavior. The volume GET and DELETE
-# requests carry no Accept header, which an empty header expectation pins. The original's
-# description:
+# Runs volume_updates/testdata/update_with_two_part_id_fails.yaml with databricks_volume
+# on sdk-go uc/volumes/v1 in every step, and expects the same behavior. The volume GET and
+# DELETE requests carry no Accept header, which an empty header expectation pins. The
+# original's description:
 #
 # Pins an update of a volume whose state ID isn't catalog.schema.volume. Importing a
 # two-part ID keeps it as the ID, and refreshes and the DELETE put it in the path. An

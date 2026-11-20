@@ -1,6 +1,6 @@
-# Runs volume/testdata/delete_missing_or_not.yaml with databricks_volume on sdk-go
-# uc/volumes/v1 in every step, and expects the same behavior. The volume POST, GET and
-# DELETE requests carry no Accept header, which an empty header expectation pins. The
+# Runs volume_lifecycle/testdata/delete_missing_or_not.yaml with databricks_volume on
+# sdk-go uc/volumes/v1 in every step, and expects the same behavior. The volume POST, GET
+# and DELETE requests carry no Accept header, which an empty header expectation pins. The
 # original's description:
 #
 # Pins which DELETE errors count as already deleted (apierr.IsMissing). NOT_FOUND and

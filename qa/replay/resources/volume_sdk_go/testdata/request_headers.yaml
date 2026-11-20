@@ -1,9 +1,9 @@
-# Runs volume/testdata/request_headers.yaml with databricks_volume on sdk-go uc/volumes/v1
-# in every step, and expects the same behavior, except where noted. Unlike the existing
-# client, sdk-go sends no Accept header on the POST, GET, PATCH or DELETE, so each Accept
-# expectation is empty instead of application/json. The other headers are the same. The
-# PATCH body also carries full_name_arg, the full name in its path, because sdk-go
-# serializes the path field into the body. The original's description:
+# Runs volume_lifecycle/testdata/request_headers.yaml with databricks_volume on sdk-go
+# uc/volumes/v1 in every step, and expects the same behavior, except where noted. Unlike
+# the existing client, sdk-go sends no Accept header on the POST, GET, PATCH or DELETE, so
+# each Accept expectation is empty instead of application/json. The other headers are the
+# same. The PATCH body also carries full_name_arg, the full name in its path, because
+# sdk-go serializes the path field into the body. The original's description:
 #
 # Pins the headers on every volume call of the classic client. POST, GET, PATCH and
 # DELETE all send Accept: application/json; the SDK adds it to the DELETE too because

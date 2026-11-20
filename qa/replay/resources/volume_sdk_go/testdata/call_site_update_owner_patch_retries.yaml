@@ -1,8 +1,9 @@
-# Runs volume/testdata/call_site_update_owner_patch_retries.yaml with databricks_volume on
-# sdk-go uc/volumes/v1 in every step, and expects the same behavior. The volume POST, GET,
-# PATCH and DELETE requests carry no Accept header, which an empty header expectation
-# pins. Each PATCH body also carries full_name_arg, the full name in its path, because
-# sdk-go serializes the path field into the body. The original's description:
+# Runs volume_call_sites/testdata/call_site_update_owner_patch_retries.yaml with
+# databricks_volume on sdk-go uc/volumes/v1 in every step, and expects the same behavior.
+# The volume POST, GET, PATCH and DELETE requests carry no Accept header, which an empty
+# header expectation pins. Each PATCH body also carries full_name_arg, the full name in
+# its path, because sdk-go serializes the path field into the body. The original's
+# description:
 #
 # Pins that the classic SDK client retries Update's first PATCH, the one that changes only
 # the owner. A 429 and a 503 are each followed by exactly one identical owner PATCH that

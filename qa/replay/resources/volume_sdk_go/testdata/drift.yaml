@@ -1,0 +1,193 @@
+# Runs volume/testdata/drift.yaml with databricks_volume on sdk-go uc/volumes/v1 in every
+# step, and expects the same behavior. The volume POST, GET and PATCH requests carry no
+# Accept header, which an empty header expectation pins. Each PATCH body also carries
+# full_name_arg, the full name in its path, because sdk-go serializes the path field into
+# the body. The original's description:
+#
+# Pins drift. The remote comment and owner change outside Terraform; the plan shows the
+# update, and apply reverts the owner with one PATCH, then the comment with a PATCH
+# without owner. API responses are inferred from the Unity Catalog API contract, not
+# recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: create_with_owner_and_comment
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: &config |
+      resource "databricks_volume" "this" {
+        name         = "drift_volume"
+        catalog_name = "main"
+        schema_name  = "replay"
+        volume_type  = "MANAGED"
+        comment      = "managed by terraform"
+        owner        = "data-engineers"
+      }
+    calls:
+      - request:
+          method: POST
+          path: /api/2.1/unity-catalog/volumes
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+            Accept: ""
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "drift_volume", "volume_type": "MANAGED",
+                   "comment": "managed by terraform"}
+        response:
+          status: 200
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "drift_volume", "full_name": "main.replay.drift_volume",
+                   "volume_type": "MANAGED", "comment": "managed by terraform",
+                   "owner": "replay-admin@example.com",
+                   "storage_location": "s3://replay-metastore/volume-31",
+                   "metastore_id": "11111111-1111-1111-1111-111111111111",
+                   "volume_id": "00000000-0000-4000-8000-000000000031"}
+      - request:
+          method: PATCH
+          path: /api/2.1/unity-catalog/volumes/main.replay.drift_volume
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+            Accept: ""
+          body:
+            json: {"full_name_arg": "main.replay.drift_volume",
+                   "comment": "managed by terraform", "owner": "data-engineers"}
+        response:
+          status: 200
+          body:
+            json: &managed {"catalog_name": "main", "schema_name": "replay",
+                            "name": "drift_volume",
+                            "full_name": "main.replay.drift_volume",
+                            "volume_type": "MANAGED", "comment": "managed by terraform",
+                            "owner": "data-engineers",
+                            "storage_location": "s3://replay-metastore/volume-31",
+                            "metastore_id": "11111111-1111-1111-1111-111111111111",
+                            "volume_id": "00000000-0000-4000-8000-000000000031"}
+      - &read_managed
+        request: &read_request
+          method: GET
+          path: /api/2.1/unity-catalog/volumes/main.replay.drift_volume
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+            Accept: ""
+          body: null
+        response:
+          status: 200
+          body:
+            json: *managed
+      - *read_managed
+  - name: plan_after_create_is_empty
+    sdk_implementations:
+      databricks_volume: sdk_go
+    plan_only: true
+    config: *config
+    plan:
+      expect: empty
+      changes: {}
+    calls:
+      - *read_managed
+  - name: remote_comment_and_owner_change_plans_update
+    sdk_implementations:
+      databricks_volume: sdk_go
+    plan_only: true
+    config: *config
+    plan:
+      expect: non_empty
+      changes:
+        databricks_volume.this:
+          actions: [update]
+          before:
+            - path: [comment]
+              equals: changed outside terraform
+            - path: [owner]
+              equals: someone-else@example.com
+          after:
+            - path: [comment]
+              equals: managed by terraform
+            - path: [owner]
+              equals: data-engineers
+    calls:
+      - &read_drifted
+        request: *read_request
+        response:
+          status: 200
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "drift_volume", "full_name": "main.replay.drift_volume",
+                   "volume_type": "MANAGED", "comment": "changed outside terraform",
+                   "owner": "someone-else@example.com",
+                   "storage_location": "s3://replay-metastore/volume-31",
+                   "metastore_id": "11111111-1111-1111-1111-111111111111",
+                   "volume_id": "00000000-0000-4000-8000-000000000031"}
+  - name: apply_reverts_owner_then_comment
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: *config
+    calls:
+      - *read_drifted
+      - request:
+          method: PATCH
+          path: /api/2.1/unity-catalog/volumes/main.replay.drift_volume
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+            Accept: ""
+          body:
+            json: {"full_name_arg": "main.replay.drift_volume",
+                   "owner": "data-engineers"}
+        response:
+          status: 200
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "drift_volume", "full_name": "main.replay.drift_volume",
+                   "volume_type": "MANAGED", "comment": "changed outside terraform",
+                   "owner": "data-engineers",
+                   "storage_location": "s3://replay-metastore/volume-31",
+                   "metastore_id": "11111111-1111-1111-1111-111111111111",
+                   "volume_id": "00000000-0000-4000-8000-000000000031"}
+      - request:
+          method: PATCH
+          path: /api/2.1/unity-catalog/volumes/main.replay.drift_volume
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+            Accept: ""
+          body:
+            json: {"full_name_arg": "main.replay.drift_volume",
+                   "comment": "managed by terraform"}
+        response:
+          status: 200
+          body:
+            json: *managed
+      - *read_managed
+      - *read_managed
+  - name: plan_after_revert_is_empty
+    sdk_implementations:
+      databricks_volume: sdk_go
+    plan_only: true
+    config: *config
+    plan:
+      expect: empty
+      changes: {}
+    calls:
+      - *read_managed
+destroy:
+  calls:
+    - *read_managed
+    - request:
+        method: DELETE
+        path: /api/2.1/unity-catalog/volumes/main.replay.drift_volume
+        headers:
+          X-Databricks-Workspace-Id: "12345"
+        body: null
+      response:
+        status: 200
+        body:
+          json: {}

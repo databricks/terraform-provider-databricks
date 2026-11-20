@@ -102,7 +102,6 @@ func addEntitlementsToSchema(s map[string]*schema.Schema) {
 			Default:  false,
 		}
 	}
-	s["workspace_consume"].ConflictsWith = []string{"workspace_access", "databricks_sql_access"}
 }
 
 // ResourceMeta is a struct that contains the meta information about the SCIM group

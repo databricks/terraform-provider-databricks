@@ -126,11 +126,12 @@ func callSdkGo[T any](ctx context.Context, b *sdkGoBridge,
 type sdkGoAttemptKey struct{}
 
 // sdkGoAttempt carries state between the stages of one call: the last request sent and
-// the status line of its response, which classic error parsing needs, and the timeout of
-// the attempt being sent.
+// the status line and body of its response, which classic error parsing needs, and the
+// timeout of the attempt being sent.
 type sdkGoAttempt struct {
 	request *http.Request
 	status  string
+	body    []byte
 	timeout *attemptTimeout
 }
 

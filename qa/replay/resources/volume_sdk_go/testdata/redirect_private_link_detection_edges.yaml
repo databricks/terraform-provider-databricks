@@ -1,10 +1,7 @@
 # Runs volume/testdata/redirect_private_link_detection_edges.yaml with databricks_volume
-# on sdk-go uc/volumes/v1 in every step, and expects the same behavior except for the two
-# login pages answered 200 with HTML. Each fails the refresh with "failed to unmarshal
-# response body: invalid character '<' looking for beginning of value", where the existing
-# client reports "received HTML response instead of JSON". The volume requests and the
-# requests that follow their redirects carry no Accept header, which an empty header
-# expectation pins. The original's description:
+# on sdk-go uc/volumes/v1 in every step, and expects the same behavior. The volume
+# requests and the requests that follow their redirects carry no Accept header, which an
+# empty header expectation pins. The original's description:
 #
 # Pins where the classic SDK stops detecting a private-link login redirect on a refresh.
 # It looks for the literal error=private-link-validation-error in the final URL's raw
@@ -65,12 +62,11 @@ steps:
           body:
             json: *created
       - *read_created
-  - name: refresh_redirected_with_percent_encoded_value_fails_to_decode_html
+  - name: refresh_redirected_with_percent_encoded_value_fails_with_html_error
     sdk_implementations:
       databricks_volume: sdk_go
     config: *config
-    expect_error: 'Error: cannot read volume: failed to unmarshal response body: invalid
-      character ''<'' looking for beginning of value\n'
+    expect_error: 'Error: cannot read volume: received HTML response instead of JSON\n'
     calls:
       - request: *read_request
         response:
@@ -103,12 +99,11 @@ steps:
       changes: {}
     calls:
       - *read_created
-  - name: refresh_redirected_to_other_path_fails_to_decode_html
+  - name: refresh_redirected_to_other_path_fails_with_html_error
     sdk_implementations:
       databricks_volume: sdk_go
     config: *config
-    expect_error: 'Error: cannot read volume: failed to unmarshal response body: invalid
-      character ''<'' looking for beginning of value\n'
+    expect_error: 'Error: cannot read volume: received HTML response instead of JSON\n'
     calls:
       - request: *read_request
         response:

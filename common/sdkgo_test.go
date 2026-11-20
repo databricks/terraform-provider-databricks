@@ -17,6 +17,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/client"
 	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/databricks-sdk-go/config/credentials"
+	"github.com/databricks/databricks-sdk-go/httpclient"
 	"github.com/databricks/sdk-go/options/call"
 	sdkvolumes "github.com/databricks/sdk-go/uc/volumes/v1"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -258,6 +259,20 @@ func TestSdkGoClientRetriesHTMLTooManyRequestsLikeClassicClient(t *testing.T) {
 	assert.NoError(t, r.classicErr)
 	assert.NoError(t, r.err)
 	assert.EqualValues(t, 2, r.calls)
+	assert.Equal(t, r.classicCalls, r.calls)
+}
+
+// A login page answered 200 that isn't a Private Link redirect fails as HTML.
+func TestSdkGoClientReportsHTMLSuccessBodiesLikeClassicClient(t *testing.T) {
+	loginPage := func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		respond(http.StatusOK, "<html><body>Sign in</body></html>")(w, r)
+	}
+	r := readBothWays(t, context.Background, nil, loginPage)
+	assert.ErrorIs(t, r.classicErr, httpclient.ErrHTMLContent)
+	assert.ErrorIs(t, r.err, httpclient.ErrHTMLContent)
+	assert.EqualError(t, r.err, r.classicErr.Error())
+	assert.EqualValues(t, 1, r.calls)
 	assert.Equal(t, r.classicCalls, r.calls)
 }
 

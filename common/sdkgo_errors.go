@@ -14,6 +14,7 @@ import (
 
 	"github.com/databricks/databricks-sdk-go/apierr"
 	sdkcommon "github.com/databricks/databricks-sdk-go/common"
+	"github.com/databricks/databricks-sdk-go/httpclient"
 	"github.com/databricks/databricks-sdk-go/logger"
 	sdkapierr "github.com/databricks/sdk-go/core/apierr"
 	"golang.org/x/time/rate"
@@ -37,12 +38,7 @@ func (b *sdkGoBridge) classicError(ctx context.Context, err error,
 	}
 	apiErr, ok := errors.AsType[*sdkapierr.APIError](err)
 	if !ok || apiErr.HTTPStatusCode() < 0 {
-		var syntaxErr *json.SyntaxError
-		var typeErr *json.UnmarshalTypeError
-		if errors.As(err, &syntaxErr) || errors.As(err, &typeErr) {
-			return fmt.Errorf("failed to unmarshal response body: %w", err)
-		}
-		return err
+		return classicDecodeError(err, attempt)
 	}
 	body := apiErr.HTTPBody()
 	resp := &http.Response{
@@ -64,6 +60,22 @@ func (b *sdkGoBridge) classicError(ctx context.Context, err error,
 		return err
 	}
 	return mapped
+}
+
+// classicDecodeError returns the classic client's error for err, which has no HTTP
+// status, such as a failure to decode a successful response's body.
+func classicDecodeError(err error, attempt *sdkGoAttempt) error {
+	_, isSyntaxErr := errors.AsType[*json.SyntaxError](err)
+	// Like the classic client, a body that starts with "<" is reported as HTML, such as a
+	// login page that isn't a Private Link redirect.
+	if isSyntaxErr && attempt != nil && bytes.HasPrefix(attempt.body, []byte("<")) {
+		return httpclient.ErrHTMLContent
+	}
+	_, isTypeErr := errors.AsType[*json.UnmarshalTypeError](err)
+	if isSyntaxErr || isTypeErr {
+		return fmt.Errorf("failed to unmarshal response body: %w", err)
+	}
+	return err
 }
 
 // visitorError is a failure before a request is sent: in authentication or in a request

@@ -136,6 +136,12 @@ func NamespaceCustomizeSchemaMapImmutable(m map[string]*schema.Schema) map[strin
 // value when the config doesn't specify provider_config. This means d.GetChange()
 // shows no change in that case. We use GetRawConfigAt to inspect the actual user
 // config and determine the true effective new workspace ID.
+//
+// When the config sets workspace_id to a value that is unknown at plan time, such as
+// another resource's attribute, the planned value stays unknown and apply resolves it,
+// so no fallback is looked up. With forceNewOnChange, an existing resource is replaced,
+// because the new workspace may differ, except on a workspace host: apply rejects any
+// workspace but the host's own there, so the resource can't move.
 func namespaceForceNew(ctx context.Context, d *schema.ResourceDiff, c *DatabricksClient, forceNewOnChange bool) error {
 	workspaceIDKey := workspaceIDSchemaKey
 
@@ -146,7 +152,13 @@ func namespaceForceNew(ctx context.Context, d *schema.ResourceDiff, c *Databrick
 	// Determine the new effective workspace ID by inspecting the raw config.
 	// With Optional+Computed, d.GetChange may return the preserved state value
 	// rather than reflecting the actual config, so we check the raw config directly.
-	configWsID, configHasProviderConfig := workspaceIDFromRawDiffConfig(d)
+	configWsID, configHasProviderConfig, configWsIDKnown := workspaceIDFromRawDiffConfig(d)
+	if !configWsIDKnown {
+		if forceNewOnChange && oldEffective != "" && c.HostTypeForTerraform() != config.WorkspaceHost {
+			return forceNewOnUnknownWorkspaceID(d)
+		}
+		return nil
+	}
 
 	var newEffective string
 	if configHasProviderConfig {
@@ -194,23 +206,36 @@ func namespaceForceNew(ctx context.Context, d *schema.ResourceDiff, c *Databrick
 	return nil
 }
 
-// workspaceIDFromRawDiffConfig extracts the workspace ID from the raw config
-// of a ResourceDiff. Returns the workspace ID string and whether provider_config
-// is present in the config.
-func workspaceIDFromRawDiffConfig(d *schema.ResourceDiff) (string, bool) {
+// forceNewOnUnknownWorkspaceID plans a replacement while provider_config.workspace_id
+// is unknown. ForceNew on that nested key alone has no effect, because SDKv2 re-diffs an
+// unknown computed value as unset, so the whole block is marked unknown and ForceNew.
+func forceNewOnUnknownWorkspaceID(d *schema.ResourceDiff) error {
+	if err := d.SetNewComputed("provider_config"); err != nil {
+		return err
+	}
+	return d.ForceNew("provider_config")
+}
+
+// workspaceIDFromRawDiffConfig extracts provider_config.workspace_id from the raw
+// config of a ResourceDiff. It returns the value, whether the config sets it, and
+// whether the value is known at plan time.
+func workspaceIDFromRawDiffConfig(d *schema.ResourceDiff) (workspaceID string, set bool, known bool) {
 	path := cty.Path{
 		cty.GetAttrStep{Name: "provider_config"},
 		cty.IndexStep{Key: cty.NumberIntVal(0)},
 		cty.GetAttrStep{Name: "workspace_id"},
 	}
 	rawValue, diags := d.GetRawConfigAt(path)
-	if diags.HasError() || rawValue.IsNull() || !rawValue.IsKnown() {
-		return "", false
+	if diags.HasError() || rawValue.IsNull() {
+		return "", false, true
+	}
+	if !rawValue.IsKnown() {
+		return "", true, false
 	}
 	if rawValue.Type() == cty.String {
-		return rawValue.AsString(), true
+		return rawValue.AsString(), true, true
 	}
-	return "", false
+	return "", false, true
 }
 
 // ValidateApiLevelForUnifiedHost fails the plan when the provider is configured

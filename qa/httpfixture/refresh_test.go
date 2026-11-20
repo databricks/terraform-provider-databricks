@@ -9,7 +9,7 @@ import (
 func TestRefreshPreservesMatchersAcrossInterleavingAndRepeatedCalls(t *testing.T) {
 	old := Call{Request: Request{Method: "POST", Path: "/items", Query: map[string][]string{"request_id": {"old"}},
 		Body: &Body{JSON: map[string]any{"name": "old"}}, Matchers: Matchers{
-			Query: map[string]Matcher{"request_id": AnyString}, Headers: map[string]Matcher{"X-Request-ID": AnyString},
+			Query: map[string]Matcher{"request_id": {Type: AnyString}}, Headers: map[string]Matcher{"X-Request-ID": {Type: AnyString}},
 			JSON: []JSONMatcher{{Path: []any{"name"}, Type: AnyString}},
 		}}, Response: Response{Status: 200}}
 	newCall := func() Call {

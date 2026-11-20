@@ -21,7 +21,9 @@ The following arguments are supported:
   current Unity Catalog name, also reported in `effective_datasource_name`
 * `schedule` (Schedule, required) - Schedule on which the datasource's ingestion job runs. A datasource cannot be paused, so a
   request that sets `schedule.enabled` to `false` is rejected. Continuous schedules are not
-  supported for Unity Catalog connection datasources
+  supported for Unity Catalog connection datasources. For an existing-table datasource, runs
+  must be no further apart than the shorter of the source table's
+  `delta.deletedFileRetentionDuration` and `delta.logRetentionDuration`
 * `schema_name` (string, required) - Name of the Unity Catalog schema that contains the datasource. Required on create and
   cannot be changed afterward. Reads return the value as supplied; the schema's current name
   is reported in `effective_schema_name`

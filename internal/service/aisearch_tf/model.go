@@ -86,11 +86,10 @@ type CreateEndpointRequest struct {
 	// the desired configuration; `endpoint.name` is server-assigned from
 	// `parent` and `endpoint_id`.
 	Endpoint types.Object `tfsdk:"endpoint"`
-	// The user-supplied short name for the Endpoint, per AIP-133. The server
-	// composes the full `Endpoint.name` as `{parent}/endpoints/{endpoint_id}`.
-	// AIP-133 does not list `endpoint_id` as a fields-may-be-required entry, so
-	// we annotate it OPTIONAL on the wire; the server still rejects empty
-	// values with INVALID_PARAMETER_VALUE.
+	// Short name of the endpoint, which becomes the last segment of `name`. The
+	// server rejects a request without it. The name can have at most 50
+	// characters, can contain only lowercase letters, digits, hyphens, periods,
+	// and underscores, and must start and end with a letter or digit.
 	EndpointId types.String `tfsdk:"-"`
 	// The Workspace where this Endpoint will be created. Format:
 	// `workspaces/{workspace_id}`
@@ -1131,31 +1130,38 @@ func (m EmbeddingVectorColumn) Type(ctx context.Context) attr.Type {
 // and serves queries against them. Customers create, query, and delete
 // endpoints; the system manages provisioning, scaling, and health status.
 type Endpoint struct {
-	// The user-selected budget policy id for the endpoint.
+	// ID of the serverless budget policy to apply to the endpoint. The caller
+	// must have permission to use the policy. Set either this field or
+	// `usage_policy_id`, not both. Responses do not echo this field; they
+	// report the applied policy in `effective_budget_policy_id`.
 	BudgetPolicyId types.String `tfsdk:"budget_policy_id"`
 	// Time the endpoint was created.
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
-	// Creator of the endpoint
+	// User name of the principal that created the endpoint. For a user, it is
+	// the user's email address; for any other principal, it is the principal's
+	// unique name.
 	Creator types.String `tfsdk:"creator"`
-	// The custom tags assigned to the endpoint
+	// Custom tags assigned to the endpoint. On update, the list replaces all of
+	// the endpoint's existing tags.
 	CustomTags types.List `tfsdk:"custom_tags"`
-	// The budget policy id applied to the endpoint
+	// ID of the budget policy that is currently applied to the endpoint.
 	EffectiveBudgetPolicyId types.String `tfsdk:"effective_budget_policy_id"`
-	// Current status of the endpoint
+	// Current lifecycle state of the endpoint, with an optional message that
+	// explains it.
 	EndpointStatus types.Object `tfsdk:"endpoint_status"`
 	// Type of endpoint. Required on create and immutable thereafter.
 	EndpointType types.String `tfsdk:"endpoint_type"`
-	// Unique identifier of the endpoint
+	// System-generated UUID that uniquely identifies the endpoint.
 	Id types.String `tfsdk:"id"`
 	// Number of indexes on the endpoint
 	IndexCount types.Int64 `tfsdk:"index_count"`
-	// User who last updated the endpoint
+	// User name of the principal that last updated the endpoint, in the same
+	// format as `creator`.
 	LastUpdatedUser types.String `tfsdk:"last_updated_user"`
-	// Name of the AI Search endpoint. Server-assigned full resource path
-	// (`workspaces/{workspace}/endpoints/{endpoint}`) on output. On create, the
-	// user-supplied short name is conveyed via
-	// `CreateEndpointRequest.endpoint_id`; the server composes the full `name`
-	// and returns it on the response.
+	// Full resource name of the endpoint, in the form
+	// `workspaces/{workspace_id}/endpoints/{endpoint_id}`. On create, the
+	// server composes it from `parent` and `endpoint_id` and ignores any value
+	// supplied in the request body.
 	Name types.String `tfsdk:"name"`
 	// The client-supplied desired number of replicas for the endpoint, applied
 	// at create/update time. Mutually exclusive with `target_qps`.
@@ -1164,12 +1170,15 @@ type Endpoint struct {
 	ScalingInfo types.Object `tfsdk:"scaling_info"`
 	// Target QPS for the endpoint. Mutually exclusive with `replica_count`.
 	// Best-effort; the system does not guarantee this QPS will be achieved.
+	// Responses report the requested value in
+	// `scaling_info.requested_target_qps`.
 	TargetQps types.Int64 `tfsdk:"target_qps"`
 	// Throughput information for the endpoint
 	ThroughputInfo types.Object `tfsdk:"throughput_info"`
 	// Time the endpoint was last updated.
 	UpdateTime timetypes.RFC3339 `tfsdk:"update_time"`
-	// The usage policy id applied to the endpoint.
+	// ID of the usage policy to apply to the endpoint. The server treats it as
+	// the same setting as `budget_policy_id`, so set only one of the two.
 	UsagePolicyId types.String `tfsdk:"usage_policy_id"`
 }
 
@@ -2142,15 +2151,18 @@ func (m *Index) SetStatus(ctx context.Context, v IndexStatus) {
 // Lifecycle and health state of an AI Search index, along with human-readable
 // detail about that state and basic indexing progress.
 type IndexStatus struct {
+	// Lifecycle and ingestion state. An online index can still have a failed
+	// update.
+	DetailedState types.String `tfsdk:"detailed_state"`
 	// Index API URL used to perform operations on the index.
 	IndexUrl types.String `tfsdk:"index_url"`
 	// Number of rows indexed.
 	IndexedRowCount types.Int64 `tfsdk:"indexed_row_count"`
 	// Human-readable detail about the index's current state.
 	Message types.String `tfsdk:"message"`
-	// Whether the index is ready to serve queries. After CreateIndex, poll
-	// GetIndex until this is true; `message` describes the current state in the
-	// meantime.
+	// Whether the index can serve queries. After CreateIndex, poll GetIndex
+	// until true; message describes progress. This does not guarantee freshness
+	// or update success; check detailed_state for update failures.
 	Ready types.Bool `tfsdk:"ready"`
 }
 
@@ -2161,6 +2173,7 @@ func (to *IndexStatus) SyncFieldsDuringRead(ctx context.Context, from IndexStatu
 }
 
 func (m IndexStatus) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["detailed_state"] = attrs["detailed_state"].SetComputed()
 	attrs["index_url"] = attrs["index_url"].SetComputed()
 	attrs["indexed_row_count"] = attrs["indexed_row_count"].SetComputed()
 	attrs["message"] = attrs["message"].SetComputed()
@@ -2187,6 +2200,7 @@ func (m IndexStatus) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"detailed_state":    m.DetailedState,
 			"index_url":         m.IndexUrl,
 			"indexed_row_count": m.IndexedRowCount,
 			"message":           m.Message,
@@ -2198,6 +2212,7 @@ func (m IndexStatus) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (m IndexStatus) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"detailed_state":    types.StringType,
 			"index_url":         types.StringType,
 			"indexed_row_count": types.Int64Type,
 			"message":           types.StringType,
@@ -2207,10 +2222,9 @@ func (m IndexStatus) Type(ctx context.Context) attr.Type {
 }
 
 type ListEndpointsRequest struct {
-	// Best-effort upper bound on the number of results to return. Honored as an
-	// upper bound by the shim: `page_size` only narrows the legacy backend's
-	// response, never widens it, so the practical cap is `min(page_size,
-	// legacy_fixed_page_size)`.
+	// Maximum number of endpoints to return in one page. The server applies its
+	// own page size limit, so a page can hold fewer endpoints than `page_size`
+	// even when more remain.
 	PageSize types.Int64 `tfsdk:"-"`
 	// Page token from a previous response. If not provided, returns the first
 	// page.
@@ -4117,13 +4131,15 @@ type UpdateEndpointRequest struct {
 	// The Endpoint resource to update. `endpoint.name` carries the full
 	// resource path.
 	Endpoint types.Object `tfsdk:"endpoint"`
-	// Name of the AI Search endpoint. Server-assigned full resource path
-	// (`workspaces/{workspace}/endpoints/{endpoint}`) on output. On create, the
-	// user-supplied short name is conveyed via
-	// `CreateEndpointRequest.endpoint_id`; the server composes the full `name`
-	// and returns it on the response.
+	// Full resource name of the endpoint, in the form
+	// `workspaces/{workspace_id}/endpoints/{endpoint_id}`. On create, the
+	// server composes it from `parent` and `endpoint_id` and ignores any value
+	// supplied in the request body.
 	Name types.String `tfsdk:"-"`
-	// The list of fields to update.
+	// Comma-separated list of `Endpoint` fields to update. The updatable fields
+	// are `budget_policy_id`, `usage_policy_id`, `custom_tags`,
+	// `replica_count`, and `target_qps`. The server rejects nested paths and
+	// unknown fields.
 	UpdateMask types.String `tfsdk:"-"`
 }
 

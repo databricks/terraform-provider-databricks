@@ -1,11 +1,7 @@
-# Pins a known defect: the request paths for a volume name with "#". The classic client
-# puts the full name in the path unescaped, so "#2" becomes a URL fragment that is never
-# sent, and the GET, the PATCH and the DELETE all go to main.replay.raw. If a volume
-# named raw exists in that schema, they read, change and delete it instead. The fixtures
-# answer those requests with raw#2's own data because a stateless fixture can't model
-# which volume the workspace resolves main.replay.raw to, so this journey can't show the
-# wrong volume. The planned existing-path escaping fix is expected to change these
-# paths; update this journey with it. API responses are inferred from the Unity Catalog
+# Pins the request paths for a volume name with "#". The provider escapes the full name
+# before the classic client puts it in the path, so the GET, the PATCH and the DELETE
+# send "#" as %23. Unescaped, "#2" becomes a URL fragment that is never sent, and the
+# calls would go to main.replay.raw. API responses are inferred from the Unity Catalog
 # API contract, not recorded.
 version: 1
 enforce_call_order: true
@@ -44,7 +40,7 @@ steps:
       - &read_created
         request: &read_request
           method: GET
-          path: /api/2.1/unity-catalog/volumes/main.replay.raw
+          path: /api/2.1/unity-catalog/volumes/main.replay.raw%232
           headers:
             X-Databricks-Workspace-Id: "12345"
           body: null
@@ -61,31 +57,31 @@ steps:
               equals: main.replay.raw#2
             - path: [volume_path]
               equals: /Volumes/main/replay/raw#2
-  - name: update_comment_wrongly_patches_the_name_before_the_hash
+  - name: update_comment_patches_the_encoded_path
     config: |
       resource "databricks_volume" "this" {
         name         = "raw#2"
         catalog_name = "main"
         schema_name  = "replay"
         volume_type  = "MANAGED"
-        comment      = "truncated"
+        comment      = "encoded"
       }
     calls:
       - *read_created
       - request:
           method: PATCH
-          path: /api/2.1/unity-catalog/volumes/main.replay.raw
+          path: /api/2.1/unity-catalog/volumes/main.replay.raw%232
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
           body:
-            json: {"comment": "truncated"}
+            json: {"comment": "encoded"}
         response:
           status: 200
           body:
             json: &commented {"catalog_name": "main", "schema_name": "replay",
                               "name": "raw#2", "full_name": "main.replay.raw#2",
-                              "volume_type": "MANAGED", "comment": "truncated",
+                              "volume_type": "MANAGED", "comment": "encoded",
                               "owner": "replay-admin@example.com",
                               "storage_location": "s3://replay-metastore/volume-165",
                               "metastore_id": "11111111-1111-1111-1111-111111111111",
@@ -97,14 +93,14 @@ steps:
           body:
             json: *commented
       - *read_commented
-  - name: delete_wrongly_deletes_the_name_before_the_hash
+  - name: delete_deletes_the_encoded_path
     config: |
       provider "databricks" {}
     calls:
       - *read_commented
       - request:
           method: DELETE
-          path: /api/2.1/unity-catalog/volumes/main.replay.raw
+          path: /api/2.1/unity-catalog/volumes/main.replay.raw%232
           headers:
             X-Databricks-Workspace-Id: "12345"
           body: null

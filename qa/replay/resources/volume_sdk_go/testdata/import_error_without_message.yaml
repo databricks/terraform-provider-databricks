@@ -1,0 +1,80 @@
+# Runs volume/testdata/import_error_without_message.yaml with databricks_volume on sdk-go
+# uc/volumes/v1 in every step, and expects the same behavior. The volume GET requests
+# carry no Accept header, which an empty header expectation pins. The original's
+# description:
+#
+# Pins the only import failure that the importer itself reports. An error body without
+# a message gives an error whose text is empty, so diags[0].Validate() in the default
+# importer fails with "empty summary": the user sees that text with no resource name,
+# and Terraform makes no refresh GET. A 404 fails the same way instead of Terraform's
+# non-existent object error. Nothing is imported, so the following plan creates the
+# volume. API responses are inferred from the Unity Catalog API contract, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: import_answered_403_without_message_fails_in_the_importer
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: &config |
+      resource "databricks_volume" "this" {
+        name         = "no_message_volume"
+        catalog_name = "main"
+        schema_name  = "replay"
+        volume_type  = "MANAGED"
+      }
+    import:
+      resource: databricks_volume.this
+      id: main.replay.no_message_volume
+      persist: true
+    expect_error: 'Error: empty summary\n'
+    calls:
+      - request: &read_request
+          method: GET
+          path: /api/2.1/unity-catalog/volumes/main.replay.no_message_volume
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+            Accept: ""
+          body: null
+        response:
+          status: 403
+          body:
+            json: {"error_code": "PERMISSION_DENIED"}
+  - name: nothing_imported_after_403_so_plan_creates
+    sdk_implementations:
+      databricks_volume: sdk_go
+    plan_only: true
+    config: *config
+    plan: &plans_create
+      expect: non_empty
+      changes:
+        databricks_volume.this:
+          actions: [create]
+    calls: []
+  - name: import_answered_404_without_message_fails_in_the_importer
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: *config
+    import:
+      resource: databricks_volume.this
+      id: main.replay.no_message_volume
+      persist: true
+    expect_error: 'Error: empty summary\n'
+    calls:
+      - request: *read_request
+        response:
+          status: 404
+          body:
+            json: {"error_code": "RESOURCE_DOES_NOT_EXIST"}
+  - name: nothing_imported_after_404_so_plan_creates
+    sdk_implementations:
+      databricks_volume: sdk_go
+    plan_only: true
+    config: *config
+    plan: *plans_create
+    calls: []
+destroy:
+  calls: []

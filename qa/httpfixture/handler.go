@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"strings"
 	"sync"
+	"time"
 )
 
 // Request defines a complete signature; only listed headers are compared.
@@ -25,15 +26,29 @@ type Request struct {
 
 // Response defines the HTTP reply, with an optional JSON, text, or binary body.
 type Response struct {
-	Status  int               `yaml:"status"`
+	Status  int               `yaml:"status,omitempty"`
 	Headers map[string]string `yaml:"headers,omitempty"`
 	Body    *Body             `yaml:"body"`
+	// Delay is a Go duration, such as 2s, to wait before writing anything. The
+	// wait ends early when the client closes the connection.
+	Delay string `yaml:"delay,omitempty"`
+	// Fault breaks the connection. Reset and close omit status, headers and body.
+	Fault Fault `yaml:"fault,omitempty"`
+	// StatusLine is the literal status line, such as HTTP/1.1 404 without a
+	// reason phrase. Its code must equal Status.
+	StatusLine string `yaml:"status_line,omitempty"`
 }
 
 // Call pairs a request signature with its response.
 type Call struct {
 	Request  Request  `yaml:"request"`
 	Response Response `yaml:"response"`
+	// Times expects the call more than once in a row, each time with the same response.
+	Times Times `yaml:"times,omitempty"`
+	// MinGap and MaxGap are Go durations bounding the time since the previous
+	// matched call's arrival, or with Times, since the call's previous repetition.
+	MinGap string `yaml:"min_gap,omitempty"`
+	MaxGap string `yaml:"max_gap,omitempty"`
 }
 
 type exchange struct {
@@ -41,8 +56,9 @@ type exchange struct {
 	expectedBody any
 	matchers     Matchers
 	responseBody []byte
+	delay        time.Duration
 	bodyKind     string
-	used         bool
+	repeat
 }
 
 // Handler permits independent requests to interleave and consumes identical
@@ -54,6 +70,8 @@ type Handler struct {
 	reusable         []exchange
 	failures         []error
 	enforceCallOrder bool
+	// arrivals lists the step's matched calls, in the order they took the lock.
+	arrivals []arrival
 }
 
 // NewHandler returns an empty handler; fixture sets are configured separately.
@@ -78,6 +96,12 @@ func (h *Handler) SetReusableFixtures(calls []Call) error {
 	if err != nil {
 		return err
 	}
+	for i, e := range compiled {
+		if e.repeated || e.hasGap() {
+			return fmt.Errorf("reusable call %d: times, min_gap and max_gap apply "+
+				"only to step calls", i+1)
+		}
+	}
 	h.mu.Lock()
 	defer h.mu.Unlock()
 	h.reusable = compiled
@@ -95,6 +119,7 @@ func (h *Handler) StartStep(label string, calls []Call) error {
 	defer h.mu.Unlock()
 	err = h.verify()
 	h.label, h.calls, h.failures = label, compiled, nil
+	h.arrivals = nil
 	return err
 }
 
@@ -109,7 +134,7 @@ func compileCalls(calls []Call) ([]exchange, error) {
 		if strings.ContainsAny(call.Request.Path, "?#") {
 			return nil, fmt.Errorf("call %d: query parameters must use query", i+1)
 		}
-		if call.Response.Status < 100 || call.Response.Status > 599 {
+		if call.Response.writesStatus() && (call.Response.Status < 100 || call.Response.Status > 599) {
 			return nil, fmt.Errorf("call %d: invalid response status %d", i+1, call.Response.Status)
 		}
 		e := exchange{call: call}
@@ -134,11 +159,11 @@ func compileCalls(calls []Call) ([]exchange, error) {
 		if err != nil {
 			return nil, fmt.Errorf("call %d request matchers: %w", i+1, err)
 		}
-		if call.Response.Body != nil {
-			e.responseBody, err = call.Response.Body.literalBytes()
-			if err != nil {
-				return nil, fmt.Errorf("call %d response: %w", i+1, err)
-			}
+		if err := compileResponse(&e, call.Response); err != nil {
+			return nil, fmt.Errorf("call %d response: %w", i+1, err)
+		}
+		if e.repeat, err = compileRepeat(call); err != nil {
+			return nil, fmt.Errorf("call %d: %w", i+1, err)
 		}
 		result[i] = e
 	}
@@ -187,10 +212,10 @@ func normalizeNumbers(value any) any {
 	return value
 }
 
-// matches checks the whole signature without consuming the exchange.
+// matches checks the whole signature, whether or not the exchange is still open.
 func (e *exchange) matches(req *http.Request, body requestBody) bool {
 	expected := e.call.Request
-	if e.used || expected.Method != req.Method || expected.Path != req.URL.EscapedPath() {
+	if expected.Method != req.Method || expected.Path != req.URL.EscapedPath() {
 		return false
 	}
 	if !matchesQuery(expected.Query, e.matchers.Query, req.URL.Query()) {
@@ -222,52 +247,101 @@ func (e *exchange) matches(req *http.Request, body requestBody) bool {
 	}
 }
 
-// ServeHTTP prefers consumable step fixtures over reusable fallbacks. Matching
-// and consumption share a lock so concurrent requests cannot consume a call twice.
+// ServeHTTP prefers consumable step fixtures over reusable fallbacks.
 func (h *Handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	// Gaps are measured between arrivals, before reading the body or taking the lock.
+	arrival := time.Now()
+	e, label := h.consume(w, req, arrival)
+	if e == nil {
+		return
+	}
+	if err := respond(w, req, e); err != nil {
+		h.mu.Lock()
+		defer h.mu.Unlock()
+		h.failures = append(h.failures, fmt.Errorf("%s: %s %s: %w", label, req.Method, req.URL.RequestURI(), err))
+	}
+}
+
+// consume matches and consumes a fixture under the lock, so concurrent requests
+// cannot consume a call twice. It returns nil after reporting a failure.
+func (h *Handler) consume(
+	w http.ResponseWriter, req *http.Request, arrival time.Time,
+) (*exchange, string) {
 	body, err := parseRequestBody(req)
 	h.mu.Lock()
 	defer h.mu.Unlock()
 	if err != nil {
 		h.fail(w, fmt.Errorf("%s: %s %s: invalid request body: %w", h.label, req.Method, req.URL.RequestURI(), err))
-		return
+		return nil, ""
 	}
-	next := -1
 	for i := range h.calls {
-		if next == -1 && !h.calls[i].used {
-			next = i
+		if !h.calls[i].open() || !h.calls[i].matches(req, body) {
+			continue
 		}
-		if h.calls[i].matches(req, body) {
-			if h.enforceCallOrder && i != next {
-				expected := h.calls[next].call.Request
-				h.fail(w, fmt.Errorf("%s: out-of-order HTTP call: %s %s body=%s matched call %d; next expected call %d: %s %s", h.label, req.Method, req.URL.RequestURI(), body.raw, i+1, next+1, expected.Method, expected.Path))
-				return
-			}
-			h.calls[i].used = true
-			writeResponse(w, &h.calls[i])
-			return
+		if next := h.nextRequired(); next != -1 && i > next {
+			expected := h.calls[next].call.Request
+			h.fail(w, fmt.Errorf("%s: out-of-order HTTP call: %s %s body=%s "+
+				"matched call %d; next expected call %d: %s %s",
+				h.label, req.Method, req.URL.RequestURI(), body.raw,
+				i+1, next+1, expected.Method, expected.Path))
+			return nil, ""
 		}
+		h.record(i, req, arrival)
+		return &h.calls[i], h.label
 	}
 	for i := range h.reusable {
 		if h.reusable[i].matches(req, body) {
-			writeResponse(w, &h.reusable[i])
-			return
+			return &h.reusable[i], h.label
 		}
 	}
 	h.fail(w, fmt.Errorf("%s: unexpected HTTP call: %s %s body=%s", h.label, req.Method, req.URL.RequestURI(), body.raw))
+	return nil, ""
+}
+
+// nextRequired returns the first open call matched fewer than its minimum
+// number of times, which ordered replay cannot skip past. It returns -1 when
+// nothing is required or calls are unordered.
+func (h *Handler) nextRequired() int {
+	if !h.enforceCallOrder {
+		return -1
+	}
+	for i := range h.calls {
+		if h.calls[i].open() && !h.calls[i].satisfied() {
+			return i
+		}
+	}
+	return -1
+}
+
+// record consumes call i at its arrival time. Ordered replay closes the
+// earlier calls, which can no longer repeat.
+func (h *Handler) record(i int, req *http.Request, at time.Time) {
+	if h.enforceCallOrder {
+		for j := range h.calls[:i] {
+			h.calls[j].closed = true
+		}
+	}
+	h.calls[i].count++
+	request := req.Method + " " + req.URL.RequestURI()
+	h.arrivals = append(h.arrivals, arrival{call: i, at: at, request: request})
 }
 
 func writeResponse(w http.ResponseWriter, e *exchange) {
-	for key, value := range e.call.Response.Headers {
-		w.Header().Set(key, value)
-	}
-	if e.call.Response.Body != nil && w.Header().Get("Content-Type") == "" {
-		kind, _ := e.call.Response.Body.kind()
-		contentType := map[string]string{"json": "application/json", "text": "text/plain; charset=utf-8", "base64": "application/octet-stream"}
-		w.Header().Set("Content-Type", contentType[kind])
-	}
+	setResponseHeaders(w.Header(), e)
 	w.WriteHeader(e.call.Response.Status)
 	_, _ = w.Write(e.responseBody)
+}
+
+// setResponseHeaders applies the explicit headers, then the body's default type.
+func setResponseHeaders(header http.Header, e *exchange) {
+	for key, value := range e.call.Response.Headers {
+		header.Set(key, value)
+	}
+	if e.call.Response.Body != nil && header.Get("Content-Type") == "" {
+		kind, _ := e.call.Response.Body.kind()
+		contentType := map[string]string{"json": "application/json", "text": "text/plain; charset=utf-8", "base64": "application/octet-stream"}
+		header.Set("Content-Type", contentType[kind])
+	}
 }
 
 func (h *Handler) fail(w http.ResponseWriter, err error) {
@@ -288,9 +362,12 @@ func (h *Handler) Verify() error {
 func (h *Handler) verify() error {
 	failures := append([]error(nil), h.failures...)
 	for i, e := range h.calls {
-		if !e.used {
-			failures = append(failures, fmt.Errorf("%s: unconsumed call %d: %s %s", h.label, i+1, e.call.Request.Method, e.call.Request.Path))
+		if !e.satisfied() {
+			failures = append(failures, fmt.Errorf("%s: unconsumed call %d: %s %s%s",
+				h.label, i+1, e.call.Request.Method, e.call.Request.Path,
+				e.countDetail()))
 		}
 	}
+	failures = append(failures, h.gapFailures()...)
 	return errors.Join(failures...)
 }

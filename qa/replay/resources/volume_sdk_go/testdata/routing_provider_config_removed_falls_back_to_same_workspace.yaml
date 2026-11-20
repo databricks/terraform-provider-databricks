@@ -1,7 +1,7 @@
-# Runs volume/testdata/routing_provider_config_removed_falls_back_to_same_workspace.yaml
-# with databricks_volume on sdk-go uc/volumes/v1 in every step, and expects the same
-# behavior. The volume POST and GET requests carry no Accept header, which an empty header
-# expectation pins. The original's description:
+# Runs routing_provider_config_removed_falls_back_to_same_workspace.yaml from
+# volume_routing/testdata with databricks_volume on sdk-go uc/volumes/v1 in every step,
+# and expects the same behavior. The volume POST and GET requests carry no Accept header,
+# which an empty header expectation pins. The original's description:
 #
 # Pins removing the provider_config block when the provider-level workspace_id names
 # the same workspace, on an account-level provider. The plan without refresh makes no

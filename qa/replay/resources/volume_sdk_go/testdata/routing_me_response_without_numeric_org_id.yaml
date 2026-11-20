@@ -1,4 +1,4 @@
-# Runs volume/testdata/routing_me_response_without_numeric_org_id.yaml with
+# Runs volume_routing/testdata/routing_me_response_without_numeric_org_id.yaml with
 # databricks_volume on sdk-go uc/volumes/v1 in every step, and expects the same behavior.
 # It makes no volume call, so its fixtures are unchanged. The original's description:
 #

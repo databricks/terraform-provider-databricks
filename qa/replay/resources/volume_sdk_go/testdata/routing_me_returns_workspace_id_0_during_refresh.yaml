@@ -1,4 +1,4 @@
-# Runs volume/testdata/routing_me_returns_workspace_id_0_during_refresh.yaml with
+# Runs volume_routing/testdata/routing_me_returns_workspace_id_0_during_refresh.yaml with
 # databricks_volume on sdk-go uc/volumes/v1 in every step, and expects the same behavior.
 # The volume POST requests carry no Accept header, which an empty header expectation pins.
 # The original's description:

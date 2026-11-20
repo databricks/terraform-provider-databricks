@@ -1,7 +1,7 @@
-# Runs volume/testdata/provider_config_on_account_provider.yaml with databricks_volume on
-# sdk-go uc/volumes/v1 in every step, and expects the same behavior. The volume POST and
-# GET requests carry no Accept header, which an empty header expectation pins. The
-# original's description:
+# Runs volume_routing/testdata/provider_config_on_account_provider.yaml with
+# databricks_volume on sdk-go uc/volumes/v1 in every step, and expects the same behavior.
+# The volume POST and GET requests carry no Accept header, which an empty header
+# expectation pins. The original's description:
 #
 # Pins an account-level provider with provider_config.workspace_id. Every Terraform
 # command that touches the volume first looks up the workspace through the account

@@ -1,7 +1,7 @@
-# Runs volume/testdata/provider_config_matching_workspace_id.yaml with databricks_volume
-# on sdk-go uc/volumes/v1 in every step, and expects the same behavior. The volume POST
-# and GET requests carry no Accept header, which an empty header expectation pins. The
-# original's description:
+# Runs volume_routing/testdata/provider_config_matching_workspace_id.yaml with
+# databricks_volume on sdk-go uc/volumes/v1 in every step, and expects the same behavior.
+# The volume POST and GET requests carry no Accept header, which an empty header
+# expectation pins. The original's description:
 #
 # Pins provider_config.workspace_id equal to the workspace of a workspace-level
 # provider: create, refresh, import and delete make the same calls as without the

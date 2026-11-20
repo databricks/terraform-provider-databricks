@@ -1,6 +1,6 @@
-# Runs volume/testdata/routing_leading_zero_workspace_id_on_account_provider.yaml with
-# databricks_volume on sdk-go uc/volumes/v1 in every step, and expects the same behavior.
-# The volume POST and GET requests carry no Accept header, which an empty header
+# Runs volume_routing/testdata/routing_leading_zero_workspace_id_on_account_provider.yaml
+# with databricks_volume on sdk-go uc/volumes/v1 in every step, and expects the same
+# behavior. The volume POST and GET requests carry no Accept header, which an empty header
 # expectation pins. The original's description:
 #
 # Pins a leading-zero provider_config.workspace_id on an account-level provider. The

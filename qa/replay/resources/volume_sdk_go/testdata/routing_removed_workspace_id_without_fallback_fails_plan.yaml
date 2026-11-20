@@ -1,6 +1,7 @@
-# Runs volume/testdata/routing_removed_workspace_id_without_fallback_fails_plan.yaml with
-# databricks_volume on sdk-go uc/volumes/v1 in every step, and expects the same behavior.
-# The volume POST and GET requests carry no Accept header, which an empty header
+# Runs
+# volume_routing/testdata/routing_removed_workspace_id_without_fallback_fails_plan.yaml
+# with databricks_volume on sdk-go uc/volumes/v1 in every step, and expects the same
+# behavior. The volume POST and GET requests carry no Accept header, which an empty header
 # expectation pins. The original's description:
 #
 # Pins removing the provider_config block on an account-level provider without a

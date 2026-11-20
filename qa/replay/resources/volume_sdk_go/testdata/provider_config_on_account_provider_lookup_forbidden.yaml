@@ -1,6 +1,6 @@
-# Runs volume/testdata/provider_config_on_account_provider_lookup_forbidden.yaml with
-# databricks_volume on sdk-go uc/volumes/v1 in every step, and expects the same behavior.
-# The volume POST and GET requests carry no Accept header, which an empty header
+# Runs volume_routing/testdata/provider_config_on_account_provider_lookup_forbidden.yaml
+# with databricks_volume on sdk-go uc/volumes/v1 in every step, and expects the same
+# behavior. The volume POST and GET requests carry no Accept header, which an empty header
 # expectation pins. The original's description:
 #
 # Pins an account-level provider whose workspace lookup answers 403. The provider

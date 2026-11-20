@@ -1,9 +1,9 @@
-# Runs volume/testdata/routing_provider_config_removed_falls_back_to_other_workspace.yaml
-# with databricks_volume on sdk-go uc/volumes/v1 in every step, and expects the same
-# behavior. The volume POST, GET and PATCH requests carry no Accept header, which an empty
-# header expectation pins. Each PATCH body also carries full_name_arg, the full name in
-# its path, because sdk-go serializes the path field into the body. The original's
-# description:
+# Runs routing_provider_config_removed_falls_back_to_other_workspace.yaml from
+# volume_routing/testdata with databricks_volume on sdk-go uc/volumes/v1 in every step,
+# and expects the same behavior. The volume POST, GET and PATCH requests carry no Accept
+# header, which an empty header expectation pins. Each PATCH body also carries
+# full_name_arg, the full name in its path, because sdk-go serializes the path field into
+# the body. The original's description:
 #
 # Pins removing the provider_config block when the provider-level workspace_id names a
 # different workspace, on an account-level provider. The plan refreshes through the

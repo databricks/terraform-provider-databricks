@@ -1,8 +1,9 @@
-# Runs volume/testdata/provider_config_workspace_id_change_updates_in_place.yaml with
-# databricks_volume on sdk-go uc/volumes/v1 in every step, and expects the same behavior.
-# The volume POST, GET and PATCH requests carry no Accept header, which an empty header
-# expectation pins. Each PATCH body also carries full_name_arg, the full name in its path,
-# because sdk-go serializes the path field into the body. The original's description:
+# Runs volume_routing/testdata/provider_config_workspace_id_change_updates_in_place.yaml
+# with databricks_volume on sdk-go uc/volumes/v1 in every step, and expects the same
+# behavior. The volume POST, GET and PATCH requests carry no Accept header, which an empty
+# header expectation pins. Each PATCH body also carries full_name_arg, the full name in
+# its path, because sdk-go serializes the path field into the body. The original's
+# description:
 #
 # Pins a change of provider_config.workspace_id on an account-level provider. The
 # volume belongs to the metastore, so the plan is an in-place update, not a

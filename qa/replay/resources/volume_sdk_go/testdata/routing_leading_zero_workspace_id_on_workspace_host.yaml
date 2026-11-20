@@ -1,6 +1,7 @@
-# Runs volume/testdata/routing_leading_zero_workspace_id_on_workspace_host.yaml with
-# databricks_volume on sdk-go uc/volumes/v1 in every step, and expects the same behavior.
-# It makes no volume call, so its fixtures are unchanged. The original's description:
+# Runs volume_routing/testdata/routing_leading_zero_workspace_id_on_workspace_host.yaml
+# with databricks_volume on sdk-go uc/volumes/v1 in every step, and expects the same
+# behavior. It makes no volume call, so its fixtures are unchanged. The original's
+# description:
 #
 # Pins a leading-zero provider_config.workspace_id on a workspace-level provider whose
 # host metadata names the same workspace without the zero. The plan succeeds without

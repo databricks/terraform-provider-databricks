@@ -1,7 +1,7 @@
-# Runs volume/testdata/routing_resource_workspace_id_overrides_provider_workspace_id.yaml
-# with databricks_volume on sdk-go uc/volumes/v1 in every step, and expects the same
-# behavior. The volume POST and GET requests carry no Accept header, which an empty header
-# expectation pins. The original's description:
+# Runs routing_resource_workspace_id_overrides_provider_workspace_id.yaml from
+# volume_routing/testdata with databricks_volume on sdk-go uc/volumes/v1 in every step,
+# and expects the same behavior. The volume POST and GET requests carry no Accept header,
+# which an empty header expectation pins. The original's description:
 #
 # Pins an account-level provider whose provider-level workspace_id differs from the
 # resource's provider_config.workspace_id. Create, refresh and delete look up and route

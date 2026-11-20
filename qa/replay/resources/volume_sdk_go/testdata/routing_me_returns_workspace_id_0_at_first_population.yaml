@@ -1,10 +1,10 @@
-# Runs volume/testdata/routing_me_returns_workspace_id_0_at_first_population.yaml with
-# databricks_volume on sdk-go uc/volumes/v1 in every step, and expects the same behavior.
-# The volume POST requests carry no Accept header, which an empty header expectation pins.
-# Every step expects an error, so destroy runs with the runner's fallback cleanup
-# configuration, which selects no SDK implementation: its volume GET and DELETE go
-# through the existing client and carry Accept application/json, which destroy pins. The
-# original's description:
+# Runs volume_routing/testdata/routing_me_returns_workspace_id_0_at_first_population.yaml
+# with databricks_volume on sdk-go uc/volumes/v1 in every step, and expects the same
+# behavior. The volume POST requests carry no Accept header, which an empty header
+# expectation pins. Every step expects an error, so destroy runs with the runner's
+# fallback cleanup configuration, which selects no SDK implementation: its volume GET and
+# DELETE go through the existing client and carry Accept application/json, which destroy
+# pins. The original's description:
 #
 # Pins SCIM /Me answering with X-Databricks-Org-Id 0 when create first populates
 # provider_config, on a workspace-level provider whose host metadata has no workspace

@@ -1,6 +1,6 @@
-# Runs volume/testdata/routing_provider_config_workspace_id_unknown_at_plan.yaml with
-# databricks_volume on sdk-go uc/volumes/v1 in every step, and expects the same behavior.
-# The volume POST and GET requests carry no Accept header, which an empty header
+# Runs volume_routing/testdata/routing_provider_config_workspace_id_unknown_at_plan.yaml
+# with databricks_volume on sdk-go uc/volumes/v1 in every step, and expects the same
+# behavior. The volume POST and GET requests carry no Accept header, which an empty header
 # expectation pins. The original's description:
 #
 # Pins provider_config.workspace_id taken from another resource, so it is unknown at

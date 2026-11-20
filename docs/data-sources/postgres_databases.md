@@ -2,7 +2,7 @@
 subcategory: "Postgres"
 ---
 # databricks_postgres_databases Data Source
-[![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
+[![GA](https://img.shields.io/badge/Release_Stage-GA-green)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
 [API Documentation](https://docs.databricks.com/api/workspace/postgres)
 
@@ -65,6 +65,7 @@ This data source exports a single attribute, `databases`. It is a list of resour
 * `role` (string) - The name of the role that owns the database.
   Format: projects/{project_id}/branches/{branch_id}/roles/{role_id}
   
+  The role must be in the same branch as the database.
   To change the owner, pass valid existing Role name when updating the Database
   
   Required when creating the Database

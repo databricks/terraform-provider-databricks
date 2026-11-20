@@ -99,13 +99,14 @@ func (r ProviderConfigData) Type(ctx context.Context) attr.Type {
 
 // SyncedTableData extends the main model with additional fields.
 type SyncedTableData struct {
+	// The time when the synced table was created.
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
-	// Output only. The Full resource name of the synced table in Postgres where
-	// (catalog, schema, table) are the UC entity names.
+	// The full resource name of the synced table, where (catalog, schema,
+	// table) are the Unity Catalog names of the synced table.
 	//
-	// Format "synced_tables/{catalog}.{schema}.{table}"
+	// Format: "synced_tables/{catalog}.{schema}.{table}".
 	//
-	// For the corresponding source table in the Unity catalog look for the
+	// For the corresponding source table in Unity Catalog, look for the
 	// "source_table_full_name" attribute.
 	Name types.String `tfsdk:"name"`
 	// Configuration details of the synced table, such as the source table,
@@ -113,7 +114,9 @@ type SyncedTableData struct {
 	Spec types.Object `tfsdk:"spec"`
 	// Synced Table data synchronization status.
 	Status types.Object `tfsdk:"status"`
-	// The part of the name, chosen by the user when the resource was created.
+	// The three-part Unity Catalog name of the synced table, in the format
+	// "{catalog}.{schema}.{table}". It is the synced_table_id that was used to
+	// create the synced table and the last component of name.
 	SyncedTableId types.String `tfsdk:"synced_table_id"`
 	// The Unity Catalog table ID for this synced table.
 	Uid                types.String `tfsdk:"uid"`

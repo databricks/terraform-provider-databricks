@@ -243,12 +243,20 @@ func (m *DatabricksServiceExceptionWithDetailsProto_SdkV2) SetDetails(ctx contex
 // configuration. This resource contains the workspace base environments that
 // are used as defaults for serverless notebooks and jobs in the workspace, for
 // both CPU and GPU compute types.
+//
+// When cpu_workspace_base_environment or gpu_workspace_base_environment is
+// unset, new serverless notebooks for that compute type use the Databricks
+// Standard base environment: the latest stable standard environment version
+// provided by Databricks, with no workspace base environment applied. The
+// workspace settings page shows this as Standard Latest.
 type DefaultWorkspaceBaseEnvironment_SdkV2 struct {
-	// The default workspace base environment for CPU compute. Format:
-	// workspace-base-environments/{workspace_base_environment}
+	// The default workspace base environment for CPU compute. If unset, CPU
+	// compute defaults to the Databricks Standard base environment (Standard
+	// Latest). Format: workspace-base-environments/{workspace_base_environment}
 	CpuWorkspaceBaseEnvironment types.String `tfsdk:"cpu_workspace_base_environment"`
-	// The default workspace base environment for GPU compute. Format:
-	// workspace-base-environments/{workspace_base_environment}
+	// The default workspace base environment for GPU compute. If unset, GPU
+	// compute defaults to the Databricks Standard base environment (Standard
+	// Latest). Format: workspace-base-environments/{workspace_base_environment}
 	GpuWorkspaceBaseEnvironment types.String `tfsdk:"gpu_workspace_base_environment"`
 	// The resource name of this singleton resource. Format:
 	// default-workspace-base-environment
@@ -907,7 +915,7 @@ func (m *Operation_SdkV2) SetError(ctx context.Context, v DatabricksServiceExcep
 
 // Request message for RefreshWorkspaceBaseEnvironments.
 type RefreshWorkspaceBaseEnvironmentRequest_SdkV2 struct {
-	// Required. The resource name of the workspace base environment to delete.
+	// Required. The resource name of the workspace base environment to refresh.
 	// Format: workspace-base-environments/{workspace_base_environment}
 	Name types.String `tfsdk:"-"`
 }
@@ -968,7 +976,10 @@ type UpdateDefaultWorkspaceBaseEnvironmentRequest_SdkV2 struct {
 	//
 	// To unset one or both defaults, include the field path(s) in the mask and
 	// omit them from the request body. To unset both, you must list both paths
-	// explicitly — the wildcard '*' cannot be used to unset fields.
+	// explicitly — the wildcard '*' cannot be used to unset fields. Unsetting
+	// a default makes that compute type use the Databricks Standard base
+	// environment. The Standard base environment has no resource name, so
+	// unsetting the field is the only way to select it.
 	UpdateMask types.String `tfsdk:"-"`
 }
 
@@ -1071,9 +1082,15 @@ func (m *UpdateDefaultWorkspaceBaseEnvironmentRequest_SdkV2) SetDefaultWorkspace
 }
 
 type UpdateWorkspaceBaseEnvironmentRequest_SdkV2 struct {
+	// The resource name of the workspace base environment to update. Format:
+	// workspace-base-environments/{workspace_base_environment}
 	Name types.String `tfsdk:"-"`
-	// Required. The workspace base environment with updated fields. The name
-	// field is used to identify the environment to update.
+	// The workspace base environment with its new configuration. The `name`
+	// path parameter identifies the environment to update. Set `display_name`
+	// and `filepath` on every update, even when they do not change. An update
+	// keeps the stored `base_environment_type`, but the YAML file is validated
+	// against the type in the request, which defaults to `CPU`, so also set it
+	// for a GPU environment.
 	WorkspaceBaseEnvironment types.List `tfsdk:"workspace_base_environment"`
 }
 
@@ -1175,7 +1192,7 @@ func (m *UpdateWorkspaceBaseEnvironmentRequest_SdkV2) SetWorkspaceBaseEnvironmen
 // configuration consisting of an environment version and a list of
 // dependencies.
 type WorkspaceBaseEnvironment_SdkV2 struct {
-	// The type of base environment (CPU or GPU).
+	// The type of base environment (CPU or GPU). The default is `CPU`.
 	BaseEnvironmentType          types.String `tfsdk:"base_environment_type"`
 	EffectiveBaseEnvironmentType types.String `tfsdk:"effective_base_environment_type"`
 	// Timestamp when the environment was created.
@@ -1184,20 +1201,29 @@ type WorkspaceBaseEnvironment_SdkV2 struct {
 	CreatorUserId types.String `tfsdk:"creator_user_id"`
 	// Human-readable display name for the workspace base environment.
 	DisplayName types.String `tfsdk:"display_name"`
-	// The WSFS or UC Volumes path to the environment YAML file.
+	// The workspace file or Unity Catalog volume path to the YAML file that
+	// defines the environment version and dependencies. The file name must end
+	// in `.yaml` or `.yml`. Create and update requests must set this field.
 	Filepath types.String `tfsdk:"filepath"`
 	// Whether this is the default environment for the workspace.
 	IsDefault types.Bool `tfsdk:"is_default"`
 	// User ID of the last user who updated the environment.
 	LastUpdatedUserId types.String `tfsdk:"last_updated_user_id"`
 	// Status message providing additional details about the environment status.
+	// When the status is `FAILED`, the message contains the build error.
 	Message types.String `tfsdk:"message"`
 	// The resource name of the workspace base environment. Format:
-	// workspace-base-environments/{workspace-base-environment}
+	// workspace-base-environments/{workspace-base-environment} The server
+	// ignores this field on create and builds the name from
+	// `workspace_base_environment_id`, or from `display_name` plus a random
+	// suffix when no ID is given.
 	Name types.String `tfsdk:"name"`
-	// The environment specification containing version and dependencies.
+	// The environment specification containing version and dependencies, read
+	// from the YAML file at `filepath`.
 	Spec types.List `tfsdk:"spec"`
-	// The status of the materialized workspace base environment.
+	// The status of the materialized workspace base environment, which the
+	// server builds from the YAML file. The status is `CREATED` once the build
+	// has succeeded.
 	Status types.String `tfsdk:"status"`
 	// Timestamp when the environment was last updated.
 	UpdateTime timetypes.RFC3339 `tfsdk:"update_time"`

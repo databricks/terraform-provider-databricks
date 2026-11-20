@@ -6,8 +6,29 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/catalog/bindings"
 	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
+
+// reconcileFileEventsDiff makes an explicit `enable_file_events` win over the server-side
+// value in `effective_enable_file_events`. The server may enable file events on its own when
+// the argument is omitted; without this, a later explicit value that matches the stale input
+// in state produces no diff and is never sent (#5967). When the argument is omitted, the
+// server-side value is kept as is.
+func reconcileFileEventsDiff(d *schema.ResourceDiff) error {
+	if d.Id() == "" {
+		return nil
+	}
+	v, diags := d.GetRawConfigAt(cty.GetAttrPath("enable_file_events"))
+	if diags.HasError() || v.IsNull() || !v.IsKnown() || !v.Type().Equals(cty.Bool) {
+		return nil
+	}
+	want := v.True()
+	if d.Get("effective_enable_file_events").(bool) == want {
+		return nil
+	}
+	return d.SetNew("effective_enable_file_events", want)
+}
 
 // This structure contains the fields of both catalog.UpdateExternalLocation and catalog.CreateExternalLocation
 type ExternalLocationInfo struct {
@@ -69,8 +90,13 @@ func ResourceExternalLocation() common.Resource {
 			return m
 		})
 	return common.Resource{
-		Schema:        s,
-		CustomizeDiff: common.NamespaceCustomizeDiffNoForceNew,
+		Schema: s,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
+			if err := common.NamespaceCustomizeDiffNoForceNew(ctx, d, c); err != nil {
+				return err
+			}
+			return reconcileFileEventsDiff(d)
+		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
 			if err != nil {
@@ -151,6 +177,11 @@ func ResourceExternalLocation() common.Resource {
 				if d.HasChange(key) {
 					updateExternalLocationRequest.ForceSendFields = append(updateExternalLocationRequest.ForceSendFields, value)
 				}
+			}
+			// The explicit value may equal the stale input in state while the server-side value
+			// differs; see reconcileFileEventsDiff.
+			if !d.HasChange("enable_file_events") && d.HasChange("effective_enable_file_events") {
+				updateExternalLocationRequest.ForceSendFields = append(updateExternalLocationRequest.ForceSendFields, "EnableFileEvents")
 			}
 			// ugly hack until API is fixed
 			if updateExternalLocationRequest.FileEventQueue != nil {

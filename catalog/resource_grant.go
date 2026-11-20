@@ -39,6 +39,10 @@ func diffPermissionsForPrincipal(principal string, desired []catalog.PrivilegeAs
 		}
 		add := permissions.SetToSlice(confPrivs.Difference(remotePrivs))
 		remove := permissions.SetToSlice(remotePrivs.Difference(confPrivs))
+		// Revoking ALL_PRIVILEGES also removes individual privileges it implies.
+		if remotePrivs.Contains("ALL_PRIVILEGES") && !confPrivs.Contains("ALL_PRIVILEGES") {
+			add = permissions.SetToSlice(confPrivs)
+		}
 		if len(add) == 0 && len(remove) == 0 {
 			continue
 		}

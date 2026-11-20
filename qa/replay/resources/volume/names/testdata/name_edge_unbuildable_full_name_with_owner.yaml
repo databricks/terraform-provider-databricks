@@ -1,0 +1,100 @@
+# Pins the owner PATCH after a create whose response returns a full name that the classic
+# client can't put in a URL unescaped: main.replay.50%_raw, whose "%" doesn't start a
+# valid escape. The provider keeps that full name as the ID before the PATCH and escapes
+# it for the path, so the PATCH is sent to .../main.replay.50%25_raw. The server rejects
+# it, apply fails with the PATCH's error, and the volume stays in state under that ID,
+# planned for replacement; destroy deletes it at the escaped path. API responses are
+# inferred from the Unity Catalog API contract, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: owner_patch_goes_to_the_escaped_returned_full_name
+    config: &config |
+      resource "databricks_volume" "this" {
+        name         = "50%_raw"
+        catalog_name = "main"
+        schema_name  = "replay"
+        volume_type  = "MANAGED"
+        owner        = "data-engineers"
+      }
+    expect_error: 'Error: cannot create volume: User does not have MANAGE on Volume
+      ''main\.replay\.50%_raw''\.\n'
+    calls:
+      - request:
+          method: POST
+          path: /api/2.1/unity-catalog/volumes
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay", "name": "50%_raw",
+                   "volume_type": "MANAGED"}
+        response:
+          status: 200
+          body:
+            json: &created {"catalog_name": "main", "schema_name": "replay",
+                            "name": "50%_raw", "full_name": "main.replay.50%_raw",
+                            "volume_type": "MANAGED", "owner": "replay-admin@example.com",
+                            "storage_location": "s3://replay-metastore/volume-19804",
+                            "metastore_id": "11111111-1111-1111-1111-111111111111",
+                            "volume_id": "00000000-0000-4000-8000-000000019804"}
+      - request:
+          method: PATCH
+          path: /api/2.1/unity-catalog/volumes/main.replay.50%25_raw
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"owner": "data-engineers"}
+        response:
+          status: 403
+          body:
+            json: {"error_code": "PERMISSION_DENIED",
+                   "message": "User does not have MANAGE on Volume 'main.replay.50%_raw'."}
+  - name: failed_owner_patch_keeps_the_returned_full_name_for_cleanup
+    plan_only: true
+    config: *config
+    plan:
+      expect: non_empty
+      changes:
+        databricks_volume.this:
+          actions: [delete, create]
+    state:
+      resources:
+        databricks_volume.this:
+          attributes:
+            - path: [id]
+              equals: main.replay.50%_raw
+            - path: [volume_path]
+              equals: /Volumes/main/replay/50%_raw
+            - path: [owner]
+              equals: replay-admin@example.com
+    calls:
+      - &read_created
+        request:
+          method: GET
+          path: /api/2.1/unity-catalog/volumes/main.replay.50%25_raw
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 200
+          body:
+            json: *created
+destroy:
+  calls:
+    - *read_created
+    - request:
+        method: DELETE
+        path: /api/2.1/unity-catalog/volumes/main.replay.50%25_raw
+        headers:
+          X-Databricks-Workspace-Id: "12345"
+        body: null
+      response:
+        status: 200
+        body:
+          json: {}

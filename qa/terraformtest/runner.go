@@ -1,8 +1,11 @@
 package terraformtest
 
 import (
+	"bytes"
+	"context"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -32,7 +35,7 @@ func RunNative(t *testing.T, path string, configure func(*resource.TestCase, fun
 	t.Helper()
 	definition, err := loadDefinition(path)
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("%s: %v", path, err)
 	}
 	runNative(t, definition, configure)
 }
@@ -207,7 +210,9 @@ func fixtureConfig(host string) func(*config.Config) error {
 		// An explicit loader prevents ambient credentials and profiles from filling
 		// configuration fields, including account/workspace routing identifiers.
 		cfg.Loaders = []config.Loader{fixtureLoader{}}
-		cfg.HTTPTransport = fixtureTransport{host: host, transport: &http.Transport{}}
+		// Go's client silently resends a replayable request that fails on a reused
+		// connection, which would hide a reset or close fault from the SDK.
+		cfg.HTTPTransport = fixtureTransport{host: host, transport: &http.Transport{DisableKeepAlives: true}}
 		return nil
 	}
 }
@@ -227,5 +232,50 @@ func (f fixtureTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	if req.URL.Scheme != expected.Scheme || req.URL.Host != expected.Host {
 		return nil, fmt.Errorf("hermetic replay rejected request outside fixture server: %s", req.URL)
 	}
+	if req.Body != nil && req.Body != http.NoBody {
+		if req, err = withBufferedBody(req); err != nil {
+			return nil, err
+		}
+	}
 	return f.transport.RoundTrip(req)
+}
+
+// withBufferedBody sends a copy of the body. net/http can return a response that
+// closes the connection before it has finished reading the body, and the SDK
+// rewinds that same reader for a retry, which could then go out empty.
+func withBufferedBody(req *http.Request) (*http.Request, error) {
+	body, err := readBody(req)
+	if err != nil {
+		return nil, err
+	}
+	clone := req.Clone(req.Context())
+	clone.ContentLength = int64(len(body))
+	clone.Body, clone.GetBody = http.NoBody, func() (io.ReadCloser, error) { return http.NoBody, nil }
+	if len(body) > 0 {
+		clone.GetBody = func() (io.ReadCloser, error) { return io.NopCloser(bytes.NewReader(body)), nil }
+		clone.Body, _ = clone.GetBody()
+	}
+	return clone, nil
+}
+
+// readBody reads and closes the body, but returns when the request's context
+// ends, as net/http does, so a blocked body still fails with the SDK's timeout.
+// Closing the body then unblocks a reader such as a pipe.
+func readBody(req *http.Request) ([]byte, error) {
+	type result struct {
+		body []byte
+		err  error
+	}
+	read := make(chan result, 1)
+	go func() {
+		body, err := io.ReadAll(req.Body)
+		read <- result{body, err}
+	}()
+	select {
+	case r := <-read:
+		return r.body, errors.Join(r.err, req.Body.Close())
+	case <-req.Context().Done():
+		_ = req.Body.Close()
+		return nil, context.Cause(req.Context())
+	}
 }

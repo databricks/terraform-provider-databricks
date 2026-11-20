@@ -1,0 +1,33 @@
+# The create response stops halfway through the body. After http_timeout_seconds
+# without data, the SDK cancels the body read, reports it as context canceled
+# and does not retry.
+version: 1
+host_metadata:
+  workspace_id: "12345"
+steps:
+  - name: create_stalls_in_body
+    config: |
+      provider "databricks" {
+        http_timeout_seconds = 1
+      }
+      resource "databricks_group" "this" {
+        display_name = "Example group"
+      }
+    expect_error: 'cannot create group: response body: context canceled'
+    calls:
+      - request:
+          method: POST
+          path: /api/2.0/preview/scim/v2/Groups
+          body:
+            json:
+              displayName: Example group
+              schemas: [urn:ietf:params:scim:schemas:core:2.0:Group]
+              entitlements: [{}]
+        response:
+          fault: stall_body
+          status: 201
+          body:
+            json:
+              id: group-id
+destroy:
+  calls: []

@@ -1,0 +1,126 @@
+# Pins the classic SDK's backoff cap on a databricks_volume refresh GET. The GET gets 503
+# on its first 12 attempts and 200 on the 13th. Before retry n the SDK waits min(n, 10)
+# seconds plus 50-750 ms of jitter, so the gaps grow by 1 s up to the 10th retry and stay
+# at 10 s for the 11th and 12th. Each min_gap is the shortest wait, rounded down, and each
+# max_gap is the longest wait plus 1 s for a slow machine. Without the cap, the 12th retry
+# would wait at least 12.05 s and exceed its 11.75 s max_gap. The refresh step takes about
+# 80 s. API responses are inferred from the Unity Catalog API contract, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: create
+    config: &config |
+      resource "databricks_volume" "this" {
+        name         = "backoff_volume"
+        catalog_name = "main"
+        schema_name  = "replay"
+        volume_type  = "MANAGED"
+      }
+    calls:
+      - request:
+          method: POST
+          path: /api/2.1/unity-catalog/volumes
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "backoff_volume", "volume_type": "MANAGED"}
+        response: &volume
+          status: 200
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "backoff_volume", "full_name": "main.replay.backoff_volume",
+                   "volume_type": "MANAGED", "owner": "replay-admin@example.com",
+                   "storage_location": "s3://replay-metastore/volume-301",
+                   "metastore_id": "11111111-1111-1111-1111-111111111111",
+                   "volume_id": "00000000-0000-4000-8000-000000000301"}
+      - &read_volume
+        request: &read
+          method: GET
+          path: /api/2.1/unity-catalog/volumes/main.replay.backoff_volume
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response: *volume
+      - *read_volume
+  - name: refresh_retries_503_with_backoff_capped_at_10s
+    plan_only: true
+    config: *config
+    plan:
+      expect: empty
+    calls:
+      # The first attempt and the first retry.
+      - request: *read
+        response: &unavailable
+          status: 503
+          body:
+            json: {"error_code": "TEMPORARILY_UNAVAILABLE",
+                   "message": "The service is temporarily unavailable."}
+        times: 2
+        min_gap: 1s
+        max_gap: 2.75s
+      - request: *read
+        response: *unavailable
+        min_gap: 2s
+        max_gap: 3.75s
+      - request: *read
+        response: *unavailable
+        min_gap: 3s
+        max_gap: 4.75s
+      - request: *read
+        response: *unavailable
+        min_gap: 4s
+        max_gap: 5.75s
+      - request: *read
+        response: *unavailable
+        min_gap: 5s
+        max_gap: 6.75s
+      - request: *read
+        response: *unavailable
+        min_gap: 6s
+        max_gap: 7.75s
+      - request: *read
+        response: *unavailable
+        min_gap: 7s
+        max_gap: 8.75s
+      - request: *read
+        response: *unavailable
+        min_gap: 8s
+        max_gap: 9.75s
+      - request: *read
+        response: *unavailable
+        min_gap: 9s
+        max_gap: 10.75s
+      # The 10th retry waits the cap itself.
+      - request: *read
+        response: *unavailable
+        min_gap: 10s
+        max_gap: 11.75s
+      # The 11th retry is capped at 10 s.
+      - request: *read
+        response: *unavailable
+        min_gap: 10s
+        max_gap: 11.75s
+      # The 12th retry is capped at 10 s and succeeds.
+      - request: *read
+        response: *volume
+        min_gap: 10s
+        max_gap: 11.75s
+destroy:
+  calls:
+    - *read_volume
+    - request:
+        method: DELETE
+        path: /api/2.1/unity-catalog/volumes/main.replay.backoff_volume
+        headers:
+          X-Databricks-Workspace-Id: "12345"
+        body: null
+      response:
+        status: 200
+        body:
+          json: {}

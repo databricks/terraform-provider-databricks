@@ -229,8 +229,7 @@ mandatory and needs no YAML state assertion.
   with `any_string`. It requires a present string; missing values and JSON null
   still fail. Do not mask names, IDs, or other values that the scenario should
   verify, and do not use `"****"` as a wildcard (it is just a literal string).
-- For polling/retry scenarios, check meaningful requests and outcomes, not
-  elapsed time or incidental scheduling.
+- For polling/retry scenarios, check meaningful requests and outcomes, not incidental scheduling. Bound elapsed time only when it is the behavior under test, such as a backoff; see [repeated calls and retry timing](#test-repeated-calls-and-retry-timing).
 - Independent request signatures can interleave. Repeated identical signatures
   consume responses FIFO, so preserve their response order. Do not assume a
   global or per-resource request order is enforced.
@@ -345,6 +344,156 @@ You can create a resource, exercise an invalid update, then let automatic destro
 clean it up using the last successful configuration. To check state after an
 expected failure, follow it with a successful step and place state checks there;
 state checks directly on the failing step are not supported.
+
+## Test slow and broken connections
+
+Optional `response` fields script what happens on the wire, so a journey can pin
+timeouts, retries and malformed replies without a hand-written `httptest`
+server. The fixture server applies them, so they behave the same whichever SDK
+client the provider uses.
+
+- `delay`: a Go duration, such as `2s`, to wait before writing anything. The
+  wait ends early when the client closes the connection, so a timed-out request
+  does not hold the server.
+- `fault`: breaks the connection instead of completing the response.
+  - `reset` closes it with linger 0, so the client sees `connection reset by peer`.
+  - `close` closes it without writing anything, so the client sees `EOF`.
+  - `truncate_body` writes the status line, the headers with the full
+    `Content-Length` and the first half of the body, then closes it.
+  - `stall_body` writes the same first half, then waits until the client closes
+    the connection.
+- `status_line`: the literal status line, such as `HTTP/1.1 404` with no reason
+  phrase. Its code must equal `status`; headers and body are written as usual.
+
+`reset` and `close` write no response, so they omit `status`, `headers`, `body`
+and `status_line`. The body faults need a nonempty `body`. `delay` combines
+with every other field. Invalid values fail when the journey loads, naming the
+file, step and call.
+
+A faulted call is consumed like any other, so `enforce_call_order` and the
+unused-fixture check still apply. Follow it with a normal call to pin a retry,
+or with nothing to pin that there is none, because a retry then fails as an
+unexpected call. This create is retried after a reset:
+
+```yaml
+calls:
+  - request: &create
+      method: POST
+      path: /api/2.0/preview/scim/v2/Groups
+      body:
+        json:
+          displayName: Example group
+          schemas: [urn:ietf:params:scim:schemas:core:2.0:Group]
+          entitlements: [{}]
+    response:
+      fault: reset
+  - request: *create
+    response:
+      status: 201
+      body: {json: {id: group-id}}
+  # The read after create and the post-apply refresh follow.
+```
+
+Pair `delay` or `stall_body` with a short `http_timeout_seconds` in the provider
+block and a delay longer than it. Each example in [testdata/faults](testdata/faults)
+fails or retries a group create, with this classic SDK diagnostic:
+
+| Response | Example | Diagnostic |
+|---|---|---|
+| `delay: 10s`, `http_timeout_seconds = 1` | [delay](testdata/faults/delay.yaml) | `request timed out after 1s of inactivity`, not retried |
+| `fault: reset` | [reset](testdata/faults/reset.yaml) | `connection reset by peer`, retried |
+| `fault: close` | [close](testdata/faults/close.yaml) | `EOF`, not retried |
+| `fault: truncate_body` | [truncate_body](testdata/faults/truncate_body.yaml) | `response body: unexpected EOF`, not retried |
+| `fault: stall_body`, `http_timeout_seconds = 1` | [stall_body](testdata/faults/stall_body.yaml) | `response body: context canceled`, not retried |
+| `status: 404`, `status_line: HTTP/1.1 404` | [status_line](testdata/faults/status_line.yaml) | `Not Found` |
+
+The replay transport opens one connection per request. Go's HTTP client
+silently resends a replayable request, such as a GET, that fails on a reused
+connection, so a fresh connection is what lets each fault reach the provider.
+Faults and `status_line` close the connection and frame the body by its
+`Content-Length`, replacing those headers in the fixture.
+
+Connection refused is not supported: the server has already accepted the
+connection by the time it matches a request. Recording rejects journeys that
+use these fields, because a live service cannot reproduce them and a refresh
+would replace them; edit such journeys by hand.
+
+## Test repeated calls and retry timing
+
+Optional call fields, next to `request` and `response`, say how often a call repeats and how long the client waits between calls, so a retry sequence needs no copies of the call and its backoff can be pinned.
+
+- `times: N` expects the call exactly N times in a row, each with the same response. It is shorthand for N copies of the call.
+- `times: {min: 2, max: 3}` expects between `min` and `max` repetitions, for a count that depends on timing, such as retries that end with `retry_timeout_seconds`. The unused-fixture check needs `min`; a repetition past `max` is an unexpected call. A `min` of 0 makes the call optional.
+- `min_gap` and `max_gap` are Go durations, such as `1s` or `1500ms`, bounding the time between arrivals at the fixture server, taken before each request's body is read. Without `times`, they bound the gap since the previous matched call in the step. With `times`, they bound the gap before each repetition since the previous one; the first repetition is not bounded, because it usually is the attempt that the retries follow. List it as its own call to bound it too.
+
+A gap out of bounds fails the step with the observed gap, such as `call 2: POST /api/2.0/preview/scim/v2/Groups arrived 2.1s after call 1 (POST /api/2.0/preview/scim/v2/Groups), above max_gap 1s`. The call is still answered, so the failure names the gap rather than whatever the provider does next. A bounded call without `times` that arrives first in its step fails too, since nothing precedes it. Host metadata is not a matched call and does not count. Invalid values fail when the journey loads, naming the file, step and call.
+
+This create gets 503 twice and succeeds on its second retry:
+
+```yaml
+calls:
+  # The first attempt and the first retry.
+  - request: &create
+      method: POST
+      path: /api/2.0/preview/scim/v2/Groups
+      body:
+        json:
+          displayName: Example group
+          schemas: [urn:ietf:params:scim:schemas:core:2.0:Group]
+          entitlements: [{}]
+    response:
+      status: 503
+      body: {json: {error_code: TEMPORARILY_UNAVAILABLE, message: Service unavailable from fixture}}
+    times: 2
+    min_gap: 1s
+    max_gap: 3s
+  # The second retry.
+  - request: *create
+    response:
+      status: 201
+      body: {json: {id: group-id}}
+    min_gap: 2s
+    max_gap: 4s
+  # The read after create and the post-apply refresh follow.
+```
+
+This one gets 429 until `retry_timeout_seconds` ends, then fails with the last response:
+
+```yaml
+config: |
+  provider "databricks" {
+    retry_timeout_seconds = 5
+  }
+  resource "databricks_group" "this" {
+    display_name = "Example group"
+  }
+expect_error: 'cannot create group: Too many requests from fixture'
+calls:
+  - request:
+      method: POST
+      path: /api/2.0/preview/scim/v2/Groups
+      body:
+        json:
+          displayName: Example group
+          schemas: [urn:ietf:params:scim:schemas:core:2.0:Group]
+          entitlements: [{}]
+    response:
+      status: 429
+      body: {json: {error_code: TOO_MANY_REQUESTS, message: Too many requests from fixture}}
+    times: {min: 2, max: 3}
+    min_gap: 1s
+    max_gap: 4s
+```
+
+The complete journeys are [retry_503](testdata/repeats/retry_503.yaml) and [retry_429_until_timeout](testdata/repeats/retry_429_until_timeout.yaml). The runner keeps `retry_timeout_seconds`, `http_timeout_seconds` and `rate_limit` from the journey's provider block. Set a short `retry_timeout_seconds` for a journey that retries until the timeout: the provider's default retries indefinitely.
+
+Choose bounds from the client's backoff, with room for a slow CI machine. The classic SDK waits `min(n, 10)` seconds plus 50-750 ms of jitter before retry n: 1.05-1.75 s before the first, 2.05-2.75 s before the second, and 10.05-10.75 s from the tenth on. The observed gap adds the time to answer the previous call and reconnect, so it is never shorter than the wait.
+
+- Set `min_gap` to the shortest wait, rounded down, such as `1s` before the first retry. A slow machine only makes the gap longer.
+- Set `max_gap` to the longest wait plus at least 1 s, such as `3s` before the first retry, because a slow machine can stall between calls.
+- For a range, attempt n starts after the sum of the earlier waits: attempt 2 at 1.05-1.75 s, attempt 3 at 3.1-4.5 s and attempt 4 at 6.15-8.25 s. Set `max` to the attempts that can start before the timeout, and `min` to those that start well before it on a slow machine.
+
+Repetitions match like copies of the call. Without `enforce_call_order`, other calls can arrive between them. With it, a call must reach its `min` before the next listed call, and cannot repeat once a later call arrives. A range takes every matching request until it reaches `max`, so an identical call listed after a range answers only once the range is full; end a retry sequence with the range, as in the 429 example. Recording rejects journeys with these fields, because a refresh would replace a repeated call with captured copies; edit such journeys by hand.
 
 ## Start from existing state
 

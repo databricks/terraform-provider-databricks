@@ -53,8 +53,8 @@ jobs:
       NEXTCHANGES_DIR: ${{ github.repository == 'databricks/cli' && '.nextchanges' || '' }}
     environment: "release-is"
     runs-on:
-      group: databricks-protected-runner-group
-      labels: linux-ubuntu-latest
+      group: databricks-ghec-public-repos-runner-group-small
+      labels: linux-ubuntu-latest-public-2core-8gb
     steps:
       - name: Generate GitHub App Token
         id: generate-token

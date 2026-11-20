@@ -40,8 +40,8 @@ permissions:
 jobs:
   warm-cache:
     runs-on:
-      group: databricks-protected-runner-group
-      labels: linux-ubuntu-latest
+      group: databricks-ghec-public-repos-runner-group-small
+      labels: linux-ubuntu-latest-public-2core-8gb
 
     steps:
       - name: Checkout

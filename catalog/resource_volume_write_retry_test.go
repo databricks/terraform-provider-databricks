@@ -11,6 +11,7 @@ import (
 	"sync"
 	"testing"
 	"testing/synctest"
+	"time"
 
 	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -313,7 +314,7 @@ func TestVolumeWritesPastHTTPTimeoutAreNotRetried(t *testing.T) {
 			id: retryVolumeID,
 		},
 		{
-			// The rollback runs on Update's context, which the timeout did not end.
+			// The HTTP timeout ends only the fields PATCH, so the rollback is still sent.
 			name:      "fields PATCH after an owner change",
 			responses: []volumeResponse{ownerChanged, held, created},
 			run:       updateVolumeOwnerAndComment,
@@ -370,50 +371,101 @@ func TestVolumeWritesPastHTTPTimeoutAreNotRetried(t *testing.T) {
 	}
 }
 
-func TestVolumeFieldsPatchCancelledInBackoffRollsBackOnCancelledContext(t *testing.T) {
-	synctest.Test(t, func(t *testing.T) {
-		// The fields PATCH retry and the rollback would both succeed if they were sent.
-		api := newScriptedVolumeAPI(t,
-			volumeResponse{status: http.StatusOK, body: volumeWithNewOwnerJSON},
-			volumeResponse{status: http.StatusTooManyRequests, body: tooManyRequestsJSON},
-			volumeResponse{status: http.StatusOK, body: retryVolumeJSON},
-			volumeResponse{status: http.StatusOK, body: retryVolumeJSON},
-		)
-		c := newVolumeClient(t, &config.Config{
-			Host:                "https://volume-api.test",
-			RetryTimeoutSeconds: retryUntilContextEnds,
-			HTTPTransport:       api,
-		})
-		r := ResourceVolume().ToResource()
-		d := ownerAndCommentUpdateData(t, r)
-		ctx, cancel := context.WithCancel(t.Context())
-		defer cancel()
-		var diags diag.Diagnostics
-		done := make(chan struct{})
-		go func() {
-			defer close(done)
-			diags = r.UpdateContext(volumeContext(ctx), d, c)
-		}()
+// updateCancelledInFieldsPatchBackoff runs Update for an owner and comment change whose
+// fields PATCH gets a 429, cancels it in that PATCH's backoff, and waits for it to
+// return. The API answers the requests after the 429 with rollback. It returns the time
+// Update ran after cancellation, and must run in a synctest bubble.
+func updateCancelledInFieldsPatchBackoff(t *testing.T, rollback ...volumeResponse) (
+	*scriptedVolumeAPI, *schema.ResourceData, diag.Diagnostics, time.Duration,
+) {
+	t.Helper()
+	api := newScriptedVolumeAPI(t, append([]volumeResponse{
+		{status: http.StatusOK, body: volumeWithNewOwnerJSON},
+		{status: http.StatusTooManyRequests, body: tooManyRequestsJSON},
+	}, rollback...)...)
+	c := newVolumeClient(t, &config.Config{
+		Host:                "https://volume-api.test",
+		RetryTimeoutSeconds: retryUntilContextEnds,
+		HTTPTransport:       api,
+	})
+	r := ResourceVolume().ToResource()
+	d := ownerAndCommentUpdateData(t, r)
+	ctx, cancel := context.WithCancel(t.Context())
+	defer cancel()
+	var diags diag.Diagnostics
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		diags = r.UpdateContext(volumeContext(ctx), d, c)
+	}()
 
-		// After the 429, Update blocks only in the fields PATCH's backoff, so Wait
-		// returns there.
-		synctest.Wait()
-		assertVolumeRequests(t, []volumeRequest{updateOwnerPatch, updateFieldsPatch}, api)
-		cancel()
-		// Wait does not advance the fake clock, so Update must return without the
-		// backoff timer firing.
-		synctest.Wait()
-		select {
-		case <-done:
-		default:
-			t.Fatal("Update kept waiting out its backoff after cancellation")
+	// After the 429, Update blocks only in the fields PATCH's backoff, so Wait returns
+	// there.
+	synctest.Wait()
+	assertVolumeRequests(t, []volumeRequest{updateOwnerPatch, updateFieldsPatch}, api)
+	cancelledAt := time.Now()
+	cancel()
+	<-done
+	return api, d, diags, time.Since(cancelledAt)
+}
+
+func TestVolumeFieldsPatchCancelledInBackoffRollsBackOwner(t *testing.T) {
+	synctest.Test(t, func(t *testing.T) {
+		api, d, diags, elapsed := updateCancelledInFieldsPatchBackoff(t,
+			volumeResponse{status: http.StatusOK, body: retryVolumeJSON})
+
+		// The fake clock advances only on a timer, so the fields PATCH's backoff ended
+		// at cancellation and the rollback was not retried.
+		assert.Zero(t, elapsed)
+		assertVolumeRequests(t, []volumeRequest{
+			updateOwnerPatch, updateFieldsPatch, ownerRollbackPatch,
+		}, api)
+		assert.Equal(t, "cannot update volume: Too many requests from fixture",
+			diagnosticSummary(t, diags))
+		assert.Equal(t, retryVolumeID, d.Id(), "the volume must stay in state")
+	})
+}
+
+func TestVolumeOwnerRollbackRejectedAfterCancellationFailsUpdate(t *testing.T) {
+	synctest.Test(t, func(t *testing.T) {
+		api, d, diags, elapsed := updateCancelledInFieldsPatchBackoff(t,
+			volumeResponse{status: http.StatusForbidden, body: `{
+				"error_code": "PERMISSION_DENIED",
+				"message": "Owner change denied by fixture"}`})
+
+		assert.Zero(t, elapsed)
+		assertVolumeRequests(t, []volumeRequest{
+			updateOwnerPatch, updateFieldsPatch, ownerRollbackPatch,
+		}, api)
+		assert.Equal(t, ownerRollbackDiagnostic("Too many requests from fixture",
+			"Owner change denied by fixture"), diagnosticSummary(t, diags))
+		assert.Equal(t, retryVolumeID, d.Id(), "the volume must stay in state")
+	})
+}
+
+func TestVolumeOwnerRollbackPersistent429AfterCancellationStopsAtTimeout(t *testing.T) {
+	synctest.Test(t, func(t *testing.T) {
+		// The SDK backs off over a second between attempts, so a 429 for each second of
+		// the timeout outlasts the rollback.
+		throttled := make([]volumeResponse, volumeOwnerRollbackTimeout/time.Second)
+		for i := range throttled {
+			throttled[i] = volumeResponse{
+				status: http.StatusTooManyRequests, body: tooManyRequestsJSON,
+			}
 		}
 
-		// The rollback fails in the SDK's rate limiter, so it never reaches the server
-		// and the owner change stays.
-		assertVolumeRequests(t, []volumeRequest{updateOwnerPatch, updateFieldsPatch}, api)
+		api, d, diags, elapsed := updateCancelledInFieldsPatchBackoff(t, throttled...)
+
+		assert.Equal(t, volumeOwnerRollbackTimeout, elapsed)
+		rollbacks := len(api.requests()) - 2
+		require.Greater(t, rollbacks, 1, "the rollback must be retried")
+		expected := []volumeRequest{updateOwnerPatch, updateFieldsPatch}
+		for range rollbacks {
+			expected = append(expected, ownerRollbackPatch)
+		}
+		assertVolumeRequests(t, expected, api)
 		assert.Equal(t, ownerRollbackDiagnostic("Too many requests from fixture",
-			"failed in rate limiter: context canceled"), diagnosticSummary(t, diags))
+			"Too many requests from fixture"), diagnosticSummary(t, diags))
 		assert.Equal(t, retryVolumeID, d.Id(), "the volume must stay in state")
 	})
 }

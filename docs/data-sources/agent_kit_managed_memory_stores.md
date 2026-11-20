@@ -39,5 +39,7 @@ This data source exports a single attribute, `managed_memory_stores`. It is a li
 * `workspace_id` (integer) - Workspace that owns the memory store
 
 ### StorageBackend
-* `backend_id` (string) - Backend-specific identifier. For Lakebase, this is the project ID
+* `backend_id` (string) - Backend-specific identifier. For Lakebase, this is the resource name of the database that
+  holds the store's entries, in the form
+  `projects/{project_id}/branches/{branch_id}/databases/{database_id}`
 * `backend_type` (string) - Type of the storage backend. Possible values are: `STORAGE_BACKEND_TYPE_LAKEBASE`

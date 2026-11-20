@@ -33,8 +33,10 @@ The following arguments are supported:
 ## Attributes
 The following attributes are exported:
 * `cpu_workspace_base_environment` (string) - The default workspace base environment for CPU compute.
+  If unset, CPU compute defaults to the Databricks Standard base environment (Standard Latest).
   Format: workspace-base-environments/{workspace_base_environment}
 * `gpu_workspace_base_environment` (string) - The default workspace base environment for GPU compute.
+  If unset, GPU compute defaults to the Databricks Standard base environment (Standard Latest).
   Format: workspace-base-environments/{workspace_base_environment}
 * `name` (string) - The resource name of this singleton resource.
   Format: default-workspace-base-environment

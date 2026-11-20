@@ -2,7 +2,7 @@
 subcategory: "Postgres"
 ---
 # databricks_postgres_database Resource
-[![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
+[![GA](https://img.shields.io/badge/Release_Stage-GA-green)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
 [API Documentation](https://docs.databricks.com/api/workspace/postgres)
 
@@ -236,7 +236,8 @@ The following arguments are supported:
 * `parent` (string, required) - The branch containing this database.
   Format: projects/{project_id}/branches/{branch_id}
 * `replace_existing` (boolean, optional) - If true, update the database if it already exists instead of returning an
-  error
+  error. This requires `database_id` to be set. Without `database_id`, the request
+  follows the normal create path and fails if the database name already exists
 * `spec` (DatabaseDatabaseSpec, optional) - The desired state of the Database.
   
   Read the resource's current values from `status`, rather than `spec`.
@@ -251,6 +252,7 @@ The following arguments are supported:
 * `role` (string, required) - The name of the role that owns the database.
   Format: projects/{project_id}/branches/{branch_id}/roles/{role_id}
   
+  The role must be in the same branch as the database.
   To change the owner, pass valid existing Role name when updating the Database
   
   Required when creating the Database

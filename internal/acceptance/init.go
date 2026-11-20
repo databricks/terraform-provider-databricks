@@ -111,7 +111,13 @@ type Step struct {
 	ImportStateVerify                    bool
 	ImportStateVerifyIgnore              []string
 	ImportStateVerifyIdentifierAttribute string
-	ResourceName                         string
+	// ImportStateKind selects how the import is done, for example with an
+	// import block that passes a resource identity. Defaults to `terraform import`.
+	ImportStateKind resource.ImportStateKind
+	// ImportStateConfigExact uses Template as is, so it can hold its own import
+	// block, instead of appending one built from the resource in state.
+	ImportStateConfigExact bool
+	ResourceName           string
 
 	ProtoV6ProviderFactories map[string]func() (tfprotov6.ProviderServer, error)
 }
@@ -284,6 +290,8 @@ func run(t *testing.T, steps []Step) {
 			ImportStateVerify:                    s.ImportStateVerify,
 			ImportStateVerifyIgnore:              s.ImportStateVerifyIgnore,
 			ImportStateVerifyIdentifierAttribute: s.ImportStateVerifyIdentifierAttribute,
+			ImportStateKind:                      s.ImportStateKind,
+			ImportStateConfigExact:               s.ImportStateConfigExact,
 			ResourceName:                         s.ResourceName,
 			ExpectError:                          s.ExpectError,
 			ProtoV6ProviderFactories:             providerFactoryForStep,

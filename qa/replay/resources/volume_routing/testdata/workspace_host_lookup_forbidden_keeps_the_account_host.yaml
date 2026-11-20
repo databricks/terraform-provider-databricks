@@ -1,0 +1,104 @@
+# This journey pins which host serves the volume calls when an account-level provider on
+# an AWS account domain routes through provider_config.workspace_id and the workspace
+# lookup answers 403. Every command that touches the volume makes the failing lookup on
+# the account host, without an X-Databricks-Workspace-Id header. The SDK then keeps the
+# account host for the volume calls, which still carry the workspace's
+# X-Databricks-Workspace-Id header, and the workspace's deployment host gets no call.
+# API responses are inferred from the account and Unity Catalog API contracts, not
+# recorded.
+version: 1
+enforce_call_order: true
+provider_host: account
+hosts:
+  account:
+    url: https://accounts.cloud.databricks.com
+  workspace:
+    url: https://replay-workspace-12345.cloud.databricks.com
+    metadata:
+      host_type: workspace
+      cloud: AWS
+      workspace_id: "12345"
+host_metadata:
+  host_type: account
+  cloud: AWS
+  account_id: replay-account
+steps:
+  - name: create_keeps_volume_calls_on_the_account_host
+    config: |
+      provider "databricks" {
+        account_id = "replay-account"
+      }
+      resource "databricks_volume" "this" {
+        name         = "host_volume"
+        catalog_name = "main"
+        schema_name  = "replay"
+        volume_type  = "MANAGED"
+        provider_config {
+          workspace_id = "12345"
+        }
+      }
+    calls:
+      - &lookup
+        request:
+          method: GET
+          path: /api/2.0/accounts/replay-account/workspaces/12345
+          matchers:
+            headers:
+              X-Databricks-Workspace-Id: absent
+          body: null
+        response:
+          status: 403
+          body:
+            json: {"error_code": "PERMISSION_DENIED",
+                   "message": "Caller cannot read workspace 12345"}
+      - request:
+          method: POST
+          path: /api/2.1/unity-catalog/volumes
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "host_volume", "volume_type": "MANAGED"}
+        response: &volume
+          status: 200
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "host_volume", "full_name": "main.replay.host_volume",
+                   "volume_type": "MANAGED", "owner": "replay-admin@example.com",
+                   "storage_location": "s3://replay-metastore/volume-79",
+                   "metastore_id": "11111111-1111-1111-1111-111111111111",
+                   "volume_id": "00000000-0000-4000-8000-000000000079"}
+      - &read_volume
+        request:
+          method: GET
+          path: /api/2.1/unity-catalog/volumes/main.replay.host_volume
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response: *volume
+      - *lookup
+      - *read_volume
+    state:
+      resources:
+        databricks_volume.this:
+          attributes:
+            - path: [id]
+              equals: main.replay.host_volume
+            - path: [provider_config, 0, workspace_id]
+              equals: "12345"
+destroy:
+  calls:
+    - *lookup
+    - *read_volume
+    - *lookup
+    - request:
+        method: DELETE
+        path: /api/2.1/unity-catalog/volumes/main.replay.host_volume
+        headers:
+          X-Databricks-Workspace-Id: "12345"
+        body: null
+      response:
+        status: 200
+        body:
+          json: {}

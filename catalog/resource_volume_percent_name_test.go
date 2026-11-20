@@ -18,6 +18,7 @@ import (
 
 const percentVolumeID = "main.replay.50%_raw"
 
+// Replay cannot hold a volume it cannot refresh, so this update stays in Go.
 func TestVolumeUpdateWithPercentInNameFailsBeforeThePatch(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{},
@@ -41,6 +42,7 @@ func TestVolumeUpdateWithPercentInNameFailsBeforeThePatch(t *testing.T) {
 		`"/api/2.1/unity-catalog/volumes/main.replay.50%_raw": invalid URL escape "%_r"`)
 }
 
+// Replay cannot hold a volume it cannot refresh, so this delete stays in Go.
 func TestVolumeDeleteWithPercentInNameFailsBeforeTheDelete(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{},

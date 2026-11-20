@@ -2,7 +2,6 @@ package catalog
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"sync/atomic"
@@ -19,10 +18,10 @@ import (
 	"github.com/databricks/terraform-provider-databricks/common"
 )
 
-// These tests pin the classic SDK client's retry timeout, HTTP timeout and
-// cancellation behavior for databricks_volume refreshes, which replay fixtures cannot
-// express. The SDK backs off on the real clock, so the backoff tests run in a synctest
-// bubble, whose fake clock makes their timing exact.
+// This test pins the classic SDK client's handling of a databricks_volume refresh
+// cancelled during its backoff. The SDK backs off on the real clock, so it runs in a
+// synctest bubble, whose fake clock makes its timing exact. The retry_refresh_ replay
+// journeys pin retry exhaustion and the HTTP timeout.
 
 const (
 	retryVolumeID   = "main.replay.retry_volume"
@@ -38,8 +37,8 @@ const (
 )
 
 // inMemoryVolumeAPI answers volume GETs with respond, numbering attempts from 1, and
-// anything else with 404. The backoff tests use it because a qa.HTTPFixture server
-// cannot serve a client inside a synctest bubble.
+// anything else with 404. An HTTP server cannot serve a client inside a synctest
+// bubble.
 type inMemoryVolumeAPI struct {
 	attempts atomic.Int32
 	respond  func(attempt int32) (status int, body string)
@@ -87,68 +86,7 @@ func diagnosticSummary(t *testing.T, diags diag.Diagnostics) string {
 	return diags[0].Summary
 }
 
-func TestVolumeRefreshPersistent429FailsAtRetryTimeout(t *testing.T) {
-	synctest.Test(t, func(t *testing.T) {
-		api := &inMemoryVolumeAPI{respond: func(int32) (int, string) {
-			return http.StatusTooManyRequests, tooManyRequestsJSON
-		}}
-		// Backoff waits 1.05 to 1.75 s before the first retry and at least 2.05 s before
-		// the second, so on the fake clock a 2 s limit allows exactly one retry.
-		c := newVolumeClient(t, &config.Config{
-			Host:                "https://volume-api.test",
-			RetryTimeoutSeconds: 2,
-			HTTPTransport:       api,
-		})
-
-		d, diags := refreshVolume(t.Context(), c)
-
-		assert.Equal(t, tooManyRequestsDiagnostic, diagnosticSummary(t, diags))
-		assert.Equal(t, int32(2), api.attempts.Load())
-		assert.Equal(t, retryVolumeID, d.Id(), "the volume must stay in state")
-	})
-}
-
-func TestVolumeRefreshPastHTTPTimeoutIsNotRetried(t *testing.T) {
-	// qa.HTTPFixture cannot delay a response, so this uses httptest. Only the first GET
-	// is held past the HTTP timeout; a retry would succeed and fail the assertions
-	// below instead of hanging.
-	release := make(chan struct{})
-	var attempts atomic.Int32
-	handler := func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path != retryVolumePath {
-			http.NotFound(w, r)
-			return
-		}
-		if attempts.Add(1) == 1 {
-			select {
-			case <-r.Context().Done():
-			case <-release:
-			}
-			return
-		}
-		w.Header().Set("Content-Type", "application/json")
-		_, _ = w.Write([]byte(retryVolumeJSON))
-	}
-	server := httptest.NewServer(http.HandlerFunc(handler))
-	defer server.Close()
-	// This runs before server.Close, which waits for the held handler to return.
-	defer close(release)
-	c := newVolumeClient(t, &config.Config{
-		Host:                server.URL,
-		RetryTimeoutSeconds: retryUntilContextEnds,
-		HTTPTimeoutSeconds:  1,
-	})
-
-	d, diags := refreshVolume(context.Background(), c)
-
-	expected := fmt.Sprintf(
-		`cannot read volume: Get "%s%s?": request timed out after 1s of inactivity`,
-		server.URL, retryVolumePath)
-	assert.Equal(t, expected, diagnosticSummary(t, diags))
-	assert.Equal(t, int32(1), attempts.Load())
-	assert.Equal(t, retryVolumeID, d.Id(), "the volume must stay in state")
-}
-
+// Replay cannot cancel Terraform during a backoff, so this cancellation stays in Go.
 func TestVolumeRefreshCancelledDuringBackoffIsNotRetried(t *testing.T) {
 	synctest.Test(t, func(t *testing.T) {
 		// The retry would succeed if it were sent.

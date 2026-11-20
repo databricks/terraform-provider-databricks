@@ -33,6 +33,7 @@ resource "aws_iam_role" "cross_account_role" {
 }
 
 data "databricks_aws_crossaccount_policy" "this" {
+  policy_type = "customer"
 }
 
 resource "aws_iam_role_policy" "this" {

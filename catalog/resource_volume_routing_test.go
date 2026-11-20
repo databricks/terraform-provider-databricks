@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"strings"
 	"sync"
 	"testing"
 
@@ -93,11 +94,12 @@ func (s *routingServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 // routingRecorder logs every call except host metadata with its destination host and
 // X-Databricks-Workspace-Id values before passing it on, so a missing header shows as []
-// and a call to an unknown host is logged too.
+// and a call to an unknown host is logged too. It also counts the calls sent by sdk-go.
 type routingRecorder struct {
-	mu    sync.Mutex
-	calls []string
-	next  http.RoundTripper
+	mu         sync.Mutex
+	calls      []string
+	sdkGoCalls int
+	next       http.RoundTripper
 }
 
 func (r *routingRecorder) RoundTrip(req *http.Request) (*http.Response, error) {
@@ -105,6 +107,9 @@ func (r *routingRecorder) RoundTrip(req *http.Request) (*http.Response, error) {
 		r.mu.Lock()
 		r.calls = append(r.calls, fmt.Sprintf("%s %s %s workspace_id=%q", req.URL.Host,
 			req.Method, req.URL.Path, req.Header.Values("X-Databricks-Workspace-Id")))
+		if sentBySdkGoVolumes(req) {
+			r.sdkGoCalls++
+		}
 		r.mu.Unlock()
 	}
 	return r.next.RoundTrip(req)
@@ -114,6 +119,36 @@ func (r *routingRecorder) snapshot() []string {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	return append([]string(nil), r.calls...)
+}
+
+func (r *routingRecorder) sdkGoCallCount() int {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	return r.sdkGoCalls
+}
+
+// sentBySdkGoVolumes reports whether req carries the User-Agent marker of sdk-go
+// uc/volumes/v1.
+func sentBySdkGoVolumes(req *http.Request) bool {
+	return strings.Contains(req.Header.Get("User-Agent"), " sdk-go-uc-volumes/")
+}
+
+// volumeResource is the volume resource, with its calls through sdk-go uc/volumes/v1 if
+// sdkGo is set.
+func volumeResource(sdkGo bool) *schema.Resource {
+	r := ResourceVolume().ToResource()
+	if sdkGo {
+		common.EnableSdkGo(r)
+	}
+	return r
+}
+
+// sdkGoCalls is want if sdkGo is set, and 0 otherwise.
+func sdkGoCalls(sdkGo bool, want int) int {
+	if sdkGo {
+		return want
+	}
+	return 0
 }
 
 // newRoutingClient configures a client for host as the provider does, including the
@@ -179,16 +214,18 @@ func routingVolumeAttributes(extra map[string]string) map[string]string {
 }
 
 // routingApplyVolume plans v against state and applies the plan with c, as one terraform
-// apply does, and returns the new state. A nil state creates the volume.
+// apply does, and returns the new state. A nil state creates the volume. The volume
+// calls go through sdk-go if sdkGo is set.
 func routingApplyVolume(
 	t *testing.T,
 	c *common.DatabricksClient,
+	sdkGo bool,
 	state *terraform.InstanceState,
 	v routingVolume,
 ) (*terraform.InstanceState, diag.Diagnostics) {
 	t.Helper()
 	ctx := context.WithValue(context.Background(), common.ResourceName, "volume")
-	r := ResourceVolume().ToResource()
+	r := volumeResource(sdkGo)
 	raw := v.rawConfig(t, r)
 	if state == nil {
 		state = &terraform.InstanceState{}
@@ -201,16 +238,16 @@ func routingApplyVolume(
 	return r.Apply(ctx, state, diff, c)
 }
 
-func routingRefreshVolume(c *common.DatabricksClient,
+func routingRefreshVolume(c *common.DatabricksClient, sdkGo bool,
 	state *terraform.InstanceState) (*terraform.InstanceState, diag.Diagnostics) {
 	ctx := context.WithValue(context.Background(), common.ResourceName, "volume")
-	return ResourceVolume().ToResource().RefreshWithoutUpgrade(ctx, state, c)
+	return volumeResource(sdkGo).RefreshWithoutUpgrade(ctx, state, c)
 }
 
-func routingDestroyVolume(c *common.DatabricksClient,
+func routingDestroyVolume(c *common.DatabricksClient, sdkGo bool,
 	state *terraform.InstanceState) diag.Diagnostics {
 	ctx := context.WithValue(context.Background(), common.ResourceName, "volume")
-	_, diags := ResourceVolume().ToResource().Apply(ctx, state,
+	_, diags := volumeResource(sdkGo).Apply(ctx, state,
 		&terraform.InstanceDiff{Destroy: true}, c)
 	return diags
 }
@@ -221,6 +258,16 @@ func routingDestroyVolume(c *common.DatabricksClient,
 // DELETE in TestVolumeAccountProviderWorkspaceHost. Replay serves every host from one
 // local server, so it can't tell the hosts apart.
 func TestVolumeAccountProviderPatchesGoToWorkspaceHost(t *testing.T) {
+	testVolumeAccountProviderPatchesGoToWorkspaceHost(t, false)
+}
+
+// TestVolumeAccountProviderPatchesGoToWorkspaceHostWithSdkGo pins the same hosts with
+// the volume calls through sdk-go uc/volumes/v1.
+func TestVolumeAccountProviderPatchesGoToWorkspaceHostWithSdkGo(t *testing.T) {
+	testVolumeAccountProviderPatchesGoToWorkspaceHost(t, true)
+}
+
+func testVolumeAccountProviderPatchesGoToWorkspaceHost(t *testing.T, sdkGo bool) {
 	routes := map[string]routingResponse{
 		"POST " + workspaceHostVolumesPath: {http.StatusOK,
 			nil, routingVolumeJSON("replay-admin@example.com", "")},
@@ -242,14 +289,14 @@ func TestVolumeAccountProviderPatchesGoToWorkspaceHost(t *testing.T) {
 		return newRoutingClient(t, workspaceHostAccountDomain, "replay-account", recorder)
 	}
 
-	state, diags := routingApplyVolume(t, newClient(), nil, routingVolume{
+	state, diags := routingApplyVolume(t, newClient(), sdkGo, nil, routingVolume{
 		attributes:  routingVolumeAttributes(map[string]string{"owner": "data-engineers"}),
 		workspaceID: "12345",
 	})
 	require.False(t, diags.HasError(), "%v", diags)
 	workspace.set("GET "+routingVolumePath, routingResponse{http.StatusOK,
 		nil, routingVolumeJSON("data-stewards", "routed comment")})
-	_, diags = routingApplyVolume(t, newClient(), state, routingVolume{
+	_, diags = routingApplyVolume(t, newClient(), sdkGo, state, routingVolume{
 		attributes: routingVolumeAttributes(map[string]string{"owner": "data-stewards",
 			"comment": "routed comment"}),
 		workspaceID: "12345",
@@ -269,6 +316,8 @@ func TestVolumeAccountProviderPatchesGoToWorkspaceHost(t *testing.T) {
 		fmt.Sprintf(volumeCall, "PATCH "+routingVolumePath),
 		fmt.Sprintf(volumeCall, "GET "+routingVolumePath),
 	}, recorder.snapshot())
+	// The workspace lookups always go through the classic account client.
+	assert.Equal(t, sdkGoCalls(sdkGo, 6), recorder.sdkGoCallCount())
 }
 
 // TestVolumeAccountProviderLookupWithoutDeploymentName pins an account lookup answered
@@ -277,6 +326,16 @@ func TestVolumeAccountProviderPatchesGoToWorkspaceHost(t *testing.T) {
 // https://.cloud.databricks.com. The test transport rejects that host, standing in for
 // the DNS failure a real run gets, and create fails with the transport error.
 func TestVolumeAccountProviderLookupWithoutDeploymentName(t *testing.T) {
+	testVolumeAccountProviderLookupWithoutDeploymentName(t, false)
+}
+
+// TestVolumeAccountProviderLookupWithoutDeploymentNameWithSdkGo pins the same host and
+// error with the volume POST through sdk-go uc/volumes/v1.
+func TestVolumeAccountProviderLookupWithoutDeploymentNameWithSdkGo(t *testing.T) {
+	testVolumeAccountProviderLookupWithoutDeploymentName(t, true)
+}
+
+func testVolumeAccountProviderLookupWithoutDeploymentName(t *testing.T, sdkGo bool) {
 	_, accountURL := newRoutingServer(t, routingAccountJSON, map[string]routingResponse{
 		"GET " + workspaceHostLookupPath: {http.StatusOK, nil, `{
 			"account_id": "replay-account", "workspace_id": 12345,
@@ -287,7 +346,7 @@ func TestVolumeAccountProviderLookupWithoutDeploymentName(t *testing.T) {
 	}}
 	c := newRoutingClient(t, workspaceHostAccountDomain, "replay-account", recorder)
 
-	_, diags := routingApplyVolume(t, c, nil, routingVolume{
+	_, diags := routingApplyVolume(t, c, sdkGo, nil, routingVolume{
 		attributes:  routingVolumeAttributes(nil),
 		workspaceID: "12345",
 	})
@@ -296,6 +355,7 @@ func TestVolumeAccountProviderLookupWithoutDeploymentName(t *testing.T) {
 		workspaceHostAccountDomain + " GET " + workspaceHostLookupPath + " workspace_id=[]",
 		`.cloud.databricks.com POST ` + workspaceHostVolumesPath + ` workspace_id=["12345"]`,
 	}, recorder.snapshot())
+	assert.Equal(t, sdkGoCalls(sdkGo, 1), recorder.sdkGoCallCount())
 	require.Len(t, diags, 1)
 	assert.Equal(t, `cannot create volume: Post "https://.cloud.databricks.com`+
 		workspaceHostVolumesPath+`": request outside the test servers: `+
@@ -307,6 +367,16 @@ func TestVolumeAccountProviderLookupWithoutDeploymentName(t *testing.T) {
 // Host metadata seeds the new provider's workspace ID, so the refresh fails with a
 // workspace_id mismatch without any call to the new host.
 func TestVolumeHostChangeFailsRefreshBeforeRead(t *testing.T) {
+	testVolumeHostChangeFailsRefreshBeforeRead(t, false)
+}
+
+// TestVolumeHostChangeFailsRefreshBeforeReadWithSdkGo pins the same failure with the
+// volume calls through sdk-go uc/volumes/v1.
+func TestVolumeHostChangeFailsRefreshBeforeReadWithSdkGo(t *testing.T) {
+	testVolumeHostChangeFailsRefreshBeforeRead(t, true)
+}
+
+func testVolumeHostChangeFailsRefreshBeforeRead(t *testing.T, sdkGo bool) {
 	routes := map[string]routingResponse{
 		"POST " + workspaceHostVolumesPath: {http.StatusOK,
 			nil, routingVolumeJSON("replay-admin@example.com", "")},
@@ -322,18 +392,19 @@ func TestVolumeHostChangeFailsRefreshBeforeRead(t *testing.T) {
 	}}
 
 	state, diags := routingApplyVolume(t,
-		newRoutingClient(t, workspaceHostWorkspaceDomain, "", recorder), nil,
+		newRoutingClient(t, workspaceHostWorkspaceDomain, "", recorder), sdkGo, nil,
 		routingVolume{attributes: routingVolumeAttributes(nil)})
 	require.False(t, diags.HasError(), "%v", diags)
 	assert.Equal(t, "12345", state.Attributes["provider_config.0.workspace_id"])
 	_, diags = routingRefreshVolume(
-		newRoutingClient(t, routingWorkspace67890Domain, "", recorder), state)
+		newRoutingClient(t, routingWorkspace67890Domain, "", recorder), sdkGo, state)
 
 	volumeCall := workspaceHostWorkspaceDomain + ` %s workspace_id=["12345"]`
 	assert.Equal(t, []string{
 		fmt.Sprintf(volumeCall, "POST "+workspaceHostVolumesPath),
 		fmt.Sprintf(volumeCall, "GET "+routingVolumePath),
 	}, recorder.snapshot())
+	assert.Equal(t, sdkGoCalls(sdkGo, 2), recorder.sdkGoCallCount())
 	require.Len(t, diags, 1)
 	assert.Equal(t, "cannot read volume: failed to validate workspace_id: workspace_id "+
 		"mismatch: provider is configured for workspace 67890 but got 12345 in "+
@@ -347,6 +418,16 @@ func TestVolumeHostChangeFailsRefreshBeforeRead(t *testing.T) {
 // the ID into state. Replay ignores unlisted headers, so it can't assert an absence.
 // Each operation uses a fresh client, as each Terraform command does.
 func TestVolumeWithoutWorkspaceIDSendsNoWorkspaceHeader(t *testing.T) {
+	testVolumeWithoutWorkspaceIDSendsNoWorkspaceHeader(t, false)
+}
+
+// TestVolumeWithoutWorkspaceIDSendsNoWorkspaceHeaderWithSdkGo pins the same headers with
+// the volume calls through sdk-go uc/volumes/v1.
+func TestVolumeWithoutWorkspaceIDSendsNoWorkspaceHeaderWithSdkGo(t *testing.T) {
+	testVolumeWithoutWorkspaceIDSendsNoWorkspaceHeader(t, true)
+}
+
+func testVolumeWithoutWorkspaceIDSendsNoWorkspaceHeader(t *testing.T, sdkGo bool) {
 	workspace, workspaceURL := newRoutingServer(t, `{"host_type": "workspace",
 		"cloud": "AWS"}`, map[string]routingResponse{
 		"POST " + workspaceHostVolumesPath: {http.StatusOK,
@@ -367,19 +448,19 @@ func TestVolumeWithoutWorkspaceIDSendsNoWorkspaceHeader(t *testing.T) {
 		return newRoutingClient(t, workspaceHostWorkspaceDomain, "", recorder)
 	}
 
-	state, diags := routingApplyVolume(t, newClient(), nil, routingVolume{
+	state, diags := routingApplyVolume(t, newClient(), sdkGo, nil, routingVolume{
 		attributes: routingVolumeAttributes(map[string]string{"owner": "data-engineers"}),
 	})
 	require.False(t, diags.HasError(), "%v", diags)
 	assert.Equal(t, "12345", state.Attributes["provider_config.0.workspace_id"])
 	workspace.set("GET "+routingVolumePath, routingResponse{http.StatusOK,
 		nil, routingVolumeJSON("data-stewards", "routed comment")})
-	state, diags = routingApplyVolume(t, newClient(), state, routingVolume{
+	state, diags = routingApplyVolume(t, newClient(), sdkGo, state, routingVolume{
 		attributes: routingVolumeAttributes(map[string]string{"owner": "data-stewards",
 			"comment": "routed comment"}),
 	})
 	require.False(t, diags.HasError(), "%v", diags)
-	diags = routingDestroyVolume(newClient(), state)
+	diags = routingDestroyVolume(newClient(), sdkGo, state)
 	require.False(t, diags.HasError(), "%v", diags)
 
 	call := workspaceHostWorkspaceDomain + " %s workspace_id=[]"
@@ -395,4 +476,6 @@ func TestVolumeWithoutWorkspaceIDSendsNoWorkspaceHeader(t *testing.T) {
 		fmt.Sprintf(call, "GET "+routingMePath),
 		fmt.Sprintf(call, "DELETE "+routingVolumePath),
 	}, recorder.snapshot())
+	// The SCIM /Me calls always go through the classic workspace client.
+	assert.Equal(t, sdkGoCalls(sdkGo, 7), recorder.sdkGoCallCount())
 }

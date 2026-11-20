@@ -1,6 +1,6 @@
-# Runs volume/testdata/TestUcAccDataSourceVolume.yaml with databricks_volume on sdk-go
-# uc/volumes/v1 in every step, and expects the same behavior. Its fixtures match the
-# requests of both paths unchanged. The original's description:
+# Runs volume_lifecycle/testdata/TestUcAccDataSourceVolume.yaml with databricks_volume on
+# sdk-go uc/volumes/v1 in every step, and expects the same behavior. Its fixtures match
+# the requests of both paths unchanged. The original's description:
 #
 # API responses are inferred from the scenarios and API models, not recorded.
 version: 1

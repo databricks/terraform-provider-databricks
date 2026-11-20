@@ -126,7 +126,9 @@ type ManagedMemoryStore struct {
 	DisplayName types.String `tfsdk:"display_name"`
 	// Caller-provided, workspace-unique memory store ID. It must be 3-56
 	// characters, begin with a lowercase letter, contain only lowercase
-	// letters, digits, and hyphens, and end with a letter or digit.
+	// letters, digits, and hyphens, and end with a letter or digit. It becomes
+	// the last segment of the store's `name` and cannot be changed after
+	// creation.
 	ManagedMemoryStoreId types.String `tfsdk:"managed_memory_store_id"`
 	// Resource name in the form `memory-stores/{managed_memory_store_id}`.
 	Name types.String `tfsdk:"name"`

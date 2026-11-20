@@ -56,6 +56,8 @@ The following arguments are available:
 
 * `lifetime_seconds` - (Optional) (Integer) The lifetime of the token, in seconds. If no lifetime is specified, then expire time will be set to maximum allowed by the workspace configuration or platform.
 * `comment` - (Optional) (String) Comment that will appear on the user's settings page for this token.
+* `scopes` - (Optional) (Set of strings) [API scopes](https://docs.databricks.com/api/workspace/scopes) the token is restricted to, e.g. `["sql", "unity-catalog"]`. If not specified, the platform default applies. When set, the token is re-created if its scopes change outside Terraform, for example through autoscoping.
+* `autoscope_enabled` - (Optional) (Boolean) Whether Databricks may automatically adjust the token's scopes. If not specified, the platform default applies. Set to `false` to keep the token's scopes fixed.
 * `provider_config` - (Optional) Configure the provider for management through account provider. This block consists of the following fields:
   * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 

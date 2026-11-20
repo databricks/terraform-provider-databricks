@@ -2,7 +2,6 @@ package httpfixture
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"io"
 	"net"
@@ -71,7 +70,7 @@ func compileResponse(e *exchange, r Response) error {
 	// Status stays the source of truth for the code; the line only changes its spelling.
 	if match := statusLinePattern.FindStringSubmatch(r.StatusLine); r.StatusLine != "" &&
 		(match == nil || match[1] != strconv.Itoa(r.Status)) {
-		return fmt.Errorf("status_line %q must be HTTP/1.1 %d, optionally followed by a reason phrase", r.StatusLine, r.Status)
+		return fmt.Errorf("status_line %q must be HTTP/1.0 or HTTP/1.1 %d, optionally followed by a reason phrase", r.StatusLine, r.Status)
 	}
 	return nil
 }
@@ -106,12 +105,11 @@ func respond(w http.ResponseWriter, req *http.Request, e *exchange) error {
 // status line, a broken connection, or a body shorter than its Content-Length.
 // Write errors are ignored, as in writeResponse: they mean the client left.
 func writeRaw(w http.ResponseWriter, e *exchange) error {
-	hijacker, ok := w.(http.Hijacker)
-	if !ok {
-		return errors.New("fault and status_line require a connection that supports hijacking")
-	}
-	conn, client, err := hijacker.Hijack()
+	conn, client, err := http.NewResponseController(w).Hijack()
 	if err != nil {
+		err = fmt.Errorf("fault and status_line require a connection that supports hijacking: %w", err)
+		// An error status keeps the client from taking the implicit 200 for a success.
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return err
 	}
 	defer conn.Close()
@@ -122,7 +120,9 @@ func writeRaw(w http.ResponseWriter, e *exchange) error {
 		return nil
 	}
 	body := e.responseBody
-	if e.call.Response.Fault != "" {
+	if e.call.Request.Method == http.MethodHead {
+		body = nil
+	} else if e.call.Response.Fault != "" {
 		body = body[:len(body)/2]
 	}
 	_, err = conn.Write(append(rawHead(e), body...))
@@ -143,7 +143,8 @@ func setLingerZero(conn net.Conn) error {
 }
 
 // rawHead frames the body by its full length, even when a fault writes less of
-// it, and announces the close, replacing any such headers in the fixture.
+// it, and announces the close, replacing any such headers in the fixture. A HEAD
+// response keeps the fixture's Content-Length, which describes the resource.
 func rawHead(e *exchange) []byte {
 	r := e.call.Response
 	line := r.StatusLine
@@ -153,7 +154,9 @@ func rawHead(e *exchange) []byte {
 	header := http.Header{}
 	setResponseHeaders(header, e)
 	header.Del("Transfer-Encoding")
-	header.Set("Content-Length", strconv.Itoa(len(e.responseBody)))
+	if e.call.Request.Method != http.MethodHead {
+		header.Set("Content-Length", strconv.Itoa(len(e.responseBody)))
+	}
 	header.Set("Connection", "close")
 	var head bytes.Buffer
 	head.WriteString(line + "\r\n")

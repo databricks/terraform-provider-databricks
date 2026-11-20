@@ -137,17 +137,19 @@ outside the handler lock, so other requests are served meanwhile.
 `FaultClose` closes it without a response, `FaultTruncateBody` declares the full
 `Content-Length` but writes half the body, and `FaultStallBody` writes half the
 body, then waits until the client closes the connection. `Response.StatusLine`
-writes a literal status line, such as `HTTP/1.1 404`, whose code must equal
-`Status`. Reset and close responses omit status, headers, body and status line.
+writes a literal HTTP/1.0 or HTTP/1.1 status line, such as `HTTP/1.1 404`,
+whose code must equal `Status`; a HEAD response keeps the fixture's
+`Content-Length`. Reset and close responses omit status, headers, body and status line.
 Body faults need a nonempty body and reject `HEAD` requests and 1xx, 204 and
 304 statuses, because `net/http` never reads those bodies.
 Invalid values fail when fixtures are loaded.
 
 Go's client silently resends a replayable request, such as a GET, that fails
-on a reused connection. A client that must see `reset` and `close` faults should
-therefore open one connection per request, as `qa/terraformtest` does. Faults
+on a reused connection. Clients should therefore use `NewClientTransport`, as
+`qa/terraformtest` and `qa/replay/clienttest` do: it opens one connection per
+request and sends a copy of each request body with its declared length. Faults
 and status lines close the connection and frame the body by its
 `Content-Length`, replacing fixture `Connection`, `Content-Length` and
 `Transfer-Encoding` headers. They need a server that supports hijacking, such
-as `httptest.NewServer`; otherwise `Verify` reports the failure. Faulted calls
-are consumed and ordered like any other call.
+as `httptest.NewServer`; otherwise the client gets a 400 and `Verify` reports
+the failure. Faulted calls are consumed and ordered like any other call.

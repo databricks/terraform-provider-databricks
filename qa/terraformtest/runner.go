@@ -1,10 +1,8 @@
 package terraformtest
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
-	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -209,9 +207,7 @@ func fixtureConfig(host string) func(*config.Config) error {
 		// An explicit loader prevents ambient credentials and profiles from filling
 		// configuration fields, including account/workspace routing identifiers.
 		cfg.Loaders = []config.Loader{fixtureLoader{}}
-		// Go's client silently resends a replayable request that fails on a reused
-		// connection, which would hide a reset or close fault from the SDK.
-		cfg.HTTPTransport = fixtureTransport{host: host, transport: &http.Transport{DisableKeepAlives: true}}
+		cfg.HTTPTransport = fixtureTransport{host: host, transport: httpfixture.NewClientTransport()}
 		return nil
 	}
 }
@@ -231,28 +227,5 @@ func (f fixtureTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	if req.URL.Scheme != expected.Scheme || req.URL.Host != expected.Host {
 		return nil, fmt.Errorf("hermetic replay rejected request outside fixture server: %s", req.URL)
 	}
-	if req.Body != nil && req.Body != http.NoBody {
-		if req, err = withBufferedBody(req); err != nil {
-			return nil, err
-		}
-	}
 	return f.transport.RoundTrip(req)
-}
-
-// withBufferedBody sends a copy of the body. net/http can return a response that
-// closes the connection before it has finished reading the body, and the SDK
-// rewinds that same reader for a retry, which could then go out empty.
-func withBufferedBody(req *http.Request) (*http.Request, error) {
-	body, err := io.ReadAll(req.Body)
-	if err = errors.Join(err, req.Body.Close()); err != nil {
-		return nil, err
-	}
-	clone := req.Clone(req.Context())
-	clone.ContentLength = int64(len(body))
-	clone.Body, clone.GetBody = http.NoBody, func() (io.ReadCloser, error) { return http.NoBody, nil }
-	if len(body) > 0 {
-		clone.GetBody = func() (io.ReadCloser, error) { return io.NopCloser(bytes.NewReader(body)), nil }
-		clone.Body, _ = clone.GetBody()
-	}
-	return clone, nil
 }

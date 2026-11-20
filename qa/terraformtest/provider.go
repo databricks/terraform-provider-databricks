@@ -45,12 +45,17 @@ func (p providerImplementations) validate() error {
 // customizer. Native Go replays can wrap RunNative's isolated configuration to
 // customize transports or authentication without duplicating provider setup.
 func ProviderFactories(customize func(*config.Config) error) map[string]func() (tfprotov6.ProviderServer, error) {
-	return providerFactories(customize, nil)
+	return providerFactories(customize, nil, nil)
 }
 
-func providerFactories(customize func(*config.Config) error, implementations providerImplementations) map[string]func() (tfprotov6.ProviderServer, error) {
+func providerFactories(customize func(*config.Config) error,
+	implementations providerImplementations,
+	sdk sdkImplementations) map[string]func() (tfprotov6.ProviderServer, error) {
 	return map[string]func() (tfprotov6.ProviderServer, error){
 		"databricks": func() (tfprotov6.ProviderServer, error) {
+			if err := sdk.validate(); err != nil {
+				return nil, err
+			}
 			var sdkResources, frameworkResources []string
 			for name, implementation := range implementations {
 				switch implementation {
@@ -62,7 +67,10 @@ func providerFactories(customize func(*config.Config) error, implementations pro
 			}
 			slices.Sort(sdkResources)
 			slices.Sort(frameworkResources)
-			sdkProvider := sdkv2.DatabricksProvider(sdkv2.WithConfigCustomizer(customize), sdkv2.WithSdkV2ResourceFallbacks(sdkResources), sdkv2.WithPluginFrameworkResources(frameworkResources))
+			sdkProvider := sdkv2.DatabricksProvider(sdkv2.WithConfigCustomizer(customize),
+				sdkv2.WithSdkV2ResourceFallbacks(sdkResources),
+				sdkv2.WithPluginFrameworkResources(frameworkResources),
+				sdkv2.WithSdkGoResources(sdk.sdkGoResources()))
 			frameworkProvider := pluginfw.GetDatabricksProviderPluginFramework(pluginfw.WithConfigCustomizer(customize), pluginfw.WithSdkV2ResourceFallbacks(sdkResources), pluginfw.WithPluginFrameworkResources(frameworkResources))
 			if err := implementations.validateResources(sdkProvider.ResourcesMap, frameworkProvider.Resources(context.Background())); err != nil {
 				return nil, err
@@ -110,20 +118,25 @@ func (d *testDefinition) cleanupConfigSteps() []int {
 	return retained
 }
 
-// Install step-level factories only for journeys which select implementations;
-// checkpoint/file staging preserves them because the case-level factory is nil.
+// Install step-level factories only for journeys which select provider or SDK
+// implementations; checkpoint/file staging preserves them because the case-level
+// factory is nil.
 func configureProviderImplementations(d *testDefinition, tc *resource.TestCase, customize func(*config.Config) error) {
-	if !slices.ContainsFunc(d.Steps, func(s step) bool { return len(s.ProviderImplementations) > 0 }) {
+	if !slices.ContainsFunc(d.Steps, func(s step) bool {
+		return len(s.ProviderImplementations) > 0 || len(s.SdkImplementations) > 0
+	}) {
 		return
 	}
 	useStepProviderFactories(tc)
 	for i, s := range d.Steps {
-		tc.Steps[i].ProtoV6ProviderFactories = providerFactories(customize, s.ProviderImplementations)
+		tc.Steps[i].ProtoV6ProviderFactories = providerFactories(customize,
+			s.ProviderImplementations, s.SdkImplementations)
 	}
-	var cleanup providerImplementations
+	var cleanup step
 	retained := d.cleanupConfigSteps()
 	if index := retained[len(retained)-1]; index >= 0 {
-		cleanup = d.Steps[index].ProviderImplementations
+		cleanup = d.Steps[index]
 	}
-	tc.Steps[len(d.Steps)].ProtoV6ProviderFactories = providerFactories(customize, cleanup)
+	tc.Steps[len(d.Steps)].ProtoV6ProviderFactories = providerFactories(customize,
+		cleanup.ProviderImplementations, cleanup.SdkImplementations)
 }

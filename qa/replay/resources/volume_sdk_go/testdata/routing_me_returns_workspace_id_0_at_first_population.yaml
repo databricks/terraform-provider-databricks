@@ -1,0 +1,136 @@
+# Runs volume_routing/testdata/routing_me_returns_workspace_id_0_at_first_population.yaml
+# with databricks_volume on sdk-go uc/volumes/v1 in every step, and expects the same
+# behavior. The volume POST requests carry no Accept header, which an empty header
+# expectation pins. Every step expects an error, so destroy runs with the runner's
+# fallback cleanup configuration, which selects no SDK implementation: its volume GET and
+# DELETE go through the existing client and carry Accept application/json, which destroy
+# pins. The original's description:
+#
+# Pins SCIM /Me answering with X-Databricks-Org-Id 0 when create first populates
+# provider_config, on a workspace-level provider whose host metadata has no workspace
+# ID and without a provider_config block. Apply succeeds and writes "0" to
+# provider_config.workspace_id, then the post-apply plan without refresh fails: its
+# CustomizeDiff gets 0 from /Me again and reports a removed workspace_id. While /Me
+# keeps returning 0, the refresh accepts the stored "0" and the plan fails the same
+# way. Once /Me returns the real ID, the refresh fails with a mismatch against the
+# stored "0" before the volume GET. Destroy only works while /Me returns 0. API
+# responses are inferred from the Unity Catalog and SCIM API contracts, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+steps:
+  - name: create_writes_workspace_id_0
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: &config |
+      resource "databricks_volume" "this" {
+        name         = "me_zero_volume"
+        catalog_name = "main"
+        schema_name  = "replay"
+        volume_type  = "MANAGED"
+      }
+    expect_error: 'Error running post-apply non-refresh plan: exit status 1\s+Error:
+      managing a workspace-level resource requires a workspace_id, but the previously
+      configured workspace_id was removed'
+    calls:
+      - request:
+          method: POST
+          path: /api/2.1/unity-catalog/volumes
+          headers:
+            Content-Type: application/json
+            Accept: ""
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "me_zero_volume", "volume_type": "MANAGED"}
+        response:
+          status: 200
+          body:
+            json: &volume {"catalog_name": "main", "schema_name": "replay",
+                           "name": "me_zero_volume",
+                           "full_name": "main.replay.me_zero_volume",
+                           "volume_type": "MANAGED", "owner": "replay-admin@example.com",
+                           "storage_location": "s3://replay-metastore/volume-1909",
+                           "metastore_id": "11111111-1111-1111-1111-111111111111",
+                           "volume_id": "00000000-0000-4000-8000-000000001909"}
+      - &read_volume
+        request:
+          method: GET
+          path: /api/2.1/unity-catalog/volumes/main.replay.me_zero_volume
+          body: null
+        response:
+          status: 200
+          body:
+            json: *volume
+      # provider_config population after create's read.
+      - &me_zero
+        request: &me_request
+          method: GET
+          path: /api/2.0/preview/scim/v2/Me
+          query:
+            excludedAttributes: [entitlements]
+          body: null
+        response:
+          status: 200
+          headers:
+            X-Databricks-Org-Id: "0"
+          body:
+            json: &me_body {"id": "1001", "userName": "replay-admin@example.com",
+                            "schemas": ["urn:ietf:params:scim:schemas:core:2.0:User"]}
+      # The post-apply plan without refresh.
+      - *me_zero
+  - name: next_plan_while_me_returns_0
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: *config
+    expect_error: 'Error running pre-apply plan: exit status 1\s+Error: managing a
+      workspace-level resource requires a workspace_id, but the previously configured
+      workspace_id was removed'
+    calls:
+      # The plan's refresh accepts the stored "0".
+      - *me_zero
+      - *read_volume
+      # CustomizeDiff looks for a fallback workspace ID.
+      - *me_zero
+  - name: next_plan_after_me_recovers
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: *config
+    expect_error: 'cannot read volume: failed to validate workspace_id: workspace_id
+      mismatch: provider is configured for workspace 12345 but got 0 in
+      provider_config\. please check the workspace_id provided in provider_config'
+    calls:
+      - request: *me_request
+        response:
+          status: 200
+          headers:
+            X-Databricks-Org-Id: "12345"
+          body:
+            json: *me_body
+destroy:
+  calls:
+    # The destroy plan's refresh.
+    - *me_zero
+    - request:
+        method: GET
+        path: /api/2.1/unity-catalog/volumes/main.replay.me_zero_volume
+        headers:
+          Accept: application/json
+        body: null
+      response:
+        status: 200
+        body:
+          json: *volume
+    # The apply.
+    - *me_zero
+    - request:
+        method: DELETE
+        path: /api/2.1/unity-catalog/volumes/main.replay.me_zero_volume
+        headers:
+          Accept: application/json
+        body: null
+      response:
+        status: 200
+        body:
+          json: {}

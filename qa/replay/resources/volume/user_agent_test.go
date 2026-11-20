@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go/config"
+	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/stretchr/testify/assert"
 
@@ -16,10 +17,47 @@ import (
 // TestVolumeUserAgent pins the User-Agent of volume calls.
 // YAML header matchers compare exact values, so the substrings are checked in Go.
 func TestVolumeUserAgent(t *testing.T) {
+	calls := recordUserAgents(t, "native_testdata/user_agent.yaml",
+		terraformtest.ProviderFactories)
+	methods := map[string]bool{}
+	for _, call := range calls {
+		methods[call.method] = true
+		request := call.method + " " + call.path
+		assert.Contains(t, call.userAgent, "databricks-tf-provider/", request)
+		assert.Contains(t, call.userAgent, "resource/volume", request)
+	}
+	want := map[string]bool{"POST": true, "PATCH": true, "GET": true, "DELETE": true}
+	assert.Equal(t, want, methods)
+}
+
+// TestVolumeSdkGoUserAgent pins that sdk-go calls keep the existing User-Agent fields
+// and add the sdk-go module.
+func TestVolumeSdkGoUserAgent(t *testing.T) {
+	calls := recordUserAgents(t, "native_testdata/sdk_go_user_agent.yaml",
+		func(customize func(*config.Config) error) providerFactories {
+			return terraformtest.ProviderFactoriesWithSdkGo(customize,
+				[]string{"databricks_volume"})
+		})
+	methods := map[string]bool{}
+	for _, call := range calls {
+		methods[call.method] = true
+		request := call.method + " " + call.path
+		assert.Contains(t, call.userAgent, "databricks-tf-provider/", request)
+		assert.Contains(t, call.userAgent, "resource/volume", request)
+		assert.Contains(t, call.userAgent, " sdk-go-uc-volumes/", request)
+	}
+	want := map[string]bool{"POST": true, "PATCH": true, "GET": true, "DELETE": true}
+	assert.Equal(t, want, methods)
+}
+
+type providerFactories = map[string]func() (tfprotov6.ProviderServer, error)
+
+func recordUserAgents(t *testing.T, path string,
+	factories func(func(*config.Config) error) providerFactories) []userAgentCall {
 	recorder := &userAgentRecorder{}
-	terraformtest.RunNative(t, "native_testdata/user_agent.yaml",
+	terraformtest.RunNative(t, path,
 		func(tc *resource.TestCase, customize func(*config.Config) error) {
-			tc.ProtoV6ProviderFactories = terraformtest.ProviderFactories(
+			tc.ProtoV6ProviderFactories = factories(
 				func(c *config.Config) error {
 					if err := customize(c); err != nil {
 						return err
@@ -28,15 +66,7 @@ func TestVolumeUserAgent(t *testing.T) {
 					return nil
 				})
 		})
-	methods := map[string]bool{}
-	for _, call := range recorder.snapshot() {
-		methods[call.method] = true
-		request := call.method + " " + call.path
-		assert.Contains(t, call.userAgent, "databricks-tf-provider/", request)
-		assert.Contains(t, call.userAgent, "resource/volume", request)
-	}
-	want := map[string]bool{"POST": true, "PATCH": true, "GET": true, "DELETE": true}
-	assert.Equal(t, want, methods)
+	return recorder.snapshot()
 }
 
 type userAgentCall struct {

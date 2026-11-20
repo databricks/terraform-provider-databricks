@@ -1,0 +1,202 @@
+# Pins a volume name with "#", which Unity Catalog names may contain, on the existing
+# path. Every call puts it in the URL as "%23": the owner PATCH after create, the
+# refreshes, a rename whose failure rolls the owner back, the rename and the DELETE.
+# Unescaped, "#2" becomes a fragment that is never sent, so the calls would go to
+# main.replay.raw. The ID and volume_path keep "#". API responses are inferred from the
+# Unity Catalog API contract, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: create_with_owner_patches_the_escaped_name
+    config: &config_created |
+      resource "databricks_volume" "this" {
+        name         = "raw#2"
+        catalog_name = "main"
+        schema_name  = "replay"
+        volume_type  = "MANAGED"
+        owner        = "data-engineers"
+      }
+    calls:
+      - request:
+          method: POST
+          path: /api/2.1/unity-catalog/volumes
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay", "name": "raw#2",
+                   "volume_type": "MANAGED"}
+        response:
+          status: 200
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay", "name": "raw#2",
+                   "full_name": "main.replay.raw#2", "volume_type": "MANAGED",
+                   "owner": "replay-admin@example.com",
+                   "storage_location": "s3://replay-metastore/volume-72",
+                   "metastore_id": "11111111-1111-1111-1111-111111111111",
+                   "volume_id": "00000000-0000-4000-8000-000000000072"}
+      - request: &owner_patch_request
+          method: PATCH
+          path: /api/2.1/unity-catalog/volumes/main.replay.raw%232
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"owner": "data-engineers"}
+        response:
+          status: 200
+          body:
+            json: &created {"catalog_name": "main", "schema_name": "replay",
+                            "name": "raw#2", "full_name": "main.replay.raw#2",
+                            "volume_type": "MANAGED", "owner": "data-engineers",
+                            "storage_location": "s3://replay-metastore/volume-72",
+                            "metastore_id": "11111111-1111-1111-1111-111111111111",
+                            "volume_id": "00000000-0000-4000-8000-000000000072"}
+      - &read_created
+        request:
+          method: GET
+          path: /api/2.1/unity-catalog/volumes/main.replay.raw%232
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 200
+          body:
+            json: *created
+      - *read_created
+    state:
+      resources:
+        databricks_volume.this:
+          attributes:
+            - path: [id]
+              equals: main.replay.raw#2
+            - path: [volume_path]
+              equals: /Volumes/main/replay/raw#2
+  - name: plan_after_create_is_empty
+    plan_only: true
+    config: *config_created
+    plan:
+      expect: empty
+      changes: {}
+    calls:
+      - *read_created
+  - name: failed_rename_rolls_back_owner_on_the_escaped_name
+    config: &config_renamed |
+      resource "databricks_volume" "this" {
+        name         = "raw#3"
+        catalog_name = "main"
+        schema_name  = "replay"
+        volume_type  = "MANAGED"
+        owner        = "analysts"
+      }
+    expect_error: "Error: cannot update volume: Volume 'main\\.replay\\.raw#3' already
+      exists\\."
+    calls:
+      - *read_created
+      - &owner_change_patch
+        request:
+          method: PATCH
+          path: /api/2.1/unity-catalog/volumes/main.replay.raw%232
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"owner": "analysts"}
+        response:
+          status: 200
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay", "name": "raw#2",
+                   "full_name": "main.replay.raw#2", "volume_type": "MANAGED",
+                   "owner": "analysts",
+                   "storage_location": "s3://replay-metastore/volume-72",
+                   "metastore_id": "11111111-1111-1111-1111-111111111111",
+                   "volume_id": "00000000-0000-4000-8000-000000000072"}
+      - request: &rename_patch_request
+          method: PATCH
+          path: /api/2.1/unity-catalog/volumes/main.replay.raw%232
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"new_name": "raw#3"}
+        response:
+          status: 409
+          body:
+            json: {"error_code": "RESOURCE_ALREADY_EXISTS",
+                   "message": "Volume 'main.replay.raw#3' already exists."}
+      - request: *owner_patch_request
+        response:
+          status: 200
+          body:
+            json: *created
+  - name: rename_moves_calls_to_the_escaped_new_name
+    config: *config_renamed
+    plan:
+      expect: non_empty
+      changes:
+        databricks_volume.this:
+          actions: [update]
+          before:
+            - path: [name]
+              equals: raw#2
+          after:
+            - path: [name]
+              equals: raw#3
+    calls:
+      - *read_created
+      - *owner_change_patch
+      - request: *rename_patch_request
+        response:
+          status: 200
+          body:
+            json: &renamed {"catalog_name": "main", "schema_name": "replay",
+                            "name": "raw#3", "full_name": "main.replay.raw#3",
+                            "volume_type": "MANAGED", "owner": "analysts",
+                            "storage_location": "s3://replay-metastore/volume-72",
+                            "metastore_id": "11111111-1111-1111-1111-111111111111",
+                            "volume_id": "00000000-0000-4000-8000-000000000072"}
+      - &read_renamed
+        request:
+          method: GET
+          path: /api/2.1/unity-catalog/volumes/main.replay.raw%233
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 200
+          body:
+            json: *renamed
+      - *read_renamed
+    state:
+      resources:
+        databricks_volume.this:
+          attributes:
+            - path: [id]
+              equals: main.replay.raw#3
+            - path: [volume_path]
+              equals: /Volumes/main/replay/raw#3
+  - name: plan_after_rename_is_empty
+    plan_only: true
+    config: *config_renamed
+    plan:
+      expect: empty
+      changes: {}
+    calls:
+      - *read_renamed
+destroy:
+  calls:
+    - *read_renamed
+    - request:
+        method: DELETE
+        path: /api/2.1/unity-catalog/volumes/main.replay.raw%233
+        headers:
+          X-Databricks-Workspace-Id: "12345"
+        body: null
+      response:
+        status: 200
+        body:
+          json: {}

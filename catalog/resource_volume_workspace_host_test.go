@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"strings"
 	"sync"
 	"testing"
 
@@ -52,16 +53,27 @@ var workspaceHostVolumeRoutes = map[string]workspaceHostResponse{
 	"DELETE " + workspaceHostVolumePath: {http.StatusOK, `{}`},
 }
 
-// workspaceHostLog records the calls both servers receive, in order.
+// workspaceHostLog records the calls both servers receive, in order, and counts those
+// sent by sdk-go.
 type workspaceHostLog struct {
-	mu    sync.Mutex
-	calls []string
+	mu         sync.Mutex
+	calls      []string
+	sdkGoCalls int
 }
 
-func (l *workspaceHostLog) add(call string) {
+func (l *workspaceHostLog) add(call string, userAgent string) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 	l.calls = append(l.calls, call)
+	if strings.Contains(userAgent, " sdk-go-uc-volumes/") {
+		l.sdkGoCalls++
+	}
+}
+
+func (l *workspaceHostLog) sdkGoCallCount() int {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	return l.sdkGoCalls
 }
 
 func (l *workspaceHostLog) snapshot() []string {
@@ -83,7 +95,7 @@ func (s workspaceHostServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	response := workspaceHostResponse{http.StatusOK, s.metadata}
 	if r.URL.Path != "/.well-known/databricks-config" {
 		s.log.add(fmt.Sprintf("%s %s %s workspace_id=%s", s.name, r.Method, r.URL.Path,
-			r.Header.Get("X-Databricks-Workspace-Id")))
+			r.Header.Get("X-Databricks-Workspace-Id")), r.Header.Get("User-Agent"))
 		var ok bool
 		response, ok = s.routes[r.Method+" "+r.URL.Path]
 		if !ok {
@@ -125,6 +137,16 @@ func (workspaceHostLoader) Configure(*config.Config) error { return nil }
 // apart. Here the provider uses an AWS account domain, and a transport sends the
 // account domain and the workspace's deployment domain to two httptest servers.
 func TestVolumeAccountProviderWorkspaceHost(t *testing.T) {
+	testVolumeAccountProviderWorkspaceHost(t, false)
+}
+
+// TestVolumeAccountProviderWorkspaceHostWithSdkGo pins the same hosts with the volume
+// calls through sdk-go uc/volumes/v1.
+func TestVolumeAccountProviderWorkspaceHostWithSdkGo(t *testing.T) {
+	testVolumeAccountProviderWorkspaceHost(t, true)
+}
+
+func testVolumeAccountProviderWorkspaceHost(t *testing.T, sdkGo bool) {
 	tests := []struct {
 		name   string
 		lookup workspaceHostResponse
@@ -169,7 +191,7 @@ func TestVolumeAccountProviderWorkspaceHost(t *testing.T) {
 				workspaceHostAccountDomain:   mustParseURL(t, account.URL),
 				workspaceHostWorkspaceDomain: mustParseURL(t, workspace.URL),
 			})
-			diags := createReadDeleteVolume(t, c)
+			diags := createReadDeleteVolume(t, c, sdkGo)
 
 			volumeCall := tt.volumeHost + " %s workspace_id=12345"
 			assert.Equal(t, []string{
@@ -179,6 +201,12 @@ func TestVolumeAccountProviderWorkspaceHost(t *testing.T) {
 				fmt.Sprintf(volumeCall, "GET "+workspaceHostVolumePath),
 				fmt.Sprintf(volumeCall, "DELETE "+workspaceHostVolumePath),
 			}, log.snapshot())
+			// The workspace lookup always goes through the classic account client.
+			wantSdkGoCalls := 0
+			if sdkGo {
+				wantSdkGoCalls = 4
+			}
+			assert.Equal(t, wantSdkGoCalls, log.sdkGoCallCount())
 			assert.False(t, diags.HasError(), "%v", diags)
 		})
 	}
@@ -209,12 +237,16 @@ func mustParseURL(t *testing.T, raw string) *url.URL {
 }
 
 // createReadDeleteVolume runs the provider's wrapped Create, Read and Delete on one
-// client for a volume whose provider_config sets workspace_id 12345. It stops at the
-// first operation that fails and returns its diagnostics.
-func createReadDeleteVolume(t *testing.T, c *common.DatabricksClient) diag.Diagnostics {
+// client for a volume whose provider_config sets workspace_id 12345, through sdk-go if
+// sdkGo is set. It stops at the first operation that fails and returns its diagnostics.
+func createReadDeleteVolume(t *testing.T, c *common.DatabricksClient,
+	sdkGo bool) diag.Diagnostics {
 	t.Helper()
 	ctx := context.WithValue(context.Background(), common.ResourceName, "volume")
 	r := ResourceVolume().ToResource()
+	if sdkGo {
+		common.EnableSdkGo(r)
+	}
 	d := schema.TestResourceDataRaw(t, r.Schema, map[string]any{
 		"name":            "host_volume",
 		"catalog_name":    "main",

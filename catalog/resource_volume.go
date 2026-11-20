@@ -120,7 +120,9 @@ func ResourceVolume() common.Resource {
 			if err != nil {
 				return err
 			}
-			if storedName != userProvidedName {
+			// Unity Catalog stores names in lower case, so an ID imported with upper case
+			// still names the same volume.
+			if !strings.EqualFold(storedName, userProvidedName) {
 				updateVolumeRequestContent.NewName = userProvidedName
 			}
 

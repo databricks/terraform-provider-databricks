@@ -3,11 +3,10 @@
 # calls use it. A comment change then sends no new_name: diff suppression keeps the
 # stored lower-case name, which matches the name in the ID. Importing by an upper-case
 # full name keeps it in the GET, PATCH and DELETE paths as is. A comment change after
-# that import also sends new_name with the stored lower-case name, and the PATCH
-# response replaces the ID with the lower-case full name. That new_name is a known
-# defect: Update compares the configured name with the name in the ID case-sensitively.
-# A fix is expected to drop it; update the last step with it. API responses are inferred
-# from the Unity Catalog API contract, not recorded.
+# that import sends no new_name either: Update compares the stored lower-case name with
+# the name in the ID case-insensitively. The PATCH response replaces the ID with the
+# lower-case full name. API responses are inferred from the Unity Catalog API contract,
+# not recorded.
 version: 1
 enforce_call_order: true
 host_metadata:
@@ -155,7 +154,7 @@ steps:
     calls:
       - *read_upper
       - *read_upper
-  - name: update_comment_after_import_patches_the_upper_case_path_with_new_name
+  - name: update_comment_after_import_patches_the_upper_case_path_without_new_name
     config: *config_commented
     calls:
       - *read_upper
@@ -166,7 +165,7 @@ steps:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
           body:
-            json: {"comment": "upper", "new_name": "raw_upper"}
+            json: {"comment": "upper"}
         response:
           status: 200
           body:

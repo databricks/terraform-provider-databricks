@@ -10,6 +10,7 @@ import (
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/config"
+	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/databricks-sdk-go/useragent"
 	sdkvolumes "github.com/databricks/sdk-go/uc/volumes/v1"
 	"github.com/stretchr/testify/assert"
@@ -99,6 +100,7 @@ func TestSdkGoVolumesClientMapsErrorsLikeClassicClient(t *testing.T) {
 			"User does not have READ VOLUME on Volume.", false},
 		{"non-JSON error body", 500, "upstream connect error",
 			"upstream connect error", false},
+		{"empty error body", 404, "", "Not Found", true},
 		{"undecodable success body", 200, "not json",
 			"failed to unmarshal response body: " +
 				"invalid character 'o' in literal null (expecting 'u')", false},
@@ -185,12 +187,18 @@ func TestSdkGoVolumesClientEscapesReservedCharactersInNames(t *testing.T) {
 	}
 }
 
-// An empty 200 body fails to decode through sdk-go, while the existing client reads it as
-// a volume without fields.
-func TestSdkGoVolumesClientRejectsEmptySuccessBody(t *testing.T) {
-	r := readBothWays(t, context.Background, nil, respond(http.StatusOK, ""))
-	assert.EqualError(t, r.err,
-		"failed to unmarshal response body: unexpected end of JSON input")
-	assert.NoError(t, r.classicErr)
-	assert.Equal(t, r.classicCalls, r.calls)
+// Like the existing client, sdk-go reads an empty success body as a volume without
+// fields, also for a 304, which neither client follows.
+func TestSdkGoVolumesClientReadsEmptySuccessBodyLikeClassicClient(t *testing.T) {
+	for _, status := range []int{http.StatusOK, http.StatusNotModified} {
+		t.Run(http.StatusText(status), func(t *testing.T) {
+			r := readBothWays(t, context.Background, nil, respond(status, ""))
+			require.NoError(t, r.classicErr)
+			require.NoError(t, r.err)
+			assert.Equal(t, &catalog.VolumeInfo{}, r.classicVolume)
+			assert.Equal(t, &sdkvolumes.VolumeInfo{}, r.volume)
+			assert.EqualValues(t, 1, r.calls)
+			assert.Equal(t, r.classicCalls, r.calls)
+		})
+	}
 }

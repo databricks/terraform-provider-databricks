@@ -25,8 +25,8 @@ const classicDefaultDebugTruncateBytes = 96
 
 // sdkGoTransport sends each sdk-go attempt the way httpclient.ApiClient sends one: it
 // runs the request visitors under the attempt's timeout, follows redirects, reads the
-// response, rejects successful responses the classic error mapper rejects, and writes
-// the classic debug log.
+// response, rejects successful responses the classic error mapper rejects, writes the
+// classic debug log, and hands sdk-go an empty successful body as an empty JSON object.
 type sdkGoTransport struct {
 	// client follows redirects over the classic transport, as the classic client does.
 	client             *http.Client
@@ -92,7 +92,19 @@ func (t *sdkGoTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	if err != nil {
 		return nil, err
 	}
-	return resp, nil
+	return withDecodableBody(resp, responseBody), nil
+}
+
+// withDecodableBody hands sdk-go an empty successful body as an empty JSON object, which
+// it decodes as the response without fields that the classic client returns for an
+// empty body. Every uc/volumes/v1 response is a JSON object.
+func withDecodableBody(resp *http.Response, body []byte) *http.Response {
+	const emptyObject = "{}"
+	if resp.StatusCode < http.StatusBadRequest && len(body) == 0 {
+		resp.Body = io.NopCloser(strings.NewReader(emptyObject))
+		resp.ContentLength = int64(len(emptyObject))
+	}
+	return resp
 }
 
 // exchange sends r, whose context ends with timeout, follows redirects and reads the

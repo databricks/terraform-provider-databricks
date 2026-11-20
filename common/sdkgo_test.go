@@ -212,6 +212,55 @@ func TestSdkGoClientStopsRetryingAtRetryTimeout(t *testing.T) {
 	assert.Equal(t, r.classicCalls, r.calls)
 }
 
+// The classic client bounds only its backoff by the retry timeout, so a response that
+// arrives after the timeout still succeeds there and must succeed through sdk-go too.
+func TestSdkGoClientWaitsForAResponsePastRetryTimeoutLikeClassicClient(t *testing.T) {
+	slow := func(w http.ResponseWriter, r *http.Request) {
+		time.Sleep(1500 * time.Millisecond)
+		respond(http.StatusOK, sdkGoTestVolume)(w, r)
+	}
+	r := readBothWays(t, context.Background, func(cfg *config.Config) {
+		cfg.RetryTimeoutSeconds = 1
+		cfg.HTTPTimeoutSeconds = 10
+	}, slow)
+	assert.NoError(t, r.err)
+	assert.EqualValues(t, 1, r.calls)
+	assert.NoError(t, r.classicErr)
+	assert.Equal(t, r.classicCalls, r.calls)
+}
+
+// htmlError answers like the legacy APIs that return an HTML page, which the classic
+// client classifies by the response's status text.
+func htmlError(status int, message string) handler {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/html")
+		respond(status, "<html><body><pre>"+message+"</pre></body></html>")(w, r)
+	}
+}
+
+func TestSdkGoClientReadsHTMLNotFoundAsMissingLikeClassicClient(t *testing.T) {
+	r := readBothWays(t, context.Background, nil,
+		htmlError(http.StatusNotFound, "Volume not found."))
+	var apiErr, classicAPIErr *apierr.APIError
+	require.ErrorAs(t, r.err, &apiErr)
+	require.ErrorAs(t, r.classicErr, &classicAPIErr)
+	assert.Equal(t, "NOT_FOUND", classicAPIErr.ErrorCode)
+	assert.Equal(t, classicAPIErr.ErrorCode, apiErr.ErrorCode)
+	assert.True(t, apierr.IsMissing(r.err))
+	assert.EqualError(t, r.err, r.classicErr.Error())
+	assert.Equal(t, r.classicCalls, r.calls)
+}
+
+func TestSdkGoClientRetriesHTMLTooManyRequestsLikeClassicClient(t *testing.T) {
+	r := readBothWays(t, context.Background, nil,
+		htmlError(http.StatusTooManyRequests, "Too many requests."),
+		respond(http.StatusOK, sdkGoTestVolume))
+	assert.NoError(t, r.classicErr)
+	assert.NoError(t, r.err)
+	assert.EqualValues(t, 2, r.calls)
+	assert.Equal(t, r.classicCalls, r.calls)
+}
+
 func TestSdkGoClientReturnsLastErrorWhenCancelledDuringBackoff(t *testing.T) {
 	var cancel context.CancelFunc
 	newContext := func() context.Context {

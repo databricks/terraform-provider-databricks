@@ -1,7 +1,7 @@
-# Runs volume/testdata/no_retry_on_refresh_errors.yaml with databricks_volume on sdk-go
-# uc/volumes/v1 in every step, and expects the same behavior. The volume POST and GET
-# requests carry no Accept header, which an empty header expectation pins. The original's
-# description:
+# Runs volume_errors/testdata/no_retry_on_refresh_errors.yaml with databricks_volume on
+# sdk-go uc/volumes/v1 in every step, and expects the same behavior. The volume POST and
+# GET requests carry no Accept header, which an empty header expectation pins. The
+# original's description:
 #
 # This journey pins that the classic SDK client sends the refresh GET exactly once and
 # reports the API message for statuses it does not retry: 400, 401, 409, 502 and 504.

@@ -1,4 +1,4 @@
-# Runs volume/testdata/diff_suppression.yaml with databricks_volume on sdk-go
+# Runs volume_lifecycle/testdata/diff_suppression.yaml with databricks_volume on sdk-go
 # uc/volumes/v1 in every step, and expects the same behavior. The volume POST and GET
 # requests carry no Accept header, which an empty header expectation pins. The original's
 # description:

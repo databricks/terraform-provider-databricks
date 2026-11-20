@@ -1,8 +1,9 @@
-# Runs volume/testdata/read_errors.yaml with databricks_volume on sdk-go uc/volumes/v1 in
-# every step, and expects the same behavior. Two more steps pin that a 200 whose body
-# can't be decoded fails the sdk-go refresh and keeps the volume in state, without the
-# existing client's request and response dump. The volume POST and GET requests carry no
-# Accept header, which an empty header expectation pins. The original's description:
+# Runs volume_errors/testdata/read_errors.yaml with databricks_volume on sdk-go
+# uc/volumes/v1 in every step, and expects the same behavior. Two more steps pin that a
+# 200 whose body can't be decoded fails the sdk-go refresh and keeps the volume in state,
+# without the existing client's request and response dump. The volume POST and GET
+# requests carry no Accept header, which an empty header expectation pins. The original's
+# description:
 #
 # Pins refresh error handling. A 403 and a 500 with a non-JSON body fail with their
 # exact diagnostics and keep the volume in state; a 404 removes it, and the same apply

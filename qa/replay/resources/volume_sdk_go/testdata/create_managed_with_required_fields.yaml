@@ -1,7 +1,7 @@
-# Runs volume/testdata/create_managed_with_required_fields.yaml with databricks_volume on
-# sdk-go uc/volumes/v1 in every step, and expects the same behavior. The volume POST and
-# GET requests carry no Accept header, which an empty header expectation pins. The
-# original's description:
+# Runs volume_lifecycle/testdata/create_managed_with_required_fields.yaml with
+# databricks_volume on sdk-go uc/volumes/v1 in every step, and expects the same behavior.
+# The volume POST and GET requests carry no Accept header, which an empty header
+# expectation pins. The original's description:
 #
 # Pins creating a MANAGED volume with only the required fields: one POST, no owner
 # PATCH, and refresh GETs by full name without a query. The response's managed

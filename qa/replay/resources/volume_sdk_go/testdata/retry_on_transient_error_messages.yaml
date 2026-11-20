@@ -1,7 +1,7 @@
-# Runs volume/testdata/retry_on_transient_error_messages.yaml with databricks_volume on
-# sdk-go uc/volumes/v1 in every step, and expects the same behavior. The volume POST and
-# GET requests carry no Accept header, which an empty header expectation pins. The
-# original's description:
+# Runs volume_retries/testdata/retry_on_transient_error_messages.yaml with
+# databricks_volume on sdk-go uc/volumes/v1 in every step, and expects the same behavior.
+# The volume POST and GET requests carry no Accept header, which an empty header
+# expectation pins. The original's description:
 #
 # This journey pins that the classic SDK client retries the refresh GET once when the
 # error message matches one of its transient patterns, even with a 400, which it never

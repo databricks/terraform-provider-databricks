@@ -1,9 +1,8 @@
 # Runs volume/native_testdata/traceparent_retry.yaml with databricks_volume on sdk-go
-# uc/volumes/v1 in every step, and expects the same behavior.
-# TestVolumeTraceparentWithSdkGo selects sdk-go with ProviderFactoriesWithSdkGo, because
-# sdk_implementations would replace the providers that record the requests. The volume
-# POST and GET requests carry no Accept header, which an empty header expectation pins.
-# The original's description:
+# uc/volumes/v1 in every step, and expects the same behavior. The test that replays it
+# selects sdk-go with ProviderFactoriesWithSdkGo, because sdk_implementations would
+# replace the providers that record the requests. The volume POST and GET requests carry
+# no Accept header, which an empty header expectation pins. The original's description:
 #
 # Supplies volume calls for TestVolumeTraceparent, which checks their traceparent
 # headers in Go. The create POST and the destroy DELETE each fail once with a 503 and

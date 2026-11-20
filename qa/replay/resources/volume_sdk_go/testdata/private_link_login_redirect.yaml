@@ -1,7 +1,7 @@
-# Runs volume/testdata/private_link_login_redirect.yaml with databricks_volume on sdk-go
-# uc/volumes/v1 in every step, and expects the same behavior. The volume POST and GET
-# requests carry no Accept header, which an empty header expectation pins. The original's
-# description:
+# Runs volume_errors/testdata/private_link_login_redirect.yaml with databricks_volume on
+# sdk-go uc/volumes/v1 in every step, and expects the same behavior. The volume POST and
+# GET requests carry no Accept header, which an empty header expectation pins. The
+# original's description:
 #
 # Pins a request that is redirected to the private-link login page. The client follows
 # the redirect, the login page answers 200, and the classic SDK turns the final URL into

@@ -1,4 +1,4 @@
-# Runs volume/testdata/response_extra_fields_keep_the_same_state.yaml with
+# Runs volume_lifecycle/testdata/response_extra_fields_keep_the_same_state.yaml with
 # databricks_volume on sdk-go uc/volumes/v1 in every step, and expects the same behavior.
 # The volume POST, GET and PATCH requests carry no Accept header, which an empty header
 # expectation pins. The PATCH body also carries full_name_arg, the full name in its path,

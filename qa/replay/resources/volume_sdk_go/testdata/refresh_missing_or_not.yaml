@@ -1,7 +1,7 @@
-# Runs volume/testdata/refresh_missing_or_not.yaml with databricks_volume on sdk-go
-# uc/volumes/v1 in every step, and expects the same behavior. The volume POST and GET
-# requests carry no Accept header, which an empty header expectation pins. The original's
-# description:
+# Runs volume_lifecycle/testdata/refresh_missing_or_not.yaml with databricks_volume on
+# sdk-go uc/volumes/v1 in every step, and expects the same behavior. The volume POST and
+# GET requests carry no Accept header, which an empty header expectation pins. The
+# original's description:
 #
 # Pins which refresh GET errors remove the volume from state (apierr.IsMissing). The
 # error_code RESOURCE_DOES_NOT_EXIST counts as missing with any status, and a 404 counts

@@ -1,4 +1,4 @@
-# Runs volume/testdata/schema_create_external_without_storage_location.yaml with
+# Runs volume_schema/testdata/schema_create_external_without_storage_location.yaml with
 # databricks_volume on sdk-go uc/volumes/v1 in every step, and expects the same behavior.
 # The volume POST request carries no Accept header, which an empty header expectation
 # pins. The original's description:

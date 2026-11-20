@@ -1,11 +1,9 @@
-# Runs volume/testdata/error_bodies_on_refresh.yaml with databricks_volume on sdk-go
-# uc/volumes/v1 in every step, and expects the same behavior. The volume POST and GET
-# requests carry no Accept header, which an empty header expectation pins. Two more steps
-# pin a suspected new-mode defect: an sdk-go error is parsed again without the HTTP status
-# text, so an HTML body with a <pre> message gets the error code UNKNOWN instead of one
-# derived from the status. An HTML 404 then fails the refresh and keeps the volume, where
-# the existing path counts it as missing and plans a create. An HTML 429 fails without a
-# retry, where the existing path retries it. The original's description:
+# Runs volume_errors/testdata/error_bodies_on_refresh.yaml with databricks_volume on
+# sdk-go uc/volumes/v1 in every step, and expects the same behavior. The volume POST and
+# GET requests carry no Accept header, which an empty header expectation pins. Two more
+# steps pin that an HTML error page with a <pre> message is classified by its status text,
+# as on the existing path: a refresh answered 404 counts as missing and plans a create,
+# and one answered 429 is retried. The original's description:
 #
 # Pins how the classic SDK turns refresh GET error bodies into diagnostics. Each failing
 # refresh keeps the volume in state, so the next step reads it again. An empty 404 body
@@ -179,11 +177,16 @@ steps:
             Content-Type: application/json
           body:
             text: '{"error_code": "INTERNAL_ERROR", "message": "Volume lookup'
-  - name: refresh_answered_html_404_fails_instead_of_planning_create
+  - name: refresh_answered_html_404_plans_create
     sdk_implementations:
       databricks_volume: sdk_go
+    plan_only: true
     config: *config
-    expect_error: 'Error: cannot read volume: Volume not found\n'
+    plan:
+      expect: non_empty
+      changes:
+        databricks_volume.this:
+          actions: [create]
     calls:
       - request: *read_request
         response:
@@ -193,11 +196,14 @@ steps:
           body:
             text: "<html><head><title>Error 404</title></head><body><h2>HTTP ERROR
               404</h2><pre>Volume not found.</pre></body></html>"
-  - name: refresh_answered_html_429_fails_without_retry
+  - name: refresh_answered_html_429_is_retried
     sdk_implementations:
       databricks_volume: sdk_go
+    plan_only: true
     config: *config
-    expect_error: 'Error: cannot read volume: Slow down\n'
+    plan:
+      expect: empty
+      changes: {}
     calls:
       - request: *read_request
         response:
@@ -207,6 +213,7 @@ steps:
           body:
             text: "<html><head><title>Error 429</title></head><body><h2>HTTP ERROR
               429</h2><pre>Slow down.</pre></body></html>"
+      - *read_created
 destroy:
   calls:
     - *read_created

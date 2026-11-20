@@ -1,6 +1,6 @@
-# Runs volume/testdata/refresh_state_unconfigured_comment_is_not_adopted.yaml with
-# databricks_volume on sdk-go uc/volumes/v1 in every step, and expects the same behavior.
-# The volume POST and GET requests carry no Accept header, which an empty header
+# Runs volume_lifecycle/testdata/refresh_state_unconfigured_comment_is_not_adopted.yaml
+# with databricks_volume on sdk-go uc/volumes/v1 in every step, and expects the same
+# behavior. The volume POST and GET requests carry no Accept header, which an empty header
 # expectation pins. The original's description:
 #
 # Pins that a refresh skips a remote comment when comment isn't configured and state

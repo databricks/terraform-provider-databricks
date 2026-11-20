@@ -1,6 +1,6 @@
-# Runs volume/testdata/schema_required_arguments.yaml with databricks_volume on sdk-go
-# uc/volumes/v1 in every step, and expects the same behavior. It sends no API calls, so it
-# has no fixtures to change. The original's description:
+# Runs volume_schema/testdata/schema_required_arguments.yaml with databricks_volume on
+# sdk-go uc/volumes/v1 in every step, and expects the same behavior. It sends no API
+# calls, so it has no fixtures to change. The original's description:
 #
 # Pins plan-time validation of the required arguments: omitting catalog_name,
 # schema_name, name or volume_type each fails before any API call.

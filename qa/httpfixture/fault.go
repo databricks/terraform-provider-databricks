@@ -65,12 +65,21 @@ func compileResponse(e *exchange, r Response) error {
 	if r.Fault != "" && len(e.responseBody) == 0 {
 		return fmt.Errorf("fault %s requires a nonempty response body", r.Fault)
 	}
+	if r.Fault != "" && !bodyAllowed(e.call.Request.Method, r.Status) {
+		return fmt.Errorf("fault %s needs a response body, which net/http ignores for HEAD requests and 1xx, 204 and 304 responses", r.Fault)
+	}
 	// Status stays the source of truth for the code; the line only changes its spelling.
 	if match := statusLinePattern.FindStringSubmatch(r.StatusLine); r.StatusLine != "" &&
 		(match == nil || match[1] != strconv.Itoa(r.Status)) {
 		return fmt.Errorf("status_line %q must be HTTP/1.1 %d, optionally followed by a reason phrase", r.StatusLine, r.Status)
 	}
 	return nil
+}
+
+// bodyAllowed mirrors net/http, whose client never reads these responses' bodies,
+// so a body fault on them would pass without reaching the client.
+func bodyAllowed(method string, status int) bool {
+	return method != http.MethodHead && status >= 200 && status != http.StatusNoContent && status != http.StatusNotModified
 }
 
 // respond waits for the delay, then writes the response. It runs outside the

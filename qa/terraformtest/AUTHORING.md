@@ -367,9 +367,10 @@ client the provider uses.
   phrase. Its code must equal `status`; headers and body are written as usual.
 
 `reset` and `close` write no response, so they omit `status`, `headers`, `body`
-and `status_line`. The body faults need a nonempty `body`. `delay` combines
-with every other field. Invalid values fail when the journey loads, naming the
-file, step and call.
+and `status_line`. The body faults need a nonempty `body` on a response that can
+carry one: not a `HEAD` request or a 1xx, 204 or 304 status, whose bodies
+`net/http` never reads. `delay` combines with every other field. Invalid values
+fail when the journey loads, naming the file, step and call.
 
 A faulted call is consumed like any other, so `enforce_call_order` and the
 unused-fixture check still apply. Follow it with a normal call to pin a retry,

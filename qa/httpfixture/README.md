@@ -139,6 +139,8 @@ outside the handler lock, so other requests are served meanwhile.
 body, then waits until the client closes the connection. `Response.StatusLine`
 writes a literal status line, such as `HTTP/1.1 404`, whose code must equal
 `Status`. Reset and close responses omit status, headers, body and status line.
+Body faults need a nonempty body and reject `HEAD` requests and 1xx, 204 and
+304 statuses, because `net/http` never reads those bodies.
 Invalid values fail when fixtures are loaded.
 
 Go's client silently resends a replayable request, such as a GET, that fails

@@ -17,6 +17,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/client"
 	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/databricks-sdk-go/config/credentials"
+	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/sdk-go/options/call"
 	sdkvolumes "github.com/databricks/sdk-go/uc/volumes/v1"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -118,6 +119,8 @@ func respond(status int, body string) handler {
 }
 
 type bothWays struct {
+	volume              *sdkvolumes.VolumeInfo
+	classicVolume       *catalog.VolumeInfo
 	err, classicErr     error
 	calls, classicCalls int32
 }
@@ -130,10 +133,11 @@ func readBothWays(t *testing.T, ctx func() context.Context,
 	var result bothWays
 	server, calls := serveSequence(t, handlers...)
 	w := newVolumesTestWorkspaceClient(t, server, customize)
-	_, result.err = getVolume(ctx(), t, w, sdkGoTestVolumeName)
+	result.volume, result.err = getVolume(ctx(), t, w, sdkGoTestVolumeName)
 	classicServer, classicCalls := serveSequence(t, handlers...)
 	classic := newVolumesTestWorkspaceClient(t, classicServer, customize)
-	_, result.classicErr = classic.Volumes.ReadByName(ctx(), sdkGoTestVolumeName)
+	result.classicVolume, result.classicErr = classic.Volumes.ReadByName(ctx(),
+		sdkGoTestVolumeName)
 	result.calls, result.classicCalls = calls.Load(), classicCalls.Load()
 	return result
 }

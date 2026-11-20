@@ -251,21 +251,18 @@ func gcpEndpointFromAPI(ctx context.Context, gcp *settings.GcpEndpoint, diags *d
 	if gcp == nil {
 		return nil
 	}
-	allVpcScServices := types.BoolValue(gcp.AllVpcScServices)
-	// Validation rejects explicit defaults; SDKv2 state can still contain them for unused targets.
-	if !gcp.AllVpcScServices {
-		allVpcScServices = types.BoolNull()
-	}
 	var googleApiEndpoints []googleApiEndpointsModel
 	if gcp.GoogleApiEndpoints != nil {
 		googleApiEndpoints = []googleApiEndpointsModel{{
 			Endpoints: stringsToList(ctx, gcp.GoogleApiEndpoints.Endpoints, diags),
 		}}
 	}
+	// Match the schema defaults even when the API omits unused selectors.
+	// Converting them to null would conflict with explicitly configured defaults.
 	return []gcpEndpointModel{{
-		AllVpcScServices:   allVpcScServices,
+		AllVpcScServices:   types.BoolValue(gcp.AllVpcScServices),
 		GoogleApiEndpoints: googleApiEndpoints,
 		PscEndpointUri:     types.StringValue(gcp.PscEndpointUri),
-		ServiceAttachment:  stringOrNull(gcp.ServiceAttachment),
+		ServiceAttachment:  types.StringValue(gcp.ServiceAttachment),
 	}}
 }

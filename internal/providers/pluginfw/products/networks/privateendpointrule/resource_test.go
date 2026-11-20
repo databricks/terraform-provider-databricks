@@ -798,8 +798,8 @@ func TestSchema_CreateOnlyFieldsRequireReplace(t *testing.T) {
 	if !ok {
 		t.Fatal("gcp_endpoint.service_attachment missing or not a StringAttribute")
 	}
-	if !sa.Optional || sa.Computed {
-		t.Errorf("service_attachment must be Optional and not Computed; got Optional=%v Computed=%v", sa.Optional, sa.Computed)
+	if !sa.Optional || !sa.Computed || sa.Default == nil {
+		t.Errorf("service_attachment must be Optional+Computed with a default; got %+v", sa)
 	}
 	if len(sa.PlanModifiers) == 0 {
 		t.Error("service_attachment must carry a RequiresReplace plan modifier; got none")
@@ -811,7 +811,7 @@ func TestSchema_CreateOnlyFieldsRequireReplace(t *testing.T) {
 // only). It compares the Optional/Computed/Required flag of every SDKv2
 // attribute against the PF attribute of the same name, so a future drift
 // (e.g. a Computed flip, or a new field added to one side only) fails here.
-// The Google API endpoints list is intentionally required only in Framework.
+// GCP scalar selectors use Computed so Framework can supply SDKv2's zero defaults.
 // ForceNew/RequiresReplace, ConflictsWith, and cardinality are covered by the
 // dedicated schema-invariant tests above.
 func TestSchema_MatchesSDKv2(t *testing.T) {
@@ -853,11 +853,6 @@ func TestSchema_MatchesSDKv2(t *testing.T) {
 							t.Errorf("gcp_endpoint.%s.%s present in SDKv2 but missing from PF", sub, nestedName)
 							continue
 						}
-						if nestedName == "endpoints" {
-							require.Equal(t, "Optional=false Computed=false Required=true", flags(pfNested))
-							require.Equal(t, "Optional=true Computed=false Required=false", sdkFlags(nestedSchema))
-							continue
-						}
 						if got, want := flags(pfNested), sdkFlags(nestedSchema); got != want {
 							t.Errorf("gcp_endpoint.%s.%s flags: PF %s, SDKv2 %s", sub, nestedName, got, want)
 						}
@@ -867,6 +862,11 @@ func TestSchema_MatchesSDKv2(t *testing.T) {
 				pfSub, ok := block.NestedObject.Attributes[sub]
 				if !ok {
 					t.Errorf("gcp_endpoint.%s present in SDKv2 but missing from PF", sub)
+					continue
+				}
+				if sub == "all_vpc_sc_services" || sub == "service_attachment" {
+					require.Equal(t, "Optional=true Computed=true Required=false", flags(pfSub))
+					require.Equal(t, "Optional=true Computed=false Required=false", sdkFlags(subSchema))
 					continue
 				}
 				if got, want := flags(pfSub), sdkFlags(subSchema); got != want {

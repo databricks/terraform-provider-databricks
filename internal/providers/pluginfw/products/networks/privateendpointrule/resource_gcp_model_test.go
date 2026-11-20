@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestGcpCreateNormalizesUnusedTargets(t *testing.T) {
+func TestGcpCreatePreservesScalarDefaults(t *testing.T) {
 	ctx := context.Background()
 	const pscURI = "projects/p/regions/r/forwardingRules/endpoint"
 	for _, tt := range []struct {
@@ -56,6 +56,8 @@ func TestGcpCreateNormalizesUnusedTargets(t *testing.T) {
 			r.Create(ctx, resource.CreateRequest{Plan: rawPlan(t, ctx, plan)}, &created)
 			fatalIfDiag(t, created.Diagnostics)
 			want := tt.config
+			want.AllVpcScServices = types.BoolValue(tt.api.AllVpcScServices)
+			want.ServiceAttachment = types.StringValue(tt.api.ServiceAttachment)
 			want.PscEndpointUri = types.StringValue(pscURI)
 			state := readModel(t, ctx, created.State)
 			require.Equal(t, []gcpEndpointModel{want}, state.GcpEndpoint)

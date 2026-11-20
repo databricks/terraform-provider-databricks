@@ -1,14 +1,15 @@
 package privateendpointrule
 
 import (
-	"github.com/hashicorp/terraform-plugin-framework-validators/boolvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -20,9 +21,9 @@ import (
 // existing AWS/Azure configurations remain compatible. `make diff-schema` does NOT
 // guard this parity: it dumps the default (SDKv2) provider, and this resource
 // is opt-in, so the PF schema below is never introspected by that gate.
-// TestSchema_MatchesSDKv2 asserts parity except for the required Google API
-// endpoints list. GCP target validation and service-attachment replacement are
-// Framework-only; SDKv2 keeps its existing behavior.
+// TestSchema_MatchesSDKv2 asserts parity except for the Computed flag needed
+// for GCP scalar defaults. These match SDKv2's zero values so omitted and
+// explicitly defaulted selectors both survive refresh without a diff.
 //
 // Attribute descriptions are sourced from the SDK struct comments
 // (databricks-sdk-go service/settings) and surfaced through
@@ -207,15 +208,9 @@ func resourceSchema() schema.Schema {
 					Attributes: map[string]schema.Attribute{
 						"all_vpc_sc_services": schema.BoolAttribute{
 							Optional:            true,
-							MarkdownDescription: "All Google APIs that support VPC Service Controls. Must be true when configured; omit to select another target.",
-							Validators: []validator.Bool{
-								boolvalidator.Equals(true),
-								// An omitted nested block is [], not null; match its required attribute.
-								boolvalidator.ExactlyOneOf(
-									path.MatchRelative().AtParent().AtName("service_attachment"),
-									path.MatchRelative().AtParent().AtName("google_api_endpoints").AtAnyListIndex().AtName("endpoints"),
-								),
-							},
+							Computed:            true,
+							Default:             booldefault.StaticBool(false),
+							MarkdownDescription: "All Google APIs that support VPC Service Controls. Defaults to false.",
 						},
 						"psc_endpoint_uri": schema.StringAttribute{
 							Computed:            true,
@@ -227,10 +222,9 @@ func resourceSchema() schema.Schema {
 						// The API only permits first-party targets to be updated in place.
 						"service_attachment": schema.StringAttribute{
 							Optional:            true,
+							Computed:            true,
+							Default:             stringdefault.StaticString(""),
 							MarkdownDescription: "(GCP only) The full URL of the target service attachment, e.g. `projects/my-project/regions/us-east4/serviceAttachments/my-attachment`. Changing this forces a new resource.",
-							Validators: []validator.String{
-								stringvalidator.LengthAtLeast(1),
-							},
 							PlanModifiers: []planmodifier.String{
 								stringplanmodifier.RequiresReplace(),
 							},
@@ -245,12 +239,9 @@ func resourceSchema() schema.Schema {
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"endpoints": schema.ListAttribute{
-										Required:            true,
+										Optional:            true,
 										ElementType:         types.StringType,
 										MarkdownDescription: "Google API hostnames. Use `googleapis.com` to cover all Google APIs.",
-										Validators: []validator.List{
-											listvalidator.SizeAtLeast(1),
-										},
 									},
 								},
 							},

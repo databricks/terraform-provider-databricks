@@ -26,7 +26,7 @@ import (
 // account API is mocked so these tests need neither preview access nor cloud resources.
 func TestGcpTerraformPluginFrameworkMigration(t *testing.T) {
 	const pscURI = "projects/p/regions/r/forwardingRules/endpoint"
-	for _, first := range []string{"Plugin Framework", "SDKv2", "SDKv2 with explicit defaults"} {
+	for _, first := range []string{"Plugin Framework", "Plugin Framework with explicit defaults", "SDKv2", "SDKv2 with explicit defaults"} {
 		for _, tt := range []struct {
 			name    string
 			target  string
@@ -75,9 +75,7 @@ func TestGcpTerraformPluginFrameworkMigration(t *testing.T) {
 							DomainNames: tt.domains,
 						},
 					}).Return(rule, nil).Once()
-					if first != "Plugin Framework" {
-						e.GetPrivateEndpointRuleByNetworkConnectivityConfigIdAndPrivateEndpointRuleId(mock.Anything, "ncc_id", "rule_id").Return(rule, nil)
-					}
+					e.GetPrivateEndpointRuleByNetworkConnectivityConfigIdAndPrivateEndpointRuleId(mock.Anything, "ncc_id", "rule_id").Return(rule, nil)
 					e.GetPrivateEndpointRule(mock.Anything, settings.GetPrivateEndpointRuleRequest{
 						NetworkConnectivityConfigId: "ncc_id", PrivateEndpointRuleId: "rule_id",
 					}).Return(rule, nil)
@@ -100,7 +98,7 @@ func TestGcpTerraformPluginFrameworkMigration(t *testing.T) {
 						"databricks": providerserver.NewProtocol6WithError(&privateEndpointRuleTestProvider{api: account.AccountClient.NetworkConnectivity}),
 					}
 					firstFactories := sdkFactories
-					if first == "Plugin Framework" {
+					if strings.HasPrefix(first, "Plugin Framework") {
 						firstFactories = pfFactories
 					}
 					config := `resource "databricks_mws_ncc_private_endpoint_rule" "this" {
@@ -112,10 +110,9 @@ func TestGcpTerraformPluginFrameworkMigration(t *testing.T) {
 					if len(tt.domains) > 0 {
 						config = strings.Replace(config, "network_connectivity_config_id", "domain_names = [\""+tt.domains[0]+"\"]\nnetwork_connectivity_config_id", 1)
 					}
-					initialConfig := config
-					if first == "SDKv2 with explicit defaults" {
-						// Legacy configurations may set unused selectors to their defaults.
-						// Omit them when opting into Framework, without editing the state.
+					omittedDefaultsConfig := config
+					if strings.HasSuffix(first, "with explicit defaults") {
+						// Both implementations accept unused selectors set to their defaults.
 						defaults := ""
 						if !tt.gcp.AllVpcScServices {
 							defaults += "all_vpc_sc_services = false\n"
@@ -123,7 +120,7 @@ func TestGcpTerraformPluginFrameworkMigration(t *testing.T) {
 						if tt.gcp.ServiceAttachment == "" {
 							defaults += "service_attachment = \"\"\n"
 						}
-						initialConfig = strings.Replace(config, "gcp_endpoint {", "gcp_endpoint {\n"+defaults, 1)
+						config = strings.Replace(config, "gcp_endpoint {", "gcp_endpoint {\n"+defaults, 1)
 					}
 					const address = "databricks_mws_ncc_private_endpoint_rule.this"
 					noChange := tfresource.ConfigPlanChecks{
@@ -132,11 +129,21 @@ func TestGcpTerraformPluginFrameworkMigration(t *testing.T) {
 					steps := []tfresource.TestStep{
 						{
 							ProtoV6ProviderFactories: firstFactories,
-							Config:                   initialConfig,
+							Config:                   config,
 							Check: tfresource.ComposeTestCheckFunc(
 								tfresource.TestCheckResourceAttr(address, "id", "ncc_id/rule_id"),
 								tfresource.TestCheckResourceAttr(address, "gcp_endpoint.0.psc_endpoint_uri", pscURI),
 							),
+						},
+						{
+							ProtoV6ProviderFactories: pfFactories,
+							Config:                   config,
+							ConfigPlanChecks:         noChange,
+						},
+						{
+							ProtoV6ProviderFactories: sdkFactories,
+							Config:                   config,
+							ConfigPlanChecks:         noChange,
 						},
 						{
 							ProtoV6ProviderFactories: pfFactories,
@@ -155,6 +162,12 @@ func TestGcpTerraformPluginFrameworkMigration(t *testing.T) {
 							Config:                   config,
 							ConfigPlanChecks:         noChange,
 						},
+					}
+					if config != omittedDefaultsConfig {
+						steps = append(steps,
+							tfresource.TestStep{ProtoV6ProviderFactories: pfFactories, Config: omittedDefaultsConfig, ConfigPlanChecks: noChange},
+							tfresource.TestStep{ProtoV6ProviderFactories: pfFactories, Config: config, ConfigPlanChecks: noChange},
+						)
 					}
 					if tt.gcp.ServiceAttachment == "" {
 						for _, enabled := range []string{"false", "true"} {

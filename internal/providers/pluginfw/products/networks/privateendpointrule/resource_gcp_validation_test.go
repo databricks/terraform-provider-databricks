@@ -16,6 +16,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	tfresource "github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/stretchr/testify/require"
 )
 
@@ -82,29 +84,28 @@ func (p *privateEndpointRuleTestProvider) Resources(context.Context) []func() re
 	}
 }
 
-func TestGcpTargetValidationIsFrameworkOnly(t *testing.T) {
+func TestGcpTargetValidationRemainsAPIOnly(t *testing.T) {
 	googleAPIs := []any{map[string]any{"endpoints": []any{"storage.googleapis.com"}}}
 	attachment := "projects/p/regions/r/serviceAttachments/a"
 	tests := []struct {
-		name  string
-		gcp   map[string]any
-		valid bool
+		name string
+		gcp  map[string]any
 	}{
-		{"non-GCP rule", nil, true},
-		{"service attachment", map[string]any{"service_attachment": attachment}, true},
-		{"Google APIs", map[string]any{"google_api_endpoints": googleAPIs}, true},
-		{"all VPC-SC services", map[string]any{"all_vpc_sc_services": true}, true},
-		{"empty target", map[string]any{}, false},
-		{"explicit false", map[string]any{"all_vpc_sc_services": false}, false},
-		{"empty attachment", map[string]any{"service_attachment": ""}, false},
-		{"missing endpoints", map[string]any{"google_api_endpoints": []any{map[string]any{}}}, false},
-		{"empty endpoints", map[string]any{"google_api_endpoints": []any{map[string]any{"endpoints": []any{}}}}, false},
-		{"attachment and APIs", map[string]any{"service_attachment": attachment, "google_api_endpoints": googleAPIs}, false},
-		{"attachment and all services", map[string]any{"service_attachment": attachment, "all_vpc_sc_services": true}, false},
-		{"APIs and all services", map[string]any{"google_api_endpoints": googleAPIs, "all_vpc_sc_services": true}, false},
-		{"APIs and explicit false", map[string]any{"google_api_endpoints": googleAPIs, "all_vpc_sc_services": false}, false},
-		{"APIs and empty attachment", map[string]any{"google_api_endpoints": googleAPIs, "service_attachment": ""}, false},
-		{"all services and empty APIs block", map[string]any{"all_vpc_sc_services": true, "google_api_endpoints": []any{map[string]any{}}}, false},
+		{"non-GCP rule", nil},
+		{"service attachment", map[string]any{"service_attachment": attachment}},
+		{"Google APIs", map[string]any{"google_api_endpoints": googleAPIs}},
+		{"all VPC-SC services", map[string]any{"all_vpc_sc_services": true}},
+		{"empty target", map[string]any{}},
+		{"explicit false", map[string]any{"all_vpc_sc_services": false}},
+		{"empty attachment", map[string]any{"service_attachment": ""}},
+		{"missing endpoints", map[string]any{"google_api_endpoints": []any{map[string]any{}}}},
+		{"empty endpoints", map[string]any{"google_api_endpoints": []any{map[string]any{"endpoints": []any{}}}}},
+		{"attachment and APIs", map[string]any{"service_attachment": attachment, "google_api_endpoints": googleAPIs}},
+		{"attachment and all services", map[string]any{"service_attachment": attachment, "all_vpc_sc_services": true}},
+		{"APIs and all services", map[string]any{"google_api_endpoints": googleAPIs, "all_vpc_sc_services": true}},
+		{"APIs and explicit false", map[string]any{"google_api_endpoints": googleAPIs, "all_vpc_sc_services": false}},
+		{"APIs and empty attachment", map[string]any{"google_api_endpoints": googleAPIs, "service_attachment": ""}},
+		{"all services and empty APIs block", map[string]any{"all_vpc_sc_services": true, "google_api_endpoints": []any{map[string]any{}}}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -116,7 +117,7 @@ func TestGcpTargetValidationIsFrameworkOnly(t *testing.T) {
 				config["group_id"] = "blob"
 			}
 			diags := mws.ResourceMwsNccPrivateEndpointRule().ToResource().Validate(terraform.NewResourceConfigRaw(config))
-			// Opting into Framework must not tighten the default SDKv2 contract.
+			// Preserve plan-only templates even if the API would reject them on apply.
 			require.False(t, diags.HasError(), "SDKv2 diagnostics: %v", diags)
 
 			// Terraform represents an omitted nested block as an empty list.
@@ -135,7 +136,39 @@ func TestGcpTargetValidationIsFrameworkOnly(t *testing.T) {
 			for _, d := range resp.Diagnostics {
 				hasError = hasError || d.Severity == tfprotov6.DiagnosticSeverityError
 			}
-			require.Equal(t, tt.valid, !hasError, "Plugin Framework diagnostics: %v", resp.Diagnostics)
+			require.False(t, hasError, "Plugin Framework diagnostics: %v", resp.Diagnostics)
+		})
+	}
+}
+
+func TestGcpTerraformPlanOnlyTemplates(t *testing.T) {
+	for _, tt := range []struct {
+		name   string
+		target string
+	}{
+		{"empty target", ``},
+		{"explicit defaults", "all_vpc_sc_services = false\nservice_attachment = \"\""},
+		{"missing endpoints", `google_api_endpoints {}`},
+		{"empty endpoints", `google_api_endpoints { endpoints = [] }`},
+		{"conflicting targets", "all_vpc_sc_services = true\nservice_attachment = \"projects/p/regions/r/serviceAttachments/a\""},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			// No API client: these templates must be usable without applying them.
+			tfresource.UnitTest(t, tfresource.TestCase{Steps: []tfresource.TestStep{{
+				ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
+					"databricks": providerserver.NewProtocol6WithError(&privateEndpointRuleTestProvider{}),
+				},
+				Config: `resource "databricks_mws_ncc_private_endpoint_rule" "this" {
+					network_connectivity_config_id = "ncc_id"
+					gcp_endpoint {
+						` + tt.target + `
+					}
+				}`,
+				PlanOnly: true, ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: tfresource.ConfigPlanChecks{PostApplyPreRefresh: []plancheck.PlanCheck{
+					plancheck.ExpectResourceAction("databricks_mws_ncc_private_endpoint_rule.this", plancheck.ResourceActionCreate),
+				}},
+			}}})
 		})
 	}
 }

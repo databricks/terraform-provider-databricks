@@ -13,6 +13,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/permissions/entity"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 // NewPermissionsAPI creates PermissionsAPI instance from provider meta
@@ -187,6 +188,10 @@ func ResourcePermissions() common.Resource {
 			}
 		}
 		s["access_control"].MinItems = 1
+		s["default_serverless_compute"].ValidateFunc = validation.StringInSlice(
+			[]string{defaultServerlessComputeInteractive}, false)
+		s["default_compute_policy"].ValidateFunc = validation.StringInSlice(
+			[]string{defaultComputePolicyAutomated}, false)
 
 		// Use a custom hash function that normalizes case-insensitive identity
 		// fields before hashing. Emails (user_name) and service principal names

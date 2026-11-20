@@ -1,0 +1,205 @@
+# Runs volume_lifecycle/testdata/refresh_missing_or_not.yaml with databricks_volume on
+# sdk-go uc/volumes/v1 in every step, and expects the same behavior. The volume POST and
+# GET requests carry no Accept header, which an empty header expectation pins. The
+# original's description:
+#
+# Pins which refresh GET errors remove the volume from state (apierr.IsMissing). The
+# error_code RESOURCE_DOES_NOT_EXIST counts as missing with any status, and a 404 counts
+# as missing with any error_code; NOT_FOUND and PERMISSION_DENIED with 400 or 403 fail
+# the refresh and keep the volume. Missing cases are plan-only steps that plan a create,
+# so the volume stays in the journey's state. API responses are inferred from the Unity
+# Catalog API contract, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: create
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: &config |
+      resource "databricks_volume" "this" {
+        name         = "missing_refresh_volume"
+        catalog_name = "main"
+        schema_name  = "replay"
+        volume_type  = "MANAGED"
+      }
+    calls:
+      - request:
+          method: POST
+          path: /api/2.1/unity-catalog/volumes
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+            Accept: ""
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "missing_refresh_volume", "volume_type": "MANAGED"}
+        response:
+          status: 200
+          body:
+            json: &created {"catalog_name": "main", "schema_name": "replay",
+                            "name": "missing_refresh_volume",
+                            "full_name": "main.replay.missing_refresh_volume",
+                            "volume_type": "MANAGED", "owner": "replay-admin@example.com",
+                            "storage_location": "s3://replay-metastore/volume-131",
+                            "metastore_id": "11111111-1111-1111-1111-111111111111",
+                            "volume_id": "00000000-0000-4000-8000-000000000131"}
+      - &read_created
+        request: &read_request
+          method: GET
+          path: /api/2.1/unity-catalog/volumes/main.replay.missing_refresh_volume
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+            Accept: ""
+          body: null
+        response:
+          status: 200
+          body:
+            json: *created
+      - *read_created
+  - name: refresh_answered_404_resource_does_not_exist_is_missing
+    sdk_implementations:
+      databricks_volume: sdk_go
+    plan_only: true
+    config: *config
+    plan: &plans_create
+      expect: non_empty
+      changes:
+        databricks_volume.this:
+          actions: [create]
+    calls:
+      - request: *read_request
+        response:
+          status: 404
+          body:
+            json: {"error_code": "RESOURCE_DOES_NOT_EXIST",
+                   "message": "Volume 'main.replay.missing_refresh_volume' does not
+                     exist."}
+  - name: refresh_answered_404_not_found_is_missing
+    sdk_implementations:
+      databricks_volume: sdk_go
+    plan_only: true
+    config: *config
+    plan: *plans_create
+    calls:
+      - request: *read_request
+        response:
+          status: 404
+          body:
+            json: {"error_code": "NOT_FOUND",
+                   "message": "Volume 'main.replay.missing_refresh_volume' was not
+                     found."}
+  - name: refresh_answered_404_permission_denied_is_missing
+    sdk_implementations:
+      databricks_volume: sdk_go
+    plan_only: true
+    config: *config
+    plan: *plans_create
+    calls:
+      - request: *read_request
+        response:
+          status: 404
+          body:
+            json: {"error_code": "PERMISSION_DENIED",
+                   "message": "User does not have READ VOLUME on Volume
+                     'main.replay.missing_refresh_volume'."}
+  - name: refresh_answered_400_resource_does_not_exist_is_missing
+    sdk_implementations:
+      databricks_volume: sdk_go
+    plan_only: true
+    config: *config
+    plan: *plans_create
+    calls:
+      - request: *read_request
+        response:
+          status: 400
+          body:
+            json: {"error_code": "RESOURCE_DOES_NOT_EXIST",
+                   "message": "Volume 'main.replay.missing_refresh_volume' does not
+                     exist."}
+  - name: refresh_answered_400_not_found_fails
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: *config
+    expect_error: 'Error: cannot read volume: Volume
+      ''main\.replay\.missing_refresh_volume'' was not found\.\n'
+    calls:
+      - request: *read_request
+        response:
+          status: 400
+          body:
+            json: {"error_code": "NOT_FOUND",
+                   "message": "Volume 'main.replay.missing_refresh_volume' was not
+                     found."}
+  - name: refresh_answered_400_permission_denied_fails
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: *config
+    expect_error: 'Error: cannot read volume: User does not have READ VOLUME on Volume
+      ''main\.replay\.missing_refresh_volume''\.\n'
+    calls:
+      - request: *read_request
+        response:
+          status: 400
+          body:
+            json: {"error_code": "PERMISSION_DENIED",
+                   "message": "User does not have READ VOLUME on Volume
+                     'main.replay.missing_refresh_volume'."}
+  - name: refresh_answered_403_resource_does_not_exist_is_missing
+    sdk_implementations:
+      databricks_volume: sdk_go
+    plan_only: true
+    config: *config
+    plan: *plans_create
+    calls:
+      - request: *read_request
+        response:
+          status: 403
+          body:
+            json: {"error_code": "RESOURCE_DOES_NOT_EXIST",
+                   "message": "Volume 'main.replay.missing_refresh_volume' does not
+                     exist."}
+  - name: refresh_answered_403_not_found_fails
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: *config
+    expect_error: 'Error: cannot read volume: Volume
+      ''main\.replay\.missing_refresh_volume'' was not found\.\n'
+    calls:
+      - request: *read_request
+        response:
+          status: 403
+          body:
+            json: {"error_code": "NOT_FOUND",
+                   "message": "Volume 'main.replay.missing_refresh_volume' was not
+                     found."}
+  - name: refresh_answered_403_permission_denied_fails
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: *config
+    expect_error: 'Error: cannot read volume: User does not have READ VOLUME on Volume
+      ''main\.replay\.missing_refresh_volume''\.\n'
+    calls:
+      - request: *read_request
+        response:
+          status: 403
+          body:
+            json: {"error_code": "PERMISSION_DENIED",
+                   "message": "User does not have READ VOLUME on Volume
+                     'main.replay.missing_refresh_volume'."}
+destroy:
+  calls:
+    - *read_created
+    - request:
+        method: DELETE
+        path: /api/2.1/unity-catalog/volumes/main.replay.missing_refresh_volume
+        headers:
+          X-Databricks-Workspace-Id: "12345"
+        body: null
+      response:
+        status: 200
+        body:
+          json: {}

@@ -1,0 +1,100 @@
+# Runs volume_lifecycle/testdata/refresh_state_server_comment_after_create.yaml with
+# databricks_volume on sdk-go uc/volumes/v1 in every step, and expects the same behavior.
+# The volume POST and GET requests carry no Accept header, which an empty header
+# expectation pins. The original's description:
+#
+# Pins a server-set comment in the first read after a create when comment isn't
+# configured. That read adopts the comment into state, so the plan right after the
+# apply isn't empty, and the next plan is an update that removes the comment. This is a
+# suspected defect, pinned as-is. API responses are inferred from the Unity Catalog API
+# contract, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: create_adopts_server_comment
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: &config |
+      resource "databricks_volume" "this" {
+        name         = "defaulted_volume"
+        catalog_name = "main"
+        schema_name  = "replay"
+        volume_type  = "MANAGED"
+      }
+    expect_error: 'After applying this test step, the non-refresh plan was not empty\.'
+    calls:
+      - request:
+          method: POST
+          path: /api/2.1/unity-catalog/volumes
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+            Accept: ""
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "defaulted_volume", "volume_type": "MANAGED"}
+        response:
+          status: 200
+          body:
+            json: &created {"catalog_name": "main", "schema_name": "replay",
+                            "name": "defaulted_volume",
+                            "full_name": "main.replay.defaulted_volume",
+                            "volume_type": "MANAGED",
+                            "comment": "server default comment",
+                            "owner": "replay-admin@example.com",
+                            "storage_location": "s3://replay-metastore/volume-18911",
+                            "metastore_id": "11111111-1111-1111-1111-111111111111",
+                            "volume_id": "00000000-0000-4000-8000-000000018911"}
+      - &read_created
+        request:
+          method: GET
+          path: /api/2.1/unity-catalog/volumes/main.replay.defaulted_volume
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+            Accept: ""
+          body: null
+        response:
+          status: 200
+          body:
+            json: *created
+  - name: next_plan_removes_server_comment
+    sdk_implementations:
+      databricks_volume: sdk_go
+    plan_only: true
+    config: *config
+    plan:
+      expect: non_empty
+      changes:
+        databricks_volume.this:
+          actions: [update]
+          before:
+            - path: [comment]
+              equals: server default comment
+          after:
+            - path: [comment]
+              equals: null
+    state:
+      resources:
+        databricks_volume.this:
+          attributes:
+            - path: [comment]
+              equals: server default comment
+    calls:
+      - *read_created
+destroy:
+  calls:
+    - *read_created
+    - request:
+        method: DELETE
+        path: /api/2.1/unity-catalog/volumes/main.replay.defaulted_volume
+        headers:
+          X-Databricks-Workspace-Id: "12345"
+        body: null
+      response:
+        status: 200
+        body:
+          json: {}

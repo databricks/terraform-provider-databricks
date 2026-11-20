@@ -1,0 +1,151 @@
+# This journey pins responses whose body ends halfway through its Content-Length. The SDK
+# reads the whole body before it looks at the status, so every truncated response fails
+# with the same "response body: unexpected EOF", is sent once and is not retried, even a
+# 429 or a 503 that would be retried whole: a retry would be an unexpected call. The
+# message never reaches the error parser, so a truncated 404 doesn't remove the volume
+# from state either. A truncated 200 on the create POST stores no ID, so the next plan
+# creates the volume again, though the server may have created it. A failed refresh keeps
+# the volume in state, so the next plan reads it again and plans no change. API
+# responses are inferred from the Unity Catalog API contract, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: create_post_200_with_a_truncated_body
+    config: &config |
+      resource "databricks_volume" "this" {
+        name         = "connection_volume"
+        catalog_name = "main"
+        schema_name  = "replay"
+        volume_type  = "MANAGED"
+      }
+    expect_error: 'Error: cannot create volume: response body: unexpected EOF\n'
+    calls:
+      - request: &create
+          method: POST
+          path: /api/2.1/unity-catalog/volumes
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "connection_volume", "volume_type": "MANAGED"}
+        response:
+          fault: truncate_body
+          status: 200
+          body:
+            json: &volume_json {"catalog_name": "main", "schema_name": "replay",
+                                "name": "connection_volume",
+                                "full_name": "main.replay.connection_volume",
+                                "volume_type": "MANAGED",
+                                "owner": "replay-admin@example.com",
+                                "storage_location": "s3://replay-metastore/volume-299",
+                                "metastore_id": "11111111-1111-1111-1111-111111111111",
+                                "volume_id": "00000000-0000-4000-8000-000000000299"}
+  - name: plan_after_truncated_create_creates_the_volume
+    plan_only: true
+    config: *config
+    plan:
+      expect: non_empty
+      changes:
+        databricks_volume.this:
+          actions: [create]
+    calls: []
+  - name: create
+    config: *config
+    calls:
+      - request: *create
+        response: &volume
+          status: 200
+          body:
+            json: *volume_json
+      - &read
+        request: &read_request
+          method: GET
+          path: /api/2.1/unity-catalog/volumes/main.replay.connection_volume
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response: *volume
+      - *read
+  # Each apply below refreshes first, so its plan fails at the refresh.
+  - name: refresh_get_200_with_a_truncated_body
+    config: *config
+    expect_error: &read_failure 'Error: cannot read volume: response body: unexpected
+      EOF\n'
+    calls:
+      - request: *read_request
+        response:
+          fault: truncate_body
+          status: 200
+          body:
+            json: *volume_json
+  - name: refresh_get_404_with_a_truncated_body_keeps_the_volume
+    config: *config
+    expect_error: *read_failure
+    calls:
+      - request: *read_request
+        response:
+          fault: truncate_body
+          status: 404
+          body:
+            json: {"error_code": "RESOURCE_DOES_NOT_EXIST",
+                   "message": "Volume 'main.replay.connection_volume' does not exist."}
+  - name: plan_after_truncated_404_keeps_the_volume
+    plan_only: true
+    config: *config
+    plan: &no_change
+      expect: empty
+    state: &kept
+      resources:
+        databricks_volume.this:
+          attributes:
+            - path: [id]
+              equals: main.replay.connection_volume
+    calls:
+      - *read
+  - name: refresh_get_429_with_a_truncated_body_is_not_retried
+    config: *config
+    expect_error: *read_failure
+    calls:
+      - request: *read_request
+        response:
+          fault: truncate_body
+          status: 429
+          body:
+            json: {"error_code": "TOO_MANY_REQUESTS",
+                   "message": "Too many requests. Please wait a moment and try again."}
+  - name: refresh_get_503_with_a_truncated_body_is_not_retried
+    config: *config
+    expect_error: *read_failure
+    calls:
+      - request: *read_request
+        response:
+          fault: truncate_body
+          status: 503
+          body:
+            json: {"error_code": "TEMPORARILY_UNAVAILABLE",
+                   "message": "The service is temporarily unavailable."}
+  - name: plan_after_truncated_refreshes_keeps_the_volume
+    plan_only: true
+    config: *config
+    plan: *no_change
+    state: *kept
+    calls:
+      - *read
+destroy:
+  calls:
+    - *read
+    - request:
+        method: DELETE
+        path: /api/2.1/unity-catalog/volumes/main.replay.connection_volume
+        headers:
+          X-Databricks-Workspace-Id: "12345"
+        body: null
+      response:
+        status: 200
+        body:
+          json: {}

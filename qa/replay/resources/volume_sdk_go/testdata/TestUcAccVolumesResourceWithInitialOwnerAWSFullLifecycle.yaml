@@ -1,8 +1,10 @@
-# Runs volume/testdata/TestUcAccVolumesResourceWithInitialOwnerAWSFullLifecycle.yaml with
-# databricks_volume on sdk-go uc/volumes/v1 in every step, and expects the same behavior.
-# The volume POST, GET and PATCH requests carry no Accept header, which an empty header
-# expectation pins. Each PATCH body also carries full_name_arg, the full name in its path,
-# because sdk-go serializes the path field into the body. The original's description:
+# Runs
+# volume_lifecycle/testdata/TestUcAccVolumesResourceWithInitialOwnerAWSFullLifecycle.yaml
+# with databricks_volume on sdk-go uc/volumes/v1 in every step, and expects the same
+# behavior. The volume POST, GET and PATCH requests carry no Accept header, which an empty
+# header expectation pins. Each PATCH body also carries full_name_arg, the full name in
+# its path, because sdk-go serializes the path field into the body. The original's
+# description:
 #
 # API responses are inferred from the scenarios and API models, not recorded.
 # Volume requests pin Content-Type and X-Databricks-Workspace-Id, and each apply is

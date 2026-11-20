@@ -1,6 +1,6 @@
-# Runs volume/testdata/no_retry_on_create_errors.yaml with databricks_volume on sdk-go
-# uc/volumes/v1 in every step, and expects the same behavior. The volume POST requests
-# carry no Accept header, which an empty header expectation pins. The original's
+# Runs volume_errors/testdata/no_retry_on_create_errors.yaml with databricks_volume on
+# sdk-go uc/volumes/v1 in every step, and expects the same behavior. The volume POST
+# requests carry no Accept header, which an empty header expectation pins. The original's
 # description:
 #
 # This journey pins that the classic SDK client sends the create POST exactly once and

@@ -1,12 +1,12 @@
 # Pins how sdk-go handles a create POST or an update PATCH answered 200 with a body it
-# can't decode. An empty body fails with "unexpected end of JSON input", where the existing
-# client decodes it as a volume without fields and takes its empty full name as the ID. A
-# body that isn't JSON fails with the existing client's message, without its request and
-# response dump. A failed create leaves nothing in state, and a failed update keeps the
-# volume under its ID, so the next plan shows the update again. The sdk-go requests carry
-# no Accept header, which an empty header expectation pins, and the PATCH bodies also carry
-# full_name_arg, the full name in their path. API responses are inferred from the Unity
-# Catalog API contract, not recorded.
+# can't decode. An empty body fails with "unexpected end of JSON input", where the
+# existing client decodes it as a volume without fields and takes its empty full name as
+# the ID. A body that isn't JSON fails with the existing client's message, without its
+# request and response dump. A failed create leaves nothing in state, and a failed update
+# keeps the volume under its ID, so the next plan shows the update again. The sdk-go
+# requests carry no Accept header, which an empty header expectation pins, and the PATCH
+# bodies also carry full_name_arg, the full name in their path. API responses are inferred
+# from the Unity Catalog API contract, not recorded.
 version: 1
 enforce_call_order: true
 host_metadata:

@@ -114,11 +114,7 @@ func gcpEndpointToAPI(ctx context.Context, gcp []gcpEndpointModel) (*settings.Gc
 	var diags diag.Diagnostics
 	endpoint := &settings.GcpEndpoint{
 		AllVpcScServices:  gcp[0].AllVpcScServices.ValueBool(),
-		PscEndpointUri:    gcp[0].PscEndpointUri.ValueString(),
 		ServiceAttachment: gcp[0].ServiceAttachment.ValueString(),
-	}
-	if !gcp[0].AllVpcScServices.IsNull() && !gcp[0].AllVpcScServices.IsUnknown() && !gcp[0].AllVpcScServices.ValueBool() {
-		endpoint.ForceSendFields = append(endpoint.ForceSendFields, "AllVpcScServices")
 	}
 	if len(gcp[0].GoogleApiEndpoints) > 0 {
 		endpoints, d := stringsFromList(ctx, gcp[0].GoogleApiEndpoints[0].Endpoints)
@@ -223,7 +219,7 @@ func (m *model) fromAPI(ctx context.Context, rule *settings.NccPrivateEndpointRu
 	m.DomainNames = stringsToList(ctx, rule.DomainNames, &diags)
 	m.ResourceNames = stringsToList(ctx, rule.ResourceNames, &diags)
 
-	m.GcpEndpoint = gcpEndpointFromAPI(ctx, rule.GcpEndpoint, m.GcpEndpoint, &diags)
+	m.GcpEndpoint = gcpEndpointFromAPI(ctx, rule.GcpEndpoint, &diags)
 	return diags
 }
 
@@ -251,13 +247,9 @@ func stringsToList(ctx context.Context, vals []string, diags *diag.Diagnostics) 
 // gcpEndpointFromAPI converts the SDK's pointer-to-struct into the
 // size-0-or-1 slice the schema expects. Returning nil omits the block from
 // state.
-func gcpEndpointFromAPI(ctx context.Context, gcp *settings.GcpEndpoint, previous []gcpEndpointModel, diags *diag.Diagnostics) []gcpEndpointModel {
+func gcpEndpointFromAPI(ctx context.Context, gcp *settings.GcpEndpoint, diags *diag.Diagnostics) []gcpEndpointModel {
 	if gcp == nil {
 		return nil
-	}
-	allVpcScServices := types.BoolValue(gcp.AllVpcScServices)
-	if !gcp.AllVpcScServices && (len(previous) == 0 || previous[0].AllVpcScServices.IsNull() || previous[0].AllVpcScServices.IsUnknown()) {
-		allVpcScServices = types.BoolNull()
 	}
 	var googleApiEndpoints []googleApiEndpointsModel
 	if gcp.GoogleApiEndpoints != nil {
@@ -265,8 +257,10 @@ func gcpEndpointFromAPI(ctx context.Context, gcp *settings.GcpEndpoint, previous
 			Endpoints: stringsToList(ctx, gcp.GoogleApiEndpoints.Endpoints, diags),
 		}}
 	}
+	// Match the schema defaults even when the API omits unused selectors.
+	// Converting them to null would conflict with explicitly configured defaults.
 	return []gcpEndpointModel{{
-		AllVpcScServices:   allVpcScServices,
+		AllVpcScServices:   types.BoolValue(gcp.AllVpcScServices),
 		GoogleApiEndpoints: googleApiEndpoints,
 		PscEndpointUri:     types.StringValue(gcp.PscEndpointUri),
 		ServiceAttachment:  types.StringValue(gcp.ServiceAttachment),

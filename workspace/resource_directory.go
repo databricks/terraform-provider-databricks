@@ -21,7 +21,7 @@ func ResourceDirectory() common.Resource {
 	s := map[string]*schema.Schema{
 		"path": {
 			Type:             schema.TypeString,
-			Required:         true,
+			Optional:         true,
 			ForceNew:         true,
 			DiffSuppressFunc: directoryPathSuppressDiff,
 		},

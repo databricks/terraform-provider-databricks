@@ -2,11 +2,13 @@ package httpfixture
 
 import (
 	"bytes"
+	"context"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 )
@@ -75,4 +77,57 @@ func TestClientTransportKeepsTheDeclaredLength(t *testing.T) {
 	req.ContentLength = 3
 	_, err = client.Do(req)
 	require.ErrorContains(t, err, "http: ContentLength=3 with Body length 6")
+}
+
+// roundTripWithin fails the test instead of hanging when RoundTrip blocks.
+func roundTripWithin(t *testing.T, transport http.RoundTripper, req *http.Request) error {
+	t.Helper()
+	done := make(chan error, 1)
+	go func() {
+		_, err := transport.RoundTrip(req)
+		done <- err
+	}()
+	select {
+	case err := <-done:
+		return err
+	case <-time.After(10 * time.Second):
+		t.Fatal("RoundTrip kept reading a stalled body after the request was canceled")
+		return nil
+	}
+}
+
+// A stalled streaming body must not hang the client past its cancellation.
+func TestClientTransportStopsReadingWhenCanceled(t *testing.T) {
+	transport := bufferedBodyTransport{base: roundTripFunc(func(*http.Request) (*http.Response, error) {
+		t.Error("a canceled request must not reach the base transport")
+		return nil, nil
+	})}
+	stalled, writer := io.Pipe()
+	ctx, cancel := context.WithCancel(context.Background())
+	req, err := http.NewRequestWithContext(ctx, "POST", "http://fixture.test/upload", stalled)
+	require.NoError(t, err)
+	time.AfterFunc(50*time.Millisecond, cancel)
+	err = roundTripWithin(t, transport, req)
+	require.Equal(t, context.Canceled, err, "the SDK compares the error with context.Canceled")
+	_, err = writer.Write([]byte("late"))
+	require.ErrorIs(t, err, io.ErrClosedPipe, "the source body is closed")
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		t.Error("a timed-out request must not reach the server")
+	}))
+	defer server.Close()
+	stalled, _ = io.Pipe()
+	client := &http.Client{Transport: NewClientTransport(), Timeout: 100 * time.Millisecond}
+	timedOut := make(chan error, 1)
+	go func() {
+		_, err := client.Post(server.URL, "text/plain", stalled)
+		timedOut <- err
+	}()
+	select {
+	case err := <-timedOut:
+		// net/http adds its Client.Timeout annotation only once its timer has fired.
+		require.ErrorIs(t, err, context.DeadlineExceeded)
+	case <-time.After(10 * time.Second):
+		t.Fatal("the client timeout did not stop reading a stalled body")
+	}
 }

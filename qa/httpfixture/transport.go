@@ -2,10 +2,12 @@ package httpfixture
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"io"
 	"net/http"
+	"sync"
 )
 
 // NewClientTransport returns the transport for clients of a fixture server, so
@@ -25,8 +27,8 @@ func (t bufferedBodyTransport) RoundTrip(req *http.Request) (*http.Response, err
 	if req.Body == nil || req.Body == http.NoBody {
 		return t.base.RoundTrip(req)
 	}
-	body, err := io.ReadAll(req.Body)
-	if err = errors.Join(err, req.Body.Close()); err != nil {
+	body, err := readBody(req)
+	if err != nil {
 		return nil, err
 	}
 	// The length stays as declared, so an unknown one is still sent chunked, and
@@ -41,4 +43,31 @@ func (t bufferedBodyTransport) RoundTrip(req *http.Request) (*http.Response, err
 		clone.Body, _ = clone.GetBody()
 	}
 	return t.base.RoundTrip(clone)
+}
+
+// readBody reads and closes the body. When the request is canceled first, it
+// closes the body to unblock a stalled read and returns the cause unwrapped, as
+// net/http does; the SDK compares it with context.Canceled to report a timeout.
+func readBody(req *http.Request) ([]byte, error) {
+	var once sync.Once
+	closeBody := func() (err error) {
+		once.Do(func() { err = req.Body.Close() })
+		return err
+	}
+	type result struct {
+		body []byte
+		err  error
+	}
+	read := make(chan result, 1)
+	go func() {
+		body, err := io.ReadAll(req.Body)
+		read <- result{body, errors.Join(err, closeBody())}
+	}()
+	select {
+	case r := <-read:
+		return r.body, r.err
+	case <-req.Context().Done():
+		_ = closeBody()
+		return nil, context.Cause(req.Context())
+	}
 }

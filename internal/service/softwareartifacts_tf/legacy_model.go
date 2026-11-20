@@ -24,6 +24,112 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
+type DeleteSoftwareArtifactRequest_SdkV2 struct {
+	// Force deletion even if the software artifact has versions, deleting them
+	// with it. Default is false.
+	Force types.Bool `tfsdk:"-"`
+	// Resource name of the software artifact, of the form
+	// `software-artifacts/{catalog}.{schema}.{artifact}`.
+	Name types.String `tfsdk:"-"`
+}
+
+func (to *DeleteSoftwareArtifactRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DeleteSoftwareArtifactRequest_SdkV2) {
+}
+
+func (to *DeleteSoftwareArtifactRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from DeleteSoftwareArtifactRequest_SdkV2) {
+}
+
+func (m DeleteSoftwareArtifactRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["force"] = attrs["force"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteSoftwareArtifactRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m DeleteSoftwareArtifactRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteSoftwareArtifactRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (m DeleteSoftwareArtifactRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"force": m.Force,
+			"name":  m.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m DeleteSoftwareArtifactRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"force": types.BoolType,
+			"name":  types.StringType,
+		},
+	}
+}
+
+type DeleteSoftwareArtifactVersionRequest_SdkV2 struct {
+	// Resource name of the version, of the form
+	// `software-artifacts/{catalog}.{schema}.{artifact}/versions/{version}`,
+	// where `{version}` is the version's content digest, for example
+	// `sha256:<hex>`.
+	Name types.String `tfsdk:"-"`
+}
+
+func (to *DeleteSoftwareArtifactVersionRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DeleteSoftwareArtifactVersionRequest_SdkV2) {
+}
+
+func (to *DeleteSoftwareArtifactVersionRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from DeleteSoftwareArtifactVersionRequest_SdkV2) {
+}
+
+func (m DeleteSoftwareArtifactVersionRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteSoftwareArtifactVersionRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m DeleteSoftwareArtifactVersionRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteSoftwareArtifactVersionRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (m DeleteSoftwareArtifactVersionRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name": m.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m DeleteSoftwareArtifactVersionRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name": types.StringType,
+		},
+	}
+}
+
 type GetSoftwareArtifactRequest_SdkV2 struct {
 	// Resource name of the artifact, of the form
 	// `software-artifacts/{catalog}.{schema}.{artifact}`.
@@ -75,7 +181,8 @@ func (m GetSoftwareArtifactRequest_SdkV2) Type(ctx context.Context) attr.Type {
 
 type GetSoftwareArtifactVersionRequest_SdkV2 struct {
 	// Resource name of the version, of the form
-	// `software-artifacts/{catalog}.{schema}.{artifact}/versions/{version}`.
+	// `software-artifacts/{catalog}.{schema}.{artifact}/versions/{version}`,
+	// where `{version}` is the version's content digest.
 	Name types.String `tfsdk:"-"`
 }
 
@@ -541,9 +648,13 @@ func (m *ListSoftwareArtifactsResponse_SdkV2) SetSoftwareArtifacts(ctx context.C
 
 // Request to resolve a software artifact version from its tag alias.
 type ResolveSoftwareArtifactVersionRequest_SdkV2 struct {
-	// Image tag alias selecting the version.
+	// Image tag alias selecting the version. The alias must be a valid OCI
+	// image tag of at most 128 characters, made of letters, digits,
+	// underscores, periods, and hyphens, and must not start with a period or
+	// hyphen.
 	Alias types.String `tfsdk:"alias"`
-	// Resource name of the software artifact containing the alias.
+	// Resource name of the software artifact containing the alias, of the form
+	// `software-artifacts/{catalog}.{schema}.{artifact}`.
 	Parent types.String `tfsdk:"-"`
 }
 
@@ -690,19 +801,26 @@ func (m *ResolveSoftwareArtifactVersionResponse_SdkV2) SetSoftwareArtifactVersio
 	m.SoftwareArtifactVersion = types.ListValueMust(t, vs)
 }
 
-// A software artifact in a Unity Catalog schema.
+// A software artifact is a named container image stored in a Unity Catalog
+// schema and governed by Unity Catalog privileges. Images are pushed through
+// Databricks Artifact Registry; each pushed image digest becomes an immutable
+// version of the artifact, exposed as a SoftwareArtifactVersion. See
+// https://docs.databricks.com/aws/en/artifact-registry/ for concepts, naming
+// rules, and the privileges each operation requires.
 type SoftwareArtifact_SdkV2 struct {
-	// Time at which this software artifact was created.
+	// Time at which the artifact was created, formatted as an RFC 3339
+	// timestamp in JSON.
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
 	// Principal name of the software artifact creator.
 	CreatedBy types.String `tfsdk:"created_by"`
 	// Resource name of the artifact, of the form
 	// `software-artifacts/{catalog}.{schema}.{artifact}`.
 	Name types.String `tfsdk:"name"`
-	// Principal name (a user, service principal, or group) that owns this
-	// artifact.
+	// Principal that owns the artifact, given as a user's email address, a
+	// service principal's application ID, or a group name.
 	Owner types.String `tfsdk:"owner"`
-	// Time at which this software artifact was last updated.
+	// Time at which the artifact was last updated, formatted as an RFC 3339
+	// timestamp in JSON.
 	UpdateTime timetypes.RFC3339 `tfsdk:"update_time"`
 	// Principal name that last updated this software artifact.
 	UpdatedBy types.String `tfsdk:"updated_by"`
@@ -769,22 +887,26 @@ func (m SoftwareArtifact_SdkV2) Type(ctx context.Context) attr.Type {
 // An immutable version of a software artifact, identified by its content
 // digest.
 type SoftwareArtifactVersion_SdkV2 struct {
-	// Time at which this software artifact version was created.
+	// Time at which this software artifact version was created, formatted as an
+	// RFC 3339 timestamp in JSON.
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
 	// Principal name of the software artifact version creator.
 	CreatedBy types.String `tfsdk:"created_by"`
-	// Content digest of the version, for example `sha256:...`.
+	// Content digest of the version's image manifest, of the form
+	// `{algorithm}:{hex}`.
 	Digest types.String `tfsdk:"digest"`
 	// Image acceleration information for this version.
 	ImageAccelerationDetails types.List `tfsdk:"image_acceleration_details"`
 	// Resource name of the version, of the form
-	// `software-artifacts/{catalog}.{schema}.{artifact}/versions/{version}`.
+	// `software-artifacts/{catalog}.{schema}.{artifact}/versions/{version}`,
+	// where `{version}` is the version's content digest.
 	Name types.String `tfsdk:"name"`
 	// Tags (aliases) that currently point at this version, for example `latest`
 	// or `v1.2.3`. Bounded at 10 per version; a version pointed at by more tags
 	// returns an arbitrary 10 of them.
 	Tags types.List `tfsdk:"tags"`
-	// Time at which this software artifact version was last updated.
+	// Time at which this software artifact version was last updated, formatted
+	// as an RFC 3339 timestamp in JSON.
 	UpdateTime timetypes.RFC3339 `tfsdk:"update_time"`
 	// Principal name that last updated this software artifact version.
 	UpdatedBy types.String `tfsdk:"updated_by"`

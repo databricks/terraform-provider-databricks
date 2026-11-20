@@ -23,13 +23,13 @@ import (
 )
 
 type AccessControlRequest struct {
-	// name of the group
+	// Display name of the group.
 	GroupName types.String `tfsdk:"group_name"`
-
+	// Permission level to grant to the principal.
 	PermissionLevel types.String `tfsdk:"permission_level"`
-	// application ID of a service principal
+	// Application ID of the service principal.
 	ServicePrincipalName types.String `tfsdk:"service_principal_name"`
-	// name of the user
+	// Username of the user, which is the user's email address.
 	UserName types.String `tfsdk:"user_name"`
 }
 
@@ -86,15 +86,16 @@ func (m AccessControlRequest) Type(ctx context.Context) attr.Type {
 }
 
 type AccessControlResponse struct {
-	// All permissions.
+	// Permission levels the principal holds on the object, both granted
+	// directly and inherited.
 	AllPermissions types.List `tfsdk:"all_permissions"`
 	// Display name of the user or service principal.
 	DisplayName types.String `tfsdk:"display_name"`
-	// name of the group
+	// Display name of the group.
 	GroupName types.String `tfsdk:"group_name"`
-	// Name of the service principal.
+	// Application ID of the service principal.
 	ServicePrincipalName types.String `tfsdk:"service_principal_name"`
-	// name of the user
+	// Username of the user, which is the user's email address.
 	UserName types.String `tfsdk:"user_name"`
 }
 
@@ -220,20 +221,29 @@ func (m *AccessControlResponse) SetAllPermissions(ctx context.Context, v []Permi
 	m.AllPermissions = types.ListValueMust(t, vs)
 }
 
+// Represents a group of users, service principals and other groups in the
+// Databricks account. Members inherit the permissions that are granted to the
+// group.
 type AccountGroup struct {
-	// Databricks account ID
+	// Identifies the Databricks account that the group belongs to.
 	AccountId types.String `tfsdk:"account_id"`
-	// String that represents a human-readable group name
+	// Identifies the group by a human-readable name. The name must be unique
+	// within the account and must not exceed 255 characters.
 	DisplayName types.String `tfsdk:"display_name"`
-	// external_id should be unique for identifying groups
+	// Identifies the group in an external identity provider. Identity providers
+	// use it to match the groups they manage to Databricks groups, so it should
+	// be unique among the groups in the account.
 	ExternalId types.String `tfsdk:"external_id"`
-	// Databricks group ID
+	// Identifies the group within Databricks. Databricks generates the ID when
+	// the group is created.
 	Id types.String `tfsdk:"id"`
-
+	// Lists the members of the group. Each entry identifies a user, service
+	// principal or group in the account by its ID in the value sub-attribute.
 	Members types.List `tfsdk:"members"`
 	// Container for the group identifier. Workspace local versus account.
 	Meta types.Object `tfsdk:"meta"`
-	// Indicates if the group has the admin role.
+	// Lists the account roles that are assigned to the group. The only
+	// supported role value is `account_admin`.
 	Roles types.List `tfsdk:"roles"`
 }
 
@@ -474,20 +484,31 @@ func (m *AccountGroup) SetRoles(ctx context.Context, v []ComplexValue) {
 	m.Roles = types.ListValueMust(t, vs)
 }
 
+// Represents a service principal in the Databricks account. Service principals
+// are identities for jobs, automated tools and systems such as scripts, apps
+// and CI/CD platforms.
 type AccountServicePrincipal struct {
-	// Databricks account ID
+	// Identifies the Databricks account that the service principal belongs to.
 	AccountId types.String `tfsdk:"account_id"`
-	// If this user is active
+	// Indicates whether the service principal is active. A deactivated service
+	// principal cannot authenticate or access Databricks APIs, but it keeps its
+	// permissions.
 	Active types.Bool `tfsdk:"active"`
-	// UUID relating to the service principal
+	// Identifies the service principal when it authenticates to Databricks.
+	// Databricks generates the application ID, except on Azure, where it can be
+	// the application ID of a Microsoft Entra ID service principal.
 	ApplicationId types.String `tfsdk:"application_id"`
-	// String that represents a concatenation of given and family names.
+	// Identifies the service principal by a human-readable name.
 	DisplayName types.String `tfsdk:"display_name"`
-
+	// Identifies the service principal in an external identity provider.
+	// Identity providers use it to match the service principals they manage to
+	// Databricks service principals.
 	ExternalId types.String `tfsdk:"external_id"`
-	// Databricks service principal ID.
+	// Identifies the service principal within Databricks. Databricks generates
+	// the ID when the service principal is created.
 	Id types.String `tfsdk:"id"`
-	// Indicates if the group has the admin role.
+	// Lists the account roles that are assigned to the service principal. The
+	// only supported role value is `account_admin`.
 	Roles types.List `tfsdk:"roles"`
 }
 
@@ -1148,17 +1169,20 @@ func (m ConsistencyToken) Type(ctx context.Context) attr.Type {
 }
 
 type CreateAccountGroupRequest struct {
-	// String that represents a human-readable group name
+	// Sets the human-readable name of the group. The name must be unique within
+	// the account and must not exceed 255 characters.
 	DisplayName types.String `tfsdk:"display_name"`
-
+	// Sets the identifier of the group in an external identity provider.
 	ExternalId types.String `tfsdk:"external_id"`
-	// Databricks group ID
+	// Identifies the group within Databricks.
 	Id types.String `tfsdk:"id"`
-
+	// Lists the members of the group. Each entry identifies a user, service
+	// principal or group in the account by its ID in the value sub-attribute.
 	Members types.List `tfsdk:"members"`
 	// Container for the group identifier. Workspace local versus account.
 	Meta types.Object `tfsdk:"meta"`
-	// Indicates if the group has the admin role.
+	// Lists the account roles that are assigned to the group. The only
+	// supported role value is `account_admin`.
 	Roles types.List `tfsdk:"roles"`
 }
 
@@ -1398,17 +1422,24 @@ func (m *CreateAccountGroupRequest) SetRoles(ctx context.Context, v []ComplexVal
 }
 
 type CreateAccountServicePrincipalRequest struct {
-	// If this user is active
+	// Indicates whether the service principal is active. A deactivated service
+	// principal cannot authenticate or access Databricks APIs, but it keeps its
+	// permissions.
 	Active types.Bool `tfsdk:"active"`
-	// UUID relating to the service principal
+	// Sets the application ID of a Microsoft Entra ID service principal. Only
+	// Azure accepts this field. On AWS and GCP, Databricks generates the
+	// application ID and rejects requests that set it.
 	ApplicationId types.String `tfsdk:"application_id"`
-	// String that represents a concatenation of given and family names.
+	// Sets the human-readable name of the service principal. The name is
+	// required unless the request sets `applicationId`.
 	DisplayName types.String `tfsdk:"display_name"`
-
+	// Sets the identifier of the service principal in an external identity
+	// provider.
 	ExternalId types.String `tfsdk:"external_id"`
-	// Databricks service principal ID.
+	// Identifies the service principal within Databricks.
 	Id types.String `tfsdk:"id"`
-	// Indicates if the group has the admin role.
+	// Lists the account roles that are assigned to the service principal. The
+	// only supported role value is `account_admin`.
 	Roles types.List `tfsdk:"roles"`
 }
 
@@ -4165,6 +4196,10 @@ func (m GetPasswordPermissionsRequest) Type(ctx context.Context) attr.Type {
 }
 
 type GetPermissionLevelsRequest struct {
+	// The id of the object. It is the id that the object's own API uses, for
+	// example the cluster id for clusters, the job id for jobs, and the
+	// workspace object id for notebooks and directories. For the
+	// `authorization` object type, use `tokens` to manage token permissions.
 	RequestObjectId types.String `tfsdk:"-"`
 	// The type of the request object. Can be one of the following: alerts,
 	// alertsv2, authorization, clusters, cluster-policies, dashboards,
@@ -4222,7 +4257,7 @@ func (m GetPermissionLevelsRequest) Type(ctx context.Context) attr.Type {
 }
 
 type GetPermissionLevelsResponse struct {
-	// Specific permission levels
+	// Permission levels that can be granted on objects of the requested type.
 	PermissionLevels types.List `tfsdk:"permission_levels"`
 }
 
@@ -4337,7 +4372,10 @@ func (m *GetPermissionLevelsResponse) SetPermissionLevels(ctx context.Context, v
 }
 
 type GetPermissionRequest struct {
-	// The id of the request object.
+	// The id of the object. It is the id that the object's own API uses, for
+	// example the cluster id for clusters, the job id for jobs, and the
+	// workspace object id for notebooks and directories. For the
+	// `authorization` object type, use `tokens` to manage token permissions.
 	RequestObjectId types.String `tfsdk:"-"`
 	// The type of the request object. Can be one of the following: alerts,
 	// alertsv2, authorization, clusters, cluster-policies, dashboards,
@@ -5248,7 +5286,8 @@ func (m *Group) SetSchemas(ctx context.Context, v []types.String) {
 type ListAccountGroupsRequest struct {
 	// Comma-separated list of attributes to return in response.
 	Attributes types.String `tfsdk:"-"`
-	// Desired number of results per page. Default is 10000.
+	// Specifies the number of results per page. When omitted, the server uses
+	// its default page size.
 	Count types.Int64 `tfsdk:"-"`
 	// Comma-separated list of attributes to exclude in response.
 	ExcludedAttributes types.String `tfsdk:"-"`
@@ -5333,7 +5372,7 @@ func (m ListAccountGroupsRequest) Type(ctx context.Context) attr.Type {
 type ListAccountGroupsResponse struct {
 	// Total results returned in the response.
 	ItemsPerPage types.Int64 `tfsdk:"items_per_page"`
-	// User objects returned in the response.
+	// Group objects returned in the response.
 	Resources types.List `tfsdk:"resources"`
 	// Starting index of all the results that matched the request filters. First
 	// item is number 1.
@@ -5549,7 +5588,7 @@ func (m ListAccountServicePrincipalsRequest) Type(ctx context.Context) attr.Type
 type ListAccountServicePrincipalsResponse struct {
 	// Total results returned in the response.
 	ItemsPerPage types.Int64 `tfsdk:"items_per_page"`
-	// User objects returned in the response.
+	// Lists the service principals that are returned in the response.
 	Resources types.List `tfsdk:"resources"`
 	// Starting index of all the results that matched the request filters. First
 	// item is number 1.
@@ -7123,11 +7162,18 @@ func (m Name) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// The permissions set on an object, with one entry per principal that holds a
+// permission on it.
 type ObjectPermissions struct {
+	// Permissions on the object, with one entry per principal. Each entry lists
+	// the principal's direct and inherited permission levels.
 	AccessControlList types.List `tfsdk:"access_control_list"`
-
+	// Path that identifies the object in the access control list, built from
+	// the object type and the object id.
 	ObjectId types.String `tfsdk:"object_id"`
-
+	// Type of the object, as recorded in the access control list. It can differ
+	// from the `request_object_type` path segment, for example a request for
+	// `clusters` returns `cluster`.
 	ObjectType types.String `tfsdk:"object_type"`
 }
 
@@ -7893,9 +7939,9 @@ func (m Patch) Type(ctx context.Context) attr.Type {
 }
 
 type PatchAccountGroupRequest struct {
-	// Unique ID in the Databricks workspace.
+	// Unique ID for a group in the Databricks account.
 	Id types.String `tfsdk:"-"`
-
+	// Lists the patch operations to apply to the group.
 	Operations types.List `tfsdk:"operations"`
 	// The schema of the patch request. Must be
 	// ["urn:ietf:params:scim:api:messages:2.0:PatchOp"].
@@ -8061,9 +8107,9 @@ func (m *PatchAccountGroupRequest) SetSchemas(ctx context.Context, v []types.Str
 }
 
 type PatchAccountServicePrincipalRequest struct {
-	// Unique ID in the Databricks workspace.
+	// Unique ID for a service principal in the Databricks account.
 	Id types.String `tfsdk:"-"`
-
+	// Lists the patch operations to apply to the service principal.
 	Operations types.List `tfsdk:"operations"`
 	// The schema of the patch request. Must be
 	// ["urn:ietf:params:scim:api:messages:2.0:PatchOp"].
@@ -8898,10 +8944,13 @@ func (m *PatchUserRequest) SetSchemas(ctx context.Context, v []types.String) {
 }
 
 type Permission struct {
+	// Whether the permission is inherited from a parent object or the root
+	// object instead of being granted directly on the object.
 	Inherited types.Bool `tfsdk:"inherited"`
-
+	// Paths of the objects the permission is inherited from. It is only set
+	// when `inherited` is true.
 	InheritedFromObject types.List `tfsdk:"inherited_from_object"`
-
+	// Permission level the principal holds on the object.
 	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
@@ -9310,8 +9359,9 @@ func (m PermissionOutput) Type(ctx context.Context) attr.Type {
 }
 
 type PermissionsDescription struct {
+	// Human-readable description of the permission level.
 	Description types.String `tfsdk:"description"`
-
+	// Permission level that can be granted on the object.
 	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
@@ -10190,8 +10240,14 @@ func (m *ServicePrincipal) SetSchemas(ctx context.Context, v []types.String) {
 }
 
 type SetObjectPermissions struct {
+	// Permissions to apply to the object, with one entry per principal. Each
+	// entry names exactly one principal through `user_name`, `group_name` or
+	// `service_principal_name` and the `permission_level` for that principal.
 	AccessControlList types.List `tfsdk:"access_control_list"`
-	// The id of the request object.
+	// The id of the object. It is the id that the object's own API uses, for
+	// example the cluster id for clusters, the job id for jobs, and the
+	// workspace object id for notebooks and directories. For the
+	// `authorization` object type, use `tokens` to manage token permissions.
 	RequestObjectId types.String `tfsdk:"-"`
 	// The type of the request object. Can be one of the following: alerts,
 	// alertsv2, authorization, clusters, cluster-policies, dashboards,
@@ -10319,17 +10375,20 @@ func (m *SetObjectPermissions) SetAccessControlList(ctx context.Context, v []Acc
 }
 
 type UpdateAccountGroupRequest struct {
-	// String that represents a human-readable group name
+	// Sets the human-readable name of the group. The name must be unique within
+	// the account and must not exceed 255 characters.
 	DisplayName types.String `tfsdk:"display_name"`
-
+	// Sets the identifier of the group in an external identity provider.
 	ExternalId types.String `tfsdk:"external_id"`
-	// Databricks group ID
+	// Identifies the group within Databricks.
 	Id types.String `tfsdk:"-"`
-
+	// Lists the members of the group. Each entry identifies a user, service
+	// principal or group in the account by its ID in the value sub-attribute.
 	Members types.List `tfsdk:"members"`
 	// Container for the group identifier. Workspace local versus account.
 	Meta types.Object `tfsdk:"meta"`
-	// Indicates if the group has the admin role.
+	// Lists the account roles that are assigned to the group. The only
+	// supported role value is `account_admin`.
 	Roles types.List `tfsdk:"roles"`
 }
 
@@ -10569,17 +10628,24 @@ func (m *UpdateAccountGroupRequest) SetRoles(ctx context.Context, v []ComplexVal
 }
 
 type UpdateAccountServicePrincipalRequest struct {
-	// If this user is active
+	// Indicates whether the service principal is active. A deactivated service
+	// principal cannot authenticate or access Databricks APIs, but it keeps its
+	// permissions.
 	Active types.Bool `tfsdk:"active"`
-	// UUID relating to the service principal
+	// Sets the application ID of a Microsoft Entra ID service principal. Only
+	// Azure accepts this field. On AWS and GCP, Databricks generates the
+	// application ID and rejects requests that set it.
 	ApplicationId types.String `tfsdk:"application_id"`
-	// String that represents a concatenation of given and family names.
+	// Sets the human-readable name of the service principal. The name is
+	// required unless the request sets `applicationId`.
 	DisplayName types.String `tfsdk:"display_name"`
-
+	// Sets the identifier of the service principal in an external identity
+	// provider.
 	ExternalId types.String `tfsdk:"external_id"`
-	// Databricks service principal ID.
+	// Identifies the service principal within Databricks.
 	Id types.String `tfsdk:"-"`
-	// Indicates if the group has the admin role.
+	// Lists the account roles that are assigned to the service principal. The
+	// only supported role value is `account_admin`.
 	Roles types.List `tfsdk:"roles"`
 }
 
@@ -11414,8 +11480,14 @@ func (m *UpdateGroupRequest) SetSchemas(ctx context.Context, v []types.String) {
 }
 
 type UpdateObjectPermissions struct {
+	// Permissions to apply to the object, with one entry per principal. Each
+	// entry names exactly one principal through `user_name`, `group_name` or
+	// `service_principal_name` and the `permission_level` for that principal.
 	AccessControlList types.List `tfsdk:"access_control_list"`
-	// The id of the request object.
+	// The id of the object. It is the id that the object's own API uses, for
+	// example the cluster id for clusters, the job id for jobs, and the
+	// workspace object id for notebooks and directories. For the
+	// `authorization` object type, use `tokens` to manage token permissions.
 	RequestObjectId types.String `tfsdk:"-"`
 	// The type of the request object. Can be one of the following: alerts,
 	// alertsv2, authorization, clusters, cluster-policies, dashboards,

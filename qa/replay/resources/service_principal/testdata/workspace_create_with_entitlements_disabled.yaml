@@ -1,0 +1,80 @@
+# Pins the workspace-level create body on AWS when entitlements are explicitly false:
+# the body still carries a single empty entitlement. An explicit workspace_consume =
+# false conflicts with workspace_access, so it stays unset. API responses are inferred
+# from the SCIM API contract, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: create_without_entitlements_sends_empty_entitlement
+    config: |
+      resource "databricks_service_principal" "this" {
+        display_name               = "SPN without entitlements"
+        allow_cluster_create       = false
+        allow_instance_pool_create = false
+        databricks_sql_access      = false
+        workspace_access           = false
+      }
+    calls:
+      - request:
+          method: POST
+          path: /api/2.0/preview/scim/v2/ServicePrincipals
+          headers:
+            Content-Type: application/scim+json; charset=utf-8
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "displayName": "SPN without entitlements", "active": true,
+                   "entitlements": [{}]}
+        response:
+          status: 201
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "id": "201", "applicationId": "00000000-0000-4000-8000-000000000001",
+                   "displayName": "SPN without entitlements", "active": true}
+      - &read_created
+        request:
+          method: GET
+          path: /api/2.0/preview/scim/v2/ServicePrincipals/201
+          query:
+            attributes: ["userName,displayName,active,externalId,entitlements"]
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "id": "201", "applicationId": "00000000-0000-4000-8000-000000000001",
+                   "displayName": "SPN without entitlements", "active": true}
+      - *read_created
+  - name: plan_after_create_is_empty
+    plan_only: true
+    config: |
+      resource "databricks_service_principal" "this" {
+        display_name               = "SPN without entitlements"
+        allow_cluster_create       = false
+        allow_instance_pool_create = false
+        databricks_sql_access      = false
+        workspace_access           = false
+      }
+    plan:
+      expect: empty
+      changes: {}
+    calls:
+      - *read_created
+destroy:
+  calls:
+    - *read_created
+    - request:
+        method: DELETE
+        path: /api/2.0/preview/scim/v2/ServicePrincipals/201
+        headers:
+          X-Databricks-Workspace-Id: "12345"
+        body: null
+      response:
+        status: 204
+        body: null

@@ -1,0 +1,139 @@
+# Pins the workspace-level rejection of disable_as_user_deletion = true with
+# force_delete_repos = true on AWS. Delete fails before sending any request; only the
+# plan refresh reads the service principal. Clearing force_delete_repos sends an update,
+# and destroy then deactivates the service principal. API responses are inferred from
+# the SCIM API contract, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: create_with_disable_and_force_delete_repos
+    config: |
+      resource "databricks_service_principal" "this" {
+        display_name             = "SPN invalid flags"
+        disable_as_user_deletion = true
+        force_delete_repos       = true
+      }
+    calls:
+      - request:
+          method: POST
+          path: /api/2.0/preview/scim/v2/ServicePrincipals
+          headers:
+            Content-Type: application/scim+json; charset=utf-8
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "displayName": "SPN invalid flags", "active": true,
+                   "entitlements": [{}]}
+        response:
+          status: 201
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "id": "201", "applicationId": "00000000-0000-4000-8000-000000000001",
+                   "displayName": "SPN invalid flags", "active": true}
+      - &read_created
+        request:
+          method: GET
+          path: /api/2.0/preview/scim/v2/ServicePrincipals/201
+          query:
+            attributes: ["userName,displayName,active,externalId,entitlements"]
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "id": "201", "applicationId": "00000000-0000-4000-8000-000000000001",
+                   "displayName": "SPN invalid flags", "active": true}
+      - *read_created
+  - name: plan_after_create_with_disable_and_force_delete_repos_is_empty
+    plan_only: true
+    config: |
+      resource "databricks_service_principal" "this" {
+        display_name             = "SPN invalid flags"
+        disable_as_user_deletion = true
+        force_delete_repos       = true
+      }
+    plan:
+      expect: empty
+      changes: {}
+    calls:
+      - *read_created
+  - name: delete_fails_before_any_call
+    config: |
+      provider "databricks" {}
+    expect_error: 'Error: cannot delete service principal: force_delete_repos: cannot
+      force delete if disable_as_user_deletion is set'
+    calls:
+      - *read_created
+  - name: clear_force_delete_repos
+    config: |
+      resource "databricks_service_principal" "this" {
+        display_name             = "SPN invalid flags"
+        disable_as_user_deletion = true
+      }
+    calls:
+      - *read_created
+      - request:
+          method: GET
+          path: /api/2.0/preview/scim/v2/ServicePrincipals/201
+          query:
+            attributes: ["groups,roles"]
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "id": "201"}
+      - request:
+          method: PUT
+          path: /api/2.0/preview/scim/v2/ServicePrincipals/201
+          headers:
+            Content-Type: application/scim+json; charset=utf-8
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "displayName": "SPN invalid flags", "active": true,
+                   "entitlements": [{}]}
+        response:
+          status: 200
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "id": "201", "applicationId": "00000000-0000-4000-8000-000000000001",
+                   "displayName": "SPN invalid flags", "active": true}
+      - *read_created
+      - *read_created
+  - name: plan_after_clear_force_delete_repos_is_empty
+    plan_only: true
+    config: |
+      resource "databricks_service_principal" "this" {
+        display_name             = "SPN invalid flags"
+        disable_as_user_deletion = true
+      }
+    plan:
+      expect: empty
+      changes: {}
+    calls:
+      - *read_created
+destroy:
+  calls:
+    - *read_created
+    - request:
+        method: PATCH
+        path: /api/2.0/preview/scim/v2/ServicePrincipals/201
+        headers:
+          Content-Type: application/scim+json; charset=utf-8
+          X-Databricks-Workspace-Id: "12345"
+        body:
+          json: {"schemas": ["urn:ietf:params:scim:api:messages:2.0:PatchOp"],
+                 "Operations": [{"op": "replace", "path": "active",
+                                 "value": [{"value": "false"}]}]}
+      response:
+        status: 200
+        body: null

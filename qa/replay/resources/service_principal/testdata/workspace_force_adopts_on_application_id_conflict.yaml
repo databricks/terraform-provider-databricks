@@ -1,0 +1,136 @@
+# Pins workspace-level force = true on AWS when create answers 409 with the "Service
+# principal with application ID ... already exists." SCIM detail and no scimType: the
+# provider lists by applicationId, adopts the match and updates it with a PUT that
+# carries applicationId. API responses are inferred from the SCIM API contract, not
+# recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: force_adopts_existing_on_application_id_conflict
+    config: &config |
+      resource "databricks_service_principal" "this" {
+        application_id = "00000000-0000-4000-8000-000000000001"
+        display_name   = "SPN forced"
+        force          = true
+      }
+    calls:
+      - request:
+          method: POST
+          path: /api/2.0/preview/scim/v2/ServicePrincipals
+          headers:
+            Content-Type: application/scim+json; charset=utf-8
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "applicationId": "00000000-0000-4000-8000-000000000001",
+                   "displayName": "SPN forced", "active": true, "entitlements": [{}]}
+        response:
+          status: 409
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:api:messages:2.0:Error"],
+                   "detail": "Service principal with application ID
+                              00000000-0000-4000-8000-000000000001 already exists.",
+                   "status": "409"}
+      - request:
+          method: GET
+          path: /api/2.0/preview/scim/v2/ServicePrincipals
+          query:
+            filter: ['applicationId eq "00000000-0000-4000-8000-000000000001"']
+            excludedAttributes: [roles]
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:api:messages:2.0:ListResponse"],
+                   "totalResults": 1, "startIndex": 1, "itemsPerPage": 1,
+                   "Resources": [{"id": "301",
+                                  "applicationId": "00000000-0000-4000-8000-000000000001",
+                                  "displayName": "SPN manual", "active": true,
+                                  "groups": [{"display": "data-engineers",
+                                              "type": "direct", "value": "401",
+                                              "$ref": "Groups/401"}]}]}
+      - request:
+          method: GET
+          path: /api/2.0/preview/scim/v2/ServicePrincipals/301
+          query:
+            attributes: ["groups,roles"]
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "id": "301",
+                   "groups": [{"display": "data-engineers", "type": "direct",
+                               "value": "401", "$ref": "Groups/401"}],
+                   "roles": [{"type": "direct",
+                              "value": "arn:aws:iam::123456789012:instance-profile/sp"}]}
+      - request:
+          method: PUT
+          path: /api/2.0/preview/scim/v2/ServicePrincipals/301
+          headers:
+            Content-Type: application/scim+json; charset=utf-8
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "applicationId": "00000000-0000-4000-8000-000000000001",
+                   "displayName": "SPN forced", "active": true, "entitlements": [{}],
+                   "groups": [{"display": "data-engineers", "type": "direct",
+                               "value": "401", "$ref": "Groups/401"}],
+                   "roles": [{"type": "direct",
+                              "value": "arn:aws:iam::123456789012:instance-profile/sp"}]}
+        response:
+          status: 200
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "id": "301", "applicationId": "00000000-0000-4000-8000-000000000001",
+                   "displayName": "SPN forced", "active": true}
+      - &read_adopted
+        request:
+          method: GET
+          path: /api/2.0/preview/scim/v2/ServicePrincipals/301
+          query:
+            attributes: ["userName,displayName,active,externalId,entitlements"]
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "id": "301", "applicationId": "00000000-0000-4000-8000-000000000001",
+                   "displayName": "SPN forced", "active": true}
+      - *read_adopted
+    state:
+      resources:
+        databricks_service_principal.this:
+          attributes:
+            - path: [id]
+              equals: "301"
+  - name: plan_after_force_adopt_is_empty
+    plan_only: true
+    config: *config
+    plan:
+      expect: empty
+      changes: {}
+    calls:
+      - *read_adopted
+destroy:
+  calls:
+    - *read_adopted
+    - request:
+        method: DELETE
+        path: /api/2.0/preview/scim/v2/ServicePrincipals/301
+        headers:
+          X-Databricks-Workspace-Id: "12345"
+        body: null
+      response:
+        status: 204
+        body: null

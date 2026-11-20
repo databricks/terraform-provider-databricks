@@ -1,0 +1,126 @@
+# Pins the account-level create body on AWS with external_id, active = false and every
+# entitlement that can be combined with workspace_access. workspace_consume conflicts
+# with workspace_access and databricks_sql_access, so
+# account_create_with_workspace_consume covers it. API responses are inferred from the
+# SCIM API contract, not recorded. An empty X-Databricks-Workspace-Id expectation
+# matches only requests without that header.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: account
+  cloud: AWS
+  account_id: replay-account
+steps:
+  - name: create_with_every_entitlement_external_id_and_inactive
+    config: |
+      provider "databricks" {
+        account_id = "replay-account"
+      }
+
+      resource "databricks_service_principal" "this" {
+        display_name               = "SPN entitled"
+        external_id                = "external-201"
+        active                     = false
+        allow_cluster_create       = true
+        allow_instance_pool_create = true
+        databricks_sql_access      = true
+        workspace_access           = true
+      }
+    calls:
+      - request:
+          method: POST
+          path: /api/2.0/accounts/replay-account/scim/v2/ServicePrincipals
+          headers:
+            Content-Type: application/scim+json; charset=utf-8
+            X-Databricks-Workspace-Id: ""
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "displayName": "SPN entitled", "active": false,
+                   "externalId": "external-201",
+                   "entitlements": [{"value": "allow-cluster-create"},
+                                    {"value": "allow-instance-pool-create"},
+                                    {"value": "databricks-sql-access"},
+                                    {"value": "workspace-access"}]}
+        response:
+          status: 201
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "id": "201", "applicationId": "00000000-0000-4000-8000-000000000001",
+                   "displayName": "SPN entitled", "active": false,
+                   "externalId": "external-201",
+                   "entitlements": [{"value": "allow-cluster-create"},
+                                    {"value": "allow-instance-pool-create"},
+                                    {"value": "databricks-sql-access"},
+                                    {"value": "workspace-access"}]}
+      - &read_created
+        request:
+          method: GET
+          path: /api/2.0/accounts/replay-account/scim/v2/ServicePrincipals/201
+          query:
+            attributes: ["userName,displayName,active,externalId,entitlements"]
+          headers:
+            X-Databricks-Workspace-Id: ""
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "id": "201", "applicationId": "00000000-0000-4000-8000-000000000001",
+                   "displayName": "SPN entitled", "active": false,
+                   "externalId": "external-201",
+                   "entitlements": [{"value": "allow-cluster-create"},
+                                    {"value": "allow-instance-pool-create"},
+                                    {"value": "databricks-sql-access"},
+                                    {"value": "workspace-access"}]}
+      - *read_created
+    state:
+      resources:
+        databricks_service_principal.this:
+          attributes:
+            - path: [id]
+              equals: "201"
+            - path: [application_id]
+              equals: 00000000-0000-4000-8000-000000000001
+            - path: [acl_principal_id]
+              equals: servicePrincipals/00000000-0000-4000-8000-000000000001
+            - path: [home]
+              equals: /Users/00000000-0000-4000-8000-000000000001
+            - path: [repos]
+              equals: /Repos/00000000-0000-4000-8000-000000000001
+  - name: plan_after_create_is_empty
+    plan_only: true
+    config: |
+      provider "databricks" {
+        account_id = "replay-account"
+      }
+
+      resource "databricks_service_principal" "this" {
+        display_name               = "SPN entitled"
+        external_id                = "external-201"
+        active                     = false
+        allow_cluster_create       = true
+        allow_instance_pool_create = true
+        databricks_sql_access      = true
+        workspace_access           = true
+      }
+    plan:
+      expect: empty
+      changes: {}
+    calls:
+      - *read_created
+destroy:
+  calls:
+    - *read_created
+    - request:
+        method: PATCH
+        path: /api/2.0/accounts/replay-account/scim/v2/ServicePrincipals/201
+        headers:
+          Content-Type: application/scim+json; charset=utf-8
+          X-Databricks-Workspace-Id: ""
+        body:
+          json: {"schemas": ["urn:ietf:params:scim:api:messages:2.0:PatchOp"],
+                 "Operations": [{"op": "replace", "path": "active",
+                                 "value": [{"value": "false"}]}]}
+      response:
+        status: 200
+        body: null

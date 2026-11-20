@@ -125,6 +125,10 @@ func authGoogleCredentialsConfig(t *testing.T) *config.Config {
 }
 
 func TestVolumeAuthCloudCredentials(t *testing.T) {
+	testVolumeAuthCloudCredentials(t, false)
+}
+
+func testVolumeAuthCloudCredentials(t *testing.T, sdkGo bool) {
 	tests := []struct {
 		name     string
 		metadata string
@@ -227,7 +231,7 @@ func TestVolumeAuthCloudCredentials(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			s := &authServer{metadata: tt.metadata, script: tt.script}
 
-			a := refreshAuthVolume(t, s, tt.config(t))
+			a := refreshAuthVolume(t, s, tt.config(t), sdkGo)
 
 			if tt.summary == "" {
 				a.assertSucceeded(t)
@@ -239,10 +243,14 @@ func TestVolumeAuthCloudCredentials(t *testing.T) {
 }
 
 func TestVolumeAuthDeprecatedGoogleAuthTypes(t *testing.T) {
+	testVolumeAuthDeprecatedGoogleAuthTypes(t, false)
+}
+
+func testVolumeAuthDeprecatedGoogleAuthTypes(t *testing.T, sdkGo bool) {
 	t.Run("google-creds", func(t *testing.T) {
 		s := &authServer{metadata: authCloudMetadata("GCP"), script: authGoogleSuccess}
 
-		a := refreshAuthVolume(t, s, authGoogleConfig(t, "google-creds"))
+		a := refreshAuthVolume(t, s, authGoogleConfig(t, "google-creds"), sdkGo)
 
 		a.assertSucceeded(t)
 		assert.Equal(t, "google-credentials", a.client.Config.AuthType)
@@ -257,7 +265,7 @@ func TestVolumeAuthDeprecatedGoogleAuthTypes(t *testing.T) {
 			s := &authServer{metadata: authCloudMetadata("GCP")}
 
 			a := refreshAuthVolume(t, s, &config.Config{Host: "https://" + authGCPHost,
-				AuthType: authType, GoogleServiceAccount: authGCPAccount})
+				AuthType: authType, GoogleServiceAccount: authGCPAccount}, sdkGo)
 
 			a.assertFailed(t, "cannot read volume: failed during request visitor: "+
 				"default auth: could not obtain OIDC token. google: error getting "+

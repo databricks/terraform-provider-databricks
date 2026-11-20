@@ -47,6 +47,16 @@ const userAgentExtraChild = "DATABRICKS_TF_TEST_USER_AGENT_EXTRA_CHILD"
 // TestVolumeUserAgentDimensions pins the exact User-Agent of every volume call for
 // each environment the classic SDK detects.
 func TestVolumeUserAgentDimensions(t *testing.T) {
+	testVolumeUserAgentDimensions(t, false)
+}
+
+// TestVolumeUserAgentDimensionsWithSdkGo pins the same User-Agents with the volume calls
+// through sdk-go uc/volumes/v1, which append the sdk-go module segments.
+func TestVolumeUserAgentDimensionsWithSdkGo(t *testing.T) {
+	testVolumeUserAgentDimensions(t, true)
+}
+
+func testVolumeUserAgentDimensions(t *testing.T, sdkGo bool) {
 	requireNoUserAgentExtra(t)
 	longAgent := strings.Repeat("x", 60) + "/abc/def"
 	testCases := []struct {
@@ -176,9 +186,9 @@ func TestVolumeUserAgentDimensions(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			setUserAgentEnvironment(t, tc.env)
-			requests := runVolumeJourney(t, "native_testdata/user_agent.yaml")
+			requests := runVolumeJourney(t, "user_agent.yaml", sdkGo)
 			want := wantUserAgent(t, nil, tc.upstream, tc.detected)
-			assertUserAgent(t, requests, want)
+			assertUserAgent(t, requests, want, sdkGo)
 		})
 	}
 }
@@ -186,34 +196,53 @@ func TestVolumeUserAgentDimensions(t *testing.T) {
 // TestVolumeUserAgentExtra pins DATABRICKS_USER_AGENT_EXTRA on every volume call.
 // The provider reads it once at start-up, so the test runs itself in a new process.
 func TestVolumeUserAgentExtra(t *testing.T) {
+	testVolumeUserAgentExtra(t, false)
+}
+
+// TestVolumeUserAgentExtraWithSdkGo pins the same User-Agent with the volume calls
+// through sdk-go uc/volumes/v1.
+func TestVolumeUserAgentExtraWithSdkGo(t *testing.T) {
+	testVolumeUserAgentExtra(t, true)
+}
+
+func testVolumeUserAgentExtra(t *testing.T, sdkGo bool) {
 	const extra = "partner-a/1.2.3 team_b/0.0.1 partner-a/1.2.3 partner-a/2.0.0 " +
 		"resource/volume"
 	if os.Getenv(userAgentExtraChild) == "" {
 		requireNoUserAgentExtra(t)
-		child := exec.Command(os.Args[0], "-test.v",
-			"-test.run=^TestVolumeUserAgentExtra$")
+		child := exec.Command(os.Args[0], "-test.v", "-test.run=^"+t.Name()+"$")
 		child.Env = append(os.Environ(),
 			userAgentExtraVariable+"="+extra, userAgentExtraChild+"=1")
 		output, err := child.CombinedOutput()
 		require.NoError(t, err, "%s", output)
-		passed := "--- PASS: TestVolumeUserAgentExtra"
+		passed := "--- PASS: " + t.Name()
 		assert.Contains(t, string(output), passed, "%s", output)
 		return
 	}
 	require.Equal(t, extra, os.Getenv(userAgentExtraVariable))
 	setUserAgentEnvironment(t, nil)
-	requests := runVolumeJourney(t, "native_testdata/user_agent.yaml")
+	requests := runVolumeJourney(t, "user_agent.yaml", sdkGo)
 	// Repeated pairs are dropped. A pair repeating a per-request dimension is kept.
 	parsed := []string{
 		"partner-a/1.2.3", "team_b/0.0.1", "partner-a/2.0.0", "resource/volume",
 	}
-	assertUserAgent(t, requests, wantUserAgent(t, parsed, nil, nil))
+	assertUserAgent(t, requests, wantUserAgent(t, parsed, nil, nil), sdkGo)
 }
 
 // TestVolumeTraceparent pins the W3C traceparent header of every volume call,
 // including both attempts of each retried call.
 func TestVolumeTraceparent(t *testing.T) {
-	requests := runVolumeJourney(t, "native_testdata/traceparent_retry.yaml")
+	testVolumeTraceparent(t, false)
+}
+
+// TestVolumeTraceparentWithSdkGo pins the same headers with the volume calls through
+// sdk-go uc/volumes/v1, whose retries follow the classic client's rules.
+func TestVolumeTraceparentWithSdkGo(t *testing.T) {
+	testVolumeTraceparent(t, true)
+}
+
+func testVolumeTraceparent(t *testing.T, sdkGo bool) {
+	requests := runVolumeJourney(t, "traceparent_retry.yaml", sdkGo)
 	var calls []string
 	for _, r := range requests {
 		calls = append(calls, r.method+" "+r.path)
@@ -240,6 +269,7 @@ func TestVolumeTraceparent(t *testing.T) {
 		traceIDs[match[1]], parentIDs[match[2]] = true, true
 		assert.Empty(t, r.header.Values("tracestate"), calls[i])
 	}
+	assertVolumeClient(t, requests, sdkGo)
 }
 
 // requireNoUserAgentExtra fails a test whose process started with
@@ -311,17 +341,37 @@ func terraformCLIVersion(t *testing.T) string {
 }
 
 // assertUserAgent checks that every volume call sends exactly the wanted User-Agent,
-// and that the journey sent each method.
-func assertUserAgent(t *testing.T, requests []volumeRequest, want string) {
+// and that the journey sent each method. With sdkGo set, the wanted User-Agent is
+// followed by the sdk-go module segments, whose versions follow go.mod.
+func assertUserAgent(t *testing.T, requests []volumeRequest, want string, sdkGo bool) {
 	t.Helper()
+	pattern := regexp.QuoteMeta(want)
+	if sdkGo {
+		pattern += ` sdk-go-core/\d+\.\d+\.\d+ sdk-go-uc-volumes/\d+\.\d+\.\d+`
+	}
+	exact := regexp.MustCompile("^" + pattern + "$")
 	methods := map[string]bool{}
 	for _, r := range requests {
 		methods[r.method] = true
 		call := r.method + " " + r.path
-		assert.Equal(t, []string{want}, r.header.Values("User-Agent"), call)
+		values := r.header.Values("User-Agent")
+		if assert.Len(t, values, 1, call) {
+			assert.Regexp(t, exact, values[0], call)
+		}
 	}
 	all := map[string]bool{"POST": true, "PATCH": true, "GET": true, "DELETE": true}
 	assert.Equal(t, all, methods)
+}
+
+// assertVolumeClient checks that every volume call came from sdk-go uc/volumes/v1 if
+// sdkGo is set, and from the existing client otherwise.
+func assertVolumeClient(t *testing.T, requests []volumeRequest, sdkGo bool) {
+	t.Helper()
+	for _, r := range requests {
+		userAgent := r.header.Get("User-Agent")
+		assert.Equal(t, sdkGo, strings.Contains(userAgent, " sdk-go-uc-volumes/"),
+			"%s %s: %s", r.method, r.path, userAgent)
+	}
 }
 
 type volumeRequest struct {
@@ -335,21 +385,31 @@ type volumeRequestRecorder struct {
 	requests []volumeRequest
 }
 
-// runVolumeJourney replays one native fixture and returns its volume requests as the
-// server received them.
-func runVolumeJourney(t *testing.T, path string) []volumeRequest {
+// runVolumeJourney replays the native fixture with the given name and returns its volume
+// requests as the server received them. With sdkGo set, it replays the fixture's sdk-go
+// copy, whose name has the sdk_go_ prefix, with the volume on sdk-go uc/volumes/v1 in
+// every step.
+func runVolumeJourney(t *testing.T, name string, sdkGo bool) []volumeRequest {
 	t.Helper()
+	path := "native_testdata/" + name
+	if sdkGo {
+		path = "native_testdata/sdk_go_" + name
+	}
 	recorder := &volumeRequestRecorder{}
 	terraformtest.RunNative(t, path,
 		func(tc *resource.TestCase, customize func(*config.Config) error) {
-			tc.ProtoV6ProviderFactories = terraformtest.ProviderFactories(
-				func(c *config.Config) error {
-					if err := customize(c); err != nil {
-						return err
-					}
-					c.HTTPTransport = volumeRequestTransport{recorder, c.HTTPTransport}
-					return nil
-				})
+			record := func(c *config.Config) error {
+				if err := customize(c); err != nil {
+					return err
+				}
+				c.HTTPTransport = volumeRequestTransport{recorder, c.HTTPTransport}
+				return nil
+			}
+			tc.ProtoV6ProviderFactories = terraformtest.ProviderFactories(record)
+			if sdkGo {
+				tc.ProtoV6ProviderFactories = terraformtest.ProviderFactoriesWithSdkGo(
+					record, []string{"databricks_volume"})
+			}
 		})
 	recorder.mu.Lock()
 	defer recorder.mu.Unlock()

@@ -40,6 +40,29 @@ func getNameFromId(id string) (string, error) {
 	return split[2], nil
 }
 
+// createdVolumeFullName falls back to the request's names when the create response has no
+// full_name, so the ID stays valid.
+func createdVolumeFullName(req catalog.CreateVolumeRequestContent, v *catalog.VolumeInfo) string {
+	if v.FullName != "" {
+		return v.FullName
+	}
+	return req.CatalogName + "." + req.SchemaName + "." + req.Name
+}
+
+// updatedVolumeFullName falls back to the current ID, with the new name on a rename, when the
+// update response has no full_name. The ID must be in the format catalog.schema.volume.
+func updatedVolumeFullName(id, newName string, v *catalog.VolumeInfo) string {
+	if v.FullName != "" {
+		return v.FullName
+	}
+	if newName == "" {
+		return id
+	}
+	split := strings.Split(id, ".")
+	split[2] = newName
+	return strings.Join(split, ".")
+}
+
 func ResourceVolume() common.Resource {
 	s := common.StructToSchema(VolumeInfo{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
@@ -76,7 +99,7 @@ func ResourceVolume() common.Resource {
 			if err != nil {
 				return err
 			}
-			d.SetId(v.FullName)
+			d.SetId(createdVolumeFullName(createVolumeRequestContent, v))
 
 			// Don't update owner if it is not provided
 			if d.Get("owner") == "" {
@@ -161,8 +184,9 @@ func ResourceVolume() common.Resource {
 
 			// We need to update the resource Id because Name is updatable and FullName consists of Name,
 			// So if we don't update the field then the requests would be made to old FullName which doesn't exists.
-			d.SetId(v.FullName)
-			d.Set("volume_path", "/Volumes/"+strings.ReplaceAll(v.FullName, ".", "/"))
+			fullName := updatedVolumeFullName(d.Id(), updateVolumeRequestContent.NewName, v)
+			d.SetId(fullName)
+			d.Set("volume_path", "/Volumes/"+strings.ReplaceAll(fullName, ".", "/"))
 			return nil
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

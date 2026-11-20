@@ -89,6 +89,8 @@ but cannot bypass an out-of-order matching consumable call.
 Test-wide reusable exchanges are intended for invariant client initialization,
 such as host metadata; they are not required to be consumed.
 
+`Call.Times` expects a call more than once in a row: `Exactly(n)` with n of at least 1, or `Times{Min: 2, Max: 3}` for a count that depends on timing. In YAML it is `times: 3` or `times: {min: 2, max: 3}`. `Verify` requires `Min`; a request past `Max` falls through to later fixtures. A range is greedy, so an identical signature listed after it matches only once the range reaches `Max`. Under ordering, a call must reach `Min` before a later call matches, and closes once one does. `Call.MinGap` and `Call.MaxGap` are Go durations bounding the time since the previous matched step call's arrival or, with `Times`, since the call's previous repetition; the first repetition is not bounded. Arrival is taken when `ServeHTTP` starts, before the body is read. `Verify` checks gaps in arrival order, whatever order concurrent requests took the lock in, and reports an out-of-bounds gap with the observed gap; the call is still answered. Reusable fixtures reject these fields.
+
 ## Files and non-JSON bodies
 
 A non-null body selects exactly one representation:
@@ -127,3 +129,25 @@ Additional part headers are ignored. Part order and the transport boundary are
 ignored; missing or extra parts fail. The request must use `multipart/form-data`.
 Multipart responses and JSON matchers on non-JSON bodies are unsupported.
 Header and query matchers work with every body representation.
+
+## Wire behavior
+
+`Response.Delay` is a Go duration string, such as `"2s"`, waited before writing
+anything; the wait ends when the client closes the connection. The wait runs
+outside the handler lock, so other requests are served meanwhile.
+`Response.Fault` hijacks the connection: `FaultReset` closes it with linger 0,
+`FaultClose` closes it without a response, `FaultTruncateBody` declares the full
+`Content-Length` but writes half the body, and `FaultStallBody` writes half the
+body, then waits until the client closes the connection. `Response.StatusLine`
+writes a literal status line, such as `HTTP/1.1 404`, whose code must equal
+`Status`. Reset and close responses omit status, headers, body and status line.
+Invalid values fail when fixtures are loaded.
+
+Go's client silently resends a replayable request, such as a GET, that fails
+on a reused connection. A client that must see `reset` and `close` faults should
+therefore open one connection per request, as `qa/terraformtest` does. Faults
+and status lines close the connection and frame the body by its
+`Content-Length`, replacing fixture `Connection`, `Content-Length` and
+`Transfer-Encoding` headers. They need a server that supports hijacking, such
+as `httptest.NewServer`; otherwise `Verify` reports the failure. Faulted calls
+are consumed and ordered like any other call.

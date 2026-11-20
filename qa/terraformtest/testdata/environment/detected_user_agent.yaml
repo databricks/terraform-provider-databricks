@@ -1,0 +1,62 @@
+# The SDK adds a User-Agent dimension for the CI provider, the Databricks Runtime and
+# the coding agent it detects from the environment. The runner clears every such
+# variable first, so the journey gets these three under any agent or CI runner.
+# They are read for each request, so the journey runs in the test process.
+version: 1
+host_metadata:
+  workspace_id: "12345"
+environment:
+  GITHUB_ACTIONS: "true"
+  DATABRICKS_RUNTIME_VERSION: "15.4"
+  CLAUDECODE: "1"
+steps:
+  - name: create
+    config: |
+      resource "databricks_directory" "this" {
+        path = "/Shared/replay-environment"
+      }
+    calls:
+      - request:
+          method: POST
+          path: /api/2.0/workspace/mkdirs
+          matchers: &user_agent
+            headers:
+              User-Agent:
+                pattern: 'databricks-tf-provider/\S+ databricks-sdk-go/\S+ go/\S+ os/\S+ terraform/\S+ sdk/sdkv2 resource/directory auth/pat cicd/github runtime/15\.4 agent/claude-code'
+          body:
+            json:
+              path: /Shared/replay-environment
+        response:
+          status: 200
+          body:
+            json: {}
+      - &read
+        request:
+          method: GET
+          path: /api/2.0/workspace/get-status
+          query:
+            path: [/Shared/replay-environment]
+          matchers: *user_agent
+          body: null
+        response:
+          status: 200
+          body:
+            json:
+              path: /Shared/replay-environment
+              object_type: DIRECTORY
+              object_id: 2002
+      - *read
+destroy:
+  calls:
+    - *read
+    - request:
+        method: POST
+        path: /api/2.0/workspace/delete
+        matchers: *user_agent
+        body:
+          json:
+            path: /Shared/replay-environment
+      response:
+        status: 200
+        body:
+          json: {}

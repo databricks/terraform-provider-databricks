@@ -1,0 +1,47 @@
+# A token endpoint that rejects the client fails the first request that needs a
+# token, before the request is sent. The SDK does not retry a 401, so the step
+# fails with one token request and no mkdirs call.
+version: 1
+provider_host: workspace
+hosts:
+  workspace:
+    url: https://replay-workspace.cloud.databricks.com
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+auth:
+  type: oauth-m2m
+  client_id: replay-sp
+  client_secret: wrong-secret
+steps:
+  - name: create
+    config: |
+      resource "databricks_directory" "this" {
+        path = "/Shared/replay-auth"
+      }
+    calls:
+      - request:
+          method: GET
+          path: /oidc/.well-known/oauth-authorization-server
+          body: null
+        response:
+          status: 200
+          body:
+            json:
+              authorization_endpoint: https://replay-workspace.cloud.databricks.com/oidc/v1/authorize
+              token_endpoint: https://replay-workspace.cloud.databricks.com/oidc/v1/token
+      - request:
+          method: POST
+          path: /oidc/v1/token
+          body:
+            text: grant_type=client_credentials&scope=all-apis
+        response:
+          status: 401
+          body:
+            json:
+              error: invalid_client
+              error_description: Client authentication failed
+    expect_error: 'cannot create directory: failed during request visitor: error getting token: Post "https://replay-workspace\.cloud\.databricks\.com/oidc/v1/token": \{"error":"invalid_client"'
+destroy:
+  calls: []

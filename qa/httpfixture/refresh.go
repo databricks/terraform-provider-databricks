@@ -11,7 +11,7 @@ import (
 // extra reads therefore cannot attach an annotation to another operation.
 // Unmatched annotations fail refresh instead of being silently lost.
 func PreserveMatchers(calls, previous []Call) error {
-	compiled, err := compileCalls(previous)
+	compiled, err := compileCalls(previous, hostNames{})
 	if err != nil {
 		return err
 	}
@@ -54,7 +54,8 @@ func refreshedAnnotation(req *http.Request, body requestBody, previous []exchang
 		for key := range old.call.Request.Headers {
 			keep[http.CanonicalHeaderKey(key)] = true
 		}
-		if hasMatchers(old.call.Request.Matchers) && old.matches(req, body) &&
+		// Recording rejects named hosts, so every refreshed call is on the unnamed host.
+		if hasMatchers(old.call.Request.Matchers) && old.matches(req, "", body) &&
 			(selected == -1 || retained[selected] && !retained[j]) {
 			selected = j
 		}

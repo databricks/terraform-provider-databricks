@@ -1,0 +1,154 @@
+# Pins that when a refresh GET's body repeats a key with different values, the last value
+# wins. A stale comment followed by the configured one keeps the state and plans nothing;
+# the reverse order refreshes the stale comment and plans an update. A key in another case
+# counts as a repeat: full_name followed by FULL_NAME takes FULL_NAME's value for
+# volume_path. The bodies are text because YAML can't repeat a key. API responses are
+# inferred from the Unity Catalog API contract, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: create
+    config: &config |
+      resource "databricks_volume" "this" {
+        name         = "duplicate_key_volume"
+        catalog_name = "main"
+        schema_name  = "replay"
+        volume_type  = "MANAGED"
+        comment      = "first comment"
+      }
+    calls:
+      - request:
+          method: POST
+          path: /api/2.1/unity-catalog/volumes
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "duplicate_key_volume", "volume_type": "MANAGED",
+                   "comment": "first comment"}
+        response:
+          status: 200
+          body:
+            json: &created {"catalog_name": "main", "schema_name": "replay",
+                            "name": "duplicate_key_volume",
+                            "full_name": "main.replay.duplicate_key_volume",
+                            "volume_type": "MANAGED", "comment": "first comment",
+                            "owner": "replay-admin@example.com",
+                            "storage_location": "s3://replay-metastore/volume-197"}
+      - &read_created
+        request: &read_request
+          method: GET
+          path: /api/2.1/unity-catalog/volumes/main.replay.duplicate_key_volume
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 200
+          body:
+            json: *created
+      - *read_created
+  - name: refresh_with_the_configured_comment_last_keeps_the_state
+    plan_only: true
+    config: *config
+    plan:
+      expect: empty
+      changes: {}
+    state:
+      resources:
+        databricks_volume.this:
+          attributes:
+            - path: [id]
+              equals: main.replay.duplicate_key_volume
+            - path: [comment]
+              equals: first comment
+    calls:
+      - request: *read_request
+        response:
+          status: 200
+          headers:
+            Content-Type: application/json
+          body:
+            text: '{"comment": "stale comment", "catalog_name": "main", "schema_name":
+              "replay", "name": "duplicate_key_volume", "full_name":
+              "main.replay.duplicate_key_volume", "volume_type": "MANAGED", "owner":
+              "replay-admin@example.com", "storage_location":
+              "s3://replay-metastore/volume-197", "comment": "first comment"}'
+  - name: refresh_with_the_stale_comment_last_plans_an_update
+    plan_only: true
+    config: *config
+    plan:
+      expect: non_empty
+      changes:
+        databricks_volume.this:
+          actions: [update]
+          before:
+            - path: [comment]
+              equals: stale comment
+          after:
+            - path: [comment]
+              equals: first comment
+    state:
+      resources:
+        databricks_volume.this:
+          attributes:
+            - path: [id]
+              equals: main.replay.duplicate_key_volume
+            - path: [comment]
+              equals: stale comment
+    calls:
+      - request: *read_request
+        response:
+          status: 200
+          headers:
+            Content-Type: application/json
+          body:
+            text: '{"comment": "first comment", "catalog_name": "main", "schema_name":
+              "replay", "name": "duplicate_key_volume", "full_name":
+              "main.replay.duplicate_key_volume", "volume_type": "MANAGED", "owner":
+              "replay-admin@example.com", "storage_location":
+              "s3://replay-metastore/volume-197", "comment": "stale comment"}'
+  - name: refresh_with_upper_case_full_name_last_takes_its_value
+    plan_only: true
+    config: *config
+    plan:
+      expect: empty
+      changes: {}
+    state:
+      resources:
+        databricks_volume.this:
+          attributes:
+            - path: [id]
+              equals: main.replay.duplicate_key_volume
+            - path: [volume_path]
+              equals: /Volumes/main/replay/other_volume
+    calls:
+      - request: *read_request
+        response:
+          status: 200
+          headers:
+            Content-Type: application/json
+          body:
+            text: '{"catalog_name": "main", "schema_name": "replay", "name":
+              "duplicate_key_volume", "full_name": "main.replay.duplicate_key_volume",
+              "volume_type": "MANAGED", "comment": "first comment", "owner":
+              "replay-admin@example.com", "storage_location":
+              "s3://replay-metastore/volume-197", "FULL_NAME":
+              "main.replay.other_volume"}'
+destroy:
+  calls:
+    - *read_created
+    - request:
+        method: DELETE
+        path: /api/2.1/unity-catalog/volumes/main.replay.duplicate_key_volume
+        headers:
+          X-Databricks-Workspace-Id: "12345"
+        body: null
+      response:
+        status: 200
+        body:
+          json: {}

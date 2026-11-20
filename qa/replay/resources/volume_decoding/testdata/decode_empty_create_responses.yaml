@@ -1,0 +1,138 @@
+# Pins a create POST answered 200 with no body, and a replacing create POST answered 200
+# with JSON null. Both decode to an empty volume without an error, so the ID comes from the
+# configured catalog_name, schema_name and name, and the reads after create GET that ID.
+# The existing response_decoding_errors journey pins a POST answered {}. API responses are
+# inferred from the Unity Catalog API contract, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: create_answered_200_with_no_body_takes_the_id_from_the_config
+    config: |
+      resource "databricks_volume" "this" {
+        name         = "empty_create_volume"
+        catalog_name = "main"
+        schema_name  = "replay"
+        volume_type  = "MANAGED"
+        comment      = "first comment"
+      }
+    calls:
+      - request:
+          method: POST
+          path: /api/2.1/unity-catalog/volumes
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "empty_create_volume", "volume_type": "MANAGED",
+                   "comment": "first comment"}
+        response:
+          status: 200
+          body: null
+      - &read_created
+        request:
+          method: GET
+          path: /api/2.1/unity-catalog/volumes/main.replay.empty_create_volume
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "empty_create_volume",
+                   "full_name": "main.replay.empty_create_volume",
+                   "volume_type": "MANAGED", "comment": "first comment",
+                   "owner": "replay-admin@example.com",
+                   "storage_location": "s3://replay-metastore/volume-197"}
+      - *read_created
+    state:
+      resources:
+        databricks_volume.this:
+          attributes:
+            - path: [id]
+              equals: main.replay.empty_create_volume
+            - path: [volume_path]
+              equals: /Volumes/main/replay/empty_create_volume
+  - name: replacing_create_answered_200_with_json_null_takes_the_id_from_the_config
+    config: |
+      resource "databricks_volume" "this" {
+        name         = "empty_create_volume"
+        catalog_name = "other"
+        schema_name  = "replay"
+        volume_type  = "MANAGED"
+        comment      = "first comment"
+      }
+    plan:
+      expect: non_empty
+      changes:
+        databricks_volume.this:
+          actions: [delete, create]
+    calls:
+      - *read_created
+      - request:
+          method: DELETE
+          path: /api/2.1/unity-catalog/volumes/main.replay.empty_create_volume
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 200
+          body:
+            json: {}
+      - request:
+          method: POST
+          path: /api/2.1/unity-catalog/volumes
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"catalog_name": "other", "schema_name": "replay",
+                   "name": "empty_create_volume", "volume_type": "MANAGED",
+                   "comment": "first comment"}
+        response:
+          status: 200
+          body:
+            json: null
+      - &read_replaced
+        request:
+          method: GET
+          path: /api/2.1/unity-catalog/volumes/other.replay.empty_create_volume
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"catalog_name": "other", "schema_name": "replay",
+                   "name": "empty_create_volume",
+                   "full_name": "other.replay.empty_create_volume",
+                   "volume_type": "MANAGED", "comment": "first comment",
+                   "owner": "replay-admin@example.com",
+                   "storage_location": "s3://replay-metastore/volume-198"}
+      - *read_replaced
+    state:
+      resources:
+        databricks_volume.this:
+          attributes:
+            - path: [id]
+              equals: other.replay.empty_create_volume
+            - path: [volume_path]
+              equals: /Volumes/other/replay/empty_create_volume
+destroy:
+  calls:
+    - *read_replaced
+    - request:
+        method: DELETE
+        path: /api/2.1/unity-catalog/volumes/other.replay.empty_create_volume
+        headers:
+          X-Databricks-Workspace-Id: "12345"
+        body: null
+      response:
+        status: 200
+        body:
+          json: {}

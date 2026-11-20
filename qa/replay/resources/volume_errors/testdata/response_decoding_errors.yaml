@@ -2,13 +2,11 @@
 # PATCH fails with the SDK's unmarshal error and a request log; the pattern checks its
 # message, request line and echoed body, and skips the generated headers in between. An
 # HTML body fails with the SDK's HTML error. An empty GET body blanks every field in the
-# refreshed state and plans a replacement. A PATCH answered {} or without full_name sets
-# the ID to the empty full name, so the read after the update GETs
-# /api/2.1/unity-catalog/volumes/; it fails and the volume keeps its old ID. That empty
-# ID is a known defect: Update takes the ID from the response's full_name without
-# checking it. A fix is expected to keep the ID; update those steps with it. API
-# responses are inferred from the Unity Catalog API contract, not recorded; the answer
-# to that empty-name GET is the workspace's usual reply to an unknown route.
+# refreshed state and plans a replacement. A POST answered {} takes the ID from the
+# configured catalog_name, schema_name and name. A PATCH answered {} or without full_name
+# keeps the ID, and a rename answered without full_name puts the new name in it; the read
+# after each write GETs that ID. API responses are inferred from the Unity Catalog API
+# contract, not recorded.
 version: 1
 enforce_call_order: true
 host_metadata:
@@ -49,10 +47,21 @@ steps:
             Content-Type: application/json
           body:
             text: '{"full_name": "main.replay.decode_volume",'
-  - name: create
+  - name: create_answered_200_with_empty_object_takes_the_id_from_the_config
     config: *config
     calls:
       - request: *create_request
+        response:
+          status: 200
+          body:
+            json: {}
+      - &read_created
+        request: &read_request
+          method: GET
+          path: /api/2.1/unity-catalog/volumes/main.replay.decode_volume
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
         response:
           status: 200
           body:
@@ -64,18 +73,15 @@ steps:
                             "storage_location": "s3://replay-metastore/volume-181",
                             "metastore_id": "11111111-1111-1111-1111-111111111111",
                             "volume_id": "00000000-0000-4000-8000-000000000181"}
-      - &read_created
-        request: &read_request
-          method: GET
-          path: /api/2.1/unity-catalog/volumes/main.replay.decode_volume
-          headers:
-            X-Databricks-Workspace-Id: "12345"
-          body: null
-        response:
-          status: 200
-          body:
-            json: *created
       - *read_created
+    state: &decode_volume_id
+      resources:
+        databricks_volume.this:
+          attributes:
+            - path: [id]
+              equals: main.replay.decode_volume
+            - path: [volume_path]
+              equals: /Volumes/main/replay/decode_volume
   - name: refresh_answered_200_with_html_fails_with_html_error
     config: *config
     expect_error: 'Error: cannot read volume: received HTML response instead of JSON\n'
@@ -163,10 +169,8 @@ steps:
             Content-Type: application/json
           body:
             text: '{"full_name": "main.replay.decode_volume",'
-  - name: update_answered_200_with_empty_object_reads_an_empty_name
+  - name: update_answered_200_with_empty_object_keeps_the_id
     config: *config_commented
-    expect_error: 'Error: cannot read volume: No API found for ''GET
-      /unity-catalog/volumes/''\n'
     calls:
       - *read_created
       - request: *patch_request
@@ -174,70 +178,125 @@ steps:
           status: 200
           body:
             json: {}
-      - request: &read_empty_name_request
-          method: GET
-          path: /api/2.1/unity-catalog/volumes/
-          headers:
-            X-Databricks-Workspace-Id: "12345"
-          body: null
-        response: &empty_name_not_found
-          status: 404
+      - &read_commented
+        request: *read_request
+        response:
+          status: 200
           body:
-            json: {"error_code": "ENDPOINT_NOT_FOUND",
-                   "message": "No API found for 'GET /unity-catalog/volumes/'"}
-  - name: plan_after_empty_object_keeps_the_old_id_and_plans_the_update_again
-    plan_only: true
-    config: *config_commented
-    plan: &plans_comment_update
-      expect: non_empty
-      changes:
-        databricks_volume.this:
-          actions: [update]
-          before:
-            - path: [comment]
-              equals: first comment
-          after:
-            - path: [comment]
-              equals: decoded
-    state: &old_id
-      resources:
-        databricks_volume.this:
-          attributes:
-            - path: [id]
-              equals: main.replay.decode_volume
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "decode_volume",
+                   "full_name": "main.replay.decode_volume",
+                   "volume_type": "MANAGED", "comment": "decoded",
+                   "owner": "replay-admin@example.com",
+                   "storage_location": "s3://replay-metastore/volume-181",
+                   "metastore_id": "11111111-1111-1111-1111-111111111111",
+                   "volume_id": "00000000-0000-4000-8000-000000000181"}
+      - *read_commented
+    state: *decode_volume_id
+  - name: update_answered_200_without_full_name_keeps_the_id
+    config: &config_recommented |
+      resource "databricks_volume" "this" {
+        name         = "decode_volume"
+        catalog_name = "main"
+        schema_name  = "replay"
+        volume_type  = "MANAGED"
+        comment      = "decoded again"
+      }
     calls:
-      - *read_created
-  - name: update_answered_200_without_full_name_reads_an_empty_name
-    config: *config_commented
-    expect_error: 'Error: cannot read volume: No API found for ''GET
-      /unity-catalog/volumes/''\n'
-    calls:
-      - *read_created
-      - request: *patch_request
+      - *read_commented
+      - request:
+          method: PATCH
+          path: /api/2.1/unity-catalog/volumes/main.replay.decode_volume
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"comment": "decoded again"}
         response:
           status: 200
           body:
             json: {"catalog_name": "main", "schema_name": "replay",
                    "name": "decode_volume", "volume_type": "MANAGED",
-                   "comment": "decoded", "owner": "replay-admin@example.com",
+                   "comment": "decoded again", "owner": "replay-admin@example.com",
                    "storage_location": "s3://replay-metastore/volume-181",
                    "metastore_id": "11111111-1111-1111-1111-111111111111",
                    "volume_id": "00000000-0000-4000-8000-000000000181"}
-      - request: *read_empty_name_request
-        response: *empty_name_not_found
-  - name: plan_after_missing_full_name_keeps_the_old_id_and_plans_the_update_again
-    plan_only: true
-    config: *config_commented
-    plan: *plans_comment_update
-    state: *old_id
+      - &read_recommented
+        request: *read_request
+        response:
+          status: 200
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "decode_volume",
+                   "full_name": "main.replay.decode_volume",
+                   "volume_type": "MANAGED", "comment": "decoded again",
+                   "owner": "replay-admin@example.com",
+                   "storage_location": "s3://replay-metastore/volume-181",
+                   "metastore_id": "11111111-1111-1111-1111-111111111111",
+                   "volume_id": "00000000-0000-4000-8000-000000000181"}
+      - *read_recommented
+    state: *decode_volume_id
+  - name: rename_answered_200_without_full_name_puts_the_new_name_in_the_id
+    config: |
+      resource "databricks_volume" "this" {
+        name         = "renamed_volume"
+        catalog_name = "main"
+        schema_name  = "replay"
+        volume_type  = "MANAGED"
+        comment      = "decoded again"
+      }
     calls:
-      - *read_created
+      - *read_recommented
+      - request:
+          method: PATCH
+          path: /api/2.1/unity-catalog/volumes/main.replay.decode_volume
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"comment": "decoded again", "new_name": "renamed_volume"}
+        response:
+          status: 200
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "renamed_volume", "volume_type": "MANAGED",
+                   "comment": "decoded again", "owner": "replay-admin@example.com",
+                   "storage_location": "s3://replay-metastore/volume-181",
+                   "metastore_id": "11111111-1111-1111-1111-111111111111",
+                   "volume_id": "00000000-0000-4000-8000-000000000181"}
+      - &read_renamed
+        request:
+          method: GET
+          path: /api/2.1/unity-catalog/volumes/main.replay.renamed_volume
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "renamed_volume",
+                   "full_name": "main.replay.renamed_volume",
+                   "volume_type": "MANAGED", "comment": "decoded again",
+                   "owner": "replay-admin@example.com",
+                   "storage_location": "s3://replay-metastore/volume-181",
+                   "metastore_id": "11111111-1111-1111-1111-111111111111",
+                   "volume_id": "00000000-0000-4000-8000-000000000181"}
+      - *read_renamed
+    state:
+      resources:
+        databricks_volume.this:
+          attributes:
+            - path: [id]
+              equals: main.replay.renamed_volume
+            - path: [volume_path]
+              equals: /Volumes/main/replay/renamed_volume
 destroy:
   calls:
-    - *read_created
+    - *read_renamed
     - request:
         method: DELETE
-        path: /api/2.1/unity-catalog/volumes/main.replay.decode_volume
+        path: /api/2.1/unity-catalog/volumes/main.replay.renamed_volume
         headers:
           X-Databricks-Workspace-Id: "12345"
         body: null

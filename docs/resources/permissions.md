@@ -805,6 +805,33 @@ resource "databricks_permissions" "dashboard_usage" {
 }
 ```
 
+## Genie Space usage
+
+[Genie Spaces](https://docs.databricks.com/en/genie/index.html) have four possible permissions: `CAN_READ`, `CAN_RUN`, `CAN_EDIT` and `CAN_MANAGE`. The workspace UI labels the read-only level as `CAN VIEW`, but the Permissions API uses `CAN_READ` for that level (see [Genie Space ACLs](https://docs.databricks.com/aws/en/security/auth/access-control/#genie-space-acls)).
+
+```hcl
+resource "databricks_genie_space" "sales" {
+  title            = "Sales Genie"
+  warehouse_id     = data.databricks_sql_warehouse.starter.id
+  parent_path      = "/Shared/genie-spaces"
+  serialized_space = file("${path.module}/sales.json")
+}
+
+resource "databricks_permissions" "sales_genie" {
+  genie_space_id = databricks_genie_space.sales.space_id
+
+  access_control {
+    group_name       = databricks_group.auto.display_name
+    permission_level = "CAN_RUN"
+  }
+
+  access_control {
+    group_name       = databricks_group.eng.display_name
+    permission_level = "CAN_MANAGE"
+  }
+}
+```
+
 ## Legacy SQL Dashboard usage
 
 [Legacy SQL dashboards](https://docs.databricks.com/sql/user/security/access-control/dashboard-acl.html) have three possible permissions: `CAN_VIEW`, `CAN_RUN` and `CAN_MANAGE`:
@@ -1082,6 +1109,7 @@ Exactly one of the following arguments is required:
 - `database_instance_name` - [Lakebase database instance](https://docs.databricks.com/aws/en/oltp/) name
 - `database_project_name` - [Lakebase database project](https://docs.databricks.com/aws/en/oltp/) name
 - `knowledge_assistant_id` - [Knowledge Assistant](knowledge_assistant.md) id
+- `genie_space_id` - [Genie Space](genie_space.md) id
 - `supervisor_agent_id` - [Supervisor Agent](supervisor_agent.md) id
 - `authorization` - either [`tokens`](https://docs.databricks.com/administration-guide/access-control/tokens.html) or [`passwords`](https://docs.databricks.com/administration-guide/users-groups/single-sign-on/index.html#configure-password-permission).
 - `sql_endpoint_id` - [SQL warehouse](sql_endpoint.md) id

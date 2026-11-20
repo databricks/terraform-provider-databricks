@@ -17,6 +17,7 @@ import (
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
@@ -166,11 +167,14 @@ type CreateVectorIndexRequest struct {
 	// The subtype of the index. Use `HYBRID` or `FULL_TEXT`. `VECTOR` is not
 	// supported.
 	IndexSubtype types.String `tfsdk:"index_subtype"`
-
+	// Type of index to create, which determines which spec field is required.
 	IndexType types.String `tfsdk:"index_type"`
-	// Name of the index
+	// Three-level Unity Catalog name of the index to create.
 	Name types.String `tfsdk:"name"`
-	// Primary key of the index
+	// Name of the column that uniquely identifies each row. For a Delta Sync
+	// index it is a column of the source table; for a Direct Vector Access
+	// index it must be declared in `schema_json`. It cannot be the embedding
+	// source or embedding vector column.
 	PrimaryKey types.String `tfsdk:"primary_key"`
 }
 
@@ -474,7 +478,7 @@ type DeleteDataVectorIndexRequest struct {
 	// Name of the vector index where data is to be deleted. Must be a Direct
 	// Vector Access Index.
 	IndexName types.String `tfsdk:"-"`
-	// List of primary keys for the data to be deleted.
+	// Primary keys of the rows to delete. At least one key is required.
 	PrimaryKeys types.List `tfsdk:"-"`
 }
 
@@ -741,7 +745,7 @@ func (m DeleteEndpointResponse) Type(ctx context.Context) attr.Type {
 }
 
 type DeleteIndexRequest struct {
-	// Name of the index
+	// Three-level Unity Catalog name of the index.
 	IndexName types.String `tfsdk:"-"`
 }
 
@@ -841,9 +845,15 @@ type DeltaSyncVectorIndexSpecRequest struct {
 	// index. The primary key column and embedding source column or embedding
 	// vector column are always synced.
 	ColumnsToSync types.List `tfsdk:"columns_to_sync"`
-	// The columns that contain the embedding source.
+	// The source table column whose text Databricks embeds, together with the
+	// embedding model endpoint to use. Set this for an index with
+	// Databricks-managed embeddings. Exactly one of `embedding_source_columns`
+	// or `embedding_vector_columns` must be specified unless the index subtype
+	// is `FULL_TEXT`, and only one column is supported.
 	EmbeddingSourceColumns types.List `tfsdk:"embedding_source_columns"`
-	// The columns that contain the embedding vectors.
+	// The source table column that contains precomputed embedding vectors. Set
+	// this instead of `embedding_source_columns` for an index with self-managed
+	// embeddings.
 	EmbeddingVectorColumns types.List `tfsdk:"embedding_vector_columns"`
 	// [Optional] Name of the Delta table to sync the vector index contents and
 	// computed embeddings to.
@@ -856,7 +866,8 @@ type DeltaSyncVectorIndexSpecRequest struct {
 	// processes new data as it arrives in the source table to keep vector index
 	// fresh.
 	PipelineType types.String `tfsdk:"pipeline_type"`
-	// The name of the source table.
+	// Three-level Unity Catalog name of the source table that the index is
+	// synced from.
 	SourceTable types.String `tfsdk:"source_table"`
 }
 
@@ -1148,9 +1159,15 @@ type DeltaSyncVectorIndexSpecResponse struct {
 	// index. The primary key column and embedding source column or embedding
 	// vector column are always synced.
 	ColumnsToSync types.List `tfsdk:"columns_to_sync"`
-	// The columns that contain the embedding source.
+	// The source table column whose text Databricks embeds, together with the
+	// embedding model endpoint to use. Set this for an index with
+	// Databricks-managed embeddings. Exactly one of `embedding_source_columns`
+	// or `embedding_vector_columns` must be specified unless the index subtype
+	// is `FULL_TEXT`, and only one column is supported.
 	EmbeddingSourceColumns types.List `tfsdk:"embedding_source_columns"`
-	// The columns that contain the embedding vectors.
+	// The source table column that contains precomputed embedding vectors. Set
+	// this instead of `embedding_source_columns` for an index with self-managed
+	// embeddings.
 	EmbeddingVectorColumns types.List `tfsdk:"embedding_vector_columns"`
 	// [Optional] Name of the Delta table to sync the vector index contents and
 	// computed embeddings to.
@@ -1165,7 +1182,8 @@ type DeltaSyncVectorIndexSpecResponse struct {
 	// processes new data as it arrives in the source table to keep vector index
 	// fresh.
 	PipelineType types.String `tfsdk:"pipeline_type"`
-	// The name of the source table.
+	// Three-level Unity Catalog name of the source table that the index is
+	// synced from.
 	SourceTable types.String `tfsdk:"source_table"`
 }
 
@@ -1449,15 +1467,20 @@ func (m *DeltaSyncVectorIndexSpecResponse) SetEmbeddingVectorColumns(ctx context
 }
 
 type DirectAccessVectorIndexSpec struct {
-	// The columns that contain the embedding source. The format should be
-	// array[double].
+	// Embedding source configuration used to embed `query_text` when the index
+	// is queried with text, naming the embedding model endpoint to use. The
+	// index stores the vectors you supply through upsert; this setting never
+	// computes embeddings for them.
 	EmbeddingSourceColumns types.List `tfsdk:"embedding_source_columns"`
-	// The columns that contain the embedding vectors. The format should be
-	// array[double].
+	// The column that holds the embedding vectors you write to the index.
+	// Exactly one column must be specified, and `schema_json` must declare it
+	// as `array<float>` or `array<double>`.
 	EmbeddingVectorColumns types.List `tfsdk:"embedding_vector_columns"`
-	// The schema of the index in JSON format. Supported types are `integer`,
-	// `long`, `float`, `double`, `boolean`, `string`, `date`, `timestamp`.
-	// Supported types for vector column: `array<float>`, `array<double>`,`.
+	// JSON object that maps each column name of the index to its type,
+	// serialized to a string. The primary key and the embedding vector column
+	// must be present. Supported types are `integer`, `long`, `float`,
+	// `double`, `boolean`, `string`, `date`, `timestamp`. Supported types for
+	// vector column: `array<float>`, `array<double>`.
 	SchemaJson types.String `tfsdk:"schema_json"`
 }
 
@@ -1650,7 +1673,7 @@ type EmbeddingSourceColumn struct {
 	// Name of the embedding model endpoint which, if specified, is used for
 	// querying (not ingestion).
 	ModelEndpointNameForQuery types.String `tfsdk:"model_endpoint_name_for_query"`
-	// Name of the column
+	// Name of the column that contains the text to embed.
 	Name types.String `tfsdk:"name"`
 }
 
@@ -1706,7 +1729,7 @@ func (m EmbeddingSourceColumn) Type(ctx context.Context) attr.Type {
 type EmbeddingVectorColumn struct {
 	// Dimension of the embedding vector
 	EmbeddingDimension types.Int64 `tfsdk:"embedding_dimension"`
-	// Name of the column
+	// Name of the column that contains the embedding vectors.
 	Name types.String `tfsdk:"name"`
 }
 
@@ -2271,6 +2294,73 @@ func (m *FacetResultData) SetFacetArray(ctx context.Context, v []types.String) {
 	m.FacetArray = types.ListValueMust(t, vs)
 }
 
+// Failure details for an index or its latest ingestion update.
+type FailedStatus struct {
+	// Error code associated with the error message, when available.
+	ErrorCode types.String `tfsdk:"error_code"`
+	// Error message, when available.
+	ErrorMessage types.String `tfsdk:"error_message"`
+	// [Standard endpoint] timestamp when the last processed commit was
+	// committed to the source table. [Storage Optimized endpoint] timestamp
+	// when the last processed commit was processed by the pipeline.
+	LastProcessedCommitTimestamp timetypes.RFC3339 `tfsdk:"last_processed_commit_timestamp"`
+	// Last source Delta table version fully processed while the index is still
+	// queryable.
+	LastProcessedCommitVersion types.Int64 `tfsdk:"last_processed_commit_version"`
+}
+
+func (to *FailedStatus) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from FailedStatus) {
+}
+
+func (to *FailedStatus) SyncFieldsDuringRead(ctx context.Context, from FailedStatus) {
+}
+
+func (m FailedStatus) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["error_code"] = attrs["error_code"].SetOptional()
+	attrs["error_message"] = attrs["error_message"].SetOptional()
+	attrs["last_processed_commit_timestamp"] = attrs["last_processed_commit_timestamp"].SetOptional()
+	attrs["last_processed_commit_version"] = attrs["last_processed_commit_version"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in FailedStatus.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m FailedStatus) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, FailedStatus
+// only implements ToObjectValue() and Type().
+func (m FailedStatus) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"error_code":                      m.ErrorCode,
+			"error_message":                   m.ErrorMessage,
+			"last_processed_commit_timestamp": m.LastProcessedCommitTimestamp,
+			"last_processed_commit_version":   m.LastProcessedCommitVersion,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m FailedStatus) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"error_code":                      types.StringType,
+			"error_message":                   types.StringType,
+			"last_processed_commit_timestamp": timetypes.RFC3339{}.Type(ctx),
+			"last_processed_commit_version":   types.Int64Type,
+		},
+	}
+}
+
 type GetEndpointRequest struct {
 	// Name of the endpoint
 	EndpointName types.String `tfsdk:"-"`
@@ -2326,7 +2416,7 @@ type GetIndexRequest struct {
 	// may still be compatible with the reranker depending on what URL we
 	// return.
 	EnsureRerankerCompatible types.Bool `tfsdk:"-"`
-	// Name of the index
+	// Three-level Unity Catalog name of the index.
 	IndexName types.String `tfsdk:"-"`
 }
 
@@ -2757,9 +2847,10 @@ func (m ListEndpointsRequest) Type(ctx context.Context) attr.Type {
 }
 
 type ListIndexesRequest struct {
-	// Name of the endpoint
+	// Name of the endpoint whose indexes to list.
 	EndpointName types.String `tfsdk:"-"`
-	// Token for pagination
+	// Page token returned by a previous call, used to get the next page of
+	// results.
 	PageToken types.String `tfsdk:"-"`
 }
 
@@ -2928,7 +3019,8 @@ type ListVectorIndexesResponse struct {
 	// A token that can be used to get the next page of results. If not present,
 	// there are no more results to show.
 	NextPageToken types.String `tfsdk:"next_page_token"`
-
+	// Indexes served by the endpoint. Each entry is a summary without the index
+	// specification and status; use Get an index to retrieve them.
 	VectorIndexes types.List `tfsdk:"vector_indexes"`
 }
 
@@ -3145,11 +3237,18 @@ func (m *MapStringValueEntry) SetValue(ctx context.Context, v Value) {
 
 // Metric specification
 type Metric struct {
-	// Metric labels
+	// Labels that restrict the metric to matching series, for example to a
+	// single index. Endpoint-level metrics do not accept labels.
 	Labels types.List `tfsdk:"labels"`
-	// Metric name
+	// Metric name. Supported metrics include: `EndpointHealthStatus`,
+	// `EndpointConcurrency`, `IndexRequestCount`, `IndexRequestLatency`,
+	// `IndexRequestErrorSourceCount`, `IndexRequestGuidanceCount`,
+	// `IndexRequestGuidancePeakRate`, `IndexIngestedRows`, and
+	// `IndexEmbeddedRows`. An unknown name is rejected with an error that lists
+	// the available metric names.
 	Name types.String `tfsdk:"name"`
-	// Percentile for the metric
+	// Percentile for latency metrics, such as `IndexRequestLatency`, which
+	// require it. One of 0.5, 0.75, 0.9, 0.95, or 0.99.
 	Percentile types.Float64 `tfsdk:"percentile"`
 }
 
@@ -3271,9 +3370,14 @@ func (m *Metric) SetLabels(ctx context.Context, v []MetricLabel) {
 
 // Label for a metric
 type MetricLabel struct {
-	// Label name
+	// Label name, such as `error_source`, `failure_cause`, `operation`,
+	// `request_path`, `query_type`, `response_code`, or `index_name`. Supported
+	// labels depend on the metric.
 	Name types.String `tfsdk:"name"`
-	// Label value
+	// Label value, as an RE2 regular expression. The label also splits the
+	// result by its values, so `.+` returns one series per value. Some labels,
+	// such as `operation`, accept only `.+`, `.*`, or listed values joined by
+	// `|`.
 	Value types.String `tfsdk:"value"`
 }
 
@@ -3325,9 +3429,9 @@ func (m MetricLabel) Type(ctx context.Context) attr.Type {
 
 // Single metric value at a specific timestamp
 type MetricValue struct {
-	// Timestamp of the metric value (milliseconds since epoch)
+	// Timestamp of the metric value, in seconds since the Unix epoch.
 	Timestamp types.Int64 `tfsdk:"timestamp"`
-	// Metric value
+	// Value of the metric at `timestamp`.
 	Value types.Float64 `tfsdk:"value"`
 }
 
@@ -3379,9 +3483,10 @@ func (m MetricValue) Type(ctx context.Context) attr.Type {
 
 // Collection of metric values for a specific metric
 type MetricValues struct {
-	// Metric specification
+	// The metric this time series was computed for, including the labels that
+	// identify the series.
 	Metric types.Object `tfsdk:"metric"`
-	// Time series of metric values
+	// Each entry is one data point of the time series.
 	Values types.List `tfsdk:"values"`
 }
 
@@ -3541,20 +3646,31 @@ func (m *MetricValues) SetValues(ctx context.Context, v []MetricValue) {
 	m.Values = types.ListValueMust(t, vs)
 }
 
+// An AI Search index stores vectors and metadata on an endpoint and serves
+// vector similarity, full-text and hybrid search queries over them. A Delta
+// Sync index is kept in sync with a source table, with embeddings either
+// computed by Databricks from a text column or supplied by you in a vector
+// column; a Direct Vector Access index holds rows that you write through the
+// upsert and delete data APIs. See
+// https://docs.databricks.com/aws/en/ai-search/create-ai-search for how to
+// choose between them.
 type MiniVectorIndex struct {
 	// The user who created the index.
 	Creator types.String `tfsdk:"creator"`
 	// ID of the endpoint associated with the index.
 	EndpointId types.String `tfsdk:"endpoint_id"`
-	// Name of the endpoint associated with the index
+	// Name of the endpoint that serves the index.
 	EndpointName types.String `tfsdk:"endpoint_name"`
-	// The subtype of the index.
+	// Subtype of the index. A `HYBRID` index supports vector similarity,
+	// full-text and hybrid queries; a `FULL_TEXT` index has no embeddings and
+	// supports only full-text queries.
 	IndexSubtype types.String `tfsdk:"index_subtype"`
-
+	// Type of the index, which determines whether `delta_sync_index_spec` or
+	// `direct_access_index_spec` describes it.
 	IndexType types.String `tfsdk:"index_type"`
-	// Name of the index
+	// Three-level Unity Catalog name of the index.
 	Name types.String `tfsdk:"name"`
-	// Primary key of the index
+	// Name of the column that uniquely identifies each row of the index.
 	PrimaryKey types.String `tfsdk:"primary_key"`
 }
 
@@ -3783,7 +3899,7 @@ func (m PatchEndpointRequest) Type(ctx context.Context) attr.Type {
 
 // Request payload for getting next page of results.
 type QueryVectorIndexNextPageRequest struct {
-	// Name of the endpoint.
+	// Name of the endpoint that serves the index.
 	EndpointName types.String `tfsdk:"endpoint_name"`
 	// Name of the vector index to query.
 	IndexName types.String `tfsdk:"-"`
@@ -3842,7 +3958,8 @@ func (m QueryVectorIndexNextPageRequest) Type(ctx context.Context) attr.Type {
 }
 
 type QueryVectorIndexRequest struct {
-	// List of column names to include in the response.
+	// Names of the columns to return for each result. At least one column is
+	// required, and only columns that are part of the index can be returned.
 	Columns types.List `tfsdk:"columns"`
 	// Column names used to retrieve data to send to the reranker.
 	ColumnsToRerank types.List `tfsdk:"columns_to_rerank"`
@@ -3852,29 +3969,39 @@ type QueryVectorIndexRequest struct {
 	// [[from,to],...]"` - inclusive numeric ranges `TOP` and `BUCKETS` are
 	// case-insensitive. A column may appear at most once.
 	Facets types.List `tfsdk:"facets"`
-	// JSON string representing query filters.
-	//
-	// Example filters:
-	//
-	// - `{"id <": 5}`: Filter for id less than 5. - `{"id >": 5}`: Filter for
-	// id greater than 5. - `{"id <=": 5}`: Filter for id less than equal to 5.
-	// - `{"id >=": 5}`: Filter for id greater than equal to 5. - `{"id": 5}`:
-	// Filter for id equal to 5.
+	// Filters to apply to the results, as a JSON object serialized to a string.
+	// Each key is a column name, optionally followed by a space and an
+	// operator, and each value is the value or list of values to compare the
+	// column against. A key without an operator matches the value exactly, or
+	// any of the listed values. Supported operators are `NOT`, `<`, `<=`, `>`,
+	// `>=`, `OR` and `LIKE`; see
+	// https://docs.databricks.com/aws/en/ai-search/query-ai-search for their
+	// semantics. This field is not supported on storage-optimized endpoints.
 	FiltersJson types.String `tfsdk:"filters_json"`
 	// Name of the vector index to query.
 	IndexName types.String `tfsdk:"-"`
-	// Number of results to return. Defaults to 10.
+	// Maximum number of results to return. It must be greater than 0 and
+	// defaults to 10. By default, a `HYBRID` query can return at most 200
+	// results.
 	NumResults types.Int64 `tfsdk:"num_results"`
 	// Text columns to search for `query_text`. When empty, all text columns are
 	// searched.
 	QueryColumns types.List `tfsdk:"query_columns"`
-	// Query text. Required for Delta Sync Index using model endpoint.
+	// Text to search for. Use it for an index with Databricks-managed
+	// embeddings, which embeds the text with the index's embedding model
+	// endpoint, and for `FULL_TEXT` queries on any index. A `HYBRID` query on
+	// an index with managed embeddings requires only `query_text`.
 	QueryText types.String `tfsdk:"query_text"`
 	// The query type to use. Choices are `ANN` and `HYBRID` and `FULL_TEXT`.
 	// Defaults to `ANN`.
 	QueryType types.String `tfsdk:"query_type"`
-	// Query vector. Required for Direct Vector Access Index and Delta Sync
-	// Index using self-managed vectors.
+	// Embedding vector to search for. Use it for an index whose embeddings you
+	// compute yourself: a Direct Vector Access index or a Delta Sync index with
+	// `embedding_vector_columns`. A `HYBRID` query on a Delta Sync index with
+	// `embedding_vector_columns`, or on a Direct Vector Access index without
+	// `embedding_source_columns`, requires both `query_vector` and
+	// `query_text`. A Direct Vector Access index with
+	// `embedding_source_columns` can be queried with `query_text` alone.
 	QueryVector types.List `tfsdk:"query_vector"`
 	// If set, the top 50 results are reranked with the Databricks Reranker
 	// model before returning the `num_results` results to the user. The setting
@@ -4545,6 +4672,8 @@ func (m *RerankerConfig) SetParameters(ctx context.Context, v RerankerConfigRera
 }
 
 type RerankerConfigRerankerParameters struct {
+	// Names of the columns whose values are sent to the reranker. List the most
+	// relevant column first, since the order affects the ranking.
 	ColumnsToRerank types.List `tfsdk:"columns_to_rerank"`
 }
 
@@ -4930,17 +5059,23 @@ func (m *ResultManifest) SetFacetColumns(ctx context.Context, v []ColumnInfo) {
 
 // Request to retrieve user-visible metrics
 type RetrieveUserVisibleMetricsRequest struct {
-	// End time for metrics query
+	// End of the time range. Defaults to the current time. Must be later than
+	// `start_time`.
 	EndTime types.String `tfsdk:"end_time"`
-	// Granularity in seconds
+	// Requested interval between data points, in seconds. Defaults to 60, which
+	// is also the minimum. The server may return a finer or coarser interval:
+	// 60 seconds only for time ranges of 1 hour or less, otherwise 300 seconds
+	// or more. Read the interval from the returned timestamps.
 	GranularityInSeconds types.Int64 `tfsdk:"granularity_in_seconds"`
-	// List of metrics to retrieve
+	// Metrics to retrieve. Each entry names a metric and optionally narrows it
+	// with labels or a percentile. An unknown metric name fails the whole
+	// request, and an empty list returns no series.
 	Metrics types.List `tfsdk:"metrics"`
-	// AI Search endpoint name
+	// Name of the endpoint whose metrics to retrieve.
 	Name types.String `tfsdk:"-"`
-	// Token for pagination
+	// Not used. The response returns all data points in one page.
 	PageToken types.String `tfsdk:"page_token"`
-	// Start time for metrics query
+	// Start of the time range. Required. Must be within the last 169 hours.
 	StartTime types.String `tfsdk:"start_time"`
 }
 
@@ -5071,10 +5206,10 @@ func (m *RetrieveUserVisibleMetricsRequest) SetMetrics(ctx context.Context, v []
 
 // Response containing user-visible metrics
 type RetrieveUserVisibleMetricsResponse struct {
-	// Collection of metric values
+	// One time series for each requested metric and each combination of label
+	// values it was broken down by.
 	MetricValues types.List `tfsdk:"metric_values"`
-	// A token that can be used to get the next page of results. If not present,
-	// there are no more results to show.
+	// Not set. The response returns all data points in one page.
 	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
@@ -5997,7 +6132,10 @@ type UpsertDataVectorIndexRequest struct {
 	// Name of the vector index where data is to be upserted. Must be a Direct
 	// Vector Access Index.
 	IndexName types.String `tfsdk:"-"`
-	// JSON string representing the data to be upserted.
+	// Rows to upsert, as a JSON array of objects serialized to a string. Each
+	// object maps column names from `schema_json` to values and must include
+	// the primary key. A row whose primary key already exists in the index is
+	// replaced.
 	InputsJson types.String `tfsdk:"inputs_json"`
 }
 
@@ -6298,26 +6436,40 @@ func (m *Value) SetStructValue(ctx context.Context, v Struct) {
 	m.StructValue = vs
 }
 
+// An AI Search index stores vectors and metadata on an endpoint and serves
+// vector similarity, full-text and hybrid search queries over them. A Delta
+// Sync index is kept in sync with a source table, with embeddings either
+// computed by Databricks from a text column or supplied by you in a vector
+// column; a Direct Vector Access index holds rows that you write through the
+// upsert and delete data APIs. See
+// https://docs.databricks.com/aws/en/ai-search/create-ai-search for how to
+// choose between them.
 type VectorIndex struct {
 	// The user who created the index.
 	Creator types.String `tfsdk:"creator"`
-
+	// Specification of a Delta Sync index. Present only when `index_type` is
+	// `DELTA_SYNC`.
 	DeltaSyncIndexSpec types.Object `tfsdk:"delta_sync_index_spec"`
-
+	// Specification of a Direct Vector Access index. Present only when
+	// `index_type` is `DIRECT_ACCESS`.
 	DirectAccessIndexSpec types.Object `tfsdk:"direct_access_index_spec"`
 	// ID of the endpoint associated with the index.
 	EndpointId types.String `tfsdk:"endpoint_id"`
-	// Name of the endpoint associated with the index
+	// Name of the endpoint that serves the index.
 	EndpointName types.String `tfsdk:"endpoint_name"`
-	// The subtype of the index.
+	// Subtype of the index. A `HYBRID` index supports vector similarity,
+	// full-text and hybrid queries; a `FULL_TEXT` index has no embeddings and
+	// supports only full-text queries.
 	IndexSubtype types.String `tfsdk:"index_subtype"`
-
+	// Type of the index, which determines whether `delta_sync_index_spec` or
+	// `direct_access_index_spec` describes it.
 	IndexType types.String `tfsdk:"index_type"`
-	// Name of the index
+	// Three-level Unity Catalog name of the index.
 	Name types.String `tfsdk:"name"`
-	// Primary key of the index
+	// Name of the column that uniquely identifies each row of the index.
 	PrimaryKey types.String `tfsdk:"primary_key"`
-
+	// Current status of the index, including whether it is ready to serve
+	// queries and how many rows it holds.
 	Status types.Object `tfsdk:"status"`
 }
 
@@ -6522,23 +6674,50 @@ func (m *VectorIndex) SetStatus(ctx context.Context, v VectorIndexStatus) {
 }
 
 type VectorIndexStatus struct {
+	// Lifecycle and ingestion state. An online index can still have a failed
+	// update.
+	DetailedState types.String `tfsdk:"detailed_state"`
+	// Failure details, when available, for OFFLINE_FAILED or
+	// ONLINE_PIPELINE_FAILED.
+	FailedStatus types.Object `tfsdk:"failed_status"`
 	// Index API Url to be used to perform operations on the index
 	IndexUrl types.String `tfsdk:"index_url"`
 	// Number of rows indexed
 	IndexedRowCount types.Int64 `tfsdk:"indexed_row_count"`
-	// Message associated with the index status
+	// Human-readable description of the current status.
 	Message types.String `tfsdk:"message"`
-	// Whether the index is ready for search
+	// Whether the index can serve queries. This does not mean the latest update
+	// succeeded or that all source-table changes have been indexed; check
+	// detailed_state for update failures.
 	Ready types.Bool `tfsdk:"ready"`
 }
 
 func (to *VectorIndexStatus) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from VectorIndexStatus) {
+	if !from.FailedStatus.IsNull() && !from.FailedStatus.IsUnknown() {
+		if toFailedStatus, ok := to.GetFailedStatus(ctx); ok {
+			if fromFailedStatus, ok := from.GetFailedStatus(ctx); ok {
+				// Recursively sync the fields of FailedStatus
+				toFailedStatus.SyncFieldsDuringCreateOrUpdate(ctx, fromFailedStatus)
+				to.SetFailedStatus(ctx, toFailedStatus)
+			}
+		}
+	}
 }
 
 func (to *VectorIndexStatus) SyncFieldsDuringRead(ctx context.Context, from VectorIndexStatus) {
+	if !from.FailedStatus.IsNull() && !from.FailedStatus.IsUnknown() {
+		if toFailedStatus, ok := to.GetFailedStatus(ctx); ok {
+			if fromFailedStatus, ok := from.GetFailedStatus(ctx); ok {
+				toFailedStatus.SyncFieldsDuringRead(ctx, fromFailedStatus)
+				to.SetFailedStatus(ctx, toFailedStatus)
+			}
+		}
+	}
 }
 
 func (m VectorIndexStatus) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["detailed_state"] = attrs["detailed_state"].SetOptional()
+	attrs["failed_status"] = attrs["failed_status"].SetOptional()
 	attrs["index_url"] = attrs["index_url"].SetOptional()
 	attrs["indexed_row_count"] = attrs["indexed_row_count"].SetOptional()
 	attrs["message"] = attrs["message"].SetOptional()
@@ -6555,7 +6734,9 @@ func (m VectorIndexStatus) ApplySchemaCustomizations(attrs map[string]tfschema.A
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (m VectorIndexStatus) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+	return map[string]reflect.Type{
+		"failed_status": reflect.TypeOf(FailedStatus{}),
+	}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -6565,6 +6746,8 @@ func (m VectorIndexStatus) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"detailed_state":    m.DetailedState,
+			"failed_status":     m.FailedStatus,
 			"index_url":         m.IndexUrl,
 			"indexed_row_count": m.IndexedRowCount,
 			"message":           m.Message,
@@ -6576,12 +6759,39 @@ func (m VectorIndexStatus) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 func (m VectorIndexStatus) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"detailed_state":    types.StringType,
+			"failed_status":     FailedStatus{}.Type(ctx),
 			"index_url":         types.StringType,
 			"indexed_row_count": types.Int64Type,
 			"message":           types.StringType,
 			"ready":             types.BoolType,
 		},
 	}
+}
+
+// GetFailedStatus returns the value of the FailedStatus field in VectorIndexStatus as
+// a FailedStatus value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *VectorIndexStatus) GetFailedStatus(ctx context.Context) (FailedStatus, bool) {
+	var e FailedStatus
+	if m.FailedStatus.IsNull() || m.FailedStatus.IsUnknown() {
+		return e, false
+	}
+	var v FailedStatus
+	d := m.FailedStatus.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetFailedStatus sets the value of the FailedStatus field in VectorIndexStatus.
+func (m *VectorIndexStatus) SetFailedStatus(ctx context.Context, v FailedStatus) {
+	vs := v.ToObjectValue(ctx)
+	m.FailedStatus = vs
 }
 
 type VectorSearchEndpointAccessControlRequest struct {

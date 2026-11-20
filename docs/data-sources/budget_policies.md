@@ -24,21 +24,21 @@ The following arguments are supported:
 * `page_size` (integer, optional) - The maximum number of budget policies to return.
   If unspecified, at most 100 budget policies will be returned.
   The maximum value is 1000; values above 1000 will be coerced to 1000
-* `sort_spec` (SortSpec, optional) - The sort specification
+* `sort_spec` (SortSpec, optional) - How to sort the returned policies. If unspecified, policies are sorted by name in ascending
+  order
 
 ### Filter
-* `creator_user_id` (integer, optional, deprecated) - The policy creator user id to be filtered on.
-  If unspecified, all policies will be returned
+* `creator_user_id` (integer, optional, deprecated) - Deprecated: This field is ignored. Creator filtering will be removed in a future version
 * `creator_user_name` (string, optional, deprecated) - Deprecated: Do not use this field in new integrations. Creator filtering will be removed in a
   future version.
   The policy creator user name to be filtered on.
   If unspecified, all policies will be returned
-* `policy_name` (string, optional) - The partial name of policies to be filtered on.
-  If unspecified, all policies will be returned
+* `policy_name` (string, optional) - Only policies whose name contains this string are returned. Matching is case-insensitive.
+  If unspecified, all policies are returned
 
 ### SortSpec
 * `descending` (boolean, optional) - Whether to sort in descending order
-* `field` (string, optional) - The filed to sort by. Possible values are: `POLICY_NAME`
+* `field` (string, optional) - The field to sort by. If unspecified, policies are sorted by name. Possible values are: `POLICY_NAME`
 
 
 ## Attributes

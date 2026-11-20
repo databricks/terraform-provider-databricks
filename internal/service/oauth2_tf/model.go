@@ -435,10 +435,13 @@ func (m CreateCustomAppIntegrationOutput) Type(ctx context.Context) attr.Type {
 }
 
 type CreatePublishedAppIntegration struct {
-	// App id of the OAuth published app integration. For example power-bi,
-	// tableau-deskop
+	// ID of the published OAuth app to enable, as returned in app_id by the
+	// list of published OAuth apps. The short legacy IDs of the original
+	// published apps, such as power-bi and tableau-desktop, are also accepted.
+	// The request fails if the app is already enabled for the account.
 	AppId types.String `tfsdk:"app_id"`
-	// Token access policy
+	// Lifetimes of the tokens issued to the app. If omitted, the app's default
+	// token lifetimes apply. If set, both TTL fields are required.
 	TokenAccessPolicy types.Object `tfsdk:"token_access_policy"`
 }
 
@@ -534,7 +537,7 @@ func (m *CreatePublishedAppIntegration) SetTokenAccessPolicy(ctx context.Context
 }
 
 type CreatePublishedAppIntegrationOutput struct {
-	// Unique integration id for the published OAuth app
+	// ID of the published OAuth app integration.
 	IntegrationId types.String `tfsdk:"integration_id"`
 }
 
@@ -1096,6 +1099,7 @@ func (m DeletePublishedAppIntegrationOutput) Type(ctx context.Context) attr.Type
 }
 
 type DeletePublishedAppIntegrationRequest struct {
+	// ID of the published OAuth app integration to delete.
 	IntegrationId types.String `tfsdk:"-"`
 }
 
@@ -1881,18 +1885,25 @@ func (m *GetCustomAppIntegrationsOutput) SetApps(ctx context.Context, v []GetCus
 	m.Apps = types.ListValueMust(t, vs)
 }
 
+// A published OAuth app integration enables an OAuth app published by
+// Databricks, such as Power BI or Tableau Desktop, for the account. Databricks
+// manages the app's client ID, redirect URLs and scopes; the integration only
+// sets the lifetimes of the tokens issued to the app. To register your own
+// application, use a custom OAuth app integration instead. See
+// https://docs.databricks.com/aws/en/integrations/enable-disable-oauth.
 type GetPublishedAppIntegrationOutput struct {
-	// App-id of the published app integration
+	// ID of the published OAuth app, as returned in app_id by the list of
+	// published OAuth apps.
 	AppId types.String `tfsdk:"app_id"`
-
+	// Time the integration was created, as an ISO 8601 timestamp.
 	CreateTime types.String `tfsdk:"create_time"`
-
+	// ID of the user who created the integration.
 	CreatedBy types.Int64 `tfsdk:"created_by"`
-	// Unique integration id for the published OAuth app
+	// ID of the published OAuth app integration in the account.
 	IntegrationId types.String `tfsdk:"integration_id"`
-	// Display name of the published OAuth app
+	// Display name of the published OAuth app.
 	Name types.String `tfsdk:"name"`
-	// Token access policy
+	// Lifetimes of the access and refresh tokens issued to the app.
 	TokenAccessPolicy types.Object `tfsdk:"token_access_policy"`
 }
 
@@ -1999,6 +2010,7 @@ func (m *GetPublishedAppIntegrationOutput) SetTokenAccessPolicy(ctx context.Cont
 }
 
 type GetPublishedAppIntegrationRequest struct {
+	// ID of the published OAuth app integration.
 	IntegrationId types.String `tfsdk:"-"`
 }
 
@@ -2049,7 +2061,8 @@ func (m GetPublishedAppIntegrationRequest) Type(ctx context.Context) attr.Type {
 type GetPublishedAppIntegrationsOutput struct {
 	// List of Published OAuth App Integrations defined for the account.
 	Apps types.List `tfsdk:"apps"`
-
+	// Token for the next page of results. If not present, there are no more
+	// results to show.
 	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
@@ -2628,8 +2641,10 @@ func (m ListOAuthPublishedAppsRequest) Type(ctx context.Context) attr.Type {
 }
 
 type ListPublishedAppIntegrationsRequest struct {
+	// Maximum number of integrations to return in one page, at most 1000.
 	PageSize types.Int64 `tfsdk:"-"`
-
+	// Token from the next_page_token field of a previous response. Omit it to
+	// request the first page.
 	PageToken types.String `tfsdk:"-"`
 }
 
@@ -3063,8 +3078,8 @@ func (m *OidcFederationPolicy) SetAudiences(ctx context.Context, v []types.Strin
 type PublishedAppOutput struct {
 	// Unique ID of the published OAuth app.
 	AppId types.String `tfsdk:"app_id"`
-	// Client ID of the published OAuth app. It is the client_id in the OAuth
-	// flow
+	// Client ID of the published OAuth app. The app sends it as client_id in
+	// the OAuth flow.
 	ClientId types.String `tfsdk:"client_id"`
 	// Description of the published OAuth app.
 	Description types.String `tfsdk:"description"`
@@ -3815,8 +3830,12 @@ func (m UpdateCustomAppIntegrationOutput) Type(ctx context.Context) attr.Type {
 }
 
 type UpdatePublishedAppIntegration struct {
+	// ID of the published OAuth app integration to update.
 	IntegrationId types.String `tfsdk:"-"`
-	// Token access policy to be updated in the published OAuth app integration
+	// New token lifetimes for the app. Both TTL fields are required when the
+	// policy is set; the single-use refresh token settings keep their current
+	// values when omitted. If the policy is omitted, the integration is left
+	// unchanged.
 	TokenAccessPolicy types.Object `tfsdk:"token_access_policy"`
 }
 

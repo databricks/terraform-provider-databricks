@@ -1,0 +1,112 @@
+# Pins a failing SCIM /Me call after a refresh reads a volume whose state has no
+# provider_config workspace ID, on a workspace-level provider whose host metadata has no
+# workspace ID and without a provider_config block. A create whose own /Me call fails
+# leaves that state: the volume is tainted and provider_config was never written. The
+# refresh's GET succeeds, then /Me answers 403 and the plan fails with the
+# provider_config diagnostic. State is unchanged: the next plan without refresh makes
+# no /Me call, which it would if state held a workspace ID, and the refresh plan still
+# replaces the tainted volume once /Me answers. API responses are inferred from the
+# Unity Catalog and SCIM API contracts, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+steps:
+  - name: me_failure_after_create_leaves_no_provider_config
+    config: &config |
+      resource "databricks_volume" "this" {
+        name         = "me_refresh_volume"
+        catalog_name = "main"
+        schema_name  = "replay"
+        volume_type  = "MANAGED"
+      }
+    expect_error: &me_error 'Error: cannot populate provider_config for volume: failed to
+      resolve workspace_id: failed to get the workspace_id: Caller cannot read /Me'
+    calls:
+      - request:
+          method: POST
+          path: /api/2.1/unity-catalog/volumes
+          headers:
+            Content-Type: application/json
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "me_refresh_volume", "volume_type": "MANAGED"}
+        response:
+          status: 200
+          body:
+            json: &volume {"catalog_name": "main", "schema_name": "replay",
+                           "name": "me_refresh_volume",
+                           "full_name": "main.replay.me_refresh_volume",
+                           "volume_type": "MANAGED", "owner": "replay-admin@example.com",
+                           "storage_location": "s3://replay-metastore/volume-1735",
+                           "metastore_id": "11111111-1111-1111-1111-111111111111",
+                           "volume_id": "00000000-0000-4000-8000-000000001735"}
+      - &read_volume
+        request:
+          method: GET
+          path: /api/2.1/unity-catalog/volumes/main.replay.me_refresh_volume
+          body: null
+        response:
+          status: 200
+          body:
+            json: *volume
+      - &me_forbidden
+        request: &me_request
+          method: GET
+          path: /api/2.0/preview/scim/v2/Me
+          query:
+            excludedAttributes: [entitlements]
+          body: null
+        response:
+          status: 403
+          body:
+            json: {"error_code": "PERMISSION_DENIED",
+                   "message": "Caller cannot read /Me"}
+  - name: me_failure_after_refresh_read_fails_plan
+    config: *config
+    expect_error: *me_error
+    calls:
+      - *read_volume
+      - *me_forbidden
+  - name: next_plan_still_replaces_volume_without_provider_config
+    plan_only: true
+    config: *config
+    plan:
+      expect: non_empty
+      changes:
+        databricks_volume.this:
+          actions: [delete, create]
+    state:
+      resources:
+        databricks_volume.this:
+          attributes:
+            - path: [id]
+              equals: main.replay.me_refresh_volume
+            - path: [provider_config, 0, workspace_id]
+              equals: "12345"
+    calls:
+      # The refresh plan: the read, then the /Me call that populates provider_config.
+      - *read_volume
+      - &me
+        request: *me_request
+        response:
+          status: 200
+          headers:
+            X-Databricks-Org-Id: "12345"
+          body:
+            json: {"id": "1001", "userName": "replay-admin@example.com",
+                   "schemas": ["urn:ietf:params:scim:schemas:core:2.0:User"]}
+destroy:
+  calls:
+    - *read_volume
+    - *me
+    - *me
+    - request:
+        method: DELETE
+        path: /api/2.1/unity-catalog/volumes/main.replay.me_refresh_volume
+        body: null
+      response:
+        status: 200
+        body:
+          json: {}

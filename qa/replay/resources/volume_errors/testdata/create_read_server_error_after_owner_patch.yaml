@@ -1,0 +1,117 @@
+# Pins a read after create that answers 500 INTERNAL_ERROR, with owner. The POST and the
+# owner PATCH succeed, the classic SDK doesn't retry the GET, whose message matches no
+# transient error pattern, and apply fails with its error. Terraform keeps the volume
+# in state under its full name, with the configured owner, and marks it tainted, so the
+# next plan refreshes it and plans a replacement. API responses are inferred from the
+# Unity Catalog API contract, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: read_server_error_after_owner_patch_fails_apply
+    config: &config |
+      resource "databricks_volume" "this" {
+        name         = "read_error_owned_volume"
+        catalog_name = "main"
+        schema_name  = "replay"
+        volume_type  = "MANAGED"
+        owner        = "data-engineers"
+      }
+    expect_error: 'Error: cannot read volume: Failed to load volume metadata from the
+      metastore\.'
+    calls:
+      - request:
+          method: POST
+          path: /api/2.1/unity-catalog/volumes
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "read_error_owned_volume", "volume_type": "MANAGED"}
+        response:
+          status: 200
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "read_error_owned_volume",
+                   "full_name": "main.replay.read_error_owned_volume",
+                   "volume_type": "MANAGED", "owner": "replay-admin@example.com",
+                   "storage_location": "s3://replay-metastore/volume-1733",
+                   "metastore_id": "11111111-1111-1111-1111-111111111111",
+                   "volume_id": "00000000-0000-4000-8000-000000001733"}
+      - request:
+          method: PATCH
+          path: /api/2.1/unity-catalog/volumes/main.replay.read_error_owned_volume
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"owner": "data-engineers"}
+        response:
+          status: 200
+          body:
+            json: &owned {"catalog_name": "main", "schema_name": "replay",
+                          "name": "read_error_owned_volume",
+                          "full_name": "main.replay.read_error_owned_volume",
+                          "volume_type": "MANAGED", "owner": "data-engineers",
+                          "storage_location": "s3://replay-metastore/volume-1733",
+                          "metastore_id": "11111111-1111-1111-1111-111111111111",
+                          "volume_id": "00000000-0000-4000-8000-000000001733"}
+      - request: &read_request
+          method: GET
+          path: /api/2.1/unity-catalog/volumes/main.replay.read_error_owned_volume
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 500
+          body:
+            json: {"error_code": "INTERNAL_ERROR",
+                   "message": "Failed to load volume metadata from the metastore."}
+  - name: next_plan_replaces_tainted_volume
+    plan_only: true
+    config: *config
+    plan:
+      expect: non_empty
+      changes:
+        databricks_volume.this:
+          actions: [delete, create]
+    state:
+      resources:
+        databricks_volume.this:
+          attributes:
+            - path: [id]
+              equals: main.replay.read_error_owned_volume
+            - path: [owner]
+              equals: data-engineers
+    calls:
+      # The read leaves out owner, which the refresh then keeps, so the check sees the
+      # owner that the failed create stored.
+      - &read_volume
+        request: *read_request
+        response:
+          status: 200
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "read_error_owned_volume",
+                   "full_name": "main.replay.read_error_owned_volume",
+                   "volume_type": "MANAGED",
+                   "storage_location": "s3://replay-metastore/volume-1733",
+                   "metastore_id": "11111111-1111-1111-1111-111111111111",
+                   "volume_id": "00000000-0000-4000-8000-000000001733"}
+destroy:
+  calls:
+    - *read_volume
+    - request:
+        method: DELETE
+        path: /api/2.1/unity-catalog/volumes/main.replay.read_error_owned_volume
+        headers:
+          X-Databricks-Workspace-Id: "12345"
+        body: null
+      response:
+        status: 200
+        body:
+          json: {}

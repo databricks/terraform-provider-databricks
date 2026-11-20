@@ -2,7 +2,7 @@
 subcategory: "AI Search"
 ---
 # databricks_ai_search_index Resource
-[![Public Preview](https://img.shields.io/badge/Release_Stage-Public_Preview-yellowgreen)](https://docs.databricks.com/aws/en/release-notes/release-types)
+[![GA](https://img.shields.io/badge/Release_Stage-GA-green)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
 [API Documentation](https://docs.databricks.com/api/workspace/aisearch)
 
@@ -101,11 +101,12 @@ In addition to the above arguments, the following attributes are exported:
 * `pipeline_id` (string) - The ID of the pipeline that is used to sync the index
 
 ### IndexStatus
+* `detailed_state` (string) - Lifecycle and ingestion state. An online index can still have a failed update. Possible values are: `DOWNLOADING`, `OFFLINE`, `OFFLINE_FAILED`, `ONLINE`, `ONLINE_CONTINUOUS_UPDATE`, `ONLINE_DIRECT_ACCESS`, `ONLINE_NO_PENDING_UPDATE`, `ONLINE_PIPELINE_FAILED`, `ONLINE_TRIGGERED_UPDATE`, `ONLINE_UPDATING_PIPELINE_RESOURCES`, `PROVISIONING`, `PROVISIONING_ENDPOINT`, `PROVISIONING_INDEX`, `PROVISIONING_INITIAL_SNAPSHOT`, `PROVISIONING_PIPELINE_RESOURCES`
 * `index_url` (string) - Index API URL used to perform operations on the index
 * `indexed_row_count` (integer) - Number of rows indexed
 * `message` (string) - Human-readable detail about the index's current state
-* `ready` (boolean) - Whether the index is ready to serve queries. After CreateIndex, poll GetIndex until this is
-  true; `message` describes the current state in the meantime
+* `ready` (boolean) - Whether the index can serve queries. After CreateIndex, poll GetIndex until true; message describes progress.
+  This does not guarantee freshness or update success; check detailed_state for update failures
 
 ## Import
 As of Terraform v1.5, resources can be imported through configuration.

@@ -1,6 +1,7 @@
-# Runs volume/testdata/create_errors.yaml with databricks_volume on sdk-go uc/volumes/v1
-# in every step, and expects the same behavior. The volume POST requests carry no Accept
-# header, which an empty header expectation pins. The original's description:
+# Runs volume_errors/testdata/create_errors.yaml with databricks_volume on sdk-go
+# uc/volumes/v1 in every step, and expects the same behavior. The volume POST requests
+# carry no Accept header, which an empty header expectation pins. The original's
+# description:
 #
 # Pins create failures. A POST answered 400 and one answered 404 each fail with their
 # exact diagnostic and leave nothing in state, so the next plan creates the volume

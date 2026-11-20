@@ -21,9 +21,9 @@ import (
 
 // classicError returns the error the classic client returns for the same failure. API
 // errors are parsed again from the response, so apierr.IsMissing, the retry rules and
-// the messages stay the same. req is the last request sent, if any.
+// the messages stay the same. attempt holds the last request and response, if any.
 func (b *sdkGoBridge) classicError(ctx context.Context, err error,
-	req *http.Request) error {
+	attempt *sdkGoAttempt) error {
 	// http.Client wraps transport failures in a url.Error, which the classic client
 	// doesn't add to these.
 	if visitorErr, ok := errors.AsType[*visitorError](err); ok {
@@ -44,15 +44,16 @@ func (b *sdkGoBridge) classicError(ctx context.Context, err error,
 		}
 		return err
 	}
-	if req == nil {
-		req = &http.Request{URL: &url.URL{}}
-	}
 	body := apiErr.HTTPBody()
 	resp := &http.Response{
 		StatusCode: apiErr.HTTPStatusCode(),
 		Header:     apiErr.HTTPHeader(),
 		Body:       io.NopCloser(bytes.NewReader(body)),
-		Request:    req,
+		Request:    &http.Request{URL: &url.URL{}},
+	}
+	// The classic client classifies HTML error pages by the status text.
+	if attempt != nil && attempt.request != nil {
+		resp.Request, resp.Status = attempt.request, attempt.status
 	}
 	mapped := b.httpConfig.ErrorMapper(ctx, sdkcommon.ResponseWrapper{
 		Response:   resp,
@@ -137,7 +138,7 @@ func (b *sdkGoBridge) newRetrier(ctx context.Context,
 }
 
 func (r *classicRetrier) IsRetriable(err error) (time.Duration, bool) {
-	classic := r.bridge.classicError(r.ctx, err, r.attempt.request)
+	classic := r.bridge.classicError(r.ctx, err, r.attempt)
 	if !r.bridge.isRetriable(r.ctx, classic) {
 		logger.Debugf(r.ctx, "non-retriable error: %s", classic)
 		return 0, false

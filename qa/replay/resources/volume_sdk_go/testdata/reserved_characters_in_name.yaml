@@ -3,8 +3,8 @@
 # the PATCH and the DELETE go to main.replay.raw%232 too, and the PATCH body carries the
 # unescaped full name as full_name_arg. Destroy follows the last sdk-go apply, so its
 # refresh and DELETE go through sdk-go. The sdk-go requests carry no Accept header. API
-# responses are inferred from the Unity Catalog API contract, not recorded. An empty header
-# expectation matches only requests without that header.
+# responses are inferred from the Unity Catalog API contract, not recorded. An empty
+# header expectation matches only requests without that header.
 version: 1
 enforce_call_order: true
 host_metadata:

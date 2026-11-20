@@ -1,6 +1,7 @@
-# Runs volume/testdata/delete.yaml with databricks_volume on sdk-go uc/volumes/v1 in every
-# step, and expects the same behavior. The volume POST and GET requests carry no Accept
-# header, which an empty header expectation pins. The original's description:
+# Runs volume_lifecycle/testdata/delete.yaml with databricks_volume on sdk-go
+# uc/volumes/v1 in every step, and expects the same behavior. The volume POST and GET
+# requests carry no Accept header, which an empty header expectation pins. The original's
+# description:
 #
 # Pins deletes by full name: a DELETE answered 200, and a DELETE answered 404, which the
 # provider treats as already gone. API responses are inferred from the Unity Catalog API

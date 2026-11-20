@@ -61,8 +61,9 @@ func ResourceExternalLocation() common.Resource {
 			common.CustomizeSchemaPath(m, "file_event_queue", "provided_pubsub", "subscription_name").SetRequired()
 			common.CustomizeSchemaPath(m, "file_event_queue", "provided_aqs", "queue_url").SetRequired()
 			common.CustomizeSchemaPath(m, "file_event_queue", "provided_sqs", "queue_url").SetRequired()
-			common.CustomizeSchemaPath(m, "file_event_queue", "managed_aqs", "resource_group").SetRequired()
-			common.CustomizeSchemaPath(m, "file_event_queue", "managed_aqs", "subscription_id").SetRequired()
+			// The server infers these from the access connector of an Azure managed identity credential.
+			common.CustomizeSchemaPath(m, "file_event_queue", "managed_aqs", "resource_group").SetOptional().SetComputed()
+			common.CustomizeSchemaPath(m, "file_event_queue", "managed_aqs", "subscription_id").SetOptional().SetComputed()
 			common.CustomizeSchemaPath(m, "file_event_queue").SetMaxItems(1)
 
 			common.NamespaceCustomizeSchemaMap(m)

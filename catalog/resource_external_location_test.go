@@ -11,6 +11,7 @@ import (
 
 	"github.com/databricks/terraform-provider-databricks/catalog/bindings"
 	"github.com/databricks/terraform-provider-databricks/qa"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -314,6 +315,96 @@ func TestCreateExternalLocationEnableFileEventsFalse(t *testing.T) {
 		comment = "def"
 		enable_file_events = false
 		`,
+	}.ApplyNoError(t)
+}
+
+func TestCreateExternalLocationManagedAqsInferredSubscriptionAndResourceGroup(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.1/unity-catalog/external-locations",
+				ExpectedRequest: catalog.CreateExternalLocation{
+					Name:             "abc",
+					Url:              "abfss://container@account.dfs.core.windows.net/path",
+					CredentialName:   "bcd",
+					EnableFileEvents: true,
+					FileEventQueue: &catalog.FileEventQueue{
+						ManagedAqs: &catalog.AzureQueueStorage{},
+					},
+				},
+				Response: catalog.ExternalLocationInfo{
+					Name: "abc",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/external-locations/abc?",
+				Response: catalog.ExternalLocationInfo{
+					Name:             "abc",
+					Url:              "abfss://container@account.dfs.core.windows.net/path",
+					CredentialName:   "bcd",
+					Owner:            "efg",
+					MetastoreId:      "fgh",
+					EnableFileEvents: true,
+					FileEventQueue: &catalog.FileEventQueue{
+						ManagedAqs: &catalog.AzureQueueStorage{
+							ManagedResourceId: "mrid",
+							ResourceGroup:     "rg",
+							SubscriptionId:    "sub",
+						},
+					},
+				},
+			},
+		},
+		Resource: ResourceExternalLocation(),
+		Create:   true,
+		HCL: `
+		name = "abc"
+		url = "abfss://container@account.dfs.core.windows.net/path"
+		credential_name = "bcd"
+		enable_file_events = true
+		file_event_queue {
+			managed_aqs {}
+		}
+		`,
+	}.ApplyAndExpectData(t, map[string]any{
+		"file_event_queue.0.managed_aqs.0.resource_group":  "rg",
+		"file_event_queue.0.managed_aqs.0.subscription_id": "sub",
+	})
+}
+
+func TestExternalLocationManagedAqsInferredFieldsNoDiff(t *testing.T) {
+	qa.ResourceFixture{
+		Resource: ResourceExternalLocation(),
+		InstanceState: map[string]string{
+			"id":                               "abc",
+			"name":                             "abc",
+			"url":                              "abfss://container@account.dfs.core.windows.net/path",
+			"credential_name":                  "bcd",
+			"owner":                            "efg",
+			"metastore_id":                     "fgh",
+			"enable_file_events":               "true",
+			"file_event_queue.#":               "1",
+			"file_event_queue.0.managed_aqs.#": "1",
+			"file_event_queue.0.managed_aqs.0.managed_resource_id": "mrid",
+			"file_event_queue.0.managed_aqs.0.resource_group":      "rg",
+			"file_event_queue.0.managed_aqs.0.subscription_id":     "sub",
+		},
+		HCL: `
+		name = "abc"
+		url = "abfss://container@account.dfs.core.windows.net/path"
+		credential_name = "bcd"
+		enable_file_events = true
+		file_event_queue {
+			managed_aqs {}
+		}
+		`,
+		// Only placeholders for unrelated computed blocks; nothing under managed_aqs.
+		ExpectedDiff: map[string]*terraform.ResourceAttrDiff{
+			"effective_file_event_queue.#": {Old: "", New: "", NewComputed: true},
+			"provider_config.#":            {Old: "", New: "", NewComputed: true},
+		},
 	}.ApplyNoError(t)
 }
 

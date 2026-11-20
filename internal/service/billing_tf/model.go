@@ -26,9 +26,14 @@ import (
 type ActionConfiguration struct {
 	// Databricks action configuration ID.
 	ActionConfigurationId types.String `tfsdk:"action_configuration_id"`
-	// The type of the action.
+	// The action to take when the alert enters a triggered state.
+	// `EMAIL_NOTIFICATION` sends an email and `BLOCK_USAGE` blocks further
+	// usage. `BLOCK_USAGE` is only supported on Unity AI Gateway budgets, with
+	// `resource_type` set to `BUDGET_RESOURCE_TYPE_UNITY_AI_GATEWAY`.
 	ActionType types.String `tfsdk:"action_type"`
-	// Target for the action. For example, an email address.
+	// Target of the action. For `EMAIL_NOTIFICATION`, the email address that
+	// receives the alert, up to 256 characters. Must be omitted for
+	// `BLOCK_USAGE`.
 	Target types.String `tfsdk:"target"`
 }
 
@@ -83,7 +88,7 @@ func (m ActionConfiguration) Type(ctx context.Context) attr.Type {
 
 type AlertConfiguration struct {
 	// Configured actions for this alert. These define what happens when an
-	// alert enters a triggered state.
+	// alert enters a triggered state. An alert can have up to 10 actions.
 	ActionConfigurations types.List `tfsdk:"action_configurations"`
 	// Databricks alert configuration ID.
 	AlertConfigurationId types.String `tfsdk:"alert_configuration_id"`
@@ -92,7 +97,8 @@ type AlertConfiguration struct {
 	// `ALERT_CONFIGURATION_SCOPE_TYPE_PER_USER`); ignored for shared alerts.
 	PrincipalOverrides types.List `tfsdk:"principal_overrides"`
 	// The threshold for the budget alert to determine if it is in a triggered
-	// state. The number is evaluated based on `quantity_type`.
+	// state. The number is evaluated based on `quantity_type`. A decimal number
+	// passed as a string, from 0 to 1,000,000,000.
 	QuantityThreshold types.String `tfsdk:"quantity_threshold"`
 	// The way to calculate cost for this budget alert. This is what
 	// `quantity_threshold` is measured in.
@@ -386,6 +392,10 @@ func (m AlertSpendStatus) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// A budget tracks the spend of your account, or of the workspaces and custom
+// tags selected by its filter, against one or more alert thresholds. Spend is
+// measured in US dollars at list price. For an overview, see
+// https://docs.databricks.com/en/admin/account-settings/budgets.html.
 type BudgetConfiguration struct {
 	// Databricks account ID.
 	AccountId types.String `tfsdk:"account_id"`
@@ -404,14 +414,16 @@ type BudgetConfiguration struct {
 	AlertConfigurations types.List `tfsdk:"alert_configurations"`
 	// Databricks budget configuration ID.
 	BudgetConfigurationId types.String `tfsdk:"budget_configuration_id"`
-	// Creation time of this budget configuration.
+	// Creation time of this budget configuration, in milliseconds since the
+	// Unix epoch.
 	CreateTime types.Int64 `tfsdk:"create_time"`
 	// Human-readable name of budget configuration. Max Length: 128
 	DisplayName types.String `tfsdk:"display_name"`
 	// Configured filters for this budget. These are applied to your account's
 	// usage to limit the scope of what is considered for this budget. Leave
 	// empty to include all usage for this account. All provided filters must be
-	// matched for usage to be included.
+	// matched for usage to be included. The filter cannot be changed after the
+	// budget is created. To change it, delete the budget and create a new one.
 	Filter types.Object `tfsdk:"filter"`
 	// Whether this budget tracks external pass-through spend (third-party costs
 	// billed through a Databricks product) in addition to internal Databricks
@@ -422,7 +434,8 @@ type BudgetConfiguration struct {
 	// The resource scope for this budget. Determines whether the budget tracks
 	// all resources or a specific resource.
 	ResourceType types.String `tfsdk:"resource_type"`
-	// Update time of this budget configuration.
+	// Time of the most recent update to this budget configuration, in
+	// milliseconds since the Unix epoch.
 	UpdateTime types.Int64 `tfsdk:"update_time"`
 }
 
@@ -769,8 +782,10 @@ func (m *BudgetConfigurationFilter) SetWorkspaceId(ctx context.Context, v Budget
 }
 
 type BudgetConfigurationFilterClause struct {
+	// How usage is compared with `values`. `IN` matches usage whose value is
+	// one of `values`.
 	Operator types.String `tfsdk:"operator"`
-
+	// Values to match. A clause can list up to 30 values.
 	Values types.List `tfsdk:"values"`
 }
 
@@ -863,8 +878,11 @@ func (m *BudgetConfigurationFilterClause) SetValues(ctx context.Context, v []typ
 }
 
 type BudgetConfigurationFilterTagClause struct {
+	// The custom tag key to match, exactly as it appears in your usage data. A
+	// key can appear in at most one clause per operator.
 	Key types.String `tfsdk:"key"`
-
+	// The tag values to match for `key`. Usage is included when its value for
+	// `key` is one of the listed values.
 	Value types.Object `tfsdk:"value"`
 }
 
@@ -959,8 +977,11 @@ func (m *BudgetConfigurationFilterTagClause) SetValue(ctx context.Context, v Bud
 }
 
 type BudgetConfigurationFilterWorkspaceIdClause struct {
+	// How usage is compared with `values`. `IN` matches usage from any of the
+	// listed workspaces.
 	Operator types.String `tfsdk:"operator"`
-
+	// IDs of the workspaces whose usage is included. A clause can list up to 30
+	// workspaces, all of which must belong to this account.
 	Values types.List `tfsdk:"values"`
 }
 
@@ -1052,7 +1073,10 @@ func (m *BudgetConfigurationFilterWorkspaceIdClause) SetValues(ctx context.Conte
 	m.Values = types.ListValueMust(t, vs)
 }
 
-// Contains the BudgetPolicy details.
+// A serverless usage policy is a set of tags that are applied to the serverless
+// usage of the workloads that use the policy. Each usage record in the billable
+// usage system table carries the policy ID and these tags, so that serverless
+// usage can be attributed to the policy.
 type BudgetPolicy struct {
 	// List of workspaces that this budget policy will be exclusively bound to.
 	// An empty binding implies that this budget policy is open to any workspace
@@ -1359,13 +1383,14 @@ func (m *BudgetSpendStatus) SetAlertSpendStatuses(ctx context.Context, v []Alert
 type CreateBillingUsageDashboardRequest struct {
 	// Workspace level usage dashboard shows usage data for the specified
 	// workspace ID. Global level usage dashboard shows usage data for all
-	// workspaces in the account.
+	// workspaces in the account. The request fails if the type is not set.
 	DashboardType types.String `tfsdk:"dashboard_type"`
-	// The major version of the usage dashboard template to use. Defaults to
-	// VERSION_1.
+	// The major version of the usage dashboard template to import. Version 2
+	// adds cost forecasting and object-level cost drill-down.
 	MajorVersion types.String `tfsdk:"major_version"`
-	// The workspace ID of the workspace in which the usage dashboard is
-	// created.
+	// The ID of the workspace to import the usage dashboard into. The workspace
+	// must be running, belong to the account, and not be a disaster recovery
+	// secondary.
 	WorkspaceId types.Int64 `tfsdk:"workspace_id"`
 }
 
@@ -1420,7 +1445,7 @@ func (m CreateBillingUsageDashboardRequest) Type(ctx context.Context) attr.Type 
 }
 
 type CreateBillingUsageDashboardResponse struct {
-	// The unique id of the usage dashboard.
+	// The ID of the AI/BI dashboard that was created.
 	DashboardId types.String `tfsdk:"dashboard_id"`
 }
 
@@ -1467,6 +1492,10 @@ func (m CreateBillingUsageDashboardResponse) Type(ctx context.Context) attr.Type
 	}
 }
 
+// A budget tracks the spend of your account, or of the workspaces and custom
+// tags selected by its filter, against one or more alert thresholds. Spend is
+// measured in US dollars at list price. For an overview, see
+// https://docs.databricks.com/en/admin/account-settings/budgets.html.
 type CreateBudgetConfigurationBudget struct {
 	// Databricks account ID.
 	AccountId types.String `tfsdk:"account_id"`
@@ -1488,7 +1517,8 @@ type CreateBudgetConfigurationBudget struct {
 	// Configured filters for this budget. These are applied to your account's
 	// usage to limit the scope of what is considered for this budget. Leave
 	// empty to include all usage for this account. All provided filters must be
-	// matched for usage to be included.
+	// matched for usage to be included. The filter cannot be changed after the
+	// budget is created. To change it, delete the budget and create a new one.
 	Filter types.Object `tfsdk:"filter"`
 	// Whether this budget tracks external pass-through spend (third-party costs
 	// billed through a Databricks product) in addition to internal Databricks
@@ -1670,9 +1700,14 @@ func (m *CreateBudgetConfigurationBudget) SetFilter(ctx context.Context, v Budge
 }
 
 type CreateBudgetConfigurationBudgetActionConfigurations struct {
-	// The type of the action.
+	// The action to take when the alert enters a triggered state.
+	// `EMAIL_NOTIFICATION` sends an email and `BLOCK_USAGE` blocks further
+	// usage. `BLOCK_USAGE` is only supported on Unity AI Gateway budgets, with
+	// `resource_type` set to `BUDGET_RESOURCE_TYPE_UNITY_AI_GATEWAY`.
 	ActionType types.String `tfsdk:"action_type"`
-	// Target for the action. For example, an email address.
+	// Target of the action. For `EMAIL_NOTIFICATION`, the email address that
+	// receives the alert, up to 256 characters. Must be omitted for
+	// `BLOCK_USAGE`.
 	Target types.String `tfsdk:"target"`
 }
 
@@ -1724,14 +1759,15 @@ func (m CreateBudgetConfigurationBudgetActionConfigurations) Type(ctx context.Co
 
 type CreateBudgetConfigurationBudgetAlertConfigurations struct {
 	// Configured actions for this alert. These define what happens when an
-	// alert enters a triggered state.
+	// alert enters a triggered state. An alert can have up to 10 actions.
 	ActionConfigurations types.List `tfsdk:"action_configurations"`
 	// Per-principal threshold overrides for this alert. Only applies to
 	// per-user alerts (`scope_type` =
 	// `ALERT_CONFIGURATION_SCOPE_TYPE_PER_USER`); ignored for shared alerts.
 	PrincipalOverrides types.List `tfsdk:"principal_overrides"`
 	// The threshold for the budget alert to determine if it is in a triggered
-	// state. The number is evaluated based on `quantity_type`.
+	// state. The number is evaluated based on `quantity_type`. A decimal number
+	// passed as a string, from 0 to 1,000,000,000.
 	QuantityThreshold types.String `tfsdk:"quantity_threshold"`
 	// The way to calculate cost for this budget alert. This is what
 	// `quantity_threshold` is measured in.
@@ -2127,9 +2163,9 @@ func (m *CreateBudgetConfigurationResponse) SetBudget(ctx context.Context, v Bud
 
 // A request to create a BudgetPolicy.
 type CreateBudgetPolicyRequest struct {
-	// The policy to create. `policy_id` needs to be empty as it will be
-	// generated `policy_name` must be provided, custom_tags may need to be
-	// provided depending on the cloud provider. All other fields are optional.
+	// The policy to create. `policy_name` must be provided, and `custom_tags`
+	// may be required depending on the cloud provider. Leave `policy_id` empty
+	// because Databricks generates it. All other fields are optional.
 	Policy types.Object `tfsdk:"policy"`
 	// A unique identifier for this request. Restricted to 36 ASCII characters.
 	// A random UUID is recommended. This request is only idempotent if a
@@ -2660,15 +2696,15 @@ func (m DownloadResponse) Type(ctx context.Context) attr.Type {
 // Structured representation of a filter to be applied to a list of policies.
 // All specified filters will be applied in conjunction.
 type Filter struct {
-	// The policy creator user id to be filtered on. If unspecified, all
-	// policies will be returned.
+	// Deprecated: This field is ignored. Creator filtering will be removed in a
+	// future version.
 	CreatorUserId types.Int64 `tfsdk:"creator_user_id"`
 	// Deprecated: Do not use this field in new integrations. Creator filtering
 	// will be removed in a future version. The policy creator user name to be
 	// filtered on. If unspecified, all policies will be returned.
 	CreatorUserName types.String `tfsdk:"creator_user_name"`
-	// The partial name of policies to be filtered on. If unspecified, all
-	// policies will be returned.
+	// Only policies whose name contains this string are returned. Matching is
+	// case-insensitive. If unspecified, all policies are returned.
 	PolicyName types.String `tfsdk:"policy_name"`
 }
 
@@ -2724,10 +2760,11 @@ func (m Filter) Type(ctx context.Context) attr.Type {
 type GetBillingUsageDashboardRequest struct {
 	// Workspace level usage dashboard shows usage data for the specified
 	// workspace ID. Global level usage dashboard shows usage data for all
-	// workspaces in the account.
+	// workspaces in the account. The request fails if the type is not set.
 	DashboardType types.String `tfsdk:"-"`
-	// The workspace ID of the workspace in which the usage dashboard is
-	// created.
+	// The ID of the workspace that contains the usage dashboard. If omitted,
+	// the most recently created dashboard of the given type across all
+	// workspaces in the account is returned.
 	WorkspaceId types.Int64 `tfsdk:"-"`
 }
 
@@ -2779,9 +2816,11 @@ func (m GetBillingUsageDashboardRequest) Type(ctx context.Context) attr.Type {
 }
 
 type GetBillingUsageDashboardResponse struct {
-	// The unique id of the usage dashboard.
+	// The ID of the AI/BI dashboard. The ID is empty if no matching dashboard
+	// is found.
 	DashboardId types.String `tfsdk:"dashboard_id"`
-	// The URL of the usage dashboard.
+	// The URL of the dashboard in its workspace. The URL is empty if no
+	// matching dashboard is found.
 	DashboardUrl types.String `tfsdk:"dashboard_url"`
 }
 
@@ -2881,6 +2920,7 @@ func (m GetBudgetConfigurationRequest) Type(ctx context.Context) attr.Type {
 }
 
 type GetBudgetConfigurationResponse struct {
+	// The requested budget configuration.
 	Budget types.Object `tfsdk:"budget"`
 }
 
@@ -3432,15 +3472,15 @@ type ListBudgetPoliciesRequest struct {
 	// 100 budget policies will be returned. The maximum value is 1000; values
 	// above 1000 will be coerced to 1000.
 	PageSize types.Int64 `tfsdk:"-"`
-	// A page token, received from a previous `ListServerlessPolicies` call.
-	// Provide this to retrieve the subsequent page. If unspecified, the first
-	// page will be returned.
+	// A page token, received from a previous `ListBudgetPolicies` call. Provide
+	// this to retrieve the subsequent page. If unspecified, the first page will
+	// be returned.
 	//
-	// When paginating, all other parameters provided to
-	// `ListServerlessPoliciesRequest` must match the call that provided the
-	// page token.
+	// When paginating, all other parameters provided to `ListBudgetPolicies`
+	// must match the call that provided the page token.
 	PageToken types.String `tfsdk:"-"`
-	// The sort specification.
+	// How to sort the returned policies. If unspecified, policies are sorted by
+	// name in ascending order.
 	SortSpec types.Object `tfsdk:"-"`
 }
 
@@ -4402,7 +4442,7 @@ func (m PrincipalOverride) Type(ctx context.Context) attr.Type {
 type SortSpec struct {
 	// Whether to sort in descending order.
 	Descending types.Bool `tfsdk:"descending"`
-	// The filed to sort by
+	// The field to sort by. If unspecified, policies are sorted by name.
 	Field types.String `tfsdk:"field"`
 }
 
@@ -4452,6 +4492,10 @@ func (m SortSpec) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// A budget tracks the spend of your account, or of the workspaces and custom
+// tags selected by its filter, against one or more alert thresholds. Spend is
+// measured in US dollars at list price. For an overview, see
+// https://docs.databricks.com/en/admin/account-settings/budgets.html.
 type UpdateBudgetConfigurationBudget struct {
 	// Databricks account ID.
 	AccountId types.String `tfsdk:"account_id"`
@@ -4475,7 +4519,8 @@ type UpdateBudgetConfigurationBudget struct {
 	// Configured filters for this budget. These are applied to your account's
 	// usage to limit the scope of what is considered for this budget. Leave
 	// empty to include all usage for this account. All provided filters must be
-	// matched for usage to be included.
+	// matched for usage to be included. The filter cannot be changed after the
+	// budget is created. To change it, delete the budget and create a new one.
 	Filter types.Object `tfsdk:"filter"`
 	// Whether this budget tracks external pass-through spend (third-party costs
 	// billed through a Databricks product) in addition to internal Databricks
@@ -4661,7 +4706,8 @@ func (m *UpdateBudgetConfigurationBudget) SetFilter(ctx context.Context, v Budge
 
 type UpdateBudgetConfigurationRequest struct {
 	// The updated budget. This will overwrite the budget specified by the
-	// budget ID.
+	// budget ID. Alerts and actions are matched by ID: those omitted from the
+	// request are removed, and those without an ID are created.
 	Budget types.Object `tfsdk:"budget"`
 	// The Databricks budget configuration ID.
 	BudgetId types.String `tfsdk:"-"`
@@ -4851,8 +4897,7 @@ func (m *UpdateBudgetConfigurationResponse) SetBudget(ctx context.Context, v Bud
 }
 
 type UpdateBudgetPolicyRequest struct {
-	// DEPRECATED. This is redundant field as LimitConfig is part of the
-	// BudgetPolicy
+	// Deprecated: This field is ignored.
 	LimitConfig types.Object `tfsdk:"-"`
 	// The policy to update. `creator_user_id` cannot be specified in the
 	// request. All other fields must be specified even if not changed. The

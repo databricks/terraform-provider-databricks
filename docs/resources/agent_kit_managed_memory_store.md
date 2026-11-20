@@ -15,7 +15,8 @@ subcategory: "Agent Bricks"
 The following arguments are supported:
 * `managed_memory_store_id` (string, required) - Caller-provided, workspace-unique memory store ID. It must be 3-56 characters, begin
   with a lowercase letter, contain only lowercase letters, digits, and hyphens, and end with a
-  letter or digit
+  letter or digit. It becomes the last segment of the store's `name` and cannot be changed
+  after creation
 * `description` (string, optional) - Human-readable description of the memory store
 * `display_name` (string, optional, deprecated) - Deprecated compatibility alias for the caller-provided memory store ID. Canonical
   clients provide the ID through `CreateMemoryStoreRequest.managed_memory_store_id` and use
@@ -39,7 +40,9 @@ In addition to the above arguments, the following attributes are exported:
 * `workspace_id` (integer) - Workspace that owns the memory store
 
 ### StorageBackend
-* `backend_id` (string) - Backend-specific identifier. For Lakebase, this is the project ID
+* `backend_id` (string) - Backend-specific identifier. For Lakebase, this is the resource name of the database that
+  holds the store's entries, in the form
+  `projects/{project_id}/branches/{branch_id}/databases/{database_id}`
 * `backend_type` (string) - Type of the storage backend. Possible values are: `STORAGE_BACKEND_TYPE_LAKEBASE`
 
 ## Import

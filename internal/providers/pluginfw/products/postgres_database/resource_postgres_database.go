@@ -121,7 +121,9 @@ type Database struct {
 	// projects/{project_id}/branches/{branch_id}
 	Parent types.String `tfsdk:"parent"`
 	// If true, update the database if it already exists instead of returning an
-	// error.
+	// error. This requires `database_id` to be set. Without `database_id`, the
+	// request follows the normal create path and fails if the database name
+	// already exists.
 	ReplaceExisting types.Bool `tfsdk:"replace_existing"`
 	// The desired state of the Database.
 	//

@@ -29,7 +29,7 @@ data "databricks_tag_policy" "example_tag_policy" {
 
 ## Arguments
 The following arguments are supported:
-* `tag_key` (string, required)
+* `tag_key` (string, required) - The tag key that this policy governs. Tag keys are case-sensitive
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 
 ### ProviderConfig
@@ -38,11 +38,12 @@ The following arguments are supported:
 ## Attributes
 The following attributes are exported:
 * `create_time` (string) - Timestamp when the tag policy was created
-* `description` (string)
-* `id` (string)
-* `tag_key` (string)
+* `description` (string) - A description of the governed tag, such as its purpose or the meaning of its values
+* `id` (string) - The unique identifier of the tag policy, generated when the policy is created
+* `tag_key` (string) - The tag key that this policy governs. Tag keys are case-sensitive
 * `update_time` (string) - Timestamp when the tag policy was last updated
-* `values` (list of Value)
+* `values` (list of Value) - The allowed values of the governed tag. Only these values can be assigned to the tag key, and each
+  value must be unique. A policy without values defines a key-only governed tag
 
 ### Value
-* `name` (string)
+* `name` (string) - The value that can be assigned to the tag key. Values are case-sensitive

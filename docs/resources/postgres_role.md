@@ -2,7 +2,7 @@
 subcategory: "Postgres"
 ---
 # databricks_postgres_role Resource
-[![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
+[![GA](https://img.shields.io/badge/Release_Stage-GA-green)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
 [API Documentation](https://docs.databricks.com/api/workspace/postgres)
 
@@ -342,12 +342,12 @@ The following arguments are supported:
 * `workspace_id` (string,optional) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ### RoleAttributes
-* `bypassrls` (boolean, optional)
-* `createdb` (boolean, optional)
-* `createrole` (boolean, optional)
+* `bypassrls` (boolean, optional) - Whether the role bypasses every row-level security policy (the Postgres BYPASSRLS attribute)
+* `createdb` (boolean, optional) - Whether the role can create databases (the Postgres CREATEDB attribute)
+* `createrole` (boolean, optional) - Whether the role can create, alter and drop other roles (the Postgres CREATEROLE attribute)
 
 ### RoleRoleSpec
-* `attributes` (RoleAttributes, optional) - The desired API-exposed Postgres role attribute to associate with the role. Optional
+* `attributes` (RoleAttributes, optional) - The Postgres role attributes to grant to the role
 * `auth_method` (string, optional) - Controls how the Postgres role authenticates when a client opens a database
   connection. Supported values:
   
@@ -369,7 +369,8 @@ The following arguments are supported:
   is the default auth method (group can login as well).
   
   This value cannot be changed after creation. Possible values are: `LAKEBASE_OAUTH_V1`, `NO_LOGIN`, `PG_PASSWORD_SCRAM_SHA_256`
-* `identity_type` (string, optional) - The type of role.
+* `identity_type` (string, optional) - The type of Databricks identity that backs the role. Leave unset to create a native Postgres
+  role that is not associated with a Databricks identity.
   When specifying a managed-identity, the chosen postgres_role must be a valid:
   
   * application ID for SERVICE_PRINCIPAL
@@ -392,25 +393,25 @@ The following arguments are supported:
   
   1. user email for IdentityType.USER
   2. app ID for IdentityType.SERVICE_PRINCIPAL
-  2. group name for IdentityType.GROUP
+  3. group name for IdentityType.GROUP
   
   This value cannot be changed after creation
 
 ### RoleRoleStatus
-* `attributes` (RoleAttributes, optional) - The PG role attributes associated with the role
-* `auth_method` (string, optional) - Possible values are: `LAKEBASE_OAUTH_V1`, `NO_LOGIN`, `PG_PASSWORD_SCRAM_SHA_256`
-* `identity_type` (string, optional) - The type of the role. Possible values are: `GROUP`, `SERVICE_PRINCIPAL`, `USER`
-* `membership_roles` (list of string, optional) - An enum value for a standard role that this role is a member of
+* `attributes` (RoleAttributes, optional) - The Postgres role attributes currently granted to the role
+* `auth_method` (string, optional) - How the role authenticates when it connects to Postgres. Possible values are: `LAKEBASE_OAUTH_V1`, `NO_LOGIN`, `PG_PASSWORD_SCRAM_SHA_256`
+* `identity_type` (string, optional) - The type of Databricks identity that backs the role, if any. Possible values are: `GROUP`, `SERVICE_PRINCIPAL`, `USER`
+* `membership_roles` (list of string, optional) - The standard roles that the role is currently a member of
 * `postgres_role` (string, optional) - The name of the Postgres role
 
 ## Attributes
 In addition to the above arguments, the following attributes are exported:
-* `create_time` (string)
+* `create_time` (string) - A timestamp indicating when the role was created
 * `name` (string) - Output only. The full resource path of the role.
   Format: projects/{project_id}/branches/{branch_id}/roles/{role_id}
 * `role_id` (string) - The part of the name, chosen by the user when the resource was created
 * `status` (RoleRoleStatus) - Current status of the role, including its identity type, authentication method, and role attributes
-* `update_time` (string)
+* `update_time` (string) - A timestamp indicating when the role was last updated
 
 ### RoleRoleStatus
 * `role_id` (string) - Part of the resource name

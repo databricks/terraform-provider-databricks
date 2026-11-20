@@ -13,6 +13,7 @@
 * Add data sources for `databricks_lakewatch_builtin_parser_version`.
 
 ### Bug Fixes
+* Fix `databricks_workspace_file` and `databricks_notebook` creation failing with `The parent folder (...) does not exist.` when other resources create the same parent folder concurrently ([#6145](https://github.com/databricks/terraform-provider-databricks/issues/6145)).
 
 ### Documentation
 

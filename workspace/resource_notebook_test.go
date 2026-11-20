@@ -232,6 +232,63 @@ func TestResourceNotebookCreate_DirectoryDoesntExist(t *testing.T) {
 	})
 }
 
+func TestResourceNotebookCreate_DirectoryCreatedConcurrently(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   http.MethodPost,
+				Resource: "/api/2.0/workspace/import",
+				ExpectedRequest: ImportPath{
+					Content:   "YWJjCg==",
+					Path:      "/foo/path.py",
+					Language:  "PYTHON",
+					Overwrite: true,
+					Format:    "SOURCE",
+				},
+				Response: apierr.APIError{
+					ErrorCode: "RESOURCE_DOES_NOT_EXIST",
+					Message:   "The parent folder (/foo) does not exist.",
+				},
+				Status: 404,
+			},
+			{
+				// Another resource created the parent folder after the import failed.
+				Method:   http.MethodGet,
+				Resource: "/api/2.0/workspace/get-status?path=%2Ffoo",
+				Response: ObjectStatus{
+					ObjectType: Directory,
+					Path:       "/foo",
+				},
+			},
+			{
+				Method:   http.MethodPost,
+				Resource: "/api/2.0/workspace/import",
+				ExpectedRequest: ImportPath{
+					Content:   "YWJjCg==",
+					Path:      "/foo/path.py",
+					Language:  "PYTHON",
+					Overwrite: true,
+					Format:    "SOURCE",
+				},
+				Response: ImportResponse{
+					ObjectID: 12345,
+				},
+			},
+		},
+		Resource: ResourceNotebook(),
+		State: map[string]any{
+			"content_base64": "YWJjCg==",
+			"language":       "PYTHON",
+			"path":           "/foo/path.py",
+		},
+		Create: true,
+	}.ApplyAndExpectData(t, map[string]any{
+		"path":      "/foo/path.py",
+		"id":        "/foo/path.py",
+		"object_id": 12345,
+	})
+}
+
 func TestResourceNotebookCreate_DirectoryCreateError(t *testing.T) {
 	_, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

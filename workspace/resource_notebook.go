@@ -322,11 +322,16 @@ func ResourceNotebook() common.Resource {
 					return err
 				}
 				_, errStatus = w.Workspace.GetStatusByPath(ctx, parent)
-				if errStatus != nil && apierr.IsMissing(errStatus) {
+				parentMissing := errStatus != nil && apierr.IsMissing(errStatus)
+				if parentMissing {
 					log.Printf("[DEBUG] Parent folder '%s' doesn't exist, creating...", parent)
 					if errStatus = notebooksAPI.Mkdirs(parent); errStatus != nil {
 						return errStatus
 					}
+				}
+				// Also retry if the parent folder was missing during the import but exists now:
+				// another resource may have created it concurrently, e.g. for a file in a subfolder.
+				if parentMissing || apierr.IsMissing(err) {
 					resp, err = notebooksAPI.Create(createNotebook)
 				}
 				if err != nil {

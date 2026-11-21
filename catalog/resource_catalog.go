@@ -172,6 +172,10 @@ func ResourceCatalog() common.Resource {
 			}
 
 			updateCatalogRequest.Owner = ""
+			// `name` holds the old name in the request path, so a rename must be sent as `new_name`
+			if d.HasChange("name") {
+				updateCatalogRequest.NewName = d.Get("name").(string)
+			}
 			// The only option allowed in update is "authorized_paths". All other options must be removed.
 			if opts := updateCatalogRequest.Options; opts != nil {
 				if v, ok := opts["authorized_paths"]; ok {

@@ -227,6 +227,44 @@ func TestUpdateCatalog(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
+func TestUpdateCatalogRename(t *testing.T) {
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockMetastoresAPI().EXPECT().Current(mock.Anything).Return(&catalog.MetastoreAssignment{
+				MetastoreId: "d",
+			}, nil)
+			e := w.GetMockCatalogsAPI().EXPECT()
+			e.Update(mock.Anything, catalog.UpdateCatalog{
+				Name:    "a",
+				NewName: "b",
+				Comment: "c",
+			}).Return(&catalog.CatalogInfo{
+				Name:    "b",
+				Comment: "c",
+			}, nil)
+			e.GetByName(mock.Anything, "b").Return(&catalog.CatalogInfo{
+				Name:    "b",
+				Comment: "c",
+			}, nil)
+		},
+		Resource: ResourceCatalog(),
+		Update:   true,
+		ID:       "a",
+		InstanceState: map[string]string{
+			"metastore_id": "d",
+			"name":         "a",
+			"comment":      "c",
+		},
+		HCL: `
+		name = "b"
+		comment = "c"
+		`,
+	}.ApplyAndExpectData(t, map[string]any{
+		"id":   "b",
+		"name": "b",
+	})
+}
+
 func TestUpdateCatalogSetEmptyComment(t *testing.T) {
 	qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {

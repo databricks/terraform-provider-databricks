@@ -11,6 +11,7 @@
 * Add resource and data sources for `databricks_lakewatch_parser_version`.
 * Add data sources for `databricks_lakewatch_builtin_parser`.
 * Add data sources for `databricks_lakewatch_builtin_parser_version`.
+* Add `databricks_workspace_file_paths` data source to list workspace files under a given path, optionally recursively ([#6272](https://github.com/databricks/terraform-provider-databricks/pull/6272)).
 
 ### Bug Fixes
 

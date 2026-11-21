@@ -13,7 +13,7 @@
 * Add data sources for `databricks_lakewatch_builtin_parser_version`.
 
 ### Bug Fixes
-* Fixed perpetual `provider_config` diff on account-level dual resources such as `databricks_group_member` ([#PR_NUMBER](https://github.com/databricks/terraform-provider-databricks/pull/PR_NUMBER)).
+* Fixed perpetual `provider_config` diff on account-level dual resources such as `databricks_group_member` ([#6273](https://github.com/databricks/terraform-provider-databricks/pull/6273)).
 
 ### Documentation
 

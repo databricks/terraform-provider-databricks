@@ -46,6 +46,8 @@ The following arguments are supported:
 * `group_id` - (Required) This is the `id` attribute (SCIM ID) of the [group](group.md) resource.
 * `member_id` - (Required) This is the `id` attribute (SCIM ID) of the [group](group.md), [service principal](service_principal.md), or [user](user.md).
 * `api` - (Optional) Specifies whether to use account-level or workspace-level API. Valid values are `account` and `workspace`. When not set, the API level is inferred from the provider host.
+* `provider_config` - (Optional) Configure the provider for management through account provider. It is used only when the resource is managed at workspace level (`api = "workspace"`, or `api` is not set and the provider is configured with a workspace host), and is ignored when the resource is managed at account level. This block consists of the following fields:
+  * `workspace_id` - (Required) Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with. Changing it recreates the resource in the new workspace.
 
 ## Attribute Reference
 

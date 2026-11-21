@@ -27,7 +27,8 @@ import (
 type AclItem struct {
 	// The permission level applied to the principal.
 	Permission types.String `tfsdk:"permission"`
-	// The principal in which the permission is applied.
+	// The user name or group name of an existing Databricks principal that the
+	// permission applies to.
 	Principal types.String `tfsdk:"principal"`
 }
 
@@ -80,10 +81,10 @@ func (m AclItem) Type(ctx context.Context) attr.Type {
 // The metadata of the Azure KeyVault for a secret scope of type
 // `AZURE_KEYVAULT`
 type AzureKeyVaultSecretScopeMetadata struct {
-	// The DNS of the KeyVault
+	// The DNS name of the key vault, for example
+	// ``https://my-key-vault.vault.azure.net/``.
 	DnsName types.String `tfsdk:"dns_name"`
-	// The resource id of the azure KeyVault that user wants to associate the
-	// scope with.
+	// The Azure resource ID of the key vault to associate with the scope.
 	ResourceId types.String `tfsdk:"resource_id"`
 }
 
@@ -152,10 +153,12 @@ type CreateCredentialsRequest struct {
 	// authentication depending on your Git provider / token requirements.
 	// Required for AWS CodeCommit.
 	GitUsername types.String `tfsdk:"git_username"`
-	// if the credential is the default for the given provider
+	// Set to true to make the new credential the default for its Git provider,
+	// replacing the current default. The first credential created for a
+	// provider becomes the default regardless of this value.
 	IsDefaultForProvider types.Bool `tfsdk:"is_default_for_provider"`
-	// the name of the git credential, used for identification and ease of
-	// lookup
+	// The name of the Git credential, used for identification and ease of
+	// lookup. It must not exceed 100 characters.
 	Name types.String `tfsdk:"name"`
 	// The personal access token used to authenticate to the corresponding Git
 	// provider. For certain providers, support may exist for other types of
@@ -163,8 +166,8 @@ type CreateCredentialsRequest struct {
 	//
 	// [Learn more]: https://docs.databricks.com/repos/get-access-tokens-from-git-provider.html
 	PersonalAccessToken types.String `tfsdk:"personal_access_token"`
-	// The ID of the service principal whose credentials will be modified. Only
-	// service principal managers can perform this action.
+	// The ID of the service principal for which the credential will be created.
+	// Only service principal managers can perform this action.
 	PrincipalId types.Int64 `tfsdk:"principal_id"`
 }
 
@@ -246,10 +249,12 @@ type CreateCredentialsResponse struct {
 	// authentication depending on your Git provider / token requirements.
 	// Required for AWS CodeCommit.
 	GitUsername types.String `tfsdk:"git_username"`
-	// if the credential is the default for the given provider
+	// Whether this credential is the default for its Git provider. The default
+	// credential is the fallback that is used when no specific credential is
+	// selected.
 	IsDefaultForProvider types.Bool `tfsdk:"is_default_for_provider"`
-	// the name of the git credential, used for identification and ease of
-	// lookup
+	// The name of the Git credential, used for identification and ease of
+	// lookup.
 	Name types.String `tfsdk:"name"`
 }
 
@@ -569,8 +574,7 @@ type CreateScope struct {
 	InitialManagePrincipal types.String `tfsdk:"initial_manage_principal"`
 	// Scope name requested by the user. Scope names are unique.
 	Scope types.String `tfsdk:"scope"`
-	// The backend type the scope will be created with. If not specified, will
-	// default to ``DATABRICKS``
+	// The backend type of the new scope. Defaults to ``DATABRICKS``.
 	ScopeBackendType types.String `tfsdk:"scope_backend_type"`
 }
 
@@ -670,6 +674,9 @@ func (m *CreateScope) SetBackendAzureKeyvault(ctx context.Context, v AzureKeyVau
 	m.BackendAzureKeyvault = vs
 }
 
+// A Git credential that Databricks uses to authenticate to a Git provider on
+// behalf of a user or service principal. Each user has one default credential
+// per Git provider, which is used when no specific credential is selected.
 type CredentialInfo struct {
 	// ID of the credential object in the workspace.
 	CredentialId types.Int64 `tfsdk:"credential_id"`
@@ -691,10 +698,13 @@ type CredentialInfo struct {
 	// authentication depending on your Git provider / token requirements.
 	// Required for AWS CodeCommit.
 	GitUsername types.String `tfsdk:"git_username"`
-	// if the credential is the default for the given provider
+	// Whether this credential is the default for its Git provider. The default
+	// credential is the fallback that is used when no specific credential is
+	// selected. See
+	// https://docs.databricks.com/aws/en/repos/repos-setup#how-default-credentials-work.
 	IsDefaultForProvider types.Bool `tfsdk:"is_default_for_provider"`
-	// the name of the git credential, used for identification and ease of
-	// lookup
+	// The name of the Git credential, used for identification and ease of
+	// lookup.
 	Name types.String `tfsdk:"name"`
 }
 
@@ -868,7 +878,7 @@ func (m DeleteAcl) Type(ctx context.Context) attr.Type {
 type DeleteCredentialsRequest struct {
 	// The ID for the corresponding credential to access.
 	CredentialId types.Int64 `tfsdk:"-"`
-	// The ID of the service principal whose credentials will be modified. Only
+	// The ID of the service principal whose credential will be deleted. Only
 	// service principal managers can perform this action.
 	PrincipalId types.Int64 `tfsdk:"-"`
 }
@@ -1475,7 +1485,7 @@ func (m GetAclRequest) Type(ctx context.Context) attr.Type {
 type GetCredentialsRequest struct {
 	// The ID for the corresponding credential to access.
 	CredentialId types.Int64 `tfsdk:"-"`
-	// The ID of the service principal whose credentials will be modified. Only
+	// The ID of the service principal whose credential will be returned. Only
 	// service principal managers can perform this action.
 	PrincipalId types.Int64 `tfsdk:"-"`
 }
@@ -1543,10 +1553,12 @@ type GetCredentialsResponse struct {
 	// authentication depending on your Git provider / token requirements.
 	// Required for AWS CodeCommit.
 	GitUsername types.String `tfsdk:"git_username"`
-	// if the credential is the default for the given provider
+	// Whether this credential is the default for its Git provider. The default
+	// credential is the fallback that is used when no specific credential is
+	// selected.
 	IsDefaultForProvider types.Bool `tfsdk:"is_default_for_provider"`
-	// the name of the git credential, used for identification and ease of
-	// lookup
+	// The name of the Git credential, used for identification and ease of
+	// lookup.
 	Name types.String `tfsdk:"name"`
 }
 
@@ -2057,7 +2069,8 @@ func (m GetSecretRequest) Type(ctx context.Context) attr.Type {
 type GetSecretResponse struct {
 	// A unique name to identify the secret.
 	Key types.String `tfsdk:"key"`
-	// The value of the secret in its byte representation.
+	// The secret value, base64-encoded. A secret written with ``string_value``
+	// is returned as the base64 encoding of its UTF-8 bytes.
 	Value types.String `tfsdk:"value"`
 }
 
@@ -3742,7 +3755,8 @@ func (m *ObjectInfo) SetDirectoryInfo(ctx context.Context, v DirectoryInfo) {
 type PutAcl struct {
 	// The permission level applied to the principal.
 	Permission types.String `tfsdk:"permission"`
-	// The principal in which the permission is applied.
+	// The user name or group name of an existing Databricks principal that the
+	// permission applies to.
 	Principal types.String `tfsdk:"principal"`
 	// The name of the scope to apply permissions to.
 	Scope types.String `tfsdk:"scope"`
@@ -3798,13 +3812,15 @@ func (m PutAcl) Type(ctx context.Context) attr.Type {
 }
 
 type PutSecret struct {
-	// If specified, value will be stored as bytes.
+	// The secret value as raw bytes. The bytes must be base64-encoded in the
+	// JSON request body.
 	BytesValue types.String `tfsdk:"bytes_value"`
 	// A unique name to identify the secret.
 	Key types.String `tfsdk:"key"`
-	// The name of the scope to which the secret will be associated with.
+	// The name of the scope to store the secret in.
 	Scope types.String `tfsdk:"scope"`
-	// If specified, note that the value will be stored in UTF-8 (MB4) form.
+	// The secret value as text. The server stores it as the UTF-8 encoding of
+	// the string.
 	StringValue types.String `tfsdk:"string_value"`
 }
 
@@ -4589,7 +4605,8 @@ func (m *RepoPermissionsRequest) SetAccessControlList(ctx context.Context, v []R
 type SecretMetadata struct {
 	// A unique name to identify the secret.
 	Key types.String `tfsdk:"key"`
-	// The last updated timestamp (in milliseconds) for the secret.
+	// The time the secret was last written, in milliseconds since the Unix
+	// epoch.
 	LastUpdatedTimestamp types.Int64 `tfsdk:"last_updated_timestamp"`
 }
 
@@ -4639,13 +4656,13 @@ func (m SecretMetadata) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// An organizational resource for storing secrets. Secret scopes can be
-// different types (Databricks-managed, Azure KeyVault backed, etc), and ACLs
-// can be applied to control permissions for all secrets within a scope.
+// An organizational resource for storing secrets. A secret scope is either
+// Databricks-backed or Azure Key Vault-backed, and ACLs can be applied to
+// control permissions for all secrets within a scope.
 type SecretScope struct {
 	// The type of secret scope backend.
 	BackendType types.String `tfsdk:"backend_type"`
-	// The metadata for the secret scope if the type is ``AZURE_KEYVAULT``
+	// The metadata for the secret scope if the type is ``AZURE_KEYVAULT``.
 	KeyvaultMetadata types.Object `tfsdk:"keyvault_metadata"`
 	// A unique name to identify the secret scope.
 	Name types.String `tfsdk:"name"`
@@ -4946,6 +4963,8 @@ type UpdateCredentialsRequest struct {
 	// DevOps Services, including Microsoft Entra ID authentication),
 	// `gitHubEnterprise`, `bitbucketServer` (Bitbucket Data Center),
 	// `gitLabEnterpriseEdition` (GitLab Self-Managed), and `awsCodeCommit`.
+	// Must match the Git provider of the existing credential; the provider
+	// cannot be changed.
 	GitProvider types.String `tfsdk:"git_provider"`
 	// The username provided with your Git provider account and associated with
 	// the credential. For most Git providers it is only used to set the Git
@@ -4953,10 +4972,12 @@ type UpdateCredentialsRequest struct {
 	// authentication depending on your Git provider / token requirements.
 	// Required for AWS CodeCommit.
 	GitUsername types.String `tfsdk:"git_username"`
-	// if the credential is the default for the given provider
+	// Set to true to make this credential the default for its Git provider,
+	// replacing the current default. Cannot be set to false; make another
+	// credential the default instead.
 	IsDefaultForProvider types.Bool `tfsdk:"is_default_for_provider"`
-	// the name of the git credential, used for identification and ease of
-	// lookup
+	// The name of the Git credential, used for identification and ease of
+	// lookup. It must not exceed 100 characters.
 	Name types.String `tfsdk:"name"`
 	// The personal access token used to authenticate to the corresponding Git
 	// provider. For certain providers, support may exist for other types of

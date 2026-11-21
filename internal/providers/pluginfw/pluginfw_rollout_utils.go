@@ -39,6 +39,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/sharing"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/user"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/volume"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/workspace_file"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 )
@@ -101,6 +102,7 @@ var pluginFwOnlyDataSources = append(
 		serving.DataSourceServingEndpoints,
 		sharing.DataSourceRecipients,
 		user.DataSourceUsers,
+		workspace_file.DataSourceWorkspaceFilePaths,
 		// TODO: Add DataSourceCluster into migratedDataSources after fixing unit tests.
 		cluster.DataSourceCluster, // Using the staging name (with pluginframework suffix)
 	},

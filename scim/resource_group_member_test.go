@@ -5,6 +5,7 @@ import (
 
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/qa"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -237,4 +238,64 @@ func TestResourceGroupMemberDelete_Error(t *testing.T) {
 	}.Apply(t)
 	qa.AssertErrorStartsWith(t, err, "Internal error happened")
 	assert.Equal(t, "abc|bcd", d.Id())
+}
+
+// Regression test for https://github.com/databricks/terraform-provider-databricks/issues/6169:
+// at account level, provider_config is never written to state, so the plan
+// must not mark it as computed on every run.
+func TestResourceGroupMemberAccountLevel_NoProviderConfigDiff(t *testing.T) {
+	state := map[string]string{
+		"id":        "abc|bcd",
+		"group_id":  "abc",
+		"member_id": "bcd",
+	}
+	qa.ResourceFixture{
+		Resource:      ResourceGroupMember(),
+		ID:            "abc|bcd",
+		InstanceState: state,
+		Host:          "https://accounts.cloud.databricks.com",
+		AccountID:     "acc",
+		HCL: `
+		group_id = "abc"
+		member_id = "bcd"
+		`,
+		ExpectedDiff: map[string]*terraform.ResourceAttrDiff{},
+	}.ApplyNoError(t)
+
+	stateWithApi := map[string]string{"api": "account"}
+	for k, v := range state {
+		stateWithApi[k] = v
+	}
+	qa.ResourceFixture{
+		Resource:      ResourceGroupMember(),
+		ID:            "abc|bcd",
+		InstanceState: stateWithApi,
+		HCL: `
+		group_id = "abc"
+		member_id = "bcd"
+		api = "account"
+		`,
+		ExpectedDiff: map[string]*terraform.ResourceAttrDiff{},
+	}.ApplyNoError(t)
+}
+
+// Workspace-level behavior is unchanged: provider_config tracked in state
+// produces no diff.
+func TestResourceGroupMemberWorkspaceLevel_ProviderConfigInState(t *testing.T) {
+	qa.ResourceFixture{
+		Resource: ResourceGroupMember(),
+		ID:       "abc|bcd",
+		InstanceState: map[string]string{
+			"id":                             "abc|bcd",
+			"group_id":                       "abc",
+			"member_id":                      "bcd",
+			"provider_config.#":              "1",
+			"provider_config.0.workspace_id": "12345",
+		},
+		HCL: `
+		group_id = "abc"
+		member_id = "bcd"
+		`,
+		ExpectedDiff: map[string]*terraform.ResourceAttrDiff{},
+	}.ApplyNoError(t)
 }

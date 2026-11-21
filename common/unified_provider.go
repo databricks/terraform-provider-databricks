@@ -267,6 +267,26 @@ func NamespaceCustomizeDiffNoForceNew(ctx context.Context, d *schema.ResourceDif
 	return namespaceForceNew(ctx, d, c, false)
 }
 
+// clearUnconfiguredProviderConfig drops the planned diff for provider_config
+// when the user did not configure it. Dual resources at account level never
+// write provider_config to state (see the post-Read/post-Create hooks in
+// ToResource). When the prior state has no provider_config entry at all
+// (state written via the legacy SDK diff path, or a null block from a client
+// that does not normalize it to an empty list the way Terraform core does),
+// SDKv2 plans the Optional+Computed list as "known after apply" on every run.
+// That is a perpetual diff, and resources without Update fail on it. See
+// https://github.com/databricks/terraform-provider-databricks/issues/6169.
+func clearUnconfiguredProviderConfig(d *schema.ResourceDiff) error {
+	raw, diags := d.GetRawConfigAt(cty.GetAttrPath("provider_config"))
+	if diags.HasError() {
+		return nil
+	}
+	if !raw.IsNull() && (!raw.IsKnown() || raw.LengthInt() > 0) {
+		return nil
+	}
+	return d.Clear("provider_config")
+}
+
 // CustomizeDiffDualResources is the CustomizeDiff entry point for dual
 // workspace/account resources (those that call AddApiField). It runs the
 // unified-host api-level check, then for account-level operations skips
@@ -277,7 +297,7 @@ func CustomizeDiffDualResources(ctx context.Context, d *schema.ResourceDiff, c *
 		return err
 	}
 	if IsAccountLevelFromDiff(d, c) {
-		return nil
+		return clearUnconfiguredProviderConfig(d)
 	}
 	return NamespaceCustomizeDiff(ctx, d, c)
 }
@@ -294,7 +314,7 @@ func CustomizeDiffDualResourcesNoForceNew(ctx context.Context, d *schema.Resourc
 		return err
 	}
 	if IsAccountLevelFromDiff(d, c) {
-		return nil
+		return clearUnconfiguredProviderConfig(d)
 	}
 	return NamespaceCustomizeDiffNoForceNew(ctx, d, c)
 }

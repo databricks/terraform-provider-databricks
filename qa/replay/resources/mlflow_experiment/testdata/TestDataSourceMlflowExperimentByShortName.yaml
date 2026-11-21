@@ -1,0 +1,51 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+# A short name is resolved by searching for experiments whose path ends with it.
+# The search filter can match more than the exact name, so the provider must
+# select the experiment whose last path segment equals the configured name.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: "workspace"
+  cloud: "AWS"
+  workspace_id: "12345"
+steps:
+  - name: "lookup_short_name"
+    config: |
+      data "databricks_mlflow_experiment" "this" {
+        name = "my-experiment"
+      }
+    calls:
+      - &search
+        request:
+          method: "POST"
+          path: "/api/2.0/mlflow/experiments/search"
+          body:
+            json:
+              filter: "name LIKE '%/my-experiment'"
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              experiments:
+                - artifact_location: "dbfs:/databricks/mlflow-tracking/456"
+                  experiment_id: "456"
+                  lifecycle_stage: "active"
+                  name: "/Users/replay@example.com/old-my-experiment"
+                - artifact_location: "dbfs:/databricks/mlflow-tracking/123"
+                  experiment_id: "123"
+                  lifecycle_stage: "active"
+                  name: "/Users/replay@example.com/my-experiment"
+      - *search
+      - *search
+    state:
+      resources:
+        data.databricks_mlflow_experiment.this:
+          attributes:
+            - path: ["id"]
+              equals: "123"
+            - path: ["experiment_id"]
+              equals: "123"
+            - path: ["name"]
+              equals: "/Users/replay@example.com/my-experiment"
+destroy:
+  calls:
+    - *search

@@ -5,14 +5,18 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/compute"
+	"github.com/databricks/databricks-sdk-go/service/sql"
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/common"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
+
+var maxSqlExecWaitTimeout = 50
 
 // https://docs.databricks.com/security/access-control/table-acls/object-privileges.html#operations-and-privileges
 
@@ -25,9 +29,11 @@ type SqlPermissions struct {
 	AnyFile              bool                  `json:"any_file,omitempty" tf:"force_new"`
 	AnonymousFunction    bool                  `json:"anonymous_function,omitempty" tf:"force_new"`
 	ClusterID            string                `json:"cluster_id,omitempty" tf:"computed"`
+	WarehouseID          string                `json:"warehouse_id,omitempty"`
 	PrivilegeAssignments []PrivilegeAssignment `json:"privilege_assignments,omitempty" tf:"slice_set"`
 
-	exec common.CommandExecutor
+	exec    common.CommandExecutor
+	sqlExec sql.StatementExecutionInterface
 }
 
 // PrivilegeAssignment ...
@@ -116,6 +122,9 @@ func (ta *SqlPermissions) read() error {
 	if thisType == "" && thisKey == "" {
 		return fmt.Errorf("invalid ID")
 	}
+	if ta.WarehouseID != "" {
+		return ta.readViaWarehouse(thisType, thisKey)
+	}
 	currentGrantsOnThis := ta.exec.Execute(ta.ClusterID, "sql", fmt.Sprintf(
 		"SHOW GRANT ON %s %s", thisType, thisKey))
 	if currentGrantsOnThis.Failed() {
@@ -193,6 +202,84 @@ func (ta *SqlPermissions) read() error {
 	return nil
 }
 
+func (ta *SqlPermissions) readViaWarehouse(thisType, thisKey string) error {
+	execCtx, cancel := context.WithTimeout(context.Background(), time.Duration(maxSqlExecWaitTimeout)*time.Second)
+	defer cancel()
+	sqlRes, err := ta.sqlExec.ExecuteStatement(execCtx, sql.ExecuteStatementRequest{
+		Statement:     fmt.Sprintf("SHOW GRANT ON %s %s", thisType, thisKey),
+		WaitTimeout:   fmt.Sprintf("%ds", maxSqlExecWaitTimeout),
+		WarehouseId:   ta.WarehouseID,
+		OnWaitTimeout: sql.ExecuteStatementRequestOnWaitTimeoutCancel,
+	})
+	if err != nil {
+		if strings.Contains(err.Error(), "does not exist") || strings.Contains(err.Error(), "RESOURCE_DOES_NOT_EXIST") {
+			return &apierr.APIError{ErrorCode: "NOT_FOUND", StatusCode: 404, Message: err.Error()}
+		}
+		return fmt.Errorf("cannot read current grants: %s", err)
+	}
+	if sqlRes.Status.State != "SUCCEEDED" {
+		var msg string
+		if sqlRes.Status.Error != nil {
+			msg = sqlRes.Status.Error.Message
+		}
+		if strings.Contains(msg, "does not exist") || strings.Contains(msg, "RESOURCE_DOES_NOT_EXIST") {
+			return &apierr.APIError{ErrorCode: "NOT_FOUND", StatusCode: 404, Message: msg}
+		}
+		return fmt.Errorf("cannot read current grants: %s", msg)
+	}
+	// clear any previous entries
+	ta.PrivilegeAssignments = []PrivilegeAssignment{}
+	if sqlRes.Result == nil {
+		return nil
+	}
+	for _, row := range sqlRes.Result.DataArray {
+		if len(row) < 4 {
+			continue
+		}
+		currentPrincipal, currentAction, currentType, currentKey := row[0], row[1], row[2], row[3]
+		if currentType == "CATALOG$" {
+			currentType = "CATALOG"
+			currentKey = ""
+		}
+		if ta.AnyFile {
+			currentType = "ANY FILE"
+			currentKey = ""
+		}
+		if ta.AnonymousFunction {
+			currentType = "ANONYMOUS FUNCTION"
+			currentKey = ""
+		}
+		if !strings.EqualFold(currentType, thisType) {
+			continue
+		}
+		noBackticks := strings.ReplaceAll(thisKey, "`", "")
+		if !strings.EqualFold(currentKey, thisKey) && !strings.EqualFold(currentKey, noBackticks) {
+			continue
+		}
+		if strings.HasPrefix(currentAction, "DENIED_") {
+			continue
+		}
+		if currentAction == "OWN" {
+			continue
+		}
+		var privileges *[]string
+		for i, pa := range ta.PrivilegeAssignments {
+			if pa.Principal == currentPrincipal {
+				privileges = &ta.PrivilegeAssignments[i].Privileges
+			}
+		}
+		if privileges == nil {
+			ta.PrivilegeAssignments = append(ta.PrivilegeAssignments, PrivilegeAssignment{
+				Principal:  currentPrincipal,
+				Privileges: []string{},
+			})
+			privileges = &ta.PrivilegeAssignments[len(ta.PrivilegeAssignments)-1].Privileges
+		}
+		*privileges = append(*privileges, currentAction)
+	}
+	return nil
+}
+
 func (ta *SqlPermissions) revoke() error {
 	existing, err := loadTableACL(ta.ID())
 	if err != nil {
@@ -200,6 +287,8 @@ func (ta *SqlPermissions) revoke() error {
 	}
 	existing.exec = ta.exec
 	existing.ClusterID = ta.ClusterID
+	existing.WarehouseID = ta.WarehouseID
+	existing.sqlExec = ta.sqlExec
 	if err = existing.read(); err != nil {
 		return err
 	}
@@ -237,6 +326,23 @@ func (ta *SqlPermissions) apply(qb func(objType, key string) string) error {
 	}
 	sqlQuery := qb(objType, key)
 	log.Printf("[INFO] Executing SQL: %s", sqlQuery)
+	if ta.WarehouseID != "" {
+		execCtx, cancel := context.WithTimeout(context.Background(), time.Duration(maxSqlExecWaitTimeout)*time.Second)
+		defer cancel()
+		res, err := ta.sqlExec.ExecuteStatement(execCtx, sql.ExecuteStatementRequest{
+			Statement:     sqlQuery,
+			WaitTimeout:   fmt.Sprintf("%ds", maxSqlExecWaitTimeout),
+			WarehouseId:   ta.WarehouseID,
+			OnWaitTimeout: sql.ExecuteStatementRequestOnWaitTimeoutCancel,
+		})
+		if err != nil {
+			return fmt.Errorf("cannot execute %s: %s", sqlQuery, err)
+		}
+		if res.Status.State != "SUCCEEDED" {
+			return fmt.Errorf("cannot execute %s: %s", sqlQuery, res.Status.State)
+		}
+		return nil
+	}
 	r := ta.exec.Execute(ta.ClusterID, "sql", sqlQuery)
 	if !r.Failed() {
 		return nil
@@ -245,6 +351,15 @@ func (ta *SqlPermissions) apply(qb func(objType, key string) string) error {
 }
 
 func (ta *SqlPermissions) initCluster(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) (err error) {
+	if wi, ok := d.GetOk("warehouse_id"); ok {
+		ta.WarehouseID = wi.(string)
+		w, err := c.WorkspaceClientUnifiedProvider(ctx, d)
+		if err != nil {
+			return err
+		}
+		ta.sqlExec = w.StatementExecution
+		return nil
+	}
 	clustersAPI := clusters.NewClustersAPI(ctx, c)
 	if ci, ok := d.GetOk("cluster_id"); ok {
 		ta.ClusterID = ci.(string)
@@ -335,6 +450,8 @@ func ResourceSqlPermissions() common.Resource {
 			return false
 		}
 		s["cluster_id"].Computed = true
+		s["warehouse_id"].Optional = true
+		s["warehouse_id"].ConflictsWith = []string{"cluster_id"}
 		common.AddNamespaceInSchema(s)
 		common.NamespaceCustomizeSchemaMap(s)
 		return s

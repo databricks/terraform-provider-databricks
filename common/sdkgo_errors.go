@@ -3,7 +3,6 @@ package common
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -40,10 +39,11 @@ func (b *sdkGoBridge) classicError(ctx context.Context, err error,
 	}
 	apiErr, ok := errors.AsType[*sdkapierr.APIError](err)
 	if !ok || apiErr.HTTPStatusCode() < 0 {
-		var syntaxErr *json.SyntaxError
-		var typeErr *json.UnmarshalTypeError
-		if errors.As(err, &syntaxErr) || errors.As(err, &typeErr) {
-			return fmt.Errorf("failed to unmarshal response body: %w", err)
+		// After a successful response, only decoding it can fail, whatever error the
+		// sdk-go wire types return.
+		if attempt.succeeded() {
+			return &responseDecodeError{
+				fmt.Errorf("failed to unmarshal response body: %w", err)}
 		}
 		return err
 	}
@@ -56,7 +56,10 @@ func (b *sdkGoBridge) classicError(ctx context.Context, err error,
 	}
 	// The classic client classifies HTML error pages by the status text.
 	if attempt != nil && attempt.request != nil {
-		resp.Request, resp.Status = attempt.request, attempt.status
+		resp.Request = attempt.request
+		if attempt.response != nil {
+			resp.Status = attempt.response.Status
+		}
 	}
 	mapped := b.httpConfig.ErrorMapper(ctx, sdkcommon.ResponseWrapper{
 		Response:   resp,
@@ -113,7 +116,7 @@ func (b *sdkGoBridge) isRetriable(ctx context.Context, err error) bool {
 	if _, ok := errors.AsType[*visitorError](err); ok {
 		return false
 	}
-	// The classic client decodes a response only after its retries.
+	// It decodes responses only after its retries.
 	if _, ok := errors.AsType[*responseDecodeError](err); ok {
 		return false
 	}

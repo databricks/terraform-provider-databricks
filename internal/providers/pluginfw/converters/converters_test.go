@@ -266,6 +266,11 @@ var tests = []struct {
 		DummyGoSdk{EnumField: TestEnumA},
 	},
 	{
+		"enum conversion with value unknown to the SDK",
+		DummyTfSdk{EnumField: types.StringValue("TEST_ENUM_UNSPECIFIED")},
+		DummyGoSdk{EnumField: TestEnum("TEST_ENUM_UNSPECIFIED")},
+	},
+	{
 		"struct conversion",
 		DummyTfSdk{NoPointerNested: types.ListValueMust(
 			dummyType, []attr.Value{

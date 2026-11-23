@@ -203,7 +203,7 @@ func tfsdkToGoSdkStructField(
 				return
 			}
 
-			destVal := convertToEnumValue(v, destField.Type())
+			destVal := convertToEnumValue(ctx, v, destField.Type())
 			destField.Set(destVal)
 		} else {
 			destField.SetString(v.ValueString())
@@ -388,7 +388,14 @@ func addToForceSendFields(ctx context.Context, fieldName string, forceSendFields
 }
 
 // Returns a reflect.Value of the enum type with the value set to the given string.
-func convertToEnumValue(v types.String, destType reflect.Type) reflect.Value {
+//
+// The backend can return enum values that the Go SDK does not know about yet,
+// for example a value added for a preview feature before the SDK was
+// regenerated. Those values are read into state without validation, so they
+// must also be accepted here. Otherwise any resource holding such a value fails
+// to convert back to the Go SDK struct. When the SDK rejects the value, the raw
+// string is kept and a warning is logged.
+func convertToEnumValue(ctx context.Context, v types.String, destType reflect.Type) reflect.Value {
 	// Find the Set method
 	destVal := reflect.New(destType)
 	setMethod := destVal.MethodByName("Set")
@@ -403,7 +410,11 @@ func convertToEnumValue(v types.String, destType reflect.Type) reflect.Value {
 	result := setMethod.Call([]reflect.Value{arg})
 	if len(result) != 0 {
 		if err, ok := result[0].Interface().(error); ok && err != nil {
-			panic(fmt.Sprintf("%s. %s", err, common.TerraformBugErrorMessage))
+			if destType.Kind() != reflect.String {
+				panic(fmt.Sprintf("%s. %s", err, common.TerraformBugErrorMessage))
+			}
+			tflog.Warn(ctx, fmt.Sprintf("unknown value for enum type %s, passing it through unchanged: %s", destType.Name(), err))
+			destVal.Elem().SetString(v.ValueString())
 		}
 	}
 	return destVal.Elem()

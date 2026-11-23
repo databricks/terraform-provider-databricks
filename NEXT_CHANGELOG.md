@@ -13,6 +13,7 @@
 * Add data sources for `databricks_lakewatch_builtin_parser_version`.
 
 ### Bug Fixes
+* Fixed a panic when a resource holds an enum value that the Go SDK does not know about yet, for example `scan_status` on `databricks_app` deployments, which crashed the exporter ([#6205](https://github.com/databricks/terraform-provider-databricks/issues/6205)).
 
 ### Documentation
 

@@ -108,25 +108,26 @@ func (r ProviderConfig) Type(ctx context.Context) attr.Type {
 
 // User extends the main model with additional fields.
 type User struct {
-	// The accountId parent of the user in Databricks.
+	// The ID of the account that contains the user.
 	AccountId types.String `tfsdk:"account_id"`
-	// The activity status of a user in a Databricks account.
+	// Whether the user is active in the account. New users are active unless
+	// you set this to `INACTIVE`.
 	AccountUserStatus types.String `tfsdk:"account_user_status"`
-	// ExternalId of the user in the customer's IdP.
+	// The ID of the user in your identity provider (IdP).
 	ExternalId types.String `tfsdk:"external_id"`
-
+	// The user's name.
 	FullName types.Object `tfsdk:"full_name"`
-	// The resource name of the user. The format depends on the API that
-	// returned it: - Account-scoped: accounts/{account_id}/users/{user_id} -
-	// Workspace-scoped: users/{user_id}
+	// The resource name of the user, in one of these formats: - Account APIs:
+	// `accounts/{account_id}/users/{user_id}` - Workspace APIs:
+	// `users/{user_id}`
 	Name types.String `tfsdk:"name"`
-	// The resource name of the account that contains the user,
-	// `accounts/{account_id}`. Both the account-scoped and workspace-scoped
-	// APIs return it.
+	// The resource name of the account that contains the user, in the format
+	// `accounts/{account_id}`. Workspace APIs return the same format.
 	Parent types.String `tfsdk:"parent"`
-	// Internal userId of the user in Databricks.
+	// The Databricks ID of the user.
 	UserId types.String `tfsdk:"user_id"`
-	// Username/email of the user.
+	// The user's username, which is their email address. It can't be changed
+	// after the user is created.
 	Username       types.String `tfsdk:"username"`
 	ProviderConfig types.Object `tfsdk:"provider_config"`
 }

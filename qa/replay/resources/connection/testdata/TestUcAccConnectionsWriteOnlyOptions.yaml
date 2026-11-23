@@ -1,0 +1,168 @@
+# API responses are inferred from the scenarios and API models, not recorded.
+# options_wo must be merged into the options sent to the API but never stored in
+# state. The API doesn't return user/password, but does echo
+# userProvidedServerCertificate; Read must drop it, otherwise the post-apply plan
+# isn't empty. Bumping options_wo_version re-sends the merged options in place.
+version: 1
+host_metadata: # Dummy host metadata.
+  host_type: "workspace"
+  cloud: "AWS"
+  workspace_id: "12345"
+steps:
+  - name: "create"
+    config: |
+      resource "databricks_connection" "this" {
+        name            = "tf-test-connection-wo-replay"
+        connection_type = "POSTGRESQL"
+        options = {
+          host                   = "test.postgres.example.com"
+          port                   = "5432"
+          trustServerCertificate = "false"
+        }
+        options_wo = jsonencode({
+          user                          = "user"
+          password                      = "password_v1"
+          userProvidedServerCertificate = "fake-server-certificate-v1"
+        })
+        options_wo_version = 1
+      }
+    calls:
+      - request:
+          method: "POST"
+          path: "/api/2.1/unity-catalog/connections"
+          body:
+            json:
+              connection_type: "POSTGRESQL"
+              name: "tf-test-connection-wo-replay"
+              options:
+                host: "test.postgres.example.com"
+                port: "5432"
+                trustServerCertificate: "false"
+                user: "user"
+                password: "password_v1"
+                userProvidedServerCertificate: "fake-server-certificate-v1"
+        response: &connection_v1 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              connection_id: "connection-123"
+              connection_type: "POSTGRESQL"
+              full_name: "tf-test-connection-wo-replay"
+              metastore_id: "11111111-1111-1111-1111-111111111111"
+              name: "tf-test-connection-wo-replay"
+              options:
+                host: "test.postgres.example.com"
+                port: "5432"
+                trustServerCertificate: "false"
+                userProvidedServerCertificate: "fake-server-certificate-v1"
+              owner: "replay-admin"
+              provisioning_info:
+                state: "ACTIVE"
+      - &get_v1
+        request:
+          method: "GET"
+          path: "/api/2.1/unity-catalog/connections/tf-test-connection-wo-replay"
+          body: null
+        response: *connection_v1 # Inferred API response; not recorded.
+      - *get_v1
+    state:
+      resources:
+        databricks_connection.this:
+          attributes:
+            - path: [options_wo]
+              equals: null
+            - path: [options_wo_version]
+              equals: 1
+  - name: "bump_version"
+    config: |
+      resource "databricks_connection" "this" {
+        name            = "tf-test-connection-wo-replay"
+        connection_type = "POSTGRESQL"
+        options = {
+          host                   = "test.postgres.example.com"
+          port                   = "5432"
+          trustServerCertificate = "false"
+        }
+        options_wo = jsonencode({
+          user                          = "user"
+          password                      = "password_v2"
+          userProvidedServerCertificate = "fake-server-certificate-v2"
+        })
+        options_wo_version = 2
+      }
+    plan:
+      changes:
+        databricks_connection.this:
+          actions: [update]
+          after:
+            - path: [options_wo_version]
+              equals: 2
+            - path: [options_wo]
+              equals: null
+    calls:
+      - *get_v1
+      - request:
+          method: "GET"
+          path: "/api/2.1/unity-catalog/current-metastore-assignment"
+          body: null
+        response: # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              default_catalog_name: "main"
+              metastore_id: "11111111-1111-1111-1111-111111111111"
+              workspace_id: 12345
+      - request:
+          method: "PATCH"
+          path: "/api/2.1/unity-catalog/connections/tf-test-connection-wo-replay"
+          body:
+            json:
+              options:
+                host: "test.postgres.example.com"
+                port: "5432"
+                trustServerCertificate: "false"
+                user: "user"
+                password: "password_v2"
+                userProvidedServerCertificate: "fake-server-certificate-v2"
+        response: &connection_v2 # Inferred API response; not recorded.
+          status: 200
+          body:
+            json:
+              connection_id: "connection-123"
+              connection_type: "POSTGRESQL"
+              full_name: "tf-test-connection-wo-replay"
+              metastore_id: "11111111-1111-1111-1111-111111111111"
+              name: "tf-test-connection-wo-replay"
+              options:
+                host: "test.postgres.example.com"
+                port: "5432"
+                trustServerCertificate: "false"
+                userProvidedServerCertificate: "fake-server-certificate-v2"
+              owner: "replay-admin"
+              provisioning_info:
+                state: "ACTIVE"
+      - &get_v2
+        request:
+          method: "GET"
+          path: "/api/2.1/unity-catalog/connections/tf-test-connection-wo-replay"
+          body: null
+        response: *connection_v2 # Inferred API response; not recorded.
+      - *get_v2
+    state:
+      resources:
+        databricks_connection.this:
+          attributes:
+            - path: [options_wo]
+              equals: null
+            - path: [options_wo_version]
+              equals: 2
+destroy:
+  calls:
+    - *get_v2
+    - request:
+        method: "DELETE"
+        path: "/api/2.1/unity-catalog/connections/tf-test-connection-wo-replay"
+        body: null
+      response: # Inferred API response; not recorded.
+        status: 200
+        body: null

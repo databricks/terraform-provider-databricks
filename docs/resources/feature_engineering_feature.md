@@ -192,6 +192,7 @@ The following arguments are supported:
 ### DataSource
 * `delta_table_source` (DeltaTableSource, optional) - A Delta table data source
 * `feature_view_source` (FeatureViewSource, optional) - A data source composed from registered upstream Features
+* `iceberg_table_source` (IcebergTableSource, optional) - A Unity Catalog managed or foreign Iceberg table source
 * `kafka_source` (KafkaSource, optional) - A Kafka stream data source
 * `lateness` (SourceLateness, optional) - Completeness timing for this Feature's use of the source. This configuration is part of the
   Feature definition; it does not modify the underlying table or stream
@@ -205,10 +206,11 @@ The following arguments are supported:
   Required if transformation_sql is specified.
   Example: {"type":"struct","fields":[{"name":"col_a","type":"integer","nullable":true,"metadata":{}},{"name":"col_c","type":"integer","nullable":true,"metadata":{}}]}
 * `entity_columns` (list of string, optional, deprecated)
-* `filter_condition` (string, optional) - Single WHERE clause to filter delta table before applying transformations. Will be row-wise evaluated, so should only include conditionals and projections
+* `filter_condition` (string, optional) - A single WHERE clause to filter the Delta table before applying transformations.
+  The predicate is evaluated for each row
 * `timeseries_column` (string, optional, deprecated)
 * `transformation_sql` (string, optional) - A single SQL SELECT expression applied after filter_condition.
-  Should contains all the columns needed (eg. "SELECT *, col_a + col_b AS col_c FROM x.y.z WHERE col_a > 0" would have `transformation_sql` "*, col_a + col_b AS col_c")
+  The expression must contain all required columns (e.g., "*, col_a + col_b AS col_c").
   If transformation_sql is not provided, all columns of the delta table are present in the DataSource dataframe
 
 ### EntityColumn
@@ -253,6 +255,17 @@ The following arguments are supported:
 ### FunctionExtraParameter
 * `key` (string, required) - The name of the parameter
 * `value` (string, required) - The value of the parameter
+
+### IcebergTableSource
+* `full_name` (string, required) - Full three-part name of the source table. May be omitted on reads when inaccessible
+* `dataframe_schema` (string, optional) - Schema of the resulting dataframe after transformations, in Spark StructType JSON format (from df.schema.json()).
+  Required if transformation_sql is specified.
+  Example: {"type":"struct","fields":[{"name":"col_a","type":"integer","nullable":true,"metadata":{}},{"name":"col_c","type":"integer","nullable":true,"metadata":{}}]}
+* `filter_condition` (string, optional) - A single WHERE clause to filter the Iceberg table before applying transformations.
+  The predicate is evaluated for each row
+* `transformation_sql` (string, optional) - A single SQL SELECT expression applied after filter_condition.
+  The expression must contain all required columns (e.g., "*, col_a + col_b AS col_c").
+  If transformation_sql is not provided, all columns of the Iceberg table are present in the DataSource dataframe
 
 ### InputBinding
 * `column` (string, required) - Source column whose value is passed for this parameter at execution time
@@ -316,7 +329,7 @@ The following arguments are supported:
 * `input_tables` (list of string, optional) - The full three-part names of the tables the pipeline reads from. Required to materialize this
   feature with a TableTrigger, which starts a run when these tables update. Each table must exist
   when the feature is created. Feature Store doesn't confirm that the pipeline reads from these
-  tables. At most 100 tables
+  tables. At most 25 tables
 * `output_table` (string, optional) - The full three-part (catalog, schema, table) name of the pipeline's output table to read from.
   The table doesn't need to exist until the pipeline first runs. Required
 * `pipeline_id` (string, optional) - The ID of the Spark Declarative Pipeline that Feature Store runs to produce this source, before
@@ -415,6 +428,7 @@ In addition to the above arguments, the following attributes are exported:
 * `created_at` (string) - Time at which this feature was created
 * `created_by` (string) - Username of the feature creator
 * `name` (string) - Name of the feature, extracted from the full three-part name (catalog.schema.name)
+* `output_type_text` (string) - Output type in Databricks SQL DDL (e.g., "BIGINT", "DECIMAL(10,2)", "ARRAY<STRING>", "STRUCT<name:STRING>")
 * `schema_name` (string) - Name of parent schema relative to its parent catalog
 
 ### SdpSource

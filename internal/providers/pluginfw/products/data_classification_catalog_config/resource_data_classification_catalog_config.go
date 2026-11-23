@@ -109,24 +109,27 @@ func (r ProviderConfig) Type(ctx context.Context) attr.Type {
 
 // CatalogConfig extends the main model with additional fields.
 type CatalogConfig struct {
-	// List of auto-tagging configurations for this catalog. Empty list means no
-	// auto-tagging is enabled.
+	// Auto-tagging configurations that apply to this catalog. Each entry
+	// overrides the metastore-level auto-tagging setting for its classification
+	// tag; tags without an entry inherit the metastore-level setting.
 	AutoTagConfigs types.List `tfsdk:"auto_tag_configs"`
 	// Schemas to exclude from the scan, each named relative to the parent
 	// catalog. If specified, all schemas except the specified ones will be
-	// scanned. Mutually exclusive with `included_schemas`: only one may be set
-	// per request. If neither `included_schemas` nor `excluded_schemas` is set,
-	// all schemas are scanned.
+	// scanned, including schemas created later. Mutually exclusive with
+	// `included_schemas`: only one may be set per request. If neither
+	// `included_schemas` nor `excluded_schemas` is set, all schemas are
+	// scanned.
 	ExcludedSchemas types.Object `tfsdk:"excluded_schemas"`
 	// Schemas to include in the scan, each named relative to the parent
-	// catalog. If specified, only listed schemas will be scanned. Mutually
+	// catalog. If specified, only listed schemas will be scanned. Schemas
+	// created later are not scanned until you add them to the list. Mutually
 	// exclusive with `excluded_schemas`: only one may be set per request. If
 	// neither `included_schemas` nor `excluded_schemas` is set, all schemas are
 	// scanned.
 	IncludedSchemas types.Object `tfsdk:"included_schemas"`
 	// Resource name in the format: catalogs/{catalog_name}/config.
 	Name types.String `tfsdk:"name"`
-	// Parent resource in the format: catalogs/{catalog_name}
+	// Name of the catalog to enable, in the format catalogs/{catalog_name}.
 	Parent         types.String `tfsdk:"parent"`
 	ProviderConfig types.Object `tfsdk:"provider_config"`
 }
@@ -283,7 +286,8 @@ func (m CatalogConfig) ApplySchemaCustomizations(attrs map[string]tfschema.Attri
 	attrs["included_schemas"] = attrs["included_schemas"].SetOptional()
 	attrs["name"] = attrs["name"].SetComputed()
 	attrs["parent"] = attrs["parent"].SetRequired()
-	attrs["parent"] = attrs["parent"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["parent"] = attrs["parent"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
+	attrs["parent"] = attrs["parent"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplaceIf(tfschema.RequiresReplaceIfKnownChange, "", "")).(tfschema.AttributeBuilder)
 
 	attrs["name"] = attrs["name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["provider_config"] = attrs["provider_config"].SetOptional()
@@ -453,6 +457,9 @@ func (r *CatalogConfigResource) Create(ctx context.Context, req resource.CreateR
 		return
 	}
 	resp.Diagnostics.Append(tfschema.PopulateProviderConfigInState(ctx, r.Client, plan.ProviderConfig, &resp.State)...)
+	if !resp.Diagnostics.HasError() {
+		resp.Diagnostics.Append(resp.Private.SetKey(ctx, tfschema.CreationInputsAppliedKey, []byte("true"))...)
+	}
 }
 
 func (r *CatalogConfigResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -565,6 +572,9 @@ func (r *CatalogConfigResource) Update(ctx context.Context, req resource.UpdateR
 	}
 
 	r.update(ctx, plan, &resp.Diagnostics, &resp.State)
+	if !resp.Diagnostics.HasError() {
+		resp.Diagnostics.Append(resp.Private.SetKey(ctx, tfschema.CreationInputsAppliedKey, []byte("true"))...)
+	}
 }
 
 func (r *CatalogConfigResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {

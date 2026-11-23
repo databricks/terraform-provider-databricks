@@ -97,23 +97,31 @@ resource "databricks_database_instance" "this" {
 
 ## Arguments
 The following arguments are supported:
-* `name` (string, required) - The name of the instance. This is the unique identifier for the instance
-* `capacity` (string, optional) - The sku of the instance. Valid values are "CU_1", "CU_2", "CU_4", "CU_8"
-* `custom_tags` (list of CustomTag, optional) - Custom tags associated with the instance. This field is only included on create and update responses
+* `name` (string, required) - The name of the instance. This is the unique identifier for the instance. Must be 1 to 63
+  characters long, contain only letters, digits and hyphens, start with a letter, and not contain
+  consecutive hyphens
+* `capacity` (string, optional) - The sku of the instance. Valid values are "CU_1", "CU_2", "CU_4", "CU_8". Must be set when
+  creating an instance
+* `custom_tags` (list of CustomTag, optional) - Custom tags associated with the instance. This field is only included on create and update responses.
+  An instance can have at most 10 tags; keys must be unique ignoring case
 * `enable_pg_native_login` (boolean, optional) - Whether to enable PG native password login on the instance. Defaults to false
-* `enable_readable_secondaries` (boolean, optional) - Whether to enable secondaries to serve read-only traffic. Defaults to false
+* `enable_readable_secondaries` (boolean, optional) - Whether to enable secondaries to serve read-only traffic. Defaults to false. Requires a
+  node_count greater than 1
 * `node_count` (integer, optional) - The number of nodes in the instance, composed of 1 primary and 0 or more secondaries. Defaults to
   1 primary and 0 secondaries. This field is input only, see effective_node_count for the output
-* `parent_instance_ref` (DatabaseInstanceRef, optional) - The ref of the parent instance. This is only available if the instance is
-  child instance.
+* `parent_instance_ref` (DatabaseInstanceRef, optional) - The ref of the parent instance. This is only available if the instance is a
+  child instance. A child instance inherits custom_tags and usage_policy_id from
+  its parent and cannot set them.
   Input: For specifying the parent instance to create a child instance. Optional.
   Output: Only populated if provided as input to create a child instance
-* `purge_on_delete` (boolean, optional) - Deprecated. Omitting the field or setting it to true will result in the field being hard deleted. Setting a value
-  of false will throw a bad request
+* `purge_on_delete` (boolean, optional) - Deprecated: omitting the field or setting it to true hard deletes the instance. Setting it to
+  false returns a bad request
 * `retention_window_in_days` (integer, optional) - The retention window for the instance. This is the time window in days
   for which the historical data is retained. The default value is 7 days.
   Valid values are 2 to 35 days
-* `stopped` (boolean, optional) - Whether to stop the instance. An input only param, see effective_stopped for the output
+* `stopped` (boolean, optional) - Whether to stop the instance. An input only param, see effective_stopped for the output. An
+  instance cannot be created in the stopped state; set this field on update to stop or start
+  the instance
 * `usage_policy_id` (string, optional) - The desired usage policy to associate with the instance
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 
@@ -144,7 +152,7 @@ In addition to the above arguments, the following attributes are exported:
   parent instance
 * `creation_time` (string) - The timestamp when the instance was created
 * `creator` (string) - The email of the creator of the instance
-* `effective_capacity` (string, deprecated) - Deprecated. The sku of the instance; this field will always match the value of capacity.
+* `effective_capacity` (string, deprecated) - Deprecated: this field always matches the value of capacity; read capacity instead.
   This is an output only field that contains the value computed from the input field combined with
   server side defaults. Use the field without the effective_ prefix to set the value
 * `effective_custom_tags` (list of CustomTag) - The recorded custom tags associated with the instance.

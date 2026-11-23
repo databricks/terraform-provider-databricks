@@ -40,21 +40,25 @@ type GroupResource struct {
 
 // Group extends the main model with additional fields.
 type Group struct {
-	// The parent account ID for group in Databricks.
+	// The ID of the account that contains the group.
 	AccountId types.String `tfsdk:"account_id"`
-	// ExternalId of the group in the customer's IdP.
+	// The ID of the group in your identity provider (IdP).
 	ExternalId types.String `tfsdk:"external_id"`
-	// Internal group ID of the group in Databricks.
+	// The Databricks ID of the group. It is a numeric string that Databricks
+	// assigns when the group is created, and it is the `{group_id}` segment of
+	// `name`.
 	GroupId types.String `tfsdk:"group_id"`
-	// Display name of the group.
+	// The display name of the group. It must be unique in the account, must not
+	// be blank, and must be shorter than 255 characters. Databricks trims
+	// surrounding whitespace. You can't use the name of a group that Databricks
+	// manages, such as `admins` or `users`.
 	GroupName types.String `tfsdk:"group_name"`
-	// The resource name of the group. The format depends on the API that
-	// returned it: - Account-scoped: accounts/{account_id}/groups/{group_id} -
-	// Workspace-scoped: groups/{group_id}
+	// The resource name of the group, in one of these formats: - Account APIs:
+	// `accounts/{account_id}/groups/{group_id}` - Workspace APIs:
+	// `groups/{group_id}`
 	Name types.String `tfsdk:"name"`
-	// The resource name of the account that contains the group,
-	// `accounts/{account_id}`. Both the account-scoped and workspace-scoped
-	// APIs return it.
+	// The resource name of the account that contains the group, in the format
+	// `accounts/{account_id}`. Workspace APIs return the same format.
 	Parent types.String `tfsdk:"parent"`
 }
 

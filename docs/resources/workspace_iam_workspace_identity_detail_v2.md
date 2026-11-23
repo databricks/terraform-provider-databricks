@@ -34,7 +34,7 @@ terraform import databricks_workspace_iam_workspace_identity_detail_v2.this prin
 ## Arguments
 The following arguments are supported:
 * `parent` (string, required) - The resource name of the parent
-* `workspace_identity_status` (string, optional) - The activity status of an identity in a Databricks workspace. Possible values are: `ACTIVE`, `INACTIVE`
+* `workspace_identity_status` (string, optional) - Whether the principal is active in the workspace. Groups are always `ACTIVE`. Possible values are: `ACTIVE`, `INACTIVE`
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 
 ### ProviderConfig
@@ -42,11 +42,11 @@ The following arguments are supported:
 
 ## Attributes
 In addition to the above arguments, the following attributes are exported:
-* `assignment_type` (string) - The type of assignment the principal has to the workspace (direct or indirect). Possible values are: `DIRECT`, `INDIRECT`
-* `name` (string) - The resource name of the workspace identity detail.
-  Format: principals/{principal_id}/workspace-identity-detail
-* `principal_id` (integer) - The internal ID of the principal (user/sp/group) in Databricks
-* `principal_type` (string) - The type of the principal (user/service principal/group). Possible values are: `GROUP`, `SERVICE_PRINCIPAL`, `USER`
+* `assignment_type` (string) - Whether the principal is assigned to the workspace directly or has access through a group. Possible values are: `DIRECT`, `INDIRECT`
+* `name` (string) - The resource name of the workspace identity detail, in the format
+  `principals/{principal_id}/workspace-identity-detail`
+* `principal_id` (integer) - The Databricks ID of the user, service principal, or group
+* `principal_type` (string) - Whether the principal is a user, service principal, or group. Possible values are: `GROUP`, `SERVICE_PRINCIPAL`, `USER`
 
 ## Import
 As of Terraform v1.5, resources can be imported through configuration.

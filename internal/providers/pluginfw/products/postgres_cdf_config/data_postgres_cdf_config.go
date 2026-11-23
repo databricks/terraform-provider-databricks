@@ -114,7 +114,12 @@ type CdfConfigData struct {
 	PostgresSchema types.String `tfsdk:"postgres_schema"`
 	// The Unity Catalog schema that replicated tables are written into. Set at
 	// creation; the CdfConfig is immutable.
-	Schema             types.String `tfsdk:"schema"`
+	Schema types.String `tfsdk:"schema"`
+	// The service principal (application id) whose identity authorizes this
+	// change data feed's ongoing writes to Unity Catalog. When unset, writes
+	// are authorized as the creating identity. Changing it requires a new
+	// CdfConfig, which writes to new Delta tables.
+	ServicePrincipal   types.String `tfsdk:"service_principal"`
 	ProviderConfigData types.Object `tfsdk:"provider_config"`
 }
 
@@ -141,12 +146,13 @@ func (m CdfConfigData) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"catalog":         m.Catalog,
-			"cdf_config_id":   m.CdfConfigId,
-			"create_time":     m.CreateTime,
-			"name":            m.Name,
-			"postgres_schema": m.PostgresSchema,
-			"schema":          m.Schema,
+			"catalog":           m.Catalog,
+			"cdf_config_id":     m.CdfConfigId,
+			"create_time":       m.CreateTime,
+			"name":              m.Name,
+			"postgres_schema":   m.PostgresSchema,
+			"schema":            m.Schema,
+			"service_principal": m.ServicePrincipal,
 
 			"provider_config": m.ProviderConfigData,
 		},
@@ -158,12 +164,13 @@ func (m CdfConfigData) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 func (m CdfConfigData) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"catalog":         types.StringType,
-			"cdf_config_id":   types.StringType,
-			"create_time":     timetypes.RFC3339{}.Type(ctx),
-			"name":            types.StringType,
-			"postgres_schema": types.StringType,
-			"schema":          types.StringType,
+			"catalog":           types.StringType,
+			"cdf_config_id":     types.StringType,
+			"create_time":       timetypes.RFC3339{}.Type(ctx),
+			"name":              types.StringType,
+			"postgres_schema":   types.StringType,
+			"schema":            types.StringType,
+			"service_principal": types.StringType,
 
 			"provider_config": ProviderConfigData{}.Type(ctx),
 		},
@@ -177,6 +184,7 @@ func (m CdfConfigData) ApplySchemaCustomizations(attrs map[string]tfschema.Attri
 	attrs["name"] = attrs["name"].SetRequired()
 	attrs["postgres_schema"] = attrs["postgres_schema"].SetComputed()
 	attrs["schema"] = attrs["schema"].SetComputed()
+	attrs["service_principal"] = attrs["service_principal"].SetComputed()
 
 	attrs["provider_config"] = attrs["provider_config"].SetOptional()
 

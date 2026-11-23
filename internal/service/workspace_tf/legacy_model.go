@@ -28,7 +28,8 @@ import (
 type AclItem_SdkV2 struct {
 	// The permission level applied to the principal.
 	Permission types.String `tfsdk:"permission"`
-	// The principal in which the permission is applied.
+	// The user name or group name of an existing Databricks principal that the
+	// permission applies to.
 	Principal types.String `tfsdk:"principal"`
 }
 
@@ -81,10 +82,10 @@ func (m AclItem_SdkV2) Type(ctx context.Context) attr.Type {
 // The metadata of the Azure KeyVault for a secret scope of type
 // `AZURE_KEYVAULT`
 type AzureKeyVaultSecretScopeMetadata_SdkV2 struct {
-	// The DNS of the KeyVault
+	// The DNS name of the key vault, for example
+	// ``https://my-key-vault.vault.azure.net/``.
 	DnsName types.String `tfsdk:"dns_name"`
-	// The resource id of the azure KeyVault that user wants to associate the
-	// scope with.
+	// The Azure resource ID of the key vault to associate with the scope.
 	ResourceId types.String `tfsdk:"resource_id"`
 }
 
@@ -153,10 +154,12 @@ type CreateCredentialsRequest_SdkV2 struct {
 	// authentication depending on your Git provider / token requirements.
 	// Required for AWS CodeCommit.
 	GitUsername types.String `tfsdk:"git_username"`
-	// if the credential is the default for the given provider
+	// Set to true to make the new credential the default for its Git provider,
+	// replacing the current default. The first credential created for a
+	// provider becomes the default regardless of this value.
 	IsDefaultForProvider types.Bool `tfsdk:"is_default_for_provider"`
-	// the name of the git credential, used for identification and ease of
-	// lookup
+	// The name of the Git credential, used for identification and ease of
+	// lookup. It must not exceed 100 characters.
 	Name types.String `tfsdk:"name"`
 	// The personal access token used to authenticate to the corresponding Git
 	// provider. For certain providers, support may exist for other types of
@@ -164,8 +167,8 @@ type CreateCredentialsRequest_SdkV2 struct {
 	//
 	// [Learn more]: https://docs.databricks.com/repos/get-access-tokens-from-git-provider.html
 	PersonalAccessToken types.String `tfsdk:"personal_access_token"`
-	// The ID of the service principal whose credentials will be modified. Only
-	// service principal managers can perform this action.
+	// The ID of the service principal for which the credential will be created.
+	// Only service principal managers can perform this action.
 	PrincipalId types.Int64 `tfsdk:"principal_id"`
 }
 
@@ -247,10 +250,12 @@ type CreateCredentialsResponse_SdkV2 struct {
 	// authentication depending on your Git provider / token requirements.
 	// Required for AWS CodeCommit.
 	GitUsername types.String `tfsdk:"git_username"`
-	// if the credential is the default for the given provider
+	// Whether this credential is the default for its Git provider. The default
+	// credential is the fallback that is used when no specific credential is
+	// selected.
 	IsDefaultForProvider types.Bool `tfsdk:"is_default_for_provider"`
-	// the name of the git credential, used for identification and ease of
-	// lookup
+	// The name of the Git credential, used for identification and ease of
+	// lookup.
 	Name types.String `tfsdk:"name"`
 }
 
@@ -318,7 +323,10 @@ type CreateRepoRequest_SdkV2 struct {
 	GitCredentialId types.Int64 `tfsdk:"git_credential_id"`
 	// Desired path for the repo in the workspace. Almost any path in the
 	// workspace can be chosen. If repo is created in `/Repos`, path must be in
-	// the format `/Repos/{folder}/{repo-name}`.
+	// the format `/Repos/{folder}/{repo-name}`. If omitted, the repo is created
+	// in the calling user's home folder (`/Users/{user}`, or `/Repos/{user}` in
+	// workspaces without workspace files). The repo name is the last path
+	// segment of `url`, for example `cli.git`.
 	Path types.String `tfsdk:"path"`
 	// Git provider. This field is case-insensitive. The available Git providers
 	// are `gitHub`, `bitbucketCloud`, `gitLab`, `azureDevOpsServices` (Azure
@@ -329,7 +337,7 @@ type CreateRepoRequest_SdkV2 struct {
 	// If specified, the repo will be created with sparse checkout enabled. You
 	// cannot enable/disable sparse checkout after the repo is created.
 	SparseCheckout types.List `tfsdk:"sparse_checkout"`
-	// URL of the Git repository to be linked.
+	// HTTPS URL of the Git repository to be linked. SSH URLs are not supported.
 	Url types.String `tfsdk:"url"`
 }
 
@@ -446,11 +454,13 @@ type CreateRepoResponse_SdkV2 struct {
 	Id types.Int64 `tfsdk:"id"`
 	// Path of the Git folder (repo) in the workspace.
 	Path types.String `tfsdk:"path"`
-	// Git provider of the linked Git repository, e.g. `gitHub`,
-	// `azureDevOpsServices`, `bitbucketServer` (Bitbucket Data Center),
-	// `gitLabEnterpriseEdition` (GitLab Self-Managed), or `awsCodeCommit`.
+	// Git provider of the linked Git repository. Supported providers are
+	// `gitHub`, `bitbucketCloud`, `gitLab`, `azureDevOpsServices`,
+	// `gitHubEnterprise`, `bitbucketServer` (Bitbucket Data Center),
+	// `gitLabEnterpriseEdition` (GitLab Self-Managed), and `awsCodeCommit`.
 	Provider types.String `tfsdk:"provider"`
-	// Sparse checkout settings for the Git folder (repo).
+	// Sparse checkout settings for the Git folder (repo). Only present when
+	// sparse checkout is enabled for the Git folder.
 	SparseCheckout types.List `tfsdk:"sparse_checkout"`
 	// URL of the linked Git repository.
 	Url types.String `tfsdk:"url"`
@@ -573,8 +583,7 @@ type CreateScope_SdkV2 struct {
 	InitialManagePrincipal types.String `tfsdk:"initial_manage_principal"`
 	// Scope name requested by the user. Scope names are unique.
 	Scope types.String `tfsdk:"scope"`
-	// The backend type the scope will be created with. If not specified, will
-	// default to ``DATABRICKS``
+	// The backend type of the new scope. Defaults to ``DATABRICKS``.
 	ScopeBackendType types.String `tfsdk:"scope_backend_type"`
 }
 
@@ -678,6 +687,9 @@ func (m *CreateScope_SdkV2) SetBackendAzureKeyvault(ctx context.Context, v Azure
 	m.BackendAzureKeyvault = types.ListValueMust(t, vs)
 }
 
+// A Git credential that Databricks uses to authenticate to a Git provider on
+// behalf of a user or service principal. Each user has one default credential
+// per Git provider, which is used when no specific credential is selected.
 type CredentialInfo_SdkV2 struct {
 	// ID of the credential object in the workspace.
 	CredentialId types.Int64 `tfsdk:"credential_id"`
@@ -699,10 +711,13 @@ type CredentialInfo_SdkV2 struct {
 	// authentication depending on your Git provider / token requirements.
 	// Required for AWS CodeCommit.
 	GitUsername types.String `tfsdk:"git_username"`
-	// if the credential is the default for the given provider
+	// Whether this credential is the default for its Git provider. The default
+	// credential is the fallback that is used when no specific credential is
+	// selected. See
+	// https://docs.databricks.com/aws/en/repos/repos-setup#how-default-credentials-work.
 	IsDefaultForProvider types.Bool `tfsdk:"is_default_for_provider"`
-	// the name of the git credential, used for identification and ease of
-	// lookup
+	// The name of the Git credential, used for identification and ease of
+	// lookup.
 	Name types.String `tfsdk:"name"`
 }
 
@@ -768,9 +783,9 @@ type Delete_SdkV2 struct {
 	// The absolute path of the notebook or directory.
 	Path types.String `tfsdk:"path"`
 	// The flag that specifies whether to delete the object recursively. It is
-	// `false` by default. Please note this deleting directory is not atomic. If
-	// it fails in the middle, some of objects under this directory may be
-	// deleted and cannot be undone.
+	// `false` by default. Deleting a directory recursively is not atomic. If
+	// the call fails part way, some objects under the directory may already be
+	// deleted and cannot be restored.
 	Recursive types.Bool `tfsdk:"recursive"`
 }
 
@@ -876,7 +891,7 @@ func (m DeleteAcl_SdkV2) Type(ctx context.Context) attr.Type {
 type DeleteCredentialsRequest_SdkV2 struct {
 	// The ID for the corresponding credential to access.
 	CredentialId types.Int64 `tfsdk:"-"`
-	// The ID of the service principal whose credentials will be modified. Only
+	// The ID of the service principal whose credential will be deleted. Only
 	// service principal managers can perform this action.
 	PrincipalId types.Int64 `tfsdk:"-"`
 }
@@ -969,7 +984,7 @@ func (m DeleteCredentialsResponse_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type DeleteRepoRequest_SdkV2 struct {
-	// The ID for the corresponding repo to delete.
+	// ID of the Git folder (repo) to delete.
 	RepoId types.Int64 `tfsdk:"-"`
 }
 
@@ -1370,10 +1385,14 @@ func (m ExportRequest_SdkV2) Type(ctx context.Context) attr.Type {
 // The request field `direct_download` determines whether a JSON response or
 // binary contents are returned by this endpoint.
 type ExportResponse_SdkV2 struct {
-	// The base64-encoded content. If the limit (10MB) is exceeded, exception
-	// with error code **MAX_NOTEBOOK_SIZE_EXCEEDED** is thrown.
+	// The base64-encoded content of the exported object. If the content exceeds
+	// the size limit (10 MB), the call fails with error code
+	// `MAX_NOTEBOOK_SIZE_EXCEEDED`.
 	Content types.String `tfsdk:"content"`
-	// The file type of the exported file.
+	// The file extension that matches the exported content, for example `py`
+	// for a Python notebook exported as `SOURCE`, `ipynb` for `JUPYTER`, `html`
+	// for `HTML`, `dbc` for `DBC`, and `zip` for a directory exported as
+	// `SOURCE` or `AUTO`. It is empty for workspace files.
 	FileType types.String `tfsdk:"file_type"`
 }
 
@@ -1479,7 +1498,7 @@ func (m GetAclRequest_SdkV2) Type(ctx context.Context) attr.Type {
 type GetCredentialsRequest_SdkV2 struct {
 	// The ID for the corresponding credential to access.
 	CredentialId types.Int64 `tfsdk:"-"`
-	// The ID of the service principal whose credentials will be modified. Only
+	// The ID of the service principal whose credential will be returned. Only
 	// service principal managers can perform this action.
 	PrincipalId types.Int64 `tfsdk:"-"`
 }
@@ -1547,10 +1566,12 @@ type GetCredentialsResponse_SdkV2 struct {
 	// authentication depending on your Git provider / token requirements.
 	// Required for AWS CodeCommit.
 	GitUsername types.String `tfsdk:"git_username"`
-	// if the credential is the default for the given provider
+	// Whether this credential is the default for its Git provider. The default
+	// credential is the fallback that is used when no specific credential is
+	// selected.
 	IsDefaultForProvider types.Bool `tfsdk:"is_default_for_provider"`
-	// the name of the git credential, used for identification and ease of
-	// lookup
+	// The name of the Git credential, used for identification and ease of
+	// lookup.
 	Name types.String `tfsdk:"name"`
 }
 
@@ -1872,7 +1893,9 @@ func (m GetRepoRequest_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type GetRepoResponse_SdkV2 struct {
-	// Branch that the local version of the repo is checked out to.
+	// Branch that the local version of the repo is checked out to. Omitted when
+	// the Git folder (repo) is in a detached HEAD state, for example after
+	// checking out a tag.
 	Branch types.String `tfsdk:"branch"`
 	// Whether the Git CLI is enabled for this Git folder (repo). When true, Git
 	// commands can be run directly against this Git folder using the Git CLI.
@@ -1883,11 +1906,13 @@ type GetRepoResponse_SdkV2 struct {
 	Id types.Int64 `tfsdk:"id"`
 	// Path of the Git folder (repo) in the workspace.
 	Path types.String `tfsdk:"path"`
-	// Git provider of the linked Git repository, e.g. `gitHub`,
-	// `azureDevOpsServices`, `bitbucketServer` (Bitbucket Data Center),
-	// `gitLabEnterpriseEdition` (GitLab Self-Managed), or `awsCodeCommit`.
+	// Git provider of the linked Git repository. Supported providers are
+	// `gitHub`, `bitbucketCloud`, `gitLab`, `azureDevOpsServices`,
+	// `gitHubEnterprise`, `bitbucketServer` (Bitbucket Data Center),
+	// `gitLabEnterpriseEdition` (GitLab Self-Managed), and `awsCodeCommit`.
 	Provider types.String `tfsdk:"provider"`
-	// Sparse checkout settings for the Git folder (repo).
+	// Sparse checkout settings for the Git folder (repo). Only present when
+	// sparse checkout is enabled for the Git folder.
 	SparseCheckout types.List `tfsdk:"sparse_checkout"`
 	// URL of the linked Git repository.
 	Url types.String `tfsdk:"url"`
@@ -2061,7 +2086,8 @@ func (m GetSecretRequest_SdkV2) Type(ctx context.Context) attr.Type {
 type GetSecretResponse_SdkV2 struct {
 	// A unique name to identify the secret.
 	Key types.String `tfsdk:"key"`
-	// The value of the secret in its byte representation.
+	// The secret value, base64-encoded. A secret written with ``string_value``
+	// is returned as the base64 encoding of its UTF-8 bytes.
 	Value types.String `tfsdk:"value"`
 }
 
@@ -2385,11 +2411,10 @@ func (m GetWorkspaceObjectPermissionsRequest_SdkV2) Type(ctx context.Context) at
 }
 
 type Import_SdkV2 struct {
-	// The base64-encoded content. This has a limit of 10 MB.
-	//
-	// If the limit (10MB) is exceeded, exception with error code
-	// **MAX_NOTEBOOK_SIZE_EXCEEDED** is thrown. This parameter might be absent,
-	// and instead a posted file is used.
+	// The base64-encoded content to import. The content is limited to 10 MB. If
+	// the limit is exceeded, the call fails with error code
+	// `MAX_NOTEBOOK_SIZE_EXCEEDED`. This parameter might be absent, and instead
+	// a posted file is used.
 	Content types.String `tfsdk:"content"`
 	// This specifies the format of the file to be imported.
 	//
@@ -2405,12 +2430,13 @@ type Import_SdkV2 struct {
 	// directories. - `R_MARKDOWN`: The notebook is imported from R Markdown
 	// format.
 	Format types.String `tfsdk:"format"`
-	// The language of the object. This value is set only if the object type is
-	// `NOTEBOOK`.
+	// The language of the notebook. It applies only to the `SOURCE` format: set
+	// it to import a single notebook, or leave it unset to import a directory.
 	Language types.String `tfsdk:"language"`
 	// The flag that specifies whether to overwrite existing object. It is
 	// `false` by default. For `DBC` format, `overwrite` is not supported since
-	// it may contain a directory.
+	// it may contain a directory. Importing a directory in `SOURCE` format does
+	// not support `overwrite` either.
 	Overwrite types.Bool `tfsdk:"overwrite"`
 	// The absolute path of the object or directory. Importing a directory is
 	// only supported for the `DBC` and `SOURCE` formats.
@@ -3453,7 +3479,10 @@ func (m *ListSecretsResponse_SdkV2) SetSecrets(ctx context.Context, v []SecretMe
 }
 
 type ListWorkspaceRequest_SdkV2 struct {
-	// UTC timestamp in milliseconds
+	// A UTC timestamp in milliseconds since the epoch. When it is set and
+	// `path` is a directory, the response includes only the notebooks that were
+	// modified after this time. Objects that are not notebooks are always
+	// included.
 	NotebooksModifiedAfter types.Int64 `tfsdk:"-"`
 	// The absolute path of the notebook or directory.
 	Path types.String `tfsdk:"-"`
@@ -3599,7 +3628,8 @@ func (m MkdirsResponse_SdkV2) Type(ctx context.Context) attr.Type {
 // The information of the object in workspace. It will be returned by “list“
 // and “get-status“.
 type ObjectInfo_SdkV2 struct {
-	// Only applicable to files. The creation UTC timestamp.
+	// The time the object was created, as a UTC timestamp in milliseconds since
+	// the epoch. It is returned for notebooks and files.
 	CreatedAt types.Int64 `tfsdk:"created_at"`
 	// Additional metadata about the directory. Only set for objects of type
 	// ``DIRECTORY``.
@@ -3607,7 +3637,8 @@ type ObjectInfo_SdkV2 struct {
 	// The language of the object. This value is set only if the object type is
 	// ``NOTEBOOK``. For Jupyter (.ipynb) notebooks, this is always ``PYTHON``.
 	Language types.String `tfsdk:"language"`
-	// Only applicable to files, the last modified UTC timestamp.
+	// The time the object was last modified, as a UTC timestamp in milliseconds
+	// since the epoch. It is returned for notebooks and files.
 	ModifiedAt types.Int64 `tfsdk:"modified_at"`
 	// Unique identifier for the object.
 	ObjectId types.Int64 `tfsdk:"object_id"`
@@ -3622,7 +3653,8 @@ type ObjectInfo_SdkV2 struct {
 	// A unique identifier for the object that is consistent across all
 	// Databricks APIs.
 	ResourceId types.String `tfsdk:"resource_id"`
-	// Only applicable to files. The file size in bytes can be returned.
+	// The size of the file in bytes. It is returned only for objects of type
+	// ``FILE``.
 	Size types.Int64 `tfsdk:"size"`
 }
 
@@ -3744,7 +3776,8 @@ func (m *ObjectInfo_SdkV2) SetDirectoryInfo(ctx context.Context, v DirectoryInfo
 type PutAcl_SdkV2 struct {
 	// The permission level applied to the principal.
 	Permission types.String `tfsdk:"permission"`
-	// The principal in which the permission is applied.
+	// The user name or group name of an existing Databricks principal that the
+	// permission applies to.
 	Principal types.String `tfsdk:"principal"`
 	// The name of the scope to apply permissions to.
 	Scope types.String `tfsdk:"scope"`
@@ -3800,13 +3833,15 @@ func (m PutAcl_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type PutSecret_SdkV2 struct {
-	// If specified, value will be stored as bytes.
+	// The secret value as raw bytes. The bytes must be base64-encoded in the
+	// JSON request body.
 	BytesValue types.String `tfsdk:"bytes_value"`
 	// A unique name to identify the secret.
 	Key types.String `tfsdk:"key"`
-	// The name of the scope to which the secret will be associated with.
+	// The name of the scope to store the secret in.
 	Scope types.String `tfsdk:"scope"`
-	// If specified, note that the value will be stored in UTF-8 (MB4) form.
+	// The secret value as text. The server stores it as the UTF-8 encoding of
+	// the string.
 	StringValue types.String `tfsdk:"string_value"`
 }
 
@@ -4060,23 +4095,30 @@ func (m *RepoAccessControlResponse_SdkV2) SetAllPermissions(ctx context.Context,
 	m.AllPermissions = types.ListValueMust(t, vs)
 }
 
-// Git folder (repo) information.
+// Git folder (repo) information. A Git folder is a workspace folder that is
+// linked to a remote Git repository and tracks the branch or commit that is
+// checked out.
 type RepoInfo_SdkV2 struct {
-	// Name of the current git branch of the git folder (repo).
+	// Name of the branch that the Git folder (repo) is checked out to. Omitted
+	// when the Git folder is in a detached HEAD state, for example after
+	// checking out a tag.
 	Branch types.String `tfsdk:"branch"`
-	// Current git commit id of the git folder (repo).
+	// SHA-1 hash of the commit that the Git folder (repo) is currently checked
+	// out to.
 	HeadCommitId types.String `tfsdk:"head_commit_id"`
-	// Id of the git folder (repo) in the Workspace.
+	// ID of the Git folder (repo) object in the workspace.
 	Id types.Int64 `tfsdk:"id"`
 	// Root path of the git folder (repo) in the Workspace.
 	Path types.String `tfsdk:"path"`
-	// Git provider of the remote git repository, e.g. `gitHub`,
-	// `azureDevOpsServices`, `bitbucketServer` (Bitbucket Data Center),
-	// `gitLabEnterpriseEdition` (GitLab Self-Managed), or `awsCodeCommit`.
+	// Git provider of the remote Git repository. Supported providers are
+	// `gitHub`, `bitbucketCloud`, `gitLab`, `azureDevOpsServices`,
+	// `gitHubEnterprise`, `bitbucketServer` (Bitbucket Data Center),
+	// `gitLabEnterpriseEdition` (GitLab Self-Managed), and `awsCodeCommit`.
 	Provider types.String `tfsdk:"provider"`
-	// Sparse checkout config for the git folder (repo).
+	// Sparse checkout configuration of the Git folder (repo). Only present when
+	// sparse checkout is enabled for the Git folder.
 	SparseCheckout types.List `tfsdk:"sparse_checkout"`
-	// URL of the remote git repository.
+	// HTTPS URL of the remote Git repository.
 	Url types.String `tfsdk:"url"`
 }
 
@@ -4588,7 +4630,8 @@ func (m *RepoPermissionsRequest_SdkV2) SetAccessControlList(ctx context.Context,
 type SecretMetadata_SdkV2 struct {
 	// A unique name to identify the secret.
 	Key types.String `tfsdk:"key"`
-	// The last updated timestamp (in milliseconds) for the secret.
+	// The time the secret was last written, in milliseconds since the Unix
+	// epoch.
 	LastUpdatedTimestamp types.Int64 `tfsdk:"last_updated_timestamp"`
 }
 
@@ -4638,13 +4681,13 @@ func (m SecretMetadata_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// An organizational resource for storing secrets. Secret scopes can be
-// different types (Databricks-managed, Azure KeyVault backed, etc), and ACLs
-// can be applied to control permissions for all secrets within a scope.
+// An organizational resource for storing secrets. A secret scope is either
+// Databricks-backed or Azure Key Vault-backed, and ACLs can be applied to
+// control permissions for all secrets within a scope.
 type SecretScope_SdkV2 struct {
 	// The type of secret scope backend.
 	BackendType types.String `tfsdk:"backend_type"`
-	// The metadata for the secret scope if the type is ``AZURE_KEYVAULT``
+	// The metadata for the secret scope if the type is ``AZURE_KEYVAULT``.
 	KeyvaultMetadata types.List `tfsdk:"keyvault_metadata"`
 	// A unique name to identify the secret scope.
 	Name types.String `tfsdk:"name"`
@@ -4949,6 +4992,8 @@ type UpdateCredentialsRequest_SdkV2 struct {
 	// DevOps Services, including Microsoft Entra ID authentication),
 	// `gitHubEnterprise`, `bitbucketServer` (Bitbucket Data Center),
 	// `gitLabEnterpriseEdition` (GitLab Self-Managed), and `awsCodeCommit`.
+	// Must match the Git provider of the existing credential; the provider
+	// cannot be changed.
 	GitProvider types.String `tfsdk:"git_provider"`
 	// The username provided with your Git provider account and associated with
 	// the credential. For most Git providers it is only used to set the Git
@@ -4956,10 +5001,12 @@ type UpdateCredentialsRequest_SdkV2 struct {
 	// authentication depending on your Git provider / token requirements.
 	// Required for AWS CodeCommit.
 	GitUsername types.String `tfsdk:"git_username"`
-	// if the credential is the default for the given provider
+	// Set to true to make this credential the default for its Git provider,
+	// replacing the current default. Cannot be set to false; make another
+	// credential the default instead.
 	IsDefaultForProvider types.Bool `tfsdk:"is_default_for_provider"`
-	// the name of the git credential, used for identification and ease of
-	// lookup
+	// The name of the Git credential, used for identification and ease of
+	// lookup. It must not exceed 100 characters.
 	Name types.String `tfsdk:"name"`
 	// The personal access token used to authenticate to the corresponding Git
 	// provider. For certain providers, support may exist for other types of
@@ -5078,7 +5125,8 @@ func (m UpdateCredentialsResponse_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type UpdateRepoRequest_SdkV2 struct {
-	// Branch that the local version of the repo is checked out to.
+	// Branch to check out. The Git folder (repo) is then updated to the latest
+	// commit of the branch. Mutually exclusive with `tag`.
 	Branch types.String `tfsdk:"branch"`
 	// WARNING: DESTRUCTIVE AND IRREVERSIBLE. If true, permanently deletes ALL
 	// uncommitted changes in the Git folder — staged, unstaged, and untracked
@@ -5099,12 +5147,13 @@ type UpdateRepoRequest_SdkV2 struct {
 	// ID of the Git folder (repo) object in the workspace.
 	RepoId types.Int64 `tfsdk:"-"`
 	// If specified, update the sparse checkout settings. The update will fail
-	// if sparse checkout is not enabled for the repo.
+	// if sparse checkout is not enabled for the repo. Must be sent together
+	// with `branch` or `tag`.
 	SparseCheckout types.List `tfsdk:"sparse_checkout"`
 	// Tag that the local version of the repo is checked out to. Updating the
 	// repo to a tag puts the repo in a detached HEAD state. Before committing
 	// new changes, you must update the repo to a branch instead of the detached
-	// HEAD.
+	// HEAD. Mutually exclusive with `branch`.
 	Tag types.String `tfsdk:"tag"`
 }
 

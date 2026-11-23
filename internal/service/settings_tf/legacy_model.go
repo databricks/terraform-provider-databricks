@@ -17,8 +17,6 @@ import (
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 
-	// .tmpl
-
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -353,6 +351,10 @@ func (m *AccountNetworkPolicy_SdkV2) SetIngressDryRun(ctx context.Context, v Cus
 }
 
 type AibiDashboardEmbeddingAccessPolicy_SdkV2 struct {
+	// Where AI/BI dashboards can be embedded: in any domain
+	// (ALLOW_ALL_DOMAINS), only in the approved domains configured for the
+	// workspace (ALLOW_APPROVED_DOMAINS), or nowhere (DENY_ALL_DOMAINS).
+	// Defaults to ALLOW_APPROVED_DOMAINS.
 	AccessPolicyType types.String `tfsdk:"access_policy_type"`
 }
 
@@ -515,6 +517,9 @@ func (m *AibiDashboardEmbeddingAccessPolicySetting_SdkV2) SetAibiDashboardEmbedd
 }
 
 type AibiDashboardEmbeddingApprovedDomains_SdkV2 struct {
+	// Domains allowed to host embedded AI/BI dashboards. A leading wildcard
+	// allows every subdomain of a domain. The list applies, and can only be
+	// changed, while the embedding access policy is ALLOW_APPROVED_DOMAINS.
 	ApprovedDomains types.List `tfsdk:"approved_domains"`
 }
 
@@ -881,14 +886,25 @@ func (m BooleanMessage_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type ClusterAutoRestartMessage_SdkV2 struct {
+	// Whether the workspace can change the enabled state. Databricks computes
+	// this value: it is false when the compliance security profile forces the
+	// feature on or when the workspace lacks the Enhanced Security and
+	// Compliance entitlement. A value sent in an update request has no effect.
 	CanToggle types.Bool `tfsdk:"can_toggle"`
-
+	// Whether automatic cluster update is enabled for the workspace. The
+	// effective value is always true while the compliance security profile is
+	// enabled on the workspace.
 	Enabled types.Bool `tfsdk:"enabled"`
-
+	// Why the feature is forced on or unavailable. Databricks sets these
+	// details for information only; they do not determine whether the feature
+	// is enabled.
 	EnablementDetails types.List `tfsdk:"enablement_details"`
-
+	// When the maintenance window runs. When unset, it defaults to the first
+	// Sunday of every month at 01:00 UTC.
 	MaintenanceWindow types.List `tfsdk:"maintenance_window"`
-
+	// Whether compute resources restart during every maintenance window even
+	// when no update is available. When false, they restart only when an update
+	// is available.
 	RestartEvenIfNoUpdatesAvailable types.Bool `tfsdk:"restart_even_if_no_updates_available"`
 }
 
@@ -1051,8 +1067,8 @@ func (m *ClusterAutoRestartMessage_SdkV2) SetMaintenanceWindow(ctx context.Conte
 type ClusterAutoRestartMessageEnablementDetails_SdkV2 struct {
 	// The feature is force enabled if compliance mode is active
 	ForcedForComplianceMode types.Bool `tfsdk:"forced_for_compliance_mode"`
-	// The feature is unavailable if the corresponding entitlement disabled (see
-	// getShieldEntitlementEnable)
+	// The feature is unavailable because the workspace does not have the
+	// Enhanced Security and Compliance entitlement.
 	UnavailableForDisabledEntitlement types.Bool `tfsdk:"unavailable_for_disabled_entitlement"`
 	// The feature is unavailable if the customer doesn't have enterprise tier
 	UnavailableForNonEnterpriseTier types.Bool `tfsdk:"unavailable_for_non_enterprise_tier"`
@@ -1108,6 +1124,8 @@ func (m ClusterAutoRestartMessageEnablementDetails_SdkV2) Type(ctx context.Conte
 }
 
 type ClusterAutoRestartMessageMaintenanceWindow_SdkV2 struct {
+	// Schedule anchored to a day of the week, either every week or on given
+	// weeks of the month.
 	WeekDayBasedSchedule types.List `tfsdk:"week_day_based_schedule"`
 }
 
@@ -1203,10 +1221,12 @@ func (m *ClusterAutoRestartMessageMaintenanceWindow_SdkV2) SetWeekDayBasedSchedu
 }
 
 type ClusterAutoRestartMessageMaintenanceWindowWeekDayBasedSchedule_SdkV2 struct {
+	// Day of the week on which the maintenance window starts.
 	DayOfWeek types.String `tfsdk:"day_of_week"`
-
+	// How often the maintenance window occurs: every week, or only on the
+	// listed occurrences of the day of the week within each month.
 	Frequency types.String `tfsdk:"frequency"`
-
+	// Time of day, in UTC, at which the maintenance window starts.
 	WindowStartTime types.List `tfsdk:"window_start_time"`
 }
 
@@ -1308,8 +1328,9 @@ func (m *ClusterAutoRestartMessageMaintenanceWindowWeekDayBasedSchedule_SdkV2) S
 }
 
 type ClusterAutoRestartMessageMaintenanceWindowWindowStartTime_SdkV2 struct {
+	// Hour of the day on a 24-hour clock.
 	Hours types.Int64 `tfsdk:"hours"`
-
+	// Minute of the hour.
 	Minutes types.Int64 `tfsdk:"minutes"`
 }
 
@@ -1572,19 +1593,24 @@ func (m *ComplianceSecurityProfileSetting_SdkV2) SetComplianceSecurityProfileWor
 	m.ComplianceSecurityProfileWorkspace = types.ListValueMust(t, vs)
 }
 
+// Holds the destination-specific configuration. Exactly one of the nested
+// configs is set.
 type Config_SdkV2 struct {
+	// Configures a Slack channel reached through the Databricks Genie app for
+	// Slack.
 	DatabricksAppSlack types.List `tfsdk:"databricks_app_slack"`
-
+	// Configures a Microsoft Teams channel reached through the Databricks Genie
+	// app for Microsoft Teams.
 	DatabricksAppTeams types.List `tfsdk:"databricks_app_teams"`
-
+	// Configures an email destination.
 	Email types.List `tfsdk:"email"`
-
+	// Configures a generic HTTPS webhook destination.
 	GenericWebhook types.List `tfsdk:"generic_webhook"`
-
+	// Configures a Microsoft Teams incoming webhook destination.
 	MicrosoftTeams types.List `tfsdk:"microsoft_teams"`
-
+	// Configures a PagerDuty destination.
 	Pagerduty types.List `tfsdk:"pagerduty"`
-
+	// Configures a Slack incoming webhook destination.
 	Slack types.List `tfsdk:"slack"`
 }
 
@@ -5046,10 +5072,7 @@ func (m *CustomerFacingIngressNetworkPolicyPrivateAccess_SdkV2) SetDenyRules(ctx
 // — including request origin, destination, and authentication.
 type CustomerFacingIngressNetworkPolicyPrivateIngressRule_SdkV2 struct {
 	// The authenticated identity the request must match. When unset, the rule
-	// matches all users and service principals. On the account-level network
-	// policy, scoping to specific identities is not currently supported, so
-	// this field must be unset (the rule matches all users and service
-	// principals).
+	// matches all users and service principals.
 	Authentication types.List `tfsdk:"authentication"`
 	// The destination the request must match — the resource being accessed,
 	// for example the workspace UI, workspace APIs, or account-level APIs. See
@@ -8640,6 +8663,7 @@ func (m DeleteNetworkPolicyRequest_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type DeleteNotificationDestinationRequest_SdkV2 struct {
+	// A UUID identifying the notification destination.
 	Id types.String `tfsdk:"-"`
 }
 
@@ -10791,8 +10815,9 @@ func (m EgressNetworkPolicyNetworkAccessPolicyStorageDestination_SdkV2) Type(ctx
 	}
 }
 
+// Configures an email destination.
 type EmailConfig_SdkV2 struct {
-	// Email addresses to notify.
+	// Email addresses to notify. At least one address is required.
 	Addresses types.List `tfsdk:"addresses"`
 }
 
@@ -12164,16 +12189,21 @@ func (m *GcpEndpoint_SdkV2) SetGoogleApiEndpoints(ctx context.Context, v GoogleA
 	m.GoogleApiEndpoints = types.ListValueMust(t, vs)
 }
 
+// Configures a generic webhook destination. Notifications are delivered as
+// HTTPS POST requests to url, optionally authenticated with HTTP Basic
+// authentication.
 type GenericWebhookConfig_SdkV2 struct {
-	// [Input-Only][Optional] Password for webhook.
+	// [Input-Only][Optional] Password for HTTP Basic authentication. Set it
+	// together with username.
 	Password types.String `tfsdk:"password"`
 	// [Output-Only] Whether password is set.
 	PasswordSet types.Bool `tfsdk:"password_set"`
-	// [Input-Only] URL for webhook.
+	// [Input-Only] HTTPS URL that notifications are posted to.
 	Url types.String `tfsdk:"url"`
 	// [Output-Only] Whether URL is set.
 	UrlSet types.Bool `tfsdk:"url_set"`
-	// [Input-Only][Optional] Username for webhook.
+	// [Input-Only][Optional] Username for HTTP Basic authentication. Set it
+	// together with password.
 	Username types.String `tfsdk:"username"`
 	// [Output-Only] Whether username is set.
 	UsernameSet types.Bool `tfsdk:"username_set"`
@@ -13690,6 +13720,7 @@ func (m GetNetworkPolicyRequest_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type GetNotificationDestinationRequest_SdkV2 struct {
+	// A UUID identifying the notification destination.
 	Id types.String `tfsdk:"-"`
 }
 
@@ -15117,8 +15148,11 @@ func (m *ListNetworkPoliciesResponse_SdkV2) SetItems(ctx context.Context, v []Ac
 }
 
 type ListNotificationDestinationsRequest_SdkV2 struct {
+	// Maximum number of notification destinations to return per page. Defaults
+	// to 20.
 	PageSize types.Int64 `tfsdk:"-"`
-
+	// Opaque token returned as next_page_token by a previous call. Omit it to
+	// request the first page.
 	PageToken types.String `tfsdk:"-"`
 }
 
@@ -15169,9 +15203,10 @@ func (m ListNotificationDestinationsRequest_SdkV2) Type(ctx context.Context) att
 }
 
 type ListNotificationDestinationsResponse_SdkV2 struct {
-	// Page token for next of results.
+	// Token to pass as page_token to fetch the next page of results. Absent
+	// when there are no more results.
 	NextPageToken types.String `tfsdk:"next_page_token"`
-
+	// Notification destinations in the current page.
 	Results types.List `tfsdk:"results"`
 }
 
@@ -15288,13 +15323,22 @@ func (m *ListNotificationDestinationsResponse_SdkV2) SetResults(ctx context.Cont
 	m.Results = types.ListValueMust(t, vs)
 }
 
+// A reusable definition of where a workspace sends notifications, such as a
+// Slack channel, a set of email addresses, a PagerDuty service, a Microsoft
+// Teams channel or a generic webhook. Job notifications, SQL alerts and other
+// workspace features reference a destination by its id. Only workspace admins
+// can create, update and delete destinations; once created, a destination is
+// available to all users in the workspace. Secret values such as webhook URLs
+// and tokens are write-only: responses report whether each one is set, never
+// its value.
 type ListNotificationDestinationsResult_SdkV2 struct {
-	// [Output-only] The type of the notification destination. The type can not
-	// be changed once set.
+	// [Output-only] The type of the notification destination, determined by
+	// which nested config was provided on creation. The type can not be changed
+	// once set.
 	DestinationType types.String `tfsdk:"destination_type"`
 	// The display name for the notification destination.
 	DisplayName types.String `tfsdk:"display_name"`
-	// UUID identifying notification destination.
+	// A UUID identifying the notification destination.
 	Id types.String `tfsdk:"id"`
 }
 
@@ -16192,24 +16236,35 @@ func (m *LlmProxyPartnerPoweredWorkspace_SdkV2) SetBooleanVal(ctx context.Contex
 	m.BooleanVal = types.ListValueMust(t, vs)
 }
 
+// Configures a Microsoft Teams destination. Notifications are posted to the
+// incoming webhook url, which is required. The app_id, auth_secret, channel_url
+// and tenant_id fields can optionally be set together to post through a
+// Microsoft Teams app.
 type MicrosoftTeamsConfig_SdkV2 struct {
-	// [Input-Only] App ID for Microsoft Teams App.
+	// [Input-Only] Application (client) ID of the Microsoft Teams app, as a
+	// UUID. Optional; set it together with auth_secret, channel_url and
+	// tenant_id.
 	AppId types.String `tfsdk:"app_id"`
 	// [Output-Only] Whether App ID is set.
 	AppIdSet types.Bool `tfsdk:"app_id_set"`
-	// [Input-Only] Secret for Microsoft Teams App authentication.
+	// [Input-Only] Client secret of the Microsoft Teams app. Optional; set it
+	// together with app_id, channel_url and tenant_id.
 	AuthSecret types.String `tfsdk:"auth_secret"`
 	// [Output-Only] Whether secret is set.
 	AuthSecretSet types.Bool `tfsdk:"auth_secret_set"`
-	// [Input-Only] Channel URL for Microsoft Teams App.
+	// [Input-Only] URL of the Microsoft Teams channel that the app posts to.
+	// Optional; set it together with app_id, auth_secret and tenant_id.
 	ChannelUrl types.String `tfsdk:"channel_url"`
 	// [Output-Only] Whether Channel URL is set.
 	ChannelUrlSet types.Bool `tfsdk:"channel_url_set"`
-	// [Input-Only] Tenant ID for Microsoft Teams App.
+	// [Input-Only] Microsoft Entra tenant ID of the Microsoft Teams app, as a
+	// UUID. Optional; set it together with app_id, auth_secret and channel_url.
 	TenantId types.String `tfsdk:"tenant_id"`
 	// [Output-Only] Whether Tenant ID is set.
 	TenantIdSet types.Bool `tfsdk:"tenant_id_set"`
-	// [Input-Only] URL for Microsoft Teams webhook.
+	// [Input-Only] Microsoft Teams incoming webhook URL that notifications are
+	// posted to. Must be an HTTPS URL. The URL is required even when the app
+	// fields are set.
 	Url types.String `tfsdk:"url"`
 	// [Output-Only] Whether URL is set.
 	UrlSet types.Bool `tfsdk:"url_set"`
@@ -17712,17 +17767,26 @@ func (m *NetworkPolicyEgress_SdkV2) SetNetworkAccess(ctx context.Context, v Egre
 	m.NetworkAccess = types.ListValueMust(t, vs)
 }
 
+// A reusable definition of where a workspace sends notifications, such as a
+// Slack channel, a set of email addresses, a PagerDuty service, a Microsoft
+// Teams channel or a generic webhook. Job notifications, SQL alerts and other
+// workspace features reference a destination by its id. Only workspace admins
+// can create, update and delete destinations; once created, a destination is
+// available to all users in the workspace. Secret values such as webhook URLs
+// and tokens are write-only: responses report whether each one is set, never
+// its value.
 type NotificationDestination_SdkV2 struct {
 	// The configuration for the notification destination. Will be exactly one
-	// of the nested configs. Only returns for users with workspace admin
+	// of the nested configs. Only returned to users with workspace admin
 	// permissions.
 	Config types.List `tfsdk:"config"`
-	// [Output-only] The type of the notification destination. The type can not
-	// be changed once set.
+	// [Output-only] The type of the notification destination, determined by
+	// which nested config was provided on creation. The type can not be changed
+	// once set.
 	DestinationType types.String `tfsdk:"destination_type"`
 	// The display name for the notification destination.
 	DisplayName types.String `tfsdk:"display_name"`
-	// UUID identifying notification destination.
+	// A UUID identifying the notification destination.
 	Id types.String `tfsdk:"id"`
 }
 
@@ -17826,8 +17890,11 @@ func (m *NotificationDestination_SdkV2) SetConfig(ctx context.Context, v Config_
 	m.Config = types.ListValueMust(t, vs)
 }
 
+// Configures a PagerDuty destination. Notifications are sent as events to the
+// PagerDuty Events API v2.
 type PagerdutyConfig_SdkV2 struct {
-	// [Input-Only] Integration key for PagerDuty.
+	// [Input-Only] Integration key from an Events API v2 integration on the
+	// PagerDuty service that receives the notifications.
 	IntegrationKey types.String `tfsdk:"integration_key"`
 	// [Output-Only] Whether integration key is set.
 	IntegrationKeySet types.Bool `tfsdk:"integration_key_set"`
@@ -18416,7 +18483,15 @@ type RestrictWorkspaceAdminsMessage_SdkV2 struct {
 	// When true, workspace admins cannot create governance tags. ALLOW_ALL
 	// status does not override this; they are independent.
 	DisableGovTagCreation types.Bool `tfsdk:"disable_gov_tag_creation"`
-
+	// Controls what workspace admins can do with service principal tokens and
+	// job identities. With ALLOW_ALL, workspace admins can create personal
+	// access tokens on behalf of any service principal in the workspace, change
+	// a job owner to any workspace user, and set a job's run_as identity to any
+	// workspace user or to a service principal they have the Service Principal
+	// User role on. With RESTRICT_TOKENS_AND_JOB_RUN_AS, they can only create
+	// tokens for service principals they have the Service Principal User role
+	// on, change a job owner to themselves, and set run_as to themselves or to
+	// a service principal they have that role on.
 	Status types.String `tfsdk:"status"`
 }
 
@@ -18671,16 +18746,24 @@ func (m RevokeTokenResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// Configures a Slack destination. Notifications are posted to the incoming
+// webhook url, which is required. A bot oauth_token and channel_id can
+// optionally be set together to post to the channel through the Slack API.
 type SlackConfig_SdkV2 struct {
-	// [Input-Only] Slack channel ID for notifications.
+	// [Input-Only] ID of the Slack channel that notifications are posted to
+	// through the Slack API. Optional; set it together with oauth_token.
 	ChannelId types.String `tfsdk:"channel_id"`
 	// [Output-Only] Whether channel ID is set.
 	ChannelIdSet types.Bool `tfsdk:"channel_id_set"`
-	// [Input-Only] OAuth token for Slack authentication.
+	// [Input-Only] Slack bot OAuth token (xoxb-...). Optional; when set
+	// together with channel_id, notifications are posted to that channel
+	// through the Slack API.
 	OauthToken types.String `tfsdk:"oauth_token"`
 	// [Output-Only] Whether OAuth token is set.
 	OauthTokenSet types.Bool `tfsdk:"oauth_token_set"`
-	// [Input-Only] URL for Slack destination.
+	// [Input-Only] Slack incoming webhook URL that notifications are posted to.
+	// Must be an HTTPS URL. The URL is required even when oauth_token and
+	// channel_id are set.
 	Url types.String `tfsdk:"url"`
 	// [Output-Only] Whether URL is set.
 	UrlSet types.Bool `tfsdk:"url_set"`
@@ -22540,7 +22623,7 @@ type UpdateNotificationDestinationRequest_SdkV2 struct {
 	Config types.List `tfsdk:"config"`
 	// The display name for the notification destination.
 	DisplayName types.String `tfsdk:"display_name"`
-	// UUID identifying notification destination.
+	// A UUID identifying the notification destination.
 	Id types.String `tfsdk:"-"`
 }
 

@@ -2,7 +2,7 @@
 subcategory: "AI Search"
 ---
 # databricks_ai_search_index Resource
-[![Public Preview](https://img.shields.io/badge/Release_Stage-Public_Preview-yellowgreen)](https://docs.databricks.com/aws/en/release-notes/release-types)
+[![GA](https://img.shields.io/badge/Release_Stage-GA-green)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
 [API Documentation](https://docs.databricks.com/api/workspace/aisearch)
 
@@ -29,51 +29,61 @@ resource "databricks_ai_search_index" "this" {
 
 ## Arguments
 The following arguments are supported:
-* `index_type` (string, required) - Type of index. Required on create and immutable thereafter. Possible values are: `DELTA_SYNC`, `DIRECT_ACCESS`
+* `index_type` (string, required) - Type of index. A `DELTA_SYNC` index is kept in sync with a source Delta table; a
+  `DIRECT_ACCESS` index holds rows that you write through UpsertData and RemoveData. Set on
+  create and immutable thereafter. Possible values are: `DELTA_SYNC`, `DIRECT_ACCESS`
 * `parent` (string, required) - The Endpoint where this Index will be created.
   Format: `workspaces/{workspace_id}/endpoints/{endpoint_id}`
-* `primary_key` (string, required) - Primary key of the index. Set on create and immutable thereafter
+* `primary_key` (string, required) - Name of the column that uniquely identifies each row. It must exist in the source table
+  (Delta Sync) or in `schema_json` (Direct Access) and cannot be the embedding source or vector
+  column. Set on create and immutable thereafter
 * `delta_sync_index_spec` (DeltaSyncIndexSpec, optional) - Specification for a Delta Sync index. Set when `index_type` is `DELTA_SYNC`
 * `direct_access_index_spec` (DirectAccessIndexSpec, optional) - Specification for a Direct Access index. Set when `index_type` is `DIRECT_ACCESS`
-* `index_id` (string, optional) - The user-supplied Unity Catalog table name for the Index, per AIP-133. The server
-  composes the full `Index.name` as `{parent}/indexes/{index_id}`. AIP-133 does not
-  list `index_id` as a fields-may-be-required entry, so we annotate it OPTIONAL on the
-  wire; the server still rejects empty values with INVALID_PARAMETER_VALUE
-* `index_subtype` (string, optional) - The subtype of the index. Set on create and immutable thereafter. Possible values are: `FULL_TEXT`, `HYBRID`, `VECTOR`
+* `index_id` (string, optional) - Three-level Unity Catalog table name for the new index, in the form `catalog.schema.name`.
+  The server composes the full `Index.name` as `{parent}/indexes/{index_id}` and rejects an
+  empty value
+* `index_subtype` (string, optional) - Subtype of the index. Use `HYBRID` for vector and hybrid search, or `FULL_TEXT` for
+  keyword-only search without embeddings; `VECTOR` is not a supported create value. Set on
+  create and immutable thereafter. Possible values are: `FULL_TEXT`, `HYBRID`, `VECTOR`
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 
 ### ProviderConfig
 * `workspace_id` (string,optional) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ### DeltaSyncIndexSpec
-* `pipeline_type` (string, required) - Pipeline execution mode. Required on create — the backend rejects an unset value.
-  Storage Optimized endpoints accept only `TRIGGERED`; Standard endpoints accept both.
-  No explicit `stage` — a REQUIRED field staged below its service would be dropped from
-  combined specs while remaining in `required`, tripping the OpenAPI required-vs-properties
-  consistency check. The field inherits the service's launch stage. Possible values are: `CONTINUOUS`, `TRIGGERED`
-* `columns_to_sync` (list of string, optional) - [Optional] Select the columns to sync with the index. If left blank, all columns
-  from the source table are synced. The primary key column and embedding source or
-  vector column are always synced
-* `embedding_source_columns` (list of EmbeddingSourceColumn, optional) - The columns that contain the embedding source
-* `embedding_vector_columns` (list of EmbeddingVectorColumn, optional) - The columns that contain the embedding vectors
-* `embedding_writeback_table` (string, optional) - [Optional] Name of the Delta table to sync the index contents and computed embeddings to
-* `source_table` (string, optional) - The full name of the source Delta table
+* `pipeline_type` (string, required) - Sync mode of the pipeline that keeps the index up to date. `TRIGGERED` syncs at creation and
+  then each time SyncIndex is called; `CONTINUOUS` processes source changes as they arrive.
+  Storage Optimized endpoints accept only `TRIGGERED`, and an unset value is rejected. Possible values are: `CONTINUOUS`, `TRIGGERED`
+* `columns_to_sync` (list of string, optional) - Columns of the source table to include in the index. When empty, all columns are synced. The
+  primary key and the embedding source or vector column are always synced. Only synced columns
+  can be returned in query results or used in filters
+* `embedding_source_columns` (list of EmbeddingSourceColumn, optional) - Columns whose text Databricks embeds during sync, using the model endpoint named on each
+  column. Set either this field or `embedding_vector_columns`, not both
+* `embedding_vector_columns` (list of EmbeddingVectorColumn, optional) - Columns of the source table that already hold precomputed embedding vectors. Set either this
+  field or `embedding_source_columns`, not both
+* `embedding_writeback_table` (string, optional) - Three-level name of a Delta table to write the synced rows and computed embeddings to. It
+  applies only when embeddings are computed from `embedding_source_columns`, and the table must
+  not already exist
+* `source_table` (string, optional) - Three-level Unity Catalog name of the source Delta table, in the form `catalog.schema.table`
 
 ### DirectAccessIndexSpec
-* `embedding_source_columns` (list of EmbeddingSourceColumn, optional) - The columns that contain the embedding source
-* `embedding_vector_columns` (list of EmbeddingVectorColumn, optional) - The columns that contain the embedding vectors
-* `schema_json` (string, optional) - The schema of the index in JSON format. Supported types are `integer`, `long`,
-  `float`, `double`, `boolean`, `string`, `date`, `timestamp`. Supported types for
-  vector columns: `array<float>`, `array<double>`
+* `embedding_source_columns` (list of EmbeddingSourceColumn, optional) - Columns that contain the text to embed, each with the model endpoint that computes its
+  embeddings
+* `embedding_vector_columns` (list of EmbeddingVectorColumn, optional) - Columns that hold precomputed embedding vectors. A single vector column is supported, and it
+  cannot be the primary key
+* `schema_json` (string, optional) - The schema of the index in JSON format, mapping each column name to its type. Supported
+  types are `integer`, `long`, `float`, `double`, `boolean`, `string`, `date`, `timestamp`.
+  Supported types for vector columns: `array<float>`, `array<double>`. The schema must include
+  the primary key column and the embedding vector column
 
 ### EmbeddingSourceColumn
 * `embedding_model_endpoint` (string, optional) - Name of the embedding model endpoint, used by default for both ingestion and querying
 * `model_endpoint_name_for_query` (string, optional) - Name of the embedding model endpoint which, if specified, is used for querying (not ingestion)
-* `name` (string, optional) - Name of the source column
+* `name` (string, optional) - Name of the column whose text is embedded
 
 ### EmbeddingVectorColumn
-* `embedding_dimension` (integer, optional) - Dimension of the embedding vector
-* `name` (string, optional) - Name of the column
+* `embedding_dimension` (integer, optional) - Number of elements in each embedding vector. It must be positive
+* `name` (string, optional) - Name of the column that holds the precomputed embedding vectors
 
 ## Attributes
 In addition to the above arguments, the following attributes are exported:
@@ -91,10 +101,12 @@ In addition to the above arguments, the following attributes are exported:
 * `pipeline_id` (string) - The ID of the pipeline that is used to sync the index
 
 ### IndexStatus
+* `detailed_state` (string) - Lifecycle and ingestion state. An online index can still have a failed update. Possible values are: `DOWNLOADING`, `OFFLINE`, `OFFLINE_FAILED`, `ONLINE`, `ONLINE_CONTINUOUS_UPDATE`, `ONLINE_DIRECT_ACCESS`, `ONLINE_NO_PENDING_UPDATE`, `ONLINE_PIPELINE_FAILED`, `ONLINE_TRIGGERED_UPDATE`, `ONLINE_UPDATING_PIPELINE_RESOURCES`, `PROVISIONING`, `PROVISIONING_ENDPOINT`, `PROVISIONING_INDEX`, `PROVISIONING_INITIAL_SNAPSHOT`, `PROVISIONING_PIPELINE_RESOURCES`
 * `index_url` (string) - Index API URL used to perform operations on the index
 * `indexed_row_count` (integer) - Number of rows indexed
 * `message` (string) - Human-readable detail about the index's current state
-* `ready` (boolean) - Whether the index is ready for search
+* `ready` (boolean) - Whether the index can serve queries. After CreateIndex, poll GetIndex until true; message describes progress.
+  This does not guarantee freshness or update success; check detailed_state for update failures
 
 ## Import
 As of Terraform v1.5, resources can be imported through configuration.

@@ -16,14 +16,17 @@ The following arguments are supported:
 * `actor_id` (string, required) - Customer-provided identifier for the actor whose memory this entry represents
 * `parent` (string, required) - Memory store that will contain the entry, in the form
   `memory-stores/{managed_memory_store_id}`
-* `path` (string, required) - Absolute, case-sensitive path identifying the entry within its actor and optional session.
+* `path` (string, required) - Absolute, case-sensitive path identifying the entry within its actor and, until the
+  deprecated `session_id` is ignored, its optional session.
   Paths must begin with `/` and must not contain empty, `.` or `..` segments
 * `content` (string, optional) - Optional free-form memory content
 * `description` (string, optional) - Human-readable description of the memory entry
 * `managed_memory_entry_id` (string, optional) - Optional caller-selected memory entry ID. The service generates an ID when omitted
-* `session_id` (string, optional) - Optional identifier for the session associated with this memory entry. When omitted, the
+* `session_id` (string, optional, deprecated) - Deprecated: memory entries will be identified by `(actor_id, path)`, and the service will
+  ignore this field on writes and omit it from responses. Until then, an omitted value means the
   entry applies across the actor's sessions
-* `source_type` (string, optional) - Which writer created this entry. Caller sets this on Create; immutable after creation. Possible values are: `MANAGED_MEMORY_ENTRY_SOURCE_TYPE_AGENT`, `MANAGED_MEMORY_ENTRY_SOURCE_TYPE_DREAMER`
+* `source_type` (string, optional) - Which writer created this entry. Caller sets this on Create; immutable after creation.
+  The server may store an omitted or UNSPECIFIED value as AGENT. Possible values are: `MANAGED_MEMORY_ENTRY_SOURCE_TYPE_AGENT`, `MANAGED_MEMORY_ENTRY_SOURCE_TYPE_DREAMER`
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 
 ### ProviderConfig

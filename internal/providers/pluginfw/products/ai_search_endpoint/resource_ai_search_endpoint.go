@@ -110,37 +110,43 @@ func (r ProviderConfig) Type(ctx context.Context) attr.Type {
 
 // Endpoint extends the main model with additional fields.
 type Endpoint struct {
-	// The user-selected budget policy id for the endpoint.
+	// ID of the serverless budget policy to apply to the endpoint. The caller
+	// must have permission to use the policy. Set either this field or
+	// `usage_policy_id`, not both. Responses do not echo this field; they
+	// report the applied policy in `effective_budget_policy_id`.
 	BudgetPolicyId types.String `tfsdk:"budget_policy_id"`
 	// Time the endpoint was created.
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
-	// Creator of the endpoint
+	// User name of the principal that created the endpoint. For a user, it is
+	// the user's email address; for any other principal, it is the principal's
+	// unique name.
 	Creator types.String `tfsdk:"creator"`
-	// The custom tags assigned to the endpoint
+	// Custom tags assigned to the endpoint. On update, the list replaces all of
+	// the endpoint's existing tags.
 	CustomTags types.List `tfsdk:"custom_tags"`
-	// The budget policy id applied to the endpoint
+	// ID of the budget policy that is currently applied to the endpoint.
 	EffectiveBudgetPolicyId types.String `tfsdk:"effective_budget_policy_id"`
-	// The user-supplied short name for the Endpoint, per AIP-133. The server
-	// composes the full `Endpoint.name` as `{parent}/endpoints/{endpoint_id}`.
-	// AIP-133 does not list `endpoint_id` as a fields-may-be-required entry, so
-	// we annotate it OPTIONAL on the wire; the server still rejects empty
-	// values with INVALID_PARAMETER_VALUE.
+	// Short name of the endpoint, which becomes the last segment of `name`. The
+	// server rejects a request without it. The name can have at most 50
+	// characters, can contain only lowercase letters, digits, hyphens, periods,
+	// and underscores, and must start and end with a letter or digit.
 	EndpointId types.String `tfsdk:"endpoint_id"`
-	// Current status of the endpoint
+	// Current lifecycle state of the endpoint, with an optional message that
+	// explains it.
 	EndpointStatus types.Object `tfsdk:"endpoint_status"`
 	// Type of endpoint. Required on create and immutable thereafter.
 	EndpointType types.String `tfsdk:"endpoint_type"`
-	// Unique identifier of the endpoint
+	// System-generated UUID that uniquely identifies the endpoint.
 	Id types.String `tfsdk:"id"`
 	// Number of indexes on the endpoint
 	IndexCount types.Int64 `tfsdk:"index_count"`
-	// User who last updated the endpoint
+	// User name of the principal that last updated the endpoint, in the same
+	// format as `creator`.
 	LastUpdatedUser types.String `tfsdk:"last_updated_user"`
-	// Name of the AI Search endpoint. Server-assigned full resource path
-	// (`workspaces/{workspace}/endpoints/{endpoint}`) on output. On create, the
-	// user-supplied short name is conveyed via
-	// `CreateEndpointRequest.endpoint_id`; the server composes the full `name`
-	// and returns it on the response.
+	// Full resource name of the endpoint, in the form
+	// `workspaces/{workspace_id}/endpoints/{endpoint_id}`. On create, the
+	// server composes it from `parent` and `endpoint_id` and ignores any value
+	// supplied in the request body.
 	Name types.String `tfsdk:"name"`
 	// The Workspace where this Endpoint will be created. Format:
 	// `workspaces/{workspace_id}`
@@ -152,12 +158,15 @@ type Endpoint struct {
 	ScalingInfo types.Object `tfsdk:"scaling_info"`
 	// Target QPS for the endpoint. Mutually exclusive with `replica_count`.
 	// Best-effort; the system does not guarantee this QPS will be achieved.
+	// Responses report the requested value in
+	// `scaling_info.requested_target_qps`.
 	TargetQps types.Int64 `tfsdk:"target_qps"`
 	// Throughput information for the endpoint
 	ThroughputInfo types.Object `tfsdk:"throughput_info"`
 	// Time the endpoint was last updated.
 	UpdateTime timetypes.RFC3339 `tfsdk:"update_time"`
-	// The usage policy id applied to the endpoint.
+	// ID of the usage policy to apply to the endpoint. The server treats it as
+	// the same setting as `budget_policy_id`, so set only one of the two.
 	UsagePolicyId  types.String `tfsdk:"usage_policy_id"`
 	ProviderConfig types.Object `tfsdk:"provider_config"`
 }
@@ -384,7 +393,8 @@ func (m Endpoint) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeB
 	attrs["endpoint_id"] = attrs["endpoint_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["endpoint_id"] = attrs["endpoint_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplaceIf(tfschema.RequiresReplaceIfKnownChange, "", "")).(tfschema.AttributeBuilder)
 	attrs["parent"] = attrs["parent"].SetRequired()
-	attrs["parent"] = attrs["parent"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["parent"] = attrs["parent"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
+	attrs["parent"] = attrs["parent"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplaceIf(tfschema.RequiresReplaceIfKnownChange, "", "")).(tfschema.AttributeBuilder)
 
 	attrs["name"] = attrs["name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["provider_config"] = attrs["provider_config"].SetOptional()
@@ -580,6 +590,9 @@ func (r *EndpointResource) Create(ctx context.Context, req resource.CreateReques
 		return
 	}
 	resp.Diagnostics.Append(tfschema.PopulateProviderConfigInState(ctx, r.Client, plan.ProviderConfig, &resp.State)...)
+	if !resp.Diagnostics.HasError() {
+		resp.Diagnostics.Append(resp.Private.SetKey(ctx, tfschema.CreationInputsAppliedKey, []byte("true"))...)
+	}
 }
 
 func (r *EndpointResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -692,6 +705,9 @@ func (r *EndpointResource) Update(ctx context.Context, req resource.UpdateReques
 	}
 
 	r.update(ctx, plan, &resp.Diagnostics, &resp.State)
+	if !resp.Diagnostics.HasError() {
+		resp.Diagnostics.Append(resp.Private.SetKey(ctx, tfschema.CreationInputsAppliedKey, []byte("true"))...)
+	}
 }
 
 func (r *EndpointResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {

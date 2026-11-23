@@ -23,9 +23,9 @@ data "databricks_workspace_iam_group_v2" "this" {
 
 ## Arguments
 The following arguments are supported:
-* `name` (string, required) - The resource name of the group. The format depends on the API that returned it:
-  - Account-scoped: accounts/{account_id}/groups/{group_id}
-  - Workspace-scoped: groups/{group_id}
+* `name` (string, required) - The resource name of the group, in one of these formats:
+  - Account APIs: `accounts/{account_id}/groups/{group_id}`
+  - Workspace APIs: `groups/{group_id}`
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 
 ### ProviderConfig
@@ -33,12 +33,15 @@ The following arguments are supported:
 
 ## Attributes
 The following attributes are exported:
-* `account_id` (string) - The parent account ID for group in Databricks
-* `external_id` (string) - ExternalId of the group in the customer's IdP
-* `group_id` (string) - Internal group ID of the group in Databricks
-* `group_name` (string) - Display name of the group
-* `name` (string) - The resource name of the group. The format depends on the API that returned it:
-  - Account-scoped: accounts/{account_id}/groups/{group_id}
-  - Workspace-scoped: groups/{group_id}
-* `parent` (string) - The resource name of the account that contains the group, `accounts/{account_id}`. Both the
-  account-scoped and workspace-scoped APIs return it
+* `account_id` (string) - The ID of the account that contains the group
+* `external_id` (string) - The ID of the group in your identity provider (IdP)
+* `group_id` (string) - The Databricks ID of the group. It is a numeric string that Databricks assigns when the group
+  is created, and it is the `{group_id}` segment of `name`
+* `group_name` (string) - The display name of the group. It must be unique in the account, must not be blank, and must be
+  shorter than 255 characters. Databricks trims surrounding whitespace. You can't use the name of a
+  group that Databricks manages, such as `admins` or `users`
+* `name` (string) - The resource name of the group, in one of these formats:
+  - Account APIs: `accounts/{account_id}/groups/{group_id}`
+  - Workspace APIs: `groups/{group_id}`
+* `parent` (string) - The resource name of the account that contains the group, in the format
+  `accounts/{account_id}`. Workspace APIs return the same format

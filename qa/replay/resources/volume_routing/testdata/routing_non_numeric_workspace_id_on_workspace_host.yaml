@@ -1,0 +1,59 @@
+# Pins a non-numeric provider_config.workspace_id on a workspace-level provider. The
+# plan succeeds without any call, and apply rejects both a malformed ID and a
+# connection ID before any call, with the message pointing at account-level
+# credentials.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: plan_with_non_numeric_workspace_id_succeeds
+    plan_only: true
+    config: &config_abc |
+      resource "databricks_volume" "this" {
+        name         = "non_numeric_volume"
+        catalog_name = "main"
+        schema_name  = "replay"
+        volume_type  = "MANAGED"
+        provider_config {
+          workspace_id = "abc"
+        }
+      }
+    plan:
+      expect: non_empty
+      changes:
+        databricks_volume.this:
+          actions: [create]
+          after:
+            - path: [provider_config, 0, workspace_id]
+              equals: abc
+    calls: []
+  - name: apply_rejects_non_numeric_workspace_id
+    config: *config_abc
+    expect_error: 'cannot create volume: failed to validate workspace_id: workspace_id
+      "abc" is not a numeric workspace ID\. Connection IDs are only supported when the
+      provider is configured against an account-level or unified host that the platform
+      gateway can disambiguate\. To use this workspace_id, reconfigure the provider with
+      account-level credentials \(account_id \+ host\) instead of workspace-level
+      credentials'
+    calls: []
+  - name: apply_rejects_connection_id
+    config: |
+      resource "databricks_volume" "this" {
+        name         = "non_numeric_volume"
+        catalog_name = "main"
+        schema_name  = "replay"
+        volume_type  = "MANAGED"
+        provider_config {
+          workspace_id = "cpdr-replay-connection-1"
+        }
+      }
+    expect_error: 'cannot create volume: failed to validate workspace_id: workspace_id
+      "cpdr-replay-connection-1" is not a numeric workspace ID\. Connection IDs are only
+      supported when the provider is configured against an account-level or unified
+      host'
+    calls: []
+destroy:
+  calls: []

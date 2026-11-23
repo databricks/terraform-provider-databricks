@@ -2,24 +2,99 @@
 subcategory: "Postgres"
 ---
 # databricks_postgres_project Resource
-[![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
+[![GA](https://img.shields.io/badge/Release_Stage-GA-green)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
 [API Documentation](https://docs.databricks.com/api/workspace/postgres)
 
-### Understanding Lakebase Autoscaling Terraform Behavior
+### Lakebase Autoscaling Terraform Behavior
 
-This resource uses Lakebase Autoscaling Terraform semantics, which differ from typical Databricks Terraform resources:
+These resources use a spec/status model: the `spec` field defines the resource configuration Terraform manages, and `status` reports the resource's current state.
 
-- **No drift detection**: This implementation does not detect changes made outside Terraform. If a resource is modified manually outside of Terraform, the next `terraform apply` will not surface those differences. It only applies updates based on the Terraform configuration.
+Provider versions without drift detection do not detect changes made through the UI, CLI, or API. They apply updates based on changes to your Terraform configuration.
 
-- **Global state requirement**: You must use shared state storage (e.g., an S3 bucket) to avoid accidentally overriding the resource configuration changes of other users when multiple users manage the same resources.
+With a provider version that supports drift detection, `terraform plan` detects changes to managed `spec` fields made outside Terraform.
 
-- **Spec vs Status behavior**:
-  - The `spec` field represents your intended resource configuration - what you want the resource to be.
-  - The `status` field represents the current system state - what the resource actually is.
-  - Removing a field from `spec` removes your intended configuration for that field, but the server-side value persists. The server will continue using its current value unless you explicitly provide a new value in `spec`.
+For help resolving provider inconsistency errors or recovering from a partially completed apply, see [Terraform state and drift detection for Lakebase](https://docs.databricks.com/aws/en/oltp/projects/terraform-state-and-drift). Use shared Terraform state storage when collaborating on the same resources.
 
-For branches and endpoints that reference projects, see the documentation for `databricks_postgres_branch` and `databricks_postgres_endpoint` resources.
+### Upgrading to a Provider with Drift Detection
+
+When upgrading from a provider version without drift detection to one that supports it, follow the steps below to resolve initial or persistent diffs.
+
+Prefer a complete `spec` that describes the resource's full desired configuration. The examples below show the minimal valid specs for an existing resource, not the recommended end state.
+
+#### Replace a Null Spec
+
+Null specs can produce persistent differences against the object returned during refresh; repeated applies do not resolve those differences.
+
+For an existing Project, replace `spec = null` with an empty object:
+
+```hcl
+spec = {}
+```
+
+This resolves the persistent null/object difference without changing the Project's configuration. Review and apply the plan, then run `terraform plan` again.
+
+#### Reconcile an Initial Diff with an Existing Spec
+
+A Project created before Lakebase supported drift detection can show an initial in-place update even when its current values already match your configured spec. Review the plan against your intended configuration. Apply the reviewed plan, then run `terraform plan` again.
+
+#### Resolve a Persistent Diff
+
+If differences remain after applying, follow the [shared reconciliation steps](https://docs.databricks.com/aws/en/oltp/projects/terraform-state-and-drift#reconcile-existing-resources-after-rollout) to choose between the values in your configuration and the current values returned by Lakebase, then review the resulting plan.
+
+### Optional Fields and Durations
+
+Prefer `null` for unused optional maps, lists, and nested objects. This recommendation does not apply to the root `spec`, which should remain non-null.
+
+Use whole-second durations, such as `"172800s"` for `history_retention_duration` and `"300s"` for endpoint suspend timeouts. Fractional durations can cause a provider inconsistency error after apply.
+
+### Clearing Fields
+
+Terraform currently does not support clearing the following Project fields:
+
+- `display_name`
+- `default_endpoint_settings.pg_settings`
+- `custom_tags`
+- `budget_policy_id`
+
+Removing these fields from `spec` or setting them to `null` preserves their current values. Empty maps or lists do not clear PostgreSQL settings or custom tags.
+
+### Import limitations
+
+See [Import](#import) for import commands.
+
+Configuring `pg_version` on an imported Project is currently unsupported. Omit it from the imported resource's spec, even when it matches the existing PostgreSQL version.
+
+For example:
+
+```hcl
+spec = {
+  display_name = "My Project"
+}
+```
+
+### Protecting Projects from Accidental Deletion
+
+Use `prevent_destroy = true` to protect against accidental destruction or replacement.
+
+```hcl
+resource "databricks_postgres_project" "this" {
+  project_id = "my-project"
+  spec = {
+    pg_version = 17
+  }
+
+  lifecycle {
+    prevent_destroy = true
+  }
+}
+```
+
+By default, deleting a Project soft-deletes it, retaining its data and preventing reuse of its `project_id` during the retention period. To recreate a Project with the same `project_id` after deletion, set `purge_on_delete = true` when creating the Project. With this option, deletion permanently removes the Project and its data.
+
+For intentional deletion or recreation, remove `prevent_destroy` and review the plan.
+
+> **Important:** Removing the entire resource block also removes its `prevent_destroy` protection.
 
 ### Overview
 
@@ -44,29 +119,37 @@ Projects are the root of the Lakebase Autoscaling resource hierarchy:
 
 ```hcl
 resource "databricks_postgres_project" "this" {
-  project_id = "my-project"
+  project_id      = "my-project"
   spec = {
     pg_version   = 17
     display_name = "My Application Project"
   }
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 ```
 
-### Project with Custom Settings
+### Project with Custom Configuration
 
 ```hcl
 resource "databricks_postgres_project" "this" {
-  project_id = "analytics-project"
+  project_id      = "analytics-project"
   spec = {
-    pg_version                = 16
-    display_name              = "Analytics Workloads"
-    history_retention_duration = "1209600s"  # 14 days
+    pg_version                 = 16
+    display_name               = "Analytics Workloads"
+    history_retention_duration = "1209600s" # 14 days
 
     default_endpoint_settings = {
-      autoscaling_limit_min_cu    = 1.0
-      autoscaling_limit_max_cu    = 8.0
-      suspend_timeout_duration    = "86400s"  # 24 hours
+      autoscaling_limit_min_cu = 1.0
+      autoscaling_limit_max_cu = 8.0
+      suspend_timeout_duration = "86400s" # 24 hours
     }
+  }
+
+  lifecycle {
+    prevent_destroy = true
   }
 }
 ```
@@ -81,10 +164,14 @@ This example manages implicitly created resources for the root branch and read-w
 
 ```hcl
 resource "databricks_postgres_project" "ha" {
-  project_id = "ha-project"
+  project_id      = "ha-project"
   spec = {
     pg_version   = 17
     display_name = "HA Production Project"
+  }
+
+  lifecycle {
+    prevent_destroy = true
   }
 }
 
@@ -120,10 +207,14 @@ resource "databricks_postgres_endpoint" "primary" {
 
 ```hcl
 resource "databricks_postgres_project" "this" {
-  project_id = "my-project"
+  project_id      = "my-project"
   spec = {
     pg_version   = 17
     display_name = "My Project"
+  }
+
+  lifecycle {
+    prevent_destroy = true
   }
 }
 
@@ -139,7 +230,7 @@ resource "databricks_postgres_branch" "dev" {
 
 ## Arguments
 The following arguments are supported:
-* `project_id` (string, required) - The part of the name, chosen by the user when the resource was created
+* `project_id` (string, required) - The project ID chosen when the project was created. It is the final segment of `name`
 * `initial_branch_spec` (InitialBranchSpec, optional) - Configuration for the initial default branch created as part of project creation.
   Allows overriding branch protection. These settings only apply at creation time
   and do not affect resources created after project creation
@@ -147,9 +238,18 @@ The following arguments are supported:
   created project. If omitted, the initial endpoint created will have default settings, without high availability
   configured. This field does not apply to any endpoints created after project creation. Use
   spec.default_endpoint_settings to configure default settings for endpoints created after project creation
-* `purge_on_delete` (boolean, optional) - If true, permanently deletes the project (hard delete).
-  If false or unset, performs a soft delete
-* `spec` (ProjectSpec, optional) - The spec contains the project configuration, including display_name, pg_version (Postgres version), history_retention_duration, and default_endpoint_settings
+* `purge_on_delete` (boolean, optional) - If true, permanently deletes the project and all of its data immediately. If false or unset, the
+  project is soft-deleted: it stops accepting connections and is retained for 7 days, during which
+  it can be restored with Undelete, and is then permanently deleted. Deleting an already
+  soft-deleted project with `purge` set to true removes it immediately. See
+  https://docs.databricks.com/aws/en/oltp/projects/manage-projects for details
+* `spec` (ProjectSpec, optional) - The desired configuration of the project. The fields under `spec` are the ones that can be
+  changed after creation, except `pg_version`, which is fixed when the project is created. See
+  `status` for the configuration that is currently in effect.
+  
+  Read the resource's current values from `status`, rather than `spec`.
+  `spec` tracks field ownership for infrastructure-as-code tools and may omit
+  unmanaged fields
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 
 ### ProviderConfig
@@ -162,14 +262,15 @@ The following arguments are supported:
 * `min` (integer, required) - The minimum number of computes in the endpoint group. Currently, this must be equal to max. This must be greater
   than or equal to 1
 * `enable_readable_secondaries` (boolean, optional) - Whether to allow read-only connections to read-write endpoints. Only relevant for read-write endpoints where
-  size.max > 1
+  `max` is greater than 1. When enabled, the endpoint also reports a read-only host in `status.hosts`
 
 ### InitialBranchSpec
 * `is_protected` (boolean, optional) - Whether the initial default branch should be protected from deletion
 
 ### InitialEndpointSpec
-* `autoscaling_limit_max_cu` (number, optional) - The maximum number of Compute Units for the initial endpoint
-* `autoscaling_limit_min_cu` (number, optional) - The minimum number of Compute Units for the initial endpoint
+* `autoscaling_limit_max_cu` (number, optional) - The maximum number of Compute Units for the initial endpoint. Minimum value is 0.5
+* `autoscaling_limit_min_cu` (number, optional) - The minimum number of Compute Units for the initial endpoint. Minimum value is 0.5, and it must
+  not exceed autoscaling_limit_max_cu
 * `group` (EndpointGroupSpec, optional) - Settings for HA configuration of the endpoint
 * `no_suspension` (boolean, optional) - When set to true, explicitly disables automatic suspension (never suspend).
   Should be set to true when provided.
@@ -196,17 +297,23 @@ The following arguments are supported:
 ### ProjectSpec
 * `budget_policy_id` (string, optional) - The desired budget policy to associate with the project.
   See status.budget_policy_id for the policy that is actually applied to the project
-* `custom_tags` (list of ProjectCustomTag, optional) - Custom tags to associate with the project. Forwarded to LBM for billing and cost tracking.
+* `custom_tags` (list of ProjectCustomTag, optional) - Custom tags to associate with the project, used for billing and cost tracking.
   To update tags, provide the new tag list and include "spec.custom_tags" in the update_mask.
   To clear all tags, provide an empty list and include "spec.custom_tags" in the update_mask.
   To preserve existing tags, omit this field from the update_mask (or use wildcard "*" which auto-excludes empty tags)
-* `default_branch` (string, optional) - The full resource path for the default branch of the project
+* `default_branch` (string, optional) - The full resource path of the default branch of the project.
   Format: projects/{project_id}/branches/{branch_id}
-* `default_endpoint_settings` (ProjectDefaultEndpointSettings, optional)
+  At creation time, the branch ID in this path names the initial branch, which is called
+  `production` when the field is omitted. On update, the path must name an existing branch of this
+  project, which then becomes the default branch
+* `default_endpoint_settings` (ProjectDefaultEndpointSettings, optional) - Settings applied by default to compute endpoints created in this project. The initial endpoint
+  also takes these values for any setting that initial_endpoint_spec does not provide
 * `display_name` (string, optional) - Human-readable project name. Length should be between 1 and 256 characters
 * `enable_pg_native_login` (boolean, optional) - Whether to enable PG native password login on all endpoints in this project. Defaults to false
-* `history_retention_duration` (string, optional) - The number of seconds to retain the shared history for point in time recovery for all branches in this project. Value should be between 172800s (2 days) and 3024000s (35 days)
-* `pg_version` (integer, optional) - The major Postgres version number. The set of supported versions may vary; consult the API documentation for currently accepted values
+* `history_retention_duration` (string, optional) - The number of seconds to retain the shared history for point in time recovery for all branches in this project. Value should be between 172800s (2 days) and 3024000s (35 days).
+  Defaults to 604800s (7 days) when omitted
+* `pg_version` (integer, optional) - The major Postgres version number. Defaults to 17 when omitted. The set of versions that new
+  projects can use may change over time
 
 ## Attributes
 In addition to the above arguments, the following attributes are exported:
@@ -217,8 +324,10 @@ In addition to the above arguments, the following attributes are exported:
   Format: projects/{project_id}
 * `purge_time` (string) - A timestamp indicating when the project is scheduled for permanent deletion.
   Empty if the project is not deleted, otherwise set to a timestamp in the future
-* `status` (ProjectStatus) - The current status of a Project
-* `uid` (string) - System-generated unique ID for the project
+* `status` (ProjectStatus) - The configuration and state of the project that are currently in effect, as reported by the
+  system
+* `uid` (string) - A system-generated UUID that identifies the project. Unlike `name`, it is not derived from the
+  user-chosen project ID
 * `update_time` (string) - A timestamp indicating when the project was last updated
 
 ### ProjectStatus
@@ -233,7 +342,7 @@ In addition to the above arguments, the following attributes are exported:
 * `history_retention_duration` (string) - The effective number of seconds to retain the shared history for point in time recovery
 * `owner` (string) - The email of the project owner
 * `pg_version` (integer) - The effective major Postgres version number
-* `project_id` (string) - Part of the resource name
+* `project_id` (string) - The project ID, which is the final segment of the project's resource name
 * `synthetic_storage_size_bytes` (integer) - The current space occupied by the project in storage
 
 ## Import

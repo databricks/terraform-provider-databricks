@@ -546,15 +546,27 @@ func (m CustomTag) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// A Database Catalog registers a Postgres database that lives in a Lakebase
+// database instance as a catalog in Unity Catalog, so that the database's
+// schemas and tables are governed and discoverable through Unity Catalog. For
+// an overview, see
+// https://docs.databricks.com/aws/en/oltp/projects/register-uc.
 type DatabaseCatalog struct {
+	// If true, the database named in database_name is created in the instance
+	// when it does not already exist, with the calling user as its owner.
+	// Defaults to false.
 	CreateDatabaseIfNotExists types.Bool `tfsdk:"create_database_if_not_exists"`
 	// The name of the DatabaseInstance housing the database.
 	DatabaseInstanceName types.String `tfsdk:"database_instance_name"`
-	// The name of the database (in an instance) associated with the catalog.
+	// The name of the Postgres database in the instance that the catalog
+	// registers. The database must already exist unless
+	// create_database_if_not_exists is true. The system databases postgres,
+	// databricks_system, template0 and template1 cannot be registered.
 	DatabaseName types.String `tfsdk:"database_name"`
-	// The name of the catalog in UC.
+	// The name of the catalog in Unity Catalog.
 	Name types.String `tfsdk:"name"`
-
+	// An immutable UUID identifier for the catalog, assigned when the catalog
+	// is created.
 	Uid types.String `tfsdk:"uid"`
 }
 
@@ -623,9 +635,15 @@ func (m DatabaseCatalog) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// A short-lived credential for connecting to database instances with the
+// caller's Databricks identity.
 type DatabaseCredential struct {
+	// The time at which the token expires. Tokens are valid for one hour after
+	// they are issued, and a new token is needed to open connections after that
+	// time.
 	ExpirationTime types.String `tfsdk:"expiration_time"`
-
+	// The OAuth token to use as the Postgres password when connecting to a
+	// database instance.
 	Token types.String `tfsdk:"token"`
 }
 
@@ -679,6 +697,7 @@ func (m DatabaseCredential) Type(ctx context.Context) attr.Type {
 // compute and storage.
 type DatabaseInstance struct {
 	// The sku of the instance. Valid values are "CU_1", "CU_2", "CU_4", "CU_8".
+	// Must be set when creating an instance.
 	Capacity types.String `tfsdk:"capacity"`
 	// The refs of the child instances. This is only available if the instance
 	// is parent instance.
@@ -688,10 +707,11 @@ type DatabaseInstance struct {
 	// The email of the creator of the instance.
 	Creator types.String `tfsdk:"creator"`
 	// Custom tags associated with the instance. This field is only included on
-	// create and update responses.
+	// create and update responses. An instance can have at most 10 tags; keys
+	// must be unique ignoring case.
 	CustomTags types.List `tfsdk:"custom_tags"`
-	// Deprecated. The sku of the instance; this field will always match the
-	// value of capacity. This is an output only field that contains the value
+	// Deprecated: this field always matches the value of capacity; read
+	// capacity instead. This is an output only field that contains the value
 	// computed from the input field combined with server side defaults. Use the
 	// field without the effective_ prefix to set the value.
 	EffectiveCapacity types.String `tfsdk:"effective_capacity"`
@@ -736,18 +756,21 @@ type DatabaseInstance struct {
 	// false.
 	EnablePgNativeLogin types.Bool `tfsdk:"enable_pg_native_login"`
 	// Whether to enable secondaries to serve read-only traffic. Defaults to
-	// false.
+	// false. Requires a node_count greater than 1.
 	EnableReadableSecondaries types.Bool `tfsdk:"enable_readable_secondaries"`
 	// The name of the instance. This is the unique identifier for the instance.
+	// Must be 1 to 63 characters long, contain only letters, digits and
+	// hyphens, start with a letter, and not contain consecutive hyphens.
 	Name types.String `tfsdk:"name"`
 	// The number of nodes in the instance, composed of 1 primary and 0 or more
 	// secondaries. Defaults to 1 primary and 0 secondaries. This field is input
 	// only, see effective_node_count for the output.
 	NodeCount types.Int64 `tfsdk:"node_count"`
 	// The ref of the parent instance. This is only available if the instance is
-	// child instance. Input: For specifying the parent instance to create a
-	// child instance. Optional. Output: Only populated if provided as input to
-	// create a child instance.
+	// a child instance. A child instance inherits custom_tags and
+	// usage_policy_id from its parent and cannot set them. Input: For
+	// specifying the parent instance to create a child instance. Optional.
+	// Output: Only populated if provided as input to create a child instance.
 	ParentInstanceRef types.Object `tfsdk:"parent_instance_ref"`
 	// The version of Postgres running on the instance.
 	PgVersion types.String `tfsdk:"pg_version"`
@@ -763,7 +786,8 @@ type DatabaseInstance struct {
 	// The current state of the instance.
 	State types.String `tfsdk:"state"`
 	// Whether to stop the instance. An input only param, see effective_stopped
-	// for the output.
+	// for the output. An instance cannot be created in the stopped state; set
+	// this field on update to stop or start the instance.
 	Stopped types.Bool `tfsdk:"stopped"`
 	// An immutable UUID identifier for the instance.
 	Uid types.String `tfsdk:"uid"`
@@ -1530,24 +1554,26 @@ func (m DatabaseInstanceRoleAttributes) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// A database table is a table that already exists in a Postgres database of a
+// Lakebase database instance and is registered in Unity Catalog, so that it is
+// governed and discoverable there while the Postgres table remains the source
+// of truth. Unlike a synced table, no data is copied from a Unity Catalog
+// source table into Postgres.
 type DatabaseTable struct {
-	// Name of the target database instance. This is required when creating
-	// database tables in standard catalogs. This is optional when creating
-	// database tables in registered catalogs. If this field is specified when
-	// creating database tables in registered catalogs, the database instance
-	// name MUST match that of the registered catalog (or the request will be
-	// rejected).
+	// The name of the database instance that hosts the Postgres table. It must
+	// be set when creating a database table.
 	DatabaseInstanceName types.String `tfsdk:"database_instance_name"`
-	// Target Postgres database object (logical database) name for this table.
-	//
-	// When creating a table in a standard catalog, this field is required. In
-	// this scenario, specifying this field will allow targeting an arbitrary
-	// postgres database.
-	//
-	// Registration of database tables via /database/tables is currently only
-	// supported in standard catalogs.
+	// The name of the Postgres database in the instance that contains the
+	// table. It must be set when creating a database table. Tables in the
+	// system databases postgres, databricks_system, template0 and template1,
+	// and tables in the schemas pg_catalog and information_schema, cannot be
+	// registered.
 	LogicalDatabaseName types.String `tfsdk:"logical_database_name"`
-	// Full three-part (catalog, schema, table) name of the table.
+	// Full three-part (catalog, schema, table) name of the table in Unity
+	// Catalog. The catalog must be a standard or default storage catalog;
+	// database tables cannot be registered in a database catalog. The schema
+	// and table parts must match the schema and table names of the Postgres
+	// table that is registered.
 	Name types.String `tfsdk:"name"`
 }
 
@@ -1601,6 +1627,7 @@ func (m DatabaseTable) Type(ctx context.Context) attr.Type {
 }
 
 type DeleteDatabaseCatalogRequest struct {
+	// The Unity Catalog name of the catalog to delete.
 	Name types.String `tfsdk:"-"`
 }
 
@@ -1649,14 +1676,13 @@ func (m DeleteDatabaseCatalogRequest) Type(ctx context.Context) attr.Type {
 
 type DeleteDatabaseInstanceRequest struct {
 	// By default, an instance cannot be deleted if it has descendant instances
-	// created via PITR. If this flag is specified as true, all descendent
-	// instances will be deleted as well.
+	// created via PITR. Setting this flag to true is not supported and the
+	// request is rejected; delete the child instances first.
 	Force types.Bool `tfsdk:"-"`
 	// Name of the instance to delete.
 	Name types.String `tfsdk:"-"`
-	// Deprecated. Omitting the field or setting it to true will result in the
-	// field being hard deleted. Setting a value of false will throw a bad
-	// request.
+	// Deprecated: omitting the field or setting it to true hard deletes the
+	// instance. Setting it to false returns a bad request.
 	Purge types.Bool `tfsdk:"-"`
 }
 
@@ -1774,6 +1800,8 @@ func (m DeleteDatabaseInstanceRoleRequest) Type(ctx context.Context) attr.Type {
 }
 
 type DeleteDatabaseTableRequest struct {
+	// Specifies the database table by its full three-part (catalog, schema,
+	// table) name.
 	Name types.String `tfsdk:"-"`
 }
 
@@ -1821,9 +1849,12 @@ func (m DeleteDatabaseTableRequest) Type(ctx context.Context) attr.Type {
 }
 
 type DeleteSyncedDatabaseTableRequest struct {
+	// Specifies the synced table by its full three-part (catalog, schema,
+	// table) name.
 	Name types.String `tfsdk:"-"`
-	// Optional. When set to true, the actual PostgreSQL table will be dropped
-	// from the database.
+	// When true, the Postgres table is also dropped from the database. When
+	// false, the synced table is unregistered from Unity Catalog and its
+	// pipeline stops syncing it, but the Postgres table and its data are kept.
 	PurgeData types.Bool `tfsdk:"-"`
 }
 
@@ -1929,7 +1960,7 @@ func (m DeltaTableSyncInfo) Type(ctx context.Context) attr.Type {
 }
 
 type FindDatabaseInstanceByUidRequest struct {
-	// UID of the cluster to get.
+	// UID of the instance to get, as returned in the uid field of the instance.
 	Uid types.String `tfsdk:"-"`
 }
 
@@ -1978,17 +2009,19 @@ func (m FindDatabaseInstanceByUidRequest) Type(ctx context.Context) attr.Type {
 
 // Generates a credential that can be used to access database instances
 type GenerateDatabaseCredentialRequest struct {
-	// A set of UC permissions to add to the credential. We verify that the
-	// caller has the necessary permissions in UC and include a reference in the
-	// token. Postgres uses that token to give the connecting user additional
-	// grants to the Postgres resources that correspond to the UC resources. The
-	// UC resources need to be something that have a Postgres counterpart. For
-	// example, a synced table or a table in a UC database catalog.
+	// Unity Catalog permissions to embed in the credential. Databricks verifies
+	// that the caller holds each permission in Unity Catalog and records a
+	// reference to it in the token. When the user connects, Postgres grants
+	// them the matching privileges on the Postgres objects that back those
+	// Unity Catalog resources. Each resource must have a Postgres counterpart,
+	// such as a synced table or a table in a database catalog.
 	Claims types.List `tfsdk:"claims"`
-	// Instances to request a credential for. At least one of instance_names or
-	// claims must be specified.
+	// Names of the database instances to connect to with the credential. Every
+	// named instance must exist in the workspace, or the request fails. At
+	// least one of instance_names or claims must be specified.
 	InstanceNames types.List `tfsdk:"instance_names"`
-
+	// A client-generated identifier for this request, such as a UUID. The
+	// request fails when it is omitted.
 	RequestId types.String `tfsdk:"request_id"`
 }
 
@@ -2150,6 +2183,7 @@ func (m *GenerateDatabaseCredentialRequest) SetInstanceNames(ctx context.Context
 }
 
 type GetDatabaseCatalogRequest struct {
+	// The Unity Catalog name of the catalog to retrieve.
 	Name types.String `tfsdk:"-"`
 }
 
@@ -2197,7 +2231,7 @@ func (m GetDatabaseCatalogRequest) Type(ctx context.Context) attr.Type {
 }
 
 type GetDatabaseInstanceRequest struct {
-	// Name of the cluster to get.
+	// Name of the instance to get.
 	Name types.String `tfsdk:"-"`
 }
 
@@ -2297,6 +2331,8 @@ func (m GetDatabaseInstanceRoleRequest) Type(ctx context.Context) attr.Type {
 }
 
 type GetDatabaseTableRequest struct {
+	// Specifies the database table by its full three-part (catalog, schema,
+	// table) name.
 	Name types.String `tfsdk:"-"`
 }
 
@@ -2344,6 +2380,8 @@ func (m GetDatabaseTableRequest) Type(ctx context.Context) attr.Type {
 }
 
 type GetSyncedDatabaseTableRequest struct {
+	// Specifies the synced table by its full three-part (catalog, schema,
+	// table) name.
 	Name types.String `tfsdk:"-"`
 }
 
@@ -2747,7 +2785,8 @@ func (m *ListDatabaseInstanceRolesResponse) SetDatabaseInstanceRoles(ctx context
 }
 
 type ListDatabaseInstancesRequest struct {
-	// Upper bound for items returned. The maximum value is 100.
+	// Upper bound for items returned. Defaults to 100, which is also the
+	// maximum value.
 	PageSize types.Int64 `tfsdk:"-"`
 	// Pagination token to go to the next page of Database Instances. Requests
 	// first page if absent.
@@ -3171,8 +3210,11 @@ func (m NewPipelineSpec) Type(ctx context.Context) attr.Type {
 }
 
 type RequestedClaims struct {
+	// The level of access that the credential grants on the listed resources.
+	// READ_ONLY covers SELECT on each table, along with USE SCHEMA on its
+	// schema and USE CATALOG on its catalog.
 	PermissionSet types.String `tfsdk:"permission_set"`
-
+	// The Unity Catalog resources that the permission set applies to.
 	Resources types.List `tfsdk:"resources"`
 }
 
@@ -3290,6 +3332,8 @@ func (m *RequestedClaims) SetResources(ctx context.Context, v []RequestedResourc
 }
 
 type RequestedResource struct {
+	// The full three-level Unity Catalog name of the database table or synced
+	// table, in the form catalog.schema.table.
 	TableName types.String `tfsdk:"table_name"`
 
 	UnspecifiedResourceName types.String `tfsdk:"unspecified_resource_name"`
@@ -3341,8 +3385,16 @@ func (m RequestedResource) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// A synced table is a Postgres table in a Lakebase database instance that
+// Databricks keeps in sync with a source table in Unity Catalog. A data
+// synchronization pipeline loads the source data and then applies later changes
+// according to the scheduling policy, so the table can serve low-latency
+// queries without a hand-built ETL process. For an overview, see
+// https://docs.databricks.com/aws/en/oltp/projects/sync-tables.
 type SyncedDatabaseTable struct {
-	// Synced Table data synchronization status
+	// Reports the status of the data synchronization pipeline that keeps this
+	// table in sync with its source, including the pipeline ID and the position
+	// of the last successful sync.
 	DataSynchronizationStatus types.Object `tfsdk:"data_synchronization_status"`
 	// Name of the target database instance. This is required when creating
 	// synced database tables in standard catalogs. This is optional when
@@ -3352,11 +3404,11 @@ type SyncedDatabaseTable struct {
 	// the request will be rejected).
 	DatabaseInstanceName types.String `tfsdk:"database_instance_name"`
 	// The name of the database instance that this table is registered to. This
-	// field is always returned, and for tables inside database catalogs is
-	// inferred database instance associated with the catalog. This is an output
-	// only field that contains the value computed from the input field combined
-	// with server side defaults. Use the field without the effective_ prefix to
-	// set the value.
+	// field is always returned; for tables inside database catalogs it is the
+	// database instance associated with the catalog. This is an output only
+	// field that contains the value computed from the input field combined with
+	// server side defaults. Use the field without the effective_ prefix to set
+	// the value.
 	EffectiveDatabaseInstanceName types.String `tfsdk:"effective_database_instance_name"`
 	// The name of the logical database that this table is registered to. This
 	// is an output only field that contains the value computed from the input
@@ -3373,12 +3425,13 @@ type SyncedDatabaseTable struct {
 	//
 	// When creating a synced table in a standard catalog, this field is
 	// required. In this scenario, specifying this field will allow targeting an
-	// arbitrary postgres database. Note that this has implications for the
-	// `create_database_objects_is_missing` field in `spec`.
+	// arbitrary postgres database. If this database does not exist yet, it is
+	// created when `create_database_objects_if_missing` in `spec` is true.
 	LogicalDatabaseName types.String `tfsdk:"logical_database_name"`
 	// Full three-part (catalog, schema, table) name of the table.
 	Name types.String `tfsdk:"name"`
-
+	// Specifies the source table, the key columns and how the data
+	// synchronization pipeline runs.
 	Spec types.Object `tfsdk:"spec"`
 	// The provisioning state of the synced table entity in Unity Catalog. This
 	// is distinct from the state of the data synchronization pipeline (i.e. the
@@ -3669,7 +3722,6 @@ func (m *SyncedTableContinuousUpdateStatus) SetInitialPipelineSyncProgress(ctx c
 // OFFLINE_FAILED or the SYNCED_PIPELINE_FAILED state.
 type SyncedTableFailedStatus struct {
 	// The last source table Delta version that was successfully synced to the
-	// synced table. The last source table Delta version that was synced to the
 	// synced table. Only populated if the table is still synced and available
 	// for serving.
 	LastProcessedCommitVersion types.Int64 `tfsdk:"last_processed_commit_version"`
@@ -3802,6 +3854,8 @@ func (m SyncedTablePipelineProgress) Type(ctx context.Context) attr.Type {
 }
 
 type SyncedTablePosition struct {
+	// Identifies the position in the source Delta table at the time of the last
+	// successful sync.
 	DeltaTableSyncInfo types.Object `tfsdk:"delta_table_sync_info"`
 	// The end timestamp of the most recent successful synchronization. This is
 	// the time when the data is available in the synced table.
@@ -4008,7 +4062,8 @@ type SyncedTableSpec struct {
 	// workspace-level enablement.
 	AcceleratedSync types.Bool `tfsdk:"accelerated_sync"`
 	// If true, the synced table's logical database and schema resources in PG
-	// will be created if they do not already exist.
+	// will be created if they do not already exist. The request fails if this
+	// is false and the database or schema does not exist.
 	CreateDatabaseObjectsIfMissing types.Bool `tfsdk:"create_database_objects_if_missing"`
 	// At most one of existing_pipeline_id and new_pipeline_spec should be
 	// defined.
@@ -4029,14 +4084,25 @@ type SyncedTableSpec struct {
 	// requires write permissions, whereas the source table only requires read
 	// permissions.
 	NewPipelineSpec types.Object `tfsdk:"new_pipeline_spec"`
-	// Primary Key columns to be used for data insert/update in the destination.
+	// The primary key columns are used to insert and update rows in the
+	// destination table. At least one column is required. Rows whose primary
+	// key columns contain null values are not synced, and the primary key
+	// cannot be changed after the table is created.
 	PrimaryKeyColumns types.List `tfsdk:"primary_key_columns"`
-	// Scheduling policy of the underlying pipeline.
+	// Specifies the scheduling policy of the underlying pipeline. With
+	// CONTINUOUS, the pipeline keeps running and applies source changes as they
+	// happen. With TRIGGERED and SNAPSHOT, the pipeline stops after the initial
+	// load and syncs again only when it is run (manually, on a schedule or from
+	// a job); TRIGGERED applies source changes incrementally, while SNAPSHOT
+	// copies the full source table on every run. CONTINUOUS and TRIGGERED
+	// require the source table to provide a change data feed.
 	SchedulingPolicy types.String `tfsdk:"scheduling_policy"`
 	// Three-part (catalog, schema, table) name of the source Delta table.
 	SourceTableFullName types.String `tfsdk:"source_table_full_name"`
-	// Time series key to deduplicate (tie-break) rows with the same primary
-	// key.
+	// The time series key deduplicates (tie-breaks) rows with the same primary
+	// key. When primary key values can repeat in the source table, the synced
+	// table keeps only the row with the latest value of this column for each
+	// primary key. The key cannot be changed after the table is created.
 	TimeseriesKey types.String `tfsdk:"timeseries_key"`
 	// Override the default Delta->PG type mapping for specific columns. A
 	// TypeOverride with PG_SPECIFIC_TYPE_UNSPECIFIED is rejected; a valid
@@ -4366,10 +4432,16 @@ func (m SyncedTableSpecTypeOverride) Type(ctx context.Context) attr.Type {
 
 // Status of a synced table.
 type SyncedTableStatus struct {
+	// Provides detailed status for an online table with the CONTINUOUS
+	// scheduling policy. It is populated when detailed_state is
+	// SYNCED_TABLE_ONLINE_CONTINUOUS_UPDATE or
+	// SYNCED_TABLE_ONLINE_UPDATING_PIPELINE_RESOURCES.
 	ContinuousUpdateStatus types.Object `tfsdk:"continuous_update_status"`
 	// The state of the synced table.
 	DetailedState types.String `tfsdk:"detailed_state"`
-
+	// Provides detailed status for a table whose data synchronization pipeline
+	// has failed. It is populated when detailed_state is
+	// SYNCED_TABLE_OFFLINE_FAILED or SYNCED_TABLE_ONLINE_PIPELINE_FAILED.
 	FailedStatus types.Object `tfsdk:"failed_status"`
 	// Summary of the last successful synchronization from source to
 	// destination.
@@ -4391,9 +4463,16 @@ type SyncedTableStatus struct {
 	// the client (in the case of bin packing), or generated by the server (when
 	// creating a new pipeline).
 	PipelineId types.String `tfsdk:"pipeline_id"`
-
+	// Provides detailed status while the table is being provisioned. It is
+	// populated when detailed_state is
+	// SYNCED_TABLE_PROVISIONING_PIPELINE_RESOURCES or
+	// SYNCED_TABLE_PROVISIONING_INITIAL_SNAPSHOT.
 	ProvisioningStatus types.Object `tfsdk:"provisioning_status"`
-
+	// Provides detailed status for an online table with the TRIGGERED or
+	// SNAPSHOT scheduling policy. It is populated when detailed_state is
+	// SYNCED_TABLE_ONLINE_TRIGGERED_UPDATE,
+	// SYNCED_TABLE_ONLINE_NO_PENDING_UPDATE or
+	// SYNCED_TABLE_ONLINE_UPDATING_PIPELINE_RESOURCES.
 	TriggeredUpdateStatus types.Object `tfsdk:"triggered_update_status"`
 }
 
@@ -4787,7 +4866,7 @@ func (m *SyncedTableTriggeredUpdateStatus) SetTriggeredUpdateProgress(ctx contex
 type UpdateDatabaseCatalogRequest struct {
 	// Note that updating a database catalog is not yet supported.
 	DatabaseCatalog types.Object `tfsdk:"database_catalog"`
-	// The name of the catalog in UC.
+	// The name of the catalog in Unity Catalog.
 	Name types.String `tfsdk:"-"`
 	// The list of fields to update. Setting this field is not yet supported.
 	UpdateMask types.String `tfsdk:"-"`
@@ -4887,12 +4966,15 @@ func (m *UpdateDatabaseCatalogRequest) SetDatabaseCatalog(ctx context.Context, v
 }
 
 type UpdateDatabaseInstanceRequest struct {
+	// Specifies the instance to update, identified by its name.
 	DatabaseInstance types.Object `tfsdk:"database_instance"`
 	// The name of the instance. This is the unique identifier for the instance.
+	// Must be 1 to 63 characters long, contain only letters, digits and
+	// hyphens, start with a letter, and not contain consecutive hyphens.
 	Name types.String `tfsdk:"-"`
 	// The list of fields to update. If unspecified, all fields will be updated
-	// when possible. To wipe out custom_tags, specify custom_tags in the
-	// update_mask with an empty custom_tags map.
+	// when possible. Use "*" to update every field. To wipe out custom_tags,
+	// specify custom_tags in the update_mask with an empty custom_tags list.
 	UpdateMask types.String `tfsdk:"-"`
 }
 

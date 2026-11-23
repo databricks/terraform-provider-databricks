@@ -2,7 +2,7 @@
 subcategory: "Postgres"
 ---
 # databricks_postgres_catalog Resource
-[![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
+[![GA](https://img.shields.io/badge/Release_Stage-GA-green)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
 [API Documentation](https://docs.databricks.com/api/workspace/postgres)
 
@@ -76,8 +76,10 @@ resource "databricks_postgres_catalog" "this" {
 
 ## Arguments
 The following arguments are supported:
-* `catalog_id` (string, required) - The part of the name, chosen by the user when the resource was created
-* `spec` (CatalogCatalogSpec, optional) - The desired state of the Catalog
+* `catalog_id` (string, required) - The ID chosen when the catalog was created, which is also its name in Unity Catalog. It is the
+  last segment of the name field
+* `spec` (CatalogCatalogSpec, optional) - The desired state of the Catalog. The catalog has no update method, so the spec is fixed when
+  the catalog is created
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 
 ### ProviderConfig
@@ -86,6 +88,7 @@ The following arguments are supported:
 ### CatalogCatalogSpec
 * `postgres_database` (string, required) - The name of the Postgres database inside the specified Lakebase project and branch to be associated with the UC catalog.
   This database must already exist, unless create_database_if_missing is set to true on creation.
+  The system databases postgres, databricks_system, template0 and template1 cannot be registered.
   
   A database can only be registered with one UC catalog at a time.
   To re-register a database with a different catalog, the existing catalog must be deleted first.
@@ -98,7 +101,8 @@ The following arguments are supported:
   
   Doing Point In Time Restore (PITR) prior to the moment before the Postgres DB was registered
   in the Catalog drops the fact of registration of the database. So the user should avoid doing so
-* `branch` (string, optional) - The resource path of the branch associated with the catalog.
+* `branch` (string, optional) - The resource path of the branch that holds the Postgres database. The branch must have a
+  read-write compute endpoint.
   
   Format: projects/{project_id}/branches/{branch_id}
 * `create_database_if_missing` (boolean, optional) - If set to true, the specified postgres_database is created on behalf of the calling user
@@ -114,7 +118,7 @@ In addition to the above arguments, the following attributes are exported:
   
   Format: "catalogs/{catalog_id}"
 * `status` (CatalogCatalogStatus) - The observed state of the Catalog
-* `uid` (string) - System-generated unique identifier for the catalog
+* `uid` (string) - The immutable UUID that identifies the catalog, assigned when the catalog is created
 * `update_time` (string) - A timestamp indicating when the catalog was last updated
 
 ### CatalogCatalogStatus

@@ -26,18 +26,21 @@ resource "databricks_account_iam_group_v2" "this" {
 
 ## Arguments
 The following arguments are supported:
-* `parent` (string, required) - The resource name of the account that contains the group, `accounts/{account_id}`. Both the
-  account-scoped and workspace-scoped APIs return it
-* `external_id` (string, optional) - ExternalId of the group in the customer's IdP
-* `group_name` (string, optional) - Display name of the group
+* `parent` (string, required) - The resource name of the account that contains the group, in the format
+  `accounts/{account_id}`. Workspace APIs return the same format
+* `external_id` (string, optional) - The ID of the group in your identity provider (IdP)
+* `group_name` (string, optional) - The display name of the group. It must be unique in the account, must not be blank, and must be
+  shorter than 255 characters. Databricks trims surrounding whitespace. You can't use the name of a
+  group that Databricks manages, such as `admins` or `users`
 
 ## Attributes
 In addition to the above arguments, the following attributes are exported:
-* `account_id` (string) - The parent account ID for group in Databricks
-* `group_id` (string) - Internal group ID of the group in Databricks
-* `name` (string) - The resource name of the group. The format depends on the API that returned it:
-  - Account-scoped: accounts/{account_id}/groups/{group_id}
-  - Workspace-scoped: groups/{group_id}
+* `account_id` (string) - The ID of the account that contains the group
+* `group_id` (string) - The Databricks ID of the group. It is a numeric string that Databricks assigns when the group
+  is created, and it is the `{group_id}` segment of `name`
+* `name` (string) - The resource name of the group, in one of these formats:
+  - Account APIs: `accounts/{account_id}/groups/{group_id}`
+  - Workspace APIs: `groups/{group_id}`
 
 ## Import
 As of Terraform v1.5, resources can be imported through configuration.

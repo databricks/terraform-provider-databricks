@@ -27,20 +27,21 @@ data "databricks_account_iam_external_service_principal_v2" "example" {
 
 ## Arguments
 The following arguments are supported:
-* `name` (string, required) - The resource name of the external service principal. The format depends on
-  the API that returned it:
-  - Account-scoped: accounts/{account_id}/external-service-principals/{external_service_principal_id}
-  - Workspace-scoped: external-service-principals/{external_service_principal_id}
+* `name` (string, required) - The resource name of the external service principal, in one of these formats:
+  - Account APIs:
+  `accounts/{account_id}/external-service-principals/{external_service_principal_id}`
+  - Workspace APIs: `external-service-principals/{external_service_principal_id}`
 
 ## Attributes
 The following attributes are exported:
-* `account_id` (string) - The parent account ID, from Databricks
-* `account_sp_status` (string) - The activity status of the service principal in the Databricks account. Possible values are: `ACTIVE`, `INACTIVE`
-* `application_id` (string) - Application ID of the service principal, from the customer's IdP
-* `display_name` (string) - Display name of the service principal, from the customer's IdP
-* `external_service_principal_id` (string) - The external ID of the service principal in the customer's IdP
-* `internal_id` (string) - Internal servicePrincipalId of the service principal in Databricks
-* `name` (string) - The resource name of the external service principal. The format depends on
-  the API that returned it:
-  - Account-scoped: accounts/{account_id}/external-service-principals/{external_service_principal_id}
-  - Workspace-scoped: external-service-principals/{external_service_principal_id}
+* `account_id` (string) - The ID of the account that contains the service principal
+* `account_sp_status` (string) - Whether the service principal is active in the account. Possible values are: `ACTIVE`, `INACTIVE`
+* `application_id` (string) - The service principal's application ID, from your IdP
+* `display_name` (string) - The service principal's display name, from your IdP
+* `external_service_principal_id` (string) - The ID of the service principal in your IdP
+* `internal_id` (string) - The Databricks ID of the service principal. Use it as the `service_principal_id` in the
+  service principal APIs
+* `name` (string) - The resource name of the external service principal, in one of these formats:
+  - Account APIs:
+  `accounts/{account_id}/external-service-principals/{external_service_principal_id}`
+  - Workspace APIs: `external-service-principals/{external_service_principal_id}`

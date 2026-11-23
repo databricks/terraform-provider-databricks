@@ -23,27 +23,29 @@ data "databricks_account_iam_users_v2" "this" {
 
 ## Arguments
 The following arguments are supported:
-* `parent` (string, required) - The parent resource name of the account whose users to list.
-  Format: accounts/{account_id}
-* `filter` (string, optional) - Optional. Allows filtering users by username or external id
-* `page_size` (integer, optional) - The maximum number of users to return. The service may return fewer than this value.
-  If not provided, defaults to 1000, which is also the maximum allowed. Requests for more than the maximum are clamped to 1000
+* `parent` (string, required) - The resource name of the account to list users in, in the format `accounts/{account_id}`
+* `filter` (string, optional) - Filters users by `username` or `external_id`, for example
+  `username eq "someone@example.com"`. Put the value in quotes
+* `page_size` (integer, optional) - The maximum number of users to return, up to 1000. The default is 1000. A page can contain
+  fewer users
 
 
 ## Attributes
 This data source exports a single attribute, `users`. It is a list of resources, each with the following attributes:
-* `account_id` (string) - The accountId parent of the user in Databricks
-* `account_user_status` (string) - The activity status of a user in a Databricks account. Possible values are: `ACTIVE`, `INACTIVE`
-* `external_id` (string) - ExternalId of the user in the customer's IdP
-* `full_name` (UserFullName)
-* `name` (string) - The resource name of the user. The format depends on the API that returned it:
-  - Account-scoped: accounts/{account_id}/users/{user_id}
-  - Workspace-scoped: users/{user_id}
-* `parent` (string) - The resource name of the account that contains the user, `accounts/{account_id}`. Both the
-  account-scoped and workspace-scoped APIs return it
-* `user_id` (string) - Internal userId of the user in Databricks
-* `username` (string) - Username/email of the user
+* `account_id` (string) - The ID of the account that contains the user
+* `account_user_status` (string) - Whether the user is active in the account. New users are active unless you set this to
+  `INACTIVE`. Possible values are: `ACTIVE`, `INACTIVE`
+* `external_id` (string) - The ID of the user in your identity provider (IdP)
+* `full_name` (UserFullName) - The user's name
+* `name` (string) - The resource name of the user, in one of these formats:
+  - Account APIs: `accounts/{account_id}/users/{user_id}`
+  - Workspace APIs: `users/{user_id}`
+* `parent` (string) - The resource name of the account that contains the user, in the format
+  `accounts/{account_id}`. Workspace APIs return the same format
+* `user_id` (string) - The Databricks ID of the user
+* `username` (string) - The user's username, which is their email address. It can't be changed after the user is
+  created
 
 ### UserFullName
-* `family_name` (string)
-* `given_name` (string)
+* `family_name` (string) - The user's family (last) name
+* `given_name` (string) - The user's given (first) name

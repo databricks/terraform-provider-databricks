@@ -110,9 +110,13 @@ type IndexData struct {
 	// endpoint is taken from `CreateIndexRequest.parent`; populated only on
 	// output.
 	Endpoint types.String `tfsdk:"endpoint"`
-	// The subtype of the index. Set on create and immutable thereafter.
+	// Subtype of the index. Use `HYBRID` for vector and hybrid search, or
+	// `FULL_TEXT` for keyword-only search without embeddings; `VECTOR` is not a
+	// supported create value. Set on create and immutable thereafter.
 	IndexSubtype types.String `tfsdk:"index_subtype"`
-	// Type of index. Required on create and immutable thereafter.
+	// Type of index. A `DELTA_SYNC` index is kept in sync with a source Delta
+	// table; a `DIRECT_ACCESS` index holds rows that you write through
+	// UpsertData and RemoveData. Set on create and immutable thereafter.
 	IndexType types.String `tfsdk:"index_type"`
 	// Name of the AI Search index. Server-assigned full resource path
 	// (`workspaces/{workspace}/endpoints/{endpoint}/indexes/{index}`) on
@@ -121,7 +125,10 @@ type IndexData struct {
 	// `CreateIndexRequest.index_id`; the server composes the full `name` and
 	// returns it on the response.
 	Name types.String `tfsdk:"name"`
-	// Primary key of the index. Set on create and immutable thereafter.
+	// Name of the column that uniquely identifies each row. It must exist in
+	// the source table (Delta Sync) or in `schema_json` (Direct Access) and
+	// cannot be the embedding source or vector column. Set on create and
+	// immutable thereafter.
 	PrimaryKey types.String `tfsdk:"primary_key"`
 	// Current status of the index.
 	Status             types.Object `tfsdk:"status"`

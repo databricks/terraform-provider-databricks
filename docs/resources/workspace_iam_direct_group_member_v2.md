@@ -27,11 +27,10 @@ resource "databricks_workspace_iam_direct_group_member_v2" "this" {
 
 ## Arguments
 The following arguments are supported:
-* `parent` (string, required) - The resource name of the group that contains the membership. The format depends on the API
-  that returned it:
-  - Account-scoped: accounts/{account_id}/groups/{group_id}
-  - Workspace-scoped: groups/{group_id}
-* `principal_id` (integer, required) - Internal ID of the principal in Databricks
+* `parent` (string, required) - The resource name of the group, in one of these formats:
+  - Account APIs: `accounts/{account_id}/groups/{group_id}`
+  - Workspace APIs: `groups/{group_id}`
+* `principal_id` (integer, required) - The Databricks ID of the member
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 
 ### ProviderConfig
@@ -39,14 +38,14 @@ The following arguments are supported:
 
 ## Attributes
 In addition to the above arguments, the following attributes are exported:
-* `display_name` (string) - Display name of the principal
-* `external_id` (string) - The external ID of the principal in the customer's IdP
-* `group_id` (integer) - The internal ID of the group this member belongs to
-* `membership_source` (string) - The source of group membership (internal or from identity provider). Possible values are: `IDENTITY_PROVIDER`, `INTERNAL`
-* `name` (string) - The resource name of the group membership. The format depends on the API that returned it:
-  - Account-scoped: accounts/{account_id}/groups/{group_id}/direct-members/{principal_id}
-  - Workspace-scoped: groups/{group_id}/direct-members/{principal_id}
-* `principal_type` (string) - The type of the principal (user/service principal/group). Possible values are: `GROUP`, `SERVICE_PRINCIPAL`, `USER`
+* `display_name` (string) - The member's display name
+* `external_id` (string) - The ID of the member in your identity provider (IdP)
+* `group_id` (integer) - The Databricks ID of the group
+* `membership_source` (string) - Where the membership comes from. Possible values are: `IDENTITY_PROVIDER`, `INTERNAL`
+* `name` (string) - The resource name of the membership, in one of these formats:
+  - Account APIs: `accounts/{account_id}/groups/{group_id}/direct-members/{principal_id}`
+  - Workspace APIs: `groups/{group_id}/direct-members/{principal_id}`
+* `principal_type` (string) - Whether the member is a user, service principal, or group. Possible values are: `GROUP`, `SERVICE_PRINCIPAL`, `USER`
 
 ## Import
 As of Terraform v1.5, resources can be imported through configuration.

@@ -27,16 +27,18 @@ import (
 
 type AuthorizationDetails struct {
 	// Represents downscoped permission rules with specific access rights. This
-	// field is specific to `workspace_rule_set` constraint.
+	// field is specific to the `workspace_rule_set` constraint.
 	GrantRules types.List `tfsdk:"grant_rules"`
-	// The acl path of the tree store resource resource.
+	// The legacy ACL path of the workspace object that the rule applies to.
 	ResourceLegacyAclPath types.String `tfsdk:"resource_legacy_acl_path"`
 	// The resource name to which the authorization rule applies. This field is
-	// specific to `workspace_rule_set` constraint. Format:
-	// `workspaces/{workspace_id}/dashboards/{dashboard_id}`
+	// specific to the `workspace_rule_set` constraint. Format:
+	// `workspaces/{workspace_id}` for a workspace-level rule, or
+	// `workspaces/{workspace_id}/dashboards/{dashboard_id}` for a rule on a
+	// dashboard.
 	ResourceName types.String `tfsdk:"resource_name"`
-	// The type of authorization downscoping policy. Ex: `workspace_rule_set`
-	// defines access rules for a specific workspace resource
+	// The type of authorization downscoping policy. A `workspace_rule_set`
+	// policy defines access rules for a specific workspace resource.
 	Type_ types.String `tfsdk:"type"`
 }
 
@@ -160,9 +162,7 @@ func (m *AuthorizationDetails) SetGrantRules(ctx context.Context, v []Authorizat
 }
 
 type AuthorizationDetailsGrantRule struct {
-	// Permission sets for dashboard are defined in
-	// iam-common/rbac-common/permission-sets/definitions/TreeStoreBasePermissionSets
-	// Ex: `permissionSets/dashboard.runner`
+	// The permission set that the rule grants on the resource.
 	PermissionSet types.String `tfsdk:"permission_set"`
 }
 
@@ -516,10 +516,10 @@ func (m *CreateSubscriptionRequest) SetSubscription(ctx context.Context, v Subsc
 }
 
 type CronSchedule struct {
-	// A cron expression using quartz syntax. EX: `0 0 8 * * ?` represents
-	// everyday at 8am. See [Cron Trigger] for details.
+	// A cron expression in Quartz syntax that defines when the schedule runs.
+	// See the [Quartz cron trigger tutorial] for the syntax.
 	//
-	// [Cron Trigger]: http://www.quartz-scheduler.org/documentation/quartz-2.3.0/tutorials/crontrigger.html
+	// [Quartz cron trigger tutorial]: https://www.quartz-scheduler.org/documentation/quartz-2.3.0/tutorials/crontrigger.html
 	QuartzCronExpression types.String `tfsdk:"quartz_cron_expression"`
 	// A Java timezone id. The schedule will be resolved with respect to this
 	// timezone. See [Java TimeZone] for details.
@@ -579,7 +579,10 @@ type Dashboard struct {
 	CreateTime types.String `tfsdk:"create_time"`
 	// UUID identifying the dashboard.
 	DashboardId types.String `tfsdk:"dashboard_id"`
-	// The display name of the dashboard.
+	// The display name of the dashboard. It is also the file name of the
+	// dashboard asset in the workspace, so it must be unique within the parent
+	// folder, cannot contain `/`, and cannot end with `.json`, `.lvdash` or
+	// `.yml`. The display name must not exceed 500 characters.
 	DisplayName types.String `tfsdk:"display_name"`
 	// The etag for the dashboard. Can be optionally provided on updates to
 	// ensure that the dashboard has not been modified since the last read. This
@@ -588,18 +591,21 @@ type Dashboard struct {
 	// The state of the dashboard resource. Used for tracking trashed status.
 	LifecycleState types.String `tfsdk:"lifecycle_state"`
 	// The workspace path of the folder containing the dashboard. Includes
-	// leading slash and no trailing slash. This field is excluded in List
-	// Dashboards responses.
+	// leading slash and no trailing slash. The folder must already exist; when
+	// omitted on create, the dashboard is created in the caller's home folder.
+	// This field is excluded in List Dashboards responses.
 	ParentPath types.String `tfsdk:"parent_path"`
 	// The workspace path of the dashboard asset, including the file name.
 	// Exported dashboards always have the file extension `.lvdash.json`. This
 	// field is excluded in List Dashboards responses.
 	Path types.String `tfsdk:"path"`
-	// The contents of the dashboard in serialized string form. This field is
-	// excluded in List Dashboards responses. Use the [get dashboard API] to
-	// retrieve an example response, which includes the `serialized_dashboard`
-	// field. This field provides the structure of the JSON string that
-	// represents the dashboard's layout and components.
+	// The dashboard definition (datasets, pages and widgets) as a JSON string,
+	// in the same format as a dashboard file exported from the workspace
+	// (`.lvdash.json`). When omitted on create, an empty dashboard is created;
+	// when omitted on update, the existing definition is kept and only the
+	// other fields change. Use the [get dashboard API] on an existing dashboard
+	// to see a complete example. This field is excluded in List Dashboards
+	// responses.
 	//
 	// [get dashboard API]: https://docs.databricks.com/api/workspace/lakeview/get
 	SerializedDashboard types.String `tfsdk:"serialized_dashboard"`
@@ -741,12 +747,13 @@ func (m DeleteScheduleRequest) Type(ctx context.Context) attr.Type {
 }
 
 type DeleteSubscriptionRequest struct {
-	// UUID identifying the dashboard which the subscription belongs.
+	// UUID identifying the dashboard to which the subscription belongs.
 	DashboardId types.String `tfsdk:"-"`
-	// The etag for the subscription. Can be optionally provided to ensure that
-	// the subscription has not been modified since the last read.
+	// The etag of the subscription, as returned when it was read. If it is
+	// provided and no longer matches, the request fails with ABORTED and the
+	// subscription is not deleted.
 	Etag types.String `tfsdk:"-"`
-	// UUID identifying the schedule which the subscription belongs.
+	// UUID identifying the schedule to which the subscription belongs.
 	ScheduleId types.String `tfsdk:"-"`
 	// UUID identifying the subscription.
 	SubscriptionId types.String `tfsdk:"-"`
@@ -900,9 +907,11 @@ func (m DownloadMessageAttachmentVisualizationResponse) Type(ctx context.Context
 	}
 }
 
-// Genie AI Response
+// One part of Genie's response to a message. Exactly one of the attachment
+// fields is set.
 type GenieAttachment struct {
-	// Attachment ID
+	// The ID of the attachment. The attachment query-result, execute-query,
+	// download, and visualization endpoints take this ID.
 	AttachmentId types.String `tfsdk:"attachment_id"`
 	// Query Attachment if Genie responds with a SQL query
 	Query types.Object `tfsdk:"query"`
@@ -1209,15 +1218,18 @@ func (m GenieCancelResponseRequest) Type(ctx context.Context) attr.Type {
 type GenieConversation struct {
 	// Conversation ID
 	ConversationId types.String `tfsdk:"conversation_id"`
-	// Timestamp when the message was created
+	// Time when the conversation was created, in milliseconds since the Unix
+	// epoch.
 	CreatedTimestamp types.Int64 `tfsdk:"created_timestamp"`
 	// Conversation ID. Legacy identifier, use conversation_id instead
 	Id types.String `tfsdk:"id"`
-	// Timestamp when the message was last updated
+	// Time when the conversation was last updated, in milliseconds since the
+	// Unix epoch.
 	LastUpdatedTimestamp types.Int64 `tfsdk:"last_updated_timestamp"`
 	// Genie space ID
 	SpaceId types.String `tfsdk:"space_id"`
-	// Conversation title
+	// Title of the conversation. Genie sets it to the text of the first
+	// message, truncated to 255 characters.
 	Title types.String `tfsdk:"title"`
 	// ID of the user who created the conversation
 	UserId types.Int64 `tfsdk:"user_id"`
@@ -1284,16 +1296,19 @@ func (m GenieConversation) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// A summary of a conversation, as returned when listing the conversations in a
+// space.
 type GenieConversationSummary struct {
 	// Whether this is a classic chat or an agent-mode conversation. Allows
 	// callers to route message retrieval (chat vs. agent endpoint) without an
 	// extra lookup.
 	AgentType types.String `tfsdk:"agent_type"`
-
+	// The ID of the conversation.
 	ConversationId types.String `tfsdk:"conversation_id"`
-
+	// Time when the conversation was created, in milliseconds since the Unix
+	// epoch.
 	CreatedTimestamp types.Int64 `tfsdk:"created_timestamp"`
-
+	// The title of the conversation.
 	Title types.String `tfsdk:"title"`
 }
 
@@ -1574,19 +1589,20 @@ func (m GenieCreateMessageCommentRequest) Type(ctx context.Context) attr.Type {
 }
 
 type GenieCreateSpaceRequest struct {
-	// Optional description
+	// Description of the space, up to 16384 bytes.
 	Description types.String `tfsdk:"description"`
-	// Parent folder path where the space will be registered
+	// Path of the workspace folder in which to create the space.
 	ParentPath types.String `tfsdk:"parent_path"`
-	// The contents of the Genie Space in serialized string form. Use the [Get
-	// Genie Space](:method:genie/getspace) API to retrieve an example response,
-	// which includes the `serialized_space` field. This field provides the
-	// structure of the JSON string that represents the space's layout and
-	// components.
+	// Configuration of the new space as a JSON string. To copy an existing
+	// space, use the value that [Get Genie Space](:method:genie/getspace)
+	// returns when `include_serialized_space` is true. For the JSON format and
+	// its validation rules, see
+	// https://docs.databricks.com/aws/en/genie-agents/conversation-api.
 	SerializedSpace types.String `tfsdk:"serialized_space"`
-	// Optional title override
+	// Display name of the new space. A default name is assigned when omitted.
 	Title types.String `tfsdk:"title"`
-	// Warehouse to associate with the new space
+	// ID of the SQL warehouse that runs the queries Genie generates for the
+	// space, as a 16-character hexadecimal string.
 	WarehouseId types.String `tfsdk:"warehouse_id"`
 }
 
@@ -1757,11 +1773,15 @@ func (m GenieDeleteConversationRequest) Type(ctx context.Context) attr.Type {
 }
 
 type GenieEvalResponse struct {
-	// The response content (either text or SQL query).
+	// The content of this entry is the SQL statement when `response_type` is
+	// SQL, or Genie's text answer when it is TEXT.
 	Response types.String `tfsdk:"response"`
-	// Type of response
+	// Whether this entry is a SQL statement or a text answer.
 	ResponseType types.String `tfsdk:"response_type"`
-	// SQL Statement Execution response.
+	// Result of executing the SQL statement, only set when `response_type` is
+	// SQL. The value has the structure of a [Statement Execution API response].
+	//
+	// [Statement Execution API response]: https://docs.databricks.com/api/statement-execution/v1/get-statement-result
 	SqlExecutionResult types.Object `tfsdk:"sql_execution_result"`
 }
 
@@ -1862,19 +1882,26 @@ func (m *GenieEvalResponse) SetSqlExecutionResult(ctx context.Context, v sql_tf.
 // including SQL execution results, actual/expected responses, and assessment
 // scores, use GenieGetEvalResultDetails.
 type GenieEvalResult struct {
-	// Stored snapshot of original benchmark answer text.
+	// Benchmark SQL statement that defines the expected answer, as it was when
+	// the run started.
 	BenchmarkAnswer types.String `tfsdk:"benchmark_answer"`
 	// The ID of the benchmark question that was evaluated.
 	BenchmarkQuestionId types.String `tfsdk:"benchmark_question_id"`
-	// User ID who created evaluation result.
+	// ID of the user who started the evaluation run.
 	CreatedByUser types.Int64 `tfsdk:"created_by_user"`
-	// Stored snapshot of original benchmark question text.
+	// Text of the benchmark question as it was when the run started. Later
+	// edits to the question do not change it.
 	Question types.String `tfsdk:"question"`
 	// Unique identifier for this evaluation result.
 	ResultId types.String `tfsdk:"result_id"`
 	// The ID of the space the evaluation result belongs to.
 	SpaceId types.String `tfsdk:"space_id"`
-	// Current status of this evaluation result.
+	// Current status of this result. NOT_STARTED and RUNNING mean the question
+	// has not finished. DONE means Genie answered and the response was
+	// assessed. EVALUATION_FAILED means Genie could not answer the question or
+	// the benchmark SQL could not run. EVALUATION_CANCELLED and
+	// EVALUATION_TIMEOUT mean the run was cancelled or its background job
+	// stopped before this question finished.
 	Status types.String `tfsdk:"status"`
 }
 
@@ -1941,9 +1968,14 @@ func (m GenieEvalResult) Type(ctx context.Context) attr.Type {
 
 // Shows detailed information for an evaluation result.
 type GenieEvalResultDetails struct {
-	// The actual response generated by Genie.
+	// Genie's response to the benchmark question. A SQL entry carries the
+	// generated statement and its execution result, and a TEXT entry carries
+	// Genie's text answer. The list is empty when Genie produced no response.
 	ActualResponse types.List `tfsdk:"actual_response"`
-	// Assessment of the evaluation result: good, bad, or needs review
+	// Outcome of comparing Genie's response with the benchmark. GOOD means the
+	// results matched, BAD means they differed, and NEEDS_REVIEW means the
+	// comparison was inconclusive and a person should review the result. The
+	// value is only meaningful once the result status is DONE.
 	Assessment types.String `tfsdk:"assessment"`
 	// Reasons for the assessment score.
 	//
@@ -1999,11 +2031,16 @@ type GenieEvalResultDetails struct {
 	AssessmentReasons types.List `tfsdk:"assessment_reasons"`
 	// The ID of the benchmark question that was evaluated.
 	BenchmarkQuestionId types.String `tfsdk:"benchmark_question_id"`
-	// Current status of the evaluation run.
+	// Current status of this evaluation result, not of the whole run. Once the
+	// status is DONE, the response and automatic assessment are complete. A
+	// user can still change the assessment manually.
 	EvalRunStatus types.String `tfsdk:"eval_run_status"`
-	// The expected responses from the benchmark.
+	// The expected answer from the benchmark question: one SQL entry with the
+	// benchmark SQL statement and its execution result.
 	ExpectedResponse types.List `tfsdk:"expected_response"`
-	// Whether this evaluation was manually assessed.
+	// Whether a user set the assessment manually after reviewing the result. A
+	// manual assessment replaces the automatic one and clears
+	// `assessment_reasons`.
 	ManualAssessment types.Bool `tfsdk:"manual_assessment"`
 	// The unique identifier for the evaluation result.
 	ResultId types.String `tfsdk:"result_id"`
@@ -2252,23 +2289,38 @@ func (m *GenieEvalResultDetails) SetExpectedResponse(ctx context.Context, v []Ge
 	m.ExpectedResponse = types.ListValueMust(t, vs)
 }
 
-// A benchmark evaluation run. The public benchmark API currently evaluates
-// chat-mode responses.
+// A benchmark evaluation run. A run asks Genie each selected benchmark question
+// in a Genie space, compares every response with the benchmark SQL, and records
+// one evaluation result per question. Runs execute asynchronously; poll the run
+// until its status is terminal, then list its results. All evaluation run
+// methods require CAN EDIT permission on the space. The public benchmark API
+// currently evaluates chat-mode responses.
 type GenieEvalRunResponse struct {
 	// Timestamp when the evaluation run was created (milliseconds since epoch).
 	CreatedTimestamp types.Int64 `tfsdk:"created_timestamp"`
 	// The unique identifier for the evaluation run.
 	EvalRunId types.String `tfsdk:"eval_run_id"`
-	// Current status of the evaluation run.
+	// Current status of the run, derived from the statuses of its results.
+	// Unless a result has timed out or the run has been cancelled, the run is
+	// RUNNING while any question has not finished. It is DONE once every
+	// question has finished, whether it was scored or failed.
+	// EVALUATION_CANCELLED means the run was cancelled before all questions
+	// finished, and EVALUATION_TIMEOUT means the background evaluation job
+	// stopped before they did. DONE, EVALUATION_CANCELLED and
+	// EVALUATION_TIMEOUT are terminal run statuses. NOT_STARTED and
+	// EVALUATION_FAILED appear only on individual results.
 	EvalRunStatus types.String `tfsdk:"eval_run_status"`
 	// Timestamp when the evaluation run was last updated (milliseconds since
 	// epoch).
 	LastUpdatedTimestamp types.Int64 `tfsdk:"last_updated_timestamp"`
-	// Number of questions answered correctly.
+	// Number of questions whose result is assessed GOOD, including results
+	// assessed manually.
 	NumCorrect types.Int64 `tfsdk:"num_correct"`
-	// Number of questions that have been completed.
+	// Number of questions that have finished, either scored (DONE) or failed
+	// (EVALUATION_FAILED). Cancelled and timed-out questions are not counted.
 	NumDone types.Int64 `tfsdk:"num_done"`
-	// Number of questions that need manual review.
+	// Number of finished questions whose result is assessed NEEDS_REVIEW and
+	// has not been reviewed manually yet.
 	NumNeedsReview types.Int64 `tfsdk:"num_needs_review"`
 	// Total number of questions in the evaluation run.
 	NumQuestions types.Int64 `tfsdk:"num_questions"`
@@ -2924,6 +2976,7 @@ func (m GenieGetEvalResultDetailsRequest) Type(ctx context.Context) attr.Type {
 }
 
 type GenieGetEvalRunRequest struct {
+	// The ID of the evaluation run, as returned when the run was created.
 	EvalRunId types.String `tfsdk:"-"`
 	// The ID associated with the Genie space where the evaluation run is
 	// located.
@@ -3254,8 +3307,9 @@ func (m GenieGetQueryResultByAttachmentRequest) Type(ctx context.Context) attr.T
 }
 
 type GenieGetSpaceRequest struct {
-	// Whether to include the serialized space export in the response. Requires
-	// at least CAN EDIT permission on the space.
+	// Whether to include the serialized space export in the response. When
+	// true, the response also carries the configuration `etag`. Requires at
+	// least CAN EDIT permission on the space.
 	IncludeSerializedSpace types.Bool `tfsdk:"-"`
 	// The ID associated with the Genie space
 	SpaceId types.String `tfsdk:"-"`
@@ -4582,13 +4636,14 @@ func (m *GenieListSpacesResponse) SetSpaces(ctx context.Context, v []GenieSpace)
 }
 
 type GenieMessage struct {
-	// AI-generated response to the message
+	// Genie's response to the message. Each attachment holds one part of the
+	// response, such as a text answer or a SQL query.
 	Attachments types.List `tfsdk:"attachments"`
 	// User message content
 	Content types.String `tfsdk:"content"`
 	// Conversation ID
 	ConversationId types.String `tfsdk:"conversation_id"`
-	// Timestamp when the message was created
+	// Time when the message was created, in milliseconds since the Unix epoch.
 	CreatedTimestamp types.Int64 `tfsdk:"created_timestamp"`
 	// Error message if Genie failed to respond to the message
 	Error types.Object `tfsdk:"error"`
@@ -4596,7 +4651,8 @@ type GenieMessage struct {
 	Feedback types.Object `tfsdk:"feedback"`
 	// Message ID. Legacy identifier, use message_id instead
 	Id types.String `tfsdk:"id"`
-	// Timestamp when the message was last updated
+	// Time when the message was last updated, in milliseconds since the Unix
+	// epoch.
 	LastUpdatedTimestamp types.Int64 `tfsdk:"last_updated_timestamp"`
 	// Message ID
 	MessageId types.String `tfsdk:"message_id"`
@@ -4973,7 +5029,7 @@ type GenieQueryAttachment struct {
 	Id types.String `tfsdk:"id"`
 	// Time when the user updated the query last
 	LastUpdatedTimestamp types.Int64 `tfsdk:"last_updated_timestamp"`
-
+	// The parameters of the SQL query, when the query is parameterized.
 	Parameters types.List `tfsdk:"parameters"`
 	// AI generated SQL query
 	Query types.String `tfsdk:"query"`
@@ -5353,6 +5409,10 @@ func (m GenieSendMessageFeedbackRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// A Genie space that business users query in natural language. Its
+// configuration (data sources, instructions, sample questions and benchmarks)
+// travels as a JSON string in `serialized_space`; the other fields are metadata
+// about the space.
 type GenieSpace struct {
 	// Time when the Genie space was created.
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
@@ -5361,13 +5421,14 @@ type GenieSpace struct {
 	// ETag for this space. Pass this value back in the update request to
 	// prevent overwriting concurrent changes.
 	Etag types.String `tfsdk:"etag"`
-	// Parent folder path of the Genie Space
+	// Path of the workspace folder that contains the space.
 	ParentPath types.String `tfsdk:"parent_path"`
-	// The contents of the Genie Space in serialized string form. This field is
-	// excluded in List Genie spaces responses. Use the [Get Genie
-	// Space](:method:genie/getspace) API to retrieve an example response, which
-	// includes the `serialized_space` field. This field provides the structure
-	// of the JSON string that represents the space's layout and components.
+	// Configuration of the space (data sources, instructions, sample questions
+	// and benchmarks) as a JSON string. [Get Genie
+	// Space](:method:genie/getspace) returns it only when
+	// `include_serialized_space` is true, and List Genie spaces never returns
+	// it. For the JSON format and its validation rules, see
+	// https://docs.databricks.com/aws/en/genie-agents/conversation-api.
 	SerializedSpace types.String `tfsdk:"serialized_space"`
 	// Genie space ID
 	SpaceId types.String `tfsdk:"space_id"`
@@ -5376,7 +5437,8 @@ type GenieSpace struct {
 	// Time when the Genie space was last modified, matching the value shown in
 	// the Genie Agent UI.
 	UpdateTime timetypes.RFC3339 `tfsdk:"update_time"`
-	// Warehouse associated with the Genie Space
+	// ID of the SQL warehouse that runs the queries Genie generates for this
+	// space.
 	WarehouseId types.String `tfsdk:"warehouse_id"`
 }
 
@@ -5507,10 +5569,11 @@ func (m GenieStartConversationMessageRequest) Type(ctx context.Context) attr.Typ
 }
 
 type GenieStartConversationResponse struct {
+	// The newly created conversation.
 	Conversation types.Object `tfsdk:"conversation"`
 	// Conversation ID
 	ConversationId types.String `tfsdk:"conversation_id"`
-
+	// The first message of the conversation, in its initial state.
 	Message types.Object `tfsdk:"message"`
 	// Message ID
 	MessageId types.String `tfsdk:"message_id"`
@@ -5795,7 +5858,7 @@ func (m GenieTrashSpaceRequest) Type(ctx context.Context) attr.Type {
 }
 
 type GenieUpdateSpaceRequest struct {
-	// Optional description
+	// New description for the space, up to 16384 bytes.
 	Description types.String `tfsdk:"description"`
 	// ETag returned by a previous GET or UPDATE. When set, the update will fail
 	// if the space has been modified since. Omit to apply the update
@@ -5803,17 +5866,19 @@ type GenieUpdateSpaceRequest struct {
 	Etag types.String `tfsdk:"etag"`
 	// Parent workspace folder path to move this Genie space under.
 	ParentPath types.String `tfsdk:"parent_path"`
-	// The contents of the Genie Space in serialized string form (full
-	// replacement). Use the [Get Genie Space](:method:genie/getspace) API to
-	// retrieve an example response, which includes the `serialized_space`
-	// field. This field provides the structure of the JSON string that
-	// represents the space's layout and components.
+	// New configuration of the space as a JSON string. It replaces the whole
+	// configuration; when omitted, the current configuration is kept. Start
+	// from the value that [Get Genie Space](:method:genie/getspace) returns
+	// when `include_serialized_space` is true. For the JSON format and its
+	// validation rules, see
+	// https://docs.databricks.com/aws/en/genie-agents/conversation-api.
 	SerializedSpace types.String `tfsdk:"serialized_space"`
 	// Genie space ID
 	SpaceId types.String `tfsdk:"-"`
-	// Optional title override
+	// New display name for the space. Cannot be empty or contain a slash.
 	Title types.String `tfsdk:"title"`
-	// Optional warehouse override
+	// ID of the SQL warehouse that runs the queries Genie generates for the
+	// space.
 	WarehouseId types.String `tfsdk:"warehouse_id"`
 }
 
@@ -6032,9 +6097,14 @@ func (m GetPublishedDashboardRequest) Type(ctx context.Context) attr.Type {
 type GetPublishedDashboardTokenInfoRequest struct {
 	// UUID identifying the published dashboard.
 	DashboardId types.String `tfsdk:"-"`
-	// Provided external value to be included in the custom claim.
+	// Value to carry in the token for this viewer, such as a tenant or region
+	// key. Dashboard dataset queries can reference it as
+	// `__aibi_external_value` to filter data per viewer. The combined size of
+	// `external_value` and `external_viewer_id` must be less than 1 KB.
 	ExternalValue types.String `tfsdk:"-"`
-	// Provided external viewer id to be included in the custom claim.
+	// Identifier of the viewer in the external application. It is recorded in
+	// dashboard audit logs, so it should be unique per viewer and must not
+	// contain personally identifiable information.
 	ExternalViewerId types.String `tfsdk:"-"`
 }
 
@@ -6088,15 +6158,16 @@ func (m GetPublishedDashboardTokenInfoRequest) Type(ctx context.Context) attr.Ty
 }
 
 type GetPublishedDashboardTokenInfoResponse struct {
-	// Authorization constraints for accessing the published dashboard.
-	// Currently includes `workspace_rule_set` and could be enriched with
-	// `unity_catalog_privileges` before oAuth token generation.
+	// Authorization constraints that restrict the minted token to viewing the
+	// published dashboard. Pass them to the OAuth token endpoint serialized as
+	// a JSON array.
 	AuthorizationDetails types.List `tfsdk:"authorization_details"`
-	// Custom claim generated from external_value and external_viewer_id.
-	// Format:
+	// Custom claim that carries `external_value` and `external_viewer_id` into
+	// the minted token. It is only present when at least one of those query
+	// parameters was provided. Format:
 	// `urn:aibi:external_data:<external_value>:<external_viewer_id>:<dashboard_id>`
 	CustomClaim types.String `tfsdk:"custom_claim"`
-	// Scope defining access permissions.
+	// The space-separated OAuth scopes to request when minting the token.
 	Scope types.String `tfsdk:"scope"`
 }
 
@@ -6270,9 +6341,9 @@ func (m GetScheduleRequest) Type(ctx context.Context) attr.Type {
 }
 
 type GetSubscriptionRequest struct {
-	// UUID identifying the dashboard which the subscription belongs.
+	// UUID identifying the dashboard to which the subscription belongs.
 	DashboardId types.String `tfsdk:"-"`
-	// UUID identifying the schedule which the subscription belongs.
+	// UUID identifying the schedule to which the subscription belongs.
 	ScheduleId types.String `tfsdk:"-"`
 	// UUID identifying the subscription.
 	SubscriptionId types.String `tfsdk:"-"`
@@ -6513,7 +6584,7 @@ func (m *ListDashboardsResponse) SetDashboards(ctx context.Context, v []Dashboar
 }
 
 type ListSchedulesRequest struct {
-	// UUID identifying the dashboard to which the schedules belongs.
+	// UUID identifying the dashboard to which the schedules belong.
 	DashboardId types.String `tfsdk:"-"`
 	// The number of schedules to return per page.
 	PageSize types.Int64 `tfsdk:"-"`
@@ -6694,14 +6765,14 @@ func (m *ListSchedulesResponse) SetSchedules(ctx context.Context, v []Schedule) 
 }
 
 type ListSubscriptionsRequest struct {
-	// UUID identifying the dashboard which the subscriptions belongs.
+	// UUID identifying the dashboard to which the subscriptions belong.
 	DashboardId types.String `tfsdk:"-"`
 	// The number of subscriptions to return per page.
 	PageSize types.Int64 `tfsdk:"-"`
 	// A page token, received from a previous `ListSubscriptions` call. Use this
 	// to retrieve the subsequent page.
 	PageToken types.String `tfsdk:"-"`
-	// UUID identifying the schedule which the subscriptions belongs.
+	// UUID identifying the schedule to which the subscriptions belong.
 	ScheduleId types.String `tfsdk:"-"`
 }
 
@@ -6880,8 +6951,9 @@ func (m *ListSubscriptionsResponse) SetSubscriptions(ctx context.Context, v []Su
 }
 
 type MessageError struct {
+	// A human-readable description of the error.
 	Error types.String `tfsdk:"error"`
-
+	// The category of the error.
 	Type_ types.String `tfsdk:"type"`
 }
 
@@ -7061,11 +7133,17 @@ func (m PublishRequest) Type(ctx context.Context) attr.Type {
 type PublishedDashboard struct {
 	// The display name of the published dashboard.
 	DisplayName types.String `tfsdk:"display_name"`
-	// Indicates whether credentials are embedded in the published dashboard.
+	// Whether the publisher's credentials are embedded in the published
+	// dashboard. When true, viewers run the dashboard's queries with the
+	// publisher's data permissions (shared data permissions); when false, each
+	// viewer runs them with their own data permissions.
 	EmbedCredentials types.Bool `tfsdk:"embed_credentials"`
-	// The timestamp of when the published dashboard was last revised.
+	// The timestamp of when the current published version was created, that is,
+	// when the dashboard was last published.
 	RevisionCreateTime types.String `tfsdk:"revision_create_time"`
-	// The warehouse ID used to run the published dashboard.
+	// The ID of the SQL warehouse that runs the published dashboard's queries.
+	// It is the warehouse given when the dashboard was published, or the
+	// draft's warehouse if none was given.
 	WarehouseId types.String `tfsdk:"warehouse_id"`
 }
 
@@ -7122,10 +7200,11 @@ func (m PublishedDashboard) Type(ctx context.Context) attr.Type {
 }
 
 type QueryAttachmentParameter struct {
+	// The name of the parameter as referenced in the SQL query.
 	Keyword types.String `tfsdk:"keyword"`
-
+	// The SQL type of the parameter value.
 	SqlType types.String `tfsdk:"sql_type"`
-
+	// The value bound to the parameter.
 	Value types.String `tfsdk:"value"`
 }
 
@@ -7247,8 +7326,9 @@ func (m Result) Type(ctx context.Context) attr.Type {
 type RevertDashboardRequest struct {
 	// UUID identifying the dashboard.
 	DashboardId types.String `tfsdk:"-"`
-	// The etag for the dashboard. Optionally, it can be provided to verify that
-	// the dashboard has not been modified from its last retrieval.
+	// The etag of the draft dashboard, as returned by the get dashboard API.
+	// When provided, the request fails with ABORTED if the draft has been
+	// modified since that etag was read.
 	Etag types.String `tfsdk:"etag"`
 }
 
@@ -7391,27 +7471,36 @@ func (m *RevertDashboardResponse) SetDashboard(ctx context.Context, v Dashboard)
 	m.Dashboard = vs
 }
 
+// A schedule periodically runs a dashboard on a cron cadence. Each run executes
+// the dashboard's queries to refresh its cached data and sends a snapshot of
+// the dashboard to the schedule's subscribers. See [Manage scheduled dashboard
+// updates and subscriptions] for details.
+//
+// [Manage scheduled dashboard updates and subscriptions]: https://docs.databricks.com/dashboards/share/schedule-subscribe
 type Schedule struct {
 	// A timestamp indicating when the schedule was created.
 	CreateTime types.String `tfsdk:"create_time"`
-	// The cron expression describing the frequency of the periodic refresh for
-	// this schedule.
+	// The cron expression and time zone that define when the schedule runs.
 	CronSchedule types.Object `tfsdk:"cron_schedule"`
 	// UUID identifying the dashboard to which the schedule belongs.
 	DashboardId types.String `tfsdk:"dashboard_id"`
-	// The display name for schedule.
+	// The name of the schedule, as shown in the dashboard's list of schedules.
 	DisplayName types.String `tfsdk:"display_name"`
 	// The etag for the schedule. Must be left empty on create, must be provided
 	// on updates to ensure that the schedule has not been modified since the
 	// last read, and can be optionally provided on delete.
 	Etag types.String `tfsdk:"etag"`
-	// The status indicates whether this schedule is paused or not.
+	// Whether the schedule is paused. A paused schedule keeps its configuration
+	// and subscribers, but the dashboard is not refreshed and no notifications
+	// are sent until the schedule is unpaused.
 	PauseStatus types.String `tfsdk:"pause_status"`
 	// UUID identifying the schedule.
 	ScheduleId types.String `tfsdk:"schedule_id"`
 	// A timestamp indicating when the schedule was last updated.
 	UpdateTime types.String `tfsdk:"update_time"`
-	// The warehouse id to run the dashboard with for the schedule.
+	// The ID of the SQL warehouse that runs the dashboard's queries during
+	// scheduled refreshes. If omitted, the warehouse of the published dashboard
+	// is used.
 	WarehouseId types.String `tfsdk:"warehouse_id"`
 }
 
@@ -7527,11 +7616,11 @@ func (m *Schedule) SetCronSchedule(ctx context.Context, v CronSchedule) {
 }
 
 type Subscriber struct {
-	// The destination to receive the subscription email. This parameter is
-	// mutually exclusive with `user_subscriber`.
+	// The notification destination that receives the subscription, such as an
+	// email list or a Slack or Microsoft Teams channel. Workspace admins
+	// configure notification destinations.
 	DestinationSubscriber types.Object `tfsdk:"destination_subscriber"`
-	// The user to receive the subscription email. This parameter is mutually
-	// exclusive with `destination_subscriber`.
+	// The workspace user who receives the subscription.
 	UserSubscriber types.Object `tfsdk:"user_subscriber"`
 }
 
@@ -7668,6 +7757,13 @@ func (m *Subscriber) SetUserSubscriber(ctx context.Context, v SubscriptionSubscr
 	m.UserSubscriber = vs
 }
 
+// A subscription registers a workspace user or a notification destination as a
+// subscriber of a dashboard schedule. Each time the schedule runs, the
+// subscriber receives a snapshot of the published dashboard, unless the
+// subscription is refresh-only. See [Manage scheduled dashboard updates and
+// subscriptions].
+//
+// [Manage scheduled dashboard updates and subscriptions]: https://docs.databricks.com/dashboards/share/schedule-subscribe
 type Subscription struct {
 	// A timestamp indicating when the subscription was created.
 	CreateTime types.String `tfsdk:"create_time"`
@@ -7676,18 +7772,19 @@ type Subscription struct {
 	CreatedByUserId types.Int64 `tfsdk:"created_by_user_id"`
 	// UUID identifying the dashboard to which the subscription belongs.
 	DashboardId types.String `tfsdk:"dashboard_id"`
-	// The etag for the subscription. Must be left empty on create, can be
-	// optionally provided on delete to ensure that the subscription has not
-	// been deleted since the last read.
+	// The etag of the subscription. It must be left empty on create. It can be
+	// passed as the `etag` parameter of the delete method to make sure the
+	// subscription has not changed since it was read.
 	Etag types.String `tfsdk:"etag"`
 	// UUID identifying the schedule to which the subscription belongs.
 	ScheduleId types.String `tfsdk:"schedule_id"`
-	// Controls whether notifications are sent to the subscriber for scheduled
-	// dashboard refreshes. If not defined, defaults to false in the backend to
-	// match the current behavior (refresh and notify)
+	// Whether the subscription is refresh-only. When true, each scheduled run
+	// refreshes the dashboard data for the subscriber without sending a
+	// notification. Defaults to false. Refresh-only subscriptions are only
+	// allowed on dashboards published without embedded credentials.
 	SkipNotify types.Bool `tfsdk:"skip_notify"`
-	// Subscriber details for users and destinations to be added as subscribers
-	// to the schedule.
+	// The subscriber that receives the dashboard snapshot. Exactly one of
+	// `user_subscriber` and `destination_subscriber` must be set.
 	Subscriber types.Object `tfsdk:"subscriber"`
 	// UUID identifying the subscription.
 	SubscriptionId types.String `tfsdk:"subscription_id"`
@@ -7807,8 +7904,10 @@ func (m *Subscription) SetSubscriber(ctx context.Context, v Subscriber) {
 }
 
 type SubscriptionSubscriberDestination struct {
-	// The canonical identifier of the destination to receive email
-	// notification.
+	// The UUID of the notification destination that receives the subscription,
+	// as returned by the [Notification Destinations API].
+	//
+	// [Notification Destinations API]: https://docs.databricks.com/api/workspace/notificationdestinations
 	DestinationId types.String `tfsdk:"destination_id"`
 }
 
@@ -7856,7 +7955,10 @@ func (m SubscriptionSubscriberDestination) Type(ctx context.Context) attr.Type {
 }
 
 type SubscriptionSubscriberUser struct {
-	// UserId of the subscriber.
+	// The ID of the workspace user who receives the subscription, as returned
+	// by the [Workspace Users API].
+	//
+	// [Workspace Users API]: https://docs.databricks.com/api/workspace/users
 	UserId types.Int64 `tfsdk:"user_id"`
 }
 
@@ -7915,7 +8017,8 @@ type TextAttachment struct {
 	// than one text attachment (for example a clarifying follow-up question
 	// alongside the final answer); use this field to tell them apart.
 	// `TEXT_ATTACHMENT_PURPOSE_ANSWER` marks the final answer/summary and
-	// `FOLLOW_UP_QUESTION` marks a clarifying question.
+	// `FOLLOW_UP_QUESTION` marks a clarifying question. Agent-mode messages
+	// return the answer as their only text attachment.
 	Purpose types.String `tfsdk:"purpose"`
 }
 

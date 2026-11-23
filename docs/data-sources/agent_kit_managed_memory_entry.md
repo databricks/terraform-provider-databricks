@@ -30,9 +30,12 @@ The following attributes are exported:
 * `name` (string) - Resource name in the form
   `memory-stores/{managed_memory_store_id}/entries/{managed_memory_entry_id}`.
   Required for updates; assigned by the service on creation
-* `path` (string) - Absolute, case-sensitive path identifying the entry within its actor and optional session.
+* `path` (string) - Absolute, case-sensitive path identifying the entry within its actor and, until the
+  deprecated `session_id` is ignored, its optional session.
   Paths must begin with `/` and must not contain empty, `.` or `..` segments
-* `session_id` (string) - Optional identifier for the session associated with this memory entry. When omitted, the
+* `session_id` (string, deprecated) - Deprecated: memory entries will be identified by `(actor_id, path)`, and the service will
+  ignore this field on writes and omit it from responses. Until then, an omitted value means the
   entry applies across the actor's sessions
-* `source_type` (string) - Which writer created this entry. Caller sets this on Create; immutable after creation. Possible values are: `MANAGED_MEMORY_ENTRY_SOURCE_TYPE_AGENT`, `MANAGED_MEMORY_ENTRY_SOURCE_TYPE_DREAMER`
+* `source_type` (string) - Which writer created this entry. Caller sets this on Create; immutable after creation.
+  The server may store an omitted or UNSPECIFIED value as AGENT. Possible values are: `MANAGED_MEMORY_ENTRY_SOURCE_TYPE_AGENT`, `MANAGED_MEMORY_ENTRY_SOURCE_TYPE_DREAMER`
 * `update_time` (string) - Time when the entry was last updated

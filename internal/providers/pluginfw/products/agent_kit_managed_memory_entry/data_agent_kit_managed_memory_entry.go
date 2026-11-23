@@ -111,15 +111,18 @@ type ManagedMemoryEntryData struct {
 	// `memory-stores/{managed_memory_store_id}/entries/{managed_memory_entry_id}`.
 	// Required for updates; assigned by the service on creation.
 	Name types.String `tfsdk:"name"`
-	// Absolute, case-sensitive path identifying the entry within its actor and
-	// optional session. Paths must begin with `/` and must not contain empty,
-	// `.` or `..` segments.
+	// Absolute, case-sensitive path identifying the entry within its actor and,
+	// until the deprecated `session_id` is ignored, its optional session. Paths
+	// must begin with `/` and must not contain empty, `.` or `..` segments.
 	Path types.String `tfsdk:"path"`
-	// Optional identifier for the session associated with this memory entry.
-	// When omitted, the entry applies across the actor's sessions.
+	// Deprecated: memory entries will be identified by `(actor_id, path)`, and
+	// the service will ignore this field on writes and omit it from responses.
+	// Until then, an omitted value means the entry applies across the actor's
+	// sessions.
 	SessionId types.String `tfsdk:"session_id"`
 	// Which writer created this entry. Caller sets this on Create; immutable
-	// after creation.
+	// after creation. The server may store an omitted or UNSPECIFIED value as
+	// AGENT.
 	SourceType types.String `tfsdk:"source_type"`
 	// Time when the entry was last updated.
 	UpdateTime         timetypes.RFC3339 `tfsdk:"update_time"`

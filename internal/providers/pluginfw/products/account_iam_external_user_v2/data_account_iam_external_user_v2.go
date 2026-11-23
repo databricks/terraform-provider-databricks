@@ -33,24 +33,23 @@ type ExternalUserDataSource struct {
 
 // ExternalUserData extends the main model with additional fields.
 type ExternalUserData struct {
-	// The parent account ID, from Databricks.
+	// The ID of the account that contains the user.
 	AccountId types.String `tfsdk:"account_id"`
-	// The activity status of the user in the Databricks account.
+	// Whether the user is active in the account.
 	AccountUserStatus types.String `tfsdk:"account_user_status"`
-	// Display name of the user from the customer's IdP.
+	// The user's given and family names from your IdP, separated by a space.
 	DisplayName types.String `tfsdk:"display_name"`
-	// The external ID of the user in the customer's IdP.
+	// The ID of the user in your IdP.
 	ExternalUserId types.String `tfsdk:"external_user_id"`
-	// The full name of the user, from the customer's IdP.
+	// The user's name, from your IdP.
 	FullName types.Object `tfsdk:"full_name"`
-	// Internal userId of the user in Databricks.
+	// The Databricks ID of the user. Use it as the `user_id` in the user APIs.
 	InternalId types.String `tfsdk:"internal_id"`
-	// The resource name of the external user. The format depends on the API
-	// that returned it: - Account-scoped:
-	// accounts/{account_id}/external-users/{external_user_id} -
-	// Workspace-scoped: external-users/{external_user_id}
+	// The resource name of the external user, in one of these formats: -
+	// Account APIs: `accounts/{account_id}/external-users/{external_user_id}` -
+	// Workspace APIs: `external-users/{external_user_id}`
 	Name types.String `tfsdk:"name"`
-	// Username/email of the user, from Databricks.
+	// The user's username, which is their email address.
 	Username types.String `tfsdk:"username"`
 }
 

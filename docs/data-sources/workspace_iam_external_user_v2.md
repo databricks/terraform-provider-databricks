@@ -30,10 +30,9 @@ data "databricks_workspace_iam_external_user_v2" "example" {
 
 ## Arguments
 The following arguments are supported:
-* `name` (string, required) - The resource name of the external user. The format depends on the API that
-  returned it:
-  - Account-scoped: accounts/{account_id}/external-users/{external_user_id}
-  - Workspace-scoped: external-users/{external_user_id}
+* `name` (string, required) - The resource name of the external user, in one of these formats:
+  - Account APIs: `accounts/{account_id}/external-users/{external_user_id}`
+  - Workspace APIs: `external-users/{external_user_id}`
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 
 ### ProviderConfig
@@ -41,18 +40,17 @@ The following arguments are supported:
 
 ## Attributes
 The following attributes are exported:
-* `account_id` (string) - The parent account ID, from Databricks
-* `account_user_status` (string) - The activity status of the user in the Databricks account. Possible values are: `ACTIVE`, `INACTIVE`
-* `display_name` (string) - Display name of the user from the customer's IdP
-* `external_user_id` (string) - The external ID of the user in the customer's IdP
-* `full_name` (FullName) - The full name of the user, from the customer's IdP
-* `internal_id` (string) - Internal userId of the user in Databricks
-* `name` (string) - The resource name of the external user. The format depends on the API that
-  returned it:
-  - Account-scoped: accounts/{account_id}/external-users/{external_user_id}
-  - Workspace-scoped: external-users/{external_user_id}
-* `username` (string) - Username/email of the user, from Databricks
+* `account_id` (string) - The ID of the account that contains the user
+* `account_user_status` (string) - Whether the user is active in the account. Possible values are: `ACTIVE`, `INACTIVE`
+* `display_name` (string) - The user's given and family names from your IdP, separated by a space
+* `external_user_id` (string) - The ID of the user in your IdP
+* `full_name` (FullName) - The user's name, from your IdP
+* `internal_id` (string) - The Databricks ID of the user. Use it as the `user_id` in the user APIs
+* `name` (string) - The resource name of the external user, in one of these formats:
+  - Account APIs: `accounts/{account_id}/external-users/{external_user_id}`
+  - Workspace APIs: `external-users/{external_user_id}`
+* `username` (string) - The user's username, which is their email address
 
 ### FullName
-* `family_name` (string) - The family (last) name of the user, from the customer's IdP
-* `given_name` (string) - The given (first) name of the user, from the customer's IdP
+* `family_name` (string) - The user's family (last) name
+* `given_name` (string) - The user's given (first) name

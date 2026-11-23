@@ -97,27 +97,26 @@ func (r ProviderConfigData) Type(ctx context.Context) attr.Type {
 
 // DirectGroupMemberData extends the main model with additional fields.
 type DirectGroupMemberData struct {
-	// Display name of the principal.
+	// The member's display name.
 	DisplayName types.String `tfsdk:"display_name"`
-	// The external ID of the principal in the customer's IdP.
+	// The ID of the member in your identity provider (IdP).
 	ExternalId types.String `tfsdk:"external_id"`
-	// The internal ID of the group this member belongs to.
+	// The Databricks ID of the group.
 	GroupId types.Int64 `tfsdk:"group_id"`
-	// The source of group membership (internal or from identity provider).
+	// Where the membership comes from.
 	MembershipSource types.String `tfsdk:"membership_source"`
-	// The resource name of the group membership. The format depends on the API
-	// that returned it: - Account-scoped:
-	// accounts/{account_id}/groups/{group_id}/direct-members/{principal_id} -
-	// Workspace-scoped: groups/{group_id}/direct-members/{principal_id}
+	// The resource name of the membership, in one of these formats: - Account
+	// APIs:
+	// `accounts/{account_id}/groups/{group_id}/direct-members/{principal_id}` -
+	// Workspace APIs: `groups/{group_id}/direct-members/{principal_id}`
 	Name types.String `tfsdk:"name"`
-	// The resource name of the group that contains the membership. The format
-	// depends on the API that returned it: - Account-scoped:
-	// accounts/{account_id}/groups/{group_id} - Workspace-scoped:
-	// groups/{group_id}
+	// The resource name of the group, in one of these formats: - Account APIs:
+	// `accounts/{account_id}/groups/{group_id}` - Workspace APIs:
+	// `groups/{group_id}`
 	Parent types.String `tfsdk:"parent"`
-	// Internal ID of the principal in Databricks.
+	// The Databricks ID of the member.
 	PrincipalId types.Int64 `tfsdk:"principal_id"`
-	// The type of the principal (user/service principal/group).
+	// Whether the member is a user, service principal, or group.
 	PrincipalType      types.String `tfsdk:"principal_type"`
 	ProviderConfigData types.Object `tfsdk:"provider_config"`
 }

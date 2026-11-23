@@ -31,12 +31,19 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
+// A clean room is a secure, Databricks-managed environment where collaborators
+// from one or more Unity Catalog metastores share tables, views, volumes and
+// notebooks and run approved analyses without seeing each other's data. Each
+// collaborator sees the clean room as a securable in their own metastore, while
+// the analyses run in a central clean room in the cloud and region chosen at
+// creation.
 type CleanRoom_SdkV2 struct {
 	// Whether clean room access is restricted due to [CSP]
 	//
 	// [CSP]: https://docs.databricks.com/en/security/privacy/security-profile.html
 	AccessRestricted types.String `tfsdk:"access_restricted"`
-
+	// Free-form description of the clean room. Comments are local to the
+	// caller's metastore and are not shared with the other collaborators.
 	Comment types.String `tfsdk:"comment"`
 	// When the clean room was created, in epoch milliseconds.
 	CreatedAt types.Int64 `tfsdk:"created_at"`
@@ -56,7 +63,8 @@ type CleanRoom_SdkV2 struct {
 	// API.
 	OutputCatalog types.List `tfsdk:"output_catalog"`
 	// This is the Databricks username of the owner of the local clean room
-	// securable for permission management.
+	// securable for permission management. When creating a clean room, leave it
+	// empty or set it to the caller.
 	Owner types.String `tfsdk:"owner"`
 	// Central clean room details. During creation, users need to specify
 	// cloud_vendor, region, and collaborators.global_metastore_id. This field
@@ -249,8 +257,8 @@ type CleanRoomAsset_SdkV2 struct {
 	// Foreign table details available to all collaborators of the clean room.
 	// Present if and only if **asset_type** is **FOREIGN_TABLE**
 	ForeignTable types.List `tfsdk:"foreign_table"`
-	// Local details for a foreign that are only available to its owner. Present
-	// if and only if **asset_type** is **FOREIGN_TABLE**
+	// Local details for a foreign table that are only available to its owner.
+	// Present if and only if **asset_type** is **FOREIGN_TABLE**
 	ForeignTableLocalDetails types.List `tfsdk:"foreign_table_local_details"`
 	// Jar analysis details available to all collaborators of the clean room.
 	// Present if and only if **asset_type** is **JAR_ANALYSIS**
@@ -270,7 +278,9 @@ type CleanRoomAsset_SdkV2 struct {
 	Notebook types.List `tfsdk:"notebook"`
 	// The alias of the collaborator who owns this asset
 	OwnerCollaboratorAlias types.String `tfsdk:"owner_collaborator_alias"`
-	// Status of the asset
+	// The sharing status of the asset. `PERMISSION_DENIED` means the clean room
+	// owner no longer has the privileges needed on the underlying Unity Catalog
+	// object, so the asset is not shared into the clean room.
 	Status types.String `tfsdk:"status"`
 	// Table details available to all collaborators of the clean room. Present
 	// if and only if **asset_type** is **TABLE** or **STREAMING_TABLE**
@@ -1281,7 +1291,7 @@ func (m CleanRoomAssetNotebook_SdkV2) ApplySchemaCustomizations(attrs map[string
 	attrs["description"] = attrs["description"].SetOptional()
 	attrs["environment_version"] = attrs["environment_version"].SetOptional()
 	attrs["etag"] = attrs["etag"].SetComputed()
-	attrs["notebook_content"] = attrs["notebook_content"].SetRequired()
+	attrs["notebook_content"] = attrs["notebook_content"].SetOptional()
 	attrs["review_state"] = attrs["review_state"].SetComputed()
 	attrs["reviews"] = attrs["reviews"].SetComputed()
 	attrs["runner_collaborator_aliases"] = attrs["runner_collaborator_aliases"].SetOptional()
@@ -2370,7 +2380,7 @@ type CleanRoomOutputCatalog_SdkV2 struct {
 	//
 	// [UC securable naming requirements]: https://docs.databricks.com/en/data-governance/unity-catalog/index.html#securable-object-naming-requirements
 	CatalogName types.String `tfsdk:"catalog_name"`
-
+	// Status of the output catalog for the calling collaborator.
 	Status types.String `tfsdk:"status"`
 }
 
@@ -2426,7 +2436,7 @@ type CleanRoomRemoteDetail_SdkV2 struct {
 	CentralCleanRoomId types.String `tfsdk:"central_clean_room_id"`
 	// Cloud vendor (aws,azure,gcp) of the central clean room.
 	CloudVendor types.String `tfsdk:"cloud_vendor"`
-	// Collaborators in the central clean room. There should one and only one
+	// Collaborators in the central clean room. There should be one and only one
 	// collaborator in the list that satisfies the owner condition:
 	//
 	// 1. It has the creator's global_metastore_id (determined by caller of
@@ -2434,11 +2444,17 @@ type CleanRoomRemoteDetail_SdkV2 struct {
 	//
 	// 2. Its invite_recipient_email is empty.
 	Collaborators types.List `tfsdk:"collaborators"`
-
+	// Compliance security profile of the central clean room. It is taken from
+	// the creator's workspace when the clean room is created; a collaborator
+	// whose workspace profile differs sees access_restricted set to
+	// CSP_MISMATCH.
 	ComplianceSecurityProfile types.List `tfsdk:"compliance_security_profile"`
 	// Collaborator who creates the clean room.
 	Creator types.List `tfsdk:"creator"`
-	// Egress network policy to apply to the central clean room workspace.
+	// Egress network policy to apply to the central clean room workspace. Only
+	// internet_access.restriction_mode (FULL_ACCESS or RESTRICTED_ACCESS) and
+	// internet_access.allowed_internet_destinations can be set. When omitted,
+	// internet access is restricted with no allowed destinations.
 	EgressNetworkPolicy types.List `tfsdk:"egress_network_policy"`
 	// Whether to enable shared output for the central clean room. When enabled,
 	// clean room task runs can write to the run-scoped shared output schema
@@ -3999,6 +4015,7 @@ func (m *CreateCleanRoomOutputCatalogRequest_SdkV2) SetOutputCatalog(ctx context
 }
 
 type CreateCleanRoomOutputCatalogResponse_SdkV2 struct {
+	// The output catalog that was created.
 	OutputCatalog types.List `tfsdk:"output_catalog"`
 }
 
@@ -4566,6 +4583,7 @@ func (m GetCleanRoomAutoApprovalRuleRequest_SdkV2) Type(ctx context.Context) att
 }
 
 type GetCleanRoomRequest_SdkV2 struct {
+	// Name of the clean room.
 	Name types.String `tfsdk:"-"`
 }
 
@@ -6049,6 +6067,9 @@ func (m *UpdateCleanRoomAutoApprovalRuleRequest_SdkV2) SetAutoApprovalRule(ctx c
 }
 
 type UpdateCleanRoomRequest_SdkV2 struct {
+	// Clean room fields to update. Only mutable fields such as owner, comment
+	// and enable_shared_output can be changed; remote_detailed_info, status,
+	// created_at and updated_at must be omitted.
 	CleanRoom types.List `tfsdk:"clean_room"`
 	// Name of the clean room.
 	Name types.String `tfsdk:"-"`

@@ -136,6 +136,11 @@ type importable struct {
 	Service string
 	// Indicates this resource uses Terraform Plugin Framework instead of SDKv2
 	PluginFramework bool
+	// Indicates that objects are generated only as data sources because there is no corresponding
+	// resource in the provider (for example, built-in objects provided by Databricks). Such objects
+	// aren't read from the provider, so they must be emitted with a pre-populated DataWrapper (see
+	// newDataSourceData), and the importable must define the Body function.
+	DataSourceOnly bool
 	// Semantic resource block name (SDKv2 signature - deprecated for Plugin Framework resources)
 	Name func(ic *importContext, d *schema.ResourceData) string
 	// Unified semantic resource block name (works with both SDKv2 and Plugin Framework)
@@ -224,6 +229,9 @@ type reference struct {
 	MultiMatchCaptureFunc multiMatchCaptureFunc
 	// true if given reference denote a reference to a generated file
 	File bool
+	// true if the attribute contains a content that was saved into a generated file. The value is
+	// the relative path of that file, and it's loaded with the `file` function in generated code.
+	FileContent bool
 	// regular expression (if MatchType == "regexp") must define a group that will be used to extract value to match
 	Regexp *regexp.Regexp
 	// functions to transform match and current search value
@@ -344,7 +352,13 @@ func (r *resource) ImportResource(ic *importContext) {
 		return
 	}
 	// Check if resource is available in the appropriate provider
-	if ir.PluginFramework {
+	if ir.DataSourceOnly {
+		if r.DataWrapper == nil {
+			log.Printf("[ERROR] %s is a data source and must be emitted with data", r)
+			return
+		}
+		r.Mode = "data"
+	} else if ir.PluginFramework {
 		if _, ok := ic.PluginFrameworkResources[r.Resource]; !ok {
 			log.Printf("[ERROR] %s is not available in Plugin Framework provider", r)
 			return

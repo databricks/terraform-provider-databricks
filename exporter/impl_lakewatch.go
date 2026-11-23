@@ -43,6 +43,7 @@ func (ic *importContext) emitLakewatchResources(catalogName string) {
 	ic.emitLakewatchConfigs(catalogName)
 	ic.emitLakewatchRules(catalogName)
 	ic.emitLakewatchDatasources(catalogName)
+	ic.emitLakewatchParsers(catalogName)
 }
 
 func (ic *importContext) emitLakewatchConfigs(catalogName string) {
@@ -262,6 +263,7 @@ func importLakewatchDatasource(ic *importContext, r *resource) error {
 	ic.emitLakewatchCommonDependencies(ds.CatalogName, ds.SchemaName, ds.RunAsPrincipal, ds.WarehouseId)
 	for _, parser := range ds.Parsers {
 		ic.emitLakewatchTableSchema(parser.TargetTable, &ds)
+		ic.emitLakewatchParserRef(parser)
 	}
 	if ds.ExistingTable != nil {
 		ic.emitLakewatchSchema(ds.ExistingTable.Catalog, ds.ExistingTable.Schema)
@@ -284,15 +286,6 @@ func importLakewatchDatasource(ic *importContext, r *resource) error {
 	}
 	if ds.UnityCatalogConnection != nil {
 		ic.emitConnectionByName(ds.UnityCatalogConnection.ConnectionName)
-	}
-	return nil
-}
-
-func importLakewatchCommonConfig(ic *importContext, r *resource) error {
-	for _, attr := range []string{"custom_content_pack_path", "custom_presets_path"} {
-		if v, ok := r.DataWrapper.Get(attr).(string); ok {
-			ic.emitVolumeByPath(v)
-		}
 	}
 	return nil
 }

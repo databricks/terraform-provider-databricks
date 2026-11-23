@@ -259,16 +259,20 @@ func (ic *importContext) reference(i importable, path []string, value string, ct
 		if d.Path != match {
 			continue
 		}
-		if d.File {
+		if d.File || d.FileContent {
 			// `${path.module}/` must stay a real interpolation, but `value` is a
 			// file name derived from an attacker-controlled object path, so it
 			// must be escaped to prevent breaking out of the string literal.
 			relativeFile := "${path.module}/" + maybeAddQuoteCharacter(value)
-			return hclwrite.Tokens{
+			tokens := hclwrite.Tokens{
 				&hclwrite.Token{Type: hclsyntax.TokenOQuote, Bytes: []byte{'"'}},
 				&hclwrite.Token{Type: hclsyntax.TokenQuotedLit, Bytes: []byte(relativeFile)},
 				&hclwrite.Token{Type: hclsyntax.TokenCQuote, Bytes: []byte{'"'}},
 			}
+			if d.FileContent {
+				return hclwrite.TokensForFunctionCall("file", tokens)
+			}
+			return tokens
 		}
 		if d.Variable {
 			varName := d.VariableName

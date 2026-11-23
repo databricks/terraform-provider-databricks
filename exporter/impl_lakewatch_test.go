@@ -78,6 +78,10 @@ func TestEmitLakewatchResources(t *testing.T) {
 			Return(createIteratorFromSlice([]lakewatch.Datasource{
 				{Name: "datasources/d1", CatalogName: "sec", SchemaName: "raw", DatasourceName: "ds1"},
 			}))
+		api.ListParsers(mock.Anything, lakewatch.ListParsersRequest{CatalogName: "sec"}).
+			Return(createIteratorFromSlice([]lakewatch.Parser{
+				{Name: "parsers/p1", CatalogName: "sec", SchemaName: "raw", ParserName: "trivy"},
+			}))
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTestWithClient(ctx, client)
 		ic.enableServices("lakewatch")
@@ -89,6 +93,7 @@ func TestEmitLakewatchResources(t *testing.T) {
 			"databricks_lakewatch_rule_config[<unknown>] (id: catalogs/sec/ruleConfig)":   true,
 			"databricks_lakewatch_rule[<unknown>] (id: rules/r1)":                         true,
 			"databricks_lakewatch_datasource[<unknown>] (id: datasources/d1)":             true,
+			"databricks_lakewatch_parser[<unknown>] (id: parsers/p1)":                     true,
 		}, ic.testEmits)
 	})
 }
@@ -106,6 +111,8 @@ func TestEmitLakewatchResourcesNotAvailable(t *testing.T) {
 		api.ListDatasources(mock.Anything, lakewatch.ListDatasourcesRequest{CatalogName: "main"}).
 			Return(createErrorIterator[lakewatch.Datasource](
 				fmt.Errorf("no access: %w", apierr.ErrPermissionDenied)))
+		api.ListParsers(mock.Anything, lakewatch.ListParsersRequest{CatalogName: "main"}).
+			Return(createErrorIterator[lakewatch.Parser](notEnabled))
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTestWithClient(ctx, client)
 		ic.enableServices("lakewatch")
@@ -251,8 +258,81 @@ func TestLakewatchExport(t *testing.T) {
 				Parsers: []lakewatch.ParserRef{
 					{Id: "p1", Version: "2", TargetTable: &lakewatch.TableName{
 						CatalogName: "sec", SchemaName: "raw", TableName: "trivy_report"}},
+					{Id: "b1", Version: "3"},
+					{Id: "p1", Version: "1"},
 				},
 			},
+		},
+		{
+			Method:       "GET",
+			Resource:     "/api/2.0/lakewatch/builtin-parsers?",
+			ReuseRequest: true,
+			Response: lakewatch.ListBuiltinParsersResponse{
+				BuiltinParsers: []lakewatch.BuiltinParser{
+					{Name: "builtin-parsers/b1", ParserId: "b1", ParserName: "azure_signin", LatestVersion: 3},
+				},
+			},
+		},
+		{
+			Method:       "GET",
+			Resource:     "/api/2.0/lakewatch/parsers?catalog_name=sec",
+			ReuseRequest: true,
+			Response: lakewatch.ListParsersResponse{
+				Parsers: []lakewatch.Parser{
+					{Name: "parsers/p1", ParserId: "p1", CatalogName: "sec", SchemaName: "raw", ParserName: "trivy"},
+					// not used by any datasource
+					{Name: "parsers/p2", ParserId: "p2", CatalogName: "sec", SchemaName: "raw", ParserName: "draft"},
+				},
+			},
+		},
+		{
+			Method:       "GET",
+			Resource:     "/api/2.0/lakewatch/parsers/p2?",
+			ReuseRequest: true,
+			Response: lakewatch.Parser{Name: "parsers/p2", ParserId: "p2", CatalogName: "sec",
+				SchemaName: "raw", ParserName: "draft", LatestVersion: 2},
+		},
+		{
+			Method:       "GET",
+			Resource:     "/api/2.0/lakewatch/parsers/p2/versions/1?",
+			ReuseRequest: true,
+			Response: lakewatch.ParserVersion{Name: "parsers/p2/versions/1", ParserName: "draft",
+				Spec: "fields: draft v1", Version: 1},
+		},
+		{
+			Method:       "GET",
+			Resource:     "/api/2.0/lakewatch/parsers/p2/versions/2?",
+			ReuseRequest: true,
+			Response: lakewatch.ParserVersion{Name: "parsers/p2/versions/2", ParserName: "draft",
+				Spec: "fields: draft v2", Version: 2},
+		},
+		{
+			Method:       "GET",
+			Resource:     "/api/2.0/lakewatch/parsers/p1?",
+			ReuseRequest: true,
+			Response: lakewatch.Parser{Name: "parsers/p1", ParserId: "p1", CatalogName: "sec",
+				SchemaName: "raw", ParserName: "trivy", LatestVersion: 3},
+		},
+		{
+			Method:       "GET",
+			Resource:     "/api/2.0/lakewatch/parsers/p1/versions/1?",
+			ReuseRequest: true,
+			Response: lakewatch.ParserVersion{Name: "parsers/p1/versions/1", ParserName: "trivy",
+				Spec: "fields: v1", Description: "initial", Version: 1},
+		},
+		{
+			Method:       "GET",
+			Resource:     "/api/2.0/lakewatch/parsers/p1/versions/2?",
+			ReuseRequest: true,
+			Response: lakewatch.ParserVersion{Name: "parsers/p1/versions/2", ParserName: "trivy",
+				Spec: "fields: v2", Version: 2},
+		},
+		{
+			Method:       "GET",
+			Resource:     "/api/2.0/lakewatch/parsers/p1/versions/3?",
+			ReuseRequest: true,
+			Response: lakewatch.ParserVersion{Name: "parsers/p1/versions/3", ParserName: "trivy",
+				Spec: "fields: v3", Version: 3},
 		},
 		{
 			Method:       "GET",
@@ -317,6 +397,37 @@ func TestLakewatchExport(t *testing.T) {
 			"WHERE l.src = 'sec.raw.literal' AND l.x IN (SELECT x FROM other.sch.tbl)\"")
 		assert.Contains(t, contentStr, `warehouse_id = "wh-123"`)
 		assert.NotContains(t, contentStr, `rule_id`)
+
+		// Custom parsers are exported as resources, built-in parsers are referenced as data sources
+		v2Name := "trivy_v2_" + generateUniqueID("parsers/p1/versions/2")[:6]
+		v3Name := "trivy_v3_" + generateUniqueID("parsers/p1/versions/3")[:6]
+		assert.Contains(t, contentStr, `resource "databricks_lakewatch_parser" "sec_raw_trivy"`)
+		assert.Contains(t, contentStr, `parser_name = "trivy"`)
+		assertLakewatchSpecFile(t, tmpDir, contentStr, "sec_raw_trivy", "fields: v1")
+		assert.Contains(t, contentStr, `description = "initial"`)
+		assert.Contains(t, contentStr, `resource "databricks_lakewatch_parser_version" "`+v2Name+`"`)
+		assert.Contains(t, contentStr, `resource "databricks_lakewatch_parser_version" "`+v3Name+`"`)
+		assert.Contains(t, contentStr, `parent = databricks_lakewatch_parser.sec_raw_trivy.name`)
+		assertLakewatchSpecFile(t, tmpDir, contentStr, v2Name, "fields: v2")
+		assertLakewatchSpecFile(t, tmpDir, contentStr, v3Name, "fields: v3")
+		assert.Contains(t, contentStr, "data \"databricks_lakewatch_builtin_parser\" \"azure_signin\" {\n name = \"builtin-parsers/b1\"\n}")
+		assert.Contains(t, contentStr,
+			"data \"databricks_lakewatch_builtin_parser_version\" \"azure_signin_v3\" {\n name = \"builtin-parsers/b1/versions/3\"\n}")
+		assert.Contains(t, contentStr, `id = databricks_lakewatch_parser.sec_raw_trivy.parser_id`)
+		assert.Contains(t, contentStr, `version = databricks_lakewatch_parser_version.`+v2Name+`.version`)
+		assert.Contains(t, contentStr, `id = data.databricks_lakewatch_builtin_parser.azure_signin.parser_id`)
+		assert.Contains(t, contentStr, `version = data.databricks_lakewatch_builtin_parser_version.azure_signin_v3.version`)
+		assert.Contains(t, contentStr, `version = "1"`)
+
+		// parsers that aren't used by datasources are exported with their latest version
+		draftV2Name := "draft_v2_" + generateUniqueID("parsers/p2/versions/2")[:6]
+		assert.Contains(t, contentStr, `resource "databricks_lakewatch_parser" "sec_raw_draft"`)
+		assertLakewatchSpecFile(t, tmpDir, contentStr, "sec_raw_draft", "fields: draft v1")
+		assert.Contains(t, contentStr, `resource "databricks_lakewatch_parser_version" "`+draftV2Name+`"`)
+		assert.Contains(t, contentStr, `parent = databricks_lakewatch_parser.sec_raw_draft.name`)
+		assertLakewatchSpecFile(t, tmpDir, contentStr, draftV2Name, "fields: draft v2")
+		assert.NotContains(t, contentStr, `id = "p1"`)
+		assert.NotContains(t, contentStr, `id = "b1"`)
 	})
 }
 
@@ -375,6 +486,9 @@ func TestImportLakewatchDatasource(t *testing.T) {
 	ic.Context = context.Background()
 	ic.currentMetastore = currentMetastoreResponse
 	ic.enableServices("lakewatch,uc-schemas,uc-volumes,sql-endpoints,secrets,uc-credentials,uc-connections")
+	ic.lakewatchBuiltinParsers = map[string]lakewatch.BuiltinParser{
+		"b1": {Name: "builtin-parsers/b1", ParserId: "b1", ParserName: "azure_signin"},
+	}
 	ds := lakewatch.Datasource{
 		Name:           "datasources/d1",
 		CatalogName:    "sec",
@@ -388,7 +502,9 @@ func TestImportLakewatchDatasource(t *testing.T) {
 			RawTable:           lakewatch.TableName{TableName: "trivy_raw"},
 		},
 		Parsers: []lakewatch.ParserRef{
-			{Id: "p1", TargetTable: &lakewatch.TableName{SchemaName: "parsed", TableName: "trivy"}},
+			{Id: "p1", Version: "2", TargetTable: &lakewatch.TableName{SchemaName: "parsed", TableName: "trivy"}},
+			{Id: "p2", Version: "1"},
+			{Id: "b1", Version: "4"},
 		},
 		ExistingTable:          &lakewatch.ExistingTable{Catalog: "src", Schema: "events", Name: "audit"},
 		UnityCatalogConnection: &lakewatch.UnityCatalogConnection{ConnectionName: "slack"},
@@ -421,23 +537,17 @@ func TestImportLakewatchDatasource(t *testing.T) {
 		"databricks_volume[<unknown>] (id: sec.landing.logs)",
 		"databricks_schema[<unknown>] (id: sec.parsed)",
 		"databricks_schema[<unknown>] (id: src.events)",
+		"databricks_lakewatch_parser[<unknown>] (id: parsers/p1)",
+		"databricks_lakewatch_parser_version[<unknown>] (id: parsers/p1/versions/2)",
+		"databricks_lakewatch_parser[<unknown>] (id: parsers/p2)",
+		"databricks_lakewatch_builtin_parser[<unknown>] (id: builtin-parsers/b1)",
+		"databricks_lakewatch_builtin_parser_version[<unknown>] (id: builtin-parsers/b1/versions/4)",
 	} {
 		assert.Contains(t, ic.testEmits, expected)
 	}
-}
-
-func TestEmitVolumeByPath(t *testing.T) {
-	ic := importContextForTest()
-	ic.enableServices("uc-volumes")
-	ic.emitVolumeByPath("/Volumes/main/default/vol/some/dir/")
-	ic.emitVolumeByPath("/Volumes/main/default/vol2")
-	ic.emitVolumeByPath("/Volumes/main/default")
-	ic.emitVolumeByPath("/Workspace/main/default/vol")
-	ic.emitVolumeByPath("")
-	assert.Equal(t, map[string]bool{
-		"databricks_volume[<unknown>] (id: main.default.vol)":  true,
-		"databricks_volume[<unknown>] (id: main.default.vol2)": true,
-	}, ic.testEmits)
+	// version 1 is created together with the parser, and built-in parsers aren't resources
+	assert.NotContains(t, ic.testEmits, "databricks_lakewatch_parser_version[<unknown>] (id: parsers/p2/versions/1)")
+	assert.NotContains(t, ic.testEmits, "databricks_lakewatch_parser[<unknown>] (id: parsers/b1)")
 }
 
 func TestImportLakewatchConfigs(t *testing.T) {
@@ -453,19 +563,8 @@ func TestImportLakewatchConfigs(t *testing.T) {
 	assert.Equal(t, "sec_rule_config",
 		ic.Importables["databricks_lakewatch_rule_config"].NameUnified(ic, wrapper))
 
-	wrapper = newLakewatchTestWrapper(t, ic, "databricks_lakewatch_common_config", "catalogs/sec/commonConfig",
-		map[string]any{
-			"custom_content_pack_path": basetypes.NewStringValue("/Volumes/sec/content/packs/custom"),
-			"custom_presets_path":      basetypes.NewStringValue("/Volumes/sec/content/presets"),
-		})
-	err = importLakewatchCommonConfig(ic, &resource{Resource: "databricks_lakewatch_common_config",
-		ID: "catalogs/sec/commonConfig", DataWrapper: wrapper})
-	require.NoError(t, err)
-
 	assert.Equal(t, map[string]bool{
-		"databricks_schema[<unknown>] (id: sec.rules)":           true,
-		"databricks_volume[<unknown>] (id: sec.content.packs)":   true,
-		"databricks_volume[<unknown>] (id: sec.content.presets)": true,
+		"databricks_schema[<unknown>] (id: sec.rules)": true,
 	}, ic.testEmits)
 }
 
@@ -491,29 +590,4 @@ func TestIsMatchingLakewatchDefaultFolder(t *testing.T) {
 	assert.True(t, isMatchingLakewatchDefaultFolder(ic, res, schemaApproximation("sec", "rules"), "default_folder"))
 	assert.False(t, isMatchingLakewatchDefaultFolder(ic, res, schemaApproximation("other", "rules"), "default_folder"))
 	assert.False(t, isMatchingLakewatchDefaultFolder(ic, res, schemaApproximation("sec", "other"), "default_folder"))
-}
-
-func TestIsMatchingCatalogAndSchemaAndTablePluginFramework(t *testing.T) {
-	ic := importContextForTest()
-	ic.Context = context.Background()
-	var tfDs lakewatch_datasource_resource.Datasource
-	require.False(t, converters.GoSdkToTfSdkStruct(ic.Context, lakewatch.Datasource{
-		ExistingTable: &lakewatch.ExistingTable{Catalog: "src", Schema: "events", Name: "audit"},
-	}, &tfDs).HasError())
-	wrapper := newLakewatchTestWrapper(t, ic, "databricks_lakewatch_datasource", "datasources/d1",
-		map[string]any{"existing_table": tfDs.ExistingTable})
-	res := &resource{Resource: "databricks_lakewatch_datasource", ID: "datasources/d1", DataWrapper: wrapper}
-	tableApproximation := func(catalogName, schemaName, name string) *resourceApproximation {
-		return &resourceApproximation{
-			Type: "databricks_sql_table",
-			Instances: []instanceApproximation{{Attributes: map[string]any{
-				"catalog_name": catalogName,
-				"schema_name":  schemaName,
-				"name":         name,
-			}}},
-		}
-	}
-	matcher := createIsMatchingCatalogAndSchemaAndTable("catalog", "schema", "name")
-	assert.True(t, matcher(ic, res, tableApproximation("src", "events", "audit"), "existing_table.name"))
-	assert.False(t, matcher(ic, res, tableApproximation("src", "other", "audit"), "existing_table.name"))
 }

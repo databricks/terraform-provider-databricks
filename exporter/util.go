@@ -88,6 +88,19 @@ func (ic *importContext) emitIfWsfsFile(path string) {
 	}
 }
 
+// emitVolumeByPath emits a databricks_volume for a path in the format
+// `/Volumes/<catalog>/<schema>/<volume>/<optional subdirs/files>`.
+func (ic *importContext) emitVolumeByPath(path string) {
+	parts := strings.Split(path, "/")
+	if len(parts) >= 5 && parts[0] == "" && parts[1] == "Volumes" &&
+		parts[2] != "" && parts[3] != "" && parts[4] != "" {
+		ic.Emit(&resource{
+			Resource: "databricks_volume",
+			ID:       strings.Join(parts[2:5], "."),
+		})
+	}
+}
+
 func (ic *importContext) emitIfVolumeFile(path string) {
 	if strings.HasPrefix(path, "/Volumes/") {
 		ic.Emit(&resource{

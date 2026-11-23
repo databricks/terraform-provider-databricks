@@ -76,9 +76,9 @@ func (t *sdkGoTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	requestBody := debugRequestBody(r)
 	resp, responseBody, err := t.exchange(req.Context(), r, timeout)
 	if attempt != nil {
-		attempt.request, attempt.status = r, ""
+		attempt.request, attempt.response = r, nil
 		if resp != nil {
-			attempt.request, attempt.status = resp.Request, resp.Status
+			attempt.request, attempt.response = resp.Request, resp
 		}
 	}
 	if err == nil && resp.StatusCode < http.StatusBadRequest {

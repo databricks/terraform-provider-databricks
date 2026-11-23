@@ -9,6 +9,7 @@
 ### New Features and Improvements
 
 ### Bug Fixes
+* Fix renaming a `databricks_catalog`: the update now sends `new_name`, so changing `name` renames the catalog instead of reporting success without a rename ([#6274](https://github.com/databricks/terraform-provider-databricks/pull/6274)).
 
 ### Documentation
 

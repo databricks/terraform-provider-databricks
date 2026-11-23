@@ -230,6 +230,36 @@ func TestSdkGoVolumesClientDecodeErrorPrintsTheRequestLog(t *testing.T) {
 		withoutHeaderLines(r.err))
 }
 
+// The classic decoder reads a value it can't decode into a string field as that value's
+// text, so a response with a number for a comment reads as a comment.
+func TestSdkGoVolumesClientCoercesValuesLikeClassicClient(t *testing.T) {
+	for name, tc := range map[string]struct {
+		value, comment string
+	}{
+		"number":  {`123`, "123"},
+		"boolean": {`true`, "true"},
+		"object":  {`{"text":"x"}`, `{"text":"x"}`},
+	} {
+		t.Run(name, func(t *testing.T) {
+			body := `{"full_name": "main.replay.volume", "created_at": "1700000000000",
+				"comment": ` + tc.value + `}`
+			server, _ := serveSequence(t, respond(http.StatusOK, body),
+				respond(http.StatusOK, body))
+			w := newVolumesTestWorkspaceClient(t, server, nil)
+			ctx := context.Background()
+			v, err := getVolume(ctx, t, w, sdkGoTestVolumeName)
+			require.NoError(t, err)
+			classic, err := w.Volumes.ReadByName(ctx, sdkGoTestVolumeName)
+			require.NoError(t, err)
+			assert.Equal(t, tc.comment, classic.Comment)
+			require.NotNil(t, v.Comment)
+			assert.Equal(t, classic.Comment, *v.Comment)
+			require.NotNil(t, v.CreatedAt)
+			assert.Equal(t, classic.CreatedAt, *v.CreatedAt)
+		})
+	}
+}
+
 // The existing client doesn't decode an empty 200 body, so it reads a volume without
 // fields, and sdk-go reads the same.
 func TestSdkGoVolumesClientReadsEmptySuccessBodyLikeClassicClient(t *testing.T) {

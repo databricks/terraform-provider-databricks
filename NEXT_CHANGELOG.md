@@ -1,6 +1,6 @@
 # NEXT CHANGELOG
 
-## Release v1.145.0
+## Release v1.146.0
 
 ### Important Changes
 
@@ -10,10 +10,6 @@
 * Add the `USE_SDK_GO_RESOURCES` environment variable, which makes the listed resources read through the modular `github.com/databricks/sdk-go` clients ([#6229](https://github.com/databricks/terraform-provider-databricks/pull/6229)).
 
   `USE_SDK_GO_RESOURCES=databricks_volume` makes `databricks_volume` read through the `github.com/databricks/sdk-go/uc/volumes` v1 client; its writes stay on the existing client. It is unset by default, and an unknown resource name fails provider configuration.
-* Add resource and data sources for `databricks_lakewatch_parser`.
-* Add resource and data sources for `databricks_lakewatch_parser_version`.
-* Add data sources for `databricks_lakewatch_builtin_parser`.
-* Add data sources for `databricks_lakewatch_builtin_parser_version`.
 
 ### Bug Fixes
 * Escape `#`, `?` and `%` in the full name of a `databricks_volume` when reading, updating and deleting it ([#6206](https://github.com/databricks/terraform-provider-databricks/pull/6206)).

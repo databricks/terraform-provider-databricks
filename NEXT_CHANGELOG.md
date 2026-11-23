@@ -9,6 +9,7 @@
 ### New Features and Improvements
 
 ### Bug Fixes
+* Fixed perpetual `provider_config` diff on account-level dual resources such as `databricks_group_member` ([#6273](https://github.com/databricks/terraform-provider-databricks/pull/6273)).
 
 ### Documentation
 

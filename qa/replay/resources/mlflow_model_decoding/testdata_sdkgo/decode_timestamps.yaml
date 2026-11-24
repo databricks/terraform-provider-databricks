@@ -1,0 +1,166 @@
+# The modular SDK twin of testdata_classic/decode_timestamps.yaml. It differs in the
+# diagnostic of the three steps whose response can't be decoded: the modular SDK
+# reports the decoding error alone, where the classic client wraps it with a request to
+# report an SDK bug and a log of the request. For the number in exponent form it names
+# the field, which the classic message masks. The requests, the state and the plans
+# are the same.
+#
+# Pins how creation_timestamp and last_updated_timestamp are decoded. The modular
+# client takes an integer JSON number or a quoted integer, as the classic one does; the
+# schema has neither field, so the state doesn't change. A string that isn't an integer
+# fails with the strconv error on the POST and on the GET, and a number in exponent
+# form fails as well, because encoding/json rejects it for an int64. That message names
+# a wire type of the SDK, which Go 1.26 and Go 1.27 report differently, so its pattern
+# takes both spellings. API responses are synthetic: inferred from the MLflow Model
+# Registry API, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: create_answered_non_integer_string_timestamp_fails_to_decode
+    config: &config |
+      resource "databricks_mlflow_model" "this" {
+        name        = "decode_model"
+        description = "first description"
+      }
+    expect_error: 'Error: cannot create mlflow model: parse int64
+      "2023-11-14T22:13:20Z": strconv\.ParseInt: parsing "2023-11-14T22:13:20Z": invalid
+      syntax\n'
+    calls:
+      - request: &create_request
+          method: POST
+          path: /api/2.0/mlflow/registered-models/create
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"name": "decode_model", "description": "first description"}
+        response:
+          status: 200
+          body:
+            json: {"registered_model": {
+                     "name": "decode_model",
+                     "description": "first description",
+                     "user_id": "replay-admin@example.com",
+                     "creation_timestamp": "2023-11-14T22:13:20Z",
+                     "last_updated_timestamp": 1700000000000}}
+  - name: create_answered_quoted_and_unquoted_integer_timestamps_succeeds
+    config: *config
+    plan:
+      changes:
+        databricks_mlflow_model.this:
+          actions: [create]
+    calls:
+      - request: *create_request
+        response:
+          status: 200
+          body:
+            json: {"registered_model": {
+                     "name": "decode_model",
+                     "description": "first description",
+                     "user_id": "replay-admin@example.com",
+                     "creation_timestamp": "1700000000000",
+                     "last_updated_timestamp": "1700000000000"}}
+      - &read_numbers
+        request: &read_request
+          method: GET
+          path: /api/2.0/mlflow/databricks/registered-models/get
+          query:
+            name: [decode_model]
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"registered_model_databricks": {
+                     "name": "decode_model",
+                     "id": "0123456789abcdef0123456789abcdef",
+                     "description": "first description",
+                     "user_id": "replay-admin@example.com",
+                     "creation_timestamp": 1700000000000,
+                     "last_updated_timestamp": 1700000000000,
+                     "permission_level": "CAN_MANAGE"}}
+      - &read_quoted_integers
+        request: *read_request
+        response:
+          status: 200
+          body:
+            json: {"registered_model_databricks": {
+                     "name": "decode_model",
+                     "id": "0123456789abcdef0123456789abcdef",
+                     "description": "first description",
+                     "user_id": "replay-admin@example.com",
+                     "creation_timestamp": "1700000000000",
+                     "last_updated_timestamp": "1700000000000",
+                     "permission_level": "CAN_MANAGE"}}
+    state: &state
+      resources:
+        databricks_mlflow_model.this:
+          attributes:
+            - path: [id]
+              equals: decode_model
+            - path: [name]
+              equals: decode_model
+            - path: [registered_model_id]
+              equals: 0123456789abcdef0123456789abcdef
+            - path: [description]
+              equals: first description
+  - name: refresh_answered_non_integer_string_timestamp_fails_to_decode
+    config: *config
+    expect_error: 'Error: cannot read mlflow model: parse int64 "2023-11-14T22:13:20Z":
+      strconv\.ParseInt: parsing "2023-11-14T22:13:20Z": invalid syntax\n'
+    calls:
+      - request: *read_request
+        response:
+          status: 200
+          body:
+            json: {"registered_model_databricks": {
+                     "name": "decode_model",
+                     "id": "0123456789abcdef0123456789abcdef",
+                     "description": "first description",
+                     "creation_timestamp": 1700000000000,
+                     "last_updated_timestamp": "2023-11-14T22:13:20Z"}}
+  - name: refresh_answered_exponent_number_timestamp_fails_to_decode
+    config: *config
+    expect_error: 'Error: cannot read mlflow model: json: cannot unmarshal number 1\.7e12
+      into Go (value|struct field
+      registeredModelDatabricksWire\.registered_model_databricks\.creation_timestamp) of
+      type int64\n'
+    calls:
+      - request: *read_request
+        response:
+          status: 200
+          headers:
+            Content-Type: application/json
+          body:
+            text: '{"registered_model_databricks": {"name": "decode_model", "id":
+              "0123456789abcdef0123456789abcdef", "description": "first description",
+              "creation_timestamp": 1.7e12, "last_updated_timestamp": 1700000000000}}'
+  - name: plan_after_failed_refreshes_keeps_the_model_and_plans_nothing
+    plan_only: true
+    config: *config
+    plan:
+      expect: empty
+      changes: {}
+    state: *state
+    calls:
+      - *read_quoted_integers
+destroy:
+  calls:
+    - *read_numbers
+    - request:
+        method: DELETE
+        path: /api/2.0/mlflow/registered-models/delete
+        query:
+          name: [decode_model]
+        headers:
+          X-Databricks-Workspace-Id: "12345"
+        body: null
+      response:
+        status: 200
+        body:
+          json: {}

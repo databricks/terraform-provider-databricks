@@ -1,0 +1,254 @@
+# The modular SDK twin of testdata_classic/decode_unexpected_patch_and_delete_bodies.yaml.
+# It differs in the diagnostic of the update that is answered with a JSON array: the
+# modular SDK reports the decoding error alone, where the classic client wraps it with
+# a request to report an SDK bug and a log of the request. The requests, the state and
+# the plans are the same.
+#
+# Pins a PATCH and a DELETE answered 200 with JSON the call doesn't expect. The PATCH
+# response is decoded and then dropped: answered with another model, the update
+# succeeds and the state comes from the read that follows. Its shape still matters: a
+# JSON array fails the update after the service accepted the PATCH. The planned
+# description is in the state all the same, so the next plan is empty without a
+# refresh. The DELETE response is never decoded: answered with another model or with an
+# array, the model is gone from the state. API responses are synthetic: inferred from
+# the MLflow Model Registry API, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: create
+    config: |
+      resource "databricks_mlflow_model" "this" {
+        name        = "decode_model"
+        description = "first description"
+      }
+    calls:
+      - request:
+          method: POST
+          path: /api/2.0/mlflow/registered-models/create
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"name": "decode_model", "description": "first description"}
+        response:
+          status: 200
+          body:
+            json: {"registered_model": {
+                     "name": "decode_model",
+                     "description": "first description",
+                     "user_id": "replay-admin@example.com",
+                     "creation_timestamp": 1700000000000,
+                     "last_updated_timestamp": 1700000000000}}
+      - &read_first
+        request: &read_request
+          method: GET
+          path: /api/2.0/mlflow/databricks/registered-models/get
+          query:
+            name: [decode_model]
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"registered_model_databricks": {
+                     "name": "decode_model",
+                     "id": "0123456789abcdef0123456789abcdef",
+                     "description": "first description",
+                     "user_id": "replay-admin@example.com",
+                     "creation_timestamp": 1700000000000,
+                     "last_updated_timestamp": 1700000000000,
+                     "permission_level": "CAN_MANAGE"}}
+      - *read_first
+  - name: update_answered_200_with_another_model_takes_the_state_from_the_read
+    config: |
+      resource "databricks_mlflow_model" "this" {
+        name        = "decode_model"
+        description = "second description"
+      }
+    plan:
+      changes:
+        databricks_mlflow_model.this:
+          actions: [update]
+    calls:
+      - *read_first
+      - request:
+          method: PATCH
+          path: /api/2.0/mlflow/registered-models/update
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"name": "decode_model", "description": "second description"}
+        response:
+          status: 200
+          body:
+            json: &another_model {"registered_model": {
+                                    "name": "another_model",
+                                    "description": "another description",
+                                    "user_id": "replay-admin@example.com",
+                                    "creation_timestamp": 1600000000000,
+                                    "last_updated_timestamp": 1600000000000}}
+      - &read_second
+        request: *read_request
+        response:
+          status: 200
+          body:
+            json: {"registered_model_databricks": {
+                     "name": "decode_model",
+                     "id": "0123456789abcdef0123456789abcdef",
+                     "description": "second description",
+                     "user_id": "replay-admin@example.com",
+                     "creation_timestamp": 1700000000000,
+                     "last_updated_timestamp": 1700000001000,
+                     "permission_level": "CAN_MANAGE"}}
+      - *read_second
+    state:
+      resources:
+        databricks_mlflow_model.this:
+          attributes:
+            - path: [id]
+              equals: decode_model
+            - path: [name]
+              equals: decode_model
+            - path: [description]
+              equals: second description
+  - name: update_answered_200_with_json_array_fails_to_decode
+    config: &config_third |
+      resource "databricks_mlflow_model" "this" {
+        name        = "decode_model"
+        description = "third description"
+      }
+    expect_error: 'Error: cannot update mlflow model: json: cannot unmarshal array into Go
+      value of type modelregistry\.updateRegisteredModelResponseWire\n'
+    calls:
+      - *read_second
+      - request:
+          method: PATCH
+          path: /api/2.0/mlflow/registered-models/update
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"name": "decode_model", "description": "third description"}
+        response:
+          status: 200
+          body:
+            json: []
+  - name: plan_after_failed_update_has_the_planned_description_and_plans_nothing
+    plan_only: true
+    config: *config_third
+    plan:
+      expect: empty
+      changes: {}
+    state:
+      resources:
+        databricks_mlflow_model.this:
+          attributes:
+            - path: [id]
+              equals: decode_model
+            - path: [description]
+              equals: third description
+    calls:
+      - &read_third
+        request: *read_request
+        response:
+          status: 200
+          body:
+            json: {"registered_model_databricks": {
+                     "name": "decode_model",
+                     "id": "0123456789abcdef0123456789abcdef",
+                     "description": "third description",
+                     "user_id": "replay-admin@example.com",
+                     "creation_timestamp": 1700000000000,
+                     "last_updated_timestamp": 1700000002000,
+                     "permission_level": "CAN_MANAGE"}}
+  - name: replace_with_delete_answered_200_with_another_model_removes_the_model
+    config: |
+      resource "databricks_mlflow_model" "this" {
+        name        = "decode_model_replaced"
+        description = "third description"
+      }
+    plan:
+      changes:
+        databricks_mlflow_model.this:
+          actions: [delete, create]
+    calls:
+      - *read_third
+      - request:
+          method: DELETE
+          path: /api/2.0/mlflow/registered-models/delete
+          query:
+            name: [decode_model]
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 200
+          body:
+            json: *another_model
+      - request:
+          method: POST
+          path: /api/2.0/mlflow/registered-models/create
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"name": "decode_model_replaced", "description": "third description"}
+        response:
+          status: 200
+          body:
+            json: {"registered_model": {
+                     "name": "decode_model_replaced",
+                     "description": "third description",
+                     "user_id": "replay-admin@example.com",
+                     "creation_timestamp": 1700000003000,
+                     "last_updated_timestamp": 1700000003000}}
+      - &read_replaced
+        request:
+          method: GET
+          path: /api/2.0/mlflow/databricks/registered-models/get
+          query:
+            name: [decode_model_replaced]
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"registered_model_databricks": {
+                     "name": "decode_model_replaced",
+                     "id": "fedcba9876543210fedcba9876543210",
+                     "description": "third description",
+                     "user_id": "replay-admin@example.com",
+                     "creation_timestamp": 1700000003000,
+                     "last_updated_timestamp": 1700000003000,
+                     "permission_level": "CAN_MANAGE"}}
+      - *read_replaced
+    state:
+      resources:
+        databricks_mlflow_model.this:
+          attributes:
+            - path: [id]
+              equals: decode_model_replaced
+            - path: [registered_model_id]
+              equals: fedcba9876543210fedcba9876543210
+destroy:
+  calls:
+    - *read_replaced
+    - request:
+        method: DELETE
+        path: /api/2.0/mlflow/registered-models/delete
+        query:
+          name: [decode_model_replaced]
+        headers:
+          X-Databricks-Workspace-Id: "12345"
+        body: null
+      response:
+        status: 200
+        body:
+          json: ["unexpected"]

@@ -52,10 +52,40 @@ const userAgentExtraVariable = "DATABRICKS_USER_AGENT_EXTRA"
 // userAgentExtraChild marks the test process that TestMlflowModelUserAgentExtra starts.
 const userAgentExtraChild = "DATABRICKS_TF_TEST_USER_AGENT_EXTRA_CHILD"
 
+// sdkGoVariable opts resources in to the modular SDK, and sdkGoResource is the name by
+// which it opts databricks_mlflow_model in.
+const (
+	sdkGoVariable = "USE_SDK_GO_RESOURCES"
+	sdkGoResource = "databricks_mlflow_model"
+)
+
+// sdkGoUserAgent is what the User-Agent of a registered model call gains on the modular
+// SDK path: the modules of the modular SDK that make the call, at their versions in
+// go.mod.
+const sdkGoUserAgent = " sdk-go-core/0.1.0 sdk-go-modelregistry/0.7.0"
+
+// onBothPaths runs test on the classic SDK path of databricks_mlflow_model and on its
+// modular SDK path. The classic run clears the opt-in, so that the environment of the
+// test process can't switch the path.
+func onBothPaths(t *testing.T, test func(t *testing.T)) {
+	t.Run("classic", func(t *testing.T) {
+		t.Setenv(sdkGoVariable, "")
+		test(t)
+	})
+	t.Run("sdkgo", func(t *testing.T) {
+		t.Setenv(sdkGoVariable, sdkGoResource)
+		test(t)
+	})
+}
+
 // TestMlflowModelUserAgent pins the two User-Agent dimensions that attribute usage of
 // the resource: the provider version and the resource name, on each of its four calls.
 // YAML header matchers compare exact values, so the dimensions are checked in Go.
 func TestMlflowModelUserAgent(t *testing.T) {
+	onBothPaths(t, testMlflowModelUserAgent)
+}
+
+func testMlflowModelUserAgent(t *testing.T) {
 	requests := runModelJourney(t, "native_testdata/user_agent.yaml")
 	requireEveryModelCall(t, requests)
 	for _, r := range requests {
@@ -70,6 +100,10 @@ func TestMlflowModelUserAgent(t *testing.T) {
 // TestMlflowModelUserAgentDimensions pins the exact User-Agent of every registered
 // model call for each environment the classic SDK detects.
 func TestMlflowModelUserAgentDimensions(t *testing.T) {
+	onBothPaths(t, testMlflowModelUserAgentDimensions)
+}
+
+func testMlflowModelUserAgentDimensions(t *testing.T) {
 	requireNoUserAgentExtra(t)
 	longAgent := strings.Repeat("x", 60) + "/abc/def"
 	testCases := []struct {
@@ -210,17 +244,22 @@ func TestMlflowModelUserAgentDimensions(t *testing.T) {
 // model call. The provider reads it once at start-up, so the test runs itself in a new
 // process.
 func TestMlflowModelUserAgentExtra(t *testing.T) {
+	onBothPaths(t, testMlflowModelUserAgentExtra)
+}
+
+func testMlflowModelUserAgentExtra(t *testing.T) {
 	const extra = "partner-a/1.2.3 team_b/0.0.1 partner-a/1.2.3 partner-a/2.0.0 " +
 		"resource/mlflow_model"
 	if os.Getenv(userAgentExtraChild) == "" {
 		requireNoUserAgentExtra(t)
+		// The child runs only this subtest, which is the path of its parent.
 		child := exec.Command(os.Args[0], "-test.v",
-			"-test.run=^TestMlflowModelUserAgentExtra$")
+			"-test.run=^"+strings.ReplaceAll(t.Name(), "/", "$/^")+"$")
 		child.Env = append(os.Environ(),
 			userAgentExtraVariable+"="+extra, userAgentExtraChild+"=1")
 		output, err := child.CombinedOutput()
 		require.NoError(t, err, "%s", output)
-		passed := "--- PASS: TestMlflowModelUserAgentExtra"
+		passed := "--- PASS: " + t.Name()
 		assert.Contains(t, string(output), passed, "%s", output)
 		return
 	}
@@ -237,6 +276,10 @@ func TestMlflowModelUserAgentExtra(t *testing.T) {
 // TestMlflowModelTraceparent pins the W3C traceparent header of every registered model
 // call, including both attempts of each retried call.
 func TestMlflowModelTraceparent(t *testing.T) {
+	onBothPaths(t, testMlflowModelTraceparent)
+}
+
+func testMlflowModelTraceparent(t *testing.T) {
 	requests := runModelJourney(t, "native_testdata/traceparent_retry.yaml")
 	var calls []string
 	for _, r := range requests {
@@ -292,7 +335,7 @@ func setUserAgentEnvironment(t *testing.T, env map[string]string) {
 }
 
 // wantUserAgent returns the User-Agent of a registered model call with the given extra,
-// upstream and detected dimensions.
+// upstream and detected dimensions, on the path that the test runs on.
 func wantUserAgent(t *testing.T, extra, upstream, detected []string) string {
 	t.Helper()
 	dimensions := []string{
@@ -305,7 +348,11 @@ func wantUserAgent(t *testing.T, extra, upstream, detected []string) string {
 	dimensions = append(dimensions, "terraform/"+terraformCLIVersion(t))
 	dimensions = append(dimensions, upstream...)
 	dimensions = append(dimensions, "sdk/sdkv2", "resource/mlflow_model", "auth/pat")
-	return strings.Join(append(dimensions, detected...), " ")
+	userAgent := strings.Join(append(dimensions, detected...), " ")
+	if os.Getenv(sdkGoVariable) == sdkGoResource {
+		userAgent += sdkGoUserAgent
+	}
+	return userAgent
 }
 
 // goUserAgentVersion returns the toolchain version as the three-part semantic version

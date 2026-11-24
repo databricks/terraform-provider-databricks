@@ -11,6 +11,15 @@ import (
 	"github.com/databricks/terraform-provider-databricks/qa/terraformtest"
 )
 
+// TestReplay runs the journeys on the classic SDK path of databricks_mlflow_model. It
+// clears the opt-in, so that the environment of the test process can't switch the path.
 func TestReplay(t *testing.T) {
+	t.Setenv("USE_SDK_GO_RESOURCES", "")
+	terraformtest.Run(t, "testdata")
+}
+
+// TestReplaySdkGo runs the same journeys on the modular SDK path of the resource.
+func TestReplaySdkGo(t *testing.T) {
+	t.Setenv("USE_SDK_GO_RESOURCES", "databricks_mlflow_model")
 	terraformtest.Run(t, "testdata")
 }

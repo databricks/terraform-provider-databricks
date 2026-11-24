@@ -98,9 +98,9 @@ generated diff for service-specific secrets before committing it.
 Same-host absolute response `Location` headers become relative URLs so redirects
 follow the local fixture server during replay. Escaped paths, queries and
 fragments are preserved. Cross-host redirects are outside the recorder's scope;
-the replay transport rejects destinations outside the fixture server and the
-test's [named hosts](#named-hosts). Recording rejects tests with named hosts,
-[`auth`](#authentication) or [`environment`](#environment-variables).
+the replay transport rejects destinations outside the fixture server.
+Requests to the test's [named hosts](#named-hosts) also reach the fixture server, and recording rejects tests with named hosts.
+Recording also rejects tests with [`auth`](#authentication) or [`environment`](#environment-variables).
 
 ### Secret redaction and replay
 
@@ -179,7 +179,6 @@ its HTTP exchanges belong under `destroy.calls`, and empty state is always
 checked. The testing framework also attempts cleanup after an interrupted test.
 
 Each exchange contains `request` and `response`. Requests specify `method`,
-optional `host` (see [named hosts](#named-hosts)),
 `path`, optional `query` (values are lists of strings), optional `headers`,
 and `body`. Responses specify an explicit HTTP `status` (except `reset` and
 `close` faults), optional `headers`, and `body`. Optional `delay`, `fault` and
@@ -189,6 +188,7 @@ Use `body: null` for no HTTP body and `body: {json: null}` for JSON
 null. Other JSON values go under `body.json`; IDs are literal, without substitution.
 Non-JSON payloads use `body.text`, `body.base64`, or request-only
 `body.multipart`; see the [payload reference](../httpfixture/README.md#files-and-non-json-bodies).
+A request's optional `host` names the host it must reach; see [named hosts](#named-hosts).
 
 Optional `request.matchers` annotations allow selected volatile strings to
 vary without ignoring their presence or type. For example:
@@ -258,8 +258,9 @@ without consuming it. Reusable host metadata may occur between any calls.
 Recorded call order can be preserved in the file without enabling enforcement.
 
 Optional `host_metadata` supplies a reusable JSON response for
-`GET /.well-known/databricks-config` on the provider host throughout the test,
-keeping repeated client initialization out of the consumable resource exchanges.
+`GET /.well-known/databricks-config` throughout the test, keeping repeated
+client initialization out of the consumable resource exchanges.
+It answers the provider host; each [named host](#named-hosts) can set its own `metadata`.
 
 State assertions are entirely optional. `state.resources` selects Terraform
 instance addresses to check, including data sources, modules, and indexed

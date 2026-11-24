@@ -43,8 +43,9 @@ import (
 //   - The status text is http.StatusText of the status code, which is what
 //     net/http itself reports over HTTP/2, where a response has no status
 //     text. The classic parser makes the error code of an HTML response with
-//     a <pre> block from it, so that error code differs when a server sends
-//     another text over HTTP/1.x.
+//     a <pre> block from it, so that error code, and with it the sentinel
+//     error behind it, differs when a server sends another text or none over
+//     HTTP/1.x.
 //   - The request has no method and an empty URL. The classic parser has
 //     overrides by method and path, which report a 400 with
 //     INVALID_PARAMETER_VALUE from GET /api/2.x/clusters/get, jobs/get and
@@ -53,9 +54,9 @@ import (
 //
 // ClassicError deliberately doesn't:
 //
-//   - retry. The classic client retries a 429, a 503 and some messages
-//     before it returns the error; whether a modular call is retried is up to
-//     the options of that call.
+//   - retry. The classic client retries a 429, a 503 and some other errors
+//     before it returns them; whether a modular call is retried is up to the
+//     options of that call.
 //   - recognize the redirect to the login page by which a workspace refuses a
 //     request from outside its private link. The classic client reports it as
 //     PRIVATE_LINK_VALIDATION_ERROR; a modular client follows the redirect
@@ -80,6 +81,7 @@ func ClassicError(ctx context.Context, err error) error {
 		},
 	})
 	if classicErr == nil {
+		// A status below 400 is no error to the classic parser.
 		return err
 	}
 	return classicErr

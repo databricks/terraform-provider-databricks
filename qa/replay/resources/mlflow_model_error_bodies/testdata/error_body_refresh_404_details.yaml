@@ -1,0 +1,163 @@
+# Pins that a details list in the error body of a refresh GET answered 404 decides
+# nothing. The classic SDK classes the error by its error_code alone and reports only
+# the message. With INVALID_PARAMETER_VALUE the refresh fails, is sent once and keeps the
+# model, although the ErrorInfo detail gives RESOURCE_DOES_NOT_EXIST as the reason. With
+# RESOURCE_DOES_NOT_EXIST the model counts as missing: no diagnostic, the plan is a
+# create, and the same apply sends the POST again. API responses are synthetic: inferred
+# from the MLflow Model Registry API and the Databricks error details format, not
+# recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: create
+    config: &config |
+      resource "databricks_mlflow_model" "this" {
+        name        = "error_body_refresh_details_model"
+        description = "Pins a refresh 404 with error details"
+      }
+    calls:
+      - &create
+        request:
+          method: POST
+          path: /api/2.0/mlflow/registered-models/create
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"name": "error_body_refresh_details_model",
+                   "description": "Pins a refresh 404 with error details"}
+        response:
+          status: 200
+          body:
+            json: {"registered_model": {
+                     "name": "error_body_refresh_details_model",
+                     "description": "Pins a refresh 404 with error details",
+                     "creation_timestamp": 1700000000000,
+                     "last_updated_timestamp": 1700000000000,
+                     "user_id": "tester@example.com"}}
+      - &read_first
+        request: &read_request
+          method: GET
+          path: /api/2.0/mlflow/databricks/registered-models/get
+          query:
+            name: [error_body_refresh_details_model]
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"registered_model_databricks": {
+                     "name": "error_body_refresh_details_model",
+                     "id": "9f8e7d6c5b4a39281706f5e4d3c2b161",
+                     "description": "Pins a refresh 404 with error details",
+                     "creation_timestamp": 1700000000000,
+                     "last_updated_timestamp": 1700000000000,
+                     "user_id": "tester@example.com",
+                     "permission_level": "CAN_MANAGE"}}
+      - *read_first
+    state:
+      resources:
+        databricks_mlflow_model.this:
+          attributes:
+            - path: [registered_model_id]
+              equals: 9f8e7d6c5b4a39281706f5e4d3c2b161
+  - name: refresh_answered_404_invalid_parameter_value_with_details_fails_with_message_only
+    config: *config
+    expect_error: 'Error: cannot read mlflow model: Registered model name
+      ''error_body_refresh_details_model'' is not valid\.\n'
+    calls:
+      - request: *read_request
+        response:
+          status: 404
+          body:
+            json: {"error_code": "INVALID_PARAMETER_VALUE",
+                   "message": "Registered model name 'error_body_refresh_details_model'
+                     is not valid.",
+                   "details": [{"@type": "type.googleapis.com/google.rpc.ErrorInfo",
+                                "reason": "RESOURCE_DOES_NOT_EXIST",
+                                "domain": "mlflow.databricks.com",
+                                "metadata": {
+                                  "registered_model": "error_body_refresh_details_model"}},
+                               {"@type": "type.googleapis.com/google.rpc.RequestInfo",
+                                "request_id": "b7c1d3e5-0f2a-4b6c-8d9e-1a2b3c4d5e61",
+                                "serving_data": ""}]}
+  - name: state_kept_after_404_invalid_parameter_value_with_details
+    plan_only: true
+    config: *config
+    plan:
+      expect: empty
+      changes: {}
+    state:
+      resources:
+        databricks_mlflow_model.this:
+          attributes:
+            - path: [id]
+              equals: error_body_refresh_details_model
+            - path: [registered_model_id]
+              equals: 9f8e7d6c5b4a39281706f5e4d3c2b161
+    calls:
+      - *read_first
+  - name: refresh_answered_404_resource_does_not_exist_with_details_removes_and_recreates
+    config: *config
+    plan:
+      expect: non_empty
+      changes:
+        databricks_mlflow_model.this:
+          actions: [create]
+    calls:
+      - request: *read_request
+        response:
+          status: 404
+          body:
+            json: {"error_code": "RESOURCE_DOES_NOT_EXIST",
+                   "message": "RegisteredModel 'error_body_refresh_details_model' does
+                     not exist. It might have been deleted.",
+                   "details": [{"@type": "type.googleapis.com/google.rpc.ErrorInfo",
+                                "reason": "RESOURCE_DOES_NOT_EXIST",
+                                "domain": "mlflow.databricks.com",
+                                "metadata": {
+                                  "registered_model": "error_body_refresh_details_model"}},
+                               {"@type": "type.googleapis.com/google.rpc.RequestInfo",
+                                "request_id": "b7c1d3e5-0f2a-4b6c-8d9e-1a2b3c4d5e62",
+                                "serving_data": ""}]}
+      - *create
+      - &read_second
+        request: *read_request
+        response:
+          status: 200
+          body:
+            json: {"registered_model_databricks": {
+                     "name": "error_body_refresh_details_model",
+                     "id": "9f8e7d6c5b4a39281706f5e4d3c2b162",
+                     "description": "Pins a refresh 404 with error details",
+                     "creation_timestamp": 1700000100000,
+                     "last_updated_timestamp": 1700000100000,
+                     "user_id": "tester@example.com",
+                     "permission_level": "CAN_MANAGE"}}
+      - *read_second
+    state:
+      resources:
+        databricks_mlflow_model.this:
+          attributes:
+            - path: [registered_model_id]
+              equals: 9f8e7d6c5b4a39281706f5e4d3c2b162
+destroy:
+  calls:
+    - *read_second
+    - request:
+        method: DELETE
+        path: /api/2.0/mlflow/registered-models/delete
+        query:
+          name: [error_body_refresh_details_model]
+        headers:
+          X-Databricks-Workspace-Id: "12345"
+        body: null
+      response:
+        status: 200
+        body:
+          json: {}

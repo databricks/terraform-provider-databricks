@@ -33,13 +33,14 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var (
-	// errCallRetriable is the only error that newCallTestRetrier retries.
-	errCallRetriable = errors.New("retriable")
-	errCallFatal     = errors.New("fatal")
-	// errCallLimiter wraps a context error, as a limiter does when ctx ends.
-	errCallLimiter = fmt.Errorf("failed in rate limiter: %w", context.Canceled)
-)
+// callErrs are the errors of the fake attempts and of the test limiter.
+var callErrs = struct{ retriable, fatal, limiter error }{
+	// retriable is the only error that callNewTestRetrier retries.
+	retriable: errors.New("retriable"),
+	fatal:     errors.New("fatal"),
+	// limiter wraps a context error, as a limiter does when ctx ends.
+	limiter: fmt.Errorf("failed in rate limiter: %w", context.Canceled),
+}
 
 // callTestRetrier retries, after delay, the errors that retriable accepts, and
 // keeps the errors that it was asked about.
@@ -54,12 +55,12 @@ func (r *callTestRetrier) IsRetriable(err error) (time.Duration, bool) {
 	return r.delay, r.retriable(err)
 }
 
-func newCallTestRetrier(delay time.Duration) *callTestRetrier {
-	return &callTestRetrier{delay: delay, retriable: func(err error) bool { return err == errCallRetriable }}
+func callNewTestRetrier(delay time.Duration) *callTestRetrier {
+	return &callTestRetrier{delay: delay, retriable: func(err error) bool { return err == callErrs.retriable }}
 }
 
 // callTestLimiter counts its waits. Like the limiter of the classic client, it
-// fails when ctx has ended. Its wait number failOn fails with errCallLimiter.
+// fails when ctx has ended. Its wait number failOn fails with callErrs.limiter.
 type callTestLimiter struct {
 	waits  atomic.Int32
 	failOn int32
@@ -67,7 +68,7 @@ type callTestLimiter struct {
 
 func (l *callTestLimiter) Wait(ctx context.Context) error {
 	if l.waits.Add(1) == l.failOn {
-		return errCallLimiter
+		return callErrs.limiter
 	}
 	if err := ctx.Err(); err != nil {
 		return fmt.Errorf("failed in rate limiter: %w", err)
@@ -149,7 +150,7 @@ func TestCallPassesItsOptionsToTheMethod(t *testing.T) {
 				assert.Equal(t, tt.limiter, resolved.RateLimiter != nil)
 				assert.Zero(t, resolved.Timeout, "Call sets no timeout")
 				if tt.retrier {
-					delay, retry := resolved.Retrier().IsRetriable(errCallFatal)
+					delay, retry := resolved.Retrier().IsRetriable(callErrs.fatal)
 					assert.Equal(t, time.Hour, delay)
 					assert.True(t, retry)
 				}
@@ -186,30 +187,30 @@ func TestCallReturnsTheResultOrTheClassicError(t *testing.T) {
 		{name: "success", method: callScripted(nil), want: "done", waits: 1},
 		{name: "success without retrier, limiter and classic", method: callScripted(nil),
 			noRetrier: true, noLimiter: true, noClassic: true, want: "done"},
-		{name: "failure", method: callScripted(errCallFatal),
-			wantErr: "classic: fatal", wantIs: errCallFatal, asked: 1, waits: 1},
-		{name: "failure without classic", method: callScripted(errCallFatal), noClassic: true,
-			wantErr: "fatal", wantIs: errCallFatal, asked: 1, waits: 1},
-		{name: "failure without retrier, limiter and classic", method: callScripted(errCallFatal),
-			noRetrier: true, noLimiter: true, noClassic: true, wantErr: "fatal", wantIs: errCallFatal},
-		{name: "retriable failure without retrier", method: callScripted(errCallRetriable, nil), noRetrier: true,
-			wantErr: "classic: retriable", wantIs: errCallRetriable, waits: 1},
-		{name: "two retries, then success", method: callScripted(errCallRetriable, errCallRetriable, nil),
+		{name: "failure", method: callScripted(callErrs.fatal),
+			wantErr: "classic: fatal", wantIs: callErrs.fatal, asked: 1, waits: 1},
+		{name: "failure without classic", method: callScripted(callErrs.fatal), noClassic: true,
+			wantErr: "fatal", wantIs: callErrs.fatal, asked: 1, waits: 1},
+		{name: "failure without retrier, limiter and classic", method: callScripted(callErrs.fatal),
+			noRetrier: true, noLimiter: true, noClassic: true, wantErr: "fatal", wantIs: callErrs.fatal},
+		{name: "retriable failure without retrier", method: callScripted(callErrs.retriable, nil), noRetrier: true,
+			wantErr: "classic: retriable", wantIs: callErrs.retriable, waits: 1},
+		{name: "two retries, then success", method: callScripted(callErrs.retriable, callErrs.retriable, nil),
 			want: "done", asked: 2, waits: 3},
-		{name: "retry, then failure", method: callScripted(errCallRetriable, errCallFatal),
-			wantErr: "classic: fatal", wantIs: errCallFatal, asked: 2, waits: 2},
+		{name: "retry, then failure", method: callScripted(callErrs.retriable, callErrs.fatal),
+			wantErr: "classic: fatal", wantIs: callErrs.fatal, asked: 2, waits: 2},
 		{name: "limiter fails before the first attempt", method: callScripted(nil), limiterFailsOn: 1,
-			wantErr: "classic: failed in rate limiter: context canceled", wantIs: errCallLimiter, waits: 1},
+			wantErr: "classic: failed in rate limiter: context canceled", wantIs: callErrs.limiter, waits: 1},
 		// The wait to retry is over, so the context error of the limiter stays.
-		{name: "limiter fails after the wait to retry", method: callScripted(errCallRetriable, nil), limiterFailsOn: 2,
-			wantErr: "classic: failed in rate limiter: context canceled", wantIs: errCallLimiter, asked: 1, waits: 2},
+		{name: "limiter fails after the wait to retry", method: callScripted(callErrs.retriable, nil), limiterFailsOn: 2,
+			wantErr: "classic: failed in rate limiter: context canceled", wantIs: callErrs.limiter, asked: 1, waits: 2},
 		// Only a context error is replaced, and only while the SDK waits to retry.
 		{name: "method fails by itself after a retried attempt", noLimiter: true,
 			method: func(ctx context.Context, opts ...call.Option) (string, error) {
-				_, _ = callScripted(errCallRetriable, nil)(ctx, opts...)
-				return "partial", errCallFatal
+				_, _ = callScripted(callErrs.retriable, nil)(ctx, opts...)
+				return "partial", callErrs.fatal
 			},
-			wantErr: "classic: fatal", wantIs: errCallFatal, asked: 1},
+			wantErr: "classic: fatal", wantIs: callErrs.fatal, asked: 1},
 		{name: "method wraps the context error of an attempt",
 			method: func(ctx context.Context, opts ...call.Option) (string, error) {
 				_, err := callScripted(context.Canceled)(ctx, opts...)
@@ -219,7 +220,7 @@ func TestCallReturnsTheResultOrTheClassicError(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			givenRetrier := newCallTestRetrier(time.Millisecond)
+			givenRetrier := callNewTestRetrier(time.Millisecond)
 			givenLimiter := &callTestLimiter{failOn: tt.limiterFailsOn}
 			retrier := callGiven[ops.Retrier](!tt.noRetrier, givenRetrier)
 			limiter := callGiven[ops.Limiter](!tt.noLimiter, givenLimiter)
@@ -247,7 +248,7 @@ func TestCallReturnsTheResultOrTheClassicError(t *testing.T) {
 // that the context ends at an exact moment of the call. The retrier waits a
 // minute before a retry.
 func TestCallWhenTheContextEnds(t *testing.T) {
-	fails := func(context.Context, int) (string, error) { return "partial", errCallRetriable }
+	fails := func(context.Context, int) (string, error) { return "partial", callErrs.retriable }
 	hangs := func(ctx context.Context, _ int) (string, error) {
 		<-ctx.Done()
 		return "partial", &url.Error{Op: "Get", URL: "https://fake.test/model", Err: ctx.Err()}
@@ -310,7 +311,7 @@ func TestCallWhenTheContextEnds(t *testing.T) {
 		for _, end := range ends {
 			t.Run(tt.name+", "+end.name, func(t *testing.T) {
 				synctest.Test(t, func(t *testing.T) {
-					givenRetrier := newCallTestRetrier(time.Minute)
+					givenRetrier := callNewTestRetrier(time.Minute)
 					limiter := callGiven[ops.Limiter](!tt.noLimiter, &callTestLimiter{})
 					ctx, cancel := end.ctx(t.Context(), tt.endsAfter)
 					defer cancel()
@@ -334,9 +335,9 @@ func TestCallWhenTheContextEnds(t *testing.T) {
 // the SDK without ending the context of the caller.
 func TestCallWhenTheTimeoutOfTheMethodPasses(t *testing.T) {
 	synctest.Test(t, func(t *testing.T) {
-		fails := func(context.Context, int) (string, error) { return "partial", errCallRetriable }
+		fails := func(context.Context, int) (string, error) { return "partial", callErrs.retriable }
 		method := callFakeMethod(fails, ops.WithTimeout(90*time.Second))
-		givenRetrier := newCallTestRetrier(time.Minute)
+		givenRetrier := callNewTestRetrier(time.Minute)
 		start := time.Now()
 
 		got, err := Call(t.Context(), method, givenRetrier, &callTestLimiter{}, callTestClassic)
@@ -353,8 +354,8 @@ func TestCallKeepsNothingBetweenCalls(t *testing.T) {
 	var wg sync.WaitGroup
 	for range 32 {
 		wg.Go(func() {
-			got, err := Call(t.Context(), callScripted(errCallRetriable, nil),
-				newCallTestRetrier(time.Millisecond), limiter, callTestClassic)
+			got, err := Call(t.Context(), callScripted(callErrs.retriable, nil),
+				callNewTestRetrier(time.Millisecond), limiter, callTestClassic)
 			assert.NoError(t, err)
 			assert.Equal(t, "done", got)
 		})
@@ -502,7 +503,7 @@ type callOutcome struct {
 	missing, canceled, timedOut bool
 }
 
-func newCallOutcome(requests []string, model string, err error, host string) callOutcome {
+func callNewOutcome(requests []string, model string, err error, host string) callOutcome {
 	got := callOutcome{requests: requests, model: model,
 		canceled: errors.Is(err, context.Canceled), timedOut: errors.Is(err, context.DeadlineExceeded)}
 	if err != nil {
@@ -582,7 +583,7 @@ func TestCallReturnsWhatTheClassicClientReturns(t *testing.T) {
 				ctx := &callEndableContext{Context: traced, done: done, err: tt.endsWith}
 				api.nextCall(onRequest)
 				model, err := get(ctx, t, server.URL)
-				return newCallOutcome(api.nextCall(nil), model, err, server.URL)
+				return callNewOutcome(api.nextCall(nil), model, err, server.URL)
 			}
 
 			classic := run(callClassicGet)

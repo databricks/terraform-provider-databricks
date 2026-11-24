@@ -1,6 +1,6 @@
 # Runs volume_schema/testdata/validation.yaml with databricks_volume on sdk-go
-# uc/volumes/v1 in every step, and expects the same behavior. Its fixtures match the
-# requests of both paths unchanged. The original's description:
+# uc/volumes/v1 in every step, and expects the same requests and behavior. The original's
+# description:
 #
 # Pins plan-time validation: a volume_type other than MANAGED or EXTERNAL fails before
 # any API call.

@@ -7,9 +7,8 @@
 # that isn't a number fails with the existing client's parse error and request log, and
 # the POST or PATCH is sent once even though the error contains the transient error code
 # REQUEST_LIMIT_EXCEEDED. A failed create leaves nothing in state, and a failed update
-# keeps the volume under its ID, so the next plan shows the update again. The sdk-go
-# requests carry no Accept header, which an empty header expectation pins, and the PATCH
-# bodies also carry full_name_arg, the full name in their path. API responses are inferred
+# keeps the volume under its ID, so the next plan shows the update again. The requests are
+# the existing client's, including Accept: application/json. API responses are inferred
 # from the Unity Catalog API contract, not recorded; the answer to the empty-name GET is
 # the workspace's usual reply to an unknown route.
 version: 1
@@ -39,7 +38,7 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
+            Accept: application/json
           body:
             json: {"catalog_name": "main", "schema_name": "replay",
                    "name": "decode_volume", "volume_type": "MANAGED", "comment": "first"}
@@ -52,7 +51,7 @@ steps:
           path: /api/2.1/unity-catalog/volumes/
           headers:
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
+            Accept: application/json
           body: null
         response:
           status: 404
@@ -116,7 +115,7 @@ steps:
           path: /api/2.1/unity-catalog/volumes/main.replay.decode_volume
           headers:
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
+            Accept: application/json
           body: null
         response:
           status: 200
@@ -149,9 +148,9 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
+            Accept: application/json
           body:
-            json: {"full_name_arg": "main.replay.decode_volume", "comment": "second"}
+            json: {"comment": "second"}
         response:
           status: 200
           body: null

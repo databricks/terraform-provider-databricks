@@ -2,13 +2,14 @@ package common
 
 import (
 	"context"
+	"fmt"
 	"net/http"
+	"net/url"
 	"sync"
 
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/databricks-sdk-go/httpclient"
-	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/sdk-go/core/ops"
 	"github.com/databricks/sdk-go/options/call"
 	"github.com/databricks/sdk-go/options/client"
@@ -54,10 +55,10 @@ func withSdkGo[F ~resourceOperation](f F) F {
 	}
 }
 
-// SdkGoVolumes is a github.com/databricks/sdk-go/uc/volumes/v1 client that sends
-// requests the way the workspace client it was built from does.
+// SdkGoVolumes calls github.com/databricks/sdk-go/uc/volumes/v1. Each call sends the
+// request that the classic workspace client it was built from sends.
 type SdkGoVolumes struct {
-	*sdkvolumes.Client
+	client *sdkvolumes.Client
 	bridge *sdkGoBridge
 }
 
@@ -79,7 +80,82 @@ func SdkGoVolumesClient(ctx context.Context,
 	if err != nil {
 		return nil, err
 	}
-	return &SdkGoVolumes{Client: vc, bridge: b}, nil
+	return &SdkGoVolumes{client: vc, bridge: b}, nil
+}
+
+// ReadByName reads the volume fullName with the request that the classic
+// Volumes.ReadByName sends for it, so "#", "?" and "%" in the name act as they do there.
+func (vc *SdkGoVolumes) ReadByName(ctx context.Context,
+	fullName string) (*sdkvolumes.VolumeInfo, error) {
+	path := classicVolumePath(fullName)
+	// The classic client adds an empty query to GETs.
+	classic := classicVolumeRequest(http.MethodGet, path, path+"?")
+	classic.response = classicVolumeInfo
+	get := func(ctx context.Context,
+		opts ...call.Option) (*sdkvolumes.VolumeInfo, error) {
+		req := sdkvolumes.GetVolumeRequest{FullNameArg: &fullName}
+		return vc.client.GetVolume(ctx, req, opts...)
+	}
+	return callSdkGo(ctx, vc.bridge, classic, get)
+}
+
+// Create creates a volume with the request that the classic Volumes.Create sends.
+func (vc *SdkGoVolumes) Create(ctx context.Context,
+	req sdkvolumes.CreateVolumeRequest) (*sdkvolumes.VolumeInfo, error) {
+	path := "/api/2.1/unity-catalog/volumes"
+	classic := classicVolumeRequest(http.MethodPost, path, path)
+	classic.response = classicVolumeInfo
+	classic.body = func(body []byte) ([]byte, error) {
+		return classicVolumeBody(body)
+	}
+	create := func(ctx context.Context,
+		opts ...call.Option) (*sdkvolumes.VolumeInfo, error) {
+		return vc.client.CreateVolume(ctx, req, opts...)
+	}
+	return callSdkGo(ctx, vc.bridge, classic, create)
+}
+
+// Update updates the volume req.FullNameArg with the request that the classic
+// Volumes.Update sends for it. The classic body has no full_name_arg, which sdk-go
+// serializes from the path.
+func (vc *SdkGoVolumes) Update(ctx context.Context,
+	req sdkvolumes.UpdateVolumeRequest) (*sdkvolumes.VolumeInfo, error) {
+	var fullName string
+	if req.FullNameArg != nil {
+		fullName = *req.FullNameArg
+	}
+	path := classicVolumePath(fullName)
+	classic := classicVolumeRequest(http.MethodPatch, path, path)
+	classic.response = classicVolumeInfo
+	classic.body = func(body []byte) ([]byte, error) {
+		return classicVolumeBody(body, "full_name_arg")
+	}
+	update := func(ctx context.Context,
+		opts ...call.Option) (*sdkvolumes.VolumeInfo, error) {
+		return vc.client.UpdateVolume(ctx, req, opts...)
+	}
+	return callSdkGo(ctx, vc.bridge, classic, update)
+}
+
+// DeleteByName deletes the volume fullName with the request that the classic
+// Volumes.DeleteByName sends for it.
+func (vc *SdkGoVolumes) DeleteByName(ctx context.Context, fullName string) error {
+	path := classicVolumePath(fullName)
+	// The classic client adds an empty query to DELETEs.
+	classic := classicVolumeRequest(http.MethodDelete, path, path+"?")
+	del := func(ctx context.Context,
+		opts ...call.Option) (*sdkvolumes.DeleteVolumeResponse, error) {
+		req := sdkvolumes.DeleteVolumeRequest{FullNameArg: &fullName}
+		return vc.client.DeleteVolume(ctx, req, opts...)
+	}
+	_, err := callSdkGo(ctx, vc.bridge, classic, del)
+	return err
+}
+
+// classicVolumePath is the path of a classic Volumes call for fullName, which the classic
+// client formats unescaped.
+func classicVolumePath(fullName string) string {
+	return "/api/2.1/unity-catalog/volumes/" + fullName
 }
 
 // clientOptions returns the options that make an sdk-go client send requests to cfg's
@@ -96,26 +172,21 @@ func (b *sdkGoBridge) clientOptions(cfg *config.Config) []client.Option {
 	}
 }
 
-// CallSdkGoVolumes runs one method of vc with the classic client's retries, rate limit
-// and response decoding, and returns the error the classic client would return for the
-// same response.
-func CallSdkGoVolumes[T any](ctx context.Context, vc *SdkGoVolumes,
+// callSdkGo runs one sdk-go method with the classic client's retries and rate limit.
+// Every attempt is sent as classic, and a failure returns the classic client's error.
+func callSdkGo[T any](ctx context.Context, b *sdkGoBridge, classic classicRequest,
 	method func(context.Context, ...call.Option) (T, error)) (T, error) {
-	return callSdkGo(ctx, vc.bridge, classicVolumesResponse[T](), method)
-}
-
-// classicVolumesResponse returns a constructor of the classic type that the classic
-// client decodes a T response into, or nil if it decodes none, as for a delete.
-func classicVolumesResponse[T any]() func() any {
-	if _, ok := any(*new(T)).(*sdkvolumes.VolumeInfo); ok {
-		return func() any { return &catalog.VolumeInfo{} }
+	var zero T
+	classicURL, err := url.Parse(classic.url)
+	if err != nil {
+		// Like the classic client, the call fails after the rate limiter, without
+		// authenticating, sending or retrying.
+		if err := (classicLimiter{b.limiter}).Wait(ctx); err != nil {
+			return zero, err
+		}
+		return zero, fmt.Errorf("failed creating new request: %w", err)
 	}
-	return nil
-}
-
-func callSdkGo[T any](ctx context.Context, b *sdkGoBridge, classicResponse func() any,
-	method func(context.Context, ...call.Option) (T, error)) (T, error) {
-	attempt := &sdkGoAttempt{classicResponse: classicResponse}
+	attempt := &sdkGoAttempt{classic: classic, classicURL: classicURL}
 	ctx = context.WithValue(ctx, sdkGoAttemptKey{}, attempt)
 	retrier := b.newRetrier(ctx, attempt)
 	result, err := method(ctx,
@@ -125,7 +196,6 @@ func callSdkGo[T any](ctx context.Context, b *sdkGoBridge, classicResponse func(
 	if err == nil {
 		return result, nil
 	}
-	var zero T
 	// Like the classic client, a cancellation during backoff returns the last error.
 	cancelled := err == context.Canceled || err == context.DeadlineExceeded
 	if retrier.lastErr != nil && cancelled {
@@ -136,14 +206,15 @@ func callSdkGo[T any](ctx context.Context, b *sdkGoBridge, classicResponse func(
 
 type sdkGoAttemptKey struct{}
 
-// sdkGoAttempt carries state between the stages of one call: the last request sent and
-// its response, which classic error parsing needs, the timeout of the attempt being
-// sent, and the classic type that successful responses are decoded into.
+// sdkGoAttempt carries state between the stages of one call: the classic request to
+// send, the last request sent and its response, which classic error parsing needs, and
+// the timeout of the attempt being sent.
 type sdkGoAttempt struct {
-	request         *http.Request
-	response        *http.Response
-	timeout         *attemptTimeout
-	classicResponse func() any
+	classic    classicRequest
+	classicURL *url.URL
+	request    *http.Request
+	response   *http.Response
+	timeout    *attemptTimeout
 }
 
 // succeeded reports whether the last attempt got a successful response.

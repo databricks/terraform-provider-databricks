@@ -23,6 +23,13 @@ import (
 // the messages stay the same. attempt holds the last request and response, if any.
 func (b *sdkGoBridge) classicError(ctx context.Context, err error,
 	attempt *sdkGoAttempt) error {
+	// sdk-go's http.Client wraps the url.Error of the request sdkGoTransport sent, which
+	// is the one the classic client returns.
+	if outer, ok := errors.AsType[*url.Error](err); ok {
+		if inner, ok := outer.Err.(*url.Error); ok {
+			return inner
+		}
+	}
 	// http.Client wraps transport failures in a url.Error, which the classic client
 	// doesn't add to these.
 	if visitorErr, ok := errors.AsType[*visitorError](err); ok {

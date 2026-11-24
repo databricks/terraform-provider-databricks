@@ -25,9 +25,9 @@ import (
 const classicDefaultDebugTruncateBytes = 96
 
 // sdkGoTransport sends each sdk-go attempt the way httpclient.ApiClient sends one: it
-// runs the request visitors under the attempt's timeout, follows redirects, reads the
-// response, rejects successful responses the classic error mapper rejects, and writes
-// the classic debug log.
+// sends the classic request, runs the request visitors under the attempt's timeout,
+// follows redirects, reads the response, rejects successful responses the classic error
+// mapper rejects, and writes the classic debug log.
 type sdkGoTransport struct {
 	// client follows redirects over the classic transport, as the classic client does.
 	client             *http.Client
@@ -55,31 +55,34 @@ func newSdkGoTransport(cfg httpclient.ClientConfig, base http.RoundTripper,
 }
 
 func (t *sdkGoTransport) RoundTrip(req *http.Request) (*http.Response, error) {
-	attempt, _ := req.Context().Value(sdkGoAttemptKey{}).(*sdkGoAttempt)
-	var timeout *attemptTimeout
-	if attempt != nil {
-		timeout = attempt.takeTimeout()
+	attempt, ok := req.Context().Value(sdkGoAttemptKey{}).(*sdkGoAttempt)
+	if !ok {
+		return nil, errors.New("sdk-go request sent without callSdkGo")
 	}
+	timeout := attempt.takeTimeout()
 	if timeout == nil {
 		timeout = startAttemptTimeout(req.Context(), t.httpTimeout)
 	}
 	// Like the classic client, the visitors already run under the attempt's timeout.
 	r := req.Clone(timeout.ctx)
+	if err := attempt.useClassicRequest(r); err != nil {
+		timeout.end()
+		return nil, err
+	}
 	for _, visit := range t.visitors {
 		if err := visit(r); err != nil {
 			timeout.end()
 			return nil, &visitorError{err}
 		}
 	}
+	attempt.setClassicHeaders(r)
 	traceparent.AddTraceparent(r)
 	r.Header.Set("User-Agent", sdkGoUserAgent(r.Context(), req.Header.Get("User-Agent")))
 	requestBody := debugRequestBody(r)
 	resp, responseBody, err := t.exchange(req.Context(), r, timeout)
-	if attempt != nil {
-		attempt.request, attempt.response = r, nil
-		if resp != nil {
-			attempt.request, attempt.response = resp.Request, resp
-		}
+	attempt.request, attempt.response = r, nil
+	if resp != nil {
+		attempt.request, attempt.response = resp.Request, resp
 	}
 	if err == nil && resp.StatusCode < http.StatusBadRequest {
 		// A Private Link redirect ends in a successful login page.
@@ -105,10 +108,10 @@ func (t *sdkGoTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 // that the response sets to the number 123.
 func (a *sdkGoAttempt) decodeLikeClassicClient(resp *http.Response,
 	requestBody, responseBody []byte) error {
-	if a == nil || a.classicResponse == nil || resp.StatusCode >= http.StatusBadRequest {
+	if a.classic.response == nil || resp.StatusCode >= http.StatusBadRequest {
 		return nil
 	}
-	response := a.classicResponse()
+	response := a.classic.response()
 	// Like the classic client, an empty body leaves the response empty.
 	if len(responseBody) > 0 {
 		if err := json.Unmarshal(responseBody, &response); err != nil {
@@ -151,8 +154,8 @@ func classicDecodeError(err error, resp *http.Response,
 }
 
 // exchange sends r, whose context ends with timeout, follows redirects and reads the
-// response body. A timed out attempt gets the classic client's message unless parent
-// ended first.
+// response body. Like the classic client, it returns the url.Error of the request it
+// sent, with the timeout message if the attempt timed out before parent ended.
 func (t *sdkGoTransport) exchange(parent context.Context, r *http.Request,
 	timeout *attemptTimeout) (*http.Response, []byte, error) {
 	defer timeout.end()
@@ -161,13 +164,10 @@ func (t *sdkGoTransport) exchange(parent context.Context, r *http.Request,
 	}
 	resp, err := t.client.Do(r)
 	if err != nil {
-		if timeout.timer.expired() && parent.Err() == nil {
-			return nil, nil, fmt.Errorf("request timed out after %s of inactivity",
+		urlErr, ok := err.(*url.Error)
+		if ok && timeout.timer.expired() && parent.Err() == nil {
+			urlErr.Err = fmt.Errorf("request timed out after %s of inactivity",
 				t.httpTimeout)
-		}
-		// sdk-go's http.Client adds the url.Error that the classic client returns.
-		if urlErr, ok := errors.AsType[*url.Error](err); ok {
-			err = urlErr.Err
 		}
 		return nil, nil, err
 	}

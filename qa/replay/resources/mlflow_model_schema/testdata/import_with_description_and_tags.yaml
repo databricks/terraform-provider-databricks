@@ -2,8 +2,8 @@
 # name, the description, both tags in the API's order, registered_model_id and
 # provider_config.workspace_id to state. A configuration that sets the same description
 # and tags then plans no change, and one that sets only the name plans an in-place
-# update that removes them, which is what issues #1225 and #3477 report. API responses
-# are inferred from the MLflow Model Registry API contract, not recorded.
+# update that removes them, the plan that issue #1225 reports. API responses are
+# inferred from the MLflow Model Registry API contract, not recorded.
 version: 1
 enforce_call_order: true
 host_metadata:

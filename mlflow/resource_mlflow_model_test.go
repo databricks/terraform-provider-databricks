@@ -1,48 +1,32 @@
+// Request and response bodies in this file are literal wire JSON, so that the tests pin
+// the bytes on the wire whichever client the resource uses. The responses are synthetic:
+// inferred from the MLflow Model Registry API, not recorded. Where a fixture departs from
+// that API, a comment on it says how.
+
 package mlflow
 
 import (
+	"encoding/json"
 	"fmt"
 	"testing"
 
-	"github.com/databricks/databricks-sdk-go/service/ml"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 )
-
-func m() ml.Model {
-	return ml.Model{
-		Name: "xyz",
-		Tags: []ml.ModelTag{
-			{Key: "key1", Value: "value1"},
-			{Key: "key2", Value: "value2"},
-		},
-	}
-}
 
 func TestModelCreateMVP(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
-				Method:   "POST",
-				Resource: "/api/2.0/mlflow/registered-models/create",
-				ExpectedRequest: ml.CreateModelRequest{
-					Name: "xyz",
-				},
-				Response: ml.CreateModelResponse{
-					RegisteredModel: &ml.Model{
-						Name: "xyz",
-					},
-				},
+				Method:          "POST",
+				Resource:        "/api/2.0/mlflow/registered-models/create",
+				ExpectedRequest: json.RawMessage(`{"name": "xyz"}`),
+				Response:        `{"registered_model": {"name": "xyz"}}`,
 			},
 			{
-				Method:   "GET",
-				Resource: "/api/2.0/mlflow/databricks/registered-models/get?name=xyz",
-				Response: ml.GetModelResponse{
-					RegisteredModelDatabricks: &ml.ModelDatabricks{
-						Name: "xyz",
-						Id:   "123",
-					},
-				},
+				Method:       "GET",
+				Resource:     "/api/2.0/mlflow/databricks/registered-models/get?name=xyz",
+				Response:     `{"registered_model_databricks": {"name": "xyz", "id": "123"}}`,
 				ReuseRequest: true,
 			},
 		},
@@ -55,48 +39,47 @@ func TestModelCreateMVP(t *testing.T) {
 }
 
 func TestModelCreateWithTags(t *testing.T) {
-	model := m()
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/mlflow/registered-models/create",
-				ExpectedRequest: ml.CreateModelRequest{
-					Name: "xyz",
-					Tags: []ml.ModelTag{
-						{Key: "key1", Value: "value1"},
-						{Key: "key2", Value: "value2"},
-					},
-				},
-				Response: ml.CreateModelResponse{
-					RegisteredModel: &model,
-				},
+				ExpectedRequest: json.RawMessage(`{
+					"name": "xyz",
+					"tags": [
+						{"key": "key1", "value": "value1"},
+						{"key": "key2", "value": "value2"}
+					]
+				}`),
+				Response: `{"registered_model": {
+					"name": "xyz",
+					"tags": [
+						{"key": "key1", "value": "value1"},
+						{"key": "key2", "value": "value2"}
+					]
+				}}`,
 			},
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/mlflow/databricks/registered-models/get?name=xyz",
-				Response: ml.GetModelResponse{
-					RegisteredModelDatabricks: &ml.ModelDatabricks{
-						Name: "xyz",
-						Tags: []ml.ModelTag{
-							{Key: "key1", Value: "value1"},
-							{Key: "key2", Value: "value2"},
-						},
-					},
-				},
+				Response: `{"registered_model_databricks": {
+					"name": "xyz",
+					"tags": [
+						{"key": "key1", "value": "value1"},
+						{"key": "key2", "value": "value2"}
+					]
+				}}`,
 			},
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/mlflow/databricks/registered-models/get?name=xyz",
-				Response: ml.GetModelResponse{
-					RegisteredModelDatabricks: &ml.ModelDatabricks{
-						Name: "xyz",
-						Tags: []ml.ModelTag{
-							{Key: "key1", Value: "value1"},
-							{Key: "key2", Value: "value2"},
-						},
-					},
-				},
+				Response: `{"registered_model_databricks": {
+					"name": "xyz",
+					"tags": [
+						{"key": "key1", "value": "value1"},
+						{"key": "key2", "value": "value2"}
+					]
+				}}`,
 			},
 		},
 		Resource: ResourceMlflowModel(),
@@ -122,22 +105,26 @@ func TestModelCreateWithTags(t *testing.T) {
 }
 
 func TestModelCreatePostError(t *testing.T) {
-	model := m()
 	_, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/mlflow/registered-models/create",
-				ExpectedRequest: ml.CreateModelRequest{
-					Name: "xyz",
-					Tags: []ml.ModelTag{
-						{Key: "key1", Value: "value1"},
-						{Key: "key2", Value: "value2"},
-					},
-				},
-				Response: ml.CreateModelResponse{
-					RegisteredModel: &model,
-				},
+				ExpectedRequest: json.RawMessage(`{
+					"name": "xyz",
+					"tags": [
+						{"key": "key1", "value": "value1"},
+						{"key": "key2", "value": "value2"}
+					]
+				}`),
+				// A 400 with a success body, which the API doesn't send.
+				Response: `{"registered_model": {
+					"name": "xyz",
+					"tags": [
+						{"key": "key1", "value": "value1"},
+						{"key": "key2", "value": "value2"}
+					]
+				}}`,
 				Status: 400,
 			},
 		},
@@ -157,6 +144,8 @@ func TestModelCreatePostError(t *testing.T) {
 	}.Apply(t)
 
 	assert.Error(t, err)
+	// The body has neither error_code nor message, so the error text is empty.
+	assert.EqualError(t, err, "")
 }
 
 func TestModelRead(t *testing.T) {
@@ -165,11 +154,7 @@ func TestModelRead(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/mlflow/databricks/registered-models/get?name=xyz",
-				Response: ml.GetModelResponse{
-					RegisteredModelDatabricks: &ml.ModelDatabricks{
-						Name: "xyz",
-					},
-				},
+				Response: `{"registered_model_databricks": {"name": "xyz"}}`,
 			},
 		},
 		Resource: ResourceMlflowModel(),
@@ -187,12 +172,9 @@ func TestModelReadGetError(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/mlflow/databricks/registered-models/get?name=xyz",
-				Response: ml.GetModelResponse{
-					RegisteredModelDatabricks: &ml.ModelDatabricks{
-						Name: "xyz",
-					},
-				},
-				Status: 400,
+				// A 400 with a success body, which the API doesn't send.
+				Response: `{"registered_model_databricks": {"name": "xyz"}}`,
+				Status:   400,
 			},
 		},
 		Resource: ResourceMlflowModel(),
@@ -201,28 +183,36 @@ func TestModelReadGetError(t *testing.T) {
 	}.Apply(t)
 
 	assert.Error(t, err)
+	// The body has neither error_code nor message, so the error text is empty.
+	assert.EqualError(t, err, "")
 }
 
 func TestModelUpdate(t *testing.T) {
-	pm := m()
-	pm.Description = "thedescription"
 	newDescription := "updatedddescription"
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "PATCH",
 				Resource: "/api/2.0/mlflow/registered-models/update",
-				Response: pm,
+				ExpectedRequest: json.RawMessage(
+					`{"name": "xyz", "description": "updatedddescription"}`),
+				// A bare model, where the API wraps it in registered_model. The provider
+				// doesn't read the response.
+				Response: `{
+					"name": "xyz",
+					"description": "thedescription",
+					"tags": [
+						{"key": "key1", "value": "value1"},
+						{"key": "key2", "value": "value2"}
+					]
+				}`,
 			},
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/mlflow/databricks/registered-models/get?name=xyz",
-				Response: ml.GetModelResponse{
-					RegisteredModelDatabricks: &ml.ModelDatabricks{
-						Name:        "xyz",
-						Description: newDescription,
-					},
-				},
+				Response: `{"registered_model_databricks": {
+					"name": "xyz", "description": "updatedddescription"
+				}}`,
 			},
 		},
 		Resource:    ResourceMlflowModel(),
@@ -244,21 +234,23 @@ func TestModelUpdate(t *testing.T) {
 }
 
 func TestModelUpdatePatchError(t *testing.T) {
-	pm := m()
-	pm.Description = "thedescription"
-	gm := m()
-	gm.Description = "updateddescription"
 	_, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "PATCH",
 				Resource: "/api/2.0/mlflow/registered-models/update",
-				ExpectedRequest: ml.UpdateModelRequest{
-					Description: "updateddescription",
-					Name:        "xyz",
-				},
-				Response: gm,
-				Status:   400,
+				ExpectedRequest: json.RawMessage(
+					`{"name": "xyz", "description": "updateddescription"}`),
+				// A 400 with a bare model as its body, which the API doesn't send.
+				Response: `{
+					"name": "xyz",
+					"description": "updateddescription",
+					"tags": [
+						{"key": "key1", "value": "value1"},
+						{"key": "key2", "value": "value2"}
+					]
+				}`,
+				Status: 400,
 			},
 		},
 		Resource:    ResourceMlflowModel(),
@@ -275,6 +267,8 @@ func TestModelUpdatePatchError(t *testing.T) {
 	}.Apply(t)
 
 	assert.Error(t, err)
+	// The body has neither error_code nor message, so the error text is empty.
+	assert.EqualError(t, err, "")
 }
 func TestModelDelete(t *testing.T) {
 	d, err := qa.ResourceFixture{
@@ -316,4 +310,8 @@ func TestModelDeleteError(t *testing.T) {
 	}.Apply(t)
 
 	assert.Error(t, err)
+}
+
+func TestMlflowModelCornerCases(t *testing.T) {
+	qa.ResourceCornerCases(t, ResourceMlflowModel())
 }

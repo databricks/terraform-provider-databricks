@@ -24,13 +24,13 @@ import (
 )
 
 type AccessControlRequest_SdkV2 struct {
-	// name of the group
+	// Display name of the group.
 	GroupName types.String `tfsdk:"group_name"`
-
+	// Permission level to grant to the principal.
 	PermissionLevel types.String `tfsdk:"permission_level"`
-	// application ID of a service principal
+	// Application ID of the service principal.
 	ServicePrincipalName types.String `tfsdk:"service_principal_name"`
-	// name of the user
+	// Username of the user, which is the user's email address.
 	UserName types.String `tfsdk:"user_name"`
 }
 
@@ -87,15 +87,16 @@ func (m AccessControlRequest_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type AccessControlResponse_SdkV2 struct {
-	// All permissions.
+	// Permission levels the principal holds on the object, both granted
+	// directly and inherited.
 	AllPermissions types.List `tfsdk:"all_permissions"`
 	// Display name of the user or service principal.
 	DisplayName types.String `tfsdk:"display_name"`
-	// name of the group
+	// Display name of the group.
 	GroupName types.String `tfsdk:"group_name"`
-	// Name of the service principal.
+	// Application ID of the service principal.
 	ServicePrincipalName types.String `tfsdk:"service_principal_name"`
-	// name of the user
+	// Username of the user, which is the user's email address.
 	UserName types.String `tfsdk:"user_name"`
 }
 
@@ -221,20 +222,29 @@ func (m *AccessControlResponse_SdkV2) SetAllPermissions(ctx context.Context, v [
 	m.AllPermissions = types.ListValueMust(t, vs)
 }
 
+// Represents a group of users, service principals and other groups in the
+// Databricks account. Members inherit the permissions that are granted to the
+// group.
 type AccountGroup_SdkV2 struct {
-	// Databricks account ID
+	// Identifies the Databricks account that the group belongs to.
 	AccountId types.String `tfsdk:"account_id"`
-	// String that represents a human-readable group name
+	// Identifies the group by a human-readable name. The name must be unique
+	// within the account and must not exceed 255 characters.
 	DisplayName types.String `tfsdk:"display_name"`
-	// external_id should be unique for identifying groups
+	// Identifies the group in an external identity provider. Identity providers
+	// use it to match the groups they manage to Databricks groups, so it should
+	// be unique among the groups in the account.
 	ExternalId types.String `tfsdk:"external_id"`
-	// Databricks group ID
+	// Identifies the group within Databricks. Databricks generates the ID when
+	// the group is created.
 	Id types.String `tfsdk:"id"`
-
+	// Lists the members of the group. Each entry identifies a user, service
+	// principal or group in the account by its ID in the value sub-attribute.
 	Members types.List `tfsdk:"members"`
 	// Container for the group identifier. Workspace local versus account.
 	Meta types.List `tfsdk:"meta"`
-	// Indicates if the group has the admin role.
+	// Lists the account roles that are assigned to the group. The only
+	// supported role value is `account_admin`.
 	Roles types.List `tfsdk:"roles"`
 }
 
@@ -479,20 +489,31 @@ func (m *AccountGroup_SdkV2) SetRoles(ctx context.Context, v []ComplexValue_SdkV
 	m.Roles = types.ListValueMust(t, vs)
 }
 
+// Represents a service principal in the Databricks account. Service principals
+// are identities for jobs, automated tools and systems such as scripts, apps
+// and CI/CD platforms.
 type AccountServicePrincipal_SdkV2 struct {
-	// Databricks account ID
+	// Identifies the Databricks account that the service principal belongs to.
 	AccountId types.String `tfsdk:"account_id"`
-	// If this user is active
+	// Indicates whether the service principal is active. A deactivated service
+	// principal cannot authenticate or access Databricks APIs, but it keeps its
+	// permissions.
 	Active types.Bool `tfsdk:"active"`
-	// UUID relating to the service principal
+	// Identifies the service principal when it authenticates to Databricks.
+	// Databricks generates the application ID, except on Azure, where it can be
+	// the application ID of a Microsoft Entra ID service principal.
 	ApplicationId types.String `tfsdk:"application_id"`
-	// String that represents a concatenation of given and family names.
+	// Identifies the service principal by a human-readable name.
 	DisplayName types.String `tfsdk:"display_name"`
-
+	// Identifies the service principal in an external identity provider.
+	// Identity providers use it to match the service principals they manage to
+	// Databricks service principals.
 	ExternalId types.String `tfsdk:"external_id"`
-	// Databricks service principal ID.
+	// Identifies the service principal within Databricks. Databricks generates
+	// the ID when the service principal is created.
 	Id types.String `tfsdk:"id"`
-	// Indicates if the group has the admin role.
+	// Lists the account roles that are assigned to the service principal. The
+	// only supported role value is `account_admin`.
 	Roles types.List `tfsdk:"roles"`
 }
 
@@ -1161,17 +1182,20 @@ func (m ConsistencyToken_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type CreateAccountGroupRequest_SdkV2 struct {
-	// String that represents a human-readable group name
+	// Sets the human-readable name of the group. The name must be unique within
+	// the account and must not exceed 255 characters.
 	DisplayName types.String `tfsdk:"display_name"`
-
+	// Sets the identifier of the group in an external identity provider.
 	ExternalId types.String `tfsdk:"external_id"`
-	// Databricks group ID
+	// Identifies the group within Databricks.
 	Id types.String `tfsdk:"id"`
-
+	// Lists the members of the group. Each entry identifies a user, service
+	// principal or group in the account by its ID in the value sub-attribute.
 	Members types.List `tfsdk:"members"`
 	// Container for the group identifier. Workspace local versus account.
 	Meta types.List `tfsdk:"meta"`
-	// Indicates if the group has the admin role.
+	// Lists the account roles that are assigned to the group. The only
+	// supported role value is `account_admin`.
 	Roles types.List `tfsdk:"roles"`
 }
 
@@ -1415,17 +1439,24 @@ func (m *CreateAccountGroupRequest_SdkV2) SetRoles(ctx context.Context, v []Comp
 }
 
 type CreateAccountServicePrincipalRequest_SdkV2 struct {
-	// If this user is active
+	// Indicates whether the service principal is active. A deactivated service
+	// principal cannot authenticate or access Databricks APIs, but it keeps its
+	// permissions.
 	Active types.Bool `tfsdk:"active"`
-	// UUID relating to the service principal
+	// Sets the application ID of a Microsoft Entra ID service principal. Only
+	// Azure accepts this field. On AWS and GCP, Databricks generates the
+	// application ID and rejects requests that set it.
 	ApplicationId types.String `tfsdk:"application_id"`
-	// String that represents a concatenation of given and family names.
+	// Sets the human-readable name of the service principal. The name is
+	// required unless the request sets `applicationId`.
 	DisplayName types.String `tfsdk:"display_name"`
-
+	// Sets the identifier of the service principal in an external identity
+	// provider.
 	ExternalId types.String `tfsdk:"external_id"`
-	// Databricks service principal ID.
+	// Identifies the service principal within Databricks.
 	Id types.String `tfsdk:"id"`
-	// Indicates if the group has the admin role.
+	// Lists the account roles that are assigned to the service principal. The
+	// only supported role value is `account_admin`.
 	Roles types.List `tfsdk:"roles"`
 }
 
@@ -2262,6 +2293,109 @@ func (m *CreateGroupRequest_SdkV2) SetSchemas(ctx context.Context, v []types.Str
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["schemas"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	m.Schemas = types.ListValueMust(t, vs)
+}
+
+type CreateRestrictedSharingGroupRequest_SdkV2 struct {
+	// The restricted sharing group to create. It has no client-set fields; the
+	// group is identified by restricted_sharing_group_id.
+	RestrictedSharingGroup types.List `tfsdk:"restricted_sharing_group"`
+	// The id of the workspace group to restrict: the numeric id of an existing
+	// and non-system workspace group.
+	RestrictedSharingGroupId types.String `tfsdk:"-"`
+}
+
+func (to *CreateRestrictedSharingGroupRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateRestrictedSharingGroupRequest_SdkV2) {
+	if !from.RestrictedSharingGroup.IsNull() && !from.RestrictedSharingGroup.IsUnknown() {
+		if toRestrictedSharingGroup, ok := to.GetRestrictedSharingGroup(ctx); ok {
+			if fromRestrictedSharingGroup, ok := from.GetRestrictedSharingGroup(ctx); ok {
+				// Recursively sync the fields of RestrictedSharingGroup
+				toRestrictedSharingGroup.SyncFieldsDuringCreateOrUpdate(ctx, fromRestrictedSharingGroup)
+				to.SetRestrictedSharingGroup(ctx, toRestrictedSharingGroup)
+			}
+		}
+	}
+}
+
+func (to *CreateRestrictedSharingGroupRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from CreateRestrictedSharingGroupRequest_SdkV2) {
+	if !from.RestrictedSharingGroup.IsNull() && !from.RestrictedSharingGroup.IsUnknown() {
+		if toRestrictedSharingGroup, ok := to.GetRestrictedSharingGroup(ctx); ok {
+			if fromRestrictedSharingGroup, ok := from.GetRestrictedSharingGroup(ctx); ok {
+				toRestrictedSharingGroup.SyncFieldsDuringRead(ctx, fromRestrictedSharingGroup)
+				to.SetRestrictedSharingGroup(ctx, toRestrictedSharingGroup)
+			}
+		}
+	}
+}
+
+func (m CreateRestrictedSharingGroupRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["restricted_sharing_group"] = attrs["restricted_sharing_group"].SetRequired()
+	attrs["restricted_sharing_group"] = attrs["restricted_sharing_group"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["restricted_sharing_group_id"] = attrs["restricted_sharing_group_id"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateRestrictedSharingGroupRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m CreateRestrictedSharingGroupRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"restricted_sharing_group": reflect.TypeOf(RestrictedSharingGroup_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CreateRestrictedSharingGroupRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (m CreateRestrictedSharingGroupRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"restricted_sharing_group":    m.RestrictedSharingGroup,
+			"restricted_sharing_group_id": m.RestrictedSharingGroupId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m CreateRestrictedSharingGroupRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"restricted_sharing_group": basetypes.ListType{
+				ElemType: RestrictedSharingGroup_SdkV2{}.Type(ctx),
+			},
+			"restricted_sharing_group_id": types.StringType,
+		},
+	}
+}
+
+// GetRestrictedSharingGroup returns the value of the RestrictedSharingGroup field in CreateRestrictedSharingGroupRequest_SdkV2 as
+// a RestrictedSharingGroup_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *CreateRestrictedSharingGroupRequest_SdkV2) GetRestrictedSharingGroup(ctx context.Context) (RestrictedSharingGroup_SdkV2, bool) {
+	var e RestrictedSharingGroup_SdkV2
+	if m.RestrictedSharingGroup.IsNull() || m.RestrictedSharingGroup.IsUnknown() {
+		return e, false
+	}
+	var v []RestrictedSharingGroup_SdkV2
+	d := m.RestrictedSharingGroup.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetRestrictedSharingGroup sets the value of the RestrictedSharingGroup field in CreateRestrictedSharingGroupRequest_SdkV2.
+func (m *CreateRestrictedSharingGroupRequest_SdkV2) SetRestrictedSharingGroup(ctx context.Context, v RestrictedSharingGroup_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["restricted_sharing_group"]
+	m.RestrictedSharingGroup = types.ListValueMust(t, vs)
 }
 
 type CreateServicePrincipalRequest_SdkV2 struct {
@@ -3249,6 +3383,55 @@ func (m DeleteGroupRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+type DeleteRestrictedSharingGroupRequest_SdkV2 struct {
+	// The name of the restricted sharing group to delete. Format:
+	// `restricted-sharing-groups/{restricted_sharing_group_id}`
+	Name types.String `tfsdk:"-"`
+}
+
+func (to *DeleteRestrictedSharingGroupRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DeleteRestrictedSharingGroupRequest_SdkV2) {
+}
+
+func (to *DeleteRestrictedSharingGroupRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from DeleteRestrictedSharingGroupRequest_SdkV2) {
+}
+
+func (m DeleteRestrictedSharingGroupRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteRestrictedSharingGroupRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m DeleteRestrictedSharingGroupRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteRestrictedSharingGroupRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (m DeleteRestrictedSharingGroupRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name": m.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m DeleteRestrictedSharingGroupRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name": types.StringType,
+		},
+	}
+}
+
 type DeleteServicePrincipalRequest_SdkV2 struct {
 	// Unique ID for a service principal in the Databricks workspace.
 	Id types.String `tfsdk:"-"`
@@ -4046,6 +4229,10 @@ func (m GetPasswordPermissionsRequest_SdkV2) Type(ctx context.Context) attr.Type
 }
 
 type GetPermissionLevelsRequest_SdkV2 struct {
+	// The id of the object. It is the id that the object's own API uses, for
+	// example the cluster id for clusters, the job id for jobs, and the
+	// workspace object id for notebooks and directories. For the
+	// `authorization` object type, use `tokens` to manage token permissions.
 	RequestObjectId types.String `tfsdk:"-"`
 	// The type of the request object. Can be one of the following: alerts,
 	// alertsv2, authorization, clusters, cluster-policies, dashboards,
@@ -4103,7 +4290,7 @@ func (m GetPermissionLevelsRequest_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type GetPermissionLevelsResponse_SdkV2 struct {
-	// Specific permission levels
+	// Permission levels that can be granted on objects of the requested type.
 	PermissionLevels types.List `tfsdk:"permission_levels"`
 }
 
@@ -4218,7 +4405,10 @@ func (m *GetPermissionLevelsResponse_SdkV2) SetPermissionLevels(ctx context.Cont
 }
 
 type GetPermissionRequest_SdkV2 struct {
-	// The id of the request object.
+	// The id of the object. It is the id that the object's own API uses, for
+	// example the cluster id for clusters, the job id for jobs, and the
+	// workspace object id for notebooks and directories. For the
+	// `authorization` object type, use `tokens` to manage token permissions.
 	RequestObjectId types.String `tfsdk:"-"`
 	// The type of the request object. Can be one of the following: alerts,
 	// alertsv2, authorization, clusters, cluster-policies, dashboards,
@@ -4271,6 +4461,55 @@ func (m GetPermissionRequest_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"request_object_id":   types.StringType,
 			"request_object_type": types.StringType,
+		},
+	}
+}
+
+type GetRestrictedSharingGroupRequest_SdkV2 struct {
+	// The name of the restricted sharing group to get. Format:
+	// `restricted-sharing-groups/{restricted_sharing_group_id}`
+	Name types.String `tfsdk:"-"`
+}
+
+func (to *GetRestrictedSharingGroupRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetRestrictedSharingGroupRequest_SdkV2) {
+}
+
+func (to *GetRestrictedSharingGroupRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from GetRestrictedSharingGroupRequest_SdkV2) {
+}
+
+func (m GetRestrictedSharingGroupRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetRestrictedSharingGroupRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m GetRestrictedSharingGroupRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetRestrictedSharingGroupRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (m GetRestrictedSharingGroupRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name": m.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m GetRestrictedSharingGroupRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name": types.StringType,
 		},
 	}
 }
@@ -5084,7 +5323,8 @@ func (m *Group_SdkV2) SetSchemas(ctx context.Context, v []types.String) {
 type ListAccountGroupsRequest_SdkV2 struct {
 	// Comma-separated list of attributes to return in response.
 	Attributes types.String `tfsdk:"-"`
-	// Desired number of results per page. Default is 10000.
+	// Specifies the number of results per page. When omitted, the server uses
+	// its default page size.
 	Count types.Int64 `tfsdk:"-"`
 	// Comma-separated list of attributes to exclude in response.
 	ExcludedAttributes types.String `tfsdk:"-"`
@@ -5169,7 +5409,7 @@ func (m ListAccountGroupsRequest_SdkV2) Type(ctx context.Context) attr.Type {
 type ListAccountGroupsResponse_SdkV2 struct {
 	// Total results returned in the response.
 	ItemsPerPage types.Int64 `tfsdk:"items_per_page"`
-	// User objects returned in the response.
+	// Group objects returned in the response.
 	Resources types.List `tfsdk:"resources"`
 	// Starting index of all the results that matched the request filters. First
 	// item is number 1.
@@ -5385,7 +5625,7 @@ func (m ListAccountServicePrincipalsRequest_SdkV2) Type(ctx context.Context) att
 type ListAccountServicePrincipalsResponse_SdkV2 struct {
 	// Total results returned in the response.
 	ItemsPerPage types.Int64 `tfsdk:"items_per_page"`
-	// User objects returned in the response.
+	// Lists the service principals that are returned in the response.
 	Resources types.List `tfsdk:"resources"`
 	// Starting index of all the results that matched the request filters. First
 	// item is number 1.
@@ -5989,6 +6229,184 @@ func (m *ListGroupsResponse_SdkV2) SetSchemas(ctx context.Context, v []types.Str
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["schemas"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	m.Schemas = types.ListValueMust(t, vs)
+}
+
+type ListRestrictedSharingGroupsRequest_SdkV2 struct {
+	// The maximum number of groups to return. The service may return fewer. If
+	// unspecified or 0, at most 100 groups are returned. Values above 100 are
+	// coerced to 100. Negative values are rejected.
+	PageSize types.Int64 `tfsdk:"-"`
+	// A page token from a previous ListRestrictedSharingGroups call. Provide
+	// this to retrieve the subsequent page.
+	PageToken types.String `tfsdk:"-"`
+}
+
+func (to *ListRestrictedSharingGroupsRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListRestrictedSharingGroupsRequest_SdkV2) {
+}
+
+func (to *ListRestrictedSharingGroupsRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListRestrictedSharingGroupsRequest_SdkV2) {
+}
+
+func (m ListRestrictedSharingGroupsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListRestrictedSharingGroupsRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ListRestrictedSharingGroupsRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListRestrictedSharingGroupsRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (m ListRestrictedSharingGroupsRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"page_size":  m.PageSize,
+			"page_token": m.PageToken,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ListRestrictedSharingGroupsRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"page_size":  types.Int64Type,
+			"page_token": types.StringType,
+		},
+	}
+}
+
+// A page of restricted sharing groups in the caller's workspace.
+type ListRestrictedSharingGroupsResponse_SdkV2 struct {
+	// A token that can be sent as page_token to retrieve the next page. If this
+	// field is omitted, there are no subsequent pages.
+	NextPageToken types.String `tfsdk:"next_page_token"`
+	// The restricted sharing groups in the workspace.
+	RestrictedSharingGroups types.List `tfsdk:"restricted_sharing_groups"`
+}
+
+func (to *ListRestrictedSharingGroupsResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListRestrictedSharingGroupsResponse_SdkV2) {
+	if !from.RestrictedSharingGroups.IsNull() && !from.RestrictedSharingGroups.IsUnknown() && to.RestrictedSharingGroups.IsNull() && len(from.RestrictedSharingGroups.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for RestrictedSharingGroups, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.RestrictedSharingGroups = from.RestrictedSharingGroups
+	}
+	if !from.RestrictedSharingGroups.IsNull() && !from.RestrictedSharingGroups.IsUnknown() {
+		if toRestrictedSharingGroups, ok := to.GetRestrictedSharingGroups(ctx); ok {
+			if fromRestrictedSharingGroups, ok := from.GetRestrictedSharingGroups(ctx); ok {
+				// Recursively sync the fields of each RestrictedSharingGroups element by position.
+				for i := range toRestrictedSharingGroups {
+					if i < len(fromRestrictedSharingGroups) {
+						toRestrictedSharingGroups[i].SyncFieldsDuringCreateOrUpdate(ctx, fromRestrictedSharingGroups[i])
+					}
+				}
+				to.SetRestrictedSharingGroups(ctx, toRestrictedSharingGroups)
+			}
+		}
+	}
+}
+
+func (to *ListRestrictedSharingGroupsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListRestrictedSharingGroupsResponse_SdkV2) {
+	if !from.RestrictedSharingGroups.IsNull() && !from.RestrictedSharingGroups.IsUnknown() && to.RestrictedSharingGroups.IsNull() && len(from.RestrictedSharingGroups.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for RestrictedSharingGroups, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.RestrictedSharingGroups = from.RestrictedSharingGroups
+	}
+	if !from.RestrictedSharingGroups.IsNull() && !from.RestrictedSharingGroups.IsUnknown() {
+		if toRestrictedSharingGroups, ok := to.GetRestrictedSharingGroups(ctx); ok {
+			if fromRestrictedSharingGroups, ok := from.GetRestrictedSharingGroups(ctx); ok {
+				for i := range toRestrictedSharingGroups {
+					if i < len(fromRestrictedSharingGroups) {
+						toRestrictedSharingGroups[i].SyncFieldsDuringRead(ctx, fromRestrictedSharingGroups[i])
+					}
+				}
+				to.SetRestrictedSharingGroups(ctx, toRestrictedSharingGroups)
+			}
+		}
+	}
+}
+
+func (m ListRestrictedSharingGroupsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+	attrs["restricted_sharing_groups"] = attrs["restricted_sharing_groups"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListRestrictedSharingGroupsResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ListRestrictedSharingGroupsResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"restricted_sharing_groups": reflect.TypeOf(RestrictedSharingGroup_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListRestrictedSharingGroupsResponse_SdkV2
+// only implements ToObjectValue() and Type().
+func (m ListRestrictedSharingGroupsResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"next_page_token":           m.NextPageToken,
+			"restricted_sharing_groups": m.RestrictedSharingGroups,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ListRestrictedSharingGroupsResponse_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"next_page_token": types.StringType,
+			"restricted_sharing_groups": basetypes.ListType{
+				ElemType: RestrictedSharingGroup_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetRestrictedSharingGroups returns the value of the RestrictedSharingGroups field in ListRestrictedSharingGroupsResponse_SdkV2 as
+// a slice of RestrictedSharingGroup_SdkV2 values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ListRestrictedSharingGroupsResponse_SdkV2) GetRestrictedSharingGroups(ctx context.Context) ([]RestrictedSharingGroup_SdkV2, bool) {
+	if m.RestrictedSharingGroups.IsNull() || m.RestrictedSharingGroups.IsUnknown() {
+		return nil, false
+	}
+	var v []RestrictedSharingGroup_SdkV2
+	d := m.RestrictedSharingGroups.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetRestrictedSharingGroups sets the value of the RestrictedSharingGroups field in ListRestrictedSharingGroupsResponse_SdkV2.
+func (m *ListRestrictedSharingGroupsResponse_SdkV2) SetRestrictedSharingGroups(ctx context.Context, v []RestrictedSharingGroup_SdkV2) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["restricted_sharing_groups"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.RestrictedSharingGroups = types.ListValueMust(t, vs)
 }
 
 type ListServicePrincipalResponse_SdkV2 struct {
@@ -6781,11 +7199,18 @@ func (m Name_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// The permissions set on an object, with one entry per principal that holds a
+// permission on it.
 type ObjectPermissions_SdkV2 struct {
+	// Permissions on the object, with one entry per principal. Each entry lists
+	// the principal's direct and inherited permission levels.
 	AccessControlList types.List `tfsdk:"access_control_list"`
-
+	// Path that identifies the object in the access control list, built from
+	// the object type and the object id.
 	ObjectId types.String `tfsdk:"object_id"`
-
+	// Type of the object, as recorded in the access control list. It can differ
+	// from the `request_object_type` path segment, for example a request for
+	// `clusters` returns `cluster`.
 	ObjectType types.String `tfsdk:"object_type"`
 }
 
@@ -7551,9 +7976,9 @@ func (m Patch_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type PatchAccountGroupRequest_SdkV2 struct {
-	// Unique ID in the Databricks workspace.
+	// Unique ID for a group in the Databricks account.
 	Id types.String `tfsdk:"-"`
-
+	// Lists the patch operations to apply to the group.
 	Operations types.List `tfsdk:"operations"`
 	// The schema of the patch request. Must be
 	// ["urn:ietf:params:scim:api:messages:2.0:PatchOp"].
@@ -7719,9 +8144,9 @@ func (m *PatchAccountGroupRequest_SdkV2) SetSchemas(ctx context.Context, v []typ
 }
 
 type PatchAccountServicePrincipalRequest_SdkV2 struct {
-	// Unique ID in the Databricks workspace.
+	// Unique ID for a service principal in the Databricks account.
 	Id types.String `tfsdk:"-"`
-
+	// Lists the patch operations to apply to the service principal.
 	Operations types.List `tfsdk:"operations"`
 	// The schema of the patch request. Must be
 	// ["urn:ietf:params:scim:api:messages:2.0:PatchOp"].
@@ -8556,10 +8981,13 @@ func (m *PatchUserRequest_SdkV2) SetSchemas(ctx context.Context, v []types.Strin
 }
 
 type Permission_SdkV2 struct {
+	// Whether the permission is inherited from a parent object or the root
+	// object instead of being granted directly on the object.
 	Inherited types.Bool `tfsdk:"inherited"`
-
+	// Paths of the objects the permission is inherited from. It is only set
+	// when `inherited` is true.
 	InheritedFromObject types.List `tfsdk:"inherited_from_object"`
-
+	// Permission level the principal holds on the object.
 	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
@@ -8972,8 +9400,9 @@ func (m PermissionOutput_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type PermissionsDescription_SdkV2 struct {
+	// Human-readable description of the permission level.
 	Description types.String `tfsdk:"description"`
-
+	// Permission level that can be granted on the object.
 	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
@@ -9138,6 +9567,70 @@ func (m ResourceMeta_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"resource_type": types.StringType,
+		},
+	}
+}
+
+// A RestrictedSharingGroup is a workspace group whose members cannot grant or
+// revoke permissions on workspace assets while they have assumed the group or
+// one of its child groups. Users acting as themselves are not affected.
+type RestrictedSharingGroup_SdkV2 struct {
+	// The display name of the restricted workspace group.
+	GroupDisplayName types.String `tfsdk:"group_display_name"`
+	// The resource name of the restricted sharing group. Format:
+	// `restricted-sharing-groups/{restricted_sharing_group_id}` Example:
+	// `restricted-sharing-groups/123`
+	Name types.String `tfsdk:"name"`
+	// The id of the restricted workspace group: the numeric id of an existing
+	// and non-system workspace group.
+	RestrictedSharingGroupId types.String `tfsdk:"restricted_sharing_group_id"`
+}
+
+func (to *RestrictedSharingGroup_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from RestrictedSharingGroup_SdkV2) {
+}
+
+func (to *RestrictedSharingGroup_SdkV2) SyncFieldsDuringRead(ctx context.Context, from RestrictedSharingGroup_SdkV2) {
+}
+
+func (m RestrictedSharingGroup_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["group_display_name"] = attrs["group_display_name"].SetComputed()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["restricted_sharing_group_id"] = attrs["restricted_sharing_group_id"].SetComputed()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in RestrictedSharingGroup.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m RestrictedSharingGroup_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, RestrictedSharingGroup_SdkV2
+// only implements ToObjectValue() and Type().
+func (m RestrictedSharingGroup_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"group_display_name":          m.GroupDisplayName,
+			"name":                        m.Name,
+			"restricted_sharing_group_id": m.RestrictedSharingGroupId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m RestrictedSharingGroup_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"group_display_name":          types.StringType,
+			"name":                        types.StringType,
+			"restricted_sharing_group_id": types.StringType,
 		},
 	}
 }
@@ -9788,8 +10281,14 @@ func (m *ServicePrincipal_SdkV2) SetSchemas(ctx context.Context, v []types.Strin
 }
 
 type SetObjectPermissions_SdkV2 struct {
+	// Permissions to apply to the object, with one entry per principal. Each
+	// entry names exactly one principal through `user_name`, `group_name` or
+	// `service_principal_name` and the `permission_level` for that principal.
 	AccessControlList types.List `tfsdk:"access_control_list"`
-	// The id of the request object.
+	// The id of the object. It is the id that the object's own API uses, for
+	// example the cluster id for clusters, the job id for jobs, and the
+	// workspace object id for notebooks and directories. For the
+	// `authorization` object type, use `tokens` to manage token permissions.
 	RequestObjectId types.String `tfsdk:"-"`
 	// The type of the request object. Can be one of the following: alerts,
 	// alertsv2, authorization, clusters, cluster-policies, dashboards,
@@ -9917,17 +10416,20 @@ func (m *SetObjectPermissions_SdkV2) SetAccessControlList(ctx context.Context, v
 }
 
 type UpdateAccountGroupRequest_SdkV2 struct {
-	// String that represents a human-readable group name
+	// Sets the human-readable name of the group. The name must be unique within
+	// the account and must not exceed 255 characters.
 	DisplayName types.String `tfsdk:"display_name"`
-
+	// Sets the identifier of the group in an external identity provider.
 	ExternalId types.String `tfsdk:"external_id"`
-	// Databricks group ID
+	// Identifies the group within Databricks.
 	Id types.String `tfsdk:"-"`
-
+	// Lists the members of the group. Each entry identifies a user, service
+	// principal or group in the account by its ID in the value sub-attribute.
 	Members types.List `tfsdk:"members"`
 	// Container for the group identifier. Workspace local versus account.
 	Meta types.List `tfsdk:"meta"`
-	// Indicates if the group has the admin role.
+	// Lists the account roles that are assigned to the group. The only
+	// supported role value is `account_admin`.
 	Roles types.List `tfsdk:"roles"`
 }
 
@@ -10171,17 +10673,24 @@ func (m *UpdateAccountGroupRequest_SdkV2) SetRoles(ctx context.Context, v []Comp
 }
 
 type UpdateAccountServicePrincipalRequest_SdkV2 struct {
-	// If this user is active
+	// Indicates whether the service principal is active. A deactivated service
+	// principal cannot authenticate or access Databricks APIs, but it keeps its
+	// permissions.
 	Active types.Bool `tfsdk:"active"`
-	// UUID relating to the service principal
+	// Sets the application ID of a Microsoft Entra ID service principal. Only
+	// Azure accepts this field. On AWS and GCP, Databricks generates the
+	// application ID and rejects requests that set it.
 	ApplicationId types.String `tfsdk:"application_id"`
-	// String that represents a concatenation of given and family names.
+	// Sets the human-readable name of the service principal. The name is
+	// required unless the request sets `applicationId`.
 	DisplayName types.String `tfsdk:"display_name"`
-
+	// Sets the identifier of the service principal in an external identity
+	// provider.
 	ExternalId types.String `tfsdk:"external_id"`
-	// Databricks service principal ID.
+	// Identifies the service principal within Databricks.
 	Id types.String `tfsdk:"-"`
-	// Indicates if the group has the admin role.
+	// Lists the account roles that are assigned to the service principal. The
+	// only supported role value is `account_admin`.
 	Roles types.List `tfsdk:"roles"`
 }
 
@@ -11024,8 +11533,14 @@ func (m *UpdateGroupRequest_SdkV2) SetSchemas(ctx context.Context, v []types.Str
 }
 
 type UpdateObjectPermissions_SdkV2 struct {
+	// Permissions to apply to the object, with one entry per principal. Each
+	// entry names exactly one principal through `user_name`, `group_name` or
+	// `service_principal_name` and the `permission_level` for that principal.
 	AccessControlList types.List `tfsdk:"access_control_list"`
-	// The id of the request object.
+	// The id of the object. It is the id that the object's own API uses, for
+	// example the cluster id for clusters, the job id for jobs, and the
+	// workspace object id for notebooks and directories. For the
+	// `authorization` object type, use `tokens` to manage token permissions.
 	RequestObjectId types.String `tfsdk:"-"`
 	// The type of the request object. Can be one of the following: alerts,
 	// alertsv2, authorization, clusters, cluster-policies, dashboards,

@@ -14,13 +14,6 @@ subcategory: "Lakewatch"
 ## Arguments
 The following arguments are supported:
 * `parent` (string, required) - The resource name of the parent
-* `custom_content_pack_path` (string, optional) - UC volume path holding user-authored custom content packs, e.g.
-  `/Volumes/{catalog}/{schema}/{volume}`. User-provided with no default:
-  when unset, custom content packs are unavailable (referencing one is
-  rejected) and only built-in content packs apply
-* `custom_presets_path` (string, optional) - UC volume path holding user-authored custom presets, e.g.
-  `/Volumes/{catalog}/{schema}/{volume}`. User-provided with no default:
-  when unset, custom presets are unavailable and only built-in presets apply
 * `per_resource_permissions_enabled` (boolean, optional) - Whether users may grant permissions on individual resources rather than
   only at the Folder level
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.

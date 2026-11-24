@@ -108,7 +108,9 @@ func (r ProviderConfig) Type(ctx context.Context) attr.Type {
 
 // SyncedDatabaseTable extends the main model with additional fields.
 type SyncedDatabaseTable struct {
-	// Synced Table data synchronization status
+	// Reports the status of the data synchronization pipeline that keeps this
+	// table in sync with its source, including the pipeline ID and the position
+	// of the last successful sync.
 	DataSynchronizationStatus types.Object `tfsdk:"data_synchronization_status"`
 	// Name of the target database instance. This is required when creating
 	// synced database tables in standard catalogs. This is optional when
@@ -118,11 +120,11 @@ type SyncedDatabaseTable struct {
 	// the request will be rejected).
 	DatabaseInstanceName types.String `tfsdk:"database_instance_name"`
 	// The name of the database instance that this table is registered to. This
-	// field is always returned, and for tables inside database catalogs is
-	// inferred database instance associated with the catalog. This is an output
-	// only field that contains the value computed from the input field combined
-	// with server side defaults. Use the field without the effective_ prefix to
-	// set the value.
+	// field is always returned; for tables inside database catalogs it is the
+	// database instance associated with the catalog. This is an output only
+	// field that contains the value computed from the input field combined with
+	// server side defaults. Use the field without the effective_ prefix to set
+	// the value.
 	EffectiveDatabaseInstanceName types.String `tfsdk:"effective_database_instance_name"`
 	// The name of the logical database that this table is registered to. This
 	// is an output only field that contains the value computed from the input
@@ -139,12 +141,13 @@ type SyncedDatabaseTable struct {
 	//
 	// When creating a synced table in a standard catalog, this field is
 	// required. In this scenario, specifying this field will allow targeting an
-	// arbitrary postgres database. Note that this has implications for the
-	// `create_database_objects_is_missing` field in `spec`.
+	// arbitrary postgres database. If this database does not exist yet, it is
+	// created when `create_database_objects_if_missing` in `spec` is true.
 	LogicalDatabaseName types.String `tfsdk:"logical_database_name"`
 	// Full three-part (catalog, schema, table) name of the table.
 	Name types.String `tfsdk:"name"`
-
+	// Specifies the source table, the key columns and how the data
+	// synchronization pipeline runs.
 	Spec types.Object `tfsdk:"spec"`
 	// The provisioning state of the synced table entity in Unity Catalog. This
 	// is distinct from the state of the data synchronization pipeline (i.e. the

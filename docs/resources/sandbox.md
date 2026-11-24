@@ -30,9 +30,12 @@ resource "databricks_sandbox" "this" {
 
 ## Arguments
 The following arguments are supported:
-* `sandbox_id` (string, required) - Client-supplied ID that becomes the final path segment of the resource name
+* `sandbox_id` (string, required) - Client-supplied ID that becomes the final path segment of the resource name. It must
+  start with a lowercase letter, contain only lowercase letters, digits and hyphens, end
+  with a letter or digit, and be at most 63 characters long. Values shaped like a UUID are
+  rejected
 * `display_name` (string, optional) - Human-readable display label for the sandbox. At most 256 characters
-* `metadata` (SandboxMetadata, optional) - Metadata associated with the sandbox
+* `metadata` (SandboxMetadata, optional) - Tags and other metadata associated with the sandbox
 * `spec` (SandboxSpec, optional) - The desired configuration of the sandbox, supplied by the caller at creation time
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 
@@ -40,20 +43,28 @@ The following arguments are supported:
 * `workspace_id` (string,optional) - Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with.
 
 ### ComputeSpec
-* `inactivity_timeout` (string, optional) - Idle duration after which the sandbox is automatically terminated
+* `inactivity_timeout` (string, optional) - Idle time after which the sandbox is automatically stopped. Unset or 0 disables inactivity
+  auto-stop. Negative values are rejected. Can be changed on an existing sandbox with
+  UpdateSandbox
 
 ### EnvironmentSpec
-* `image_uri` (string, optional) - The Unity Catalog container image to use for the sandbox environment
-  (for example, `catalog.schema.folder.image:tag`). See
-  [Artifact Registry](https://docs.databricks.com/en/artifact-registry/)
+* `image_uri` (string, optional) - The Unity Catalog container image to run the sandbox from, in the form
+  `catalog.schema.artifact:tag`, or `catalog.schema.artifact@sha256:<digest>` to pin an
+  exact version. When omitted, the sandbox runs the default sandbox image. See
+  [custom images](https://docs.databricks.com/en/compute/serverless/sandbox-custom-image)
+
+### NetworkSpec
+* `internet_access` (boolean, optional) - Whether the sandbox can reach the public internet. Defaults to true. Control-plane,
+  PrivateLink, and workspace/UC/Delta-shared storage stay reachable either way
 
 ### SandboxMetadata
 * `custom_tags` (object, optional) - Key-value tags associated with the sandbox. Supports up to 54 tags. Keys must be between
   1 and 512 characters, and values must not exceed 256 characters
 
 ### SandboxSpec
-* `compute` (ComputeSpec, optional) - Compute configuration (size, inactivity timeout) requested for the sandbox
-* `environment` (EnvironmentSpec, optional) - The execution environment to use for the sandbox
+* `compute` (ComputeSpec, optional) - Compute settings requested for the sandbox, such as the inactivity timeout
+* `environment` (EnvironmentSpec, optional) - Software environment for the sandbox, such as the container image it runs
+* `network` (NetworkSpec, optional) - Network configuration requested for the sandbox
 
 ## Attributes
 In addition to the above arguments, the following attributes are exported:
@@ -64,7 +75,16 @@ In addition to the above arguments, the following attributes are exported:
 * `update_time` (string) - Output only. The last update time of the sandbox metadata and spec
 
 ### SandboxStatus
-* `state` (string) - Lifecycle state of the sandbox. Possible values are: `SANDBOX_STATE_PENDING`, `SANDBOX_STATE_RUNNING`, `SANDBOX_STATE_STOPPED`, `SANDBOX_STATE_STOPPING`
+* `state` (string) - Lifecycle state of the sandbox.
+  
+  - `SANDBOX_STATE_PENDING`: The sandbox is being provisioned after a create or start request
+  and cannot run commands yet.
+  - `SANDBOX_STATE_RUNNING`: The sandbox is ready and commands can run in it.
+  - `SANDBOX_STATE_STOPPING`: The sandbox is shutting down. It settles to
+  `SANDBOX_STATE_STOPPED`, or disappears if it is being deleted.
+  - `SANDBOX_STATE_STOPPED`: The sandbox is stopped, by a stop request, inactivity auto-stop,
+  or a failed provisioning. Its home directory is kept and it can be started again with
+  StartSandbox. Possible values are: `SANDBOX_STATE_PENDING`, `SANDBOX_STATE_RUNNING`, `SANDBOX_STATE_STOPPED`, `SANDBOX_STATE_STOPPING`
 
 ## Import
 As of Terraform v1.5, resources can be imported through configuration.

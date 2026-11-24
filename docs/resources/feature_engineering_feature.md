@@ -192,6 +192,7 @@ The following arguments are supported:
 ### DataSource
 * `delta_table_source` (DeltaTableSource, optional) - A Delta table data source
 * `feature_view_source` (FeatureViewSource, optional) - A data source composed from registered upstream Features
+* `iceberg_table_source` (IcebergTableSource, optional) - A Unity Catalog managed or foreign Iceberg table source
 * `kafka_source` (KafkaSource, optional) - A Kafka stream data source
 * `lateness` (SourceLateness, optional) - Completeness timing for this Feature's use of the source. This configuration is part of the
   Feature definition; it does not modify the underlying table or stream
@@ -205,11 +206,16 @@ The following arguments are supported:
   Required if transformation_sql is specified.
   Example: {"type":"struct","fields":[{"name":"col_a","type":"integer","nullable":true,"metadata":{}},{"name":"col_c","type":"integer","nullable":true,"metadata":{}}]}
 * `entity_columns` (list of string, optional, deprecated)
-* `filter_condition` (string, optional) - Single WHERE clause to filter delta table before applying transformations. Will be row-wise evaluated, so should only include conditionals and projections
+* `filter_condition` (string, optional) - A single WHERE clause to filter the Delta table before applying transformations.
+  The predicate is evaluated for each row
 * `timeseries_column` (string, optional, deprecated)
 * `transformation_sql` (string, optional) - A single SQL SELECT expression applied after filter_condition.
-  Should contains all the columns needed (eg. "SELECT *, col_a + col_b AS col_c FROM x.y.z WHERE col_a > 0" would have `transformation_sql` "*, col_a + col_b AS col_c")
+  The expression must contain all required columns (e.g., "*, col_a + col_b AS col_c").
   If transformation_sql is not provided, all columns of the delta table are present in the DataSource dataframe
+
+### EntityBinding
+* `entity` (string, required) - Specifies the entity column of the upstream Feature
+* `input` (InputReference, required) - Specifies where the column's values come from
 
 ### EntityColumn
 * `name` (string, required) - The name of the entity column. For Kafka sources, use dot-prefixed path notation to reference
@@ -249,14 +255,30 @@ The following arguments are supported:
 * `custom_udf` (CustomUdf, optional) - Applies a registered Unity Catalog function row-wise to source columns
 * `extra_parameters` (list of FunctionExtraParameter, optional, deprecated)
 * `function_type` (string, optional, deprecated) - Possible values are: `APPROX_COUNT_DISTINCT`, `APPROX_PERCENTILE`, `AVG`, `COUNT`, `FIRST`, `FUNCTION_TYPE_UNSPECIFIED`, `LAST`, `MAX`, `MIN`, `STDDEV_POP`, `STDDEV_SAMP`, `SUM`, `VAR_POP`, `VAR_SAMP`
+* `lookup` (Lookup, optional) - Looks up an upstream Feature using entity values from other Features or the request
+* `secondary_keys` (SecondaryKeys, optional) - Selects the secondary key values an upstream Feature has stored for the request's entity
 
 ### FunctionExtraParameter
 * `key` (string, required) - The name of the parameter
 * `value` (string, required) - The value of the parameter
 
+### IcebergTableSource
+* `full_name` (string, required) - Full three-part name of the source table. May be omitted on reads when inaccessible
+* `dataframe_schema` (string, optional) - Schema of the resulting dataframe after transformations, in Spark StructType JSON format (from df.schema.json()).
+  Required if transformation_sql is specified.
+  Example: {"type":"struct","fields":[{"name":"col_a","type":"integer","nullable":true,"metadata":{}},{"name":"col_c","type":"integer","nullable":true,"metadata":{}}]}
+* `filter_condition` (string, optional) - A single WHERE clause to filter the Iceberg table before applying transformations.
+  The predicate is evaluated for each row
+* `transformation_sql` (string, optional) - A single SQL SELECT expression applied after filter_condition.
+  The expression must contain all required columns (e.g., "*, col_a + col_b AS col_c").
+  If transformation_sql is not provided, all columns of the Iceberg table are present in the DataSource dataframe
+
 ### InputBinding
 * `column` (string, required) - Source column whose value is passed for this parameter at execution time
 * `parameter` (string, required) - Name of the UC function parameter
+
+### InputReference
+* `feature` (FeatureReference, optional) - Specifies another Feature whose output supplies the value
 
 ### JobContext
 * `job_id` (integer, optional) - The job ID where this API invoked
@@ -282,6 +304,11 @@ The following arguments are supported:
 ### LineageContext
 * `job_context` (JobContext, optional) - Job context information including job ID and run ID
 * `notebook_id` (integer, optional) - The notebook ID where this API was invoked
+
+### Lookup
+* `entities` (list of EntityBinding, required) - One binding per entity column of the upstream Feature. Every entity column must be
+  bound exactly once
+* `feature` (FeatureReference, required) - The upstream Feature to look up
 
 ### MaxFunction
 * `input` (string, required) - The input column from which the maximum is computed
@@ -327,6 +354,13 @@ The following arguments are supported:
 * `transformation_sql` (string, optional) - A single SQL SELECT expression applied after filter_condition.
   Should contain all the columns needed (eg. "SELECT *, col_a + col_b AS col_c FROM x.y.z WHERE col_a > 0" would have `transformation_sql` "*, col_a + col_b AS col_c")
   If transformation_sql is not provided, all columns of the pipeline's output table are present in the DataSource dataframe
+
+### SecondaryKeys
+* `feature` (FeatureReference, required) - The upstream Feature whose stored keys are selected
+* `key` (string, required) - The entity column of the upstream Feature to return values for. It is not supplied
+  by the request
+* `max_keys` (integer, required) - Maximum number of keys to return per entity, in primary key order. Must not exceed the
+  workspace limit
 
 ### SlidingWindow
 * `slide_duration` (string, required) - The slide duration (interval by which windows advance, must be positive and less than duration)

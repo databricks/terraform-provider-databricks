@@ -119,15 +119,17 @@ type Index struct {
 	// endpoint is taken from `CreateIndexRequest.parent`; populated only on
 	// output.
 	Endpoint types.String `tfsdk:"endpoint"`
-	// The user-supplied Unity Catalog table name for the Index, per AIP-133.
-	// The server composes the full `Index.name` as
-	// `{parent}/indexes/{index_id}`. AIP-133 does not list `index_id` as a
-	// fields-may-be-required entry, so we annotate it OPTIONAL on the wire; the
-	// server still rejects empty values with INVALID_PARAMETER_VALUE.
+	// Three-level Unity Catalog table name for the new index, in the form
+	// `catalog.schema.name`. The server composes the full `Index.name` as
+	// `{parent}/indexes/{index_id}` and rejects an empty value.
 	IndexId types.String `tfsdk:"index_id"`
-	// The subtype of the index. Set on create and immutable thereafter.
+	// Subtype of the index. Use `HYBRID` for vector and hybrid search, or
+	// `FULL_TEXT` for keyword-only search without embeddings; `VECTOR` is not a
+	// supported create value. Set on create and immutable thereafter.
 	IndexSubtype types.String `tfsdk:"index_subtype"`
-	// Type of index. Required on create and immutable thereafter.
+	// Type of index. A `DELTA_SYNC` index is kept in sync with a source Delta
+	// table; a `DIRECT_ACCESS` index holds rows that you write through
+	// UpsertData and RemoveData. Set on create and immutable thereafter.
 	IndexType types.String `tfsdk:"index_type"`
 	// Name of the AI Search index. Server-assigned full resource path
 	// (`workspaces/{workspace}/endpoints/{endpoint}/indexes/{index}`) on
@@ -139,7 +141,10 @@ type Index struct {
 	// The Endpoint where this Index will be created. Format:
 	// `workspaces/{workspace_id}/endpoints/{endpoint_id}`
 	Parent types.String `tfsdk:"parent"`
-	// Primary key of the index. Set on create and immutable thereafter.
+	// Name of the column that uniquely identifies each row. It must exist in
+	// the source table (Delta Sync) or in `schema_json` (Direct Access) and
+	// cannot be the embedding source or vector column. Set on create and
+	// immutable thereafter.
 	PrimaryKey types.String `tfsdk:"primary_key"`
 	// Current status of the index.
 	Status         types.Object `tfsdk:"status"`
@@ -312,7 +317,8 @@ func (m Index) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuil
 	attrs["index_id"] = attrs["index_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["index_id"] = attrs["index_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplaceIf(tfschema.RequiresReplaceIfKnownChange, "", "")).(tfschema.AttributeBuilder)
 	attrs["parent"] = attrs["parent"].SetRequired()
-	attrs["parent"] = attrs["parent"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["parent"] = attrs["parent"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
+	attrs["parent"] = attrs["parent"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplaceIf(tfschema.RequiresReplaceIfKnownChange, "", "")).(tfschema.AttributeBuilder)
 
 	attrs["name"] = attrs["name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["provider_config"] = attrs["provider_config"].SetOptional()
@@ -482,6 +488,9 @@ func (r *IndexResource) Create(ctx context.Context, req resource.CreateRequest, 
 		return
 	}
 	resp.Diagnostics.Append(tfschema.PopulateProviderConfigInState(ctx, r.Client, plan.ProviderConfig, &resp.State)...)
+	if !resp.Diagnostics.HasError() {
+		resp.Diagnostics.Append(resp.Private.SetKey(ctx, tfschema.CreationInputsAppliedKey, []byte("true"))...)
+	}
 }
 
 func (r *IndexResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -539,6 +548,12 @@ func (r *IndexResource) Read(ctx context.Context, req resource.ReadRequest, resp
 }
 
 func (r *IndexResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	if tfschema.AdoptImportedCreateFields(ctx, req, resp, "index_id", "parent") {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.Append(resp.Private.SetKey(ctx, tfschema.CreationInputsAppliedKey, []byte("true"))...)
+		}
+		return
+	}
 	// VARIANT_IMMUTABLE resources do not support updates - all changes require replacement.
 	resp.Diagnostics.AddError("Update not supported", "This resource does not support updates. All changes require replacement.")
 }

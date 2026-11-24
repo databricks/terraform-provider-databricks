@@ -29,8 +29,8 @@ func DataSourceProjects() datasource.DataSource {
 // ProjectsData extends the main model with additional fields.
 type ProjectsData struct {
 	Postgres types.List `tfsdk:"projects"`
-	// Upper bound for items returned. Cannot be negative. The maximum value is
-	// 100.
+	// Upper bound for the number of projects returned. Cannot be negative.
+	// Values above the maximum page size are reduced to that maximum.
 	PageSize types.Int64 `tfsdk:"page_size"`
 	// Whether to include soft-deleted projects in the response. When true,
 	// soft-deleted projects are included alongside active projects.

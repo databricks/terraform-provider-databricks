@@ -32,13 +32,13 @@ The following arguments are supported:
 ## Attributes
 This data source exports a single attribute, `rules`. It is a list of resources, each with the following attributes:
 * `annotations` (object) - Free-form client-managed key/value annotations
-* `batch` (RuleInputBatch) - Batch SQL rule input
+* `batch` (RuleInputBatch) - Scheduled detection (also known as batch detection) input
 * `catalog_name` (string) - Name of the Unity Catalog catalog that contains the rule. Required. Cannot be changed after
   creation. Reads return the value as supplied; the catalog's current name is reported in
   `effective_catalog_name`
 * `category` (string) - Free-form rule category
 * `compute_workspace_id` (string) - ID of the workspace whose compute runs this rule's jobs and owns its
-  associated resources, such as the SQL warehouse a scheduled rule runs on.
+  associated resources, such as the SQL warehouse a scheduled detection runs on.
   Server-assigned; a rule's warehouse can only be changed from this workspace
 * `content_resource_id` (string) - Immutable UUIDv4 identifying the authored content resource installed as this rule
 * `create_time` (string) - Time the rule was created
@@ -84,23 +84,31 @@ This data source exports a single attribute, `rules`. It is a list of resources,
   include `run_as_principal` keeps the current identity, and the requester must
   still be authorized to delegate to it; an editor who is not must supply a
   run_as_principal they can delegate to (for example, their own identity), or
-  clear it, either of which reassigns the rule. An update whose mask includes
+  clear it, either of which reassigns the rule. An update that only enables or
+  disables the rule (changes `schedule.enabled` and nothing else) does not
+  require delegate permission and keeps the current identity. Enabling the rule
+  still requires the current identity to have the access the rule needs to run,
+  or the request is rejected. An update whose mask includes
   `run_as_principal` but supplies no value clears it: the rule then runs as the
   requester, exactly as when it is omitted on create. Reads return the value as
   supplied; the identity the rule runs as is reported in
   `effective_run_as_principal`
 * `runbook` (string) - Long-form operational guidance carried from the authored rule metadata. Supports up to 4096
-  characters. Requests exceeding this limit are rejected
-* `schedule` (RuleSchedule) - When the rule executes
+  characters. Requests exceeding this limit are rejected. Supports Markdown; analysts and the
+  investigation agent follow it when triaging this rule's alerts
+* `schedule` (RuleSchedule) - When the rule executes. Required for scheduled rules. A streaming rule accepts only
+  `enabled`, and an omitted schedule means enabled
 * `schema_name` (string) - Name of the Unity Catalog schema that contains the rule. Required. Cannot be changed after
   creation. Reads return the value as supplied; the schema's current name is reported in
   `effective_schema_name`
 * `severity` (string) - Free-form severity label, such as `Informational`, `Medium`, `High`, or
   `Critical`
 * `status` (ResourceStatus) - Read-only lifecycle status
+* `streaming` (RuleInputStreaming) - Native streaming rule input: one source table filtered by one stateless row predicate.
+  Permanent field number; must not be renumbered
 * `suppress_until_time` (string) - If set, this rule's signals do not open new alerts until the given time
-* `timerange` (RuleTimeRange) - Time-range configuration for batch rules. If unset, the execution time range is extended by
-  a fixed `15m` lookback
+* `timerange` (RuleTimeRange) - Time-range configuration for scheduled detections. If unset, the execution time range is
+  extended by a fixed `15m` lookback
 * `update_time` (string) - Time the rule was last updated
 * `updated_by` (Principal) - Principal that last updated the rule
 * `version` (integer) - Monotonic version, bumped on each update. Informational; use `etag` for
@@ -134,7 +142,7 @@ This data source exports a single attribute, `rules`. It is a list of resources,
 * `custom` (RuleInputCustomNotebook) - Custom-notebook user function. The output is used as input data for the
   rule
 * `sql` (RuleInputBatchSql) - SQL query evaluated as the rule input
-* `warehouse_id` (string) - SQL warehouse used to run this batch rule
+* `warehouse_id` (string) - SQL warehouse that runs this scheduled detection
 
 ### RuleInputBatchSql
 * `default_catalog_name` (string) - Default catalog used to resolve unqualified identifiers in `query`. If
@@ -147,6 +155,10 @@ This data source exports a single attribute, `rules`. It is a list of resources,
 * `notebook` (string) - Fully-qualified notebook path, or a path relative to the configured base
   notebook directory
 * `options` (object) - Optional arguments supplied when invoking the custom function
+
+### RuleInputStreaming
+* `predicate` (StreamingPredicate) - Row predicate that selects matching rows
+* `source` (StreamingSource) - Source table whose rows are evaluated
 
 ### RuleMitreMapping
 * `sub_technique` (string) - Human-readable MITRE sub-technique name
@@ -170,8 +182,6 @@ This data source exports a single attribute, `rules`. It is a list of resources,
 * `at_least_every` (string) - Defines the minimum cadence as a duration string. It may contain components
   for days, hours, minutes, and seconds (e.g. `5d`, `5d3h`, `3d2h5m12s`,
   `12m16s`)
-* `continuous` (boolean) - Runs the rule continuously. Detection rules do not accept it: batch rules reject it, and
-  streaming rules run continuously without it
 * `cron_expression` (string) - Defines the schedule using a Quartz cron expression
 * `enabled` (boolean) - Sets whether the job is scheduled to run. Defaults to true
 
@@ -179,5 +189,12 @@ This data source exports a single attribute, `rules`. It is a list of resources,
 * `extend_lookback` (string) - Extends the start of the execution time range by a compact duration with integer
   days, hours, minutes, and seconds in that order, such as `1h30m` or `15m`.
   Zero duration disables extension. Unset or empty uses a fixed `15m` at execution
-  time. Only the start moves; the end is unchanged. Has no effect on batch SQL
-  that does not use `IN_TIMERANGE`. Values must fit signed 64-bit microseconds
+  time. Only the start moves; the end is unchanged. Has no effect on a detection
+  query that does not use `IN_TIMERANGE`. Values must fit signed 64-bit microseconds
+
+### StreamingPredicate
+* `expression` (string) - A SQL expression suitable for a WHERE clause, not a SELECT query. Evaluated
+  per input row; only stateless, row-local expressions are accepted
+
+### StreamingSource
+* `table` (string) - Fully-qualified Unity Catalog table in `catalog.schema.table` form

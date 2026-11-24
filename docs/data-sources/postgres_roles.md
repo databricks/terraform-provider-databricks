@@ -2,7 +2,7 @@
 subcategory: "Postgres"
 ---
 # databricks_postgres_roles Data Source
-[![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
+[![GA](https://img.shields.io/badge/Release_Stage-GA-green)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
 [API Documentation](https://docs.databricks.com/api/workspace/postgres)
 
@@ -40,23 +40,27 @@ The following arguments are supported:
 
 ## Attributes
 This data source exports a single attribute, `roles`. It is a list of resources, each with the following attributes:
-* `create_time` (string)
+* `create_time` (string) - A timestamp indicating when the role was created
 * `name` (string) - Output only. The full resource path of the role.
   Format: projects/{project_id}/branches/{branch_id}/roles/{role_id}
 * `parent` (string) - The Branch where this Role exists.
   Format: projects/{project_id}/branches/{branch_id}
 * `role_id` (string) - The part of the name, chosen by the user when the resource was created
-* `spec` (RoleRoleSpec) - The spec contains the role configuration, including identity type, authentication method, and role attributes
+* `spec` (RoleRoleSpec) - The spec contains the role configuration, including identity type, authentication method, and role attributes.
+  
+  Read the resource's current values from `status`, rather than `spec`.
+  `spec` tracks field ownership for infrastructure-as-code tools and may omit
+  unmanaged fields
 * `status` (RoleRoleStatus) - Current status of the role, including its identity type, authentication method, and role attributes
-* `update_time` (string)
+* `update_time` (string) - A timestamp indicating when the role was last updated
 
 ### RoleAttributes
-* `bypassrls` (boolean)
-* `createdb` (boolean)
-* `createrole` (boolean)
+* `bypassrls` (boolean) - Whether the role bypasses every row-level security policy (the Postgres BYPASSRLS attribute)
+* `createdb` (boolean) - Whether the role can create databases (the Postgres CREATEDB attribute)
+* `createrole` (boolean) - Whether the role can create, alter and drop other roles (the Postgres CREATEROLE attribute)
 
 ### RoleRoleSpec
-* `attributes` (RoleAttributes) - The desired API-exposed Postgres role attribute to associate with the role. Optional
+* `attributes` (RoleAttributes) - The Postgres role attributes to grant to the role
 * `auth_method` (string) - Controls how the Postgres role authenticates when a client opens a database
   connection. Supported values:
   
@@ -67,9 +71,8 @@ This data source exports a single attribute, `roles`. It is a list of resources,
   * PG_PASSWORD_SCRAM_SHA_256: the role authenticates with a Postgres
   password verified server-side using the SCRAM-SHA-256 mechanism.
   Lakebase generates a password for the role.
-  * NO_LOGIN: the role cannot open a Postgres session at all. Useful for
-  roles that exist only to own objects or to aggregate privileges that
-  are then granted to other, loginable roles.
+  
+  NO_LOGIN is not currently supported for Role creation.
   
   If auth_method is left unspecified, a meaningful authentication method is derived from the identity_type:
   * For the managed identities, OAUTH is used.
@@ -78,30 +81,19 @@ This data source exports a single attribute, `roles`. It is a list of resources,
   NOTE: for the Databricks identity type GROUP, LAKEBASE_OAUTH_V1
   is the default auth method (group can login as well).
   
-  This field is set when the role is created and cannot be changed.
-  When replacing an existing role with replace_existing=true, omit this
-  field or supply its current value. A differing value returns
-  INVALID_PARAMETER_VALUE and rejects the entire request, including changes
-  to mutable fields.
-  With `*` or masks containing only mutable fields, supplied values are ignored.
-  Including this field as an explicit path in update_mask returns
-  INVALID_PARAMETER_VALUE. Possible values are: `LAKEBASE_OAUTH_V1`, `NO_LOGIN`, `PG_PASSWORD_SCRAM_SHA_256`
-* `identity_type` (string) - The type of role.
-  When specifying a managed-identity, the chosen role_id must be a valid:
+  This value cannot be changed after creation. Possible values are: `LAKEBASE_OAUTH_V1`, `NO_LOGIN`, `PG_PASSWORD_SCRAM_SHA_256`
+* `identity_type` (string) - The type of Databricks identity that backs the role. Leave unset to create a native Postgres
+  role that is not associated with a Databricks identity.
+  When specifying a managed-identity, the chosen postgres_role must be a valid:
   
   * application ID for SERVICE_PRINCIPAL
   * user email for USER
   * group name for GROUP
   
-  This field is set when the role is created and cannot be changed.
-  When replacing an existing role with replace_existing=true, omit this
-  field or supply its current value. A differing value returns
-  INVALID_PARAMETER_VALUE and rejects the entire request, including changes
-  to mutable fields.
-  With `*` or masks containing only mutable fields, supplied values are ignored.
-  Including this field as an explicit path in update_mask returns
-  INVALID_PARAMETER_VALUE. Possible values are: `GROUP`, `SERVICE_PRINCIPAL`, `USER`
-* `membership_roles` (list of string) - An enum value for a standard role that this role is a member of
+  This value cannot be changed after creation. Possible values are: `GROUP`, `SERVICE_PRINCIPAL`, `USER`
+* `membership_roles` (list of string) - An enum value for a standard role that this role is a member of.
+  When selected in update_mask, this field replaces all existing memberships.
+  An empty or omitted list clears all memberships, including DATABRICKS_SUPERUSER
 * `postgres_role` (string) - The name of the Postgres role.
   
   This expects a valid Postgres identifier as specified in the link below.
@@ -114,21 +106,14 @@ This data source exports a single attribute, `roles`. It is a list of resources,
   
   1. user email for IdentityType.USER
   2. app ID for IdentityType.SERVICE_PRINCIPAL
-  2. group name for IdentityType.GROUP
+  3. group name for IdentityType.GROUP
   
-  This field is set when the role is created and cannot be changed.
-  When replacing an existing role with replace_existing=true, omit this
-  field or supply its current value. A differing value returns
-  INVALID_PARAMETER_VALUE and rejects the entire request, including changes
-  to mutable fields.
-  With `*` or masks containing only mutable fields, supplied values are ignored.
-  Including this field as an explicit path in update_mask returns
-  INVALID_PARAMETER_VALUE
+  This value cannot be changed after creation
 
 ### RoleRoleStatus
-* `attributes` (RoleAttributes) - The PG role attributes associated with the role
-* `auth_method` (string) - Possible values are: `LAKEBASE_OAUTH_V1`, `NO_LOGIN`, `PG_PASSWORD_SCRAM_SHA_256`
-* `identity_type` (string) - The type of the role. Possible values are: `GROUP`, `SERVICE_PRINCIPAL`, `USER`
-* `membership_roles` (list of string) - An enum value for a standard role that this role is a member of
+* `attributes` (RoleAttributes) - The Postgres role attributes currently granted to the role
+* `auth_method` (string) - How the role authenticates when it connects to Postgres. Possible values are: `LAKEBASE_OAUTH_V1`, `NO_LOGIN`, `PG_PASSWORD_SCRAM_SHA_256`
+* `identity_type` (string) - The type of Databricks identity that backs the role, if any. Possible values are: `GROUP`, `SERVICE_PRINCIPAL`, `USER`
+* `membership_roles` (list of string) - The standard roles that the role is currently a member of
 * `postgres_role` (string) - The name of the Postgres role
 * `role_id` (string) - Part of the resource name

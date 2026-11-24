@@ -27,13 +27,19 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
+// An app that runs on Databricks Apps. The app runs on managed compute in the
+// workspace and is deployed from a workspace folder or a Git repository. Each
+// app acts as its own dedicated service principal.
 type App_SdkV2 struct {
 	// The active deployment of the app. A deployment is considered active when
 	// it has been deployed to the app compute.
 	ActiveDeployment types.List `tfsdk:"active_deployment"`
-
+	// Status of the application process on the app compute, as reported by the
+	// app runtime.
 	AppStatus types.List `tfsdk:"app_status"`
-
+	// ID of the serverless budget policy that the app's compute usage is
+	// attributed to. Budget policies and usage policies are alternatives: set
+	// at most one of `budget_policy_id` and `usage_policy_id`.
 	BudgetPolicyId types.String `tfsdk:"budget_policy_id"`
 	// Maximum number of app instances the app is configured to run. Must be set
 	// together with `compute_min_instances`.
@@ -41,11 +47,13 @@ type App_SdkV2 struct {
 	// Minimum number of app instances the app is configured to run. Must be set
 	// together with `compute_max_instances`.
 	ComputeMinInstances types.Int64 `tfsdk:"compute_min_instances"`
-
+	// Size of the compute instances the app runs on. Defaults to MEDIUM. Larger
+	// sizes provide more CPU and memory at a higher hourly cost. See
+	// https://docs.databricks.com/aws/en/dev-tools/databricks-apps/compute-size.
 	ComputeSize types.String `tfsdk:"compute_size"`
-
+	// Status of the compute that runs the app.
 	ComputeStatus types.List `tfsdk:"compute_status"`
-	// The creation time of the app. Formatted timestamp in ISO 6801.
+	// The creation time of the app. Formatted timestamp in ISO 8601.
 	CreateTime types.String `tfsdk:"create_time"`
 	// The email of the user that created the app.
 	Creator types.String `tfsdk:"creator"`
@@ -60,9 +68,14 @@ type App_SdkV2 struct {
 	DefaultSourceCodePath types.String `tfsdk:"default_source_code_path"`
 	// The description of the app.
 	Description types.String `tfsdk:"description"`
-
+	// ID of the budget policy in effect for the app, after Databricks applies
+	// any defaults.
 	EffectiveBudgetPolicyId types.String `tfsdk:"effective_budget_policy_id"`
-
+	// Resources added to the app, plus the resources it inherits from its
+	// space. Empty for apps that are not in a space.
+	EffectiveResources types.List `tfsdk:"effective_resources"`
+	// ID of the usage policy in effect for the app, after Databricks applies
+	// any defaults.
 	EffectiveUsagePolicyId types.String `tfsdk:"effective_usage_policy_id"`
 	// The effective api scopes granted to the user access token.
 	EffectiveUserApiScopes types.List `tfsdk:"effective_user_api_scopes"`
@@ -82,38 +95,53 @@ type App_SdkV2 struct {
 	// The name of the app. The name must contain only lowercase alphanumeric
 	// characters and hyphens. It must be unique within the workspace.
 	Name types.String `tfsdk:"name"`
-
+	// OAuth client ID of the app integration that signs in the app's users.
 	Oauth2AppClientId types.String `tfsdk:"oauth2_app_client_id"`
-
+	// ID of the OAuth app integration that Databricks creates for the app to
+	// sign in its users.
 	Oauth2AppIntegrationId types.String `tfsdk:"oauth2_app_integration_id"`
 	// The pending deployment of the app. A deployment is considered pending
 	// when it is being prepared for deployment to the app compute.
 	PendingDeployment types.List `tfsdk:"pending_deployment"`
-	// Resources for the app.
+	// Databricks resources the app depends on. Each entry grants the app's
+	// service principal the listed permission on one resource and makes that
+	// resource available to the app under the entry's name.
 	Resources types.List `tfsdk:"resources"`
-
+	// OAuth client ID of the app's service principal. The app runtime exposes
+	// it to the app as the DATABRICKS_CLIENT_ID environment variable.
 	ServicePrincipalClientId types.String `tfsdk:"service_principal_client_id"`
-
+	// Numeric ID of the service principal the app runs as. Databricks creates a
+	// dedicated service principal for each app and deletes it with the app.
+	// Apps in some older spaces run as the space's shared service principal
+	// instead.
 	ServicePrincipalId types.Int64 `tfsdk:"service_principal_id"`
-
+	// Display name of the app's service principal.
 	ServicePrincipalName types.String `tfsdk:"service_principal_name"`
-
+	// Workspace file system path of the app source code. On create, the app is
+	// deployed from this path. Alternative to `git_source`.
 	SourceCodePath types.String `tfsdk:"source_code_path"`
 	// Name of the space this app belongs to.
 	Space types.String `tfsdk:"space"`
-
+	// Destinations that receive the app's OpenTelemetry logs, metrics and
+	// traces. Changes take effect when the app is next deployed.
 	TelemetryExportDestinations types.List `tfsdk:"telemetry_export_destinations"`
 	// The URL of the thumbnail image for the app.
 	ThumbnailUrl types.String `tfsdk:"thumbnail_url"`
-	// The update time of the app. Formatted timestamp in ISO 6801.
+	// The update time of the app. Formatted timestamp in ISO 8601.
 	UpdateTime types.String `tfsdk:"update_time"`
 	// The email of the user that last updated the app.
 	Updater types.String `tfsdk:"updater"`
 	// The URL of the app once it is deployed.
 	Url types.String `tfsdk:"url"`
-
+	// ID of the usage policy that the app's compute usage is attributed to.
+	// Alternative to `budget_policy_id`.
 	UsagePolicyId types.String `tfsdk:"usage_policy_id"`
-
+	// API scopes the app requests for user authorization. The user access token
+	// that Databricks forwards to the app is limited to these scopes plus the
+	// default identity scopes, so the app can act on the user's behalf only
+	// within them. Workspace admins can restrict which scopes apps in the
+	// workspace may request. See
+	// https://docs.databricks.com/aws/en/dev-tools/databricks-apps/auth.
 	UserApiScopes types.List `tfsdk:"user_api_scopes"`
 }
 
@@ -151,6 +179,25 @@ func (to *App_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Ap
 				// Recursively sync the fields of DefaultGitSource
 				toDefaultGitSource.SyncFieldsDuringCreateOrUpdate(ctx, fromDefaultGitSource)
 				to.SetDefaultGitSource(ctx, toDefaultGitSource)
+			}
+		}
+	}
+	if !from.EffectiveResources.IsNull() && !from.EffectiveResources.IsUnknown() && to.EffectiveResources.IsNull() && len(from.EffectiveResources.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for EffectiveResources, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.EffectiveResources = from.EffectiveResources
+	}
+	if !from.EffectiveResources.IsNull() && !from.EffectiveResources.IsUnknown() {
+		if toEffectiveResources, ok := to.GetEffectiveResources(ctx); ok {
+			if fromEffectiveResources, ok := from.GetEffectiveResources(ctx); ok {
+				// Recursively sync the fields of each EffectiveResources element by position.
+				for i := range toEffectiveResources {
+					if i < len(fromEffectiveResources) {
+						toEffectiveResources[i].SyncFieldsDuringCreateOrUpdate(ctx, fromEffectiveResources[i])
+					}
+				}
+				to.SetEffectiveResources(ctx, toEffectiveResources)
 			}
 		}
 	}
@@ -274,6 +321,24 @@ func (to *App_SdkV2) SyncFieldsDuringRead(ctx context.Context, from App_SdkV2) {
 			}
 		}
 	}
+	if !from.EffectiveResources.IsNull() && !from.EffectiveResources.IsUnknown() && to.EffectiveResources.IsNull() && len(from.EffectiveResources.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for EffectiveResources, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.EffectiveResources = from.EffectiveResources
+	}
+	if !from.EffectiveResources.IsNull() && !from.EffectiveResources.IsUnknown() {
+		if toEffectiveResources, ok := to.GetEffectiveResources(ctx); ok {
+			if fromEffectiveResources, ok := from.GetEffectiveResources(ctx); ok {
+				for i := range toEffectiveResources {
+					if i < len(fromEffectiveResources) {
+						toEffectiveResources[i].SyncFieldsDuringRead(ctx, fromEffectiveResources[i])
+					}
+				}
+				to.SetEffectiveResources(ctx, toEffectiveResources)
+			}
+		}
+	}
 	if !from.EffectiveUserApiScopes.IsNull() && !from.EffectiveUserApiScopes.IsUnknown() && to.EffectiveUserApiScopes.IsNull() && len(from.EffectiveUserApiScopes.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
 		// If a user specified a non-Null, empty list for EffectiveUserApiScopes, and the deserialized field value is Null,
@@ -374,6 +439,7 @@ func (m App_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attribute
 	attrs["default_source_code_path"] = attrs["default_source_code_path"].SetComputed()
 	attrs["description"] = attrs["description"].SetOptional()
 	attrs["effective_budget_policy_id"] = attrs["effective_budget_policy_id"].SetComputed()
+	attrs["effective_resources"] = attrs["effective_resources"].SetComputed()
 	attrs["effective_usage_policy_id"] = attrs["effective_usage_policy_id"].SetComputed()
 	attrs["effective_user_api_scopes"] = attrs["effective_user_api_scopes"].SetComputed()
 	attrs["forward_user_access_token"] = attrs["forward_user_access_token"].SetOptional()
@@ -421,6 +487,7 @@ func (m App_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.
 		"app_status":                    reflect.TypeOf(ApplicationStatus_SdkV2{}),
 		"compute_status":                reflect.TypeOf(ComputeStatus_SdkV2{}),
 		"default_git_source":            reflect.TypeOf(GitSource_SdkV2{}),
+		"effective_resources":           reflect.TypeOf(AppResource_SdkV2{}),
 		"effective_user_api_scopes":     reflect.TypeOf(types.String{}),
 		"git_repository":                reflect.TypeOf(GitRepository_SdkV2{}),
 		"git_source":                    reflect.TypeOf(GitSource_SdkV2{}),
@@ -451,6 +518,7 @@ func (m App_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"default_source_code_path":      m.DefaultSourceCodePath,
 			"description":                   m.Description,
 			"effective_budget_policy_id":    m.EffectiveBudgetPolicyId,
+			"effective_resources":           m.EffectiveResources,
 			"effective_usage_policy_id":     m.EffectiveUsagePolicyId,
 			"effective_user_api_scopes":     m.EffectiveUserApiScopes,
 			"forward_user_access_token":     m.ForwardUserAccessToken,
@@ -502,7 +570,10 @@ func (m App_SdkV2) Type(ctx context.Context) attr.Type {
 			"default_source_code_path":   types.StringType,
 			"description":                types.StringType,
 			"effective_budget_policy_id": types.StringType,
-			"effective_usage_policy_id":  types.StringType,
+			"effective_resources": basetypes.ListType{
+				ElemType: AppResource_SdkV2{}.Type(ctx),
+			},
+			"effective_usage_policy_id": types.StringType,
 			"effective_user_api_scopes": basetypes.ListType{
 				ElemType: types.StringType,
 			},
@@ -645,6 +716,32 @@ func (m *App_SdkV2) SetDefaultGitSource(ctx context.Context, v GitSource_SdkV2) 
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["default_git_source"]
 	m.DefaultGitSource = types.ListValueMust(t, vs)
+}
+
+// GetEffectiveResources returns the value of the EffectiveResources field in App_SdkV2 as
+// a slice of AppResource_SdkV2 values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *App_SdkV2) GetEffectiveResources(ctx context.Context) ([]AppResource_SdkV2, bool) {
+	if m.EffectiveResources.IsNull() || m.EffectiveResources.IsUnknown() {
+		return nil, false
+	}
+	var v []AppResource_SdkV2
+	d := m.EffectiveResources.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetEffectiveResources sets the value of the EffectiveResources field in App_SdkV2.
+func (m *App_SdkV2) SetEffectiveResources(ctx context.Context, v []AppResource_SdkV2) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["effective_resources"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.EffectiveResources = types.ListValueMust(t, vs)
 }
 
 // GetEffectiveUserApiScopes returns the value of the EffectiveUserApiScopes field in App_SdkV2 as
@@ -1027,39 +1124,63 @@ func (m *AppAccessControlResponse_SdkV2) SetAllPermissions(ctx context.Context, 
 	m.AllPermissions = types.ListValueMust(t, vs)
 }
 
+// A deployment of an app's source code, taken from a workspace path or a Git
+// reference. When a deployment succeeds, it becomes the app's active
+// deployment. See
+// https://docs.databricks.com/aws/en/dev-tools/databricks-apps/deploy.
 type AppDeployment_SdkV2 struct {
 	// The command with which to run the app. This will override the command
 	// specified in the app.yaml file.
 	Command types.List `tfsdk:"command"`
-	// The creation time of the deployment. Formatted timestamp in ISO 6801.
+	// The creation time of the deployment. Formatted timestamp in ISO 8601.
 	CreateTime types.String `tfsdk:"create_time"`
-	// The email of the user creates the deployment.
+	// The email of the user that created the deployment.
 	Creator types.String `tfsdk:"creator"`
 	// The deployment artifacts for an app.
 	DeploymentArtifacts types.List `tfsdk:"deployment_artifacts"`
-	// The unique id of the deployment.
+	// The unique ID of the deployment. Databricks generates the ID when the
+	// deployment is created.
 	DeploymentId types.String `tfsdk:"deployment_id"`
 	// The environment variables to set in the app runtime environment. This
 	// will override the environment variables specified in the app.yaml file.
+	// Responses return only the variable names, not their values.
 	EnvVars types.List `tfsdk:"env_vars"`
-	// Git repository to use as the source for the app deployment.
+	// Git repository to use as the source for the app deployment. The
+	// repository itself is configured on the app, so set only the branch, tag
+	// or commit here, and optionally `source_code_path`.
 	GitSource types.List `tfsdk:"git_source"`
 	// Deploy-time health check for the app. Verifies the app is responding to
 	// HTTP requests before considering the deployment successful.
 	HealthCheck types.List `tfsdk:"health_check"`
-	// The mode of which the deployment will manage the source code.
+	// The mode in which the deployment manages the source code. The mode
+	// defaults to `SNAPSHOT`, which is the only supported mode.
 	Mode types.String `tfsdk:"mode"`
+	// Whether `scan_omitted_findings_count` is a lower bound rather than an
+	// exact count, because the scanner itself stopped counting.
+	ScanOmittedCountIsLowerBound types.Bool `tfsdk:"scan_omitted_count_is_lower_bound"`
+	// The number of findings the scan reported but did not store, because the
+	// deployment hit the per-deployment findings cap. Non-zero means the listed
+	// findings are incomplete.
+	ScanOmittedFindingsCount types.Int64 `tfsdk:"scan_omitted_findings_count"`
+	// The security scan outcome for this deployment. UNSPECIFIED means no scan
+	// result has been recorded: the scan may still be in flight, or it ended
+	// without recording one, so don't wait indefinitely for it to change. The
+	// other values are terminal.
+	ScanStatus types.String `tfsdk:"scan_status"`
 	// The workspace file system path of the source code used to create the app
 	// deployment. This is different from
 	// `deployment_artifacts.source_code_path`, which is the path used by the
 	// deployed app. The former refers to the original source code location of
 	// the app in the workspace during deployment creation, whereas the latter
 	// provides a system generated stable snapshotted source code path used by
-	// the deployment.
+	// the deployment. Set either `source_code_path` or `git_source`, not both.
+	// If neither is set, the deployment reuses the source of the app's active
+	// deployment.
 	SourceCodePath types.String `tfsdk:"source_code_path"`
-	// Status and status message of the deployment
+	// The current state of the deployment and a message that describes its
+	// progress or failure.
 	Status types.List `tfsdk:"status"`
-	// The update time of the deployment. Formatted timestamp in ISO 6801.
+	// The update time of the deployment. Formatted timestamp in ISO 8601.
 	UpdateTime types.String `tfsdk:"update_time"`
 }
 
@@ -1199,6 +1320,9 @@ func (m AppDeployment_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema
 	attrs["health_check"] = attrs["health_check"].SetOptional()
 	attrs["health_check"] = attrs["health_check"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["mode"] = attrs["mode"].SetOptional()
+	attrs["scan_omitted_count_is_lower_bound"] = attrs["scan_omitted_count_is_lower_bound"].SetComputed()
+	attrs["scan_omitted_findings_count"] = attrs["scan_omitted_findings_count"].SetComputed()
+	attrs["scan_status"] = attrs["scan_status"].SetComputed()
 	attrs["source_code_path"] = attrs["source_code_path"].SetOptional()
 	attrs["status"] = attrs["status"].SetComputed()
 	attrs["status"] = attrs["status"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
@@ -1232,18 +1356,21 @@ func (m AppDeployment_SdkV2) ToObjectValue(ctx context.Context) basetypes.Object
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"command":              m.Command,
-			"create_time":          m.CreateTime,
-			"creator":              m.Creator,
-			"deployment_artifacts": m.DeploymentArtifacts,
-			"deployment_id":        m.DeploymentId,
-			"env_vars":             m.EnvVars,
-			"git_source":           m.GitSource,
-			"health_check":         m.HealthCheck,
-			"mode":                 m.Mode,
-			"source_code_path":     m.SourceCodePath,
-			"status":               m.Status,
-			"update_time":          m.UpdateTime,
+			"command":                           m.Command,
+			"create_time":                       m.CreateTime,
+			"creator":                           m.Creator,
+			"deployment_artifacts":              m.DeploymentArtifacts,
+			"deployment_id":                     m.DeploymentId,
+			"env_vars":                          m.EnvVars,
+			"git_source":                        m.GitSource,
+			"health_check":                      m.HealthCheck,
+			"mode":                              m.Mode,
+			"scan_omitted_count_is_lower_bound": m.ScanOmittedCountIsLowerBound,
+			"scan_omitted_findings_count":       m.ScanOmittedFindingsCount,
+			"scan_status":                       m.ScanStatus,
+			"source_code_path":                  m.SourceCodePath,
+			"status":                            m.Status,
+			"update_time":                       m.UpdateTime,
 		})
 }
 
@@ -1269,8 +1396,11 @@ func (m AppDeployment_SdkV2) Type(ctx context.Context) attr.Type {
 			"health_check": basetypes.ListType{
 				ElemType: AppHealthCheck_SdkV2{}.Type(ctx),
 			},
-			"mode":             types.StringType,
-			"source_code_path": types.StringType,
+			"mode":                              types.StringType,
+			"scan_omitted_count_is_lower_bound": types.BoolType,
+			"scan_omitted_findings_count":       types.Int64Type,
+			"scan_status":                       types.StringType,
+			"source_code_path":                  types.StringType,
 			"status": basetypes.ListType{
 				ElemType: AppDeploymentStatus_SdkV2{}.Type(ctx),
 			},
@@ -1484,10 +1614,106 @@ func (m AppDeploymentArtifacts_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// A single security scan finding for an app deployment. Findings are produced
+// when a deployment's source code is scanned, and their triage `status` is
+// preserved across re-scans of the same deployment.
+type AppDeploymentScanFinding_SdkV2 struct {
+	// The app-relative path of the file the finding was reported in.
+	FilePath types.String `tfsdk:"file_path"`
+	// The stable id of the finding (the last segment of `name`), derived from
+	// the rule, file, and line so the same issue keeps its triage status across
+	// re-scans.
+	FindingId types.String `tfsdk:"finding_id"`
+	// The line number the finding was reported at.
+	Line types.Int64 `tfsdk:"line"`
+	// A human-readable description of the finding.
+	Message types.String `tfsdk:"message"`
+	// The resource name of the finding, in the form
+	// `apps/{app}/deployments/{deployment}/scanFindings/{finding_id}`.
+	Name types.String `tfsdk:"name"`
+	// The scanner rule that produced the finding.
+	RuleId types.String `tfsdk:"rule_id"`
+	// The scanner that produced the finding.
+	ScannerType types.String `tfsdk:"scanner_type"`
+	// The severity reported by the scanner.
+	Severity types.String `tfsdk:"severity"`
+	// The triage status of the finding. This is the only client-writable field;
+	// set it to resolve or ignore a finding.
+	Status types.String `tfsdk:"status"`
+}
+
+func (to *AppDeploymentScanFinding_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from AppDeploymentScanFinding_SdkV2) {
+}
+
+func (to *AppDeploymentScanFinding_SdkV2) SyncFieldsDuringRead(ctx context.Context, from AppDeploymentScanFinding_SdkV2) {
+}
+
+func (m AppDeploymentScanFinding_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["file_path"] = attrs["file_path"].SetComputed()
+	attrs["finding_id"] = attrs["finding_id"].SetComputed()
+	attrs["line"] = attrs["line"].SetComputed()
+	attrs["message"] = attrs["message"].SetComputed()
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["rule_id"] = attrs["rule_id"].SetComputed()
+	attrs["scanner_type"] = attrs["scanner_type"].SetComputed()
+	attrs["severity"] = attrs["severity"].SetComputed()
+	attrs["status"] = attrs["status"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in AppDeploymentScanFinding.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m AppDeploymentScanFinding_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, AppDeploymentScanFinding_SdkV2
+// only implements ToObjectValue() and Type().
+func (m AppDeploymentScanFinding_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"file_path":    m.FilePath,
+			"finding_id":   m.FindingId,
+			"line":         m.Line,
+			"message":      m.Message,
+			"name":         m.Name,
+			"rule_id":      m.RuleId,
+			"scanner_type": m.ScannerType,
+			"severity":     m.Severity,
+			"status":       m.Status,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m AppDeploymentScanFinding_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"file_path":    types.StringType,
+			"finding_id":   types.StringType,
+			"line":         types.Int64Type,
+			"message":      types.StringType,
+			"name":         types.StringType,
+			"rule_id":      types.StringType,
+			"scanner_type": types.StringType,
+			"severity":     types.StringType,
+			"status":       types.StringType,
+		},
+	}
+}
+
 type AppDeploymentStatus_SdkV2 struct {
 	// Message corresponding with the deployment state.
 	Message types.String `tfsdk:"message"`
-	// State of the deployment.
+	// State of the deployment. A deployment starts in `IN_PROGRESS` and ends in
+	// `SUCCEEDED`, `FAILED` or `CANCELLED`.
 	State types.String `tfsdk:"state"`
 }
 
@@ -2781,28 +3007,31 @@ func (m *AppPermissionsRequest_SdkV2) SetAccessControlList(ctx context.Context, 
 }
 
 type AppResource_SdkV2 struct {
+	// Another app in the workspace that this app is granted access to.
 	App types.List `tfsdk:"app"`
-
+	// Lakebase Provisioned database the app is granted access to.
 	Database types.List `tfsdk:"database"`
 	// Description of the App Resource.
 	Description types.String `tfsdk:"description"`
-
+	// MLflow experiment the app is granted access to.
 	Experiment types.List `tfsdk:"experiment"`
-
+	// Genie space the app is granted access to.
 	GenieSpace types.List `tfsdk:"genie_space"`
-
+	// Lakeflow job the app is granted access to.
 	Job types.List `tfsdk:"job"`
-	// Name of the App Resource.
+	// Key that identifies the resource within the app. The app configuration
+	// (app.yaml) references the resource by this key.
 	Name types.String `tfsdk:"name"`
-
+	// Lakebase Autoscaling Postgres database the app is granted access to.
 	Postgres types.List `tfsdk:"postgres"`
-
+	// Secret the app is granted access to.
 	Secret types.List `tfsdk:"secret"`
-
+	// Model serving endpoint the app is granted access to.
 	ServingEndpoint types.List `tfsdk:"serving_endpoint"`
-
+	// SQL warehouse the app is granted access to.
 	SqlWarehouse types.List `tfsdk:"sql_warehouse"`
-
+	// Unity Catalog securable (volume, table, function, connection or model
+	// service) the app is granted a privilege on.
 	UcSecurable types.List `tfsdk:"uc_securable"`
 }
 
@@ -3354,8 +3583,9 @@ func (m *AppResource_SdkV2) SetUcSecurable(ctx context.Context, v AppResourceUcS
 }
 
 type AppResourceApp_SdkV2 struct {
+	// Name of the app to grant access to.
 	Name types.String `tfsdk:"name"`
-
+	// Permission to grant on that app.
 	Permission types.String `tfsdk:"permission"`
 }
 
@@ -3406,10 +3636,11 @@ func (m AppResourceApp_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type AppResourceDatabase_SdkV2 struct {
+	// Name of the database within the instance.
 	DatabaseName types.String `tfsdk:"database_name"`
-
+	// Name of the Lakebase database instance.
 	InstanceName types.String `tfsdk:"instance_name"`
-
+	// Permission to grant the app on the database.
 	Permission types.String `tfsdk:"permission"`
 }
 
@@ -3463,8 +3694,9 @@ func (m AppResourceDatabase_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type AppResourceExperiment_SdkV2 struct {
+	// ID of the MLflow experiment.
 	ExperimentId types.String `tfsdk:"experiment_id"`
-
+	// Permission to grant the app on the experiment.
 	Permission types.String `tfsdk:"permission"`
 }
 
@@ -3516,9 +3748,9 @@ func (m AppResourceExperiment_SdkV2) Type(ctx context.Context) attr.Type {
 
 type AppResourceGenieSpace_SdkV2 struct {
 	Name types.String `tfsdk:"name"`
-
+	// Permission to grant the app on the Genie space.
 	Permission types.String `tfsdk:"permission"`
-
+	// ID of the Genie space.
 	SpaceId types.String `tfsdk:"space_id"`
 }
 
@@ -3626,10 +3858,13 @@ func (m AppResourceJob_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type AppResourcePostgres_SdkV2 struct {
+	// Resource name of the Lakebase Autoscaling branch, in the form
+	// `projects/{project}/branches/{branch}`.
 	Branch types.String `tfsdk:"branch"`
-
+	// Resource name of the database within the branch, in the form
+	// `projects/{project}/branches/{branch}/databases/{database}`.
 	Database types.String `tfsdk:"database"`
-
+	// Permission to grant the app on the database.
 	Permission types.String `tfsdk:"permission"`
 }
 
@@ -3850,13 +4085,17 @@ func (m AppResourceSqlWarehouse_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type AppResourceUcSecurable_SdkV2 struct {
+	// Privilege to grant the app on the securable. The privilege must be valid
+	// for the securable type, such as READ_VOLUME for a volume or SELECT for a
+	// table.
 	Permission types.String `tfsdk:"permission"`
-
+	// Full name of the Unity Catalog securable. For volumes, tables and
+	// functions this is the three-level catalog.schema.object name.
 	SecurableFullName types.String `tfsdk:"securable_full_name"`
 	// The securable kind from Unity Catalog. See
 	// https://docs.databricks.com/api/workspace/tables/get#securable_kind_manifest-securable_kind.
 	SecurableKind types.String `tfsdk:"securable_kind"`
-
+	// Kind of Unity Catalog securable that `securable_full_name` refers to.
 	SecurableType types.String `tfsdk:"securable_type"`
 }
 
@@ -3961,7 +4200,10 @@ func (m AppThumbnail_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// Progress of an app update started by AsyncUpdateApp, together with the values
+// the update requested.
 type AppUpdate_SdkV2 struct {
+	// Budget policy ID requested by the update.
 	BudgetPolicyId types.String `tfsdk:"budget_policy_id"`
 	// Maximum number of app instances the app is configured to run. Must be set
 	// together with `compute_min_instances`.
@@ -3969,24 +4211,24 @@ type AppUpdate_SdkV2 struct {
 	// Minimum number of app instances the app is configured to run. Must be set
 	// together with `compute_max_instances`.
 	ComputeMinInstances types.Int64 `tfsdk:"compute_min_instances"`
-
+	// Compute size requested by the update.
 	ComputeSize types.String `tfsdk:"compute_size"`
-
+	// Description requested by the update.
 	Description types.String `tfsdk:"description"`
 	// Forward the user's access token to the app. Requires stopping and
 	// starting app compute to take effect.
 	ForwardUserAccessToken types.Bool `tfsdk:"forward_user_access_token"`
-
+	// Git repository configuration requested by the update.
 	GitRepository types.List `tfsdk:"git_repository"`
-
+	// Resources requested by the update.
 	Resources types.List `tfsdk:"resources"`
-
+	// Progress of the update.
 	Status types.List `tfsdk:"status"`
-
+	// Telemetry export destinations requested by the update.
 	TelemetryExportDestinations types.List `tfsdk:"telemetry_export_destinations"`
-
+	// Usage policy ID requested by the update.
 	UsagePolicyId types.String `tfsdk:"usage_policy_id"`
-
+	// User API scopes requested by the update.
 	UserApiScopes types.List `tfsdk:"user_api_scopes"`
 }
 
@@ -4335,8 +4577,9 @@ func (m *AppUpdate_SdkV2) SetUserApiScopes(ctx context.Context, v []types.String
 }
 
 type AppUpdateUpdateStatus_SdkV2 struct {
+	// Human-readable detail about the update state.
 	Message types.String `tfsdk:"message"`
-
+	// State of the update.
 	State types.String `tfsdk:"state"`
 }
 
@@ -4387,7 +4630,7 @@ func (m AppUpdateUpdateStatus_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type ApplicationStatus_SdkV2 struct {
-	// Application status message
+	// Human-readable detail about the application state.
 	Message types.String `tfsdk:"message"`
 	// The number of app instances whose application process is running.
 	RunningInstances types.Int64 `tfsdk:"running_instances"`
@@ -4445,9 +4688,15 @@ func (m ApplicationStatus_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type AsyncUpdateAppRequest_SdkV2 struct {
+	// The new values for the app. Only the fields named in `update_mask` are
+	// applied; the others must still be valid.
 	App types.List `tfsdk:"app"`
-
+	// The name of the app to update.
 	AppName types.String `tfsdk:"-"`
+	// Comma-separated names of the `app` fields to update, such as
+	// `description` or `resources`. A field named in the mask but absent from
+	// `app` is cleared, except `compute_size`, which resets to `MEDIUM`.
+	//
 	// The field mask must be a single string, with multiple fields separated by
 	// commas (no spaces). The field path is relative to the resource object,
 	// using a dot (`.`) to navigate sub-fields (e.g., `author.given_name`).
@@ -4563,7 +4812,7 @@ type ComputeStatus_SdkV2 struct {
 	// The number of active compute instances currently used and billed for this
 	// application.
 	ActiveInstances types.Int64 `tfsdk:"active_instances"`
-	// Compute status message
+	// Human-readable detail about the compute state.
 	Message types.String `tfsdk:"message"`
 	// State of the app compute.
 	State types.String `tfsdk:"state"`
@@ -5546,6 +5795,55 @@ func (m GetAppDeploymentRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+type GetAppDeploymentScanFindingRequest_SdkV2 struct {
+	// The resource name of the finding, in the form
+	// `apps/{app}/deployments/{deployment}/scanFindings/{finding_id}`.
+	Name types.String `tfsdk:"-"`
+}
+
+func (to *GetAppDeploymentScanFindingRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetAppDeploymentScanFindingRequest_SdkV2) {
+}
+
+func (to *GetAppDeploymentScanFindingRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from GetAppDeploymentScanFindingRequest_SdkV2) {
+}
+
+func (m GetAppDeploymentScanFindingRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetAppDeploymentScanFindingRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m GetAppDeploymentScanFindingRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetAppDeploymentScanFindingRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (m GetAppDeploymentScanFindingRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name": m.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m GetAppDeploymentScanFindingRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name": types.StringType,
+		},
+	}
+}
+
 type GetAppPermissionLevelsRequest_SdkV2 struct {
 	// The app for which to get or manage permissions.
 	AppName types.String `tfsdk:"-"`
@@ -6204,13 +6502,195 @@ func (m *GitSource_SdkV2) SetGitRepository(ctx context.Context, v GitRepository_
 	m.GitRepository = types.ListValueMust(t, vs)
 }
 
+type ListAppDeploymentScanFindingsRequest_SdkV2 struct {
+	// Upper bound for the number of findings returned.
+	PageSize types.Int64 `tfsdk:"-"`
+	// Pagination token to request the next page. Requests the first page if
+	// absent.
+	PageToken types.String `tfsdk:"-"`
+	// The parent deployment whose findings to list, in the form
+	// `apps/{app}/deployments/{deployment}`.
+	Parent types.String `tfsdk:"-"`
+}
+
+func (to *ListAppDeploymentScanFindingsRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListAppDeploymentScanFindingsRequest_SdkV2) {
+}
+
+func (to *ListAppDeploymentScanFindingsRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListAppDeploymentScanFindingsRequest_SdkV2) {
+}
+
+func (m ListAppDeploymentScanFindingsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["parent"] = attrs["parent"].SetRequired()
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListAppDeploymentScanFindingsRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ListAppDeploymentScanFindingsRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListAppDeploymentScanFindingsRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (m ListAppDeploymentScanFindingsRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"page_size":  m.PageSize,
+			"page_token": m.PageToken,
+			"parent":     m.Parent,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ListAppDeploymentScanFindingsRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"page_size":  types.Int64Type,
+			"page_token": types.StringType,
+			"parent":     types.StringType,
+		},
+	}
+}
+
+// Response message for ListAppDeploymentScanFindings.
+type ListAppDeploymentScanFindingsResponse_SdkV2 struct {
+	// The scan findings for the deployment.
+	AppDeploymentScanFindings types.List `tfsdk:"app_deployment_scan_findings"`
+	// Pagination token to request the next page of findings.
+	NextPageToken types.String `tfsdk:"next_page_token"`
+}
+
+func (to *ListAppDeploymentScanFindingsResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ListAppDeploymentScanFindingsResponse_SdkV2) {
+	if !from.AppDeploymentScanFindings.IsNull() && !from.AppDeploymentScanFindings.IsUnknown() && to.AppDeploymentScanFindings.IsNull() && len(from.AppDeploymentScanFindings.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for AppDeploymentScanFindings, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.AppDeploymentScanFindings = from.AppDeploymentScanFindings
+	}
+	if !from.AppDeploymentScanFindings.IsNull() && !from.AppDeploymentScanFindings.IsUnknown() {
+		if toAppDeploymentScanFindings, ok := to.GetAppDeploymentScanFindings(ctx); ok {
+			if fromAppDeploymentScanFindings, ok := from.GetAppDeploymentScanFindings(ctx); ok {
+				// Recursively sync the fields of each AppDeploymentScanFindings element by position.
+				for i := range toAppDeploymentScanFindings {
+					if i < len(fromAppDeploymentScanFindings) {
+						toAppDeploymentScanFindings[i].SyncFieldsDuringCreateOrUpdate(ctx, fromAppDeploymentScanFindings[i])
+					}
+				}
+				to.SetAppDeploymentScanFindings(ctx, toAppDeploymentScanFindings)
+			}
+		}
+	}
+}
+
+func (to *ListAppDeploymentScanFindingsResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ListAppDeploymentScanFindingsResponse_SdkV2) {
+	if !from.AppDeploymentScanFindings.IsNull() && !from.AppDeploymentScanFindings.IsUnknown() && to.AppDeploymentScanFindings.IsNull() && len(from.AppDeploymentScanFindings.Elements()) == 0 {
+		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty list for AppDeploymentScanFindings, and the deserialized field value is Null,
+		// set the resulting resource state to the empty list to match the planned value.
+		to.AppDeploymentScanFindings = from.AppDeploymentScanFindings
+	}
+	if !from.AppDeploymentScanFindings.IsNull() && !from.AppDeploymentScanFindings.IsUnknown() {
+		if toAppDeploymentScanFindings, ok := to.GetAppDeploymentScanFindings(ctx); ok {
+			if fromAppDeploymentScanFindings, ok := from.GetAppDeploymentScanFindings(ctx); ok {
+				for i := range toAppDeploymentScanFindings {
+					if i < len(fromAppDeploymentScanFindings) {
+						toAppDeploymentScanFindings[i].SyncFieldsDuringRead(ctx, fromAppDeploymentScanFindings[i])
+					}
+				}
+				to.SetAppDeploymentScanFindings(ctx, toAppDeploymentScanFindings)
+			}
+		}
+	}
+}
+
+func (m ListAppDeploymentScanFindingsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["app_deployment_scan_findings"] = attrs["app_deployment_scan_findings"].SetOptional()
+	attrs["next_page_token"] = attrs["next_page_token"].SetComputed()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListAppDeploymentScanFindingsResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ListAppDeploymentScanFindingsResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"app_deployment_scan_findings": reflect.TypeOf(AppDeploymentScanFinding_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListAppDeploymentScanFindingsResponse_SdkV2
+// only implements ToObjectValue() and Type().
+func (m ListAppDeploymentScanFindingsResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"app_deployment_scan_findings": m.AppDeploymentScanFindings,
+			"next_page_token":              m.NextPageToken,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ListAppDeploymentScanFindingsResponse_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"app_deployment_scan_findings": basetypes.ListType{
+				ElemType: AppDeploymentScanFinding_SdkV2{}.Type(ctx),
+			},
+			"next_page_token": types.StringType,
+		},
+	}
+}
+
+// GetAppDeploymentScanFindings returns the value of the AppDeploymentScanFindings field in ListAppDeploymentScanFindingsResponse_SdkV2 as
+// a slice of AppDeploymentScanFinding_SdkV2 values.
+// If the field is unknown or null, the boolean return value is false.
+func (m *ListAppDeploymentScanFindingsResponse_SdkV2) GetAppDeploymentScanFindings(ctx context.Context) ([]AppDeploymentScanFinding_SdkV2, bool) {
+	if m.AppDeploymentScanFindings.IsNull() || m.AppDeploymentScanFindings.IsUnknown() {
+		return nil, false
+	}
+	var v []AppDeploymentScanFinding_SdkV2
+	d := m.AppDeploymentScanFindings.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAppDeploymentScanFindings sets the value of the AppDeploymentScanFindings field in ListAppDeploymentScanFindingsResponse_SdkV2.
+func (m *ListAppDeploymentScanFindingsResponse_SdkV2) SetAppDeploymentScanFindings(ctx context.Context, v []AppDeploymentScanFinding_SdkV2) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["app_deployment_scan_findings"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	m.AppDeploymentScanFindings = types.ListValueMust(t, vs)
+}
+
 type ListAppDeploymentsRequest_SdkV2 struct {
 	// The name of the app.
 	AppName types.String `tfsdk:"-"`
-	// Upper bound for items returned.
+	// Upper bound for items returned. The default is 100 and the maximum is
+	// 1000.
 	PageSize types.Int64 `tfsdk:"-"`
-	// Pagination token to go to the next page of apps. Requests first page if
-	// absent.
+	// Pagination token to go to the next page of deployments. Requests first
+	// page if absent.
 	PageToken types.String `tfsdk:"-"`
 }
 
@@ -6264,9 +6744,9 @@ func (m ListAppDeploymentsRequest_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type ListAppDeploymentsResponse_SdkV2 struct {
-	// Deployment history of the app.
+	// Deployment history of the app, most recent deployment first.
 	AppDeployments types.List `tfsdk:"app_deployments"`
-	// Pagination token to request the next page of apps.
+	// Pagination token to request the next page of deployments.
 	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
@@ -7034,13 +7514,17 @@ func (m *Operation_SdkV2) SetError(ctx context.Context, v DatabricksServiceExcep
 	m.Error = types.ListValueMust(t, vs)
 }
 
+// An app space groups Databricks apps and shares configuration across them.
+// Resources, user API scopes and the usage policy configured on a space apply
+// to every app in the space. See
+// https://docs.databricks.com/aws/en/dev-tools/databricks-apps/app-spaces.
 type Space_SdkV2 struct {
 	// The group whose permissions users assume via Role Authorization for apps
 	// in this space. When set, user tokens assume the role of this group
 	// instead of doing regular obo token downscoping. Set only at space
 	// creation.
 	AssumeGroupId types.String `tfsdk:"assume_group_id"`
-	// The creation time of the app space. Formatted timestamp in ISO 6801.
+	// The creation time of the app space. Formatted timestamp in ISO 8601.
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
 	// The email of the user that created the app space.
 	Creator types.String `tfsdk:"creator"`
@@ -7054,26 +7538,28 @@ type Space_SdkV2 struct {
 	Id types.String `tfsdk:"id"`
 	// The name of the app space. The name must contain only lowercase
 	// alphanumeric characters and hyphens. It must be unique within the
-	// workspace.
+	// workspace. It can't start or end with a hyphen, and it can't be changed
+	// after the space is created.
 	Name types.String `tfsdk:"name"`
 	// Resources for the app space. Resources configured at the space level are
 	// available to all apps in the space.
 	Resources types.List `tfsdk:"resources"`
-	// The service principal client ID for the app space.
+	// OAuth client ID of the app space's service principal.
 	ServicePrincipalClientId types.String `tfsdk:"service_principal_client_id"`
-	// The service principal ID for the app space.
+	// Numeric ID of the app space's service principal.
 	ServicePrincipalId types.Int64 `tfsdk:"service_principal_id"`
-	// The service principal name for the app space.
+	// Display name of the app space's service principal.
 	ServicePrincipalName types.String `tfsdk:"service_principal_name"`
 	// The status of the app space.
 	Status types.List `tfsdk:"status"`
-	// The update time of the app space. Formatted timestamp in ISO 6801.
+	// The update time of the app space. Formatted timestamp in ISO 8601.
 	UpdateTime timetypes.RFC3339 `tfsdk:"update_time"`
 	// The email of the user that last updated the app space.
 	Updater types.String `tfsdk:"updater"`
 	// The usage policy ID for managing cost at the space level.
 	UsagePolicyId types.String `tfsdk:"usage_policy_id"`
-	// OAuth scopes for apps in the space.
+	// API scopes that apps in the space can request for user authorization. See
+	// https://docs.databricks.com/aws/en/dev-tools/databricks-apps/auth.
 	UserApiScopes types.List `tfsdk:"user_api_scopes"`
 }
 
@@ -7791,6 +8277,7 @@ func (m StopAppRequest_SdkV2) Type(ctx context.Context) attr.Type {
 
 // A single telemetry export destination with its configuration and status.
 type TelemetryExportDestination_SdkV2 struct {
+	// Unity Catalog tables that receive the telemetry.
 	UnityCatalog types.List `tfsdk:"unity_catalog"`
 }
 
@@ -7887,11 +8374,14 @@ func (m *TelemetryExportDestination_SdkV2) SetUnityCatalog(ctx context.Context, 
 
 // Unity Catalog Destinations for OTEL telemetry export.
 type UnityCatalog_SdkV2 struct {
-	// Unity Catalog table for OTEL logs.
+	// Three-level name of the Unity Catalog table that receives OpenTelemetry
+	// logs. The table is created if it does not exist.
 	LogsTable types.String `tfsdk:"logs_table"`
-	// Unity Catalog table for OTEL metrics.
+	// Three-level name of the Unity Catalog table that receives OpenTelemetry
+	// metrics. The table is created if it does not exist.
 	MetricsTable types.String `tfsdk:"metrics_table"`
-	// Unity Catalog table for OTEL traces (spans).
+	// Three-level name of the Unity Catalog table that receives OpenTelemetry
+	// traces (spans). The table is created if it does not exist.
 	TracesTable types.String `tfsdk:"traces_table"`
 }
 
@@ -7942,6 +8432,115 @@ func (m UnityCatalog_SdkV2) Type(ctx context.Context) attr.Type {
 			"traces_table":  types.StringType,
 		},
 	}
+}
+
+type UpdateAppDeploymentScanFindingRequest_SdkV2 struct {
+	// The finding to update. `name` identifies the finding and `status` is the
+	// new triage status.
+	AppDeploymentScanFinding types.List `tfsdk:"app_deployment_scan_finding"`
+	// The resource name of the finding, in the form
+	// `apps/{app}/deployments/{deployment}/scanFindings/{finding_id}`.
+	Name types.String `tfsdk:"-"`
+	// The fields to update. Must be exactly `status`, the only updatable field
+	// on a scan finding.
+	UpdateMask types.String `tfsdk:"-"`
+}
+
+func (to *UpdateAppDeploymentScanFindingRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from UpdateAppDeploymentScanFindingRequest_SdkV2) {
+	if !from.AppDeploymentScanFinding.IsNull() && !from.AppDeploymentScanFinding.IsUnknown() {
+		if toAppDeploymentScanFinding, ok := to.GetAppDeploymentScanFinding(ctx); ok {
+			if fromAppDeploymentScanFinding, ok := from.GetAppDeploymentScanFinding(ctx); ok {
+				// Recursively sync the fields of AppDeploymentScanFinding
+				toAppDeploymentScanFinding.SyncFieldsDuringCreateOrUpdate(ctx, fromAppDeploymentScanFinding)
+				to.SetAppDeploymentScanFinding(ctx, toAppDeploymentScanFinding)
+			}
+		}
+	}
+}
+
+func (to *UpdateAppDeploymentScanFindingRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from UpdateAppDeploymentScanFindingRequest_SdkV2) {
+	if !from.AppDeploymentScanFinding.IsNull() && !from.AppDeploymentScanFinding.IsUnknown() {
+		if toAppDeploymentScanFinding, ok := to.GetAppDeploymentScanFinding(ctx); ok {
+			if fromAppDeploymentScanFinding, ok := from.GetAppDeploymentScanFinding(ctx); ok {
+				toAppDeploymentScanFinding.SyncFieldsDuringRead(ctx, fromAppDeploymentScanFinding)
+				to.SetAppDeploymentScanFinding(ctx, toAppDeploymentScanFinding)
+			}
+		}
+	}
+}
+
+func (m UpdateAppDeploymentScanFindingRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["app_deployment_scan_finding"] = attrs["app_deployment_scan_finding"].SetRequired()
+	attrs["app_deployment_scan_finding"] = attrs["app_deployment_scan_finding"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["update_mask"] = attrs["update_mask"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateAppDeploymentScanFindingRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m UpdateAppDeploymentScanFindingRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"app_deployment_scan_finding": reflect.TypeOf(AppDeploymentScanFinding_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateAppDeploymentScanFindingRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (m UpdateAppDeploymentScanFindingRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"app_deployment_scan_finding": m.AppDeploymentScanFinding,
+			"name":                        m.Name,
+			"update_mask":                 m.UpdateMask,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m UpdateAppDeploymentScanFindingRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"app_deployment_scan_finding": basetypes.ListType{
+				ElemType: AppDeploymentScanFinding_SdkV2{}.Type(ctx),
+			},
+			"name":        types.StringType,
+			"update_mask": types.StringType,
+		},
+	}
+}
+
+// GetAppDeploymentScanFinding returns the value of the AppDeploymentScanFinding field in UpdateAppDeploymentScanFindingRequest_SdkV2 as
+// a AppDeploymentScanFinding_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *UpdateAppDeploymentScanFindingRequest_SdkV2) GetAppDeploymentScanFinding(ctx context.Context) (AppDeploymentScanFinding_SdkV2, bool) {
+	var e AppDeploymentScanFinding_SdkV2
+	if m.AppDeploymentScanFinding.IsNull() || m.AppDeploymentScanFinding.IsUnknown() {
+		return e, false
+	}
+	var v []AppDeploymentScanFinding_SdkV2
+	d := m.AppDeploymentScanFinding.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAppDeploymentScanFinding sets the value of the AppDeploymentScanFinding field in UpdateAppDeploymentScanFindingRequest_SdkV2.
+func (m *UpdateAppDeploymentScanFindingRequest_SdkV2) SetAppDeploymentScanFinding(ctx context.Context, v AppDeploymentScanFinding_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["app_deployment_scan_finding"]
+	m.AppDeploymentScanFinding = types.ListValueMust(t, vs)
 }
 
 type UpdateAppRequest_SdkV2 struct {
@@ -8252,21 +8851,14 @@ func (m *UpdateCustomTemplateRequest_SdkV2) SetTemplate(ctx context.Context, v C
 type UpdateSpaceRequest_SdkV2 struct {
 	// The name of the app space. The name must contain only lowercase
 	// alphanumeric characters and hyphens. It must be unique within the
-	// workspace.
+	// workspace. It can't start or end with a hyphen, and it can't be changed
+	// after the space is created.
 	Name types.String `tfsdk:"-"`
 
 	Space types.List `tfsdk:"space"`
-	// The field mask must be a single string, with multiple fields separated by
-	// commas (no spaces). The field path is relative to the resource object,
-	// using a dot (`.`) to navigate sub-fields (e.g., `author.given_name`).
-	// Specification of elements in sequence or map fields is not allowed, as
-	// only the entire collection field can be specified. Field names must
-	// exactly match the resource field names.
-	//
-	// A field mask of `*` indicates full replacement. It’s recommended to
-	// always explicitly list the fields being updated and avoid using `*`
-	// wildcards, as it can lead to unintended results if the API changes in the
-	// future.
+	// Comma-separated names of the `space` fields to update, such as
+	// `description` or `resources`. A field named in the mask but absent from
+	// `space` is cleared.
 	UpdateMask types.String `tfsdk:"-"`
 }
 

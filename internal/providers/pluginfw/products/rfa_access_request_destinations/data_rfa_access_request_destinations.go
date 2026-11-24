@@ -108,15 +108,27 @@ type AccessRequestDestinationsData struct {
 	DestinationSourceSecurable types.Object `tfsdk:"destination_source_securable"`
 	// The access request destinations for the securable.
 	Destinations types.Set `tfsdk:"destinations"`
-	// The full name of the securable. Redundant with the name in the securable
-	// object, but necessary for Terraform integration
+	// The full name of the securable, repeated from **securable**.
 	FullName types.String `tfsdk:"full_name"`
 	// The securable for which the access request destinations are being
 	// modified or read.
 	Securable types.Object `tfsdk:"securable"`
-	// The type of the securable. Redundant with the type in the securable
-	// object, but necessary for Terraform integration
-	SecurableType      types.String `tfsdk:"securable_type"`
+	// The type of the securable, repeated from **securable** as a plain string.
+	SecurableType types.String `tfsdk:"securable_type"`
+	// The access request URLs shared by every workspace in the metastore. Only
+	// set when the securable is a metastore. These URLs are used when neither
+	// the requested securable nor its parents have an explicit destination or a
+	// default owner email destination, and they take precedence over metastore
+	// destinations.
+	//
+	// A **dynamic_url** and default owner email destinations cannot both be on:
+	// saving one turns the other off. Saving a **dynamic_url** while they are
+	// on requires a metastore admin.
+	//
+	// Setting this field removes the metastore destinations in this workspace.
+	// The first save also removes the metastore URL destinations of other
+	// workspaces. Once set, the configuration can be cleared but not removed.
+	UrlConfiguration   types.Object `tfsdk:"url_configuration"`
 	ProviderConfigData types.Object `tfsdk:"provider_config"`
 }
 
@@ -132,6 +144,7 @@ func (m AccessRequestDestinationsData) GetComplexFieldTypes(ctx context.Context)
 		"destination_source_securable": reflect.TypeOf(catalog_tf.Securable{}),
 		"destinations":                 reflect.TypeOf(catalog_tf.NotificationDestination{}),
 		"securable":                    reflect.TypeOf(catalog_tf.Securable{}),
+		"url_configuration":            reflect.TypeOf(catalog_tf.UrlConfiguration{}),
 		"provider_config":              reflect.TypeOf(ProviderConfigData{}),
 	}
 }
@@ -152,6 +165,7 @@ func (m AccessRequestDestinationsData) ToObjectValue(ctx context.Context) basety
 			"full_name":                    m.FullName,
 			"securable":                    m.Securable,
 			"securable_type":               m.SecurableType,
+			"url_configuration":            m.UrlConfiguration,
 
 			"provider_config": m.ProviderConfigData,
 		},
@@ -168,9 +182,10 @@ func (m AccessRequestDestinationsData) Type(ctx context.Context) attr.Type {
 			"destinations": basetypes.SetType{
 				ElemType: catalog_tf.NotificationDestination{}.Type(ctx),
 			},
-			"full_name":      types.StringType,
-			"securable":      catalog_tf.Securable{}.Type(ctx),
-			"securable_type": types.StringType,
+			"full_name":         types.StringType,
+			"securable":         catalog_tf.Securable{}.Type(ctx),
+			"securable_type":    types.StringType,
+			"url_configuration": catalog_tf.UrlConfiguration{}.Type(ctx),
 
 			"provider_config": ProviderConfigData{}.Type(ctx),
 		},
@@ -184,6 +199,7 @@ func (m AccessRequestDestinationsData) ApplySchemaCustomizations(attrs map[strin
 	attrs["full_name"] = attrs["full_name"].SetRequired()
 	attrs["securable"] = attrs["securable"].SetComputed()
 	attrs["securable_type"] = attrs["securable_type"].SetRequired()
+	attrs["url_configuration"] = attrs["url_configuration"].SetComputed()
 
 	attrs["provider_config"] = attrs["provider_config"].SetOptional()
 

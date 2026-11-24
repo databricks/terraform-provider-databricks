@@ -2,7 +2,7 @@
 subcategory: "Postgres"
 ---
 # databricks_postgres_database Data Source
-[![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
+[![GA](https://img.shields.io/badge/Release_Stage-GA-green)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
 [API Documentation](https://docs.databricks.com/api/workspace/postgres)
 
@@ -44,7 +44,11 @@ The following attributes are exported:
   Format: projects/{project_id}/branches/{branch_id}/databases/{database_id}
 * `parent` (string) - The branch containing this database.
   Format: projects/{project_id}/branches/{branch_id}
-* `spec` (DatabaseDatabaseSpec) - The desired state of the Database
+* `spec` (DatabaseDatabaseSpec) - The desired state of the Database.
+  
+  Read the resource's current values from `status`, rather than `spec`.
+  `spec` tracks field ownership for infrastructure-as-code tools and may omit
+  unmanaged fields
 * `status` (DatabaseDatabaseStatus) - The observed state of the Database
 * `update_time` (string) - A timestamp indicating when the database was last updated
 
@@ -59,9 +63,10 @@ The following attributes are exported:
 * `role` (string) - The name of the role that owns the database.
   Format: projects/{project_id}/branches/{branch_id}/roles/{role_id}
   
+  The role must be in the same branch as the database.
   To change the owner, pass valid existing Role name when updating the Database
   
-  A database always has an owner
+  Required when creating the Database
 
 ### DatabaseDatabaseStatus
 * `database_id` (string) - Part of the resource name

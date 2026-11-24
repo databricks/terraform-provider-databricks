@@ -2,7 +2,7 @@
 subcategory: "Postgres"
 ---
 # databricks_postgres_endpoint Data Source
-[![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
+[![GA](https://img.shields.io/badge/Release_Stage-GA-green)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
 [API Documentation](https://docs.databricks.com/api/workspace/postgres)
 
@@ -35,19 +35,26 @@ The following arguments are supported:
 ## Attributes
 The following attributes are exported:
 * `create_time` (string) - A timestamp indicating when the compute endpoint was created
-* `endpoint_id` (string) - The part of the name, chosen by the user when the resource was created
+* `endpoint_id` (string) - The endpoint ID chosen when the endpoint was created. It is the final segment of `name`
 * `name` (string) - Output only. The full resource path of the endpoint.
   Format: projects/{project_id}/branches/{branch_id}/endpoints/{endpoint_id}
 * `parent` (string) - The branch containing this endpoint (API resource hierarchy).
   Format: projects/{project_id}/branches/{branch_id}
-* `spec` (EndpointSpec) - The spec contains the compute endpoint configuration, including autoscaling limits, suspend timeout, and disabled state
-* `status` (EndpointStatus) - Current operational status of the compute endpoint
-* `uid` (string) - System-generated unique ID for the endpoint
+* `spec` (EndpointSpec) - The desired configuration of the endpoint. Every field under `spec` except `endpoint_type` can be
+  changed after creation. See `status` for the configuration that is currently in effect.
+  
+  Read the resource's current values from `status`, rather than `spec`.
+  `spec` tracks field ownership for infrastructure-as-code tools and may omit
+  unmanaged fields
+* `status` (EndpointStatus) - The configuration and state of the endpoint that are currently in effect, as reported by the
+  system, including the hostnames to connect to
+* `uid` (string) - A system-generated ID that identifies the endpoint. Unlike `name`, it is not derived from the
+  user-chosen endpoint ID. The endpoint's connection hostnames are based on this ID
 * `update_time` (string) - A timestamp indicating when the compute endpoint was last updated
 
 ### EndpointGroupSpec
 * `enable_readable_secondaries` (boolean) - Whether to allow read-only connections to read-write endpoints. Only relevant for read-write endpoints where
-  size.max > 1
+  `max` is greater than 1. When enabled, the endpoint also reports a read-only host in `status.hosts`
 * `max` (integer) - The maximum number of computes in the endpoint group. Currently, this must be equal to min. Set to 1 for single
   compute endpoints, to disable HA. To manually suspend all computes in an endpoint group, set disabled to
   true on the EndpointSpec
@@ -55,8 +62,8 @@ The following attributes are exported:
   than or equal to 1
 
 ### EndpointGroupStatus
-* `enable_readable_secondaries` (boolean) - Whether read-only connections to read-write endpoints are allowed. Only relevant if read replicas are configured
-  by specifying size.max > 1
+* `enable_readable_secondaries` (boolean) - Whether read-only connections to read-write endpoints are allowed. Only relevant if the endpoint has more than
+  one compute (`max` greater than 1)
 * `max` (integer) - The maximum number of computes in the endpoint group. Currently, this must be equal to min. Set to 1 for single
   compute endpoints, to disable HA. To manually suspend all computes in an endpoint group, set disabled to
   true on the EndpointSpec
@@ -74,42 +81,51 @@ The following attributes are exported:
 * `read_write_pooled_host` (string) - The read-write hostname of the compute endpoint, with pooling. This attribute is only defined for read-write endpoints
 
 ### EndpointSettings
-* `pg_settings` (object) - A raw representation of Postgres settings
+* `pg_settings` (object) - Postgres server parameters to set on the compute endpoint, keyed by parameter name. Each value is
+  given as a string
 
 ### EndpointSpec
 * `autoscaling_limit_max_cu` (number) - The maximum number of Compute Units. The maximum value is 64.
-  The difference between the minimum and maximum Compute Units (max - min) must not exceed 16
-* `autoscaling_limit_min_cu` (number) - The minimum number of Compute Units. Minimum value is 0.5
+  The difference between the minimum and maximum Compute Units (max - min) must not exceed 16.
+  Set it equal to `autoscaling_limit_min_cu` for a fixed-size compute. When omitted at creation, the
+  project's default endpoint settings apply
+* `autoscaling_limit_min_cu` (number) - The minimum number of Compute Units. Minimum value is 0.5, and it must not exceed
+  `autoscaling_limit_max_cu`. When omitted at creation, the project's default endpoint settings apply
 * `disabled` (boolean) - Whether to restrict connections to the compute endpoint.
   Enabling this option schedules a suspend compute operation.
   A disabled compute endpoint cannot be enabled by a connection or
-  console action
+  console action. To accept connections again, set this field back to false
 * `endpoint_type` (string) - The endpoint type. A branch can only have one READ_WRITE endpoint. Possible values are: `ENDPOINT_TYPE_READ_ONLY`, `ENDPOINT_TYPE_READ_WRITE`
 * `group` (EndpointGroupSpec) - Settings for optional HA configuration of the endpoint. If unspecified, the endpoint defaults
   to non HA settings, with a single compute backing the endpoint (and no readable secondaries
-  for Read/Write endpoints)
+  for Read/Write endpoints). Automatic suspension is not available for an endpoint with more than one
+  compute, so set `no_suspension` to true when configuring one
 * `no_suspension` (boolean) - When set to true, explicitly disables automatic suspension (never suspend).
-  Should be set to true when provided.
+  The value must be true when provided.
   Mutually exclusive with `suspend_timeout_duration`
-* `settings` (EndpointSettings)
+* `settings` (EndpointSettings) - Postgres server parameters for the compute endpoint. On update, an empty `pg_settings` map leaves
+  the current parameters unchanged
 * `suspend_timeout_duration` (string) - Duration of inactivity after which the compute endpoint is automatically suspended.
-  If specified should be between 60s and 604800s (1 minute to 1 week).
+  If specified, the value must be between 60s and 604800s (1 minute to 1 week). A suspended endpoint
+  keeps its hostnames and configuration, and the next connection attempt restarts it. When neither
+  this field nor `no_suspension` is set at creation, the project's default endpoint settings apply.
   Mutually exclusive with `no_suspension`
 
 ### EndpointStatus
 * `autoscaling_limit_max_cu` (number) - The maximum number of Compute Units. The maximum value is 64.
   The difference between the minimum and maximum Compute Units (max - min) must not exceed 16
 * `autoscaling_limit_min_cu` (number) - The minimum number of Compute Units
-* `current_state` (string) - Possible values are: `ACTIVE`, `DEGRADED`, `IDLE`, `INIT`
+* `current_state` (string) - The state the compute endpoint is in now. Possible values are: `ACTIVE`, `DEGRADED`, `IDLE`, `INIT`
 * `disabled` (boolean) - Whether to restrict connections to the compute endpoint.
   Enabling this option schedules a suspend compute operation.
   A disabled compute endpoint cannot be enabled by a connection or
   console action
-* `endpoint_id` (string) - Part of the resource name
+* `endpoint_id` (string) - The endpoint ID, which is the final segment of the endpoint's resource name
 * `endpoint_type` (string) - The endpoint type. A branch can only have one READ_WRITE endpoint. Possible values are: `ENDPOINT_TYPE_READ_ONLY`, `ENDPOINT_TYPE_READ_WRITE`
 * `group` (EndpointGroupStatus) - Details on the HA configuration of the endpoint
 * `hosts` (EndpointHosts) - Contains host information for connecting to the endpoint
 * `last_active_time` (string) - A timestamp indicating when the compute endpoint was last active
-* `pending_state` (string) - Possible values are: `ACTIVE`, `DEGRADED`, `IDLE`, `INIT`
-* `settings` (EndpointSettings)
-* `suspend_timeout_duration` (string) - Duration of inactivity after which the compute endpoint is automatically suspended
+* `pending_state` (string) - The state the compute endpoint is transitioning to, if a transition is in progress. Possible values are: `ACTIVE`, `DEGRADED`, `IDLE`, `INIT`
+* `settings` (EndpointSettings) - The Postgres server parameters currently set on the compute endpoint
+* `suspend_timeout_duration` (string) - Duration of inactivity after which the compute endpoint is automatically suspended. Absent when
+  automatic suspension is disabled

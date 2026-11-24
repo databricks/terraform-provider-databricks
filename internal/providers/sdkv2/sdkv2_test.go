@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -35,6 +36,7 @@ func TestPluginFrameworkOptInsExistInSdkV2(t *testing.T) {
 }
 
 func TestConfigureDatabricksClient(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
 	testCases := []struct {
 		name                 string
 		config               map[string]interface{}
@@ -87,7 +89,13 @@ func TestConfigureDatabricksClient(t *testing.T) {
 			rd := schema.TestResourceDataRaw(t, p.Schema, tc.config)
 
 			// Call ConfigureDatabricksClient
-			client, diags := ConfigureDatabricksClient(context.Background(), rd, nil)
+			client, diags := ConfigureDatabricksClient(context.Background(), rd, func(cfg *config.Config) error {
+				// Host discovery is external to these configuration cases.
+				cfg.HostMetadataResolver = func(context.Context, string) (*config.HostMetadata, error) {
+					return nil, nil
+				}
+				return nil
+			})
 			assert.False(t, diags.HasError(), "ConfigureDatabricksClient should not return errors")
 
 			// Get the client from the response

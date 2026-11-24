@@ -2,7 +2,7 @@
 subcategory: "Postgres"
 ---
 # databricks_postgres_branch Data Source
-[![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
+[![GA](https://img.shields.io/badge/Release_Stage-GA-green)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
 [API Documentation](https://docs.databricks.com/api/workspace/postgres)
 
@@ -43,7 +43,11 @@ The following attributes are exported:
   
   Note: This field indicates where the branch exists in the resource hierarchy.
   For point-in-time branching from another branch, see `status.source_branch`
-* `spec` (BranchSpec) - The spec contains the branch configuration
+* `spec` (BranchSpec) - The spec contains the branch configuration.
+  
+  Read the resource's current values from `status`, rather than `spec`.
+  `spec` tracks field ownership for infrastructure-as-code tools and may omit
+  unmanaged fields
 * `status` (BranchStatus) - The current status of a Branch
 * `uid` (string) - System-generated unique ID for the branch
 * `update_time` (string) - A timestamp indicating when the branch was last updated

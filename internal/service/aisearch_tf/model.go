@@ -86,11 +86,10 @@ type CreateEndpointRequest struct {
 	// the desired configuration; `endpoint.name` is server-assigned from
 	// `parent` and `endpoint_id`.
 	Endpoint types.Object `tfsdk:"endpoint"`
-	// The user-supplied short name for the Endpoint, per AIP-133. The server
-	// composes the full `Endpoint.name` as `{parent}/endpoints/{endpoint_id}`.
-	// AIP-133 does not list `endpoint_id` as a fields-may-be-required entry, so
-	// we annotate it OPTIONAL on the wire; the server still rejects empty
-	// values with INVALID_PARAMETER_VALUE.
+	// Short name of the endpoint, which becomes the last segment of `name`. The
+	// server rejects a request without it. The name can have at most 50
+	// characters, can contain only lowercase letters, digits, hyphens, periods,
+	// and underscores, and must start and end with a letter or digit.
 	EndpointId types.String `tfsdk:"-"`
 	// The Workspace where this Endpoint will be created. Format:
 	// `workspaces/{workspace_id}`
@@ -195,11 +194,9 @@ type CreateIndexRequest struct {
 	// desired configuration; `index.name` is server-assigned from `parent` and
 	// `index_id`.
 	Index types.Object `tfsdk:"index"`
-	// The user-supplied Unity Catalog table name for the Index, per AIP-133.
-	// The server composes the full `Index.name` as
-	// `{parent}/indexes/{index_id}`. AIP-133 does not list `index_id` as a
-	// fields-may-be-required entry, so we annotate it OPTIONAL on the wire; the
-	// server still rejects empty values with INVALID_PARAMETER_VALUE.
+	// Three-level Unity Catalog table name for the new index, in the form
+	// `catalog.schema.name`. The server composes the full `Index.name` as
+	// `{parent}/indexes/{index_id}` and rejects an empty value.
 	IndexId types.String `tfsdk:"-"`
 	// The Endpoint where this Index will be created. Format:
 	// `workspaces/{workspace_id}/endpoints/{endpoint_id}`
@@ -551,27 +548,31 @@ func (m DeleteIndexRequest) Type(ctx context.Context) attr.Type {
 // Specification for a Delta Sync index — the index is kept in sync with a
 // source Delta table.
 type DeltaSyncIndexSpec struct {
-	// [Optional] Select the columns to sync with the index. If left blank, all
-	// columns from the source table are synced. The primary key column and
-	// embedding source or vector column are always synced.
+	// Columns of the source table to include in the index. When empty, all
+	// columns are synced. The primary key and the embedding source or vector
+	// column are always synced. Only synced columns can be returned in query
+	// results or used in filters.
 	ColumnsToSync types.List `tfsdk:"columns_to_sync"`
-	// The columns that contain the embedding source.
+	// Columns whose text Databricks embeds during sync, using the model
+	// endpoint named on each column. Set either this field or
+	// `embedding_vector_columns`, not both.
 	EmbeddingSourceColumns types.List `tfsdk:"embedding_source_columns"`
-	// The columns that contain the embedding vectors.
+	// Columns of the source table that already hold precomputed embedding
+	// vectors. Set either this field or `embedding_source_columns`, not both.
 	EmbeddingVectorColumns types.List `tfsdk:"embedding_vector_columns"`
-	// [Optional] Name of the Delta table to sync the index contents and
-	// computed embeddings to.
+	// Three-level name of a Delta table to write the synced rows and computed
+	// embeddings to. It applies only when embeddings are computed from
+	// `embedding_source_columns`, and the table must not already exist.
 	EmbeddingWritebackTable types.String `tfsdk:"embedding_writeback_table"`
 	// The ID of the pipeline that is used to sync the index.
 	PipelineId types.String `tfsdk:"pipeline_id"`
-	// Pipeline execution mode. Required on create — the backend rejects an
-	// unset value. Storage Optimized endpoints accept only `TRIGGERED`;
-	// Standard endpoints accept both. No explicit `stage` — a REQUIRED field
-	// staged below its service would be dropped from combined specs while
-	// remaining in `required`, tripping the OpenAPI required-vs-properties
-	// consistency check. The field inherits the service's launch stage.
+	// Sync mode of the pipeline that keeps the index up to date. `TRIGGERED`
+	// syncs at creation and then each time SyncIndex is called; `CONTINUOUS`
+	// processes source changes as they arrive. Storage Optimized endpoints
+	// accept only `TRIGGERED`, and an unset value is rejected.
 	PipelineType types.String `tfsdk:"pipeline_type"`
-	// The full name of the source Delta table.
+	// Three-level Unity Catalog name of the source Delta table, in the form
+	// `catalog.schema.table`.
 	SourceTable types.String `tfsdk:"source_table"`
 }
 
@@ -813,13 +814,17 @@ func (m *DeltaSyncIndexSpec) SetEmbeddingVectorColumns(ctx context.Context, v []
 // Specification for a Direct Access index — the customer manages vectors and
 // metadata directly.
 type DirectAccessIndexSpec struct {
-	// The columns that contain the embedding source.
+	// Columns that contain the text to embed, each with the model endpoint that
+	// computes its embeddings.
 	EmbeddingSourceColumns types.List `tfsdk:"embedding_source_columns"`
-	// The columns that contain the embedding vectors.
+	// Columns that hold precomputed embedding vectors. A single vector column
+	// is supported, and it cannot be the primary key.
 	EmbeddingVectorColumns types.List `tfsdk:"embedding_vector_columns"`
-	// The schema of the index in JSON format. Supported types are `integer`,
-	// `long`, `float`, `double`, `boolean`, `string`, `date`, `timestamp`.
-	// Supported types for vector columns: `array<float>`, `array<double>`.
+	// The schema of the index in JSON format, mapping each column name to its
+	// type. Supported types are `integer`, `long`, `float`, `double`,
+	// `boolean`, `string`, `date`, `timestamp`. Supported types for vector
+	// columns: `array<float>`, `array<double>`. The schema must include the
+	// primary key column and the embedding vector column.
 	SchemaJson types.String `tfsdk:"schema_json"`
 }
 
@@ -1014,7 +1019,7 @@ type EmbeddingSourceColumn struct {
 	// Name of the embedding model endpoint which, if specified, is used for
 	// querying (not ingestion).
 	ModelEndpointNameForQuery types.String `tfsdk:"model_endpoint_name_for_query"`
-	// Name of the source column.
+	// Name of the column whose text is embedded.
 	Name types.String `tfsdk:"name"`
 }
 
@@ -1069,9 +1074,9 @@ func (m EmbeddingSourceColumn) Type(ctx context.Context) attr.Type {
 
 // Name and dimension of an embedding vector column.
 type EmbeddingVectorColumn struct {
-	// Dimension of the embedding vector.
+	// Number of elements in each embedding vector. It must be positive.
 	EmbeddingDimension types.Int64 `tfsdk:"embedding_dimension"`
-	// Name of the column.
+	// Name of the column that holds the precomputed embedding vectors.
 	Name types.String `tfsdk:"name"`
 }
 
@@ -1125,31 +1130,38 @@ func (m EmbeddingVectorColumn) Type(ctx context.Context) attr.Type {
 // and serves queries against them. Customers create, query, and delete
 // endpoints; the system manages provisioning, scaling, and health status.
 type Endpoint struct {
-	// The user-selected budget policy id for the endpoint.
+	// ID of the serverless budget policy to apply to the endpoint. The caller
+	// must have permission to use the policy. Set either this field or
+	// `usage_policy_id`, not both. Responses do not echo this field; they
+	// report the applied policy in `effective_budget_policy_id`.
 	BudgetPolicyId types.String `tfsdk:"budget_policy_id"`
 	// Time the endpoint was created.
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
-	// Creator of the endpoint
+	// User name of the principal that created the endpoint. For a user, it is
+	// the user's email address; for any other principal, it is the principal's
+	// unique name.
 	Creator types.String `tfsdk:"creator"`
-	// The custom tags assigned to the endpoint
+	// Custom tags assigned to the endpoint. On update, the list replaces all of
+	// the endpoint's existing tags.
 	CustomTags types.List `tfsdk:"custom_tags"`
-	// The budget policy id applied to the endpoint
+	// ID of the budget policy that is currently applied to the endpoint.
 	EffectiveBudgetPolicyId types.String `tfsdk:"effective_budget_policy_id"`
-	// Current status of the endpoint
+	// Current lifecycle state of the endpoint, with an optional message that
+	// explains it.
 	EndpointStatus types.Object `tfsdk:"endpoint_status"`
 	// Type of endpoint. Required on create and immutable thereafter.
 	EndpointType types.String `tfsdk:"endpoint_type"`
-	// Unique identifier of the endpoint
+	// System-generated UUID that uniquely identifies the endpoint.
 	Id types.String `tfsdk:"id"`
 	// Number of indexes on the endpoint
 	IndexCount types.Int64 `tfsdk:"index_count"`
-	// User who last updated the endpoint
+	// User name of the principal that last updated the endpoint, in the same
+	// format as `creator`.
 	LastUpdatedUser types.String `tfsdk:"last_updated_user"`
-	// Name of the AI Search endpoint. Server-assigned full resource path
-	// (`workspaces/{workspace}/endpoints/{endpoint}`) on output. On create, the
-	// user-supplied short name is conveyed via
-	// `CreateEndpointRequest.endpoint_id`; the server composes the full `name`
-	// and returns it on the response.
+	// Full resource name of the endpoint, in the form
+	// `workspaces/{workspace_id}/endpoints/{endpoint_id}`. On create, the
+	// server composes it from `parent` and `endpoint_id` and ignores any value
+	// supplied in the request body.
 	Name types.String `tfsdk:"name"`
 	// The client-supplied desired number of replicas for the endpoint, applied
 	// at create/update time. Mutually exclusive with `target_qps`.
@@ -1158,12 +1170,15 @@ type Endpoint struct {
 	ScalingInfo types.Object `tfsdk:"scaling_info"`
 	// Target QPS for the endpoint. Mutually exclusive with `replica_count`.
 	// Best-effort; the system does not guarantee this QPS will be achieved.
+	// Responses report the requested value in
+	// `scaling_info.requested_target_qps`.
 	TargetQps types.Int64 `tfsdk:"target_qps"`
 	// Throughput information for the endpoint
 	ThroughputInfo types.Object `tfsdk:"throughput_info"`
 	// Time the endpoint was last updated.
 	UpdateTime timetypes.RFC3339 `tfsdk:"update_time"`
-	// The usage policy id applied to the endpoint.
+	// ID of the usage policy to apply to the endpoint. The server treats it as
+	// the same setting as `budget_policy_id`, so set only one of the two.
 	UsagePolicyId types.String `tfsdk:"usage_policy_id"`
 }
 
@@ -1907,9 +1922,13 @@ type Index struct {
 	// endpoint is taken from `CreateIndexRequest.parent`; populated only on
 	// output.
 	Endpoint types.String `tfsdk:"endpoint"`
-	// The subtype of the index. Set on create and immutable thereafter.
+	// Subtype of the index. Use `HYBRID` for vector and hybrid search, or
+	// `FULL_TEXT` for keyword-only search without embeddings; `VECTOR` is not a
+	// supported create value. Set on create and immutable thereafter.
 	IndexSubtype types.String `tfsdk:"index_subtype"`
-	// Type of index. Required on create and immutable thereafter.
+	// Type of index. A `DELTA_SYNC` index is kept in sync with a source Delta
+	// table; a `DIRECT_ACCESS` index holds rows that you write through
+	// UpsertData and RemoveData. Set on create and immutable thereafter.
 	IndexType types.String `tfsdk:"index_type"`
 	// Name of the AI Search index. Server-assigned full resource path
 	// (`workspaces/{workspace}/endpoints/{endpoint}/indexes/{index}`) on
@@ -1918,7 +1937,10 @@ type Index struct {
 	// `CreateIndexRequest.index_id`; the server composes the full `name` and
 	// returns it on the response.
 	Name types.String `tfsdk:"name"`
-	// Primary key of the index. Set on create and immutable thereafter.
+	// Name of the column that uniquely identifies each row. It must exist in
+	// the source table (Delta Sync) or in `schema_json` (Direct Access) and
+	// cannot be the embedding source or vector column. Set on create and
+	// immutable thereafter.
 	PrimaryKey types.String `tfsdk:"primary_key"`
 	// Current status of the index.
 	Status types.Object `tfsdk:"status"`
@@ -2129,13 +2151,18 @@ func (m *Index) SetStatus(ctx context.Context, v IndexStatus) {
 // Lifecycle and health state of an AI Search index, along with human-readable
 // detail about that state and basic indexing progress.
 type IndexStatus struct {
+	// Lifecycle and ingestion state. An online index can still have a failed
+	// update.
+	DetailedState types.String `tfsdk:"detailed_state"`
 	// Index API URL used to perform operations on the index.
 	IndexUrl types.String `tfsdk:"index_url"`
 	// Number of rows indexed.
 	IndexedRowCount types.Int64 `tfsdk:"indexed_row_count"`
 	// Human-readable detail about the index's current state.
 	Message types.String `tfsdk:"message"`
-	// Whether the index is ready for search.
+	// Whether the index can serve queries. After CreateIndex, poll GetIndex
+	// until true; message describes progress. This does not guarantee freshness
+	// or update success; check detailed_state for update failures.
 	Ready types.Bool `tfsdk:"ready"`
 }
 
@@ -2146,6 +2173,7 @@ func (to *IndexStatus) SyncFieldsDuringRead(ctx context.Context, from IndexStatu
 }
 
 func (m IndexStatus) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["detailed_state"] = attrs["detailed_state"].SetComputed()
 	attrs["index_url"] = attrs["index_url"].SetComputed()
 	attrs["indexed_row_count"] = attrs["indexed_row_count"].SetComputed()
 	attrs["message"] = attrs["message"].SetComputed()
@@ -2172,6 +2200,7 @@ func (m IndexStatus) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"detailed_state":    m.DetailedState,
 			"index_url":         m.IndexUrl,
 			"indexed_row_count": m.IndexedRowCount,
 			"message":           m.Message,
@@ -2183,6 +2212,7 @@ func (m IndexStatus) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (m IndexStatus) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"detailed_state":    types.StringType,
 			"index_url":         types.StringType,
 			"indexed_row_count": types.Int64Type,
 			"message":           types.StringType,
@@ -2192,10 +2222,9 @@ func (m IndexStatus) Type(ctx context.Context) attr.Type {
 }
 
 type ListEndpointsRequest struct {
-	// Best-effort upper bound on the number of results to return. Honored as an
-	// upper bound by the shim: `page_size` only narrows the legacy backend's
-	// response, never widens it, so the practical cap is `min(page_size,
-	// legacy_fixed_page_size)`.
+	// Maximum number of endpoints to return in one page. The server applies its
+	// own page size limit, so a page can hold fewer endpoints than `page_size`
+	// even when more remain.
 	PageSize types.Int64 `tfsdk:"-"`
 	// Page token from a previous response. If not provided, returns the first
 	// page.
@@ -2378,10 +2407,8 @@ func (m *ListEndpointsResponse) SetEndpoints(ctx context.Context, v []Endpoint) 
 }
 
 type ListIndexesRequest struct {
-	// Best-effort upper bound on the number of results to return. Honored as an
-	// upper bound by the shim: `page_size` only narrows the legacy backend's
-	// response, never widens it, so the practical cap is `min(page_size,
-	// legacy_fixed_page_size)`.
+	// Maximum number of indexes to return. When unset, every index on the
+	// endpoint is returned.
 	PageSize types.Int64 `tfsdk:"-"`
 	// Page token from a previous response. If not provided, returns the first
 	// page.
@@ -2572,17 +2599,22 @@ func (m *ListIndexesResponse) SetIndexes(ctx context.Context, v []Index) {
 // is exposed as `max_results`; v1 returns up to `max_results` rows in a single
 // response (no cursor pagination — see the note on `max_results` below).
 type QueryIndexRequest struct {
-	// Column names to include in each result row.
+	// Columns to include in each result row. Only columns that are part of the
+	// index can be returned.
 	Columns types.List `tfsdk:"columns"`
 	// Columns whose values are sent to the reranker.
 	ColumnsToRerank types.List `tfsdk:"columns_to_rerank"`
 	// Facets to compute over the matched results (e.g. `"category TOP 5"`).
 	Facets types.List `tfsdk:"facets"`
-	// JSON string describing query filters (e.g. `{"id >": 5}`).
+	// JSON object of filters to apply, serialized as a string. Each key is a
+	// column name with an optional operator suffix such as `<`, `>=`, `NOT`, or
+	// `OR`, and each value is the value to compare against. Only columns that
+	// are part of the index can be filtered. See
+	// https://docs.databricks.com/aws/en/ai-search/query-ai-search#filters for
+	// the supported operators.
 	FiltersJson types.String `tfsdk:"filters_json"`
-	// Maximum number of results to return (the legacy `num_results`). Defaults
-	// to 10. Prefer `page_size`; when both are set, `page_size` takes
-	// precedence.
+	// Maximum number of results to return. Defaults to 10. It corresponds to
+	// `num_results` in the Vector Search API.
 	MaxResults types.Int64 `tfsdk:"max_results"`
 	// Full resource name of the index to query. Format:
 	// `workspaces/{workspace_id}/endpoints/{endpoint_id}/indexes/{index_id}`
@@ -2591,17 +2623,21 @@ type QueryIndexRequest struct {
 	// searched.
 	QueryColumns types.List `tfsdk:"query_columns"`
 	// Query text. Required for Delta Sync indexes that compute embeddings from
-	// a model endpoint.
+	// a model endpoint, and for `HYBRID` and `FULL_TEXT` queries.
 	QueryText types.String `tfsdk:"query_text"`
-	// Query type: `ANN`, `HYBRID`, or `FULL_TEXT`. Defaults to `ANN`.
+	// Query type: `ANN` for vector similarity search, `HYBRID` for combined
+	// vector and keyword search, or `FULL_TEXT` for keyword search without
+	// embeddings. Defaults to `ANN`.
 	QueryType types.String `tfsdk:"query_type"`
 	// Query vector. Required for Direct Access indexes and Delta Sync indexes
 	// with self-managed vectors.
 	QueryVector types.List `tfsdk:"query_vector"`
-	// If set, results are reranked before being returned.
+	// If set, results are reranked before being returned. See
+	// https://docs.databricks.com/aws/en/ai-search/query-ai-search#rerank for
+	// details.
 	Reranker types.Object `tfsdk:"reranker"`
-	// Score threshold for the approximate nearest-neighbor search. Defaults to
-	// 0.0.
+	// Score threshold for the approximate nearest-neighbor search; results that
+	// score below it are not returned. Defaults to 0.0.
 	ScoreThreshold types.Float64 `tfsdk:"score_threshold"`
 	// Sort clauses, e.g. `["rating DESC", "price ASC"]`. Overrides relevance
 	// ordering.
@@ -3246,7 +3282,9 @@ func (m *RemoveDataRequest) SetPrimaryKeys(ctx context.Context, v []types.String
 type RemoveDataResponse struct {
 	// Per-row outcome of the delete.
 	Result types.Object `tfsdk:"result"`
-	// Overall status of the delete.
+	// Overall status of the delete: `SUCCESS` when every row was removed,
+	// `PARTIAL_SUCCESS` when some rows failed (see
+	// `result.failed_primary_keys`), or `FAILURE` when the operation failed.
 	Status types.String `tfsdk:"status"`
 }
 
@@ -3838,7 +3876,7 @@ type ScanIndexRequest struct {
 	// Full resource name of the index to scan. Format:
 	// `workspaces/{workspace_id}/endpoints/{endpoint_id}/indexes/{index_id}`
 	Name types.String `tfsdk:"-"`
-	// Maximum number of rows to return in this page.
+	// Maximum number of rows to return in this page. Defaults to 10.
 	PageSize types.Int64 `tfsdk:"page_size"`
 	// Page token from a previous response; if unset, scanning starts from the
 	// beginning.
@@ -3897,7 +3935,8 @@ func (m ScanIndexRequest) Type(ctx context.Context) attr.Type {
 // Response for ScanIndex carrying a page of rows and an optional continuation
 // token.
 type ScanIndexResponse struct {
-	// The rows in this page, each a struct of column name to value.
+	// Rows in this page, ordered by primary key. Each row is a JSON object that
+	// maps column names to values.
 	Data types.List `tfsdk:"data"`
 	// Token for the next page; empty when the scan is exhausted.
 	NextPageToken types.String `tfsdk:"next_page_token"`
@@ -4092,13 +4131,15 @@ type UpdateEndpointRequest struct {
 	// The Endpoint resource to update. `endpoint.name` carries the full
 	// resource path.
 	Endpoint types.Object `tfsdk:"endpoint"`
-	// Name of the AI Search endpoint. Server-assigned full resource path
-	// (`workspaces/{workspace}/endpoints/{endpoint}`) on output. On create, the
-	// user-supplied short name is conveyed via
-	// `CreateEndpointRequest.endpoint_id`; the server composes the full `name`
-	// and returns it on the response.
+	// Full resource name of the endpoint, in the form
+	// `workspaces/{workspace_id}/endpoints/{endpoint_id}`. On create, the
+	// server composes it from `parent` and `endpoint_id` and ignores any value
+	// supplied in the request body.
 	Name types.String `tfsdk:"-"`
-	// The list of fields to update.
+	// Comma-separated list of `Endpoint` fields to update. The updatable fields
+	// are `budget_policy_id`, `usage_policy_id`, `custom_tags`,
+	// `replica_count`, and `target_qps`. The server rejects nested paths and
+	// unknown fields.
 	UpdateMask types.String `tfsdk:"-"`
 }
 
@@ -4197,7 +4238,11 @@ func (m *UpdateEndpointRequest) SetEndpoint(ctx context.Context, v Endpoint) {
 
 // Request to upsert rows into a Direct Access AI Search index.
 type UpsertDataRequest struct {
-	// JSON document describing the rows to upsert.
+	// JSON array of the rows to insert or update, serialized as a string. Each
+	// element is an object that maps column names to values and must include
+	// the primary key column; vector columns are given as arrays of numbers. A
+	// row whose primary key already exists is overwritten. The array must not
+	// be empty.
 	InputsJson types.String `tfsdk:"inputs_json"`
 	// Full resource name of the index. Must be a Direct Access index. Format:
 	// `workspaces/{workspace_id}/endpoints/{endpoint_id}/indexes/{index_id}`
@@ -4254,7 +4299,9 @@ func (m UpsertDataRequest) Type(ctx context.Context) attr.Type {
 type UpsertDataResponse struct {
 	// Per-row outcome of the upsert.
 	Result types.Object `tfsdk:"result"`
-	// Overall status of the upsert.
+	// Overall status of the upsert: `SUCCESS` when every row was written,
+	// `PARTIAL_SUCCESS` when some rows failed (see
+	// `result.failed_primary_keys`), or `FAILURE` when the operation failed.
 	Status types.String `tfsdk:"status"`
 }
 

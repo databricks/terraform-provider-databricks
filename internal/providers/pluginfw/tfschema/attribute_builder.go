@@ -50,7 +50,7 @@ func BuildResourceAttributeMap(attributes map[string]AttributeBuilder) map[strin
 	resourceAttributes := make(map[string]schema.Attribute)
 
 	for key, attribute := range attributes {
-		resourceAttributes[key] = attribute.BuildResourceAttribute()
+		resourceAttributes[key] = withIPAddressPlanModifier(attribute.BuildResourceAttribute())
 	}
 
 	return resourceAttributes

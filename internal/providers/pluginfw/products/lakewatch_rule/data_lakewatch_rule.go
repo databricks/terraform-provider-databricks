@@ -101,7 +101,7 @@ func (r ProviderConfigData) Type(ctx context.Context) attr.Type {
 type RuleData struct {
 	// Free-form client-managed key/value annotations.
 	Annotations types.Map `tfsdk:"annotations"`
-	// Batch SQL rule input.
+	// Scheduled detection (also known as batch detection) input.
 	Batch types.Object `tfsdk:"batch"`
 	// Name of the Unity Catalog catalog that contains the rule. Required.
 	// Cannot be changed after creation. Reads return the value as supplied; the
@@ -110,9 +110,9 @@ type RuleData struct {
 	// Free-form rule category.
 	Category types.String `tfsdk:"category"`
 	// ID of the workspace whose compute runs this rule's jobs and owns its
-	// associated resources, such as the SQL warehouse a scheduled rule runs on.
-	// Server-assigned; a rule's warehouse can only be changed from this
-	// workspace.
+	// associated resources, such as the SQL warehouse a scheduled detection
+	// runs on. Server-assigned; a rule's warehouse can only be changed from
+	// this workspace.
 	ComputeWorkspaceId types.String `tfsdk:"compute_workspace_id"`
 	// Immutable UUIDv4 identifying the authored content resource installed as
 	// this rule.
@@ -187,6 +187,10 @@ type RuleData struct {
 	// the requester must still be authorized to delegate to it; an editor who
 	// is not must supply a run_as_principal they can delegate to (for example,
 	// their own identity), or clear it, either of which reassigns the rule. An
+	// update that only enables or disables the rule (changes `schedule.enabled`
+	// and nothing else) does not require delegate permission and keeps the
+	// current identity. Enabling the rule still requires the current identity
+	// to have the access the rule needs to run, or the request is rejected. An
 	// update whose mask includes `run_as_principal` but supplies no value
 	// clears it: the rule then runs as the requester, exactly as when it is
 	// omitted on create. Reads return the value as supplied; the identity the
@@ -194,9 +198,11 @@ type RuleData struct {
 	RunAsPrincipal types.String `tfsdk:"run_as_principal"`
 	// Long-form operational guidance carried from the authored rule metadata.
 	// Supports up to 4096 characters. Requests exceeding this limit are
-	// rejected.
+	// rejected. Supports Markdown; analysts and the investigation agent follow
+	// it when triaging this rule's alerts.
 	Runbook types.String `tfsdk:"runbook"`
-	// When the rule executes.
+	// When the rule executes. Required for scheduled rules. A streaming rule
+	// accepts only `enabled`, and an omitted schedule means enabled.
 	Schedule types.Object `tfsdk:"schedule"`
 	// Name of the Unity Catalog schema that contains the rule. Required. Cannot
 	// be changed after creation. Reads return the value as supplied; the
@@ -207,10 +213,13 @@ type RuleData struct {
 	Severity types.String `tfsdk:"severity"`
 	// Read-only lifecycle status.
 	Status types.Object `tfsdk:"status"`
+	// Native streaming rule input: one source table filtered by one stateless
+	// row predicate. Permanent field number; must not be renumbered.
+	Streaming types.Object `tfsdk:"streaming"`
 	// If set, this rule's signals do not open new alerts until the given time.
 	SuppressUntilTime timetypes.RFC3339 `tfsdk:"suppress_until_time"`
-	// Time-range configuration for batch rules. If unset, the execution time
-	// range is extended by a fixed `15m` lookback.
+	// Time-range configuration for scheduled detections. If unset, the
+	// execution time range is extended by a fixed `15m` lookback.
 	Timerange types.Object `tfsdk:"timerange"`
 	// Time the rule was last updated.
 	UpdateTime timetypes.RFC3339 `tfsdk:"update_time"`
@@ -241,6 +250,7 @@ func (m RuleData) GetComplexFieldTypes(ctx context.Context) map[string]reflect.T
 		"references":            reflect.TypeOf(types.String{}),
 		"schedule":              reflect.TypeOf(lakewatch_tf.RuleSchedule{}),
 		"status":                reflect.TypeOf(lakewatch_tf.ResourceStatus{}),
+		"streaming":             reflect.TypeOf(lakewatch_tf.RuleInputStreaming{}),
 		"timerange":             reflect.TypeOf(lakewatch_tf.RuleTimeRange{}),
 		"updated_by":            reflect.TypeOf(lakewatch_tf.Principal{}),
 		"provider_config":       reflect.TypeOf(ProviderConfigData{}),
@@ -289,6 +299,7 @@ func (m RuleData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"schema_name":                m.SchemaName,
 			"severity":                   m.Severity,
 			"status":                     m.Status,
+			"streaming":                  m.Streaming,
 			"suppress_until_time":        m.SuppressUntilTime,
 			"timerange":                  m.Timerange,
 			"update_time":                m.UpdateTime,
@@ -343,6 +354,7 @@ func (m RuleData) Type(ctx context.Context) attr.Type {
 			"schema_name":         types.StringType,
 			"severity":            types.StringType,
 			"status":              lakewatch_tf.ResourceStatus{}.Type(ctx),
+			"streaming":           lakewatch_tf.RuleInputStreaming{}.Type(ctx),
 			"suppress_until_time": timetypes.RFC3339{}.Type(ctx),
 			"timerange":           lakewatch_tf.RuleTimeRange{}.Type(ctx),
 			"update_time":         timetypes.RFC3339{}.Type(ctx),
@@ -387,6 +399,7 @@ func (m RuleData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeB
 	attrs["schema_name"] = attrs["schema_name"].SetComputed()
 	attrs["severity"] = attrs["severity"].SetComputed()
 	attrs["status"] = attrs["status"].SetComputed()
+	attrs["streaming"] = attrs["streaming"].SetComputed()
 	attrs["suppress_until_time"] = attrs["suppress_until_time"].SetComputed()
 	attrs["timerange"] = attrs["timerange"].SetComputed()
 	attrs["update_time"] = attrs["update_time"].SetComputed()

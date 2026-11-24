@@ -99,6 +99,7 @@ func (r ProviderConfigData) Type(ctx context.Context) attr.Type {
 
 // RoleData extends the main model with additional fields.
 type RoleData struct {
+	// A timestamp indicating when the role was created.
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
 	// Output only. The full resource path of the role. Format:
 	// projects/{project_id}/branches/{branch_id}/roles/{role_id}
@@ -110,11 +111,15 @@ type RoleData struct {
 	RoleId types.String `tfsdk:"role_id"`
 	// The spec contains the role configuration, including identity type,
 	// authentication method, and role attributes.
+	//
+	// Read the resource's current values from `status`, rather than `spec`.
+	// `spec` tracks field ownership for infrastructure-as-code tools and may
+	// omit unmanaged fields.
 	Spec types.Object `tfsdk:"spec"`
 	// Current status of the role, including its identity type, authentication
 	// method, and role attributes.
 	Status types.Object `tfsdk:"status"`
-
+	// A timestamp indicating when the role was last updated.
 	UpdateTime         timetypes.RFC3339 `tfsdk:"update_time"`
 	ProviderConfigData types.Object      `tfsdk:"provider_config"`
 }

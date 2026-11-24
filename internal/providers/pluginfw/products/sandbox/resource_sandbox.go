@@ -114,14 +114,16 @@ type Sandbox struct {
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
 	// Human-readable display label for the sandbox. At most 256 characters.
 	DisplayName types.String `tfsdk:"display_name"`
-	// Metadata associated with the sandbox.
+	// Tags and other metadata associated with the sandbox.
 	Metadata types.Object `tfsdk:"metadata"`
 	// The sandbox resource name, in the form `sandboxes/{sandbox_id}`. Derived
 	// from `sandbox_id`; any value supplied in a create or update request body
 	// is ignored.
 	Name types.String `tfsdk:"name"`
 	// Client-supplied ID that becomes the final path segment of the resource
-	// name.
+	// name. It must start with a lowercase letter, contain only lowercase
+	// letters, digits and hyphens, end with a letter or digit, and be at most
+	// 63 characters long. Values shaped like a UUID are rejected.
 	SandboxId types.String `tfsdk:"sandbox_id"`
 	// The desired configuration of the sandbox, supplied by the caller at
 	// creation time.
@@ -442,6 +444,9 @@ func (r *SandboxResource) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 	resp.Diagnostics.Append(tfschema.PopulateProviderConfigInState(ctx, r.Client, plan.ProviderConfig, &resp.State)...)
+	if !resp.Diagnostics.HasError() {
+		resp.Diagnostics.Append(resp.Private.SetKey(ctx, tfschema.CreationInputsAppliedKey, []byte("true"))...)
+	}
 }
 
 func (r *SandboxResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -554,6 +559,9 @@ func (r *SandboxResource) Update(ctx context.Context, req resource.UpdateRequest
 	}
 
 	r.update(ctx, plan, &resp.Diagnostics, &resp.State)
+	if !resp.Diagnostics.HasError() {
+		resp.Diagnostics.Append(resp.Private.SetKey(ctx, tfschema.CreationInputsAppliedKey, []byte("true"))...)
+	}
 }
 
 func (r *SandboxResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {

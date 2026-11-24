@@ -126,7 +126,9 @@ type ManagedMemoryStore struct {
 	DisplayName types.String `tfsdk:"display_name"`
 	// Caller-provided, workspace-unique memory store ID. It must be 3-56
 	// characters, begin with a lowercase letter, contain only lowercase
-	// letters, digits, and hyphens, and end with a letter or digit.
+	// letters, digits, and hyphens, and end with a letter or digit. It becomes
+	// the last segment of the store's `name` and cannot be changed after
+	// creation.
 	ManagedMemoryStoreId types.String `tfsdk:"managed_memory_store_id"`
 	// Resource name in the form `memory-stores/{managed_memory_store_id}`.
 	Name types.String `tfsdk:"name"`
@@ -372,6 +374,9 @@ func (r *ManagedMemoryStoreResource) Create(ctx context.Context, req resource.Cr
 		return
 	}
 	resp.Diagnostics.Append(tfschema.PopulateProviderConfigInState(ctx, r.Client, plan.ProviderConfig, &resp.State)...)
+	if !resp.Diagnostics.HasError() {
+		resp.Diagnostics.Append(resp.Private.SetKey(ctx, tfschema.CreationInputsAppliedKey, []byte("true"))...)
+	}
 }
 
 func (r *ManagedMemoryStoreResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -484,6 +489,9 @@ func (r *ManagedMemoryStoreResource) Update(ctx context.Context, req resource.Up
 	}
 
 	r.update(ctx, plan, &resp.Diagnostics, &resp.State)
+	if !resp.Diagnostics.HasError() {
+		resp.Diagnostics.Append(resp.Private.SetKey(ctx, tfschema.CreationInputsAppliedKey, []byte("true"))...)
+	}
 }
 
 func (r *ManagedMemoryStoreResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {

@@ -113,12 +113,12 @@ type GenieAgent struct {
 	// Time when the Genie Agent was created.
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
 	// The definition of the Genie Agent: its sample questions, data sources,
-	// instructions, and benchmarks. Must set at least one field. Returned on
-	// get and on list with `GENIE_AGENT_VIEW_FULL`. Create and update return a
-	// submitted definition unchanged; one the service would store differently,
-	// or with a column config the workspace can't keep (unknown column, or a
-	// display name while those are disabled), is rejected with
-	// INVALID_PARAMETER_VALUE.
+	// instructions, and benchmarks. Create requires at least one table, volume,
+	// MCP connection, or sub-agent in `data_sources`. Returned on get and on
+	// list with `GENIE_AGENT_VIEW_FULL`. Create and update return a submitted
+	// definition unchanged; one the service would store differently, or with a
+	// column config the workspace can't keep (unknown column, or a display name
+	// while those are disabled), is rejected with INVALID_PARAMETER_VALUE.
 	Definition types.Object `tfsdk:"definition"`
 	// Description of the Genie Agent.
 	//
@@ -392,6 +392,9 @@ func (r *GenieAgentResource) Create(ctx context.Context, req resource.CreateRequ
 		return
 	}
 	resp.Diagnostics.Append(tfschema.PopulateProviderConfigInState(ctx, r.Client, plan.ProviderConfig, &resp.State)...)
+	if !resp.Diagnostics.HasError() {
+		resp.Diagnostics.Append(resp.Private.SetKey(ctx, tfschema.CreationInputsAppliedKey, []byte("true"))...)
+	}
 }
 
 func (r *GenieAgentResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -504,6 +507,9 @@ func (r *GenieAgentResource) Update(ctx context.Context, req resource.UpdateRequ
 	}
 
 	r.update(ctx, plan, &resp.Diagnostics, &resp.State)
+	if !resp.Diagnostics.HasError() {
+		resp.Diagnostics.Append(resp.Private.SetKey(ctx, tfschema.CreationInputsAppliedKey, []byte("true"))...)
+	}
 }
 
 func (r *GenieAgentResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {

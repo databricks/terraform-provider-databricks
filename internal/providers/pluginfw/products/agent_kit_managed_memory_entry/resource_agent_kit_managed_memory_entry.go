@@ -127,17 +127,18 @@ type ManagedMemoryEntry struct {
 	// Memory store that will contain the entry, in the form
 	// `memory-stores/{managed_memory_store_id}`.
 	Parent types.String `tfsdk:"parent"`
-	// Absolute, case-sensitive path identifying the entry within its actor and
-	// optional session. Paths must begin with `/` and must not contain empty,
-	// `.` or `..` segments.
+	// Absolute, case-sensitive path identifying the entry within its actor and,
+	// until the deprecated `session_id` is ignored, its optional session. Paths
+	// must begin with `/` and must not contain empty, `.` or `..` segments.
 	Path types.String `tfsdk:"path"`
-	// Optional identifier for the session associated with this memory entry.
-	// When omitted, the entry applies across the actor's sessions.
+	// Deprecated: memory entries will be identified by `(actor_id, path)`, and
+	// the service will ignore this field on writes and omit it from responses.
+	// Until then, an omitted value means the entry applies across the actor's
+	// sessions.
 	SessionId types.String `tfsdk:"session_id"`
 	// Which writer created this entry. Caller sets this on Create; immutable
-	// after creation. While the workspace's default-source-type rollout flag is
-	// on, omitted or UNSPECIFIED is stored as AGENT. While it is off, omitted
-	// is stored unset and UNSPECIFIED as UNSPECIFIED.
+	// after creation. The server may store an omitted or UNSPECIFIED value as
+	// AGENT.
 	SourceType types.String `tfsdk:"source_type"`
 	// Time when the entry was last updated.
 	UpdateTime     timetypes.RFC3339 `tfsdk:"update_time"`
@@ -251,7 +252,8 @@ func (m ManagedMemoryEntry) ApplySchemaCustomizations(attrs map[string]tfschema.
 	attrs["managed_memory_entry_id"] = attrs["managed_memory_entry_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["managed_memory_entry_id"] = attrs["managed_memory_entry_id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplaceIf(tfschema.RequiresReplaceIfKnownChange, "", "")).(tfschema.AttributeBuilder)
 	attrs["parent"] = attrs["parent"].SetRequired()
-	attrs["parent"] = attrs["parent"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["parent"] = attrs["parent"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
+	attrs["parent"] = attrs["parent"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplaceIf(tfschema.RequiresReplaceIfKnownChange, "", "")).(tfschema.AttributeBuilder)
 
 	attrs["name"] = attrs["name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["provider_config"] = attrs["provider_config"].SetOptional()
@@ -346,6 +348,9 @@ func (r *ManagedMemoryEntryResource) Create(ctx context.Context, req resource.Cr
 		return
 	}
 	resp.Diagnostics.Append(tfschema.PopulateProviderConfigInState(ctx, r.Client, plan.ProviderConfig, &resp.State)...)
+	if !resp.Diagnostics.HasError() {
+		resp.Diagnostics.Append(resp.Private.SetKey(ctx, tfschema.CreationInputsAppliedKey, []byte("true"))...)
+	}
 }
 
 func (r *ManagedMemoryEntryResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -458,6 +463,9 @@ func (r *ManagedMemoryEntryResource) Update(ctx context.Context, req resource.Up
 	}
 
 	r.update(ctx, plan, &resp.Diagnostics, &resp.State)
+	if !resp.Diagnostics.HasError() {
+		resp.Diagnostics.Append(resp.Private.SetKey(ctx, tfschema.CreationInputsAppliedKey, []byte("true"))...)
+	}
 }
 
 func (r *ManagedMemoryEntryResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {

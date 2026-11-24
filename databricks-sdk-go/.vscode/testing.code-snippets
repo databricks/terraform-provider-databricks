@@ -1,0 +1,90 @@
+{
+	// https://snippet-generator.app/
+	"explain error": {
+		"prefix": "ifef",
+		"body": [
+		  "if err != nil {",
+		  "  return nil, fmt.Errorf(\"failed to XXX: %w\", err)",
+		  "}"
+		],
+		"description": "explain error"
+	},
+	"if not nil": {
+		"prefix": "inn",
+		"body": [
+		  "if $1 != nil {",
+		  "  $2",
+		  "}"
+		],
+		"description": "if not nil"
+	},
+	"Test case": {
+		"prefix": "te",
+		"body": [
+			"func Test$1(t *testing.T) {",
+			"    $2",
+			"}"
+		],
+		"description": "Test case"
+	},
+	"Assert len": {
+		"prefix": "al",
+		"body": [
+			"assert.Len(t, $1, $2)"
+		],
+		"description": "Assert len"
+	},
+	"Method with single error result": {
+		"prefix": "me",
+		"body": [
+		  "func (a $1) $2() error {",
+		  "    return nil",
+		  "}"
+		],
+		"description": "Method with single error result"
+	  },
+	"if err != nil return err": {
+		"prefix": "ife",
+		"body": [
+			"if err != nil {",
+			"    return fmt.Errorf(\"$1: %w\", err)",
+			"}"
+		],
+		"description": "if err != nil return err"
+	},
+	"assert.EqualError": {
+		"prefix": "aee",
+		"body": [
+		  "assert.EqualError(t, err, \"..\")"
+		],
+		"description": "assert.EqualError"
+	},
+	"assert.Equal": {
+		"prefix": "ae",
+		"body": [
+		  "assert.Equal(t, \"..\", $1)"
+		],
+		"description": "assert.Equal"
+	},
+	"assert.NoError": {
+		"prefix": "anoe",
+		"body": [
+		  "assert.NoError(t, err)"
+		],
+		"description": "assert.NoError"
+	},
+	"require.NoError": {
+		"prefix": "rnoe",
+		"body": [
+		  "require.NoError(t, err)"
+		],
+		"description": "require.NoError"
+	},
+	"err :=": {
+		"prefix": "e",
+		"body": [
+		  "err := "
+		],
+		"description": "err :="
+	  }
+}

@@ -110,15 +110,19 @@ func (r ProviderConfig) Type(ctx context.Context) attr.Type {
 type TagPolicy struct {
 	// Timestamp when the tag policy was created
 	CreateTime types.String `tfsdk:"create_time"`
-
+	// A description of the governed tag, such as its purpose or the meaning of
+	// its values.
 	Description types.String `tfsdk:"description"`
-
+	// The unique identifier of the tag policy, generated when the policy is
+	// created.
 	Id types.String `tfsdk:"id"`
-
+	// The tag key that this policy governs. Tag keys are case-sensitive.
 	TagKey types.String `tfsdk:"tag_key"`
 	// Timestamp when the tag policy was last updated
 	UpdateTime types.String `tfsdk:"update_time"`
-
+	// The allowed values of the governed tag. Only these values can be assigned
+	// to the tag key, and each value must be unique. A policy without values
+	// defines a key-only governed tag.
 	Values         types.Set    `tfsdk:"values"`
 	ProviderConfig types.Object `tfsdk:"provider_config"`
 }
@@ -206,8 +210,10 @@ func (to *TagPolicy) SyncFieldsDuringRead(ctx context.Context, from TagPolicy) {
 
 func (m TagPolicy) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["create_time"] = attrs["create_time"].SetComputed()
+	attrs["create_time"] = attrs["create_time"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["description"] = attrs["description"].SetOptional()
 	attrs["id"] = attrs["id"].SetComputed()
+	attrs["id"] = attrs["id"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["tag_key"] = attrs["tag_key"].SetRequired()
 	attrs["tag_key"] = attrs["tag_key"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["update_time"] = attrs["update_time"].SetComputed()

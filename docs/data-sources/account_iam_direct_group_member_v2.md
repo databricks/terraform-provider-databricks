@@ -32,7 +32,8 @@ The following attributes are exported:
 * `display_name` (string) - The member's display name
 * `external_id` (string) - The ID of the member in your identity provider (IdP)
 * `group_id` (integer) - The Databricks ID of the group
-* `membership_source` (string) - Where the membership comes from. Possible values are: `IDENTITY_PROVIDER`, `INTERNAL`
+* `membership_source` (string) - Where the membership comes from: added in Databricks (in the UI, through the API, or through
+  SCIM provisioning), or synced from your IdP by automatic identity management. Possible values are: `IDENTITY_PROVIDER`, `INTERNAL`
 * `name` (string) - The resource name of the membership, in one of these formats:
   - Account APIs: `accounts/{account_id}/groups/{group_id}/direct-members/{principal_id}`
   - Workspace APIs: `groups/{group_id}/direct-members/{principal_id}`

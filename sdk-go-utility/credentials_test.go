@@ -280,6 +280,10 @@ func TestCredentials_OAuthTokenStaysWithClassicConfig(t *testing.T) {
 		cfg.DisableAsyncTokenRefresh = true
 	})
 	c := ws.clients(t, cfg)
+	// Built before the first token is issued, so that it takes no time out
+	// of the lifetime of that token.
+	_, err := c.classic()
+	require.NoError(t, err)
 	creds := Credentials(cfg)
 	ctx := context.Background()
 
@@ -296,7 +300,7 @@ func TestCredentials_OAuthTokenStaysWithClassicConfig(t *testing.T) {
 			assert.Equal(t, credentialsOnWire(credentialsBearer(token)), credentialsSentAuth(call))
 		}
 	}
-	_, err := creds.AuthHeaders(ctx)
+	_, err = creds.AuthHeaders(ctx)
 	require.NoError(t, err)
 	fetched := time.Now()
 	callAll("token-1")

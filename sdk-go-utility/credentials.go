@@ -11,11 +11,11 @@ import (
 	"github.com/databricks/sdk-go/auth"
 )
 
-// unknownAuthName is the name of credentials whose config has no
+// credentialsUnknownName is the name of credentials whose config has no
 // authentication type: it has not authenticated yet, or its credentials
 // strategy has an empty name. A modular client puts the name in its
 // User-Agent and fails every request when the name is empty.
-const unknownAuthName = "unknown"
+const credentialsUnknownName = "unknown"
 
 // Credentials returns the credentials of a modular SDK client that
 // authenticates the way the classic client of cfg does. Pass them to the
@@ -45,20 +45,21 @@ const unknownAuthName = "unknown"
 //     host, the workspace routing headers, the User-Agent and the headers of
 //     cfg.Headers.
 //   - cancellation. A strategy that ignores the context of the request, as
-//     the token-based ones of the classic SDK do, returns its headers for a
-//     cancelled context too. The modular client then fails on sending.
+//     personal access tokens, basic authentication and OAuth M2M do, returns
+//     its headers for a cancelled context too. The modular client then fails
+//     on sending the request.
 func Credentials(cfg *config.Config) auth.Credentials {
-	return classicCredentials{cfg: cfg}
+	return credentialsFromConfig{cfg: cfg}
 }
 
-// classicCredentials is an auth.Credentials on top of a classic config.
-type classicCredentials struct {
+// credentialsFromConfig is an auth.Credentials on top of a classic config.
+type credentialsFromConfig struct {
 	cfg *config.Config
 }
 
-func (c classicCredentials) Name() string {
+func (c credentialsFromConfig) Name() string {
 	if c.cfg.AuthType == "" {
-		return unknownAuthName
+		return credentialsUnknownName
 	}
 	return c.cfg.AuthType
 }
@@ -68,7 +69,7 @@ func (c classicCredentials) Name() string {
 // only after authentication. Reading cfg.Host here instead would race with
 // the first authentication of the config, which rewrites the host under a
 // lock that only the config can take.
-func (c classicCredentials) AuthHeaders(ctx context.Context) ([]auth.Header, error) {
+func (c credentialsFromConfig) AuthHeaders(ctx context.Context) ([]auth.Header, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, "/", nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed creating new request: %w", err)

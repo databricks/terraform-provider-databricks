@@ -18,8 +18,8 @@ import (
 const clientOptionsClassicRetryTimeout = 5 * time.Minute
 
 // ClientOptions returns the options that point a modular SDK client, such as
-// the one modelregistry.NewClient builds, at the workspace of cfg, the
-// resolved config of a classic client. A client built from them:
+// the one modelregistry.NewClient builds, at the workspace of cfg, the config
+// of an existing classic workspace client. A client built from them:
 //
 //   - sends its calls to cfg.Host, with cfg.WorkspaceID in the
 //     X-Databricks-Workspace-Id header when it is set, and carries
@@ -39,9 +39,13 @@ const clientOptionsClassicRetryTimeout = 5 * time.Minute
 //
 // It leaves to the caller:
 //
-//   - resolving cfg, which building a classic client does. Before that, the
-//     host can lack its scheme and still hold the workspace ID in its query.
-//     ClientOptions tells an unresolved config only by such a host;
+//   - passing the config of a workspace client that already exists, since
+//     building one with databricks.NewWorkspaceClient resolves and
+//     authenticates its config. A config that is not resolved can lack the
+//     scheme of its host and hold the workspace ID in its query, and
+//     ClientOptions tells it only by such a host. A config that has not
+//     authenticated rewrites its host on its first call, under a lock that
+//     ClientOptions can't take, so reading the host then is a data race;
 //   - credentials and transport. ClientOptions doesn't derive them from cfg
 //     and doesn't wrap them, so authentication, the User-Agent, TLS settings,
 //     request logging and cfg.HTTPTimeoutSeconds are theirs to bring;

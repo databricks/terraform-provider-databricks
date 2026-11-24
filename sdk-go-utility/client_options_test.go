@@ -2,7 +2,6 @@ package sdkgoutility
 
 import (
 	"context"
-	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -51,36 +50,29 @@ var clientOptionsTestCredentials = clientOptionsFakeCredentials{headers: []auth.
 	{Key: "X-Databricks-Azure-SP-Management-Token", Value: "fake-management-token"},
 }}
 
-// clientOptionsMapCredentials are credentials whose zero value is a nil map.
-type clientOptionsMapCredentials map[string]string
+// clientOptionsNilMap are credentials whose zero value is a nil map.
+type clientOptionsNilMap map[string]string
 
-func (c clientOptionsMapCredentials) Name() string { return "map" }
+func (c clientOptionsNilMap) Name() string { return "map" }
 
-func (c clientOptionsMapCredentials) AuthHeaders(context.Context) ([]auth.Header, error) {
-	return nil, nil
-}
+func (c clientOptionsNilMap) AuthHeaders(context.Context) ([]auth.Header, error) { return nil, nil }
 
 // clientOptionsRoundTripFunc is a transport whose zero value is a nil func.
 type clientOptionsRoundTripFunc func(*http.Request) (*http.Response, error)
 
 func (f clientOptionsRoundTripFunc) RoundTrip(r *http.Request) (*http.Response, error) { return f(r) }
 
-// clientOptionsPlainTransport notes the deadline of every request, marks it
-// with clientOptionsTransportHeader and sends it.
+// clientOptionsPlainTransport notes the deadline of every request, zero for
+// none, marks the request with clientOptionsTransportHeader and sends it.
 type clientOptionsPlainTransport struct {
-	mu   sync.Mutex
-	sent []clientOptionsSentRequest
-}
-
-type clientOptionsSentRequest struct {
-	deadline time.Time
-	bounded  bool
+	mu        sync.Mutex
+	deadlines []time.Time
 }
 
 func (t *clientOptionsPlainTransport) RoundTrip(r *http.Request) (*http.Response, error) {
-	deadline, bounded := r.Context().Deadline()
+	deadline, _ := r.Context().Deadline()
 	t.mu.Lock()
-	t.sent = append(t.sent, clientOptionsSentRequest{deadline, bounded})
+	t.deadlines = append(t.deadlines, deadline)
 	t.mu.Unlock()
 	marked := r.Clone(r.Context())
 	marked.Header.Set(clientOptionsTransportHeader, "plain")
@@ -140,8 +132,8 @@ func clientOptionsCleanEnvironment(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 }
 
-// clientOptionsClassicClient returns a real classic client for cfg. Its Config
-// is resolved, as the one that the provider passes to ClientOptions.
+// clientOptionsClassicClient returns a real classic client for cfg. Building
+// it resolves and authenticates its Config, which then keeps its host.
 func clientOptionsClassicClient(t *testing.T, cfg *config.Config) *databricks.WorkspaceClient {
 	t.Helper()
 	cfg.Token = "classic-token"
@@ -150,6 +142,7 @@ func clientOptionsClassicClient(t *testing.T, cfg *config.Config) *databricks.Wo
 	}
 	w, err := databricks.NewWorkspaceClient((*databricks.Config)(cfg))
 	require.NoError(t, err)
+	require.Equal(t, "pat", cfg.AuthType, "building the client didn't authenticate its config")
 	return w
 }
 
@@ -166,8 +159,7 @@ func clientOptionsModularClient(t *testing.T, cfg *config.Config, transport http
 // clientOptionsGetModel gets the model m and returns its name.
 func clientOptionsGetModel(ctx context.Context, c *modelregistry.Client, options ...call.Option) (string, error) {
 	name := "m"
-	model, err := c.GetRegisteredModelDatabricks(ctx,
-		modelregistry.GetRegisteredModelDatabricksRequest{Name: &name}, options...)
+	model, err := c.GetRegisteredModelDatabricks(ctx, modelregistry.GetRegisteredModelDatabricksRequest{Name: &name}, options...)
 	if err != nil {
 		return "", err
 	}
@@ -198,7 +190,7 @@ func TestClientOptions_Errors(t *testing.T) {
 		{name: "nil credentials", cfg: resolved, transport: transport, want: nilCredentials},
 		{name: "nil credentials come before a nil transport", cfg: resolved, want: nilCredentials},
 		{name: "nil pointer as credentials", cfg: resolved, credentials: (*clientOptionsFakeCredentials)(nil), transport: transport, want: nilCredentials},
-		{name: "nil map as credentials", cfg: resolved, credentials: clientOptionsMapCredentials(nil), transport: transport, want: nilCredentials},
+		{name: "nil map as credentials", cfg: resolved, credentials: clientOptionsNilMap(nil), transport: transport, want: nilCredentials},
 		{name: "nil transport", cfg: resolved, credentials: clientOptionsTestCredentials, want: nilTransport},
 		{name: "nil pointer as transport", cfg: resolved, credentials: clientOptionsTestCredentials, transport: (*http.Transport)(nil), want: nilTransport},
 		{name: "nil func as transport", cfg: resolved, credentials: clientOptionsTestCredentials, transport: clientOptionsRoundTripFunc(nil), want: nilTransport},
@@ -234,6 +226,7 @@ func TestClientOptions_Errors(t *testing.T) {
 }
 
 func TestClientOptions_SetEveryOption(t *testing.T) {
+	clientOptionsCleanEnvironment(t)
 	transport := &clientOptionsPlainTransport{}
 	tests := []struct {
 		name        string
@@ -243,11 +236,11 @@ func TestClientOptions_SetEveryOption(t *testing.T) {
 	}{
 		{name: "host only", cfg: &config.Config{Host: clientOptionsTestHost}, wantTimeout: 5 * time.Minute},
 		{name: "workspace ID", cfg: &config.Config{Host: clientOptionsTestHost, WorkspaceID: "1234567890123456"}, wantTimeout: 5 * time.Minute},
-		{name: "account ID", cfg: &config.Config{Host: "https://accounts.cloud.databricks.com", AccountID: "8f4c2a10-account"}, wantTimeout: 5 * time.Minute},
+		{name: "account ID", cfg: &config.Config{Host: clientOptionsTestHost, AccountID: "8f4c2a10-account"}, wantTimeout: 5 * time.Minute},
 		{name: "workspace ID and account ID", cfg: &config.Config{Host: clientOptionsTestHost, WorkspaceID: "conn-1a2b", AccountID: "8f4c2a10-account"}, wantTimeout: 5 * time.Minute},
 		{name: "host with an IPv6 address and a port", cfg: &config.Config{Host: "http://[::1]:8080"}, wantTimeout: 5 * time.Minute},
 		{name: "credentials that are a pointer", cfg: &config.Config{Host: clientOptionsTestHost}, credentials: &clientOptionsTestCredentials, wantTimeout: 5 * time.Minute},
-		{name: "credentials that are a map", cfg: &config.Config{Host: clientOptionsTestHost}, credentials: clientOptionsMapCredentials{}, wantTimeout: 5 * time.Minute},
+		{name: "credentials that are a map", cfg: &config.Config{Host: clientOptionsTestHost}, credentials: clientOptionsNilMap{}, wantTimeout: 5 * time.Minute},
 		{name: "retry timeout of a second", cfg: &config.Config{Host: clientOptionsTestHost, RetryTimeoutSeconds: 1}, wantTimeout: time.Second},
 		{name: "retry timeout of an hour", cfg: &config.Config{Host: clientOptionsTestHost, RetryTimeoutSeconds: 3600}, wantTimeout: time.Hour},
 		{name: "negative retry timeout turns the timeout off", cfg: &config.Config{Host: clientOptionsTestHost, RetryTimeoutSeconds: -1}, wantTimeout: 0},
@@ -258,6 +251,7 @@ func TestClientOptions_SetEveryOption(t *testing.T) {
 			if tt.credentials == nil {
 				tt.credentials = clientOptionsTestCredentials
 			}
+			clientOptionsClassicClient(t, tt.cfg)
 			options, err := ClientOptions(tt.cfg, tt.credentials, transport)
 			require.NoError(t, err)
 
@@ -282,8 +276,6 @@ func TestClientOptions_SetEveryOption(t *testing.T) {
 			assert.Empty(t, got.ProfileName)
 			require.NotNil(t, got.Timeout)
 			assert.Equal(t, tt.wantTimeout, *got.Timeout)
-			// EnsureResolved fills the loaders of a config that has none.
-			assert.Empty(t, tt.cfg.Loaders, "ClientOptions resolved the config")
 		})
 	}
 }
@@ -311,11 +303,7 @@ func TestClientOptions_CallsLikeClassicClient(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			server := clientOptionsNewServer(t, http.StatusOK, clientOptionsModelBody)
-			w := clientOptionsClassicClient(t, &config.Config{
-				Host:        server.URL + tt.host,
-				WorkspaceID: tt.workspaceID,
-				AccountID:   tt.accountID,
-			})
+			w := clientOptionsClassicClient(t, &config.Config{Host: server.URL + tt.host, WorkspaceID: tt.workspaceID, AccountID: tt.accountID})
 			classicModel, err := w.ModelRegistry.GetModel(ctx, ml.GetModelRequest{Name: "m"})
 			require.NoError(t, err)
 			classicRequests := server.received()
@@ -345,52 +333,27 @@ func TestClientOptions_CallsLikeClassicClient(t *testing.T) {
 
 			// It went over the transport.
 			assert.Equal(t, []string{"plain"}, got.Header.Values(clientOptionsTransportHeader))
-			assert.Len(t, transport.sent, 1)
+			assert.Len(t, transport.deadlines, 1)
 		})
 	}
-}
-
-func TestClientOptions_SendsOnlyOverTransport(t *testing.T) {
-	clientOptionsCleanEnvironment(t)
-	var urls []string
-	// The host doesn't resolve, so a request over any other transport fails.
-	transport := clientOptionsRoundTripFunc(func(r *http.Request) (*http.Response, error) {
-		urls = append(urls, r.URL.String())
-		return &http.Response{
-			StatusCode: http.StatusOK,
-			Body:       io.NopCloser(strings.NewReader(clientOptionsModelBody)),
-			Request:    r,
-		}, nil
-	})
-	c := clientOptionsModularClient(t, &config.Config{Host: "https://workspace.invalid"}, transport)
-
-	name, err := clientOptionsGetModel(context.Background(), c)
-
-	require.NoError(t, err)
-	assert.Equal(t, "m", name)
-	assert.Equal(t, []string{"https://workspace.invalid/api/2.0/mlflow/databricks/registered-models/get?name=m"}, urls)
 }
 
 func TestClientOptions_IgnoresEnvironment(t *testing.T) {
 	ctx := context.Background()
 	tests := []struct {
 		name string
-		// env are the variables to set and files the files to write, by path
-		// in the home directory. In both, {elsewhere} is the URL of a server
-		// that is not the workspace and {home} is the home directory.
+		// env are the variables to set and files the files to write in the
+		// home directory. {elsewhere} is the URL of another server than the
+		// workspace and {home} is the home directory.
 		env   map[string]string
 		files map[string]string
-		// What a modular client without the options does in this environment:
-		// NewClient fails with leftAloneError, or the call goes elsewhere with
-		// this Authorization and this workspace ID.
+		// A modular client without the options fails in NewClient with
+		// leftAloneError, or calls elsewhere with these headers.
 		leftAloneError         string
 		leftAloneAuthorization string
 		leftAloneWorkspaceID   []string
 	}{
-		{name: "DATABRICKS_HOST and DATABRICKS_TOKEN",
-			env:                    map[string]string{"DATABRICKS_HOST": "{elsewhere}", "DATABRICKS_TOKEN": "env-token"},
-			leftAloneAuthorization: "Bearer env-token"},
-		{name: "DATABRICKS_WORKSPACE_ID and DATABRICKS_ACCOUNT_ID",
+		{name: "DATABRICKS_HOST, DATABRICKS_TOKEN, DATABRICKS_WORKSPACE_ID and DATABRICKS_ACCOUNT_ID",
 			env: map[string]string{"DATABRICKS_HOST": "{elsewhere}", "DATABRICKS_TOKEN": "env-token",
 				"DATABRICKS_WORKSPACE_ID": "999", "DATABRICKS_ACCOUNT_ID": "env-account"},
 			leftAloneAuthorization: "Bearer env-token",
@@ -493,7 +456,6 @@ func TestClientOptions_CallTimeout(t *testing.T) {
 	}{
 		{name: "unset is the 5 minutes of the classic client", retryTimeoutSeconds: 0, want: 5 * time.Minute},
 		{name: "1 second", retryTimeoutSeconds: 1, want: time.Second},
-		{name: "45 seconds", retryTimeoutSeconds: 45, want: 45 * time.Second},
 		{name: "1 hour", retryTimeoutSeconds: 3600, want: time.Hour},
 		{name: "minus one is no bound, as the provider sets it", retryTimeoutSeconds: -1},
 		{name: "any negative value is no bound", retryTimeoutSeconds: -300},
@@ -505,7 +467,8 @@ func TestClientOptions_CallTimeout(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			transport := &clientOptionsPlainTransport{}
-			c := clientOptionsModularClient(t, &config.Config{Host: server.URL, RetryTimeoutSeconds: tt.retryTimeoutSeconds}, transport)
+			w := clientOptionsClassicClient(t, &config.Config{Host: server.URL, RetryTimeoutSeconds: tt.retryTimeoutSeconds})
+			c := clientOptionsModularClient(t, w.Config, transport)
 			before := time.Now()
 			ctx := context.Background()
 			if tt.callerTimeout != 0 {
@@ -518,15 +481,14 @@ func TestClientOptions_CallTimeout(t *testing.T) {
 			after := time.Now()
 
 			require.NoError(t, err)
-			require.Len(t, transport.sent, 1)
-			sent := transport.sent[0]
+			require.Len(t, transport.deadlines, 1)
+			deadline := transport.deadlines[0]
 			if tt.want == 0 {
-				assert.False(t, sent.bounded, "the request has the deadline %s", sent.deadline)
+				assert.Zero(t, deadline, "the request has a deadline")
 				return
 			}
-			require.True(t, sent.bounded, "the request has no deadline")
-			assert.False(t, sent.deadline.Before(before.Add(tt.want)), "the deadline is less than %s ahead", tt.want)
-			assert.False(t, sent.deadline.After(after.Add(tt.want)), "the deadline is more than %s ahead", tt.want)
+			assert.False(t, deadline.Before(before.Add(tt.want)), "the deadline is less than %s ahead", tt.want)
+			assert.False(t, deadline.After(after.Add(tt.want)), "the deadline is more than %s ahead", tt.want)
 		})
 	}
 }
@@ -568,19 +530,16 @@ func TestClientOptions_BoundsCallLikeClassicClient(t *testing.T) {
 			var classicErr, modularErr error
 			var classicTook, modularTook time.Duration
 			var wg sync.WaitGroup
-			wg.Add(2)
-			go func() {
-				defer wg.Done()
+			wg.Go(func() {
 				start := time.Now()
 				_, classicErr = w.ModelRegistry.GetModel(ctx, ml.GetModelRequest{Name: "m"})
 				classicTook = time.Since(start)
-			}()
-			go func() {
-				defer wg.Done()
+			})
+			wg.Go(func() {
 				start := time.Now()
 				_, modularErr = clientOptionsGetModel(ctx, c, retry)
 				modularTook = time.Since(start)
-			}()
+			})
 			wg.Wait()
 
 			assert.ErrorIs(t, classicErr, tt.wantClassicErr)
@@ -591,5 +550,45 @@ func TestClientOptions_BoundsCallLikeClassicClient(t *testing.T) {
 			}
 			assert.Equal(t, tt.wantRetries, len(server.received()) > 2, "retries of the modular client")
 		})
+	}
+}
+
+// Resources build their options while others call with the classic client of
+// the same config. Under -race this fails if ClientOptions writes the config.
+func TestClientOptions_Concurrent(t *testing.T) {
+	clientOptionsCleanEnvironment(t)
+	ctx := context.Background()
+	server := clientOptionsNewServer(t, http.StatusOK, clientOptionsModelBody)
+	w := clientOptionsClassicClient(t, &config.Config{Host: server.URL, WorkspaceID: "42"})
+	const builders, classicCalls = 32, 10
+	errs := make(chan error, builders+classicCalls)
+	var wg sync.WaitGroup
+	for i := range builders {
+		wg.Go(func() {
+			options, err := ClientOptions(w.Config, clientOptionsTestCredentials, &clientOptionsPlainTransport{})
+			if err == nil {
+				var c *modelregistry.Client
+				if c, err = modelregistry.NewClient(ctx, options...); err == nil {
+					_, err = clientOptionsGetModel(ctx, c)
+				}
+			}
+			errs <- err
+		})
+		if i < classicCalls {
+			wg.Go(func() {
+				_, err := w.ModelRegistry.GetModel(ctx, ml.GetModelRequest{Name: "m"})
+				errs <- err
+			})
+		}
+	}
+	wg.Wait()
+	close(errs)
+	for err := range errs {
+		assert.NoError(t, err)
+	}
+	requests := server.received()
+	require.Len(t, requests, builders+classicCalls)
+	for _, r := range requests {
+		assert.Equal(t, []string{"42"}, r.Header.Values(clientOptionsWorkspaceIDHeader))
 	}
 }

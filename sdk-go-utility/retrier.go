@@ -25,20 +25,24 @@ import (
 //     ErrorRetriable of config.HTTPClientConfigFromConfig(cfg) says so (a 429,
 //     a 503 and the messages that the classic apierr package calls
 //     transient), when the error is a *url.Error with one of the network
-//     messages in retriableNetworkErrors, or when its message contains one of
+//     messages in retrierNetworkErrors, or when its message contains one of
 //     the TransientErrors of that configuration, such as
 //     REQUEST_LIMIT_EXCEEDED. It doesn't retry an error that classic turns
-//     into nil.
+//     into nil. It applies these rules to every error of an attempt, also to
+//     one from before the request is sent, such as a failed authentication,
+//     which the classic client never retries.
 //   - How long it waits. The wait before retry n is the classic backoff,
 //     retries.RetryConfig.Backoff(n). A Retry-After header doesn't change the
 //     wait, because the classic client doesn't read that header.
 //   - When it stops. The classic retry timeout is cfg.RetryTimeoutSeconds, or
 //     5 minutes when that is 0, and it runs from the moment Retrier returns.
-//     The retrier stops when the timeout or the deadline of ctx would pass
-//     during the next wait, and when ctx has ended. The call then returns the
-//     error of its last attempt, as a classic call does. A negative
-//     cfg.RetryTimeoutSeconds, which the provider sets when the user sets
-//     none, leaves only ctx to stop the retries.
+//     A negative cfg.RetryTimeoutSeconds, which the provider sets when the
+//     user sets none, is no timeout. The retrier stops when the timeout or
+//     the deadline of ctx would pass during the next wait, and when ctx has
+//     ended. The call then returns the error of its last attempt, as a
+//     classic call does. Only a ctx that is cancelled during a wait ends the
+//     call differently: the modular SDK returns the error of ctx then, and
+//     the classic client the error of the last attempt.
 //
 // The retrier writes the lines that the classic client logs about a retry, to
 // the logger of the classic SDK. Retrier returns an error when cfg or classic
@@ -71,12 +75,12 @@ func Retrier(ctx context.Context, cfg *config.Config, classic func(error) error)
 	if err != nil {
 		return nil, err
 	}
-	r := &classicRetrier{
+	r := &retrierForCall{
 		ctx:             ctx,
 		classic:         classic,
 		errorRetriable:  httpConfig.ErrorRetriable,
 		transientErrors: httpConfig.TransientErrors,
-		retryConfig:     classicRetryConfig(httpConfig),
+		retryConfig:     retrierClassicRetryConfig(httpConfig),
 	}
 	if timeout := r.retryConfig.Timeout(); timeout > 0 {
 		r.deadline = time.Now().Add(timeout)
@@ -87,10 +91,10 @@ func Retrier(ctx context.Context, cfg *config.Config, classic func(error) error)
 	return r, nil
 }
 
-// classicRetryConfig returns the retry configuration that the classic client
+// retrierClassicRetryConfig returns the retry configuration that the classic client
 // gives a request, by the steps that the client takes from its HTTP client
 // configuration to retries.Poll.
-func classicRetryConfig(httpConfig httpclient.ClientConfig) retries.RetryConfig {
+func retrierClassicRetryConfig(httpConfig httpclient.ClientConfig) retries.RetryConfig {
 	timeout := httpConfig.RetryTimeout
 	if timeout == 0 {
 		// defaultRetryTimeout of the classic httpclient package.
@@ -106,8 +110,8 @@ func classicRetryConfig(httpConfig httpclient.ClientConfig) retries.RetryConfig 
 	return retryConfig
 }
 
-// classicRetrier is the ops.Retrier that Retrier returns.
-type classicRetrier struct {
+// retrierForCall is the ops.Retrier that Retrier returns.
+type retrierForCall struct {
 	// ctx is the context of the call. The retrier lives as long as that call.
 	ctx     context.Context
 	classic func(error) error
@@ -126,10 +130,7 @@ type classicRetrier struct {
 // IsRetriable does for a failed attempt what Run of the classic retries
 // package does: it picks the wait by the number of the attempt, and gives up
 // when the retries would end during that wait.
-func (r *classicRetrier) IsRetriable(err error) (time.Duration, bool) {
-	if r.ctx.Err() != nil {
-		return 0, false
-	}
+func (r *retrierForCall) IsRetriable(err error) (time.Duration, bool) {
 	err = r.classic(err)
 	if err == nil {
 		return 0, false
@@ -143,7 +144,7 @@ func (r *classicRetrier) IsRetriable(err error) (time.Duration, bool) {
 	logger.Tracef(r.ctx, "%s. Sleeping %s",
 		strings.TrimSuffix(err.Error(), "."),
 		wait.Round(time.Millisecond))
-	if !r.deadline.IsZero() && !time.Now().Add(wait).Before(r.deadline) {
+	if r.ctx.Err() != nil || !r.deadline.IsZero() && !time.Now().Add(wait).Before(r.deadline) {
 		return 0, false
 	}
 	return wait, true
@@ -151,11 +152,11 @@ func (r *classicRetrier) IsRetriable(err error) (time.Duration, bool) {
 
 // isRetriable is isRetriable of the classic httpclient.ApiClient, with the
 // debug messages that it logs.
-func (r *classicRetrier) isRetriable(err error) bool {
+func (r *retrierForCall) isRetriable(err error) bool {
 	if r.errorRetriable(r.ctx, err) {
 		return true
 	}
-	if isRetriableNetworkError(err) {
+	if retrierIsNetworkError(err) {
 		logger.Debugf(r.ctx, "Attempting retry because of IO error: %s", err)
 		return true
 	}
@@ -169,10 +170,10 @@ func (r *classicRetrier) isRetriable(err error) bool {
 	return false
 }
 
-// retriableNetworkErrors are the messages of the network errors that the
+// retrierNetworkErrors are the messages of the network errors that the
 // classic client retries. They are a copy of urlErrorTransientErrorMessages of
 // the classic httpclient package, which doesn't export the list.
-var retriableNetworkErrors = []string{
+var retrierNetworkErrors = []string{
 	"connection reset by peer",
 	"TLS handshake timeout",
 	"connection refused",
@@ -180,15 +181,15 @@ var retriableNetworkErrors = []string{
 	"i/o timeout",
 }
 
-// isRetriableNetworkError is isRetriableUrlError of the classic httpclient
+// retrierIsNetworkError is isRetriableUrlError of the classic httpclient
 // package.
-func isRetriableNetworkError(err error) bool {
+func retrierIsNetworkError(err error) bool {
 	var urlError *url.Error
 	if !errors.As(err, &urlError) {
 		return false
 	}
 	message := err.Error()
-	for _, substring := range retriableNetworkErrors {
+	for _, substring := range retrierNetworkErrors {
 		if strings.Contains(message, substring) {
 			return true
 		}

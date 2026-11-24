@@ -9,11 +9,21 @@ Allows you to create a private endpoint in a [Network Connectivity Config](mws_n
 
 -> This resource can only be used with an account-level provider!
 
--> This feature is available on Azure, and in Public Preview on AWS.
+-> This feature is available on Azure, and in Public Preview on AWS. GCP support described below requires the Plugin Framework implementation and access to the corresponding GCP feature.
 
 ## Plugin Framework Opt-In
 
 A Plugin Framework implementation of this resource is available. The default remains the SDK V2 implementation; to opt in, set the environment variable `export DATABRICKS_TF_ENABLED_PF_RESOURCES="databricks_mws_ncc_private_endpoint_rule"`. Once opted in, `terraform apply` waits for the rule to leave `CREATING` before returning: `PENDING` and `ESTABLISHED` succeed, while a `CREATE_FAILED`, `REJECTED`, `DISCONNECTED`, or `EXPIRED` connection state surfaces as an apply-time error instead of on the next plan.
+
+GCP target updates and state handling are supported through Plugin Framework. The default SDKv2 implementation is unchanged and does not support updating GCP targets. Set the opt-in variable in every environment running Terraform, including CI:
+
+```sh
+export DATABRICKS_TF_ENABLED_PF_RESOURCES=databricks_mws_ncc_private_endpoint_rule
+```
+
+This selects Plugin Framework for every `databricks_mws_ncc_private_endpoint_rule` resource in the run, not for individual resource blocks. AWS and Azure remain supported.
+
+To migrate an existing GCP rule, keep its Terraform configuration and state, enable the opt-in, and run `terraform plan` to review the result before applying. Unused scalar selectors default to `all_vpc_sc_services = false` and `service_attachment = ""`, matching SDKv2; explicit defaults are also accepted. No manual state editing or re-import is needed. Target validation is performed by the API when applying, not during planning.
 
 ## Example Usage
 
@@ -72,6 +82,21 @@ resource "databricks_mws_ncc_private_endpoint_rule" "vpce" {
 }
 ```
 
+Create a GCP Private Service Connect rule for selected Google APIs after enabling Plugin Framework as shown above.
+
+```hcl
+resource "databricks_mws_ncc_private_endpoint_rule" "google_apis" {
+  provider                       = databricks.account
+  network_connectivity_config_id = databricks_mws_network_connectivity_config.ncc.network_connectivity_config_id
+
+  gcp_endpoint {
+    google_api_endpoints {
+      endpoints = ["storage.googleapis.com", "bigquery.googleapis.com"]
+    }
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are available:
@@ -84,7 +109,11 @@ The following arguments are available:
   * On AWS: List of target resource FQDNs accessible via the VPC endpoint service. Only used by private endpoints towards a VPC endpoint service behind a customer-managed VPC endpoint service. Conflicts with `resource_names`.
 * `endpoint_service` - (AWS only) Example `com.amazonaws.vpce.us-east-1.vpce-svc-123abcc1298abc123`. The full target AWS endpoint service name that connects to the destination resources of the private endpoint. Change forces creation of a new resource.
 * `resource_names` - (AWS only) Only used by private endpoints towards AWS S3 service. List of globally unique S3 bucket names that will be accessed via the VPC endpoint. The bucket names must be in the same region as the NCC/endpoint service. Conflict with `domain_names`.
-* `enabled` - (AWS only) Activation status. Only used by private endpoints towards an AWS S3 service. Update this field to activate/deactivate this private endpoint to allow egress access from serverless compute resources. Can only be updated after a private endpoint rule towards an AWS S3 service is successfully created.
+* `gcp_endpoint` - (GCP, Plugin Framework only) Private Service Connect target. Select one of the following targets; the API validates the selection on apply. Google API target changes are sent as in-place updates; changing `service_attachment` forces a new resource.
+  * `service_attachment` - Nonempty service attachment URL, for example `projects/my-project/regions/us-east4/serviceAttachments/my-attachment`.
+  * `google_api_endpoints` - Block containing an `endpoints` list of Google API hostnames. The list is optional in the Terraform schema; the API requires a valid target on apply.
+  * `all_vpc_sc_services` - Set to `true` to select all supported services. Defaults to `false`.
+* `enabled` - Activation status for first-party endpoints on AWS, or GCP with Plugin Framework. Can only be updated after the private endpoint rule is successfully created.
 
 ## Attribute Reference
 
@@ -108,8 +137,9 @@ The possible values are:
 * `deactivated_at` - Time in epoch milliseconds when this object was deactivated.
 * `creation_time` - Time in epoch milliseconds when this object was created.
 * `updated_time` - Time in epoch milliseconds when this object was updated.
-* `enabled` - Activation status. Only used by private endpoints towards an AWS S3 service.
+* `enabled` - Activation status for first-party endpoints on AWS, or GCP with Plugin Framework.
 * `vpc_endpoint_id` - The AWS VPC endpoint ID. You can use this ID to identify the VPC endpoint created by Databricks.
+* `gcp_endpoint.psc_endpoint_uri` - (GCP, Plugin Framework only) URI of the Private Service Connect endpoint created by Databricks.
 
 ## Import
 

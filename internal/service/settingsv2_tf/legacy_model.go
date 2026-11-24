@@ -24,6 +24,10 @@ import (
 )
 
 type AibiDashboardEmbeddingAccessPolicy_SdkV2 struct {
+	// Where AI/BI dashboards can be embedded: in any domain
+	// (ALLOW_ALL_DOMAINS), only in the approved domains configured for the
+	// workspace (ALLOW_APPROVED_DOMAINS), or nowhere (DENY_ALL_DOMAINS).
+	// Defaults to ALLOW_APPROVED_DOMAINS.
 	AccessPolicyType types.String `tfsdk:"access_policy_type"`
 }
 
@@ -71,6 +75,9 @@ func (m AibiDashboardEmbeddingAccessPolicy_SdkV2) Type(ctx context.Context) attr
 }
 
 type AibiDashboardEmbeddingApprovedDomains_SdkV2 struct {
+	// Domains allowed to host embedded AI/BI dashboards. A leading wildcard
+	// allows every subdomain of a domain. The list applies, and can only be
+	// changed, while the embedding access policy is ALLOW_APPROVED_DOMAINS.
 	ApprovedDomains types.List `tfsdk:"approved_domains"`
 }
 
@@ -160,6 +167,10 @@ func (m *AibiDashboardEmbeddingApprovedDomains_SdkV2) SetApprovedDomains(ctx con
 }
 
 type AllowedAppsUserApiScopesMessage_SdkV2 struct {
+	// OAuth scopes that app developers can request when an app acts on behalf
+	// of a user. A list with the single entry * allows every supported scope
+	// and cannot be combined with other scopes. An empty list disables user
+	// authorization for apps.
 	AllowedScopes types.List `tfsdk:"allowed_scopes"`
 }
 
@@ -296,14 +307,25 @@ func (m BooleanMessage_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type ClusterAutoRestartMessage_SdkV2 struct {
+	// Whether the workspace can change the enabled state. Databricks computes
+	// this value: it is false when the compliance security profile forces the
+	// feature on or when the workspace lacks the Enhanced Security and
+	// Compliance entitlement. A value sent in an update request has no effect.
 	CanToggle types.Bool `tfsdk:"can_toggle"`
-
+	// Whether automatic cluster update is enabled for the workspace. The
+	// effective value is always true while the compliance security profile is
+	// enabled on the workspace.
 	Enabled types.Bool `tfsdk:"enabled"`
-
+	// Why the feature is forced on or unavailable. Databricks sets these
+	// details for information only; they do not determine whether the feature
+	// is enabled.
 	EnablementDetails types.List `tfsdk:"enablement_details"`
-
+	// When the maintenance window runs. When unset, it defaults to the first
+	// Sunday of every month at 01:00 UTC.
 	MaintenanceWindow types.List `tfsdk:"maintenance_window"`
-
+	// Whether compute resources restart during every maintenance window even
+	// when no update is available. When false, they restart only when an update
+	// is available.
 	RestartEvenIfNoUpdatesAvailable types.Bool `tfsdk:"restart_even_if_no_updates_available"`
 }
 
@@ -466,8 +488,8 @@ func (m *ClusterAutoRestartMessage_SdkV2) SetMaintenanceWindow(ctx context.Conte
 type ClusterAutoRestartMessageEnablementDetails_SdkV2 struct {
 	// The feature is force enabled if compliance mode is active
 	ForcedForComplianceMode types.Bool `tfsdk:"forced_for_compliance_mode"`
-	// The feature is unavailable if the corresponding entitlement disabled (see
-	// getShieldEntitlementEnable)
+	// The feature is unavailable because the workspace does not have the
+	// Enhanced Security and Compliance entitlement.
 	UnavailableForDisabledEntitlement types.Bool `tfsdk:"unavailable_for_disabled_entitlement"`
 	// The feature is unavailable if the customer doesn't have enterprise tier
 	UnavailableForNonEnterpriseTier types.Bool `tfsdk:"unavailable_for_non_enterprise_tier"`
@@ -523,6 +545,8 @@ func (m ClusterAutoRestartMessageEnablementDetails_SdkV2) Type(ctx context.Conte
 }
 
 type ClusterAutoRestartMessageMaintenanceWindow_SdkV2 struct {
+	// Schedule anchored to a day of the week, either every week or on given
+	// weeks of the month.
 	WeekDayBasedSchedule types.List `tfsdk:"week_day_based_schedule"`
 }
 
@@ -618,10 +642,12 @@ func (m *ClusterAutoRestartMessageMaintenanceWindow_SdkV2) SetWeekDayBasedSchedu
 }
 
 type ClusterAutoRestartMessageMaintenanceWindowWeekDayBasedSchedule_SdkV2 struct {
+	// Day of the week on which the maintenance window starts.
 	DayOfWeek types.String `tfsdk:"day_of_week"`
-
+	// How often the maintenance window occurs: every week, or only on the
+	// listed occurrences of the day of the week within each month.
 	Frequency types.String `tfsdk:"frequency"`
-
+	// Time of day, in UTC, at which the maintenance window starts.
 	WindowStartTime types.List `tfsdk:"window_start_time"`
 }
 
@@ -723,8 +749,9 @@ func (m *ClusterAutoRestartMessageMaintenanceWindowWeekDayBasedSchedule_SdkV2) S
 }
 
 type ClusterAutoRestartMessageMaintenanceWindowWindowStartTime_SdkV2 struct {
+	// Hour of the day on a 24-hour clock.
 	Hours types.Int64 `tfsdk:"hours"`
-
+	// Minute of the hour.
 	Minutes types.Int64 `tfsdk:"minutes"`
 }
 
@@ -3011,7 +3038,7 @@ func (m GetPublicAccountUserPreferenceRequest_SdkV2) Type(ctx context.Context) a
 }
 
 type GetPublicWorkspaceSettingRequest_SdkV2 struct {
-	// Name of the setting
+	// Name of the setting to retrieve.
 	Name types.String `tfsdk:"-"`
 }
 
@@ -3659,6 +3686,9 @@ func (m *ListWorkspaceSettingsMetadataResponse_SdkV2) SetSettingsMetadata(ctx co
 }
 
 type OperationalEmailCustomRecipientMessage_SdkV2 struct {
+	// Email address that receives this workspace's operational emails in
+	// addition to the workspace admins. Use a distribution list address to
+	// reach several people. An empty string clears the additional recipient.
 	Email types.String `tfsdk:"email"`
 }
 
@@ -3913,7 +3943,7 @@ func (m *PatchPublicAccountUserPreferenceRequest_SdkV2) SetSetting(ctx context.C
 }
 
 type PatchPublicWorkspaceSettingRequest_SdkV2 struct {
-	// Name of the setting
+	// Name of the setting to update.
 	Name types.String `tfsdk:"-"`
 
 	Setting types.List `tfsdk:"setting"`
@@ -4014,6 +4044,10 @@ func (m *PatchPublicWorkspaceSettingRequest_SdkV2) SetSetting(ctx context.Contex
 }
 
 type PersonalComputeMessage_SdkV2 struct {
+	// ON grants all users in all workspaces of the account access to the
+	// Personal Compute default policy. DELEGATE moves control to each
+	// workspace, where users or groups must be added to the policy's
+	// permissions before they can create compute with it.
 	Value types.String `tfsdk:"value"`
 }
 
@@ -4064,7 +4098,15 @@ type RestrictWorkspaceAdminsMessage_SdkV2 struct {
 	// When true, workspace admins cannot create governance tags. ALLOW_ALL
 	// status does not override this; they are independent.
 	DisableGovTagCreation types.Bool `tfsdk:"disable_gov_tag_creation"`
-
+	// Controls what workspace admins can do with service principal tokens and
+	// job identities. With ALLOW_ALL, workspace admins can create personal
+	// access tokens on behalf of any service principal in the workspace, change
+	// a job owner to any workspace user, and set a job's run_as identity to any
+	// workspace user or to a service principal they have the Service Principal
+	// User role on. With RESTRICT_TOKENS_AND_JOB_RUN_AS, they can only create
+	// tokens for service principals they have the Service Principal User role
+	// on, change a job owner to themselves, and set run_as to themselves or to
+	// a service principal they have that role on.
 	Status types.String `tfsdk:"status"`
 }
 
@@ -4114,6 +4156,14 @@ func (m RestrictWorkspaceAdminsMessage_SdkV2) Type(ctx context.Context) attr.Typ
 	}
 }
 
+// A setting and its value at the workspace or account scope. Each setting has
+// one value type, so one value field applies to it: a primitive wrapper
+// (boolean_val, string_val or integer_val) or a setting-specific message. The
+// settings metadata endpoint reports the field each setting uses. When updating
+// a setting, set only the value field that matches its type. Responses return
+// that field with the value configured at this scope, if one is set, together
+// with the matching effective_* field, which holds the value in effect after
+// Databricks applies account policies and defaults.
 type Setting_SdkV2 struct {
 	// Setting value for aibi_dashboard_embedding_access_policy setting. This is
 	// the setting value set by consumers, check
@@ -4189,7 +4239,8 @@ type Setting_SdkV2 struct {
 	// Setting value for integer type setting. This is the setting value set by
 	// consumers, check effective_integer_val for final setting value.
 	IntegerVal types.List `tfsdk:"integer_val"`
-	// Name of the setting.
+	// Name of the setting. The settings metadata endpoint lists the names
+	// available at each scope.
 	Name types.String `tfsdk:"name"`
 	// Setting value for operational_email_custom_recipient setting. This is the
 	// setting value set by consumers, check
@@ -5949,8 +6000,12 @@ func (m *UserPreference_SdkV2) SetStringVal(ctx context.Context, v StringMessage
 
 // Workspace label and color for display (e.g. in account console).
 type WorkspaceLabelMessage_SdkV2 struct {
+	// Color of the label badge. The supported colors are coral, lemon, lime,
+	// turquoise, indigo, purple and pink. It is an empty string when no label
+	// is set.
 	Color types.String `tfsdk:"color"`
-
+	// Text of the label shown next to the workspace name in the top navigation
+	// bar. An empty string means no label is set.
 	Label types.String `tfsdk:"label"`
 }
 

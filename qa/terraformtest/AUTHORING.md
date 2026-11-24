@@ -466,6 +466,83 @@ clean it up using the last successful configuration. To check state after an
 expected failure, follow it with a successful step and place state checks there;
 state checks directly on the failing step are not supported.
 
+## Test slow and broken connections
+
+Optional `response` fields script what happens on the wire, so a journey can pin
+timeouts, retries and malformed replies without a hand-written `httptest`
+server. The fixture server applies them, so they behave the same whichever SDK
+client the provider uses.
+
+- `delay`: a Go duration, such as `2s`, to wait before writing anything. The
+  wait ends early when the client closes the connection, so a timed-out request
+  does not hold the server.
+- `fault`: breaks the connection instead of completing the response.
+  - `reset` closes it with linger 0, so the client sees `connection reset by peer`.
+  - `close` closes it without writing anything, so the client sees `EOF`.
+  - `truncate_body` writes the status line, the headers with the full
+    `Content-Length` and the first half of the body, then closes it.
+  - `stall_body` writes the same first half, then waits until the client closes
+    the connection.
+- `status_line`: the literal HTTP/1.0 or HTTP/1.1 status line, such as
+  `HTTP/1.1 404` with no reason phrase. Its code must equal `status`; headers
+  and body are written as usual, and a `HEAD` response keeps its fixture
+  `Content-Length`.
+
+`reset` and `close` write no response, so they omit `status`, `headers`, `body`
+and `status_line`. The body faults need a nonempty `body` on a response that can
+carry one: not a `HEAD` request or a 1xx, 204 or 304 status, whose bodies
+`net/http` never reads. `delay` combines with every other field. Invalid values
+fail when the journey loads, naming the file, step and call.
+
+A faulted call is consumed like any other, so `enforce_call_order` and the
+unused-fixture check still apply. Follow it with a normal call to pin a retry,
+or with nothing to pin that there is none, because a retry then fails as an
+unexpected call. This create is retried after a reset:
+
+```yaml
+calls:
+  - request: &create
+      method: POST
+      path: /api/2.0/preview/scim/v2/Groups
+      body:
+        json:
+          displayName: Example group
+          schemas: [urn:ietf:params:scim:schemas:core:2.0:Group]
+          entitlements: [{}]
+    response:
+      fault: reset
+  - request: *create
+    response:
+      status: 201
+      body: {json: {id: group-id}}
+  # The read after create and the post-apply refresh follow.
+```
+
+Pair `delay` or `stall_body` with a short `http_timeout_seconds` in the provider
+block and a delay longer than it. Each example in [testdata/faults](testdata/faults)
+fails or retries a group create, with this classic SDK diagnostic:
+
+| Response | Example | Diagnostic |
+|---|---|---|
+| `delay: 10s`, `http_timeout_seconds = 1` | [delay](testdata/faults/delay.yaml) | `request timed out after 1s of inactivity`, not retried |
+| `fault: reset` | [reset](testdata/faults/reset.yaml) | `connection reset by peer`, retried |
+| `fault: close` | [close](testdata/faults/close.yaml) | `EOF`, not retried |
+| `fault: truncate_body` | [truncate_body](testdata/faults/truncate_body.yaml) | `response body: unexpected EOF`, not retried |
+| `fault: stall_body`, `http_timeout_seconds = 1` | [stall_body](testdata/faults/stall_body.yaml) | `response body: context canceled`, not retried |
+| `status: 404`, `status_line: HTTP/1.1 404` | [status_line](testdata/faults/status_line.yaml) | `Not Found` |
+
+The replay transport, which `qa/replay/clienttest` shares, opens one connection
+per request. Go's HTTP client silently resends a replayable request, such as a
+GET, that fails on a reused connection, so a fresh connection is what lets each
+fault reach the provider.
+Faults and `status_line` close the connection and frame the body by its
+`Content-Length`, replacing those headers in the fixture.
+
+Connection refused is not supported: the server has already accepted the
+connection by the time it matches a request. Recording rejects journeys that
+use these fields, because a live service cannot reproduce them and a refresh
+would replace them; edit such journeys by hand.
+
 ## Start from existing state
 
 Add [`initial_state.checkpoint`](README.md#initial-state) to reference a

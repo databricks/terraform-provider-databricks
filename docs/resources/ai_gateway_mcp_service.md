@@ -31,7 +31,9 @@ resource "databricks_ai_gateway_mcp_service" "example" {
 
 ## Arguments
 The following arguments are supported:
-* `mcp_service_id` (string, required) - Name for the MCP service, e.g. "my_mcp_service"
+* `mcp_service_id` (string, required) - Name of the MCP service within the parent schema. The name must not
+  contain periods, spaces, forward slashes, percent signs, or control characters,
+  and it is stored in lowercase
 * `parent` (string, required) - Name of the parent schema.
   Format: `schemas/{catalog}.{schema}`.
   Each `{...}` component is capped at 255 characters individually
@@ -73,20 +75,22 @@ The following arguments are supported:
 ## Attributes
 In addition to the above arguments, the following attributes are exported:
 * `create_time` (string) - Time the MCP service was created
-* `created_by` (string) - Creator identity
-* `effective_owner` (string) - Owner of the MCP service
+* `created_by` (string) - Username or service principal application ID of the principal that created the MCP service
+* `effective_owner` (string) - Username, group name, or service principal application ID of the MCP service owner
 * `etag` (string) - Optimistic concurrency token returned on every read. To make an Update or
   Delete conditional, pass the last-read value in that request's `etag`
   field. In REST responses, this value is a base64 string; URL-encode it when
   setting the `etag` query parameter
-* `metastore_id` (string) - Metastore hosting the MCP service
+* `metastore_id` (string) - Unique identifier of the metastore that contains the MCP service
 * `name` (string) - Resource name of the MCP service.
   Format: `mcp-services/{catalog}.{schema}.{mcp_service}`.
   Each `{...}` component is capped at 255 characters individually.
-  Server-derived on Create from `parent` +
-  `mcp_service_id`; required and immutable on Update/Get/Delete
+  The server derives the name on Create from
+  `parent` and `mcp_service_id`; it is required and immutable on Update,
+  Get, and Delete
 * `update_time` (string) - Time the MCP service was last modified
-* `updated_by` (string) - Identity of the last updater
+* `updated_by` (string) - Username or service principal application ID of the principal that last updated the MCP
+  service
 
 ### McpServiceConfigSourceConnection
 * `is_deleted` (boolean) - Whether the referenced connection has been deleted. The MCP service keeps

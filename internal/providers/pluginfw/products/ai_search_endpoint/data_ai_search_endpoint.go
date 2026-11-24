@@ -99,31 +99,38 @@ func (r ProviderConfigData) Type(ctx context.Context) attr.Type {
 
 // EndpointData extends the main model with additional fields.
 type EndpointData struct {
-	// The user-selected budget policy id for the endpoint.
+	// ID of the serverless budget policy to apply to the endpoint. The caller
+	// must have permission to use the policy. Set either this field or
+	// `usage_policy_id`, not both. Responses do not echo this field; they
+	// report the applied policy in `effective_budget_policy_id`.
 	BudgetPolicyId types.String `tfsdk:"budget_policy_id"`
 	// Time the endpoint was created.
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
-	// Creator of the endpoint
+	// User name of the principal that created the endpoint. For a user, it is
+	// the user's email address; for any other principal, it is the principal's
+	// unique name.
 	Creator types.String `tfsdk:"creator"`
-	// The custom tags assigned to the endpoint
+	// Custom tags assigned to the endpoint. On update, the list replaces all of
+	// the endpoint's existing tags.
 	CustomTags types.List `tfsdk:"custom_tags"`
-	// The budget policy id applied to the endpoint
+	// ID of the budget policy that is currently applied to the endpoint.
 	EffectiveBudgetPolicyId types.String `tfsdk:"effective_budget_policy_id"`
-	// Current status of the endpoint
+	// Current lifecycle state of the endpoint, with an optional message that
+	// explains it.
 	EndpointStatus types.Object `tfsdk:"endpoint_status"`
 	// Type of endpoint. Required on create and immutable thereafter.
 	EndpointType types.String `tfsdk:"endpoint_type"`
-	// Unique identifier of the endpoint
+	// System-generated UUID that uniquely identifies the endpoint.
 	Id types.String `tfsdk:"id"`
 	// Number of indexes on the endpoint
 	IndexCount types.Int64 `tfsdk:"index_count"`
-	// User who last updated the endpoint
+	// User name of the principal that last updated the endpoint, in the same
+	// format as `creator`.
 	LastUpdatedUser types.String `tfsdk:"last_updated_user"`
-	// Name of the AI Search endpoint. Server-assigned full resource path
-	// (`workspaces/{workspace}/endpoints/{endpoint}`) on output. On create, the
-	// user-supplied short name is conveyed via
-	// `CreateEndpointRequest.endpoint_id`; the server composes the full `name`
-	// and returns it on the response.
+	// Full resource name of the endpoint, in the form
+	// `workspaces/{workspace_id}/endpoints/{endpoint_id}`. On create, the
+	// server composes it from `parent` and `endpoint_id` and ignores any value
+	// supplied in the request body.
 	Name types.String `tfsdk:"name"`
 	// The client-supplied desired number of replicas for the endpoint, applied
 	// at create/update time. Mutually exclusive with `target_qps`.
@@ -132,12 +139,15 @@ type EndpointData struct {
 	ScalingInfo types.Object `tfsdk:"scaling_info"`
 	// Target QPS for the endpoint. Mutually exclusive with `replica_count`.
 	// Best-effort; the system does not guarantee this QPS will be achieved.
+	// Responses report the requested value in
+	// `scaling_info.requested_target_qps`.
 	TargetQps types.Int64 `tfsdk:"target_qps"`
 	// Throughput information for the endpoint
 	ThroughputInfo types.Object `tfsdk:"throughput_info"`
 	// Time the endpoint was last updated.
 	UpdateTime timetypes.RFC3339 `tfsdk:"update_time"`
-	// The usage policy id applied to the endpoint.
+	// ID of the usage policy to apply to the endpoint. The server treats it as
+	// the same setting as `budget_policy_id`, so set only one of the two.
 	UsagePolicyId      types.String `tfsdk:"usage_policy_id"`
 	ProviderConfigData types.Object `tfsdk:"provider_config"`
 }

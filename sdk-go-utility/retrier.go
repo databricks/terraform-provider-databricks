@@ -91,9 +91,9 @@ func Retrier(ctx context.Context, cfg *config.Config, classic func(error) error)
 	return r, nil
 }
 
-// retrierClassicRetryConfig returns the retry configuration that the classic client
-// gives a request, by the steps that the client takes from its HTTP client
-// configuration to retries.Poll.
+// retrierClassicRetryConfig returns the retry configuration that the classic
+// client gives a request, by the steps that the client takes from its HTTP
+// client configuration to retries.Poll.
 func retrierClassicRetryConfig(httpConfig httpclient.ClientConfig) retries.RetryConfig {
 	timeout := httpConfig.RetryTimeout
 	if timeout == 0 {

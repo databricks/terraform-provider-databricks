@@ -15,9 +15,7 @@ import (
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go/config"
-	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -35,14 +33,14 @@ import (
 
 const (
 	authVolumeID   = "main.replay.auth_volume"
-	authVolumePath = "/api/2.1/unity-catalog/volumes/" + authVolumeID
+	authVolumePath = workspaceHostVolumesPath + "/" + authVolumeID
 	authVolumeJSON = `{"catalog_name": "main", "schema_name": "replay",
 		"name": "auth_volume", "full_name": "main.replay.auth_volume",
 		"volume_type": "MANAGED", "owner": "replay-admin@example.com",
 		"storage_location": "s3://replay-metastore/volume-199",
 		"metastore_id": "11111111-1111-1111-1111-111111111111",
 		"volume_id": "00000000-0000-4000-8000-000000000199"}`
-	authAWSHost           = "replay-workspace-12345.cloud.databricks.com"
+	authAWSHost           = workspaceHostWorkspaceDomain
 	authGCPHost           = "12345.6.gcp.databricks.com"
 	authGoogleURL         = "oauth2.googleapis.com/token"
 	authGCPAccount        = "replay-sa@replay-project.iam.gserviceaccount.com"
@@ -168,14 +166,6 @@ func (t authTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	return http.DefaultTransport.RoundTrip(req)
 }
 
-// authLoader keeps ambient profiles and environment variables out of the client
-// configuration.
-type authLoader struct{}
-
-func (authLoader) Name() string { return "auth test" }
-
-func (authLoader) Configure(*config.Config) error { return nil }
-
 // newAuthClient starts s and configures a client for cfg as the provider does,
 // including its deprecated auth type mapping. Ambient profiles and environment
 // variables are kept out of cfg.
@@ -184,10 +174,8 @@ func newAuthClient(t *testing.T, s *authServer,
 	t.Helper()
 	server := httptest.NewServer(s)
 	t.Cleanup(server.Close)
-	serverURL, err := url.Parse(server.URL)
-	require.NoError(t, err)
-	cfg.Loaders = []config.Loader{authLoader{}}
-	cfg.HTTPTransport = authTransport{server: serverURL}
+	cfg.Loaders = []config.Loader{workspaceHostLoader{}}
+	cfg.HTTPTransport = authTransport{server: mustParseURL(t, server.URL)}
 	return providerclient.PrepareDatabricksClient(context.Background(), cfg, nil)
 }
 
@@ -225,44 +213,25 @@ type authRefresh struct {
 	plan   *terraform.InstanceDiff
 }
 
-// authVolumeConfig is the volume's configuration, which has no provider_config.
-var authVolumeConfig = map[string]string{"name": "auth_volume", "catalog_name": "main",
-	"schema_name": "replay", "volume_type": "MANAGED"}
-
-// authVolumeRawConfig is the configuration as Terraform's gRPC calls carry it, so
-// provider_config is read from the configuration as it is outside tests.
-func authVolumeRawConfig(t *testing.T, r *schema.Resource) cty.Value {
-	t.Helper()
-	values := map[string]cty.Value{}
-	for k, value := range authVolumeConfig {
-		values[k] = cty.StringVal(value)
-	}
-	raw, err := r.CoreConfigSchema().CoerceValue(cty.ObjectVal(values))
-	require.NoError(t, err)
-	return raw
-}
-
 // refreshAuthVolume refreshes the volume with a client for cfg, as terraform plan does,
 // checks that the requests match the script and plans the volume's configuration.
 func refreshAuthVolume(t *testing.T, s *authServer, cfg *config.Config) authRefresh {
 	t.Helper()
 	c, err := newAuthClient(t, s, cfg)
 	require.NoError(t, err)
-	ctx := context.WithValue(context.Background(), common.ResourceName, "volume")
-	r := ResourceVolume().ToResource()
-	state, diags := r.RefreshWithoutUpgrade(ctx, authVolumeState(), c)
+	state, diags := routingRefreshVolume(c, authVolumeState())
 	assert.Equal(t, s.expected(), s.received())
 
+	r := ResourceVolume().ToResource()
+	v := routingVolume{attributes: routingVolumeAttributes(map[string]string{
+		"name": "auth_volume"})}
 	planned := state
 	if planned == nil {
 		planned = &terraform.InstanceState{}
 	}
-	planned.RawConfig = authVolumeRawConfig(t, r)
-	resourceConfig := map[string]any{}
-	for k, value := range authVolumeConfig {
-		resourceConfig[k] = value
-	}
-	plan, err := r.Diff(ctx, planned, terraform.NewResourceConfigRaw(resourceConfig), c)
+	planned.RawConfig = v.rawConfig(t, r)
+	ctx := context.WithValue(context.Background(), common.ResourceName, "volume")
+	plan, err := r.Diff(ctx, planned, v.resourceConfig(), c)
 	require.NoError(t, err)
 	return authRefresh{client: c, state: state, diags: diags, plan: plan}
 }

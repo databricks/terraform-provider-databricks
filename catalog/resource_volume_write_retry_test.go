@@ -2,7 +2,9 @@ package catalog
 
 import (
 	"context"
+	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -20,10 +22,11 @@ import (
 	"github.com/databricks/terraform-provider-databricks/common"
 )
 
-// This test pins the classic SDK client's handling of a databricks_volume Update
-// cancelled during the fields PATCH's backoff. The write_retry_, write_timeout_ and
-// write_reset_ replay journeys pin transient-message retries, retry exhaustion, HTTP
-// timeouts and connection resets on writes.
+// These tests pin the classic SDK client's HTTP timeout, cancellation and connection
+// reset behavior on databricks_volume writes, which replay fixtures cannot express: a
+// fixture can neither delay a response nor reset a connection, and a journey cannot
+// cancel Terraform mid-call. The write_retry_ replay journeys pin transient-message
+// retries and retry exhaustion.
 
 const (
 	volumesAPIPath         = "/api/2.1/unity-catalog/volumes"
@@ -32,13 +35,23 @@ const (
 	volumeWithNewOwnerJSON = `{"catalog_name": "main", "schema_name": "replay",
 		"name": "retry_volume", "full_name": "main.replay.retry_volume",
 		"volume_type": "MANAGED", "comment": "first", "owner": "owner-b@example.com"}`
+	commentRejectedJSON = `{"error_code": "INVALID_PARAMETER_VALUE",
+		"message": "Comment rejected by fixture"}`
 )
 
 var (
+	createVolumePost = volumeRequest{http.MethodPost, volumesAPIPath,
+		`{"catalog_name": "main", "schema_name": "replay", "name": "retry_volume",
+		"volume_type": "MANAGED"}`}
+	createOwnerPatch = volumeRequest{http.MethodPatch, retryVolumePath,
+		`{"owner": "owner-a@example.com"}`}
 	updateOwnerPatch = volumeRequest{http.MethodPatch, retryVolumePath,
 		`{"owner": "owner-b@example.com"}`}
 	updateFieldsPatch = volumeRequest{http.MethodPatch, retryVolumePath,
 		`{"comment": "second"}`}
+	ownerRollbackPatch = volumeRequest{http.MethodPatch, retryVolumePath,
+		`{"owner": "owner-a@example.com"}`}
+	deleteVolumeRequest = volumeRequest{http.MethodDelete, retryVolumePath + "?", ""}
 )
 
 // volumeRequest is one request the fake volume API received. An empty body means none.
@@ -52,6 +65,11 @@ type volumeRequest struct {
 type volumeResponse struct {
 	status int
 	body   string
+	// hold withholds the response until the request is cancelled.
+	hold bool
+	// reset reads the request and then resets the connection, so it needs a real
+	// server.
+	reset bool
 }
 
 // scriptedVolumeAPI answers volume requests with its responses in order and records
@@ -60,13 +78,28 @@ type volumeResponse struct {
 // and are not recorded.
 type scriptedVolumeAPI struct {
 	t         *testing.T
+	released  chan struct{}
 	mu        sync.Mutex
 	responses []volumeResponse
 	received  []volumeRequest
 }
 
 func newScriptedVolumeAPI(t *testing.T, responses ...volumeResponse) *scriptedVolumeAPI {
-	return &scriptedVolumeAPI{t: t, responses: responses}
+	return &scriptedVolumeAPI{t: t, responses: responses, released: make(chan struct{})}
+}
+
+// newScriptedVolumeServer serves the API over HTTP, which the hold and reset responses
+// need.
+func newScriptedVolumeServer(
+	t *testing.T, responses ...volumeResponse,
+) (*scriptedVolumeAPI, *httptest.Server) {
+	api := newScriptedVolumeAPI(t, responses...)
+	server := httptest.NewServer(api)
+	t.Cleanup(server.Close)
+	// Cleanups run last in, first out, so held handlers return before server.Close
+	// waits for them.
+	t.Cleanup(func() { close(api.released) })
+	return api, server
 }
 
 func (api *scriptedVolumeAPI) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -92,9 +125,32 @@ func (api *scriptedVolumeAPI) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 		response, api.responses = api.responses[0], api.responses[1:]
 	}
 	api.mu.Unlock()
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(response.status)
-	_, _ = w.Write([]byte(response.body))
+	switch {
+	case response.hold:
+		select {
+		case <-r.Context().Done():
+		case <-api.released:
+		}
+	case response.reset:
+		api.resetConnection(w)
+	default:
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(response.status)
+		_, _ = w.Write([]byte(response.body))
+	}
+}
+
+func (api *scriptedVolumeAPI) resetConnection(w http.ResponseWriter) {
+	conn, _, err := http.NewResponseController(w).Hijack()
+	if err != nil {
+		api.t.Errorf("cannot hijack the connection: %v", err)
+		return
+	}
+	// A zero linger makes Close send a TCP reset instead of a FIN.
+	if err := conn.(*net.TCPConn).SetLinger(0); err != nil {
+		api.t.Errorf("cannot set linger: %v", err)
+	}
+	_ = conn.Close()
 }
 
 // RoundTrip serves the API in memory, which a synctest bubble needs.
@@ -148,6 +204,23 @@ func volumeContext(ctx context.Context) context.Context {
 	return context.WithValue(ctx, common.ResourceName, "volume")
 }
 
+// createVolumeWithOwner runs the provider's wrapped Create for a volume owned by
+// oldVolumeOwner.
+func createVolumeWithOwner(
+	ctx context.Context, t *testing.T, c *common.DatabricksClient,
+) (*schema.ResourceData, diag.Diagnostics) {
+	r := ResourceVolume().ToResource()
+	d := schema.TestResourceDataRaw(t, r.Schema, map[string]any{
+		"name":         "retry_volume",
+		"catalog_name": "main",
+		"schema_name":  "replay",
+		"volume_type":  "MANAGED",
+		"owner":        oldVolumeOwner,
+	})
+	d.MarkNewResource()
+	return d, r.CreateContext(volumeContext(ctx), d, c)
+}
+
 // ownerAndCommentUpdateData is the data Terraform passes to Update for a plan that
 // changes the owner from oldVolumeOwner to newVolumeOwner and the comment from first
 // to second.
@@ -171,7 +244,132 @@ func ownerAndCommentUpdateData(t *testing.T, r *schema.Resource) *schema.Resourc
 	return d
 }
 
-// Replay cannot cancel Terraform during a backoff, so this cancellation stays in Go.
+// updateVolumeOwnerAndComment runs the provider's wrapped Update for that plan.
+func updateVolumeOwnerAndComment(
+	ctx context.Context, t *testing.T, c *common.DatabricksClient,
+) (*schema.ResourceData, diag.Diagnostics) {
+	r := ResourceVolume().ToResource()
+	d := ownerAndCommentUpdateData(t, r)
+	return d, r.UpdateContext(volumeContext(ctx), d, c)
+}
+
+// destroyVolume runs the provider's wrapped Delete.
+func destroyVolume(
+	ctx context.Context, _ *testing.T, c *common.DatabricksClient,
+) (*schema.ResourceData, diag.Diagnostics) {
+	r := ResourceVolume().ToResource()
+	d := r.TestResourceData()
+	d.SetId(retryVolumeID)
+	return d, r.DeleteContext(volumeContext(ctx), d, c)
+}
+
+func TestVolumeWritesPastHTTPTimeoutAreNotRetried(t *testing.T) {
+	held := volumeResponse{hold: true}
+	created := volumeResponse{status: http.StatusOK, body: retryVolumeJSON}
+	ownerChanged := volumeResponse{status: http.StatusOK, body: volumeWithNewOwnerJSON}
+	rejected := volumeResponse{status: http.StatusBadRequest, body: commentRejectedJSON}
+	timedOut := func(method, url string) string {
+		return fmt.Sprintf(`%s "%s": request timed out after 1s of inactivity`,
+			method, url)
+	}
+	tests := []struct {
+		name      string
+		responses []volumeResponse
+		run       func(context.Context, *testing.T, *common.DatabricksClient) (
+			*schema.ResourceData, diag.Diagnostics)
+		requests []volumeRequest
+		// diagnostic returns the expected diagnostic for the server's URL.
+		diagnostic func(serverURL string) string
+		id         string
+	}{
+		{
+			name:      "create POST",
+			responses: []volumeResponse{held},
+			run:       createVolumeWithOwner,
+			requests:  []volumeRequest{createVolumePost},
+			diagnostic: func(u string) string {
+				return "cannot create volume: " + timedOut("Post", u+volumesAPIPath)
+			},
+			id: "",
+		},
+		{
+			name:      "owner PATCH after create",
+			responses: []volumeResponse{created, held},
+			run:       createVolumeWithOwner,
+			requests:  []volumeRequest{createVolumePost, createOwnerPatch},
+			diagnostic: func(u string) string {
+				return "cannot create volume: " + timedOut("Patch", u+retryVolumePath)
+			},
+			id: retryVolumeID,
+		},
+		{
+			name:      "owner PATCH in Update",
+			responses: []volumeResponse{held},
+			run:       updateVolumeOwnerAndComment,
+			requests:  []volumeRequest{updateOwnerPatch},
+			diagnostic: func(u string) string {
+				return "cannot update volume: " + timedOut("Patch", u+retryVolumePath)
+			},
+			id: retryVolumeID,
+		},
+		{
+			// The rollback runs on Update's context, which the timeout did not end.
+			name:      "fields PATCH after an owner change",
+			responses: []volumeResponse{ownerChanged, held, created},
+			run:       updateVolumeOwnerAndComment,
+			requests: []volumeRequest{
+				updateOwnerPatch, updateFieldsPatch, ownerRollbackPatch,
+			},
+			diagnostic: func(u string) string {
+				return "cannot update volume: " + timedOut("Patch", u+retryVolumePath)
+			},
+			id: retryVolumeID,
+		},
+		{
+			name:      "rollback PATCH",
+			responses: []volumeResponse{ownerChanged, rejected, held},
+			run:       updateVolumeOwnerAndComment,
+			requests: []volumeRequest{
+				updateOwnerPatch, updateFieldsPatch, ownerRollbackPatch,
+			},
+			diagnostic: func(u string) string {
+				return ownerRollbackDiagnostic("Comment rejected by fixture",
+					timedOut("Patch", u+retryVolumePath))
+			},
+			id: retryVolumeID,
+		},
+		{
+			name:      "DELETE",
+			responses: []volumeResponse{held},
+			run:       destroyVolume,
+			requests:  []volumeRequest{deleteVolumeRequest},
+			diagnostic: func(u string) string {
+				return "cannot delete volume: " +
+					timedOut("Delete", u+retryVolumePath+"?")
+			},
+			id: retryVolumeID,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// A retry of the held request would get a 500 and fail the request
+			// assertion.
+			api, server := newScriptedVolumeServer(t, tt.responses...)
+			c := newVolumeClient(t, &config.Config{
+				Host:                server.URL,
+				RetryTimeoutSeconds: retryUntilContextEnds,
+				HTTPTimeoutSeconds:  1,
+			})
+
+			d, diags := tt.run(context.Background(), t, c)
+
+			assertVolumeRequests(t, tt.requests, api)
+			assert.Equal(t, tt.diagnostic(server.URL), diagnosticSummary(t, diags))
+			assert.Equal(t, tt.id, d.Id())
+		})
+	}
+}
+
 func TestVolumeFieldsPatchCancelledInBackoffRollsBackOnCancelledContext(t *testing.T) {
 	synctest.Test(t, func(t *testing.T) {
 		// The fields PATCH retry and the rollback would both succeed if they were sent.
@@ -218,4 +416,28 @@ func TestVolumeFieldsPatchCancelledInBackoffRollsBackOnCancelledContext(t *testi
 			"failed in rate limiter: context canceled"), diagnosticSummary(t, diags))
 		assert.Equal(t, retryVolumeID, d.Id(), "the volume must stay in state")
 	})
+}
+
+func TestVolumeCreateRetriedAfterConnectionResetFailsWithAlreadyExists(t *testing.T) {
+	// The first POST reaches the server, which creates the volume and then resets the
+	// connection before responding. The SDK retries the reset with the same body, and
+	// the server rejects the retry because the volume now exists.
+	api, server := newScriptedVolumeServer(t,
+		volumeResponse{reset: true},
+		volumeResponse{status: http.StatusConflict, body: `{
+			"error_code": "RESOURCE_ALREADY_EXISTS",
+			"message": "Volume 'main.replay.retry_volume' already exists"}`},
+	)
+	c := newVolumeClient(t, &config.Config{
+		Host:                server.URL,
+		RetryTimeoutSeconds: retryUntilContextEnds,
+	})
+
+	d, diags := createVolumeWithOwner(context.Background(), t, c)
+
+	assertVolumeRequests(t, []volumeRequest{createVolumePost, createVolumePost}, api)
+	assert.Equal(t,
+		"cannot create volume: Volume 'main.replay.retry_volume' already exists",
+		diagnosticSummary(t, diags))
+	assert.Empty(t, d.Id(), "the volume the first POST created must not be in state")
 }

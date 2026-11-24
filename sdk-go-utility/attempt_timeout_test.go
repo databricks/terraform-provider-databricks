@@ -1,7 +1,9 @@
 package sdkgoutility
 
 import (
+	"cmp"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -26,15 +28,11 @@ import (
 )
 
 const (
-	attemptTimeoutGetPath    = "/api/2.0/mlflow/databricks/registered-models/get"
-	attemptTimeoutCreatePath = "/api/2.0/mlflow/registered-models/create"
-	// attemptTimeoutModelJSON answers both calls of the tests.
-	attemptTimeoutModelJSON = `{"registered_model":{"name":"m"},"registered_model_databricks":{"name":"m"}}`
-	// attemptTimeoutHost is the host of the tests that use no server.
-	attemptTimeoutHost = "https://attempt-timeout.test"
-	// attemptTimeoutPause is the pause between two steps of a script. It is
-	// shorter than the timeout of 10 seconds that the scripts are played with.
-	attemptTimeoutPause = 9 * time.Second
+	// attemptTimeoutFailed starts an error of net/http, without the host.
+	attemptTimeoutFailed = `Post "/api/2.0/mlflow/registered-models/create": `
+	attemptTimeoutModel  = `{"registered_model":{"name":"m"}}`
+	attemptTimeoutHost   = "https://attempt-timeout.test" // For tests without a server.
+	attemptTimeoutNever  = time.Duration(1 << 62)         // A wait that does not end.
 )
 
 // attemptTimeoutLoader replaces the loaders of a classic config, so that a
@@ -46,170 +44,110 @@ func (l attemptTimeoutLoader) Configure(*config.Config) error { return l.err }
 
 func attemptTimeoutConfig(host string, seconds int) *config.Config {
 	return &config.Config{
-		Host:                host,
-		Token:               "token",
-		HTTPTimeoutSeconds:  seconds,
-		RetryTimeoutSeconds: -1, // No limit on the whole call, as in the provider.
-		Loaders:             []config.Loader{attemptTimeoutLoader{}},
-		HostMetadataResolver: func(context.Context, string) (*config.HostMetadata, error) {
-			return nil, nil
-		},
+		Host: host, Token: "token", HTTPTimeoutSeconds: seconds,
+		RetryTimeoutSeconds:  -1, // No limit on the whole call, as in the provider.
+		Loaders:              []config.Loader{attemptTimeoutLoader{}},
+		HostMetadataResolver: func(context.Context, string) (*config.HostMetadata, error) { return nil, nil },
 	}
 }
 
 // attemptTimeoutClients are a real classic client and a real modular client
-// of one config. Both send over the same transport, the modular one through
-// AttemptTimeout.
+// of one config. Both send over base, the modular one through AttemptTimeout.
 type attemptTimeoutClients struct {
+	host    string
 	classic *databricks.WorkspaceClient
 	modular *modelregistry.Client
 }
 
 func attemptTimeoutNewClients(t *testing.T, cfg *config.Config, base http.RoundTripper) attemptTimeoutClients {
-	t.Helper()
 	cfg.HTTPTransport = base
-	classic, err := databricks.NewWorkspaceClient((*databricks.Config)(cfg))
-	require.NoError(t, err)
-	transport, err := AttemptTimeout(cfg, base)
-	require.NoError(t, err)
-	creds, err := credentials.NewPATCredentials(cfg.Token)
-	require.NoError(t, err)
-	modular, err := modelregistry.NewClient(t.Context(),
+	classic, classicErr := databricks.NewWorkspaceClient((*databricks.Config)(cfg))
+	transport, transportErr := AttemptTimeout(cfg, base)
+	creds, credsErr := credentials.NewPATCredentials(cfg.Token)
+	modular, modularErr := modelregistry.NewClient(t.Context(),
 		client.WithHost(cfg.Host), client.WithCredentials(creds),
 		client.WithHTTPClient(&http.Client{Transport: transport}),
 		client.WithoutConfigFile(), client.WithoutEnv(), client.WithTimeout(0))
-	require.NoError(t, err)
-	return attemptTimeoutClients{classic: classic, modular: modular}
+	require.NoError(t, errors.Join(classicErr, transportErr, credsErr, modularErr))
+	return attemptTimeoutClients{host: cfg.Host, classic: classic, modular: modular}
 }
 
-// classicCall gets the model called name, or creates it with a description of
-// 30 kB if create is set, and returns what it got or the text of the error.
-func (c attemptTimeoutClients) classicCall(ctx context.Context, name string, create bool) string {
-	if create {
-		res, err := c.classic.ModelRegistry.CreateModel(ctx,
-			ml.CreateModelRequest{Name: name, Description: strings.Repeat("d", 30000)})
-		if err != nil {
-			return err.Error()
-		}
-		return "created " + res.RegisteredModel.Name
-	}
-	res, err := c.classic.ModelRegistry.GetModel(ctx, ml.GetModelRequest{Name: name})
-	if err != nil {
-		return err.Error()
-	}
-	return "got " + res.RegisteredModelDatabricks.Name
+// attemptTimeoutCall is the call that both clients make: they create the
+// model called name with a description of 30 kB, under a context that is
+// cancelled after cancelAfter and has a deadline of deadline, if set.
+type attemptTimeoutCall struct {
+	name                  string
+	cancelAfter, deadline time.Duration
 }
 
-// modularCall makes the call of classicCall with the modular client.
-func (c attemptTimeoutClients) modularCall(ctx context.Context, name string, create bool) string {
-	if create {
-		description := strings.Repeat("d", 30000)
-		res, err := c.modular.CreateRegisteredModel(ctx,
-			modelregistry.CreateRegisteredModelRequest{Name: &name, Description: &description})
-		if err != nil {
-			return err.Error()
-		}
-		return "created " + *res.RegisteredModel.Name
-	}
-	res, err := c.modular.GetRegisteredModelDatabricks(ctx,
-		modelregistry.GetRegisteredModelDatabricksRequest{Name: &name})
-	if err != nil {
-		return err.Error()
-	}
-	return "got " + *res.RegisteredModelDatabricks.Name
-}
-
-// attemptTimeoutEnd is how a call ended and how long it took.
+// attemptTimeoutEnd is how a call ended, "ok" or the text of its error
+// without the host, and how long it took.
 type attemptTimeoutEnd struct {
 	outcome string
 	after   time.Duration
 }
 
-// attemptTimeoutCall is one call that both clients make.
-type attemptTimeoutCall struct {
-	name   string
-	create bool
-	// ctx returns the context of the call, context.Background if nil.
-	ctx func() (context.Context, context.CancelFunc)
-}
-
-func (c attemptTimeoutCall) run(do func(context.Context, string, bool) string) attemptTimeoutEnd {
-	newContext := c.ctx
-	if newContext == nil {
-		newContext = func() (context.Context, context.CancelFunc) {
-			return context.WithCancel(context.Background())
-		}
-	}
-	ctx, cancel := newContext()
-	defer cancel()
-	start := time.Now()
-	outcome := do(ctx, c.name, c.create)
-	return attemptTimeoutEnd{outcome, time.Since(start)}
-}
-
-func attemptTimeoutCancelAfter(d time.Duration) func() (context.Context, context.CancelFunc) {
-	return func() (context.Context, context.CancelFunc) {
+func (c attemptTimeoutClients) ends(call attemptTimeoutCall) (classic, modular attemptTimeoutEnd) {
+	big := strings.Repeat("d", 30000)
+	run := func(create func(context.Context) error) attemptTimeoutEnd {
 		ctx, cancel := context.WithCancel(context.Background())
-		time.AfterFunc(d, cancel)
-		return ctx, cancel
+		defer cancel()
+		defer time.AfterFunc(cmp.Or(call.cancelAfter, attemptTimeoutNever), cancel).Stop()
+		if call.deadline > 0 {
+			ctx, cancel = context.WithTimeout(ctx, call.deadline)
+			defer cancel()
+		}
+		start, outcome := time.Now(), "ok"
+		if err := create(ctx); err != nil {
+			outcome = strings.ReplaceAll(err.Error(), c.host, "")
+		}
+		return attemptTimeoutEnd{outcome, time.Since(start)}
 	}
+	classic = run(func(ctx context.Context) error {
+		_, err := c.classic.ModelRegistry.CreateModel(ctx, ml.CreateModelRequest{Name: call.name, Description: big})
+		return err
+	})
+	modular = run(func(ctx context.Context) error {
+		_, err := c.modular.CreateRegisteredModel(ctx,
+			modelregistry.CreateRegisteredModelRequest{Name: &call.name, Description: &big})
+		return err
+	})
+	return classic, modular
 }
 
-func attemptTimeoutDeadlineAfter(d time.Duration) func() (context.Context, context.CancelFunc) {
-	return func() (context.Context, context.CancelFunc) {
-		return context.WithTimeout(context.Background(), d)
-	}
-}
-
-// attemptTimeoutGetError and attemptTimeoutCreateError are the errors of the
-// two calls when net/http fails them with text. HOST stands for the host.
-func attemptTimeoutGetError(name, text string) string {
-	return fmt.Sprintf("Get %q: %s", "HOST"+attemptTimeoutGetPath+"?name="+name, text)
-}
-
-func attemptTimeoutCreateError(text string) string {
-	return fmt.Sprintf("Post %q: %s", "HOST"+attemptTimeoutCreatePath, text)
-}
-
-// attemptTimeoutServer answers the calls of the tests over proto and counts
-// them. The name of the model picks what a get does: "never" gets no answer,
-// "stalls" gets the headers and no body, "slow" gets the body byte by byte
-// for longer than a timeout of one second, and any other name gets the model
-// at once. A create gets the model once its body is read.
+// attemptTimeoutServer answers the calls of the tests over TLS and proto, and
+// counts them. The name of the model, in the body or in the query, picks the
+// answer: none for "never", the headers alone for "stalls", the model byte by
+// byte for 1.65 seconds for "slow", and the model at once for any other name.
 func attemptTimeoutServer(t *testing.T, proto string) (*httptest.Server, *atomic.Int32) {
-	requests := &atomic.Int32{}
-	release := make(chan struct{})
-	handler := func(w http.ResponseWriter, r *http.Request) {
+	requests, release := &atomic.Int32{}, make(chan struct{})
+	server := httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		requests.Add(1)
 		assert.Equal(t, proto, r.Proto)
-		name := r.URL.Query().Get("name")
-		_, _ = io.Copy(io.Discard, r.Body)
+		var model struct{ Name string }
+		_ = json.NewDecoder(r.Body).Decode(&model)
 		w.Header().Set("Content-Type", "application/json")
-		switch name {
-		case "never", "stalls":
-			if name == "stalls" {
-				w.(http.Flusher).Flush()
-			}
+		switch cmp.Or(r.URL.Query().Get("name"), model.Name) {
+		case "stalls":
+			w.(http.Flusher).Flush()
+			fallthrough
+		case "never":
 			select {
 			case <-r.Context().Done():
 			case <-release:
 			}
 		case "slow":
-			for i := range len(attemptTimeoutModelJSON) {
-				_, _ = io.WriteString(w, attemptTimeoutModelJSON[i:i+1])
+			for i := range len(attemptTimeoutModel) {
+				_, _ = io.WriteString(w, attemptTimeoutModel[i:i+1])
 				w.(http.Flusher).Flush()
-				time.Sleep(20 * time.Millisecond)
+				time.Sleep(50 * time.Millisecond)
 			}
 		default:
-			_, _ = io.WriteString(w, attemptTimeoutModelJSON)
+			_, _ = io.WriteString(w, attemptTimeoutModel)
 		}
-	}
-	server := httptest.NewUnstartedServer(http.HandlerFunc(handler))
-	if server.EnableHTTP2 = proto == "HTTP/2.0"; server.EnableHTTP2 {
-		server.StartTLS()
-	} else {
-		server.Start()
-	}
+	}))
+	server.EnableHTTP2 = proto == "HTTP/2.0"
+	server.StartTLS()
 	t.Cleanup(func() {
 		close(release) // Before Close, which waits for the handlers.
 		server.Close()
@@ -217,137 +155,29 @@ func attemptTimeoutServer(t *testing.T, proto string) (*httptest.Server, *atomic
 	return server, requests
 }
 
-// attemptTimeoutUpload is a transport that reads the request body as a slow
-// connection does: in parts pieces, 100 ms apart, which takes longer than a
-// timeout of one second if parts is 15. If stall is set, it stops reading
-// after the first piece. With no parts it reads as the wrapped transport does.
-type attemptTimeoutUpload struct {
-	http.RoundTripper
-	parts int
-	stall bool
-}
-
-func (u attemptTimeoutUpload) RoundTrip(req *http.Request) (*http.Response, error) {
-	if u.parts == 0 || req.Body == nil {
-		return u.RoundTripper.RoundTrip(req)
-	}
-	paced := req.Clone(req.Context())
-	paced.Body = &attemptTimeoutUploadBody{ReadCloser: req.Body, upload: u, ctx: req.Context(),
-		size: int(req.ContentLength) / u.parts}
-	return u.RoundTripper.RoundTrip(paced)
-}
-
-type attemptTimeoutUploadBody struct {
-	io.ReadCloser
-	upload attemptTimeoutUpload
-	ctx    context.Context
-	size   int
-	reads  int
-}
-
-func (b *attemptTimeoutUploadBody) Read(p []byte) (int, error) {
-	if b.reads++; b.upload.stall && b.reads > 1 {
-		<-b.ctx.Done()
-		return 0, context.Cause(b.ctx)
-	}
-	time.Sleep(100 * time.Millisecond)
-	return b.ReadCloser.Read(p[:min(len(p), b.size)])
-}
-
-// The calls of the ticket, with a real classic client and a real modular
-// client against one httptest.Server each, over HTTP/1.1 and over HTTP/2.
-func TestAttemptTimeout_EndsLikeClassicClient(t *testing.T) {
-	const expired = "request timed out after 1s of inactivity"
-	tests := []struct {
-		name   string
-		call   attemptTimeoutCall
-		upload attemptTimeoutUpload
-		// classic is how the classic call ends, and no sooner than after. The
-		// modular call ends the same way unless modular is set.
-		classic, modular attemptTimeoutEnd
-	}{{
-		name:    "server answers at once",
-		call:    attemptTimeoutCall{name: "m"},
-		classic: attemptTimeoutEnd{outcome: "got m"},
-	}, {
-		name:    "server never answers",
-		call:    attemptTimeoutCall{name: "never"},
-		classic: attemptTimeoutEnd{attemptTimeoutGetError("never", expired), time.Second},
-	}, {
-		// The classic client reports a stall in the body as the cancellation
-		// that its timeout caused. AttemptTimeout names the timeout.
-		name:    "server sends headers and then stalls",
-		call:    attemptTimeoutCall{name: "stalls"},
-		classic: attemptTimeoutEnd{"response body: context canceled", time.Second},
-		modular: attemptTimeoutEnd{expired, time.Second},
-	}, {
-		name:    "server sends the body slowly but steadily for longer than the timeout",
-		call:    attemptTimeoutCall{name: "slow"},
-		classic: attemptTimeoutEnd{"got m", 1500 * time.Millisecond},
-	}, {
-		name:    "request body is sent slowly but steadily for longer than the timeout",
-		call:    attemptTimeoutCall{name: "m", create: true},
-		upload:  attemptTimeoutUpload{parts: 15},
-		classic: attemptTimeoutEnd{"created m", 1500 * time.Millisecond},
-	}, {
-		name:    "request body stalls",
-		call:    attemptTimeoutCall{name: "m", create: true},
-		upload:  attemptTimeoutUpload{parts: 15, stall: true},
-		classic: attemptTimeoutEnd{attemptTimeoutCreateError(expired), time.Second},
-	}, {
-		name:    "context is cancelled",
-		call:    attemptTimeoutCall{name: "never", ctx: attemptTimeoutCancelAfter(100 * time.Millisecond)},
-		classic: attemptTimeoutEnd{attemptTimeoutGetError("never", "context canceled"), 100 * time.Millisecond},
-	}, {
-		name:    "context deadline passes before the timeout",
-		call:    attemptTimeoutCall{name: "never", ctx: attemptTimeoutDeadlineAfter(100 * time.Millisecond)},
-		classic: attemptTimeoutEnd{attemptTimeoutGetError("never", "context deadline exceeded"), 100 * time.Millisecond},
-	}}
-	for _, proto := range []string{"HTTP/1.1", "HTTP/2.0"} {
-		for _, tc := range tests {
-			t.Run(proto+"/"+tc.name, func(t *testing.T) {
-				t.Parallel()
-				server, requests := attemptTimeoutServer(t, proto)
-				tc.upload.RoundTripper = server.Client().Transport
-				clients := attemptTimeoutNewClients(t, attemptTimeoutConfig(server.URL, 1), tc.upload)
-				if tc.modular == (attemptTimeoutEnd{}) {
-					tc.modular = tc.classic
-				}
-				for _, side := range []struct {
-					want attemptTimeoutEnd
-					do   func(context.Context, string, bool) string
-				}{{tc.classic, clients.classicCall}, {tc.modular, clients.modularCall}} {
-					got := tc.call.run(side.do)
-					assert.Equal(t, strings.ReplaceAll(side.want.outcome, "HOST", server.URL), got.outcome)
-					assert.GreaterOrEqual(t, got.after, side.want.after)
-				}
-				if tc.call.ctx == nil { // A context can end before the request is sent.
-					assert.Equal(t, int32(2), requests.Load(), "each client sends one attempt")
-				}
-			})
-		}
-	}
-}
-
-// attemptTimeoutScript is a transport that plays one exchange in memory. Its
-// steps are attemptTimeoutPause apart and block durably, so that a synctest
-// bubble can play it on a fake clock.
+// attemptTimeoutScript is a transport that plays the slow parts of one
+// exchange. Its steps are pause apart and block durably, so that a synctest
+// bubble can play them on a fake clock.
 type attemptTimeoutScript struct {
-	// rewind makes the transport replace the request body with a new one from
-	// GetBody first, as net/http does when it sends a request again.
+	// base gets the request once its body is paced. If it is nil, the script
+	// answers the request itself, as the fields after uploadStall say.
+	base  http.RoundTripper
+	pause time.Duration
+	// rewind replaces the request body with a new one from GetBody first, as
+	// net/http does when it sends a request again.
 	rewind bool
-	// uploads is the number of reads from the request body, a pause before each.
-	uploads int
-	// headers is the wait for the response headers, negative for no answer.
-	headers time.Duration
+	// uploads is the number of pieces in which the request body is read, a
+	// pause before each and before its end, or zero for no pacing.
+	// uploadStall stops the reading after the first piece.
+	uploads     int
+	uploadStall bool
+	headers     time.Duration // The wait for the response headers.
 	// pieces is the number of pieces of the response body, a pause before
-	// each. With no pieces the body is there at once.
+	// each and before its end. stall leaves out that end, and the whole body
+	// if pieces is zero.
 	pieces int
-	// stall leaves the response body without an end, and without a start if
-	// it has no pieces.
-	stall bool
-	// ended returns the error for a context that ended. If nil, it is the
-	// cause of the context, as in net/http.
+	stall  bool
+	// ended returns the error for a context that ended, its cause if nil.
 	ended func(context.Context) error
 }
 
@@ -356,41 +186,33 @@ func (s attemptTimeoutScript) RoundTrip(req *http.Request) (*http.Response, erro
 	if s.rewind {
 		body, _ = req.GetBody()
 	}
-	for range s.uploads {
-		if err := s.wait(ctx, attemptTimeoutPause); err != nil {
-			return nil, err
-		}
-		_, _ = body.Read(make([]byte, 8))
+	if s.uploads > 0 {
+		size := (int(req.ContentLength) + s.uploads - 1) / s.uploads
+		body = &attemptTimeoutPaced{ReadCloser: body, script: s, ctx: ctx, size: size, stalled: s.uploadStall, left: 1}
+	}
+	if s.base != nil {
+		paced := req.Clone(ctx)
+		paced.Body = body
+		return s.base.RoundTrip(paced)
+	}
+	// The buffer holds the whole body, so that a read is a piece.
+	if _, err := io.CopyBuffer(struct{ io.Writer }{io.Discard}, body, make([]byte, 1<<16)); err != nil {
+		return nil, err
 	}
 	if err := s.wait(ctx, s.headers); err != nil {
 		return nil, err
 	}
-	answer := &attemptTimeoutScriptBody{script: s, ctx: ctx}
-	n := s.pieces
-	if n == 0 && !s.stall {
-		n = 1
-	}
-	for i := range n {
-		from, to := i*len(attemptTimeoutModelJSON)/n, (i+1)*len(attemptTimeoutModelJSON)/n
-		answer.pieces = append(answer.pieces, attemptTimeoutModelJSON[from:to])
-	}
+	n := max(s.pieces, 1)
+	answer := &attemptTimeoutPaced{ReadCloser: io.NopCloser(strings.NewReader(attemptTimeoutModel)),
+		script: s, ctx: ctx, size: (len(attemptTimeoutModel) + n - 1) / n, stalled: s.stall, left: s.pieces}
 	header := http.Header{"Content-Type": {"application/json"}}
 	return &http.Response{StatusCode: http.StatusOK, Header: header, Body: answer, Request: req}, nil
 }
 
-// wait blocks for d, or for good if d is negative, unless ctx ends first.
+// wait blocks for d unless ctx ends first.
 func (s attemptTimeoutScript) wait(ctx context.Context, d time.Duration) error {
-	if d == 0 {
-		return nil
-	}
-	var passed <-chan time.Time
-	if d > 0 {
-		timer := time.NewTimer(d)
-		defer timer.Stop()
-		passed = timer.C
-	}
 	select {
-	case <-passed:
+	case <-time.After(d):
 		return nil
 	case <-ctx.Done():
 		if s.ended != nil {
@@ -400,166 +222,142 @@ func (s attemptTimeoutScript) wait(ctx context.Context, d time.Duration) error {
 	}
 }
 
-type attemptTimeoutScriptBody struct {
-	script attemptTimeoutScript
-	ctx    context.Context
-	pieces []string
+// attemptTimeoutPaced is a body on a slow connection: a read gets size bytes
+// at most after a pause of the script, and nothing after left reads if stalled.
+type attemptTimeoutPaced struct {
+	io.ReadCloser
+	script  attemptTimeoutScript
+	ctx     context.Context
+	size    int
+	stalled bool
+	left    int
 }
 
-func (b *attemptTimeoutScriptBody) Read(p []byte) (int, error) {
-	if len(b.pieces) == 0 {
-		if !b.script.stall {
-			return 0, io.EOF
-		}
-		return 0, b.script.wait(b.ctx, -1)
+func (b *attemptTimeoutPaced) Read(p []byte) (int, error) {
+	pause := b.script.pause
+	if b.left--; b.stalled && b.left < 0 {
+		pause = attemptTimeoutNever
 	}
-	if b.script.pieces > 0 {
-		if err := b.script.wait(b.ctx, attemptTimeoutPause); err != nil {
-			return 0, err
-		}
+	if err := b.script.wait(b.ctx, pause); err != nil {
+		return 0, err
 	}
-	n := copy(p, b.pieces[0])
-	b.pieces = b.pieces[1:]
-	return n, nil
+	return b.ReadCloser.Read(p[:min(len(p), b.size)])
 }
 
-func (b *attemptTimeoutScriptBody) Close() error { return nil }
-
-// attemptTimeoutPlay makes call with both clients against script, with a
-// timeout of seconds, in a synctest bubble. It returns how each call ended
-// and how long it took on the fake clock.
-func attemptTimeoutPlay(
-	t *testing.T, seconds int, script attemptTimeoutScript, call attemptTimeoutCall,
-) (classic, modular attemptTimeoutEnd) {
-	synctest.Test(t, func(t *testing.T) {
-		clients := attemptTimeoutNewClients(t, attemptTimeoutConfig(attemptTimeoutHost, seconds), script)
-		classic = call.run(clients.classicCall)
-		modular = call.run(clients.modularCall)
-	})
-	classic.outcome = strings.ReplaceAll(classic.outcome, attemptTimeoutHost, "HOST")
-	modular.outcome = strings.ReplaceAll(modular.outcome, attemptTimeoutHost, "HOST")
-	return classic, modular
-}
-
-// The rules of the wait, on a fake clock: both clients end the same exchange
-// at the same instant. The timeout is 10 seconds and a pause is 9.
-func TestAttemptTimeout_WaitsLikeClassicClient(t *testing.T) {
-	const expired = "request timed out after 10s of inactivity"
-	get, create := attemptTimeoutCall{name: "m"}, attemptTimeoutCall{name: "m", create: true}
+// The cases of the ticket: a real classic client and a real modular client
+// against one httptest.Server each, over HTTP/1.1 and HTTP/2, timeout of 1 s.
+func TestAttemptTimeout_EndsLikeClassicClient(t *testing.T) {
+	type call = attemptTimeoutCall
+	type end = attemptTimeoutEnd
+	const expired, failed, ms = "request timed out after 1s of inactivity", attemptTimeoutFailed, time.Millisecond
 	tests := []struct {
 		name   string
+		call   call
 		script attemptTimeoutScript
-		call   attemptTimeoutCall
-		// The modular call ends as the classic call unless modular is set.
-		classic, modular attemptTimeoutEnd
-	}{{
-		name:    "no response headers",
-		script:  attemptTimeoutScript{headers: -1},
-		classic: attemptTimeoutEnd{attemptTimeoutGetError("m", expired), 10 * time.Second},
-	}, {
-		name:    "response headers do not restart the wait",
-		script:  attemptTimeoutScript{headers: 6 * time.Second, stall: true},
-		classic: attemptTimeoutEnd{"response body: context canceled", 10 * time.Second},
-		modular: attemptTimeoutEnd{expired, 10 * time.Second},
-	}, {
-		name:    "reads from the response body restart the wait",
-		script:  attemptTimeoutScript{pieces: 3, stall: true},
-		classic: attemptTimeoutEnd{"response body: context canceled", 37 * time.Second},
-		modular: attemptTimeoutEnd{expired, 37 * time.Second},
-	}, {
-		name:    "slow response body that ends",
-		script:  attemptTimeoutScript{pieces: 5},
-		classic: attemptTimeoutEnd{"got m", 45 * time.Second},
-	}, {
-		name:    "reads from the request body restart the wait",
-		script:  attemptTimeoutScript{uploads: 3, headers: 9 * time.Second},
-		call:    create,
-		classic: attemptTimeoutEnd{"created m", 36 * time.Second},
-	}, {
-		name:    "request body stalls",
-		script:  attemptTimeoutScript{uploads: 2, headers: -1},
-		call:    create,
-		classic: attemptTimeoutEnd{attemptTimeoutCreateError(expired), 28 * time.Second},
-	}, {
-		// The classic client does not watch a body that net/http rewound.
-		name:    "reads from a rewound request body restart the wait",
-		script:  attemptTimeoutScript{rewind: true, uploads: 3, headers: 9 * time.Second},
-		call:    create,
-		classic: attemptTimeoutEnd{attemptTimeoutCreateError(expired), 10 * time.Second},
-		modular: attemptTimeoutEnd{"created m", 36 * time.Second},
-	}, {
-		name:    "transport reports context.Canceled",
-		script:  attemptTimeoutScript{headers: -1, ended: context.Context.Err},
-		classic: attemptTimeoutEnd{attemptTimeoutGetError("m", expired), 10 * time.Second},
-	}, {
-		// The classic client compares with context.Canceled by identity.
-		name: "transport wraps context.Canceled",
-		script: attemptTimeoutScript{headers: -1, ended: func(ctx context.Context) error {
-			return fmt.Errorf("dial: %w", ctx.Err())
-		}},
-		classic: attemptTimeoutEnd{attemptTimeoutGetError("m", "dial: context canceled"), 10 * time.Second},
-		modular: attemptTimeoutEnd{attemptTimeoutGetError("m", expired), 10 * time.Second},
-	}, {
-		name: "transport fails with another error once the timeout passed",
-		script: attemptTimeoutScript{headers: -1, ended: func(context.Context) error {
-			return errors.New("broken pipe")
-		}},
-		classic: attemptTimeoutEnd{attemptTimeoutGetError("m", "broken pipe"), 10 * time.Second},
-	}, {
-		name:    "context is cancelled first",
-		script:  attemptTimeoutScript{headers: -1},
-		call:    attemptTimeoutCall{name: "m", ctx: attemptTimeoutCancelAfter(3 * time.Second)},
-		classic: attemptTimeoutEnd{attemptTimeoutGetError("m", "context canceled"), 3 * time.Second},
-	}, {
-		// The classic client adds "response body: " to every error of a read
-		// from the body. The modular client adds nothing.
-		name:    "context is cancelled first while the body is read",
-		script:  attemptTimeoutScript{stall: true},
-		call:    attemptTimeoutCall{name: "m", ctx: attemptTimeoutCancelAfter(3 * time.Second)},
-		classic: attemptTimeoutEnd{"response body: context canceled", 3 * time.Second},
-		modular: attemptTimeoutEnd{"context canceled", 3 * time.Second},
-	}, {
-		name:    "context deadline passes first while the body is read",
-		script:  attemptTimeoutScript{pieces: 2, stall: true},
-		call:    attemptTimeoutCall{name: "m", ctx: attemptTimeoutDeadlineAfter(25 * time.Second)},
-		classic: attemptTimeoutEnd{"response body: context deadline exceeded", 25 * time.Second},
-		modular: attemptTimeoutEnd{"context deadline exceeded", 25 * time.Second},
-	}}
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			t.Parallel()
-			if tc.call.name == "" {
-				tc.call = get
-			}
-			if tc.modular == (attemptTimeoutEnd{}) {
-				tc.modular = tc.classic
-			}
-			classic, modular := attemptTimeoutPlay(t, 10, tc.script, tc.call)
-			assert.Equal(t, tc.classic, classic, "classic client")
-			assert.Equal(t, tc.modular, modular, "modular client")
-		})
+		// classic is how the classic call ends, and no sooner than after. The
+		// modular call ends the same way unless modular is set.
+		classic, modular end
+	}{
+		{name: "server answers at once", call: call{name: "m"}, classic: end{outcome: "ok"}},
+		{name: "server never answers", call: call{name: "never"}, classic: end{failed + expired, 1000 * ms}},
+		// The classic client reports a stall in the body as the cancellation
+		// that its timeout caused. AttemptTimeout names the timeout.
+		{name: "server sends headers and then stalls", call: call{name: "stalls"},
+			classic: end{"response body: context canceled", 1000 * ms}, modular: end{expired, 1000 * ms}},
+		{name: "server sends the body slowly but steadily for longer than the timeout",
+			call: call{name: "slow"}, classic: end{"ok", 1500 * ms}},
+		{name: "request body is sent slowly but steadily for longer than the timeout", call: call{name: "m"},
+			script: attemptTimeoutScript{uploads: 15}, classic: end{"ok", 1500 * ms}},
+		{name: "request body stalls", call: call{name: "m"}, classic: end{failed + expired, 1000 * ms},
+			script: attemptTimeoutScript{uploads: 15, uploadStall: true}},
+		{name: "context is cancelled", call: call{name: "never", cancelAfter: 100 * ms},
+			classic: end{failed + "context canceled", 100 * ms}},
+		{name: "context deadline passes before the timeout", call: call{name: "never", deadline: 100 * ms},
+			classic: end{failed + "context deadline exceeded", 100 * ms}},
+	}
+	for _, proto := range []string{"HTTP/1.1", "HTTP/2.0"} {
+		for _, tc := range tests {
+			t.Run(proto+"/"+tc.name, func(t *testing.T) {
+				t.Parallel()
+				server, requests := attemptTimeoutServer(t, proto)
+				tc.script.base, tc.script.pause = server.Client().Transport, 100*ms
+				tc.modular = cmp.Or(tc.modular, tc.classic)
+				clients := attemptTimeoutNewClients(t, attemptTimeoutConfig(server.URL, 1), tc.script)
+				classic, modular := clients.ends(tc.call)
+				assert.Equal(t, tc.classic.outcome, classic.outcome, "classic client")
+				assert.Equal(t, tc.modular.outcome, modular.outcome, "modular client")
+				assert.GreaterOrEqual(t, classic.after, tc.classic.after, "classic client")
+				assert.GreaterOrEqual(t, modular.after, tc.modular.after, "modular client")
+				if tc.call.cancelAfter+tc.call.deadline == 0 { // Else the context can end before the request is sent.
+					assert.Equal(t, int32(2), requests.Load(), "each client sends one attempt")
+				}
+			})
+		}
 	}
 }
 
-func TestAttemptTimeout_TakesTimeoutFromConfig(t *testing.T) {
+// The rules of the wait, on the fake clock of a synctest bubble: both clients
+// end the same exchange at the same instant. The timeout is 10 seconds unless
+// seconds or unset says otherwise, and the pause of the scripts is 9.
+func TestAttemptTimeout_WaitsLikeClassicClient(t *testing.T) {
+	type script = attemptTimeoutScript
+	type call = attemptTimeoutCall
+	type end = attemptTimeoutEnd
+	const expired, failed, s = "request timed out after 10s of inactivity", attemptTimeoutFailed, time.Second
+	const never = attemptTimeoutNever
+	wrapped := func(ctx context.Context) error { return fmt.Errorf("dial: %w", ctx.Err()) }
+	broken := func(context.Context) error { return errors.New("broken pipe") }
 	tests := []struct {
 		name    string
 		seconds int
-		want    attemptTimeoutEnd
+		unset   bool
+		script  script
+		call    call
+		// The modular call ends as the classic call unless modular is set.
+		classic, modular end
 	}{
-		{"unset", 0, attemptTimeoutEnd{"request timed out after 1m0s of inactivity", time.Minute}},
-		{"default of the provider", 65, attemptTimeoutEnd{"request timed out after 1m5s of inactivity", 65 * time.Second}},
-		{"one second", 1, attemptTimeoutEnd{"request timed out after 1s of inactivity", time.Second}},
-		{"negative", -1, attemptTimeoutEnd{"request timed out after -1s of inactivity", 0}},
+		{name: "no response headers", script: script{headers: never}, classic: end{failed + expired, 10 * s}},
+		{name: "response headers do not restart the wait", script: script{headers: 6 * s, stall: true},
+			classic: end{"response body: context canceled", 10 * s}, modular: end{expired, 10 * s}},
+		{name: "reads from the response body restart the wait", script: script{pieces: 3, stall: true},
+			classic: end{"response body: context canceled", 37 * s}, modular: end{expired, 37 * s}},
+		{name: "slow response body that ends", script: script{pieces: 5}, classic: end{"ok", 54 * s}},
+		{name: "reads from the request body restart the wait", script: script{uploads: 3}, classic: end{"ok", 54 * s}},
+		{name: "request body stalls", script: script{uploads: 3, uploadStall: true}, classic: end{failed + expired, 19 * s}},
+		// The classic client does not watch a body that net/http rewound.
+		{name: "reads from a rewound request body restart the wait", script: script{rewind: true, uploads: 3},
+			classic: end{failed + expired, 10 * s}, modular: end{"ok", 54 * s}},
+		{name: "transport reports context.Canceled", script: script{headers: never, ended: context.Context.Err},
+			classic: end{failed + expired, 10 * s}},
+		// The classic client compares with context.Canceled by identity.
+		{name: "transport wraps context.Canceled", script: script{headers: never, ended: wrapped},
+			classic: end{failed + "dial: context canceled", 10 * s}, modular: end{failed + expired, 10 * s}},
+		{name: "transport fails with another error once the timeout passed",
+			script: script{headers: never, ended: broken}, classic: end{failed + "broken pipe", 10 * s}},
+		{name: "context is cancelled first", script: script{headers: never}, call: call{cancelAfter: 3 * s},
+			classic: end{failed + "context canceled", 3 * s}},
+		// The classic client adds "response body: " to every error of a read
+		// from the body. The modular client adds nothing.
+		{name: "context is cancelled first while the body is read", script: script{stall: true},
+			call:    call{cancelAfter: 3 * s},
+			classic: end{"response body: context canceled", 3 * s}, modular: end{"context canceled", 3 * s}},
+		{name: "timeout is unset", unset: true, script: script{headers: never},
+			classic: end{failed + "request timed out after 1m0s of inactivity", 60 * s}},
+		{name: "timeout is negative", seconds: -1, script: script{headers: never},
+			classic: end{outcome: failed + "request timed out after -1s of inactivity"}},
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
-			tc.want.outcome = attemptTimeoutGetError("m", tc.want.outcome)
-			classic, modular := attemptTimeoutPlay(t, tc.seconds,
-				attemptTimeoutScript{headers: -1}, attemptTimeoutCall{name: "m"})
-			assert.Equal(t, tc.want, classic, "classic client")
-			assert.Equal(t, tc.want, modular, "modular client")
+			if tc.script.pause, tc.call.name = 9*s, "m"; tc.seconds == 0 && !tc.unset {
+				tc.seconds = 10
+			}
+			synctest.Test(t, func(t *testing.T) {
+				cfg := attemptTimeoutConfig(attemptTimeoutHost, tc.seconds)
+				classic, modular := attemptTimeoutNewClients(t, cfg, tc.script).ends(tc.call)
+				assert.Equal(t, tc.classic, classic, "classic client")
+				assert.Equal(t, cmp.Or(tc.modular, tc.classic), modular, "modular client")
+			})
 		})
 	}
 }
@@ -568,191 +366,112 @@ func TestAttemptTimeout_RejectsBadArguments(t *testing.T) {
 	loadErr := errors.New("cannot load")
 	unresolved := attemptTimeoutConfig(attemptTimeoutHost, 1)
 	unresolved.Loaders = []config.Loader{attemptTimeoutLoader{err: loadErr}}
-	tests := []struct {
-		name      string
+	for want, tc := range map[string]struct {
 		cfg       *config.Config
 		transport http.RoundTripper
-		want      string
 	}{
-		{"nil config", nil, http.DefaultTransport, "attempt timeout: config is nil"},
-		{"nil transport", attemptTimeoutConfig(attemptTimeoutHost, 1), nil, "attempt timeout: transport is nil"},
-		{"config that does not resolve", unresolved, http.DefaultTransport, "attempt timeout: resolve: cannot load"},
-	}
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
+		"attempt timeout: config is nil":        {nil, http.DefaultTransport},
+		"attempt timeout: transport is nil":     {attemptTimeoutConfig(attemptTimeoutHost, 1), nil},
+		"attempt timeout: resolve: cannot load": {unresolved, http.DefaultTransport},
+	} {
+		t.Run(want, func(t *testing.T) {
 			transport, err := AttemptTimeout(tc.cfg, tc.transport)
 			assert.Nil(t, transport)
 			require.Error(t, err)
-			assert.True(t, strings.HasPrefix(err.Error(), tc.want), err.Error())
+			assert.True(t, strings.HasPrefix(err.Error(), want), err.Error())
 			assert.Equal(t, tc.cfg == unresolved, errors.Is(err, loadErr))
 		})
 	}
 }
 
-// attemptTimeoutRoundTrip is a transport made of a function.
-type attemptTimeoutRoundTrip func(*http.Request) (*http.Response, error)
-
-func (f attemptTimeoutRoundTrip) RoundTrip(req *http.Request) (*http.Response, error) { return f(req) }
-
-// attemptTimeoutTimers records the timers that a transport starts.
-type attemptTimeoutTimers struct {
-	mu     sync.Mutex
-	timers []*time.Timer
+// attemptTimeoutSeen is a transport that keeps what a test wants to see of
+// AttemptTimeout around it: its timers and the last request that it sent.
+type attemptTimeoutSeen struct {
+	transport http.RoundTripper // AttemptTimeout around this transport.
+	inner     func(*http.Request) (*http.Response, error)
+	mu        sync.Mutex
+	timers    []*time.Timer
+	sent      *http.Request
 }
 
-// attemptTimeoutWatched returns AttemptTimeout around base, with a timeout of
-// seconds, and the timers that it starts.
+func (s *attemptTimeoutSeen) RoundTrip(req *http.Request) (*http.Response, error) {
+	s.mu.Lock()
+	s.sent = req
+	s.mu.Unlock()
+	return s.inner(req)
+}
+
+// attemptTimeoutWatched puts AttemptTimeout, with a timeout of seconds, around
+// inner and returns what a test sees of it.
 func attemptTimeoutWatched(
-	t *testing.T, seconds int, base http.RoundTripper,
-) (http.RoundTripper, *attemptTimeoutTimers) {
-	t.Helper()
-	transport, err := AttemptTimeout(attemptTimeoutConfig(attemptTimeoutHost, seconds), base)
+	t *testing.T, seconds int, inner func(*http.Request) (*http.Response, error),
+) *attemptTimeoutSeen {
+	seen := &attemptTimeoutSeen{inner: inner}
+	transport, err := AttemptTimeout(attemptTimeoutConfig(attemptTimeoutHost, seconds), seen)
 	require.NoError(t, err)
-	timers := &attemptTimeoutTimers{}
 	transport.(*attemptTimeoutTransport).afterFunc = func(d time.Duration, f func()) *time.Timer {
-		timers.mu.Lock()
-		defer timers.mu.Unlock()
-		timers.timers = append(timers.timers, time.AfterFunc(d, f))
-		return timers.timers[len(timers.timers)-1]
+		seen.mu.Lock()
+		defer seen.mu.Unlock()
+		seen.timers = append(seen.timers, time.AfterFunc(d, f))
+		return seen.timers[len(seen.timers)-1]
 	}
-	return transport, timers
+	seen.transport = transport
+	return seen
 }
 
-// running stops all timers and returns how many there are and how many of
-// them were still running, which is how many a finished attempt left behind.
-func (l *attemptTimeoutTimers) running() (started, running int) {
-	l.mu.Lock()
-	defer l.mu.Unlock()
-	for _, timer := range l.timers {
-		if timer.Stop() {
-			running++
-		}
+// released checks that every attempt started one timer and left none behind.
+func (s *attemptTimeoutSeen) released(t *testing.T, attempts int) {
+	assert.Len(t, s.timers, attempts)
+	for _, timer := range s.timers {
+		assert.False(t, timer.Stop(), "the timer of a finished attempt still ran")
 	}
-	return len(l.timers), running
 }
 
 func TestAttemptTimeout_SendsCopyOfRequest(t *testing.T) {
 	type key struct{}
-	body := func() io.ReadCloser { return io.NopCloser(strings.NewReader("body")) }
-	rewindErr := errors.New("cannot rewind")
-	tests := []struct {
-		name      string
-		body      io.ReadCloser
-		rewound   io.ReadCloser
-		rewindErr error
-	}{
-		{name: "no body"},
-		{name: "http.NoBody", body: http.NoBody, rewound: http.NoBody},
-		{name: "body", body: body(), rewound: body()},
-		{name: "body that cannot be rewound", body: body(), rewindErr: rewindErr},
-	}
-	// watched tells whether sent is body with its reads counted as progress.
+	body := func() io.ReadCloser { return attemptTimeoutCloser{strings.NewReader("body"), io.ErrClosedPipe} }
+	// watched tells whether the transport got body with its reads counted
+	// as progress, or body itself if there is nothing to read.
 	watched := func(body, sent io.ReadCloser) bool {
+		if body == nil || body == http.NoBody {
+			return sent == body
+		}
 		wrapper, ok := sent.(*attemptTimeoutRequestBody)
-		return ok && wrapper.body == body
+		return ok && wrapper.body == body && sent.Close() == body.Close()
 	}
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			var sent *http.Request
-			transport, _ := attemptTimeoutWatched(t, 10, attemptTimeoutRoundTrip(
-				func(req *http.Request) (*http.Response, error) {
-					sent = req
-					return nil, errors.New("sent")
-				}))
+	for name, tc := range map[string]struct {
+		body, rewound io.ReadCloser
+		rewindErr     error
+	}{
+		"no body":                     {},
+		"http.NoBody":                 {body: http.NoBody, rewound: http.NoBody},
+		"body":                        {body: body(), rewound: body()},
+		"body that cannot be rewound": {body: body(), rewindErr: errors.New("cannot rewind")},
+	} {
+		t.Run(name, func(t *testing.T) {
+			seen := attemptTimeoutWatched(t, 10, func(*http.Request) (*http.Response, error) {
+				return nil, errors.New("sent")
+			})
 			ctx := context.WithValue(context.Background(), key{}, "value")
 			req, err := http.NewRequestWithContext(ctx, http.MethodPost, attemptTimeoutHost, nil)
 			require.NoError(t, err)
-			req.Body = tc.body
-			if tc.body != nil {
+			if req.Body = tc.body; tc.body != nil {
 				req.GetBody = func() (io.ReadCloser, error) { return tc.rewound, tc.rewindErr }
 			}
-			_, err = transport.RoundTrip(req)
+			_, err = seen.transport.RoundTrip(req)
 			require.EqualError(t, err, "sent")
-
-			assert.Equal(t, ctx, req.Context(), "the request of the caller keeps its context")
-			assert.True(t, req.Body == tc.body, "the request of the caller keeps its body")
+			assert.True(t, req.Context() == ctx && req.Body == tc.body, "the request of the caller is unchanged")
+			sent := seen.sent
 			assert.NotSame(t, req, sent)
 			assert.Equal(t, "value", sent.Context().Value(key{}))
-			plain := tc.body == nil || tc.body == http.NoBody
-			assert.Equal(t, plain, sent.Body == tc.body)
-			assert.Equal(t, !plain, watched(tc.body, sent.Body))
+			assert.True(t, watched(tc.body, sent.Body))
 			if tc.body == nil {
 				assert.Nil(t, sent.GetBody)
 				return
 			}
 			rewound, err := sent.GetBody()
 			assert.Equal(t, tc.rewindErr, err)
-			plain = tc.rewound == nil || tc.rewound == http.NoBody
-			assert.Equal(t, plain, rewound == tc.rewound)
-			assert.Equal(t, !plain, watched(tc.rewound, rewound))
-		})
-	}
-}
-
-// Every way in which an attempt finishes releases its timer and its context
-// at once, and hands on what the transport returned.
-func TestAttemptTimeout_ReleasesFinishedAttempt(t *testing.T) {
-	failed := errors.New("failed")
-	closeErr := errors.New("cannot close")
-	read := func(t *testing.T, body io.ReadCloser) {
-		got, err := io.ReadAll(body)
-		assert.Equal(t, "body", string(got))
-		assert.NoError(t, err)
-	}
-	tests := []struct {
-		name     string
-		response func() *http.Response
-		err      error
-		// finish is what the caller does with the body, if there is one.
-		finish func(*testing.T, io.ReadCloser)
-	}{
-		{name: "transport fails", err: failed},
-		{name: "transport returns nothing"},
-		{name: "response has no body", response: func() *http.Response { return &http.Response{} }},
-		{name: "response comes with an error", err: failed, response: func() *http.Response {
-			return &http.Response{Body: io.NopCloser(strings.NewReader("body"))}
-		}},
-		{name: "body is closed unread", finish: func(t *testing.T, body io.ReadCloser) {
-			assert.Equal(t, closeErr, body.Close())
-		}},
-		{name: "body is closed after it is read", finish: func(t *testing.T, body io.ReadCloser) {
-			read(t, body)
-			assert.Equal(t, closeErr, body.Close())
-		}},
-		{name: "body is closed twice and read again", finish: func(t *testing.T, body io.ReadCloser) {
-			assert.Equal(t, closeErr, body.Close())
-			assert.Equal(t, closeErr, body.Close())
-			read(t, body)
-		}},
-	}
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			var sent *http.Request
-			inner := &http.Response{Body: attemptTimeoutCloser{strings.NewReader("body"), closeErr}}
-			if tc.finish == nil {
-				inner = nil
-			}
-			if tc.response != nil {
-				inner = tc.response()
-			}
-			transport, timers := attemptTimeoutWatched(t, 10, attemptTimeoutRoundTrip(
-				func(req *http.Request) (*http.Response, error) {
-					sent = req
-					return inner, tc.err
-				}))
-			req, err := http.NewRequest(http.MethodGet, attemptTimeoutHost, nil)
-			require.NoError(t, err)
-			resp, err := transport.RoundTrip(req)
-			assert.Same(t, inner, resp)
-			assert.Equal(t, tc.err, err)
-			if tc.finish != nil {
-				assert.NoError(t, sent.Context().Err(), "the attempt lasts while its body is open")
-				tc.finish(t, resp.Body)
-			}
-			assert.Equal(t, context.Canceled, context.Cause(sent.Context()))
-			started, running := timers.running()
-			assert.Equal(t, 1, started)
-			assert.Zero(t, running)
+			assert.True(t, watched(tc.rewound, rewound))
 		})
 	}
 }
@@ -765,38 +484,73 @@ type attemptTimeoutCloser struct {
 
 func (c attemptTimeoutCloser) Close() error { return c.err }
 
-// A body that is never closed holds its timer until the timeout passes
-// without a read, or for as long if the context of the caller ends before.
-func TestAttemptTimeout_ReleasesUnclosedBody(t *testing.T) {
-	for _, cancelled := range []bool{false, true} {
-		t.Run(fmt.Sprintf("cancelled=%t", cancelled), func(t *testing.T) {
+// An attempt hands on what the transport returned, and releases its context
+// and its timer at once when it is over. A body that is never closed holds
+// them until the timeout passes without a read.
+func TestAttemptTimeout_ReleasesAttempt(t *testing.T) {
+	const expired, s = "request timed out after 10s of inactivity", time.Second
+	failed, closeErr := errors.New("failed"), errors.New("cannot close")
+	response := func() *http.Response {
+		return &http.Response{Body: attemptTimeoutCloser{strings.NewReader("body"), closeErr}}
+	}
+	tests := []struct {
+		name     string
+		response *http.Response
+		err      error
+		// The caller reads the body after 9 seconds, closes it, and cancels
+		// the context of the request.
+		read, close, cancel bool
+		// The context of the attempt ends after held, with cause if that is
+		// set and as cancelled if not.
+		held  time.Duration
+		cause string
+	}{
+		{name: "transport fails", err: failed},
+		{name: "transport returns nothing"},
+		{name: "response has no body", response: &http.Response{}},
+		{name: "response comes with an error", response: response(), err: failed},
+		{name: "body is closed unread", response: response(), close: true},
+		{name: "body is read and closed", response: response(), read: true, close: true, held: 9 * s},
+		{name: "body is read and never closed", response: response(), read: true, held: 19 * s, cause: expired},
+		{name: "unclosed body is read and the caller cancels", response: response(), read: true, cancel: true, held: 9 * s},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
 			synctest.Test(t, func(t *testing.T) {
-				transport, timers := attemptTimeoutWatched(t, 10, attemptTimeoutScript{})
+				seen := attemptTimeoutWatched(t, 10, func(*http.Request) (*http.Response, error) {
+					return tc.response, tc.err
+				})
 				ctx, cancel := context.WithCancel(context.Background())
 				defer cancel()
 				req, err := http.NewRequestWithContext(ctx, http.MethodGet, attemptTimeoutHost, nil)
 				require.NoError(t, err)
-				resp, err := transport.RoundTrip(req)
-				require.NoError(t, err)
-				time.Sleep(attemptTimeoutPause)
-				got, err := io.ReadAll(resp.Body)
-				require.NoError(t, err)
-				assert.Equal(t, attemptTimeoutModelJSON, string(got))
-				attempt := resp.Body.(*attemptTimeoutResponseBody).watch.ctx
-				want := "request timed out after 10s of inactivity"
-				if cancelled {
-					cancel()
-					want = "context canceled"
+				start := time.Now()
+				resp, err := seen.transport.RoundTrip(req)
+				assert.Same(t, tc.response, resp)
+				assert.Equal(t, tc.err, err)
+				if tc.read {
+					time.Sleep(9 * s)
+					got, err := io.ReadAll(resp.Body)
+					assert.Equal(t, "body", string(got))
+					assert.NoError(t, err)
 				}
-				time.Sleep(10*time.Second - time.Nanosecond)
+				if tc.close {
+					assert.Equal(t, closeErr, resp.Body.Close())
+					assert.Equal(t, closeErr, resp.Body.Close(), "a second Close reaches the body too")
+					_, err := resp.Body.Read(make([]byte, 1))
+					assert.Equal(t, tc.read, err == io.EOF, "a Read after Close reaches the body too")
+				}
+				if tc.cancel {
+					cancel()
+				}
+				<-seen.sent.Context().Done()
+				assert.Equal(t, tc.held, time.Since(start))
+				assert.EqualError(t, context.Cause(seen.sent.Context()), cmp.Or(tc.cause, "context canceled"))
+				if tc.cancel { // The timer lasts until it fires, and does not start again.
+					time.Sleep(10*s - tc.held)
+				}
 				synctest.Wait()
-				assert.Equal(t, cancelled, attempt.Err() != nil, "the wait restarted with the read")
-				time.Sleep(time.Nanosecond)
-				synctest.Wait()
-				assert.EqualError(t, context.Cause(attempt), want)
-				started, running := timers.running()
-				assert.Equal(t, 1, started)
-				assert.Zero(t, running)
+				seen.released(t, 1)
 			})
 		})
 	}
@@ -807,20 +561,17 @@ func TestAttemptTimeout_ReleasesUnclosedBody(t *testing.T) {
 func TestAttemptTimeout_LeavesNoTimerOrGoroutine(t *testing.T) {
 	const rounds = 50
 	before := runtime.NumGoroutine()
-	var timers *attemptTimeoutTimers
+	var seen *attemptTimeoutSeen
 	t.Run("attempts", func(t *testing.T) {
 		server, _ := attemptTimeoutServer(t, "HTTP/1.1")
-		var transport http.RoundTripper
-		transport, timers = attemptTimeoutWatched(t, 1, server.Client().Transport)
-		// attempt gets the model called name, reads the body if read is set
-		// and closes it. The caller gives up after patience.
+		seen = attemptTimeoutWatched(t, 1, server.Client().Transport.RoundTrip)
+		// attempt gets the model called name and closes the body, read or not.
 		attempt := func(name string, read bool, patience time.Duration) {
 			ctx, cancel := context.WithTimeout(context.Background(), patience)
 			defer cancel()
-			url := server.URL + attemptTimeoutGetPath + "?name=" + name
-			req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+			req, err := http.NewRequestWithContext(ctx, http.MethodGet, server.URL+"?name="+name, nil)
 			assert.NoError(t, err)
-			resp, err := (&http.Client{Transport: transport}).Do(req)
+			resp, err := (&http.Client{Transport: seen.transport}).Do(req)
 			if err != nil {
 				return
 			}
@@ -840,9 +591,7 @@ func TestAttemptTimeout_LeavesNoTimerOrGoroutine(t *testing.T) {
 		}
 		group.Wait()
 	})
-	started, running := timers.running()
-	assert.Equal(t, 6*rounds, started)
-	assert.Zero(t, running)
+	seen.released(t, 6*rounds)
 	for end := time.Now().Add(10 * time.Second); runtime.NumGoroutine() > before && time.Now().Before(end); {
 		time.Sleep(10 * time.Millisecond)
 	}

@@ -100,10 +100,9 @@ func (t *attemptTimeoutTransport) RoundTrip(req *http.Request) (*http.Response, 
 func (t *attemptTimeoutTransport) watch(parent context.Context) *attemptTimeoutWatch {
 	ctx, cancel := context.WithCancelCause(parent)
 	w := &attemptTimeoutWatch{ctx: ctx, cancel: cancel, timeout: t.timeout, expired: t.expired}
-	// A timeout that is not positive fires at once, and check needs the timer.
+	// check can run as soon as the timer exists, and it needs the timer.
 	w.mu.Lock()
 	defer w.mu.Unlock()
-	w.deadline = time.Now().Add(t.timeout)
 	w.timer = t.afterFunc(t.timeout, w.check)
 	return w
 }
@@ -117,7 +116,9 @@ type attemptTimeoutWatch struct {
 	timeout time.Duration
 	expired error
 
-	mu       sync.Mutex
+	mu sync.Mutex
+	// deadline is the end of the wait that the last progress started. It is
+	// zero until then, because the timer first fires when the first wait ends.
 	deadline time.Time
 	timer    *time.Timer
 }
@@ -152,15 +153,12 @@ func (w *attemptTimeoutWatch) stop() {
 	w.cancel(nil)
 }
 
-// failure returns the error of an attempt that failed with err: the timeout
-// error if the watch ended the attempt before its parent context did and err
-// is that cancellation, and err otherwise. net/http reports the cause of a
-// cancelled context, and other transports report context.Canceled.
+// failure returns the error of an attempt that failed with err. If the watch
+// ended the attempt before its parent context did, a transport reports that
+// as context.Canceled, which becomes the timeout error here, or as the cause
+// of the context, as net/http does, which is the timeout error already.
 func (w *attemptTimeoutWatch) failure(err error) error {
-	if context.Cause(w.ctx) != w.expired {
-		return err
-	}
-	if errors.Is(err, context.Canceled) || errors.Is(err, w.expired) {
+	if context.Cause(w.ctx) == w.expired && errors.Is(err, context.Canceled) {
 		return w.expired
 	}
 	return err

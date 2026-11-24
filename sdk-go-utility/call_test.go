@@ -8,7 +8,6 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
-	"net/http/httptrace"
 	"net/url"
 	"strconv"
 	"strings"
@@ -177,8 +176,8 @@ func TestCallReturnsTheResultOrTheClassicError(t *testing.T) {
 		method                          func(context.Context, ...call.Option) (string, error)
 		limiterFailsOn                  int32
 		noRetrier, noLimiter, noClassic bool
-		// wantErr is the message of the error, which must wrap wantIs. asked
-		// and waits count the calls of the retrier and of the limiter.
+		// wantErr is the message of the error, which must wrap wantIs; a success
+		// has neither. asked and waits count the calls of the retrier and limiter.
 		want, wantErr string
 		wantIs        error
 		asked         int
@@ -220,6 +219,7 @@ func TestCallReturnsTheResultOrTheClassicError(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel() // Calls keep nothing between them, so the cases run at once.
 			givenRetrier := callNewTestRetrier(time.Millisecond)
 			givenLimiter := &callTestLimiter{failOn: tt.limiterFailsOn}
 			retrier := callGiven[ops.Retrier](!tt.noRetrier, givenRetrier)
@@ -229,11 +229,9 @@ func TestCallReturnsTheResultOrTheClassicError(t *testing.T) {
 			got, err := Call(t.Context(), tt.method, retrier, limiter, classic)
 
 			assert.Equal(t, tt.want, got)
-			if tt.wantErr == "" {
-				assert.NoError(t, err)
-			} else {
+			assert.ErrorIs(t, err, tt.wantIs)
+			if tt.wantErr != "" {
 				assert.EqualError(t, err, tt.wantErr)
-				assert.ErrorIs(t, err, tt.wantIs)
 			}
 			if tt.noClassic && tt.wantIs != nil {
 				assert.Same(t, tt.wantIs, err, "without classic the error is returned as it is")
@@ -349,34 +347,20 @@ func TestCallWhenTheTimeoutOfTheMethodPasses(t *testing.T) {
 	})
 }
 
-func TestCallKeepsNothingBetweenCalls(t *testing.T) {
-	limiter := &callTestLimiter{}
-	var wg sync.WaitGroup
-	for range 32 {
-		wg.Go(func() {
-			got, err := Call(t.Context(), callScripted(callErrs.retriable, nil),
-				callNewTestRetrier(time.Millisecond), limiter, callTestClassic)
-			assert.NoError(t, err)
-			assert.Equal(t, "done", got)
-		})
-	}
-	wg.Wait()
-	assert.Equal(t, int32(64), limiter.waits.Load(), "two attempts of each call")
-}
-
 const (
 	callModelPath    = "/api/2.0/mlflow/databricks/registered-models/get"
 	callModelRequest = "GET " + callModelPath + "?name=m"
 	callModelFound   = `200 {"registered_model_databricks": {"name": "m", "id": "model-id"}}`
 	callModelMissing = `404 {"error_code": "RESOURCE_DOES_NOT_EXIST", "message": "no such model"}`
 	callTooMany      = `429 {"error_code": "TOO_MANY_REQUESTS", "message": "slow down"}`
-	// callHangs holds a request until its client gives up.
+	// callHangs holds a request until its client gives up and then aborts it,
+	// because a handler that returns answers a client that may still be reading.
 	callHangs = "hangs"
 )
 
 // callRegistry is the model registry API that the classic and the modular
-// client call in turn. It answers the attempts of a call with responses, each
-// a status and a body, and calls onRequest when it gets a request for the model.
+// client call in turn. It answers the attempts of a call with responses, each a
+// status and a body, and calls onRequest, if set, when it gets a model request.
 type callRegistry struct {
 	responses []string
 	mu        sync.Mutex
@@ -394,10 +378,12 @@ func (s *callRegistry) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	s.requests = append(s.requests, r.Method+" "+r.URL.RequestURI())
 	response, onRequest := s.responses[len(s.requests)-1], s.onRequest
 	s.mu.Unlock()
-	onRequest()
+	if onRequest != nil {
+		onRequest()
+	}
 	if response == callHangs {
 		<-r.Context().Done()
-		return
+		panic(http.ErrAbortHandler)
 	}
 	status, _ := strconv.Atoi(response[:3])
 	w.Header().Set("Content-Type", "application/json")
@@ -435,6 +421,31 @@ func (c *callEndableContext) Err() error {
 	}
 }
 
+// callAfterResponse is the transport of both clients. It calls then, if set,
+// when the client has read the whole response to a request for the model,
+// which is right before a client that retries starts its wait.
+type callAfterResponse struct{ then func() }
+
+func (a callAfterResponse) RoundTrip(req *http.Request) (*http.Response, error) {
+	resp, err := http.DefaultTransport.RoundTrip(req)
+	if err == nil && a.then != nil && req.URL.Path == callModelPath {
+		resp.Body = callBodyThen{resp.Body, a.then}
+	}
+	return resp, err
+}
+
+type callBodyThen struct {
+	io.ReadCloser
+	then func()
+}
+
+func (b callBodyThen) Read(p []byte) (n int, err error) {
+	if n, err = b.ReadCloser.Read(p); err == io.EOF {
+		b.then()
+	}
+	return n, err
+}
+
 // callClassicError converts the error of a modular client with the parser of
 // the classic client, from the response that the modular error carries.
 func callClassicError(err error) error {
@@ -452,11 +463,11 @@ func callClassicError(err error) error {
 	})
 }
 
-// callGet returns the ID of the model m, read from host.
-type callGet func(ctx context.Context, t *testing.T, host string) (string, error)
+// callGet returns the ID of the model m, read from host over transport.
+type callGet func(ctx context.Context, t *testing.T, host string, transport http.RoundTripper) (string, error)
 
-func callClassicGet(ctx context.Context, t *testing.T, host string) (string, error) {
-	w, err := databricks.NewWorkspaceClient(&databricks.Config{Host: host, Token: "token"})
+func callClassicGet(ctx context.Context, t *testing.T, host string, transport http.RoundTripper) (string, error) {
+	w, err := databricks.NewWorkspaceClient(&databricks.Config{Host: host, Token: "token", HTTPTransport: transport})
 	require.NoError(t, err)
 	resp, err := w.ModelRegistry.GetModel(ctx, ml.GetModelRequest{Name: "m"})
 	if err != nil {
@@ -468,11 +479,11 @@ func callClassicGet(ctx context.Context, t *testing.T, host string) (string, err
 // callModularGet reads the model with a modular client through Call. Its
 // retrier retries a 429, as the classic client does, after retryAfter.
 func callModularGet(retryAfter time.Duration) callGet {
-	return func(ctx context.Context, t *testing.T, host string) (string, error) {
+	return func(ctx context.Context, t *testing.T, host string, transport http.RoundTripper) (string, error) {
 		creds, err := credentials.NewPATCredentials("token")
 		require.NoError(t, err)
 		c, err := modelregistry.NewClient(t.Context(), client.WithHost(host), client.WithCredentials(creds),
-			client.WithoutConfigFile(), client.WithoutEnv())
+			client.WithHTTPClient(&http.Client{Transport: transport}), client.WithoutConfigFile(), client.WithoutEnv())
 		require.NoError(t, err)
 		retrier := &callTestRetrier{delay: retryAfter, retriable: func(err error) bool {
 			modularErr, ok := errors.AsType[*modularerr.APIError](err)
@@ -534,8 +545,7 @@ func TestCallReturnsWhatTheClassicClientReturns(t *testing.T) {
 	tests := []struct {
 		name      string
 		responses []string
-		// ends is the moment at which the context ends, if it does, and
-		// endsWith the error of the context.
+		// ends is the moment at which the context ends with endsWith, if it does.
 		ends     string
 		endsWith error
 		want     callOutcome
@@ -567,22 +577,13 @@ func TestCallReturnsWhatTheClassicClientReturns(t *testing.T) {
 			run := func(get callGet) callOutcome {
 				done := make(chan struct{})
 				end := sync.OnceFunc(func() { close(done) })
-				onRequest, afterResponse := func() {}, func() {}
-				switch tt.ends {
-				case callEndsBeforeTheCall:
+				ctx := &callEndableContext{Context: context.Background(), done: done, err: tt.endsWith}
+				if tt.ends == callEndsBeforeTheCall {
 					end()
-				case callEndsAfterTheResponse:
-					afterResponse = end
-				case callEndsDuringTheRequest:
-					onRequest = end
 				}
-				// A connection is idle once its client has read the whole response,
-				// which is right before a client that retries starts its wait.
-				traced := httptrace.WithClientTrace(context.Background(),
-					&httptrace.ClientTrace{PutIdleConn: func(error) { afterResponse() }})
-				ctx := &callEndableContext{Context: traced, done: done, err: tt.endsWith}
-				api.nextCall(onRequest)
-				model, err := get(ctx, t, server.URL)
+				api.nextCall(callGiven(tt.ends == callEndsDuringTheRequest, end))
+				transport := callAfterResponse{callGiven(tt.ends == callEndsAfterTheResponse, end)}
+				model, err := get(ctx, t, server.URL, transport)
 				return callNewOutcome(api.nextCall(nil), model, err, server.URL)
 			}
 

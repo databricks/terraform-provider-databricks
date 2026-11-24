@@ -206,6 +206,9 @@ func resourceSchema() schema.Schema {
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
+						// Static defaults match SDKv2's zero-valued state without rejecting
+						// explicit false/"". They also reset removed selectors instead of
+						// retaining their prior values through Optional+Computed planning.
 						"all_vpc_sc_services": schema.BoolAttribute{
 							Optional:            true,
 							Computed:            true,

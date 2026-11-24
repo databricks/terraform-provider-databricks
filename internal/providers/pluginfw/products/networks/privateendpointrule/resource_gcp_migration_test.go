@@ -18,7 +18,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	sdkschema "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	tfresource "github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -191,6 +193,22 @@ func TestGcpTerraformPluginFrameworkMigration(t *testing.T) {
 								plancheck.ExpectResourceAction(address, plancheck.ResourceActionDestroyBeforeCreate),
 							}},
 						})
+						// Removing the attachment must replace it, not retain the old
+						// value because the selector is Optional+Computed.
+						for _, replacement := range []string{
+							`google_api_endpoints { endpoints = ["storage.googleapis.com"] }`,
+							"service_attachment = \"\"\ngoogle_api_endpoints { endpoints = [\"storage.googleapis.com\"] }",
+						} {
+							steps = append(steps, tfresource.TestStep{
+								ProtoV6ProviderFactories: pfFactories,
+								Config:                   strings.Replace(config, tt.target, replacement, 1),
+								PlanOnly:                 true, ExpectNonEmptyPlan: true,
+								ConfigPlanChecks: tfresource.ConfigPlanChecks{PostApplyPreRefresh: []plancheck.PlanCheck{
+									plancheck.ExpectResourceAction(address, plancheck.ResourceActionDestroyBeforeCreate),
+									plancheck.ExpectKnownValue(address, tfjsonpath.New("gcp_endpoint").AtSliceIndex(0).AtMapKey("service_attachment"), knownvalue.StringExact("")),
+								}},
+							})
+						}
 					}
 					tfresource.UnitTest(t, tfresource.TestCase{Steps: steps})
 				})

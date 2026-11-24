@@ -13,12 +13,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	tfresource "github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/stretchr/testify/mock"
 )
 
 func TestGcpTerraformTargetUpdatesWithDefaults(t *testing.T) {
-	for _, defaults := range []string{"omitted", "explicit"} {
+	for _, defaults := range []string{"omitted", "explicit", "null"} {
 		t.Run(defaults, func(t *testing.T) {
 			const address = "databricks_mws_ncc_private_endpoint_rule.this"
 			const pscURI = "projects/p/regions/r/forwardingRules/endpoint"
@@ -64,6 +66,9 @@ func TestGcpTerraformTargetUpdatesWithDefaults(t *testing.T) {
 				if defaults == "explicit" {
 					googleConfig = strings.Replace(googleConfig, "gcp_endpoint {", "gcp_endpoint {\nall_vpc_sc_services = false\nservice_attachment = \"\"", 1)
 					allConfig = strings.Replace(allConfig, "gcp_endpoint {", "gcp_endpoint {\nservice_attachment = \"\"", 1)
+				} else if defaults == "null" {
+					googleConfig = strings.Replace(googleConfig, "gcp_endpoint {", "gcp_endpoint {\nall_vpc_sc_services = null\nservice_attachment = null", 1)
+					allConfig = strings.Replace(allConfig, "gcp_endpoint {", "gcp_endpoint {\nservice_attachment = null", 1)
 				}
 				factories := map[string]func() (tfprotov6.ProviderServer, error){
 					"databricks": providerserver.NewProtocol6WithError(&privateEndpointRuleTestProvider{api: account.AccountClient.NetworkConnectivity}),
@@ -71,6 +76,12 @@ func TestGcpTerraformTargetUpdatesWithDefaults(t *testing.T) {
 				noChange := tfresource.ConfigPlanChecks{PreApply: []plancheck.PlanCheck{
 					plancheck.ExpectResourceAction(address, plancheck.ResourceActionNoop),
 				}}
+				targetPlan := func(allServices bool) tfresource.ConfigPlanChecks {
+					return tfresource.ConfigPlanChecks{PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(address, plancheck.ResourceActionUpdate),
+						plancheck.ExpectKnownValue(address, tfjsonpath.New("gcp_endpoint").AtSliceIndex(0).AtMapKey("all_vpc_sc_services"), knownvalue.Bool(allServices)),
+					}}
+				}
 				check := func(allServices string) tfresource.TestCheckFunc {
 					return tfresource.ComposeTestCheckFunc(
 						tfresource.TestCheckResourceAttr(address, "id", "ncc_id/rule_id"),
@@ -81,9 +92,9 @@ func TestGcpTerraformTargetUpdatesWithDefaults(t *testing.T) {
 				}
 				tfresource.UnitTest(t, tfresource.TestCase{Steps: []tfresource.TestStep{
 					{ProtoV6ProviderFactories: factories, Config: googleConfig, Check: check("false")},
-					{ProtoV6ProviderFactories: factories, Config: allConfig, Check: check("true")},
+					{ProtoV6ProviderFactories: factories, Config: allConfig, ConfigPlanChecks: targetPlan(true), Check: check("true")},
 					{ProtoV6ProviderFactories: factories, Config: allConfig, ConfigPlanChecks: noChange},
-					{ProtoV6ProviderFactories: factories, Config: googleConfig, Check: check("false")},
+					{ProtoV6ProviderFactories: factories, Config: googleConfig, ConfigPlanChecks: targetPlan(false), Check: check("false")},
 					{ProtoV6ProviderFactories: factories, Config: googleConfig, ConfigPlanChecks: noChange},
 				}})
 			})

@@ -51,6 +51,14 @@ steps:
                      "user_id": "replay-admin@example.com",
                      "permission_level": "CAN_MANAGE"}}
       - *read_created
+    state:
+      resources:
+        databricks_mlflow_model.this:
+          attributes:
+            - path: [id]
+              equals: user_agent_model
+            - path: [registered_model_id]
+              equals: 0123456789abcdef0123456789abcdef
   - name: update_description
     config: |
       resource "databricks_mlflow_model" "this" {
@@ -88,6 +96,12 @@ steps:
                      "user_id": "replay-admin@example.com",
                      "permission_level": "CAN_MANAGE"}}
       - *read_updated
+    state:
+      resources:
+        databricks_mlflow_model.this:
+          attributes:
+            - path: [description]
+              equals: updated
 destroy:
   calls:
     - *read_updated

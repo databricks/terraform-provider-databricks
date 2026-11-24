@@ -66,6 +66,8 @@ steps:
           attributes:
             - path: [id]
               equals: traceparent_model
+            - path: [registered_model_id]
+              equals: 0123456789abcdef0123456789abcdef
   - name: update_retries_the_patch_once
     config: |
       resource "databricks_mlflow_model" "this" {

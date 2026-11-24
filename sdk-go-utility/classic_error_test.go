@@ -25,8 +25,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// classicSentinels are the sentinel errors of the classic apierr package.
-var classicSentinels = []error{
+// classicErrorSentinels are the sentinel errors of the classic apierr package.
+var classicErrorSentinels = []error{
 	apierr.ErrBadRequest, apierr.ErrUnauthenticated, apierr.ErrPermissionDenied, apierr.ErrNotFound,
 	apierr.ErrResourceConflict, apierr.ErrTooManyRequests, apierr.ErrCancelled, apierr.ErrInternalError,
 	apierr.ErrNotImplemented, apierr.ErrTemporarilyUnavailable, apierr.ErrDeadlineExceeded,
@@ -36,19 +36,19 @@ var classicSentinels = []error{
 }
 
 const (
-	htmlWithPre    = `<html><body><h2>HTTP ERROR</h2><pre> Worker environment not ready. </pre></body></html>`
-	htmlWithoutPre = `<html><head><title>Bad Gateway</title></head><body><center>nginx</center></body></html>`
-	truncatedJSON  = `{"error_code":"RESOURCE_DOES_NOT_EXIST","mess`
-	withDetails    = `{"error_code":"INVALID_PARAMETER_VALUE","message":"Invalid name","details":[` +
+	classicErrorHTMLWithPre    = `<html><body><h2>HTTP ERROR</h2><pre> Worker environment not ready. </pre></body></html>`
+	classicErrorHTMLWithoutPre = `<html><head><title>Bad Gateway</title></head><body><center>nginx</center></body></html>`
+	classicErrorTruncatedJSON  = `{"error_code":"RESOURCE_DOES_NOT_EXIST","mess`
+	classicErrorWithDetails    = `{"error_code":"INVALID_PARAMETER_VALUE","message":"Invalid name","details":[` +
 		`{"@type":"type.googleapis.com/google.rpc.ErrorInfo","reason":"INVALID_NAME","domain":"mlflow","metadata":{"name":"a/b"}},` +
 		`{"@type":"type.googleapis.com/google.rpc.RequestInfo","request_id":"r-1","serving_data":"s"},` +
 		`{"@type":"type.googleapis.com/google.rpc.RetryInfo","retry_delay":"3s"},{"@type":"unknown","x":1},"not an object"]}`
 )
 
-// errorResponses are failed responses with what the classic client makes of
-// them: the error code, the message, whether apierr.IsMissing holds and
-// whether the client retries the call before it returns the error.
-var errorResponses = []struct {
+// classicErrorResponses are failed responses with what the classic client
+// makes of them: the error code, the message, whether apierr.IsMissing holds
+// and whether the client retries the call before it returns the error.
+var classicErrorResponses = []struct {
 	name          string
 	status        int
 	body          string
@@ -97,15 +97,15 @@ var errorResponses = []struct {
 	{name: "404 integer error_code", status: 404, body: `{"error_code":404,"message":"gone"}`, code: "404", message: "gone", missing: true},
 	{name: "500 integer error_code", status: 500, body: `{"error_code":500,"message":"oops"}`, code: "500", message: "oops"},
 	// Error details.
-	{name: "400 details", status: 400, body: withDetails, code: "INVALID_PARAMETER_VALUE", message: "Invalid name"},
-	{name: "500 details", status: 500, body: withDetails, code: "INVALID_PARAMETER_VALUE", message: "Invalid name"},
+	{name: "400 details", status: 400, body: classicErrorWithDetails, code: "INVALID_PARAMETER_VALUE", message: "Invalid name"},
+	{name: "500 details", status: 500, body: classicErrorWithDetails, code: "INVALID_PARAMETER_VALUE", message: "Invalid name"},
 	// Other JSON.
 	{name: "404 message only", status: 404, body: `{"message":"gone"}`, code: "<nil>", message: "gone", missing: true},
 	{name: "404 empty object", status: 404, body: `{}`, code: "<nil>", missing: true},
 	{name: "404 null", status: 404, body: `null`, code: "<nil>", missing: true},
 	{name: "404 array", status: 404, body: `[]`, code: "UNKNOWN", message: `[]`},
-	{name: "404 truncated JSON", status: 404, body: truncatedJSON, code: "UNKNOWN", message: truncatedJSON},
-	{name: "500 truncated JSON", status: 500, body: truncatedJSON, code: "UNKNOWN", message: truncatedJSON},
+	{name: "404 truncated JSON", status: 404, body: classicErrorTruncatedJSON, code: "UNKNOWN", message: classicErrorTruncatedJSON},
+	{name: "500 truncated JSON", status: 500, body: classicErrorTruncatedJSON, code: "UNKNOWN", message: classicErrorTruncatedJSON},
 	// Plain text of the form CODE: message, which holds the error code.
 	{name: "400 text", status: 400, body: `INVALID_PARAMETER_VALUE: bad name`, code: "INVALID_PARAMETER_VALUE", message: "bad name"},
 	{name: "400 text RESOURCE_DOES_NOT_EXIST", status: 400, body: `RESOURCE_DOES_NOT_EXIST: gone`, code: "RESOURCE_DOES_NOT_EXIST", message: "gone", missing: true},
@@ -113,14 +113,14 @@ var errorResponses = []struct {
 	{name: "500 text", status: 500, body: `INTERNAL_ERROR: oops`, code: "INTERNAL_ERROR", message: "oops"},
 	{name: "404 other text", status: 404, body: "model not found\n", code: "UNKNOWN", message: "model not found\n"},
 	// HTML with a <pre> block, which holds the message. The error code is the status text.
-	{name: "400 HTML with pre", status: 400, body: htmlWithPre, code: "BAD_REQUEST", message: "Worker environment not ready"},
-	{name: "404 HTML with pre", status: 404, body: htmlWithPre, code: "NOT_FOUND", message: "Worker environment not ready", missing: true},
-	{name: "500 HTML with pre", status: 500, body: htmlWithPre, code: "INTERNAL_SERVER_ERROR", message: "Worker environment not ready"},
-	{name: "503 HTML with pre", status: 503, body: htmlWithPre, code: "SERVICE_UNAVAILABLE", message: "Worker environment not ready", retried: true},
+	{name: "400 HTML with pre", status: 400, body: classicErrorHTMLWithPre, code: "BAD_REQUEST", message: "Worker environment not ready"},
+	{name: "404 HTML with pre", status: 404, body: classicErrorHTMLWithPre, code: "NOT_FOUND", message: "Worker environment not ready", missing: true},
+	{name: "500 HTML with pre", status: 500, body: classicErrorHTMLWithPre, code: "INTERNAL_SERVER_ERROR", message: "Worker environment not ready"},
+	{name: "503 HTML with pre", status: 503, body: classicErrorHTMLWithPre, code: "SERVICE_UNAVAILABLE", message: "Worker environment not ready", retried: true},
 	// HTML without a <pre> block.
-	{name: "404 HTML without pre", status: 404, body: htmlWithoutPre, code: "UNKNOWN", message: htmlWithoutPre},
-	{name: "502 HTML without pre", status: 502, body: htmlWithoutPre, code: "UNKNOWN", message: htmlWithoutPre},
-	{name: "503 HTML without pre", status: 503, body: htmlWithoutPre, code: "UNKNOWN", message: htmlWithoutPre, retried: true},
+	{name: "404 HTML without pre", status: 404, body: classicErrorHTMLWithoutPre, code: "UNKNOWN", message: classicErrorHTMLWithoutPre},
+	{name: "502 HTML without pre", status: 502, body: classicErrorHTMLWithoutPre, code: "UNKNOWN", message: classicErrorHTMLWithoutPre},
+	{name: "503 HTML without pre", status: 503, body: classicErrorHTMLWithoutPre, code: "UNKNOWN", message: classicErrorHTMLWithoutPre, retried: true},
 	// An empty body. The message is the status text.
 	{name: "400 empty", status: 400, message: "Bad Request"},
 	{name: "404 empty", status: 404, message: "Not Found", missing: true},
@@ -129,9 +129,9 @@ var errorResponses = []struct {
 	{name: "503 empty", status: 503, message: "Service Unavailable", retried: true},
 }
 
-// modelCalls are the calls of databricks_mlflow_model, each through the
-// classic client and through the modular client.
-var modelCalls = []struct {
+// classicErrorModelCalls are the calls of databricks_mlflow_model, each
+// through the classic client and through the modular client.
+var classicErrorModelCalls = []struct {
 	name    string
 	classic func(context.Context, *databricks.WorkspaceClient) error
 	modular func(context.Context, *modelregistry.Client) error
@@ -165,21 +165,21 @@ var modelCalls = []struct {
 	}},
 }
 
-// noAmbientConfig keeps profiles and environment variables out of the
-// configuration of the classic client.
-type noAmbientConfig struct{}
+// classicErrorNoAmbientConfig keeps profiles and environment variables out of
+// the configuration of the classic client.
+type classicErrorNoAmbientConfig struct{}
 
-func (noAmbientConfig) Name() string                   { return "classic error test" }
-func (noAmbientConfig) Configure(*config.Config) error { return nil }
+func (classicErrorNoAmbientConfig) Name() string                   { return "classic error test" }
+func (classicErrorNoAmbientConfig) Configure(*config.Config) error { return nil }
 
-// newClients returns a classic and a modular client for server. Neither reads
-// the environment or a config file. The classic client stops retrying after a
-// second, the shortest time it can be set to, and the modular client doesn't
-// retry.
-func newClients(t *testing.T, server *httptest.Server) (*databricks.WorkspaceClient, *modelregistry.Client) {
+// classicErrorClients returns a classic and a modular client for server.
+// Neither reads the environment or a config file. The classic client stops
+// retrying after a second, the shortest time it can be set to, and the modular
+// client doesn't retry.
+func classicErrorClients(t *testing.T, server *httptest.Server) (*databricks.WorkspaceClient, *modelregistry.Client) {
 	t.Helper()
 	classic, err := databricks.NewWorkspaceClient(&databricks.Config{
-		Host: server.URL, Token: "token", AuthType: "pat", Loaders: []config.Loader{noAmbientConfig{}},
+		Host: server.URL, Token: "token", AuthType: "pat", Loaders: []config.Loader{classicErrorNoAmbientConfig{}},
 		HTTPTransport: server.Client().Transport, RetryTimeoutSeconds: 1,
 		HostMetadataResolver: func(context.Context, string) (*config.HostMetadata, error) { return nil, nil },
 	})
@@ -192,11 +192,12 @@ func newClients(t *testing.T, server *httptest.Server) (*databricks.WorkspaceCli
 	return classic, modular
 }
 
-// respond answers every request with status and body. JSON goes out as JSON,
-// truncated or not, and net/http names the content type of every other body.
-func respond(status int, body string) http.HandlerFunc {
+// classicErrorRespond answers every request with status and body. JSON goes
+// out as JSON, truncated or not, and net/http names the content type of every
+// other body.
+func classicErrorRespond(status int, body string) http.HandlerFunc {
 	return func(w http.ResponseWriter, _ *http.Request) {
-		if json.Valid([]byte(body)) || body == truncatedJSON {
+		if json.Valid([]byte(body)) || body == classicErrorTruncatedJSON {
 			w.Header().Set("Content-Type", "application/json")
 		}
 		w.Header().Set("X-Request-Id", "r-1")
@@ -205,9 +206,9 @@ func respond(status int, body string) http.HandlerFunc {
 	}
 }
 
-// respondRaw answers every request with statusLine as the HTTP/1.1 status
-// line, which a http.ResponseWriter can't write, and body as HTML.
-func respondRaw(statusLine, body string) http.HandlerFunc {
+// classicErrorRespondRaw answers every request with statusLine as the HTTP/1.1
+// status line, which a http.ResponseWriter can't write, and body as HTML.
+func classicErrorRespondRaw(statusLine, body string) http.HandlerFunc {
 	return func(w http.ResponseWriter, _ *http.Request) {
 		conn, buffer, err := w.(http.Hijacker).Hijack()
 		if err != nil {
@@ -220,9 +221,9 @@ func respondRaw(statusLine, body string) http.HandlerFunc {
 	}
 }
 
-// serve starts a server for handler, over HTTP/2 with TLS when http2 is set
-// and over HTTP/1.1 otherwise.
-func serve(t *testing.T, handler http.Handler, http2 bool) *httptest.Server {
+// classicErrorServe starts a server for handler, over HTTP/2 with TLS when
+// http2 is set and over HTTP/1.1 otherwise.
+func classicErrorServe(t *testing.T, handler http.Handler, http2 bool) *httptest.Server {
 	t.Helper()
 	server := httptest.NewUnstartedServer(handler)
 	if server.EnableHTTP2 = http2; http2 {
@@ -234,35 +235,36 @@ func serve(t *testing.T, handler http.Handler, http2 bool) *httptest.Server {
 	return server
 }
 
-// classicAPIError returns the classic APIError in the chain of err and fails
-// the test when there is none.
-func classicAPIError(t *testing.T, err error) *apierr.APIError {
+// classicErrorAPIError returns the classic APIError in the chain of err and
+// fails the test when there is none.
+func classicErrorAPIError(t *testing.T, err error) *apierr.APIError {
 	t.Helper()
 	apiErr, ok := errors.AsType[*apierr.APIError](err)
 	require.True(t, ok, "no classic APIError in %#v", err)
 	return apiErr
 }
 
-// convert makes the read call of databricks_mlflow_model fail through the
-// modular client and returns its error and what ClassicError makes of it.
-func convert(t *testing.T, modular *modelregistry.Client) (modularErr, converted error) {
+// classicErrorConvert makes the read call of databricks_mlflow_model fail
+// through the modular client and returns its error and what ClassicError makes
+// of it.
+func classicErrorConvert(t *testing.T, modular *modelregistry.Client) (modularErr, converted error) {
 	t.Helper()
-	modularErr = modelCalls[0].modular(t.Context(), modular)
+	modularErr = classicErrorModelCalls[0].modular(t.Context(), modular)
 	require.Error(t, modularErr)
 	return modularErr, ClassicError(t.Context(), modularErr)
 }
 
-// assertSameError fails the test unless converted, the result of ClassicError,
-// reads like classicErr, the error of the classic client for the same
-// response.
-func assertSameError(t *testing.T, classicErr, converted error) {
+// classicErrorAssertSame fails the test unless converted, the result of
+// ClassicError, reads like classicErr, the error of the classic client for the
+// same response.
+func classicErrorAssertSame(t *testing.T, classicErr, converted error) {
 	t.Helper()
-	want := classicAPIError(t, classicErr)
+	want := classicErrorAPIError(t, classicErr)
 	got, ok := converted.(*apierr.APIError)
 	require.True(t, ok, "ClassicError returned %#v", converted)
 	assert.Equal(t, classicErr.Error(), converted.Error(), "Error()")
 	assert.Equal(t, apierr.IsMissing(classicErr), apierr.IsMissing(converted), "IsMissing")
-	for _, sentinel := range classicSentinels {
+	for _, sentinel := range classicErrorSentinels {
 		assert.Equal(t, errors.Is(classicErr, sentinel), errors.Is(converted, sentinel), "errors.Is %q", sentinel)
 	}
 	assert.Equal(t, want.StatusCode, got.StatusCode, "StatusCode")
@@ -277,22 +279,22 @@ func assertSameError(t *testing.T, classicErr, converted error) {
 }
 
 func TestClassicError_SameAsClassicClient(t *testing.T) {
-	for _, call := range modelCalls {
-		for _, response := range errorResponses {
+	for _, call := range classicErrorModelCalls {
+		for _, response := range classicErrorResponses {
 			if response.retried && call.name != "read" {
 				continue // Each costs the second that the classic client retries for.
 			}
 			t.Run(call.name+"/"+response.name, func(t *testing.T) {
 				t.Parallel()
-				classic, modular := newClients(t, serve(t, respond(response.status, response.body), false))
+				classic, modular := classicErrorClients(t, classicErrorServe(t, classicErrorRespond(response.status, response.body), false))
 				classicErr := call.classic(t.Context(), classic)
 				modularErr := call.modular(t.Context(), modular)
 				_, ok := errors.AsType[*modularerr.APIError](modularErr)
 				require.True(t, ok, "no modular APIError in %#v", modularErr)
 
-				assertSameError(t, classicErr, ClassicError(t.Context(), modularErr))
+				classicErrorAssertSame(t, classicErr, ClassicError(t.Context(), modularErr))
 
-				want := classicAPIError(t, classicErr)
+				want := classicErrorAPIError(t, classicErr)
 				assert.Equal(t, response.status, want.StatusCode)
 				assert.Equal(t, response.code, want.ErrorCode)
 				assert.Equal(t, response.message, want.Message)
@@ -310,11 +312,11 @@ func TestClassicError_SameAsClassicClientOverHTTP2(t *testing.T) {
 	for _, status := range []int{404, 500, 599} {
 		t.Run(fmt.Sprint(status), func(t *testing.T) {
 			t.Parallel()
-			classic, modular := newClients(t, serve(t, respond(status, htmlWithPre), true))
-			classicErr := modelCalls[0].classic(t.Context(), classic)
-			_, converted := convert(t, modular)
-			assertSameError(t, classicErr, converted)
-			assert.Equal(t, "HTTP/2.0", classicAPIError(t, classicErr).ResponseWrapper.Response.Proto)
+			classic, modular := classicErrorClients(t, classicErrorServe(t, classicErrorRespond(status, classicErrorHTMLWithPre), true))
+			classicErr := classicErrorModelCalls[0].classic(t.Context(), classic)
+			_, converted := classicErrorConvert(t, modular)
+			classicErrorAssertSame(t, classicErr, converted)
+			assert.Equal(t, "HTTP/2.0", classicErrorAPIError(t, classicErr).ResponseWrapper.Response.Proto)
 		})
 	}
 }
@@ -332,20 +334,20 @@ func TestClassicError_DiffersByStatusText(t *testing.T) {
 		handler            http.HandlerFunc
 		classic, converted result
 	}{
-		{"another status text", respondRaw("404 No Such Model", htmlWithPre), result{"NO_SUCH_MODEL", true}, result{"NOT_FOUND", true}},
-		{"no status text", respondRaw("404", htmlWithPre), result{"UNKNOWN", false}, result{"NOT_FOUND", true}},
+		{"another status text", classicErrorRespondRaw("404 No Such Model", classicErrorHTMLWithPre), result{"NO_SUCH_MODEL", true}, result{"NOT_FOUND", true}},
+		{"no status text", classicErrorRespondRaw("404", classicErrorHTMLWithPre), result{"UNKNOWN", false}, result{"NOT_FOUND", true}},
 		// The server of net/http writes "status code 599" for a status that http.StatusText doesn't know.
-		{"status without a text in net/http", respond(599, htmlWithPre), result{"STATUS_CODE_599", false}, result{"", false}},
+		{"status without a text in net/http", classicErrorRespond(599, classicErrorHTMLWithPre), result{"STATUS_CODE_599", false}, result{"", false}},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
-			classic, modular := newClients(t, serve(t, test.handler, false))
-			classicErr := modelCalls[0].classic(t.Context(), classic)
-			_, converted := convert(t, modular)
+			classic, modular := classicErrorClients(t, classicErrorServe(t, test.handler, false))
+			classicErr := classicErrorModelCalls[0].classic(t.Context(), classic)
+			_, converted := classicErrorConvert(t, modular)
 
-			assert.Equal(t, test.classic, result{classicAPIError(t, classicErr).ErrorCode, apierr.IsMissing(classicErr)})
-			assert.Equal(t, test.converted, result{classicAPIError(t, converted).ErrorCode, apierr.IsMissing(converted)})
+			assert.Equal(t, test.classic, result{classicErrorAPIError(t, classicErr).ErrorCode, apierr.IsMissing(classicErr)})
+			assert.Equal(t, test.converted, result{classicErrorAPIError(t, converted).ErrorCode, apierr.IsMissing(converted)})
 			assert.Equal(t, classicErr.Error(), converted.Error())
 		})
 	}
@@ -378,9 +380,9 @@ func TestClassicError_DiffersByRequestOverride(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 			body := fmt.Sprintf(`{"error_code":"INVALID_PARAMETER_VALUE","message":%q}`, test.message)
-			classic, modular := newClients(t, serve(t, respond(400, body), false))
+			classic, modular := classicErrorClients(t, classicErrorServe(t, classicErrorRespond(400, body), false))
 			classicErr := test.call(t.Context(), classic)
-			_, converted := convert(t, modular)
+			_, converted := classicErrorConvert(t, modular)
 
 			assert.ErrorIs(t, classicErr, apierr.ErrResourceDoesNotExist)
 			assert.True(t, apierr.IsMissing(classicErr))
@@ -396,20 +398,20 @@ func TestClassicError_DiffersByRequestOverride(t *testing.T) {
 // modular client follows the redirect and fails to decode the page, which is
 // no APIError, so ClassicError returns that error as it is.
 func TestClassicError_DiffersForPrivateLinkRedirect(t *testing.T) {
-	server := serve(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	server := classicErrorServe(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/login.html" {
 			http.Redirect(w, r, "/login.html?error=private-link-validation-error", http.StatusFound)
 			return
 		}
 		_, _ = io.WriteString(w, "<html><body>Log in</body></html>")
 	}), false)
-	classic, modular := newClients(t, server)
+	classic, modular := classicErrorClients(t, server)
 
-	classicErr := classicAPIError(t, modelCalls[0].classic(t.Context(), classic))
+	classicErr := classicErrorAPIError(t, classicErrorModelCalls[0].classic(t.Context(), classic))
 	assert.Equal(t, "PRIVATE_LINK_VALIDATION_ERROR", classicErr.ErrorCode)
 	assert.ErrorIs(t, classicErr, apierr.ErrPermissionDenied)
 
-	modularErr, converted := convert(t, modular)
+	modularErr, converted := classicErrorConvert(t, modular)
 	_, ok := errors.AsType[*modularerr.APIError](modularErr)
 	assert.False(t, ok, "modular APIError in %#v", modularErr)
 	assert.True(t, converted == modularErr, "ClassicError returned %#v", converted)
@@ -471,7 +473,7 @@ func TestClassicError_RebuildsResponse(t *testing.T) {
 	body := []byte(`{"error_code":"REQUEST_LIMIT_EXCEEDED","message":"slow"}`)
 	converted := ClassicError(t.Context(), modularerr.FromHTTPError(429, header, body))
 
-	wrapper := classicAPIError(t, converted).ResponseWrapper
+	wrapper := classicErrorAPIError(t, converted).ResponseWrapper
 	assert.Equal(t, 429, wrapper.Response.StatusCode)
 	assert.Equal(t, "429 Too Many Requests", wrapper.Response.Status)
 	assert.Equal(t, header, wrapper.Response.Header)
@@ -486,11 +488,11 @@ func TestClassicError_RebuildsResponse(t *testing.T) {
 }
 
 func TestClassicError_ConcurrentUse(t *testing.T) {
-	err := fmt.Errorf("cannot read model: %w", modularerr.FromHTTPError(404, http.Header{"X-Request-Id": {"r-1"}}, []byte(withDetails)))
+	err := fmt.Errorf("cannot read model: %w", modularerr.FromHTTPError(404, http.Header{"X-Request-Id": {"r-1"}}, []byte(classicErrorWithDetails)))
 	var group sync.WaitGroup
 	for range 32 {
 		group.Go(func() {
-			converted := classicAPIError(t, ClassicError(t.Context(), err))
+			converted := classicErrorAPIError(t, ClassicError(t.Context(), err))
 			assert.Equal(t, "Invalid name", converted.Error())
 			assert.Equal(t, "INVALID_NAME", converted.ErrorDetails().ErrorInfo.Reason)
 		})

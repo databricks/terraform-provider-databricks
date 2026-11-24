@@ -32,12 +32,15 @@ const sdkGoUserAgentPrefix = "sdk-go-"
 //     order. They send the request to cfg.Host, add the authentication type,
 //     the CI/CD provider, the runtime and the agent to the User-Agent data of
 //     the context, and call the cfg.Headers hook. An error of a visitor is
-//     returned wrapped, starting with "failed during request visitor: ";
+//     returned wrapped, starting with "failed during request visitor: ". A
+//     redirect that the http.Client follows keeps the target that the server
+//     gave it, as it does with the classic client;
 //  2. adds the traceparent header unless the request has one;
 //  3. sets User-Agent to the classic one for the context that the visitors
 //     left, followed by the sdk-go- segments of the User-Agent that the
 //     modular SDK set, which mark the call as coming from the modular SDK;
-//  4. sets Accept to application/json unless the request has an Accept.
+//  4. sets Accept to application/json unless the caller's request has an
+//     Accept, as the classic generated calls do.
 //
 // It then sends the request over cfg.HTTPTransport when that is set, and
 // otherwise over a transport with the proxy, connection and TLS settings of
@@ -92,16 +95,26 @@ func (t *classicHeadersTransport) RoundTrip(req *http.Request) (*http.Response, 
 		}
 		return nil, fmt.Errorf("failed during request visitor: %w", err)
 	}
-	// A classic request is built from a path, so its Host header is always the
-	// host that the visitors put in the URL. A modular request arrives with
-	// the host of its client in both places.
-	if out.URL != nil && req.URL != nil && out.URL.Host != req.URL.Host {
-		out.Host = out.URL.Host
+	if out.URL != nil && req.URL != nil {
+		if req.Response != nil {
+			// http.Client follows a redirect with a new request, which carries
+			// the response that redirected it. The classic client runs its
+			// visitors before http.Client, so a redirect goes where the server
+			// sent it and not to cfg.Host.
+			out.URL.Scheme, out.URL.Host, out.Host = req.URL.Scheme, req.URL.Host, req.Host
+		} else if out.URL.Host != req.URL.Host {
+			// A classic request is built from a path, so its Host header is
+			// the host that the visitors put in the URL. A modular request
+			// arrives with the host of its client in both places.
+			out.Host = out.URL.Host
+		}
 	}
 	traceparent.AddTraceparent(out)
 	// The context of out holds the User-Agent data that the visitors added.
 	out.Header.Set("User-Agent", transportUserAgent(out.Context(), req.Header.Get("User-Agent")))
-	if out.Header.Get("Accept") == "" {
+	// The classic generated call sets Accept after the visitors, so the Headers
+	// hook can't change it. The modular SDK sends none.
+	if req.Header.Get("Accept") == "" {
 		out.Header.Set("Accept", "application/json")
 	}
 	return t.base.RoundTrip(out)

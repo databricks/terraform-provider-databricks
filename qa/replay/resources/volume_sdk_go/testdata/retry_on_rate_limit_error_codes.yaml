@@ -1,8 +1,8 @@
-# Runs retry_on_rate_limit_error_codes with reads through sdk-go uc/volumes/v1. The
-# refresh GET is retried once when a 400 carries REQUEST_LIMIT_EXCEEDED or
-# RESOURCE_EXHAUSTED. The GETs send Accept: application/json, as the existing client does.
-# Writes stay on the existing path. API responses are inferred from the Unity Catalog API
-# contract, not recorded.
+# Runs volume_retries/testdata/retry_on_rate_limit_error_codes.yaml with reads through
+# sdk-go uc/volumes/v1. The refresh GET is retried once when a 400 carries
+# REQUEST_LIMIT_EXCEEDED or RESOURCE_EXHAUSTED. The GETs send Accept: application/json, as
+# the existing client does. Writes stay on the existing path. API responses are inferred
+# from the Unity Catalog API contract, not recorded.
 version: 1
 enforce_call_order: true
 host_metadata:

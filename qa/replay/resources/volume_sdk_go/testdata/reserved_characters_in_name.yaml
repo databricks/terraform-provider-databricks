@@ -1,11 +1,11 @@
 # Pins a volume name with "#", which Unity Catalog allows, with reads through sdk-go
 # uc/volumes/v1. Like the existing path, sdk-go reads put the full name in the URL
-# unescaped, so "#2" becomes a URL fragment that is never sent: the GETs of both paths
-# are the same request to main.replay.raw and plan no changes.
-# name_with_hash_drops_the_fragment.yaml pins this defect on the existing path. Destroy
-# follows the sdk-go create step, so its refresh reads through sdk-go and its DELETE, a
-# write, goes to main.replay.raw through the existing client. API responses are inferred
-# from the Unity Catalog API contract, not recorded.
+# unescaped, so "#2" becomes a URL fragment that is never sent: the GETs of both paths are
+# the same request to main.replay.raw and plan no changes.
+# volume/testdata/name_with_hash_drops_the_fragment.yaml pins this defect on the existing
+# path. Destroy follows the sdk-go create step, so its refresh reads through sdk-go and
+# its DELETE, a write, goes to main.replay.raw through the existing client. API responses
+# are inferred from the Unity Catalog API contract, not recorded.
 version: 1
 enforce_call_order: true
 host_metadata:

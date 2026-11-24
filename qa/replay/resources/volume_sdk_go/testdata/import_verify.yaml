@@ -1,8 +1,8 @@
-# Runs import_verify with reads through sdk-go uc/volumes/v1: importing an EXTERNAL volume
-# into separate state reads it twice by its full name and matches the created state. The
-# GETs send Accept: application/json, as the existing client does. Writes stay on the
-# existing path. API responses are inferred from the Unity Catalog API contract, not
-# recorded.
+# Runs volume_lifecycle/testdata/import_verify.yaml with reads through sdk-go
+# uc/volumes/v1: importing an EXTERNAL volume into separate state reads it twice by its
+# full name and matches the created state. The GETs send Accept: application/json, as the
+# existing client does. Writes stay on the existing path. API responses are inferred from
+# the Unity Catalog API contract, not recorded.
 version: 1
 enforce_call_order: true
 host_metadata:

@@ -1,0 +1,25 @@
+# The server closes the connection without responding. The SDK reports EOF and
+# does not retry: a second POST would be unexpected.
+version: 1
+host_metadata:
+  workspace_id: "12345"
+steps:
+  - name: create_fails_with_eof
+    config: |
+      resource "databricks_group" "this" {
+        display_name = "Example group"
+      }
+    expect_error: 'cannot create group: Post "http://[^"]+/Groups": EOF'
+    calls:
+      - request:
+          method: POST
+          path: /api/2.0/preview/scim/v2/Groups
+          body:
+            json:
+              displayName: Example group
+              schemas: [urn:ietf:params:scim:schemas:core:2.0:Group]
+              entitlements: [{}]
+        response:
+          fault: close
+destroy:
+  calls: []

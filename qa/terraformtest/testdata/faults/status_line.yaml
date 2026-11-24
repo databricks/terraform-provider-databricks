@@ -1,0 +1,27 @@
+# The server answers with a status line that has no reason phrase and no body.
+# The SDK still parses the 404 and derives the message from the status code.
+version: 1
+host_metadata:
+  workspace_id: "12345"
+steps:
+  - name: create_gets_bare_404
+    config: |
+      resource "databricks_group" "this" {
+        display_name = "Example group"
+      }
+    expect_error: 'cannot create group: Not Found'
+    calls:
+      - request:
+          method: POST
+          path: /api/2.0/preview/scim/v2/Groups
+          body:
+            json:
+              displayName: Example group
+              schemas: [urn:ietf:params:scim:schemas:core:2.0:Group]
+              entitlements: [{}]
+        response:
+          status: 404
+          status_line: HTTP/1.1 404
+          body: null
+destroy:
+  calls: []

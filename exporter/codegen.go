@@ -259,16 +259,20 @@ func (ic *importContext) reference(i importable, path []string, value string, ct
 		if d.Path != match {
 			continue
 		}
-		if d.File {
+		if d.File || d.FileContent {
 			// `${path.module}/` must stay a real interpolation, but `value` is a
 			// file name derived from an attacker-controlled object path, so it
 			// must be escaped to prevent breaking out of the string literal.
 			relativeFile := "${path.module}/" + maybeAddQuoteCharacter(value)
-			return hclwrite.Tokens{
+			tokens := hclwrite.Tokens{
 				&hclwrite.Token{Type: hclsyntax.TokenOQuote, Bytes: []byte{'"'}},
 				&hclwrite.Token{Type: hclsyntax.TokenQuotedLit, Bytes: []byte(relativeFile)},
 				&hclwrite.Token{Type: hclsyntax.TokenCQuote, Bytes: []byte{'"'}},
 			}
+			if d.FileContent {
+				return hclwrite.TokensForFunctionCall("file", tokens)
+			}
+			return tokens
 		}
 		if d.Variable {
 			varName := d.VariableName
@@ -363,15 +367,15 @@ func (ic *importContext) referenceSubstitutions(d reference, path []string, valu
 		lookup.Regexp = nil
 		var subs []substitution
 		for _, idx := range d.Regexp.FindAllStringSubmatchIndex(value, -1) {
-			if len(idx) < 4 || idx[2] < 0 {
+			start, end, captured, ok := multiMatchCapture(d, value, idx)
+			if !ok {
 				continue
 			}
-			captured := value[idx[2]:idx[3]]
 			_, traversal, _ := ic.Find(captured, attr, lookup, origResource, origPath)
 			if traversal == nil {
 				continue
 			}
-			subs = append(subs, substitution{Start: idx[2], End: idx[3], Inner: hclwrite.TokensForTraversal(traversal)})
+			subs = append(subs, substitution{Start: start, End: end, Inner: hclwrite.TokensForTraversal(traversal)})
 		}
 		return subs
 	}
@@ -379,6 +383,18 @@ func (ic *importContext) referenceSubstitutions(d reference, path []string, valu
 		return []substitution{sub}
 	}
 	return nil
+}
+
+// multiMatchCapture returns the span to substitute and the value to look up for a single
+// match of a MultiMatch reference.
+func multiMatchCapture(d reference, value string, idx []int) (start, end int, lookupValue string, ok bool) {
+	if d.MultiMatchCaptureFunc != nil {
+		return d.MultiMatchCaptureFunc(value, idx)
+	}
+	if len(idx) < 4 || idx[2] < 0 {
+		return 0, 0, "", false
+	}
+	return idx[2], idx[3], value[idx[2]:idx[3]], true
 }
 
 // referenceSubstitution computes, for a single reference and value, the span of

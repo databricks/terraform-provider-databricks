@@ -7,6 +7,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/apierr"
 
 	"github.com/databricks/terraform-provider-databricks/qa"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -321,4 +322,86 @@ func TestResourceTokenDelete_Error(t *testing.T) {
 	}.Apply(t)
 	qa.AssertErrorStartsWith(t, err, "Internal error happened")
 	assert.Equal(t, "abc", d.Id())
+}
+
+func TestResourceTokenCreateWithScopesAndAutoscopeDisabled(t *testing.T) {
+	autoscopeEnabled := false
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/token/create",
+				ExpectedRequest: TokenRequest{
+					LifetimeSeconds:  300,
+					Scopes:           []string{"sql", "unity-catalog"},
+					AutoscopeEnabled: &autoscopeEnabled,
+				},
+				Response: TokenResponse{
+					TokenValue: "dapi...",
+					TokenInfo: &TokenInfo{
+						TokenID: "abc",
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/token/list",
+				Response: TokenList{
+					TokenInfos: []TokenInfo{
+						{
+							TokenID: "abc",
+							Scopes:  []string{"sql", "unity-catalog"},
+						},
+					},
+				},
+			},
+		},
+		Resource: ResourceToken(),
+		HCL: `
+		lifetime_seconds = 300
+		scopes = ["sql", "unity-catalog"]
+		autoscope_enabled = false
+		`,
+		Create: true,
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "abc", d.Id())
+	assert.ElementsMatch(t, []any{"sql", "unity-catalog"}, d.Get("scopes").(*schema.Set).List())
+}
+
+func TestResourceTokenCreate_AutoscopeOmittedWhenUnset(t *testing.T) {
+	_, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/token/create",
+				ExpectedRequest: map[string]any{
+					"lifetime_seconds": 300,
+				},
+				Response: TokenResponse{
+					TokenValue: "dapi...",
+					TokenInfo: &TokenInfo{
+						TokenID: "abc",
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/token/list",
+				Response: TokenList{
+					TokenInfos: []TokenInfo{
+						{
+							TokenID: "abc",
+						},
+					},
+				},
+			},
+		},
+		Resource: ResourceToken(),
+		HCL: `
+		lifetime_seconds = 300
+		`,
+		Create: true,
+	}.Apply(t)
+	assert.NoError(t, err)
 }

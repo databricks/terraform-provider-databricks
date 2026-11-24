@@ -30,7 +30,8 @@ func DataSourceExternalMetadatas() datasource.DataSource {
 type ExternalMetadatasData struct {
 	ExternalMetadata types.List `tfsdk:"external_metadata"`
 	// Specifies the maximum number of external metadata objects to return in a
-	// single response. The value must be less than or equal to 1000.
+	// single response. The value must be less than or equal to 1000. Defaults
+	// to 1000 when omitted.
 	PageSize           types.Int64  `tfsdk:"page_size"`
 	ProviderConfigData types.Object `tfsdk:"provider_config"`
 }

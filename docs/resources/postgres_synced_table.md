@@ -2,7 +2,7 @@
 subcategory: "Postgres"
 ---
 # databricks_postgres_synced_table Resource
-[![Public Beta](https://img.shields.io/badge/Release_Stage-Public_Beta-orange)](https://docs.databricks.com/aws/en/release-notes/release-types)
+[![GA](https://img.shields.io/badge/Release_Stage-GA-green)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
 [API Documentation](https://docs.databricks.com/api/workspace/postgres)
 
@@ -118,7 +118,8 @@ resource "databricks_postgres_synced_table" "this" {
 
 ## Arguments
 The following arguments are supported:
-* `synced_table_id` (string, required) - The part of the name, chosen by the user when the resource was created
+* `synced_table_id` (string, required) - The three-part Unity Catalog name of the synced table, in the format "{catalog}.{schema}.{table}".
+  It is the synced_table_id that was used to create the synced table and the last component of name
 * `spec` (SyncedTableSyncedTableSpec, optional) - Configuration details of the synced table, such as the source table, scheduling policy, etc
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 
@@ -139,31 +140,34 @@ The following arguments are supported:
 * `accelerated_sync` (boolean, optional) - When true, enables accelerated sync mode for the initial data load.
   This significantly improves performance for large tables.
   Requires workspace-level enablement through Lakebase Accelerated Sync preview
-* `branch` (string, optional) - The full resource name the branch associated with the table.
+* `branch` (string, optional) - The full resource name of the branch that contains the synced table.
   
-  Format: "projects/{project_id}/branches/{branch_id}"
+  Format: "projects/{project_id}/branches/{branch_id}".
+  
+  A value must be specified when creating a synced table inside a standard catalog. Inside a
+  Lakebase catalog it can be omitted, and if specified it must match the branch of that catalog
 * `create_database_objects_if_missing` (boolean, optional) - If true, the synced table's logical database and schema resources in PG
   will be created if they do not already exist.
   The request will fail if this is false and the database/schema do not exist.
   
   Defaults to true if omitted
-* `existing_pipeline_id` (string, optional) - ID of an existing pipeline to bin-pack this synced table into.
+* `existing_pipeline_id` (string, optional) - ID of an existing pipeline to bin-pack this synced table into. The pipeline must be a synced
+  table pipeline that runs continuously if and only if scheduling_policy is CONTINUOUS.
   At most one of existing_pipeline_id and new_pipeline_spec should be defined.
   
-  The pipeline used for the synced table is returned via the top level pipeline_id attribute
+  The pipeline used for the synced table is returned in status.pipeline_id
 * `extra_columns` (list of SyncedTableSyncedTableSpecExtraColumn, optional) - Extra PostgreSQL-only columns to add to the synced table
 * `new_pipeline_spec` (NewPipelineSpec, optional) - Specification for creating a new pipeline.
   At most one of existing_pipeline_id and new_pipeline_spec should be defined.
   
-  The pipeline used for the synced table is returned via the top level pipeline_id attribute
-* `postgres_database` (string, optional) - The Postgres database name where the synced table will be created in.
-  
-  If this synced table is created inside a Lakebase Catalog, this attribute can be omitted on creation and is inferred
-  from the postgres_database associated with the Lakebase Catalog. If specified when inside a Lakebase Catalog, the value must match.
-  
-  A value must be specified when creating a synced table inside a Standard Catalog
-* `primary_key_columns` (list of string, optional) - Primary Key columns to be used for data insert/update in the destination
-* `scheduling_policy` (string, optional) - Scheduling policy of the underlying pipeline. Possible values are: `CONTINUOUS`, `SNAPSHOT`, `TRIGGERED`
+  The pipeline used for the synced table is returned in status.pipeline_id
+* `postgres_database` (string, optional) - The name of the Postgres database where the synced table is created. A value must be specified
+  on creation. If the synced table is created inside a Lakebase catalog, the value must match the
+  Postgres database of that catalog
+* `primary_key_columns` (list of string, optional) - Primary Key columns to be used for data insert/update in the destination. At least one column
+  must be specified
+* `scheduling_policy` (string, optional) - Scheduling policy of the underlying pipeline. A value must be specified on creation. See
+  https://docs.databricks.com/aws/en/oltp/projects/sync-tables for how to choose a sync mode. Possible values are: `CONTINUOUS`, `SNAPSHOT`, `TRIGGERED`
 * `source_table_full_name` (string, optional) - Three-part (catalog, schema, table) name of the source Delta table.
   
   For the corresponding destination table, use any of the two:
@@ -189,13 +193,13 @@ The following arguments are supported:
 
 ## Attributes
 In addition to the above arguments, the following attributes are exported:
-* `create_time` (string)
-* `name` (string) - Output only. The Full resource name of the synced table in Postgres
-  where (catalog, schema, table) are the UC entity names.
+* `create_time` (string) - The time when the synced table was created
+* `name` (string) - The full resource name of the synced table, where (catalog, schema, table) are the Unity Catalog
+  names of the synced table.
   
-  Format "synced_tables/{catalog}.{schema}.{table}"
+  Format: "synced_tables/{catalog}.{schema}.{table}".
   
-  For the corresponding source table in the Unity catalog look for the "source_table_full_name" attribute
+  For the corresponding source table in Unity Catalog, look for the "source_table_full_name" attribute
 * `status` (SyncedTableSyncedTableStatus) - Synced Table data synchronization status
 * `uid` (string) - The Unity Catalog table ID for this synced table
 
@@ -213,7 +217,7 @@ In addition to the above arguments, the following attributes are exported:
 * `total_row_count` (integer) - The total number of rows that need to be synced in this update. This number may be an estimate
 
 ### SyncedTablePosition
-* `delta_table_sync_info` (DeltaTableSyncInfo)
+* `delta_table_sync_info` (DeltaTableSyncInfo) - The source Delta table version that the last successful sync read
 * `sync_end_time` (string) - The end timestamp of the most recent successful synchronization.
   This is the time when the data is available in the synced table
 * `sync_start_time` (string) - The starting timestamp of the most recent successful synchronization from the source table
@@ -228,7 +232,8 @@ In addition to the above arguments, the following attributes are exported:
 * `last_sync_time` (string) - The end timestamp of the last time any data was synchronized from the source table to the synced
   table. This is when the data is available in the synced table
 * `message` (string) - A text description of the current state of the synced table
-* `ongoing_sync_progress` (SyncedTablePipelineProgress)
+* `ongoing_sync_progress` (SyncedTablePipelineProgress) - Progress of the sync that is currently running, either the initial data load or an update of a
+  triggered or snapshot synced table
 * `pipeline_id` (string) - ID of the associated pipeline
 * `project` (string) - The full resource name of the project associated with the table.
   

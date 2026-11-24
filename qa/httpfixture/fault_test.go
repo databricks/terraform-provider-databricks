@@ -167,7 +167,10 @@ func TestFaultAfterAnotherCallNeedsAFreshConnection(t *testing.T) {
 	for _, keepAlive := range []bool{true, false} {
 		t.Run(map[bool]string{true: "reused connection", false: "fresh connection"}[keepAlive], func(t *testing.T) {
 			h, url := faultServer(t, textCall("/first", "ok"), faulted(textCall("/close", "unused"), FaultClose))
-			client := &http.Client{Transport: &http.Transport{DisableKeepAlives: !keepAlive}}
+			client := &http.Client{Transport: NewClientTransport()}
+			if keepAlive {
+				client.Transport = &http.Transport{}
+			}
 			resp, err := client.Get(url + "/first")
 			require.NoError(t, err)
 			_, _ = io.Copy(io.Discard, resp.Body)
@@ -210,35 +213,59 @@ func TestFaultedCallsAreConsumedInOrder(t *testing.T) {
 func TestFaultRequiresHijacking(t *testing.T) {
 	h := NewHandler()
 	require.NoError(t, h.StartStep("step 1 (faults)", []Call{faulted(textCall("/close", "unused"), FaultClose)}))
-	send(h, "GET", "/close", "")
+	require.Equal(t, 400, send(h, "GET", "/close", "").Code, "an unwritten response must not become an implicit 200")
 	require.ErrorContains(t, h.Verify(), "step 1 (faults): GET /close: fault and status_line require a connection that supports hijacking")
+}
+
+// A HEAD response's Content-Length describes the resource, not a body to read.
+func TestStatusLineForHEADKeepsContentLength(t *testing.T) {
+	c := Call{Request: Request{Method: "HEAD", Path: "/file"}, Response: Response{
+		Status: 200, StatusLine: "HTTP/1.1 200", Headers: map[string]string{"Content-Length": "4"},
+	}}
+	h, url := faultServer(t, c)
+	resp, err := http.Head(url + "/file")
+	require.NoError(t, err)
+	resp.Body.Close()
+	require.Equal(t, "200", resp.Status)
+	require.Equal(t, int64(4), resp.ContentLength)
+	require.NoError(t, h.Verify())
 }
 
 func TestInvalidResponseWireFields(t *testing.T) {
 	text := func(value string) *Body { return &Body{Text: &value} }
 	for _, tc := range []struct {
 		name     string
+		method   string
 		response Response
 		message  string
 	}{
-		{"malformed delay", Response{Status: 200, Delay: "soon"}, ` response: delay "soon" must be a positive duration`},
-		{"number delay", Response{Status: 200, Delay: "5"}, ` response: delay "5" must be a positive duration`},
-		{"zero delay", Response{Status: 200, Delay: "0s"}, ` response: delay "0s" must be a positive duration`},
-		{"negative delay", Response{Status: 200, Delay: "-1s"}, ` response: delay "-1s" must be a positive duration`},
-		{"unknown fault", Response{Fault: "timeout"}, ` response: unknown fault "timeout"; expected reset, close, truncate_body or stall_body`},
-		{"reset with status", Response{Status: 200, Fault: FaultReset}, " response: fault reset writes no response; omit status"},
-		{"close with body", Response{Body: text("x"), Fault: FaultClose}, " response: fault close writes no response"},
-		{"close with headers", Response{Headers: map[string]string{"X": "y"}, Fault: FaultClose}, " response: fault close writes no response"},
-		{"reset with status line", Response{StatusLine: "HTTP/1.1 404", Fault: FaultReset}, " response: fault reset writes no response"},
-		{"truncate without status", Response{Body: text("x"), Fault: FaultTruncateBody}, ": invalid response status 0"},
-		{"truncate without body", Response{Status: 200, Fault: FaultTruncateBody}, " response: fault truncate_body requires a nonempty response body"},
-		{"stall with empty body", Response{Status: 200, Body: text(""), Fault: FaultStallBody}, " response: fault stall_body requires a nonempty response body"},
-		{"status line code", Response{Status: 404, StatusLine: "HTTP/1.1 400"}, ` response: status_line "HTTP/1.1 400" must be HTTP/1.1 404`},
-		{"status line protocol", Response{Status: 404, StatusLine: "HTTP/2 404"}, ` response: status_line "HTTP/2 404" must be HTTP/1.1 404`},
-		{"status line header injection", Response{Status: 404, StatusLine: "HTTP/1.1 404\r\nX-Extra: 1"}, ` response: status_line "HTTP/1.1 404\r\nX-Extra: 1" must be HTTP/1.1 404`},
+		{"malformed delay", "", Response{Status: 200, Delay: "soon"}, ` response: delay "soon" must be a positive duration`},
+		{"number delay", "", Response{Status: 200, Delay: "5"}, ` response: delay "5" must be a positive duration`},
+		{"zero delay", "", Response{Status: 200, Delay: "0s"}, ` response: delay "0s" must be a positive duration`},
+		{"negative delay", "", Response{Status: 200, Delay: "-1s"}, ` response: delay "-1s" must be a positive duration`},
+		{"unknown fault", "", Response{Fault: "timeout"}, ` response: unknown fault "timeout"; expected reset, close, truncate_body or stall_body`},
+		{"reset with status", "", Response{Status: 200, Fault: FaultReset}, " response: fault reset writes no response; omit status"},
+		{"close with body", "", Response{Body: text("x"), Fault: FaultClose}, " response: fault close writes no response"},
+		{"close with headers", "", Response{Headers: map[string]string{"X": "y"}, Fault: FaultClose}, " response: fault close writes no response"},
+		{"reset with status line", "", Response{StatusLine: "HTTP/1.1 404", Fault: FaultReset}, " response: fault reset writes no response"},
+		{"truncate without status", "", Response{Body: text("x"), Fault: FaultTruncateBody}, ": invalid response status 0"},
+		{"truncate without body", "", Response{Status: 200, Fault: FaultTruncateBody}, " response: fault truncate_body requires a nonempty response body"},
+		{"stall with empty body", "", Response{Status: 200, Body: text(""), Fault: FaultStallBody}, " response: fault stall_body requires a nonempty response body"},
+		{"truncate for HEAD", "HEAD", Response{Status: 200, Body: text("x"), Fault: FaultTruncateBody}, " response: fault truncate_body needs a response body, which net/http ignores for HEAD requests and 1xx, 204 and 304 responses"},
+		{"stall for HEAD", "HEAD", Response{Status: 200, Body: text("x"), Fault: FaultStallBody}, " response: fault stall_body needs a response body, which net/http ignores for HEAD requests and 1xx, 204 and 304 responses"},
+		{"truncate 204", "", Response{Status: 204, Body: text("x"), Fault: FaultTruncateBody}, " response: fault truncate_body needs a response body, which net/http ignores for HEAD requests and 1xx, 204 and 304 responses"},
+		{"stall 304", "", Response{Status: 304, Body: text("x"), Fault: FaultStallBody}, " response: fault stall_body needs a response body, which net/http ignores for HEAD requests and 1xx, 204 and 304 responses"},
+		{"truncate 1xx", "", Response{Status: 103, Body: text("x"), Fault: FaultTruncateBody}, " response: fault truncate_body needs a response body, which net/http ignores for HEAD requests and 1xx, 204 and 304 responses"},
+		{"status line code", "", Response{Status: 404, StatusLine: "HTTP/1.1 400"}, ` response: status_line "HTTP/1.1 400" must be HTTP/1.0 or HTTP/1.1 404`},
+		{"status line protocol", "", Response{Status: 404, StatusLine: "HTTP/2 404"}, ` response: status_line "HTTP/2 404" must be HTTP/1.0 or HTTP/1.1 404`},
+		{"status line header injection", "", Response{Status: 404, StatusLine: "HTTP/1.1 404\r\nX-Extra: 1"}, ` response: status_line "HTTP/1.1 404\r\nX-Extra: 1" must be HTTP/1.0 or HTTP/1.1 404`},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			c := Call{Request: Request{Method: "GET", Path: "/wire"}, Response: tc.response}
+			method := tc.method
+			if method == "" {
+				method = "GET"
+			}
+			c := Call{Request: Request{Method: method, Path: "/wire"}, Response: tc.response}
 			err := NewHandler().StartStep("step 2 (update)", []Call{textCall("/ok", "ok"), c})
 			require.ErrorContains(t, err, "step 2 (update): call 2"+tc.message)
 		})

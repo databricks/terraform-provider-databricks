@@ -10,12 +10,13 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// enabledEnv spells the name of the variable out instead of using
-// useSDKGoResourcesEnv, so that a change of the name fails the tests.
-const enabledEnv = "USE_SDK_GO_RESOURCES"
+// enabledTestEnvName spells the name of the variable out instead of using
+// enabledEnvName, so that a change of the name fails the tests.
+const enabledTestEnvName = "USE_SDK_GO_RESOURCES"
 
-// enabledProbes are the resources that assertEnabledExactly asks about.
-var enabledProbes = []string{
+// enabledTestProbes are the resources that enabledTestAssertExactly asks
+// about.
+var enabledTestProbes = []string{
 	"databricks_mlflow_model",
 	"databricks_volume",
 	"databricks_mlflow_experiment",
@@ -56,34 +57,35 @@ var enabledProbes = []string{
 	"databricks_mlflow_model\xff",
 }
 
-// unsetEnabledEnv unsets USE_SDK_GO_RESOURCES until the test ends.
-func unsetEnabledEnv(t *testing.T) {
+// enabledTestUnsetEnv unsets USE_SDK_GO_RESOURCES until the test ends.
+func enabledTestUnsetEnv(t *testing.T) {
 	t.Helper()
 	// t.Setenv restores the variable when the test ends, although it is unset
 	// by then.
-	t.Setenv(enabledEnv, "")
-	require.NoError(t, os.Unsetenv(enabledEnv))
+	t.Setenv(enabledTestEnvName, "")
+	require.NoError(t, os.Unsetenv(enabledTestEnvName))
 }
 
-// assertEnabledExactly checks that Enabled is true for the probes in want and
-// false for every other one, and that it leaves the variable as it is.
-func assertEnabledExactly(t *testing.T, want ...string) {
+// enabledTestAssertExactly checks that Enabled is true for the probes in
+// want and false for every other one, and that it leaves the variable as it
+// is.
+func enabledTestAssertExactly(t *testing.T, want ...string) {
 	t.Helper()
 	for _, name := range want {
-		require.Contains(t, enabledProbes, name, "%q has to be a probe", name)
+		require.Contains(t, enabledTestProbes, name, "%q has to be a probe", name)
 	}
-	valueBefore, setBefore := os.LookupEnv(enabledEnv)
+	valueBefore, setBefore := os.LookupEnv(enabledTestEnvName)
 
-	for _, probe := range enabledProbes {
+	for _, probe := range enabledTestProbes {
 		assert.Equal(t, slices.Contains(want, probe), Enabled(probe), "Enabled(%q)", probe)
 	}
 
-	valueAfter, setAfter := os.LookupEnv(enabledEnv)
+	valueAfter, setAfter := os.LookupEnv(enabledTestEnvName)
 	assert.Equal(t, setBefore, setAfter)
 	assert.Equal(t, valueBefore, valueAfter)
 }
 
-func TestEnabledUnsetOrEmpty(t *testing.T) {
+func TestEnabled_UnsetOrEmpty(t *testing.T) {
 	tests := []struct {
 		name  string
 		value string
@@ -100,19 +102,19 @@ func TestEnabledUnsetOrEmpty(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if tt.unset {
-				unsetEnabledEnv(t)
-				_, isSet := os.LookupEnv(enabledEnv)
+				enabledTestUnsetEnv(t)
+				_, isSet := os.LookupEnv(enabledTestEnvName)
 				require.False(t, isSet)
 			} else {
-				t.Setenv(enabledEnv, tt.value)
+				t.Setenv(enabledTestEnvName, tt.value)
 			}
 
-			assertEnabledExactly(t)
+			enabledTestAssertExactly(t)
 		})
 	}
 }
 
-func TestEnabledOneName(t *testing.T) {
+func TestEnabled_OneName(t *testing.T) {
 	tests := []struct {
 		name  string
 		value string
@@ -129,14 +131,14 @@ func TestEnabledOneName(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			t.Setenv(enabledEnv, tt.value)
+			t.Setenv(enabledTestEnvName, tt.value)
 
-			assertEnabledExactly(t, "databricks_mlflow_model")
+			enabledTestAssertExactly(t, "databricks_mlflow_model")
 		})
 	}
 }
 
-func TestEnabledSeparators(t *testing.T) {
+func TestEnabled_Separators(t *testing.T) {
 	tests := []struct {
 		name  string
 		value string
@@ -165,14 +167,14 @@ func TestEnabledSeparators(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			t.Setenv(enabledEnv, tt.value)
+			t.Setenv(enabledTestEnvName, tt.value)
 
-			assertEnabledExactly(t, "databricks_mlflow_model", "databricks_volume")
+			enabledTestAssertExactly(t, "databricks_mlflow_model", "databricks_volume")
 		})
 	}
 }
 
-func TestEnabledExactNames(t *testing.T) {
+func TestEnabled_ExactNames(t *testing.T) {
 	tests := []struct {
 		name  string
 		value string
@@ -217,14 +219,14 @@ func TestEnabledExactNames(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			t.Setenv(enabledEnv, tt.value)
+			t.Setenv(enabledTestEnvName, tt.value)
 
-			assertEnabledExactly(t, tt.want...)
+			enabledTestAssertExactly(t, tt.want...)
 		})
 	}
 }
 
-func TestEnabledDoesNotValidateNames(t *testing.T) {
+func TestEnabled_DoesNotValidateNames(t *testing.T) {
 	tests := []struct {
 		name  string
 		value string
@@ -267,14 +269,14 @@ func TestEnabledDoesNotValidateNames(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			t.Setenv(enabledEnv, tt.value)
+			t.Setenv(enabledTestEnvName, tt.value)
 
-			assertEnabledExactly(t, tt.want...)
+			enabledTestAssertExactly(t, tt.want...)
 		})
 	}
 }
 
-func TestEnabledEmptyResource(t *testing.T) {
+func TestEnabled_EmptyResource(t *testing.T) {
 	tests := []struct {
 		name  string
 		value string
@@ -292,9 +294,9 @@ func TestEnabledEmptyResource(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if tt.unset {
-				unsetEnabledEnv(t)
+				enabledTestUnsetEnv(t)
 			} else {
-				t.Setenv(enabledEnv, tt.value)
+				t.Setenv(enabledTestEnvName, tt.value)
 			}
 
 			assert.False(t, Enabled(""))
@@ -302,9 +304,9 @@ func TestEnabledEmptyResource(t *testing.T) {
 	}
 }
 
-func TestEnabledResourceWithSeparator(t *testing.T) {
+func TestEnabled_ResourceWithSeparator(t *testing.T) {
 	const value = "databricks_mlflow_model, databricks_volume"
-	t.Setenv(enabledEnv, value)
+	t.Setenv(enabledTestEnvName, value)
 	require.True(t, Enabled("databricks_mlflow_model"))
 	require.True(t, Enabled("databricks_volume"))
 
@@ -332,7 +334,7 @@ func TestEnabledResourceWithSeparator(t *testing.T) {
 	}
 }
 
-func TestEnabledReadsVariableOnEveryCall(t *testing.T) {
+func TestEnabled_ReadsVariableOnEveryCall(t *testing.T) {
 	steps := []struct {
 		name       string
 		value      string
@@ -356,9 +358,9 @@ func TestEnabledReadsVariableOnEveryCall(t *testing.T) {
 	// left behind.
 	for i, step := range steps {
 		if step.unset {
-			unsetEnabledEnv(t)
+			enabledTestUnsetEnv(t)
 		} else {
-			t.Setenv(enabledEnv, step.value)
+			t.Setenv(enabledTestEnvName, step.value)
 		}
 
 		// The second call shows that the first answer isn't kept either.
@@ -369,7 +371,7 @@ func TestEnabledReadsVariableOnEveryCall(t *testing.T) {
 	}
 }
 
-func TestEnabledChangeBetweenTwoCalls(t *testing.T) {
+func TestEnabled_ChangeBetweenTwoCalls(t *testing.T) {
 	tests := []struct {
 		name   string
 		before string
@@ -385,10 +387,10 @@ func TestEnabledChangeBetweenTwoCalls(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			t.Setenv(enabledEnv, tt.before)
+			t.Setenv(enabledTestEnvName, tt.before)
 			first := Enabled("databricks_mlflow_model")
 
-			t.Setenv(enabledEnv, tt.after)
+			t.Setenv(enabledTestEnvName, tt.after)
 			second := Enabled("databricks_mlflow_model")
 
 			assert.Equal(t, tt.want, [2]bool{first, second})
@@ -396,10 +398,10 @@ func TestEnabledChangeBetweenTwoCalls(t *testing.T) {
 	}
 }
 
-// TestEnabledConcurrentCalls is for -race: operations of a resource run
+// TestEnabled_ConcurrentCalls is for -race: operations of a resource run
 // concurrently, and Enabled has no state for them to race on.
-func TestEnabledConcurrentCalls(t *testing.T) {
-	t.Setenv(enabledEnv, "databricks_mlflow_model, databricks_volume")
+func TestEnabled_ConcurrentCalls(t *testing.T) {
+	t.Setenv(enabledTestEnvName, "databricks_mlflow_model, databricks_volume")
 
 	var wg sync.WaitGroup
 	for range 16 {
@@ -415,13 +417,13 @@ func TestEnabledConcurrentCalls(t *testing.T) {
 	wg.Wait()
 }
 
-func TestIsNameSeparator(t *testing.T) {
+func TestEnabled_IsSeparator(t *testing.T) {
 	separators := []rune{',', ' ', '\t', '\n', '\r', '\v', '\f', '\u0085', '\u00a0', '\u2003', '\u3000'}
 	for _, r := range separators {
-		assert.True(t, isNameSeparator(r), "%q", r)
+		assert.True(t, enabledIsSeparator(r), "%q", r)
 	}
 	others := []rune{'_', '-', '.', ';', ':', '|', '/', '"', '\'', 'a', 'Z', '0', '\x00', '\u200b', '\ufffd'}
 	for _, r := range others {
-		assert.False(t, isNameSeparator(r), "%q", r)
+		assert.False(t, enabledIsSeparator(r), "%q", r)
 	}
 }

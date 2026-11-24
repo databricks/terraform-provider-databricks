@@ -7,9 +7,9 @@ import (
 	"unicode"
 )
 
-// useSDKGoResourcesEnv is the environment variable that lists the resources
-// for which Enabled is true.
-const useSDKGoResourcesEnv = "USE_SDK_GO_RESOURCES"
+// enabledEnvName is the environment variable that lists the resources for
+// which Enabled is true.
+const enabledEnvName = "USE_SDK_GO_RESOURCES"
 
 // Enabled reports whether the environment variable USE_SDK_GO_RESOURCES names
 // resource, a Terraform resource type such as databricks_mlflow_model. A
@@ -40,12 +40,12 @@ const useSDKGoResourcesEnv = "USE_SDK_GO_RESOURCES"
 //     result, and calls Enabled again for every operation that is to follow a
 //     change of the variable.
 func Enabled(resource string) bool {
-	names := strings.FieldsFunc(os.Getenv(useSDKGoResourcesEnv), isNameSeparator)
+	names := strings.FieldsFunc(os.Getenv(enabledEnvName), enabledIsSeparator)
 	return slices.Contains(names, resource)
 }
 
-// isNameSeparator reports whether r separates two names in the value of
+// enabledIsSeparator reports whether r separates two names in the value of
 // USE_SDK_GO_RESOURCES.
-func isNameSeparator(r rune) bool {
+func enabledIsSeparator(r rune) bool {
 	return r == ',' || unicode.IsSpace(r)
 }

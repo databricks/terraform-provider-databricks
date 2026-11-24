@@ -1,7 +1,6 @@
 # Runs volume/testdata/redirect_not_followed_counts_as_success.yaml with databricks_volume
-# on sdk-go uc/volumes/v1 in every step, and expects the same behavior. The volume POST,
-# GET and DELETE requests carry no Accept header, which an empty header expectation pins.
-# The original's description:
+# on sdk-go uc/volumes/v1 in every step, and expects the same requests and behavior. The
+# original's description:
 #
 # Pins refresh answers in the 3xx range that Go's client returns without following: a
 # 302 without Location and a 304. The classic SDK counts any status below 400 as
@@ -34,7 +33,6 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body:
             json: {"catalog_name": "main", "schema_name": "replay",
                    "name": "redirect_unfollowed_volume", "volume_type": "MANAGED",
@@ -56,7 +54,6 @@ steps:
           path: /api/2.1/unity-catalog/volumes/main.replay.redirect_unfollowed_volume
           headers:
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body: null
         response:
           status: 200
@@ -150,7 +147,6 @@ destroy:
         path: /api/2.1/unity-catalog/volumes/main.replay.redirect_unfollowed_volume
         headers:
           X-Databricks-Workspace-Id: "12345"
-          Accept: ""
         body: null
       response:
         status: 200

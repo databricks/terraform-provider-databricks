@@ -1,6 +1,5 @@
 # Runs volume/testdata/import_missing_volume.yaml with databricks_volume on sdk-go
-# uc/volumes/v1 in every step, and expects the same behavior. The volume GET requests
-# carry no Accept header, which an empty header expectation pins. The original's
+# uc/volumes/v1 in every step, and expects the same requests and behavior. The original's
 # description:
 #
 # Pins importing a volume whose GET answers 404. The importer's read doesn't ignore a
@@ -45,7 +44,6 @@ steps:
           path: /api/2.1/unity-catalog/volumes/main.replay.missing_import_volume
           headers:
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body: null
         response:
           status: 404

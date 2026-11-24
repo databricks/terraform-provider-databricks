@@ -44,14 +44,15 @@ steps:
                    "message": "No create permission in fixture"}
   - name: create_404_is_not_retried
     config: *config
-    expect_error: 'Error: cannot create mlflow model: Registry not found by fixture\n'
+    expect_error: 'Error: cannot create mlflow model: No API found for ''POST
+      /mlflow/registered-models/create''\n'
     calls:
       - request: *create
         response:
           status: 404
           body:
-            json: {"error_code": "RESOURCE_DOES_NOT_EXIST",
-                   "message": "Registry not found by fixture"}
+            json: {"error_code": "ENDPOINT_NOT_FOUND",
+                   "message": "No API found for 'POST /mlflow/registered-models/create'"}
   - name: create_500_is_not_retried
     config: *config
     expect_error: 'Error: cannot create mlflow model: Internal error from fixture\n'

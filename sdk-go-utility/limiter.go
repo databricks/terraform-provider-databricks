@@ -10,14 +10,14 @@ import (
 	"golang.org/x/time/rate"
 )
 
-// defaultRateLimitPerSecond is the rate of a config that sets none. It is the
+// limiterDefaultPerSecond is the rate of a config that sets none. It is the
 // value of defaultRateLimitPerSeconds in package httpclient of the classic
 // SDK, which is unexported.
-const defaultRateLimitPerSecond = 15
+const limiterDefaultPerSecond = 15
 
-// budgets holds the limiter of every config that Limiter has seen, as an
-// ops.Limiter by *config.Config.
-var budgets sync.Map
+// limiterBudgets holds the budget of every config that Limiter has seen, as a
+// limiterBudget by *config.Config.
+var limiterBudgets sync.Map
 
 // Limiter returns the rate limiter for the modular SDK calls made with cfg.
 // The classic client waits on a rate limiter before every request, so that a
@@ -59,40 +59,40 @@ var budgets sync.Map
 //     classic and the modular calls of one config are limited separately,
 //     each at the rate of cfg.
 func Limiter(cfg *config.Config) ops.Limiter {
-	limiter, ok := budgets.Load(cfg)
+	budget, ok := limiterBudgets.Load(cfg)
 	if !ok {
-		limiter, _ = budgets.LoadOrStore(cfg, configLimiter{newBudget(cfg)})
+		budget, _ = limiterBudgets.LoadOrStore(cfg, limiterNewBudget(cfg))
 	}
-	return limiter.(ops.Limiter)
+	return budget.(limiterBudget)
 }
 
-// newBudget returns the limiter that httpclient.NewApiClient of the classic
-// SDK builds for cfg: the burst is the rate per second, also when the
-// transport lifts the limit.
-func newBudget(cfg *config.Config) *rate.Limiter {
+// limiterNewBudget returns the budget of cfg. Its bucket is the limiter that
+// httpclient.NewApiClient of the classic SDK builds for cfg: the burst is the
+// rate per second, also when the transport lifts the limit.
+func limiterNewBudget(cfg *config.Config) limiterBudget {
 	if cfg == nil {
 		cfg = &config.Config{}
 	}
 	perSecond := cfg.RateLimitPerSecond
 	if perSecond == 0 {
-		perSecond = defaultRateLimitPerSecond
+		perSecond = limiterDefaultPerSecond
 	}
 	limit := rate.Limit(perSecond)
 	skippable, ok := cfg.HTTPTransport.(interface{ SkipRetryOnIO() bool })
 	if ok && skippable.SkipRetryOnIO() {
 		limit = rate.Inf
 	}
-	return rate.NewLimiter(limit, perSecond)
+	return limiterBudget{rate.NewLimiter(limit, perSecond)}
 }
 
-// configLimiter waits on the budget of one config and reports a failed wait
-// as the classic client does.
-type configLimiter struct {
-	budget *rate.Limiter
+// limiterBudget is the budget of one config. It reports a failed wait as the
+// classic client does.
+type limiterBudget struct {
+	bucket *rate.Limiter
 }
 
-func (l configLimiter) Wait(ctx context.Context) error {
-	if err := l.budget.Wait(ctx); err != nil {
+func (b limiterBudget) Wait(ctx context.Context) error {
+	if err := b.bucket.Wait(ctx); err != nil {
 		return fmt.Errorf("failed in rate limiter: %w", err)
 	}
 	return nil

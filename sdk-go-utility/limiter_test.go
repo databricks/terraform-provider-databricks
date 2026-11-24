@@ -31,30 +31,31 @@ import (
 // rate, and against an httptest.Server for the errors.
 
 const (
-	// getModelPath is the path of the call that both clients make in these
-	// tests: GetModel of the classic client and GetRegisteredModelDatabricks
-	// of the modular one.
-	getModelPath = "/api/2.0/mlflow/databricks/registered-models/get"
+	// limiterTestGetModelPath is the path of the call that both clients make in
+	// these tests: GetModel of the classic client and
+	// GetRegisteredModelDatabricks of the modular one.
+	limiterTestGetModelPath = "/api/2.0/mlflow/databricks/registered-models/get"
 
-	// unlimited is the rate of a limiter that admits every call at once.
-	unlimited = 0
+	// limiterTestUnlimited is the rate of a limiter that admits every call at once.
+	limiterTestUnlimited = 0
 )
 
-// wantAdmissions returns when a limiter that the classic client builds for
-// perSecond admits n calls made one after the other, counted from the first:
-// perSecond calls at once and then one call every 1/perSecond of a second.
-func wantAdmissions(perSecond, n int) []time.Duration {
+// limiterWantAdmissions returns when a limiter that the classic client builds
+// for perSecond admits n calls made one after the other, counted from the
+// first: perSecond calls at once and then one call every 1/perSecond of a
+// second.
+func limiterWantAdmissions(perSecond, n int) []time.Duration {
 	times := make([]time.Duration, n)
-	for i := perSecond; perSecond != unlimited && i < n; i++ {
+	for i := perSecond; perSecond != limiterTestUnlimited && i < n; i++ {
 		times[i] = time.Duration(i-perSecond+1) * time.Second / time.Duration(perSecond)
 	}
 	return times
 }
 
-// assertAdmissions checks that calls were admitted at the times want. It
-// allows a microsecond, because the limiter computes its waits in floating
+// limiterAssertAdmissions checks that calls were admitted at the times want.
+// It allows a microsecond, because the limiter computes its waits in floating
 // point.
-func assertAdmissions(t *testing.T, want, got []time.Duration) {
+func limiterAssertAdmissions(t *testing.T, want, got []time.Duration) {
 	t.Helper()
 	require.Len(t, got, len(want))
 	for i := range want {
@@ -62,9 +63,9 @@ func assertAdmissions(t *testing.T, want, got []time.Duration) {
 	}
 }
 
-// admissions makes n calls one after the other and returns when each of them
-// returned, counted from the first.
-func admissions(t *testing.T, n int, makeCall func() error) []time.Duration {
+// limiterAdmissions makes n calls one after the other and returns when each
+// of them returned, counted from the first.
+func limiterAdmissions(t *testing.T, n int, makeCall func() error) []time.Duration {
 	t.Helper()
 	start := time.Now()
 	times := make([]time.Duration, n)
@@ -75,33 +76,34 @@ func admissions(t *testing.T, n int, makeCall func() error) []time.Duration {
 	return times
 }
 
-// forgetNilConfig gives the nil config a new budget for the test. All tests
-// of the nil config would otherwise draw from one.
-func forgetNilConfig(t *testing.T) {
+// limiterForgetNilConfig gives the nil config a new budget for the test. All
+// tests of the nil config would otherwise draw from one.
+func limiterForgetNilConfig(t *testing.T) {
 	t.Helper()
 	var cfg *config.Config
-	budgets.Delete(cfg)
-	t.Cleanup(func() { budgets.Delete(cfg) })
+	limiterBudgets.Delete(cfg)
+	t.Cleanup(func() { limiterBudgets.Delete(cfg) })
 }
 
-// noopLoader keeps the DATABRICKS_ variables and the config file of the
-// machine out of a classic config: the SDK loads them only when the config
-// names no loader.
-type noopLoader struct{}
+// limiterNoopLoader keeps the DATABRICKS_ variables and the config file of
+// the machine out of a classic config: the SDK loads them only when the
+// config names no loader.
+type limiterNoopLoader struct{}
 
-func (noopLoader) Name() string                   { return "noop" }
-func (noopLoader) Configure(*config.Config) error { return nil }
+func (limiterNoopLoader) Name() string                   { return "noop" }
+func (limiterNoopLoader) Configure(*config.Config) error { return nil }
 
-// registry answers the call that both clients make and notes when each call
-// arrived. It is the transport of the clients in a synctest bubble, which
-// can't wait on a real connection, and the handler of an httptest.Server.
-type registry struct {
+// limiterTestRegistry answers the call that both clients make and notes when
+// each call arrived. It is the transport of the clients in a synctest bubble,
+// which can't wait on a real connection, and the handler of an
+// httptest.Server.
+type limiterTestRegistry struct {
 	mu       sync.Mutex
 	arrivals []time.Time
 }
 
-func (r *registry) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	if req.Method != http.MethodGet || req.URL.Path != getModelPath {
+func (r *limiterTestRegistry) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	if req.Method != http.MethodGet || req.URL.Path != limiterTestGetModelPath {
 		http.NotFound(w, req)
 		return
 	}
@@ -112,7 +114,7 @@ func (r *registry) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	_, _ = w.Write([]byte(`{"registered_model_databricks": {"name": "model"}}`))
 }
 
-func (r *registry) RoundTrip(req *http.Request) (*http.Response, error) {
+func (r *limiterTestRegistry) RoundTrip(req *http.Request) (*http.Response, error) {
 	recorder := httptest.NewRecorder()
 	r.ServeHTTP(recorder, req)
 	resp := recorder.Result()
@@ -122,7 +124,7 @@ func (r *registry) RoundTrip(req *http.Request) (*http.Response, error) {
 
 // take returns when the calls since the last take arrived, counted from
 // start. The clients take turns, so these are the calls of one client.
-func (r *registry) take(start time.Time) []time.Duration {
+func (r *limiterTestRegistry) take(start time.Time) []time.Duration {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	times := make([]time.Duration, len(r.arrivals))
@@ -133,34 +135,37 @@ func (r *registry) take(start time.Time) []time.Duration {
 	return times
 }
 
-// fixtureRegistry is a registry that says whether the classic client retries
-// on IO errors, as the HTTP fixtures of the classic SDK do. The classic client
-// doesn't limit the rate of a transport that says it doesn't.
-type fixtureRegistry struct {
-	*registry
+// limiterFixtureRegistry is a registry that says whether the classic client
+// retries on IO errors, as the HTTP fixtures of the classic SDK do. The
+// classic client doesn't limit the rate of a transport that says it doesn't.
+type limiterFixtureRegistry struct {
+	*limiterTestRegistry
 	skipRetryOnIO bool
 }
 
-func (f fixtureRegistry) SkipRetryOnIO() bool { return f.skipRetryOnIO }
+func (f limiterFixtureRegistry) SkipRetryOnIO() bool { return f.skipRetryOnIO }
 
-// clients are a real classic client and a real modular client of one config.
-// The modular client limits its calls with Limiter of that config.
-type clients struct {
+// limiterTestClients are a real classic client and a real modular client of
+// one config. The modular client limits its calls with Limiter of that
+// config.
+type limiterTestClients struct {
 	classic *databricks.WorkspaceClient
 	modular *modelregistry.Client
 	limiter ops.Limiter
 }
 
-// newClients returns the clients of a config for host with the rate limit.
-// A nil transport is the default transport of each client.
-func newClients(t *testing.T, host string, perSecond int, transport http.RoundTripper) clients {
+// limiterNewTestClients returns the clients of a config for host with the
+// rate limit. A nil transport is the default transport of each client.
+func limiterNewTestClients(
+	t *testing.T, host string, perSecond int, transport http.RoundTripper,
+) limiterTestClients {
 	t.Helper()
 	cfg := &config.Config{
 		Host:               host,
 		Token:              "token",
 		RateLimitPerSecond: perSecond,
 		HTTPTransport:      transport,
-		Loaders:            []config.Loader{noopLoader{}},
+		Loaders:            []config.Loader{limiterNoopLoader{}},
 		// The registry has no metadata of the host for the classic client.
 		HostMetadataResolver: func(context.Context, string) (*config.HostMetadata, error) {
 			return nil, nil
@@ -178,15 +183,15 @@ func newClients(t *testing.T, host string, perSecond int, transport http.RoundTr
 		client.WithoutConfigFile(),
 	)
 	require.NoError(t, err)
-	return clients{classic: classic, modular: modular, limiter: Limiter(cfg)}
+	return limiterTestClients{classic: classic, modular: modular, limiter: Limiter(cfg)}
 }
 
-func (c clients) classicCall(ctx context.Context) error {
+func (c limiterTestClients) classicCall(ctx context.Context) error {
 	_, err := c.classic.ModelRegistry.GetModel(ctx, ml.GetModelRequest{Name: "model"})
 	return err
 }
 
-func (c clients) modularCall(ctx context.Context) error {
+func (c limiterTestClients) modularCall(ctx context.Context) error {
 	name := "model"
 	_, err := c.modular.GetRegisteredModelDatabricks(ctx,
 		modelregistry.GetRegisteredModelDatabricksRequest{Name: &name},
@@ -210,25 +215,26 @@ func TestLimiterRate(t *testing.T) {
 		{"transport without an opinion on retries",
 			&config.Config{RateLimitPerSecond: 4, HTTPTransport: http.DefaultTransport}, 4},
 		{"transport that retries on IO errors",
-			&config.Config{RateLimitPerSecond: 4, HTTPTransport: fixtureRegistry{}}, 4},
+			&config.Config{RateLimitPerSecond: 4, HTTPTransport: limiterFixtureRegistry{}}, 4},
 		{"transport that doesn't retry on IO errors",
-			&config.Config{RateLimitPerSecond: 4, HTTPTransport: fixtureRegistry{skipRetryOnIO: true}}, unlimited},
+			&config.Config{RateLimitPerSecond: 4, HTTPTransport: limiterFixtureRegistry{skipRetryOnIO: true}},
+			limiterTestUnlimited},
 		{"mapping fixtures of the classic SDK",
-			&config.Config{HTTPTransport: fixtures.MappingTransport{}}, unlimited},
+			&config.Config{HTTPTransport: fixtures.MappingTransport{}}, limiterTestUnlimited},
 		{"slice fixtures of the classic SDK",
-			&config.Config{HTTPTransport: fixtures.SliceTransport{}}, unlimited},
+			&config.Config{HTTPTransport: fixtures.SliceTransport{}}, limiterTestUnlimited},
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			forgetNilConfig(t)
+			limiterForgetNilConfig(t)
 			synctest.Test(t, func(t *testing.T) {
 				limiter := Limiter(tc.cfg)
 				wait := func() error { return limiter.Wait(t.Context()) }
 				n := 2*tc.want + 40
-				assertAdmissions(t, wantAdmissions(tc.want, n), admissions(t, n, wait))
+				limiterAssertAdmissions(t, limiterWantAdmissions(tc.want, n), limiterAdmissions(t, n, wait))
 				// An idle budget fills up to the burst and no further.
 				time.Sleep(time.Hour)
-				assertAdmissions(t, wantAdmissions(tc.want, n), admissions(t, n, wait))
+				limiterAssertAdmissions(t, limiterWantAdmissions(tc.want, n), limiterAdmissions(t, n, wait))
 			})
 		})
 	}
@@ -238,14 +244,14 @@ func TestLimiterRate(t *testing.T) {
 // from a classic client with what it receives from a modular client that uses
 // the limiter, for one config.
 func TestLimiterHoldsModularCallsToClassicRate(t *testing.T) {
-	plain := func(r *registry) http.RoundTripper { return r }
-	fixture := func(skipRetryOnIO bool) func(*registry) http.RoundTripper {
-		return func(r *registry) http.RoundTripper { return fixtureRegistry{r, skipRetryOnIO} }
+	plain := func(r *limiterTestRegistry) http.RoundTripper { return r }
+	fixture := func(skipRetryOnIO bool) func(*limiterTestRegistry) http.RoundTripper {
+		return func(r *limiterTestRegistry) http.RoundTripper { return limiterFixtureRegistry{r, skipRetryOnIO} }
 	}
 	tests := []struct {
 		name      string
 		perSecond int
-		transport func(*registry) http.RoundTripper
+		transport func(*limiterTestRegistry) http.RoundTripper
 		want      int
 	}{
 		{"unset rate", 0, plain, 15},
@@ -253,28 +259,28 @@ func TestLimiterHoldsModularCallsToClassicRate(t *testing.T) {
 		{"rate below the default", 4, plain, 4},
 		{"rate above the default", 100, plain, 100},
 		{"transport that retries on IO errors", 4, fixture(false), 4},
-		{"transport that doesn't retry on IO errors", 4, fixture(true), unlimited},
-		{"transport that doesn't retry on IO errors, unset rate", 0, fixture(true), unlimited},
+		{"transport that doesn't retry on IO errors", 4, fixture(true), limiterTestUnlimited},
+		{"transport that doesn't retry on IO errors, unset rate", 0, fixture(true), limiterTestUnlimited},
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			synctest.Test(t, func(t *testing.T) {
-				api := &registry{}
-				c := newClients(t, "https://registry.test", tc.perSecond, tc.transport(api))
+				api := &limiterTestRegistry{}
+				c := limiterNewTestClients(t, "https://registry.test", tc.perSecond, tc.transport(api))
 				n := 2*tc.want + 40
-				want := wantAdmissions(tc.want, n)
+				want := limiterWantAdmissions(tc.want, n)
 
 				start := time.Now()
-				admissions(t, n, func() error { return c.classicCall(t.Context()) })
+				limiterAdmissions(t, n, func() error { return c.classicCall(t.Context()) })
 				classic := api.take(start)
 
 				start = time.Now()
-				admissions(t, n, func() error { return c.modularCall(t.Context()) })
+				limiterAdmissions(t, n, func() error { return c.modularCall(t.Context()) })
 				modular := api.take(start)
 
-				assertAdmissions(t, want, classic)
-				assertAdmissions(t, want, modular)
-				assertAdmissions(t, classic, modular)
+				limiterAssertAdmissions(t, want, classic)
+				limiterAssertAdmissions(t, want, modular)
+				limiterAssertAdmissions(t, classic, modular)
 			})
 		})
 	}
@@ -293,38 +299,38 @@ func TestLimiterBudgets(t *testing.T) {
 		want []time.Duration
 	}{
 		{name: "one config has one budget",
-			first: one, second: one, spend: 3, want: wantAdmissions(3, 9)[3:]},
+			first: one, second: one, spend: 3, want: limiterWantAdmissions(3, 9)[3:]},
 		{name: "the nil config has one budget",
-			first: nil, second: nil, spend: 15, want: wantAdmissions(15, 45)[15:]},
+			first: nil, second: nil, spend: 15, want: limiterWantAdmissions(15, 45)[15:]},
 		{name: "a config keeps its budget when its rate and its transport change",
-			first: changed, second: changed, spend: 3, want: wantAdmissions(3, 9)[3:],
+			first: changed, second: changed, spend: 3, want: limiterWantAdmissions(3, 9)[3:],
 			change: func() {
 				changed.RateLimitPerSecond = 5
 				changed.HTTPTransport = fixtures.MappingTransport{}
 			}},
 		{name: "configs with equal fields have a budget each",
 			first: &config.Config{RateLimitPerSecond: 3}, second: &config.Config{RateLimitPerSecond: 3},
-			spend: 3, want: wantAdmissions(3, 9)},
+			spend: 3, want: limiterWantAdmissions(3, 9)},
 		{name: "configs with different rates have a budget each",
 			first: &config.Config{RateLimitPerSecond: 3}, second: &config.Config{RateLimitPerSecond: 5},
-			spend: 3, want: wantAdmissions(5, 15)},
+			spend: 3, want: limiterWantAdmissions(5, 15)},
 		{name: "a config and the nil config have a budget each",
-			first: &config.Config{}, second: nil, spend: 15, want: wantAdmissions(15, 45)},
+			first: &config.Config{}, second: nil, spend: 15, want: limiterWantAdmissions(15, 45)},
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			forgetNilConfig(t)
+			limiterForgetNilConfig(t)
 			synctest.Test(t, func(t *testing.T) {
 				first := Limiter(tc.first)
 				if tc.change != nil {
 					tc.change()
 				}
 				second := Limiter(tc.second)
-				spent := admissions(t, tc.spend, func() error { return first.Wait(t.Context()) })
-				assertAdmissions(t, make([]time.Duration, tc.spend), spent)
+				spent := limiterAdmissions(t, tc.spend, func() error { return first.Wait(t.Context()) })
+				limiterAssertAdmissions(t, make([]time.Duration, tc.spend), spent)
 
-				got := admissions(t, len(tc.want), func() error { return second.Wait(t.Context()) })
-				assertAdmissions(t, tc.want, got)
+				got := limiterAdmissions(t, len(tc.want), func() error { return second.Wait(t.Context()) })
+				limiterAssertAdmissions(t, tc.want, got)
 			})
 		})
 	}
@@ -368,7 +374,7 @@ func TestLimiterConcurrentWaits(t *testing.T) {
 				wg.Wait()
 				for i, got := range admitted {
 					slices.Sort(got)
-					assertAdmissions(t, wantAdmissions(tc.want[i], tc.waits), got)
+					limiterAssertAdmissions(t, limiterWantAdmissions(tc.want[i], tc.waits), got)
 				}
 			})
 		})
@@ -460,15 +466,15 @@ func TestLimiterWaitFails(t *testing.T) {
 
 				require.EqualError(t, err, tc.want)
 				assert.Equal(t, tc.after, time.Since(start))
-				assertContextCause(t, tc.cause, err)
+				limiterAssertContextCause(t, tc.cause, err)
 			})
 		})
 	}
 }
 
-// assertContextCause checks that errors.Is finds the context error cause in
-// err and no other one.
-func assertContextCause(t *testing.T, cause, err error) {
+// limiterAssertContextCause checks that errors.Is finds the context error
+// cause in err and no other one.
+func limiterAssertContextCause(t *testing.T, cause, err error) {
 	t.Helper()
 	for _, target := range []error{context.Canceled, context.DeadlineExceeded} {
 		assert.Equal(t, target == cause, errors.Is(err, target), "errors.Is(%q, %q)", err, target)
@@ -482,10 +488,10 @@ func assertContextCause(t *testing.T, cause, err error) {
 func TestLimiterFailsAsClassicClient(t *testing.T) {
 	for _, tc := range limiterFailures {
 		t.Run(tc.name, func(t *testing.T) {
-			api := &registry{}
+			api := &limiterTestRegistry{}
 			server := httptest.NewServer(api)
 			defer server.Close()
-			c := newClients(t, server.URL, tc.perSecond, nil)
+			c := limiterNewTestClients(t, server.URL, tc.perSecond, nil)
 			start := time.Now()
 			// fail makes the calls that pass and the call that fails. It returns
 			// the number of calls that the server received and the error.
@@ -502,8 +508,8 @@ func TestLimiterFailsAsClassicClient(t *testing.T) {
 
 			require.EqualError(t, classicErr, tc.want)
 			require.EqualError(t, modularErr, tc.want)
-			assertContextCause(t, tc.cause, classicErr)
-			assertContextCause(t, tc.cause, modularErr)
+			limiterAssertContextCause(t, tc.cause, classicErr)
+			limiterAssertContextCause(t, tc.cause, modularErr)
 			assert.Equal(t, tc.spend, classicReceived)
 			assert.Equal(t, tc.spend, modularReceived)
 		})

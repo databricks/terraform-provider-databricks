@@ -578,10 +578,10 @@ func TestDataToStruct_SameRequestsAsClassic(t *testing.T) {
 	}
 }
 
-// TestDataToStruct_LeavesOutZeroThatClassicSends pins the one difference from
-// the classic path: name has no omitempty in the classic struct, so the classic
-// client sends an empty name, and DataToStruct leaves it out until the caller
-// sets the pointer.
+// TestDataToStruct_LeavesOutZeroThatClassicSends pins the request that differs
+// from the classic path: name has no omitempty in the classic struct, so the
+// classic client sends an empty name, and DataToStruct leaves it out until the
+// caller sets the pointer.
 func TestDataToStruct_LeavesOutZeroThatClassicSends(t *testing.T) {
 	s := common.StructToSchema(ml.CreateModelRequest{}, nil)
 	d := schema.TestResourceDataRaw(t, s, map[string]any{"name": ""})

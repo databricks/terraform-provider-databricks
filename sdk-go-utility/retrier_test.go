@@ -357,6 +357,8 @@ func TestRetrierMatchesClassicClientInFakeTime(t *testing.T) {
 	throttled.header = http.Header{"Retry-After": {"120"}}
 	html := retrierStep{status: http.StatusServiceUnavailable, body: "<html><pre>No webapps are available</pre></html>"}
 	exception := "com.databricks.backend.manager.util.UnknownWorkerEnvironmentException"
+	late := created
+	late.delay = 4 * time.Second
 	tests := []retrierScenario{
 		{name: "429 with Retry-After", script: steps{throttled, created}, attempts: 2},
 		{name: "429 without a body", script: steps{{status: 429}, created}, attempts: 2},
@@ -383,6 +385,8 @@ func TestRetrierMatchesClassicClientInFakeTime(t *testing.T) {
 		{name: "retries end at the first other error", attempts: 3, outcome: "409 FIXTURE: conflict", script: steps{
 			fail(429, "slow down"), fail(503, "unavailable"), fail(409, "conflict"),
 		}},
+		// The retry timeout is checked between attempts and doesn't end one.
+		{name: "200 after the retry timeout has passed", script: steps{late}, retryTimeoutSeconds: 2, attempts: 1},
 		{name: "13 waits", attempts: 14, script: append(slices.Repeat(steps{fail(429, "slow down")}, 13), created)},
 		{name: "500 is not retried", script: steps{fail(500, "broken")}, attempts: 1, outcome: "500 FIXTURE: broken"},
 		{name: "500 without a body is not retried", script: steps{{status: 500}}, attempts: 1, outcome: "500 : Internal Server Error"},
@@ -428,6 +432,8 @@ func TestRetrierStopsWhenClassicClientDoes(t *testing.T) {
 		{scenario: scenario{name: "retry timeout of 20 seconds", retryTimeoutSeconds: 20, attempts: 6}, took: 20 * time.Second},
 		{scenario: scenario{name: "retry timeout runs from the start of the call", script: []retrierStep{slow}, retryTimeoutSeconds: 5, attempts: 1},
 			took: 5 * time.Second},
+		{scenario: scenario{name: "attempt that outlasts the retry timeout", script: []retrierStep{slow}, retryTimeoutSeconds: 2, attempts: 1},
+			took: 4 * time.Second},
 		{scenario: scenario{name: "fixture transport has 20 minutes", retryTimeoutSeconds: 20, fixture: true}, took: 20 * time.Minute},
 		{scenario: scenario{name: "deadline of the context", retryTimeoutSeconds: -1, timeout: 20 * time.Second, attempts: 6}, took: 20 * time.Second},
 		{scenario: scenario{name: "deadline before the retry timeout", retryTimeoutSeconds: 60, timeout: 20 * time.Second, attempts: 6},

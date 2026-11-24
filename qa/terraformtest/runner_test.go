@@ -8,9 +8,12 @@ import (
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go/config"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/stretchr/testify/require"
 
+	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/sdkv2"
 	"github.com/databricks/terraform-provider-databricks/qa/httpfixture"
 )
 
@@ -102,6 +105,30 @@ func TestFixtureConfigIgnoresAmbientCredentials(t *testing.T) {
 	require.NoError(t, fixtureConfig(server.URL)(account))
 	require.NoError(t, account.EnsureResolved())
 	require.Equal(t, "fixture-account", account.AccountID)
+}
+
+// A journey cannot pin rate_limit through arrival gaps, because the SDK takes a token
+// before the request reaches the fixture server, so this checks the client's config.
+func TestFixtureConfigKeepsProviderRateLimitAndTimeouts(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{}`))
+	}))
+	defer server.Close()
+	provider := sdkv2.DatabricksProvider()
+	data := schema.TestResourceDataRaw(t, provider.Schema, map[string]any{
+		"rate_limit":            1,
+		"retry_timeout_seconds": 5,
+		"http_timeout_seconds":  7,
+	})
+	client, diags := sdkv2.ConfigureDatabricksClient(context.Background(), data,
+		fixtureConfig(server.URL))
+	require.False(t, diags.HasError(), diags)
+	cfg := client.(*common.DatabricksClient).Config
+	require.Equal(t, server.URL, cfg.Host)
+	require.Equal(t, 1, cfg.RateLimitPerSecond)
+	require.Equal(t, 5, cfg.RetryTimeoutSeconds)
+	require.Equal(t, 7, cfg.HTTPTimeoutSeconds)
 }
 
 func TestConfigureTerraformDisablesDownloadsAndExtraRefresh(t *testing.T) {

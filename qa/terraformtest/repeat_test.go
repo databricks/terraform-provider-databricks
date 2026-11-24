@@ -14,9 +14,9 @@ func TestRepeatReplay(t *testing.T) {
 	Run(t, "testdata/repeats")
 }
 
-// Each edit runs a repeat journey in a subprocess. The passing ones pin that
-// the runner keeps retry_timeout_seconds and rate_limit from the provider block,
-// and the failing ones that the journeys catch a change in retries or timing.
+// Each edit runs a repeat journey in a subprocess. The passing one pins that the
+// runner keeps retry_timeout_seconds from the provider block, and the failing ones
+// that the journeys catch a change in retries or timing.
 func TestRepeatJourneysPinRetriesAndTiming(t *testing.T) {
 	retryTimeout := func(seconds string) func(*step) {
 		return func(s *step) {
@@ -46,7 +46,6 @@ func TestRepeatJourneysPinRetriesAndTiming(t *testing.T) {
 			`step 1 \(create_retries_503\): call 2: POST ` + groups +
 				` arrived [0-9.]+s after ` + create + `, above max_gap 1s`,
 			func(s *step) { s.Calls[1].MinGap, s.Calls[1].MaxGap = "", "1s" }},
-		{"rate_limit delays the read after the create", "retry_503", "", withRateLimit},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			d, err := loadDefinition("testdata/repeats/" + tc.journey + ".yaml")
@@ -66,16 +65,6 @@ func TestRepeatJourneysPinRetriesAndTiming(t *testing.T) {
 			require.Regexp(t, tc.failure, output)
 		})
 	}
-}
-
-// withRateLimit sets rate_limit = 1, drops the 503s and expects the read at least
-// 900ms after the create, which the SDK's rate limiter only does when the runner
-// keeps rate_limit. A slow machine only lengthens the gap.
-func withRateLimit(s *step) {
-	s.Config = "provider \"databricks\" {\n  rate_limit = 1\n}\n" + s.Config
-	s.Calls = s.Calls[1:]
-	s.Calls[0].MinGap, s.Calls[0].MaxGap = "", ""
-	s.Calls[1].MinGap = "900ms"
 }
 
 func TestRecordingRejectsRepeatFields(t *testing.T) {

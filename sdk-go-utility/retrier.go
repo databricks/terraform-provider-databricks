@@ -40,8 +40,10 @@ import (
 //     cfg.RetryTimeoutSeconds, which the provider sets when the user sets
 //     none, leaves only ctx to stop the retries.
 //
-// Retrier returns an error when cfg or classic is nil, and the error of
-// config.HTTPClientConfigFromConfig when cfg doesn't resolve.
+// The retrier writes the lines that the classic client logs about a retry, to
+// the logger of the classic SDK. Retrier returns an error when cfg or classic
+// is nil, and the error of config.HTTPClientConfigFromConfig when cfg doesn't
+// resolve.
 //
 // Retrier leaves to the caller:
 //
@@ -129,7 +131,11 @@ func (r *classicRetrier) IsRetriable(err error) (time.Duration, bool) {
 		return 0, false
 	}
 	err = r.classic(err)
-	if err == nil || !r.isRetriable(err) {
+	if err == nil {
+		return 0, false
+	}
+	if !r.isRetriable(err) {
+		logger.Debugf(r.ctx, "non-retriable error: %s", err)
 		return 0, false
 	}
 	r.attempt++

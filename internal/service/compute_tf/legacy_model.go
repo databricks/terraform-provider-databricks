@@ -504,6 +504,11 @@ func (m *AutomatedConstraints_SdkV2) SetPerWorkloadMax(ctx context.Context, v Ra
 // Attributes set during cluster creation which are related to Amazon Web
 // Services.
 type AwsAttributes_SdkV2 struct {
+	// Availability type used for all subsequent nodes past the
+	// `first_on_demand` ones.
+	//
+	// Note: If `first_on_demand` is zero, this availability type will be used
+	// for the entire cluster.
 	Availability types.String `tfsdk:"availability"`
 	// The number of volumes launched for each instance. Users can choose up to
 	// 10 volumes. This feature is only enabled for supported node types. Legacy
@@ -681,7 +686,9 @@ type AzureAttributes_SdkV2 struct {
 	// Note that this value does not affect cluster size and cannot currently be
 	// mutated over the lifetime of a cluster.
 	FirstOnDemand types.Int64 `tfsdk:"first_on_demand"`
-	// Defines values necessary to configure and run Azure Log Analytics agent
+	// Defines values necessary to configure and run Azure Log Analytics agent.
+	// Both `log_analytics_workspace_id` and `log_analytics_primary_key` must be
+	// set, or neither.
 	LogAnalyticsInfo types.List `tfsdk:"log_analytics_info"`
 	// The max bid price to be used for Azure spot instances. The Max price for
 	// the bid cannot be higher than the on-demand price of the instance. If not
@@ -993,6 +1000,7 @@ func (m CancelResponse_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type ChangeClusterOwner_SdkV2 struct {
+	// The ID of the cluster whose owner is changed.
 	ClusterId types.String `tfsdk:"cluster_id"`
 	// New owner of the cluster_id after this RPC.
 	OwnerUsername types.String `tfsdk:"owner_username"`
@@ -1479,9 +1487,9 @@ func (m *ClusterAccessControlResponse_SdkV2) SetAllPermissions(ctx context.Conte
 type ClusterAttributes_SdkV2 struct {
 	// Automatically terminates the cluster after it is inactive for this time
 	// in minutes. If not set, this cluster will not be automatically
-	// terminated. If specified, the threshold must be between 10 and 10000
-	// minutes. Users can also set this value to 0 to explicitly disable
-	// automatic termination.
+	// terminated. If specified, the threshold must be between 10 and 43200
+	// minutes (30 days). Users can also set this value to 0 to explicitly
+	// disable automatic termination.
 	AutoterminationMinutes types.Int64 `tfsdk:"autotermination_minutes"`
 	// Attributes related to clusters running on Amazon Web Services. If not
 	// specified at cluster creation, a set of default values will be used.
@@ -1511,11 +1519,43 @@ type ClusterAttributes_SdkV2 struct {
 	// - Clusters can only reuse cloud resources if the resources' tags are a
 	// subset of the cluster tags
 	CustomTags types.Map `tfsdk:"custom_tags"`
-
+	// Data security mode decides what data governance model to use when
+	// accessing data from a cluster.
+	//
+	// * `DATA_SECURITY_MODE_AUTO`: Databricks will choose the most appropriate
+	// access mode depending on your compute configuration. *
+	// `DATA_SECURITY_MODE_STANDARD`: A secure cluster that can be shared by
+	// multiple users. Cluster users are fully isolated so that they cannot see
+	// each other's data and credentials. Most data governance features are
+	// supported in this mode. But programming languages and cluster features
+	// might be limited. * `DATA_SECURITY_MODE_DEDICATED`: A secure cluster that
+	// can only be exclusively used by a single user specified in
+	// `single_user_name`. Most programming languages, cluster features and data
+	// governance features are available in this mode. * `NONE`: No security
+	// isolation for multiple users sharing the cluster. Data governance
+	// features are not available in this mode.
+	//
+	// The following modes are legacy aliases for the above modes:
+	//
+	// * `USER_ISOLATION`: Legacy alias for `DATA_SECURITY_MODE_STANDARD`. *
+	// `SINGLE_USER`: Legacy alias for `DATA_SECURITY_MODE_DEDICATED`.
+	//
+	// The following modes are deprecated starting with Databricks Runtime 15.0
+	// and will be removed for future Databricks Runtime versions:
+	//
+	// * `LEGACY_TABLE_ACL`: This mode is for users migrating from legacy Table
+	// ACL clusters. * `LEGACY_PASSTHROUGH`: This mode is for users migrating
+	// from legacy Passthrough on high concurrency clusters. *
+	// `LEGACY_SINGLE_USER`: This mode is for users migrating from legacy
+	// Passthrough on standard clusters. * `LEGACY_SINGLE_USER_STANDARD`: This
+	// mode provides a way that doesn't have UC or passthrough enabled.
 	DataSecurityMode types.String `tfsdk:"data_security_mode"`
 	// Controls dependency configuration for the cluster.
 	DependencyMode types.String `tfsdk:"dependency_mode"`
-	// Custom docker image BYOC
+	// Custom Docker image for the cluster's nodes, used with [Databricks
+	// Container Services].
+	//
+	// [Databricks Container Services]: https://docs.databricks.com/compute/custom-containers.html
 	DockerImage types.List `tfsdk:"docker_image"`
 	// The optional ID of the instance pool for the driver of the cluster
 	// belongs. The pool cluster uses the instance pool with id
@@ -1548,7 +1588,21 @@ type ClusterAttributes_SdkV2 struct {
 	// When set to true, Databricks will automatically set single node related
 	// `custom_tags`, `spark_conf`, and `num_workers`
 	IsSingleNode types.Bool `tfsdk:"is_single_node"`
-
+	// The kind of compute described by this compute specification.
+	//
+	// Depending on `kind`, different validations and default values will be
+	// applied.
+	//
+	// Clusters with `kind = CLASSIC_PREVIEW` support the following fields,
+	// whereas clusters with no specified `kind` do not. * [is_single_node] *
+	// [use_ml_runtime]
+	//
+	// By using the [simple form], your clusters are automatically using `kind =
+	// CLASSIC_PREVIEW`.
+	//
+	// [is_single_node]: https://docs.databricks.com/api/workspace/clusters/create#is_single_node
+	// [simple form]: https://docs.databricks.com/compute/simple-form.html
+	// [use_ml_runtime]: https://docs.databricks.com/api/workspace/clusters/create#use_ml_runtime
 	Kind types.String `tfsdk:"kind"`
 	// This field encodes, through a single value, the resources available to
 	// each of the Spark nodes in this cluster. For example, the Spark nodes can
@@ -1615,7 +1669,8 @@ type ClusterAttributes_SdkV2 struct {
 	UseMlRuntime types.Bool `tfsdk:"use_ml_runtime"`
 	// Flexible node type configuration for worker nodes.
 	WorkerNodeTypeFlexibility types.List `tfsdk:"worker_node_type_flexibility"`
-
+	// Types of workloads that can use the cluster, such as notebooks or jobs.
+	// If omitted, the cluster can be used for both notebooks and jobs.
 	WorkloadType types.List `tfsdk:"workload_type"`
 }
 
@@ -1646,6 +1701,12 @@ func (to *ClusterAttributes_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Co
 				to.SetClusterLogConf(ctx, toClusterLogConf)
 			}
 		}
+	}
+	if !from.CustomTags.IsNull() && !from.CustomTags.IsUnknown() && to.CustomTags.IsNull() && len(from.CustomTags.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for CustomTags, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.CustomTags = from.CustomTags
 	}
 	if !from.DockerImage.IsNull() && !from.DockerImage.IsUnknown() {
 		if toDockerImage, ok := to.GetDockerImage(ctx); ok {
@@ -1692,6 +1753,18 @@ func (to *ClusterAttributes_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Co
 				to.SetInitScripts(ctx, toInitScripts)
 			}
 		}
+	}
+	if !from.SparkConf.IsNull() && !from.SparkConf.IsUnknown() && to.SparkConf.IsNull() && len(from.SparkConf.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for SparkConf, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.SparkConf = from.SparkConf
+	}
+	if !from.SparkEnvVars.IsNull() && !from.SparkEnvVars.IsUnknown() && to.SparkEnvVars.IsNull() && len(from.SparkEnvVars.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for SparkEnvVars, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.SparkEnvVars = from.SparkEnvVars
 	}
 	if !from.SshPublicKeys.IsNull() && !from.SshPublicKeys.IsUnknown() && to.SshPublicKeys.IsNull() && len(from.SshPublicKeys.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
@@ -1744,6 +1817,12 @@ func (to *ClusterAttributes_SdkV2) SyncFieldsDuringRead(ctx context.Context, fro
 			}
 		}
 	}
+	if !from.CustomTags.IsNull() && !from.CustomTags.IsUnknown() && to.CustomTags.IsNull() && len(from.CustomTags.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for CustomTags, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.CustomTags = from.CustomTags
+	}
 	if !from.DockerImage.IsNull() && !from.DockerImage.IsUnknown() {
 		if toDockerImage, ok := to.GetDockerImage(ctx); ok {
 			if fromDockerImage, ok := from.GetDockerImage(ctx); ok {
@@ -1785,6 +1864,18 @@ func (to *ClusterAttributes_SdkV2) SyncFieldsDuringRead(ctx context.Context, fro
 				to.SetInitScripts(ctx, toInitScripts)
 			}
 		}
+	}
+	if !from.SparkConf.IsNull() && !from.SparkConf.IsUnknown() && to.SparkConf.IsNull() && len(from.SparkConf.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for SparkConf, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.SparkConf = from.SparkConf
+	}
+	if !from.SparkEnvVars.IsNull() && !from.SparkEnvVars.IsUnknown() && to.SparkEnvVars.IsNull() && len(from.SparkEnvVars.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for SparkEnvVars, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.SparkEnvVars = from.SparkEnvVars
 	}
 	if !from.SshPublicKeys.IsNull() && !from.SshPublicKeys.IsUnknown() && to.SshPublicKeys.IsNull() && len(from.SshPublicKeys.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
@@ -2352,6 +2443,12 @@ func (to *ClusterCompliance_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Co
 			}
 		}
 	}
+	if !from.Violations.IsNull() && !from.Violations.IsUnknown() && to.Violations.IsNull() && len(from.Violations.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for Violations, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.Violations = from.Violations
+	}
 }
 
 func (to *ClusterCompliance_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ClusterCompliance_SdkV2) {
@@ -2362,6 +2459,12 @@ func (to *ClusterCompliance_SdkV2) SyncFieldsDuringRead(ctx context.Context, fro
 				to.SetPendingEnforcement(ctx, toPendingEnforcement)
 			}
 		}
+	}
+	if !from.Violations.IsNull() && !from.Violations.IsUnknown() && to.Violations.IsNull() && len(from.Violations.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for Violations, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.Violations = from.Violations
 	}
 }
 
@@ -2479,9 +2582,9 @@ type ClusterDetails_SdkV2 struct {
 	Autoscale types.List `tfsdk:"autoscale"`
 	// Automatically terminates the cluster after it is inactive for this time
 	// in minutes. If not set, this cluster will not be automatically
-	// terminated. If specified, the threshold must be between 10 and 10000
-	// minutes. Users can also set this value to 0 to explicitly disable
-	// automatic termination.
+	// terminated. If specified, the threshold must be between 10 and 43200
+	// minutes (30 days). Users can also set this value to 0 to explicitly
+	// disable automatic termination.
 	AutoterminationMinutes types.Int64 `tfsdk:"autotermination_minutes"`
 	// Attributes related to clusters running on Amazon Web Services. If not
 	// specified at cluster creation, a set of default values will be used.
@@ -2528,7 +2631,36 @@ type ClusterDetails_SdkV2 struct {
 	// - Clusters can only reuse cloud resources if the resources' tags are a
 	// subset of the cluster tags
 	CustomTags types.Map `tfsdk:"custom_tags"`
-
+	// Data security mode decides what data governance model to use when
+	// accessing data from a cluster.
+	//
+	// * `DATA_SECURITY_MODE_AUTO`: Databricks will choose the most appropriate
+	// access mode depending on your compute configuration. *
+	// `DATA_SECURITY_MODE_STANDARD`: A secure cluster that can be shared by
+	// multiple users. Cluster users are fully isolated so that they cannot see
+	// each other's data and credentials. Most data governance features are
+	// supported in this mode. But programming languages and cluster features
+	// might be limited. * `DATA_SECURITY_MODE_DEDICATED`: A secure cluster that
+	// can only be exclusively used by a single user specified in
+	// `single_user_name`. Most programming languages, cluster features and data
+	// governance features are available in this mode. * `NONE`: No security
+	// isolation for multiple users sharing the cluster. Data governance
+	// features are not available in this mode.
+	//
+	// The following modes are legacy aliases for the above modes:
+	//
+	// * `USER_ISOLATION`: Legacy alias for `DATA_SECURITY_MODE_STANDARD`. *
+	// `SINGLE_USER`: Legacy alias for `DATA_SECURITY_MODE_DEDICATED`.
+	//
+	// The following modes are deprecated starting with Databricks Runtime 15.0
+	// and will be removed for future Databricks Runtime versions:
+	//
+	// * `LEGACY_TABLE_ACL`: This mode is for users migrating from legacy Table
+	// ACL clusters. * `LEGACY_PASSTHROUGH`: This mode is for users migrating
+	// from legacy Passthrough on high concurrency clusters. *
+	// `LEGACY_SINGLE_USER`: This mode is for users migrating from legacy
+	// Passthrough on standard clusters. * `LEGACY_SINGLE_USER_STANDARD`: This
+	// mode provides a way that doesn't have UC or passthrough enabled.
 	DataSecurityMode types.String `tfsdk:"data_security_mode"`
 	// Tags that are added by Databricks regardless of any `custom_tags`,
 	// including:
@@ -2545,7 +2677,10 @@ type ClusterDetails_SdkV2 struct {
 	DefaultTags types.Map `tfsdk:"default_tags"`
 	// Controls dependency configuration for the cluster.
 	DependencyMode types.String `tfsdk:"dependency_mode"`
-	// Custom docker image BYOC
+	// Custom Docker image for the cluster's nodes, used with [Databricks
+	// Container Services].
+	//
+	// [Databricks Container Services]: https://docs.databricks.com/compute/custom-containers.html
 	DockerImage types.List `tfsdk:"docker_image"`
 	// Node on which the Spark driver resides. The driver node contains the
 	// Spark master and the Databricks application that manages the per-notebook
@@ -2584,12 +2719,27 @@ type ClusterDetails_SdkV2 struct {
 	// When set to true, Databricks will automatically set single node related
 	// `custom_tags`, `spark_conf`, and `num_workers`
 	IsSingleNode types.Bool `tfsdk:"is_single_node"`
-	// Port on which Spark JDBC server is listening, in the driver nod. No
-	// service will be listeningon on this port in executor nodes.
+	// Port on which Spark JDBC server is listening in the driver node. No
+	// service will be listening on this port in executor nodes.
 	JdbcPort types.Int64 `tfsdk:"jdbc_port"`
-
+	// The kind of compute described by this compute specification.
+	//
+	// Depending on `kind`, different validations and default values will be
+	// applied.
+	//
+	// Clusters with `kind = CLASSIC_PREVIEW` support the following fields,
+	// whereas clusters with no specified `kind` do not. * [is_single_node] *
+	// [use_ml_runtime]
+	//
+	// By using the [simple form], your clusters are automatically using `kind =
+	// CLASSIC_PREVIEW`.
+	//
+	// [is_single_node]: https://docs.databricks.com/api/workspace/clusters/create#is_single_node
+	// [simple form]: https://docs.databricks.com/compute/simple-form.html
+	// [use_ml_runtime]: https://docs.databricks.com/api/workspace/clusters/create#use_ml_runtime
 	Kind types.String `tfsdk:"kind"`
-	// the timestamp that the cluster was started/restarted
+	// Time (in epoch milliseconds) when the cluster was last started or
+	// restarted.
 	LastRestartedTime types.Int64 `tfsdk:"last_restarted_time"`
 	// Time when the cluster driver last lost its state (due to a restart or
 	// driver failure).
@@ -2692,7 +2842,8 @@ type ClusterDetails_SdkV2 struct {
 	UseMlRuntime types.Bool `tfsdk:"use_ml_runtime"`
 	// Flexible node type configuration for worker nodes.
 	WorkerNodeTypeFlexibility types.List `tfsdk:"worker_node_type_flexibility"`
-
+	// Types of workloads that can use the cluster, such as notebooks or jobs.
+	// If omitted, the cluster can be used for both notebooks and jobs.
 	WorkloadType types.List `tfsdk:"workload_type"`
 }
 
@@ -2741,6 +2892,18 @@ func (to *ClusterDetails_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Conte
 				to.SetClusterLogStatus(ctx, toClusterLogStatus)
 			}
 		}
+	}
+	if !from.CustomTags.IsNull() && !from.CustomTags.IsUnknown() && to.CustomTags.IsNull() && len(from.CustomTags.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for CustomTags, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.CustomTags = from.CustomTags
+	}
+	if !from.DefaultTags.IsNull() && !from.DefaultTags.IsUnknown() && to.DefaultTags.IsNull() && len(from.DefaultTags.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for DefaultTags, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.DefaultTags = from.DefaultTags
 	}
 	if !from.DockerImage.IsNull() && !from.DockerImage.IsUnknown() {
 		if toDockerImage, ok := to.GetDockerImage(ctx); ok {
@@ -2815,6 +2978,18 @@ func (to *ClusterDetails_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Conte
 				to.SetInitScripts(ctx, toInitScripts)
 			}
 		}
+	}
+	if !from.SparkConf.IsNull() && !from.SparkConf.IsUnknown() && to.SparkConf.IsNull() && len(from.SparkConf.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for SparkConf, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.SparkConf = from.SparkConf
+	}
+	if !from.SparkEnvVars.IsNull() && !from.SparkEnvVars.IsUnknown() && to.SparkEnvVars.IsNull() && len(from.SparkEnvVars.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for SparkEnvVars, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.SparkEnvVars = from.SparkEnvVars
 	}
 	if !from.Spec.IsNull() && !from.Spec.IsUnknown() {
 		if toSpec, ok := to.GetSpec(ctx); ok {
@@ -2901,6 +3076,18 @@ func (to *ClusterDetails_SdkV2) SyncFieldsDuringRead(ctx context.Context, from C
 			}
 		}
 	}
+	if !from.CustomTags.IsNull() && !from.CustomTags.IsUnknown() && to.CustomTags.IsNull() && len(from.CustomTags.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for CustomTags, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.CustomTags = from.CustomTags
+	}
+	if !from.DefaultTags.IsNull() && !from.DefaultTags.IsUnknown() && to.DefaultTags.IsNull() && len(from.DefaultTags.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for DefaultTags, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.DefaultTags = from.DefaultTags
+	}
 	if !from.DockerImage.IsNull() && !from.DockerImage.IsUnknown() {
 		if toDockerImage, ok := to.GetDockerImage(ctx); ok {
 			if fromDockerImage, ok := from.GetDockerImage(ctx); ok {
@@ -2968,6 +3155,18 @@ func (to *ClusterDetails_SdkV2) SyncFieldsDuringRead(ctx context.Context, from C
 				to.SetInitScripts(ctx, toInitScripts)
 			}
 		}
+	}
+	if !from.SparkConf.IsNull() && !from.SparkConf.IsUnknown() && to.SparkConf.IsNull() && len(from.SparkConf.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for SparkConf, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.SparkConf = from.SparkConf
+	}
+	if !from.SparkEnvVars.IsNull() && !from.SparkEnvVars.IsUnknown() && to.SparkEnvVars.IsNull() && len(from.SparkEnvVars.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for SparkEnvVars, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.SparkEnvVars = from.SparkEnvVars
 	}
 	if !from.Spec.IsNull() && !from.Spec.IsUnknown() {
 		if toSpec, ok := to.GetSpec(ctx); ok {
@@ -3797,16 +3996,18 @@ func (m *ClusterDetails_SdkV2) SetWorkloadType(ctx context.Context, v WorkloadTy
 }
 
 type ClusterEvent_SdkV2 struct {
+	// The ID of the cluster the event belongs to.
 	ClusterId types.String `tfsdk:"cluster_id"`
 
 	DataPlaneEventDetails types.List `tfsdk:"data_plane_event_details"`
-
+	// Details about the event. Which fields are populated depends on the event
+	// `type`.
 	Details types.List `tfsdk:"details"`
 	// The timestamp when the event occurred, stored as the number of
 	// milliseconds since the Unix epoch. If not provided, this will be assigned
 	// by the Timeline service.
 	Timestamp types.Int64 `tfsdk:"timestamp"`
-
+	// The type of event, which determines which `details` fields are populated.
 	Type_ types.String `tfsdk:"type"`
 }
 
@@ -5464,9 +5665,9 @@ type ClusterSpec_SdkV2 struct {
 	Autoscale types.List `tfsdk:"autoscale"`
 	// Automatically terminates the cluster after it is inactive for this time
 	// in minutes. If not set, this cluster will not be automatically
-	// terminated. If specified, the threshold must be between 10 and 10000
-	// minutes. Users can also set this value to 0 to explicitly disable
-	// automatic termination.
+	// terminated. If specified, the threshold must be between 10 and 43200
+	// minutes (30 days). Users can also set this value to 0 to explicitly
+	// disable automatic termination.
 	AutoterminationMinutes types.Int64 `tfsdk:"autotermination_minutes"`
 	// Attributes related to clusters running on Amazon Web Services. If not
 	// specified at cluster creation, a set of default values will be used.
@@ -5496,11 +5697,43 @@ type ClusterSpec_SdkV2 struct {
 	// - Clusters can only reuse cloud resources if the resources' tags are a
 	// subset of the cluster tags
 	CustomTags types.Map `tfsdk:"custom_tags"`
-
+	// Data security mode decides what data governance model to use when
+	// accessing data from a cluster.
+	//
+	// * `DATA_SECURITY_MODE_AUTO`: Databricks will choose the most appropriate
+	// access mode depending on your compute configuration. *
+	// `DATA_SECURITY_MODE_STANDARD`: A secure cluster that can be shared by
+	// multiple users. Cluster users are fully isolated so that they cannot see
+	// each other's data and credentials. Most data governance features are
+	// supported in this mode. But programming languages and cluster features
+	// might be limited. * `DATA_SECURITY_MODE_DEDICATED`: A secure cluster that
+	// can only be exclusively used by a single user specified in
+	// `single_user_name`. Most programming languages, cluster features and data
+	// governance features are available in this mode. * `NONE`: No security
+	// isolation for multiple users sharing the cluster. Data governance
+	// features are not available in this mode.
+	//
+	// The following modes are legacy aliases for the above modes:
+	//
+	// * `USER_ISOLATION`: Legacy alias for `DATA_SECURITY_MODE_STANDARD`. *
+	// `SINGLE_USER`: Legacy alias for `DATA_SECURITY_MODE_DEDICATED`.
+	//
+	// The following modes are deprecated starting with Databricks Runtime 15.0
+	// and will be removed for future Databricks Runtime versions:
+	//
+	// * `LEGACY_TABLE_ACL`: This mode is for users migrating from legacy Table
+	// ACL clusters. * `LEGACY_PASSTHROUGH`: This mode is for users migrating
+	// from legacy Passthrough on high concurrency clusters. *
+	// `LEGACY_SINGLE_USER`: This mode is for users migrating from legacy
+	// Passthrough on standard clusters. * `LEGACY_SINGLE_USER_STANDARD`: This
+	// mode provides a way that doesn't have UC or passthrough enabled.
 	DataSecurityMode types.String `tfsdk:"data_security_mode"`
 	// Controls dependency configuration for the cluster.
 	DependencyMode types.String `tfsdk:"dependency_mode"`
-	// Custom docker image BYOC
+	// Custom Docker image for the cluster's nodes, used with [Databricks
+	// Container Services].
+	//
+	// [Databricks Container Services]: https://docs.databricks.com/compute/custom-containers.html
 	DockerImage types.List `tfsdk:"docker_image"`
 	// The optional ID of the instance pool for the driver of the cluster
 	// belongs. The pool cluster uses the instance pool with id
@@ -5533,7 +5766,21 @@ type ClusterSpec_SdkV2 struct {
 	// When set to true, Databricks will automatically set single node related
 	// `custom_tags`, `spark_conf`, and `num_workers`
 	IsSingleNode types.Bool `tfsdk:"is_single_node"`
-
+	// The kind of compute described by this compute specification.
+	//
+	// Depending on `kind`, different validations and default values will be
+	// applied.
+	//
+	// Clusters with `kind = CLASSIC_PREVIEW` support the following fields,
+	// whereas clusters with no specified `kind` do not. * [is_single_node] *
+	// [use_ml_runtime]
+	//
+	// By using the [simple form], your clusters are automatically using `kind =
+	// CLASSIC_PREVIEW`.
+	//
+	// [is_single_node]: https://docs.databricks.com/api/workspace/clusters/create#is_single_node
+	// [simple form]: https://docs.databricks.com/compute/simple-form.html
+	// [use_ml_runtime]: https://docs.databricks.com/api/workspace/clusters/create#use_ml_runtime
 	Kind types.String `tfsdk:"kind"`
 	// This field encodes, through a single value, the resources available to
 	// each of the Spark nodes in this cluster. For example, the Spark nodes can
@@ -5611,7 +5858,8 @@ type ClusterSpec_SdkV2 struct {
 	UseMlRuntime types.Bool `tfsdk:"use_ml_runtime"`
 	// Flexible node type configuration for worker nodes.
 	WorkerNodeTypeFlexibility types.List `tfsdk:"worker_node_type_flexibility"`
-
+	// Types of workloads that can use the cluster, such as notebooks or jobs.
+	// If omitted, the cluster can be used for both notebooks and jobs.
 	WorkloadType types.List `tfsdk:"workload_type"`
 }
 
@@ -5651,6 +5899,12 @@ func (to *ClusterSpec_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context,
 				to.SetClusterLogConf(ctx, toClusterLogConf)
 			}
 		}
+	}
+	if !from.CustomTags.IsNull() && !from.CustomTags.IsUnknown() && to.CustomTags.IsNull() && len(from.CustomTags.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for CustomTags, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.CustomTags = from.CustomTags
 	}
 	if !from.DockerImage.IsNull() && !from.DockerImage.IsUnknown() {
 		if toDockerImage, ok := to.GetDockerImage(ctx); ok {
@@ -5697,6 +5951,18 @@ func (to *ClusterSpec_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context,
 				to.SetInitScripts(ctx, toInitScripts)
 			}
 		}
+	}
+	if !from.SparkConf.IsNull() && !from.SparkConf.IsUnknown() && to.SparkConf.IsNull() && len(from.SparkConf.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for SparkConf, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.SparkConf = from.SparkConf
+	}
+	if !from.SparkEnvVars.IsNull() && !from.SparkEnvVars.IsUnknown() && to.SparkEnvVars.IsNull() && len(from.SparkEnvVars.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for SparkEnvVars, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.SparkEnvVars = from.SparkEnvVars
 	}
 	if !from.SshPublicKeys.IsNull() && !from.SshPublicKeys.IsUnknown() && to.SshPublicKeys.IsNull() && len(from.SshPublicKeys.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
@@ -5757,6 +6023,12 @@ func (to *ClusterSpec_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Clus
 			}
 		}
 	}
+	if !from.CustomTags.IsNull() && !from.CustomTags.IsUnknown() && to.CustomTags.IsNull() && len(from.CustomTags.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for CustomTags, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.CustomTags = from.CustomTags
+	}
 	if !from.DockerImage.IsNull() && !from.DockerImage.IsUnknown() {
 		if toDockerImage, ok := to.GetDockerImage(ctx); ok {
 			if fromDockerImage, ok := from.GetDockerImage(ctx); ok {
@@ -5798,6 +6070,18 @@ func (to *ClusterSpec_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Clus
 				to.SetInitScripts(ctx, toInitScripts)
 			}
 		}
+	}
+	if !from.SparkConf.IsNull() && !from.SparkConf.IsUnknown() && to.SparkConf.IsNull() && len(from.SparkConf.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for SparkConf, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.SparkConf = from.SparkConf
+	}
+	if !from.SparkEnvVars.IsNull() && !from.SparkEnvVars.IsUnknown() && to.SparkEnvVars.IsNull() && len(from.SparkEnvVars.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for SparkEnvVars, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.SparkEnvVars = from.SparkEnvVars
 	}
 	if !from.SshPublicKeys.IsNull() && !from.SshPublicKeys.IsUnknown() && to.SshPublicKeys.IsNull() && len(from.SshPublicKeys.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
@@ -6700,6 +6984,12 @@ func (to *ComputePolicy_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Contex
 			}
 		}
 	}
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() && to.Tags.IsNull() && len(from.Tags.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for Tags, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.Tags = from.Tags
+	}
 }
 
 func (to *ComputePolicy_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ComputePolicy_SdkV2) {
@@ -6710,6 +7000,12 @@ func (to *ComputePolicy_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Co
 				to.SetAllowedComputeProducts(ctx, toAllowedComputeProducts)
 			}
 		}
+	}
+	if !from.Tags.IsNull() && !from.Tags.IsUnknown() && to.Tags.IsNull() && len(from.Tags.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for Tags, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.Tags = from.Tags
 	}
 }
 
@@ -6951,9 +7247,9 @@ type CreateCluster_SdkV2 struct {
 	Autoscale types.List `tfsdk:"autoscale"`
 	// Automatically terminates the cluster after it is inactive for this time
 	// in minutes. If not set, this cluster will not be automatically
-	// terminated. If specified, the threshold must be between 10 and 10000
-	// minutes. Users can also set this value to 0 to explicitly disable
-	// automatic termination.
+	// terminated. If specified, the threshold must be between 10 and 43200
+	// minutes (30 days). Users can also set this value to 0 to explicitly
+	// disable automatic termination.
 	AutoterminationMinutes types.Int64 `tfsdk:"autotermination_minutes"`
 	// Attributes related to clusters running on Amazon Web Services. If not
 	// specified at cluster creation, a set of default values will be used.
@@ -6986,11 +7282,43 @@ type CreateCluster_SdkV2 struct {
 	// - Clusters can only reuse cloud resources if the resources' tags are a
 	// subset of the cluster tags
 	CustomTags types.Map `tfsdk:"custom_tags"`
-
+	// Data security mode decides what data governance model to use when
+	// accessing data from a cluster.
+	//
+	// * `DATA_SECURITY_MODE_AUTO`: Databricks will choose the most appropriate
+	// access mode depending on your compute configuration. *
+	// `DATA_SECURITY_MODE_STANDARD`: A secure cluster that can be shared by
+	// multiple users. Cluster users are fully isolated so that they cannot see
+	// each other's data and credentials. Most data governance features are
+	// supported in this mode. But programming languages and cluster features
+	// might be limited. * `DATA_SECURITY_MODE_DEDICATED`: A secure cluster that
+	// can only be exclusively used by a single user specified in
+	// `single_user_name`. Most programming languages, cluster features and data
+	// governance features are available in this mode. * `NONE`: No security
+	// isolation for multiple users sharing the cluster. Data governance
+	// features are not available in this mode.
+	//
+	// The following modes are legacy aliases for the above modes:
+	//
+	// * `USER_ISOLATION`: Legacy alias for `DATA_SECURITY_MODE_STANDARD`. *
+	// `SINGLE_USER`: Legacy alias for `DATA_SECURITY_MODE_DEDICATED`.
+	//
+	// The following modes are deprecated starting with Databricks Runtime 15.0
+	// and will be removed for future Databricks Runtime versions:
+	//
+	// * `LEGACY_TABLE_ACL`: This mode is for users migrating from legacy Table
+	// ACL clusters. * `LEGACY_PASSTHROUGH`: This mode is for users migrating
+	// from legacy Passthrough on high concurrency clusters. *
+	// `LEGACY_SINGLE_USER`: This mode is for users migrating from legacy
+	// Passthrough on standard clusters. * `LEGACY_SINGLE_USER_STANDARD`: This
+	// mode provides a way that doesn't have UC or passthrough enabled.
 	DataSecurityMode types.String `tfsdk:"data_security_mode"`
 	// Controls dependency configuration for the cluster.
 	DependencyMode types.String `tfsdk:"dependency_mode"`
-	// Custom docker image BYOC
+	// Custom Docker image for the cluster's nodes, used with [Databricks
+	// Container Services].
+	//
+	// [Databricks Container Services]: https://docs.databricks.com/compute/custom-containers.html
 	DockerImage types.List `tfsdk:"docker_image"`
 	// The optional ID of the instance pool for the driver of the cluster
 	// belongs. The pool cluster uses the instance pool with id
@@ -7023,7 +7351,21 @@ type CreateCluster_SdkV2 struct {
 	// When set to true, Databricks will automatically set single node related
 	// `custom_tags`, `spark_conf`, and `num_workers`
 	IsSingleNode types.Bool `tfsdk:"is_single_node"`
-
+	// The kind of compute described by this compute specification.
+	//
+	// Depending on `kind`, different validations and default values will be
+	// applied.
+	//
+	// Clusters with `kind = CLASSIC_PREVIEW` support the following fields,
+	// whereas clusters with no specified `kind` do not. * [is_single_node] *
+	// [use_ml_runtime]
+	//
+	// By using the [simple form], your clusters are automatically using `kind =
+	// CLASSIC_PREVIEW`.
+	//
+	// [is_single_node]: https://docs.databricks.com/api/workspace/clusters/create#is_single_node
+	// [simple form]: https://docs.databricks.com/compute/simple-form.html
+	// [use_ml_runtime]: https://docs.databricks.com/api/workspace/clusters/create#use_ml_runtime
 	Kind types.String `tfsdk:"kind"`
 	// This field encodes, through a single value, the resources available to
 	// each of the Spark nodes in this cluster. For example, the Spark nodes can
@@ -7101,7 +7443,8 @@ type CreateCluster_SdkV2 struct {
 	UseMlRuntime types.Bool `tfsdk:"use_ml_runtime"`
 	// Flexible node type configuration for worker nodes.
 	WorkerNodeTypeFlexibility types.List `tfsdk:"worker_node_type_flexibility"`
-
+	// Types of workloads that can use the cluster, such as notebooks or jobs.
+	// If omitted, the cluster can be used for both notebooks and jobs.
 	WorkloadType types.List `tfsdk:"workload_type"`
 }
 
@@ -7151,6 +7494,12 @@ func (to *CreateCluster_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Contex
 			}
 		}
 	}
+	if !from.CustomTags.IsNull() && !from.CustomTags.IsUnknown() && to.CustomTags.IsNull() && len(from.CustomTags.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for CustomTags, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.CustomTags = from.CustomTags
+	}
 	if !from.DockerImage.IsNull() && !from.DockerImage.IsUnknown() {
 		if toDockerImage, ok := to.GetDockerImage(ctx); ok {
 			if fromDockerImage, ok := from.GetDockerImage(ctx); ok {
@@ -7196,6 +7545,18 @@ func (to *CreateCluster_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Contex
 				to.SetInitScripts(ctx, toInitScripts)
 			}
 		}
+	}
+	if !from.SparkConf.IsNull() && !from.SparkConf.IsUnknown() && to.SparkConf.IsNull() && len(from.SparkConf.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for SparkConf, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.SparkConf = from.SparkConf
+	}
+	if !from.SparkEnvVars.IsNull() && !from.SparkEnvVars.IsUnknown() && to.SparkEnvVars.IsNull() && len(from.SparkEnvVars.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for SparkEnvVars, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.SparkEnvVars = from.SparkEnvVars
 	}
 	if !from.SshPublicKeys.IsNull() && !from.SshPublicKeys.IsUnknown() && to.SshPublicKeys.IsNull() && len(from.SshPublicKeys.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
@@ -7264,6 +7625,12 @@ func (to *CreateCluster_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Cr
 			}
 		}
 	}
+	if !from.CustomTags.IsNull() && !from.CustomTags.IsUnknown() && to.CustomTags.IsNull() && len(from.CustomTags.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for CustomTags, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.CustomTags = from.CustomTags
+	}
 	if !from.DockerImage.IsNull() && !from.DockerImage.IsUnknown() {
 		if toDockerImage, ok := to.GetDockerImage(ctx); ok {
 			if fromDockerImage, ok := from.GetDockerImage(ctx); ok {
@@ -7305,6 +7672,18 @@ func (to *CreateCluster_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Cr
 				to.SetInitScripts(ctx, toInitScripts)
 			}
 		}
+	}
+	if !from.SparkConf.IsNull() && !from.SparkConf.IsUnknown() && to.SparkConf.IsNull() && len(from.SparkConf.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for SparkConf, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.SparkConf = from.SparkConf
+	}
+	if !from.SparkEnvVars.IsNull() && !from.SparkEnvVars.IsUnknown() && to.SparkEnvVars.IsNull() && len(from.SparkEnvVars.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for SparkEnvVars, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.SparkEnvVars = from.SparkEnvVars
 	}
 	if !from.SshPublicKeys.IsNull() && !from.SshPublicKeys.IsUnknown() && to.SshPublicKeys.IsNull() && len(from.SshPublicKeys.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
@@ -8108,6 +8487,12 @@ func (to *CreateInstancePool_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.C
 			}
 		}
 	}
+	if !from.CustomTags.IsNull() && !from.CustomTags.IsUnknown() && to.CustomTags.IsNull() && len(from.CustomTags.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for CustomTags, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.CustomTags = from.CustomTags
+	}
 	if !from.DiskSpec.IsNull() && !from.DiskSpec.IsUnknown() {
 		if toDiskSpec, ok := to.GetDiskSpec(ctx); ok {
 			if fromDiskSpec, ok := from.GetDiskSpec(ctx); ok {
@@ -8178,6 +8563,12 @@ func (to *CreateInstancePool_SdkV2) SyncFieldsDuringRead(ctx context.Context, fr
 				to.SetAzureAttributes(ctx, toAzureAttributes)
 			}
 		}
+	}
+	if !from.CustomTags.IsNull() && !from.CustomTags.IsUnknown() && to.CustomTags.IsNull() && len(from.CustomTags.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for CustomTags, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.CustomTags = from.CustomTags
 	}
 	if !from.DiskSpec.IsNull() && !from.DiskSpec.IsUnknown() {
 		if toDiskSpec, ok := to.GetDiskSpec(ctx); ok {
@@ -9719,9 +10110,9 @@ func (m DiskType_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type DockerBasicAuth_SdkV2 struct {
-	// Password of the user
+	// Password for authenticating to the Docker registry that hosts the image.
 	Password types.String `tfsdk:"password"`
-	// Name of the user
+	// User name for authenticating to the Docker registry that hosts the image.
 	Username types.String `tfsdk:"username"`
 }
 
@@ -9883,9 +10274,9 @@ type EditCluster_SdkV2 struct {
 	Autoscale types.List `tfsdk:"autoscale"`
 	// Automatically terminates the cluster after it is inactive for this time
 	// in minutes. If not set, this cluster will not be automatically
-	// terminated. If specified, the threshold must be between 10 and 10000
-	// minutes. Users can also set this value to 0 to explicitly disable
-	// automatic termination.
+	// terminated. If specified, the threshold must be between 10 and 43200
+	// minutes (30 days). Users can also set this value to 0 to explicitly
+	// disable automatic termination.
 	AutoterminationMinutes types.Int64 `tfsdk:"autotermination_minutes"`
 	// Attributes related to clusters running on Amazon Web Services. If not
 	// specified at cluster creation, a set of default values will be used.
@@ -9917,11 +10308,43 @@ type EditCluster_SdkV2 struct {
 	// - Clusters can only reuse cloud resources if the resources' tags are a
 	// subset of the cluster tags
 	CustomTags types.Map `tfsdk:"custom_tags"`
-
+	// Data security mode decides what data governance model to use when
+	// accessing data from a cluster.
+	//
+	// * `DATA_SECURITY_MODE_AUTO`: Databricks will choose the most appropriate
+	// access mode depending on your compute configuration. *
+	// `DATA_SECURITY_MODE_STANDARD`: A secure cluster that can be shared by
+	// multiple users. Cluster users are fully isolated so that they cannot see
+	// each other's data and credentials. Most data governance features are
+	// supported in this mode. But programming languages and cluster features
+	// might be limited. * `DATA_SECURITY_MODE_DEDICATED`: A secure cluster that
+	// can only be exclusively used by a single user specified in
+	// `single_user_name`. Most programming languages, cluster features and data
+	// governance features are available in this mode. * `NONE`: No security
+	// isolation for multiple users sharing the cluster. Data governance
+	// features are not available in this mode.
+	//
+	// The following modes are legacy aliases for the above modes:
+	//
+	// * `USER_ISOLATION`: Legacy alias for `DATA_SECURITY_MODE_STANDARD`. *
+	// `SINGLE_USER`: Legacy alias for `DATA_SECURITY_MODE_DEDICATED`.
+	//
+	// The following modes are deprecated starting with Databricks Runtime 15.0
+	// and will be removed for future Databricks Runtime versions:
+	//
+	// * `LEGACY_TABLE_ACL`: This mode is for users migrating from legacy Table
+	// ACL clusters. * `LEGACY_PASSTHROUGH`: This mode is for users migrating
+	// from legacy Passthrough on high concurrency clusters. *
+	// `LEGACY_SINGLE_USER`: This mode is for users migrating from legacy
+	// Passthrough on standard clusters. * `LEGACY_SINGLE_USER_STANDARD`: This
+	// mode provides a way that doesn't have UC or passthrough enabled.
 	DataSecurityMode types.String `tfsdk:"data_security_mode"`
 	// Controls dependency configuration for the cluster.
 	DependencyMode types.String `tfsdk:"dependency_mode"`
-	// Custom docker image BYOC
+	// Custom Docker image for the cluster's nodes, used with [Databricks
+	// Container Services].
+	//
+	// [Databricks Container Services]: https://docs.databricks.com/compute/custom-containers.html
 	DockerImage types.List `tfsdk:"docker_image"`
 	// The optional ID of the instance pool for the driver of the cluster
 	// belongs. The pool cluster uses the instance pool with id
@@ -9954,7 +10377,21 @@ type EditCluster_SdkV2 struct {
 	// When set to true, Databricks will automatically set single node related
 	// `custom_tags`, `spark_conf`, and `num_workers`
 	IsSingleNode types.Bool `tfsdk:"is_single_node"`
-
+	// The kind of compute described by this compute specification.
+	//
+	// Depending on `kind`, different validations and default values will be
+	// applied.
+	//
+	// Clusters with `kind = CLASSIC_PREVIEW` support the following fields,
+	// whereas clusters with no specified `kind` do not. * [is_single_node] *
+	// [use_ml_runtime]
+	//
+	// By using the [simple form], your clusters are automatically using `kind =
+	// CLASSIC_PREVIEW`.
+	//
+	// [is_single_node]: https://docs.databricks.com/api/workspace/clusters/create#is_single_node
+	// [simple form]: https://docs.databricks.com/compute/simple-form.html
+	// [use_ml_runtime]: https://docs.databricks.com/api/workspace/clusters/create#use_ml_runtime
 	Kind types.String `tfsdk:"kind"`
 	// This field encodes, through a single value, the resources available to
 	// each of the Spark nodes in this cluster. For example, the Spark nodes can
@@ -10032,7 +10469,8 @@ type EditCluster_SdkV2 struct {
 	UseMlRuntime types.Bool `tfsdk:"use_ml_runtime"`
 	// Flexible node type configuration for worker nodes.
 	WorkerNodeTypeFlexibility types.List `tfsdk:"worker_node_type_flexibility"`
-
+	// Types of workloads that can use the cluster, such as notebooks or jobs.
+	// If omitted, the cluster can be used for both notebooks and jobs.
 	WorkloadType types.List `tfsdk:"workload_type"`
 }
 
@@ -10072,6 +10510,12 @@ func (to *EditCluster_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context,
 				to.SetClusterLogConf(ctx, toClusterLogConf)
 			}
 		}
+	}
+	if !from.CustomTags.IsNull() && !from.CustomTags.IsUnknown() && to.CustomTags.IsNull() && len(from.CustomTags.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for CustomTags, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.CustomTags = from.CustomTags
 	}
 	if !from.DockerImage.IsNull() && !from.DockerImage.IsUnknown() {
 		if toDockerImage, ok := to.GetDockerImage(ctx); ok {
@@ -10118,6 +10562,18 @@ func (to *EditCluster_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context,
 				to.SetInitScripts(ctx, toInitScripts)
 			}
 		}
+	}
+	if !from.SparkConf.IsNull() && !from.SparkConf.IsUnknown() && to.SparkConf.IsNull() && len(from.SparkConf.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for SparkConf, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.SparkConf = from.SparkConf
+	}
+	if !from.SparkEnvVars.IsNull() && !from.SparkEnvVars.IsUnknown() && to.SparkEnvVars.IsNull() && len(from.SparkEnvVars.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for SparkEnvVars, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.SparkEnvVars = from.SparkEnvVars
 	}
 	if !from.SshPublicKeys.IsNull() && !from.SshPublicKeys.IsUnknown() && to.SshPublicKeys.IsNull() && len(from.SshPublicKeys.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
@@ -10178,6 +10634,12 @@ func (to *EditCluster_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Edit
 			}
 		}
 	}
+	if !from.CustomTags.IsNull() && !from.CustomTags.IsUnknown() && to.CustomTags.IsNull() && len(from.CustomTags.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for CustomTags, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.CustomTags = from.CustomTags
+	}
 	if !from.DockerImage.IsNull() && !from.DockerImage.IsUnknown() {
 		if toDockerImage, ok := to.GetDockerImage(ctx); ok {
 			if fromDockerImage, ok := from.GetDockerImage(ctx); ok {
@@ -10219,6 +10681,18 @@ func (to *EditCluster_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Edit
 				to.SetInitScripts(ctx, toInitScripts)
 			}
 		}
+	}
+	if !from.SparkConf.IsNull() && !from.SparkConf.IsUnknown() && to.SparkConf.IsNull() && len(from.SparkConf.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for SparkConf, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.SparkConf = from.SparkConf
+	}
+	if !from.SparkEnvVars.IsNull() && !from.SparkEnvVars.IsUnknown() && to.SparkEnvVars.IsNull() && len(from.SparkEnvVars.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for SparkEnvVars, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.SparkEnvVars = from.SparkEnvVars
 	}
 	if !from.SshPublicKeys.IsNull() && !from.SshPublicKeys.IsUnknown() && to.SshPublicKeys.IsNull() && len(from.SshPublicKeys.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
@@ -10887,9 +11361,21 @@ type EditInstancePool_SdkV2 struct {
 }
 
 func (to *EditInstancePool_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from EditInstancePool_SdkV2) {
+	if !from.CustomTags.IsNull() && !from.CustomTags.IsUnknown() && to.CustomTags.IsNull() && len(from.CustomTags.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for CustomTags, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.CustomTags = from.CustomTags
+	}
 }
 
 func (to *EditInstancePool_SdkV2) SyncFieldsDuringRead(ctx context.Context, from EditInstancePool_SdkV2) {
+	if !from.CustomTags.IsNull() && !from.CustomTags.IsUnknown() && to.CustomTags.IsNull() && len(from.CustomTags.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for CustomTags, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.CustomTags = from.CustomTags
+	}
 }
 
 func (m EditInstancePool_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -11480,9 +11966,9 @@ type EnforcePolicyComplianceForClusterResponseClusterSettings_SdkV2 struct {
 	Autoscale types.List `tfsdk:"autoscale"`
 	// Automatically terminates the cluster after it is inactive for this time
 	// in minutes. If not set, this cluster will not be automatically
-	// terminated. If specified, the threshold must be between 10 and 10000
-	// minutes. Users can also set this value to 0 to explicitly disable
-	// automatic termination.
+	// terminated. If specified, the threshold must be between 10 and 43200
+	// minutes (30 days). Users can also set this value to 0 to explicitly
+	// disable automatic termination.
 	AutoterminationMinutes types.Int64 `tfsdk:"autotermination_minutes"`
 	// Attributes related to clusters running on Amazon Web Services. If not
 	// specified at cluster creation, a set of default values will be used.
@@ -11512,11 +11998,43 @@ type EnforcePolicyComplianceForClusterResponseClusterSettings_SdkV2 struct {
 	// - Clusters can only reuse cloud resources if the resources' tags are a
 	// subset of the cluster tags
 	CustomTags types.Map `tfsdk:"custom_tags"`
-
+	// Data security mode decides what data governance model to use when
+	// accessing data from a cluster.
+	//
+	// * `DATA_SECURITY_MODE_AUTO`: Databricks will choose the most appropriate
+	// access mode depending on your compute configuration. *
+	// `DATA_SECURITY_MODE_STANDARD`: A secure cluster that can be shared by
+	// multiple users. Cluster users are fully isolated so that they cannot see
+	// each other's data and credentials. Most data governance features are
+	// supported in this mode. But programming languages and cluster features
+	// might be limited. * `DATA_SECURITY_MODE_DEDICATED`: A secure cluster that
+	// can only be exclusively used by a single user specified in
+	// `single_user_name`. Most programming languages, cluster features and data
+	// governance features are available in this mode. * `NONE`: No security
+	// isolation for multiple users sharing the cluster. Data governance
+	// features are not available in this mode.
+	//
+	// The following modes are legacy aliases for the above modes:
+	//
+	// * `USER_ISOLATION`: Legacy alias for `DATA_SECURITY_MODE_STANDARD`. *
+	// `SINGLE_USER`: Legacy alias for `DATA_SECURITY_MODE_DEDICATED`.
+	//
+	// The following modes are deprecated starting with Databricks Runtime 15.0
+	// and will be removed for future Databricks Runtime versions:
+	//
+	// * `LEGACY_TABLE_ACL`: This mode is for users migrating from legacy Table
+	// ACL clusters. * `LEGACY_PASSTHROUGH`: This mode is for users migrating
+	// from legacy Passthrough on high concurrency clusters. *
+	// `LEGACY_SINGLE_USER`: This mode is for users migrating from legacy
+	// Passthrough on standard clusters. * `LEGACY_SINGLE_USER_STANDARD`: This
+	// mode provides a way that doesn't have UC or passthrough enabled.
 	DataSecurityMode types.String `tfsdk:"data_security_mode"`
 	// Controls dependency configuration for the cluster.
 	DependencyMode types.String `tfsdk:"dependency_mode"`
-	// Custom docker image BYOC
+	// Custom Docker image for the cluster's nodes, used with [Databricks
+	// Container Services].
+	//
+	// [Databricks Container Services]: https://docs.databricks.com/compute/custom-containers.html
 	DockerImage types.List `tfsdk:"docker_image"`
 	// The optional ID of the instance pool for the driver of the cluster
 	// belongs. The pool cluster uses the instance pool with id
@@ -11549,7 +12067,21 @@ type EnforcePolicyComplianceForClusterResponseClusterSettings_SdkV2 struct {
 	// When set to true, Databricks will automatically set single node related
 	// `custom_tags`, `spark_conf`, and `num_workers`
 	IsSingleNode types.Bool `tfsdk:"is_single_node"`
-
+	// The kind of compute described by this compute specification.
+	//
+	// Depending on `kind`, different validations and default values will be
+	// applied.
+	//
+	// Clusters with `kind = CLASSIC_PREVIEW` support the following fields,
+	// whereas clusters with no specified `kind` do not. * [is_single_node] *
+	// [use_ml_runtime]
+	//
+	// By using the [simple form], your clusters are automatically using `kind =
+	// CLASSIC_PREVIEW`.
+	//
+	// [is_single_node]: https://docs.databricks.com/api/workspace/clusters/create#is_single_node
+	// [simple form]: https://docs.databricks.com/compute/simple-form.html
+	// [use_ml_runtime]: https://docs.databricks.com/api/workspace/clusters/create#use_ml_runtime
 	Kind types.String `tfsdk:"kind"`
 	// This field encodes, through a single value, the resources available to
 	// each of the Spark nodes in this cluster. For example, the Spark nodes can
@@ -11627,7 +12159,8 @@ type EnforcePolicyComplianceForClusterResponseClusterSettings_SdkV2 struct {
 	UseMlRuntime types.Bool `tfsdk:"use_ml_runtime"`
 	// Flexible node type configuration for worker nodes.
 	WorkerNodeTypeFlexibility types.List `tfsdk:"worker_node_type_flexibility"`
-
+	// Types of workloads that can use the cluster, such as notebooks or jobs.
+	// If omitted, the cluster can be used for both notebooks and jobs.
 	WorkloadType types.List `tfsdk:"workload_type"`
 }
 
@@ -11667,6 +12200,12 @@ func (to *EnforcePolicyComplianceForClusterResponseClusterSettings_SdkV2) SyncFi
 				to.SetClusterLogConf(ctx, toClusterLogConf)
 			}
 		}
+	}
+	if !from.CustomTags.IsNull() && !from.CustomTags.IsUnknown() && to.CustomTags.IsNull() && len(from.CustomTags.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for CustomTags, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.CustomTags = from.CustomTags
 	}
 	if !from.DockerImage.IsNull() && !from.DockerImage.IsUnknown() {
 		if toDockerImage, ok := to.GetDockerImage(ctx); ok {
@@ -11713,6 +12252,18 @@ func (to *EnforcePolicyComplianceForClusterResponseClusterSettings_SdkV2) SyncFi
 				to.SetInitScripts(ctx, toInitScripts)
 			}
 		}
+	}
+	if !from.SparkConf.IsNull() && !from.SparkConf.IsUnknown() && to.SparkConf.IsNull() && len(from.SparkConf.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for SparkConf, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.SparkConf = from.SparkConf
+	}
+	if !from.SparkEnvVars.IsNull() && !from.SparkEnvVars.IsUnknown() && to.SparkEnvVars.IsNull() && len(from.SparkEnvVars.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for SparkEnvVars, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.SparkEnvVars = from.SparkEnvVars
 	}
 	if !from.SshPublicKeys.IsNull() && !from.SshPublicKeys.IsUnknown() && to.SshPublicKeys.IsNull() && len(from.SshPublicKeys.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
@@ -11773,6 +12324,12 @@ func (to *EnforcePolicyComplianceForClusterResponseClusterSettings_SdkV2) SyncFi
 			}
 		}
 	}
+	if !from.CustomTags.IsNull() && !from.CustomTags.IsUnknown() && to.CustomTags.IsNull() && len(from.CustomTags.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for CustomTags, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.CustomTags = from.CustomTags
+	}
 	if !from.DockerImage.IsNull() && !from.DockerImage.IsUnknown() {
 		if toDockerImage, ok := to.GetDockerImage(ctx); ok {
 			if fromDockerImage, ok := from.GetDockerImage(ctx); ok {
@@ -11814,6 +12371,18 @@ func (to *EnforcePolicyComplianceForClusterResponseClusterSettings_SdkV2) SyncFi
 				to.SetInitScripts(ctx, toInitScripts)
 			}
 		}
+	}
+	if !from.SparkConf.IsNull() && !from.SparkConf.IsUnknown() && to.SparkConf.IsNull() && len(from.SparkConf.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for SparkConf, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.SparkConf = from.SparkConf
+	}
+	if !from.SparkEnvVars.IsNull() && !from.SparkEnvVars.IsUnknown() && to.SparkEnvVars.IsNull() && len(from.SparkEnvVars.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for SparkEnvVars, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.SparkEnvVars = from.SparkEnvVars
 	}
 	if !from.SshPublicKeys.IsNull() && !from.SshPublicKeys.IsUnknown() && to.SshPublicKeys.IsNull() && len(from.SshPublicKeys.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
@@ -12600,7 +13169,8 @@ type EventDetails_SdkV2 struct {
 	CurrentNumVcpus types.Int64 `tfsdk:"current_num_vcpus"`
 	// The current number of nodes in the cluster.
 	CurrentNumWorkers types.Int64 `tfsdk:"current_num_workers"`
-
+	// The reason the disk was not expanded. Included in `DID_NOT_EXPAND_DISK`
+	// and `FAILED_TO_EXPAND_DISK` events.
 	DidNotExpandReason types.String `tfsdk:"did_not_expand_reason"`
 	// Current disk size in bytes
 	DiskSize types.Int64 `tfsdk:"disk_size"`
@@ -12609,7 +13179,8 @@ type EventDetails_SdkV2 struct {
 	// Whether or not a blocklisted node should be terminated. For
 	// ClusterEventType NODE_BLACKLISTED.
 	EnableTerminationForNodeBlocklisted types.Bool `tfsdk:"enable_termination_for_node_blocklisted"`
-
+	// Free disk space in bytes. Included in disk expansion events such as
+	// `EXPANDED_DISK` and `DID_NOT_EXPAND_DISK`.
 	FreeSpace types.Int64 `tfsdk:"free_space"`
 	// List of global and cluster init scripts associated with this cluster
 	// event.
@@ -13257,6 +13828,12 @@ func (to *GetClusterComplianceResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx
 			}
 		}
 	}
+	if !from.Violations.IsNull() && !from.Violations.IsUnknown() && to.Violations.IsNull() && len(from.Violations.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for Violations, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.Violations = from.Violations
+	}
 }
 
 func (to *GetClusterComplianceResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from GetClusterComplianceResponse_SdkV2) {
@@ -13267,6 +13844,12 @@ func (to *GetClusterComplianceResponse_SdkV2) SyncFieldsDuringRead(ctx context.C
 				to.SetPendingEnforcement(ctx, toPendingEnforcement)
 			}
 		}
+	}
+	if !from.Violations.IsNull() && !from.Violations.IsUnknown() && to.Violations.IsNull() && len(from.Violations.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for Violations, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.Violations = from.Violations
 	}
 }
 
@@ -14038,6 +14621,7 @@ func (m *GetEvents_SdkV2) SetEventTypes(ctx context.Context, v []types.String) {
 }
 
 type GetEventsResponse_SdkV2 struct {
+	// The events matching the request, in the requested `order`.
 	Events types.List `tfsdk:"events"`
 	// Deprecated: use next_page_token or prev_page_token instead.
 	//
@@ -14294,11 +14878,9 @@ type GetInstancePool_SdkV2 struct {
 	//
 	// - Vendor: Databricks
 	//
-	// - InstancePoolCreator: <user_id_of_creator>
+	// - DatabricksInstancePoolCreatorId: <user_id_of_creator>
 	//
-	// - InstancePoolName: <name_of_pool>
-	//
-	// - InstancePoolId: <id_of_pool>
+	// - DatabricksInstancePoolId: <id_of_pool>
 	DefaultTags types.Map `tfsdk:"default_tags"`
 	// Defines the specification of the disks that will be attached to all spark
 	// containers.
@@ -14383,6 +14965,18 @@ func (to *GetInstancePool_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Cont
 				to.SetAzureAttributes(ctx, toAzureAttributes)
 			}
 		}
+	}
+	if !from.CustomTags.IsNull() && !from.CustomTags.IsUnknown() && to.CustomTags.IsNull() && len(from.CustomTags.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for CustomTags, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.CustomTags = from.CustomTags
+	}
+	if !from.DefaultTags.IsNull() && !from.DefaultTags.IsUnknown() && to.DefaultTags.IsNull() && len(from.DefaultTags.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for DefaultTags, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.DefaultTags = from.DefaultTags
 	}
 	if !from.DiskSpec.IsNull() && !from.DiskSpec.IsUnknown() {
 		if toDiskSpec, ok := to.GetDiskSpec(ctx); ok {
@@ -14472,6 +15066,18 @@ func (to *GetInstancePool_SdkV2) SyncFieldsDuringRead(ctx context.Context, from 
 				to.SetAzureAttributes(ctx, toAzureAttributes)
 			}
 		}
+	}
+	if !from.CustomTags.IsNull() && !from.CustomTags.IsUnknown() && to.CustomTags.IsNull() && len(from.CustomTags.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for CustomTags, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.CustomTags = from.CustomTags
+	}
+	if !from.DefaultTags.IsNull() && !from.DefaultTags.IsUnknown() && to.DefaultTags.IsNull() && len(from.DefaultTags.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for DefaultTags, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.DefaultTags = from.DefaultTags
 	}
 	if !from.DiskSpec.IsNull() && !from.DiskSpec.IsUnknown() {
 		if toDiskSpec, ok := to.GetDiskSpec(ctx); ok {
@@ -17141,11 +17747,9 @@ type InstancePoolAndStats_SdkV2 struct {
 	//
 	// - Vendor: Databricks
 	//
-	// - InstancePoolCreator: <user_id_of_creator>
+	// - DatabricksInstancePoolCreatorId: <user_id_of_creator>
 	//
-	// - InstancePoolName: <name_of_pool>
-	//
-	// - InstancePoolId: <id_of_pool>
+	// - DatabricksInstancePoolId: <id_of_pool>
 	DefaultTags types.Map `tfsdk:"default_tags"`
 	// Defines the specification of the disks that will be attached to all spark
 	// containers.
@@ -17230,6 +17834,18 @@ func (to *InstancePoolAndStats_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context
 				to.SetAzureAttributes(ctx, toAzureAttributes)
 			}
 		}
+	}
+	if !from.CustomTags.IsNull() && !from.CustomTags.IsUnknown() && to.CustomTags.IsNull() && len(from.CustomTags.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for CustomTags, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.CustomTags = from.CustomTags
+	}
+	if !from.DefaultTags.IsNull() && !from.DefaultTags.IsUnknown() && to.DefaultTags.IsNull() && len(from.DefaultTags.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for DefaultTags, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.DefaultTags = from.DefaultTags
 	}
 	if !from.DiskSpec.IsNull() && !from.DiskSpec.IsUnknown() {
 		if toDiskSpec, ok := to.GetDiskSpec(ctx); ok {
@@ -17319,6 +17935,18 @@ func (to *InstancePoolAndStats_SdkV2) SyncFieldsDuringRead(ctx context.Context, 
 				to.SetAzureAttributes(ctx, toAzureAttributes)
 			}
 		}
+	}
+	if !from.CustomTags.IsNull() && !from.CustomTags.IsUnknown() && to.CustomTags.IsNull() && len(from.CustomTags.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for CustomTags, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.CustomTags = from.CustomTags
+	}
+	if !from.DefaultTags.IsNull() && !from.DefaultTags.IsUnknown() && to.DefaultTags.IsNull() && len(from.DefaultTags.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for DefaultTags, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.DefaultTags = from.DefaultTags
 	}
 	if !from.DiskSpec.IsNull() && !from.DiskSpec.IsUnknown() {
 		if toDiskSpec, ok := to.GetDiskSpec(ctx); ok {
@@ -18804,12 +19432,14 @@ func (m LakebaseConstraints_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// A library to install on a cluster. Exactly one of the library-type fields
+// must be set.
 type Library_SdkV2 struct {
-	// Specification of a CRAN library to be installed as part of the library
+	// Specification of a CRAN library to be installed.
 	Cran types.List `tfsdk:"cran"`
-	// Deprecated. URI of the egg library to install. Installing Python egg
-	// files is deprecated and is not supported in Databricks Runtime 14.0 and
-	// above.
+	// Deprecated: Installing Python egg files is not supported in Databricks
+	// Runtime 14.0 and above. Use a wheel (`whl`) or a PyPI package (`pypi`)
+	// instead. The value is the URI of the egg file to install.
 	Egg types.String `tfsdk:"egg"`
 	// URI of the JAR library to install. Supported URIs include Workspace
 	// paths, Unity Catalog Volumes paths, and S3 URIs. For example: `{ "jar":
@@ -18822,13 +19452,14 @@ type Library_SdkV2 struct {
 	// Specification of a maven library to be installed. For example: `{
 	// "coordinates": "org.jsoup:jsoup:1.7.2" }`
 	Maven types.List `tfsdk:"maven"`
-	// Specification of a PyPi library to be installed. For example: `{
+	// Specification of a PyPI library to be installed. For example: `{
 	// "package": "simplejson" }`
 	Pypi types.List `tfsdk:"pypi"`
 	// URI of the requirements.txt file to install. Only Workspace paths and
 	// Unity Catalog Volumes paths are supported. For example: `{
 	// "requirements": "/Workspace/path/to/requirements.txt" }` or `{
-	// "requirements" : "/Volumes/path/to/requirements.txt" }`
+	// "requirements" : "/Volumes/path/to/requirements.txt" }`. Installing a
+	// requirements file requires Databricks Runtime 15.0 or above.
 	Requirements types.String `tfsdk:"requirements"`
 	// URI of the wheel library to install. Supported URIs include Workspace
 	// paths, Unity Catalog Volumes paths, and S3 URIs. For example: `{ "whl":
@@ -19048,12 +19679,17 @@ type LibraryFullStatus_SdkV2 struct {
 	// Whether the library was set to be installed on all clusters via the
 	// libraries UI.
 	IsLibraryForAllClusters types.Bool `tfsdk:"is_library_for_all_clusters"`
-	// Unique identifier for the library.
+	// The library whose status is reported.
 	Library types.List `tfsdk:"library"`
 	// All the info and warning messages that have occurred so far for this
 	// library.
 	Messages types.List `tfsdk:"messages"`
-	// Status of installing the library on the cluster.
+	// Status of installing the library on the cluster. The status starts at
+	// PENDING and ends at INSTALLED, FAILED or SKIPPED. Intermediate states are
+	// not always reported. A library stays UNINSTALL_ON_RESTART after an
+	// uninstall request until the cluster restarts. While the cluster is not
+	// running, libraries are reported as PENDING, and libraries marked for
+	// uninstall are omitted.
 	Status types.String `tfsdk:"status"`
 }
 
@@ -21536,8 +22172,11 @@ func (m LocalFileInfo_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type LogAnalyticsInfo_SdkV2 struct {
+	// Primary key of the Azure Log Analytics workspace. The agent uses it to
+	// authenticate when reporting to the workspace.
 	LogAnalyticsPrimaryKey types.String `tfsdk:"log_analytics_primary_key"`
-
+	// ID of the Azure Log Analytics workspace that the Log Analytics agent on
+	// the cluster's nodes reports to.
 	LogAnalyticsWorkspaceId types.String `tfsdk:"log_analytics_workspace_id"`
 }
 
@@ -21646,7 +22285,7 @@ func (m LogSyncStatus_SdkV2) Type(ctx context.Context) attr.Type {
 type MavenLibrary_SdkV2 struct {
 	// Gradle-style maven coordinates. For example: "org.jsoup:jsoup:1.7.2".
 	Coordinates types.String `tfsdk:"coordinates"`
-	// List of dependences to exclude. For example: `["slf4j:slf4j",
+	// List of dependencies to exclude. For example: `["slf4j:slf4j",
 	// "*:hadoop-client"]`.
 	//
 	// Maven dependency exclusions:
@@ -22844,7 +23483,7 @@ func (m PolicyFamily_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type PythonPyPiLibrary_SdkV2 struct {
-	// The name of the pypi package to install. An optional exact version
+	// The name of the PyPI package to install. An optional exact version
 	// specification is also supported. Examples: "simplejson" and
 	// "simplejson==3.8.0".
 	Package types.String `tfsdk:"package"`
@@ -23258,7 +23897,9 @@ func (m ResizeClusterResponse_SdkV2) Type(ctx context.Context) attr.Type {
 type RestartCluster_SdkV2 struct {
 	// The cluster to be started.
 	ClusterId types.String `tfsdk:"cluster_id"`
-
+	// User name recorded in the `RESTARTING` cluster event as the user who
+	// restarted the cluster. If omitted, the name of the user making the
+	// request is recorded.
 	RestartUser types.String `tfsdk:"restart_user"`
 }
 
@@ -24095,9 +24736,21 @@ type TerminationReason_SdkV2 struct {
 }
 
 func (to *TerminationReason_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from TerminationReason_SdkV2) {
+	if !from.Parameters.IsNull() && !from.Parameters.IsUnknown() && to.Parameters.IsNull() && len(from.Parameters.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for Parameters, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.Parameters = from.Parameters
+	}
 }
 
 func (to *TerminationReason_SdkV2) SyncFieldsDuringRead(ctx context.Context, from TerminationReason_SdkV2) {
+	if !from.Parameters.IsNull() && !from.Parameters.IsUnknown() && to.Parameters.IsNull() && len(from.Parameters.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for Parameters, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.Parameters = from.Parameters
+	}
 }
 
 func (m TerminationReason_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -24536,9 +25189,9 @@ type UpdateClusterResource_SdkV2 struct {
 	Autoscale types.List `tfsdk:"autoscale"`
 	// Automatically terminates the cluster after it is inactive for this time
 	// in minutes. If not set, this cluster will not be automatically
-	// terminated. If specified, the threshold must be between 10 and 10000
-	// minutes. Users can also set this value to 0 to explicitly disable
-	// automatic termination.
+	// terminated. If specified, the threshold must be between 10 and 43200
+	// minutes (30 days). Users can also set this value to 0 to explicitly
+	// disable automatic termination.
 	AutoterminationMinutes types.Int64 `tfsdk:"autotermination_minutes"`
 	// Attributes related to clusters running on Amazon Web Services. If not
 	// specified at cluster creation, a set of default values will be used.
@@ -24568,11 +25221,43 @@ type UpdateClusterResource_SdkV2 struct {
 	// - Clusters can only reuse cloud resources if the resources' tags are a
 	// subset of the cluster tags
 	CustomTags types.Map `tfsdk:"custom_tags"`
-
+	// Data security mode decides what data governance model to use when
+	// accessing data from a cluster.
+	//
+	// * `DATA_SECURITY_MODE_AUTO`: Databricks will choose the most appropriate
+	// access mode depending on your compute configuration. *
+	// `DATA_SECURITY_MODE_STANDARD`: A secure cluster that can be shared by
+	// multiple users. Cluster users are fully isolated so that they cannot see
+	// each other's data and credentials. Most data governance features are
+	// supported in this mode. But programming languages and cluster features
+	// might be limited. * `DATA_SECURITY_MODE_DEDICATED`: A secure cluster that
+	// can only be exclusively used by a single user specified in
+	// `single_user_name`. Most programming languages, cluster features and data
+	// governance features are available in this mode. * `NONE`: No security
+	// isolation for multiple users sharing the cluster. Data governance
+	// features are not available in this mode.
+	//
+	// The following modes are legacy aliases for the above modes:
+	//
+	// * `USER_ISOLATION`: Legacy alias for `DATA_SECURITY_MODE_STANDARD`. *
+	// `SINGLE_USER`: Legacy alias for `DATA_SECURITY_MODE_DEDICATED`.
+	//
+	// The following modes are deprecated starting with Databricks Runtime 15.0
+	// and will be removed for future Databricks Runtime versions:
+	//
+	// * `LEGACY_TABLE_ACL`: This mode is for users migrating from legacy Table
+	// ACL clusters. * `LEGACY_PASSTHROUGH`: This mode is for users migrating
+	// from legacy Passthrough on high concurrency clusters. *
+	// `LEGACY_SINGLE_USER`: This mode is for users migrating from legacy
+	// Passthrough on standard clusters. * `LEGACY_SINGLE_USER_STANDARD`: This
+	// mode provides a way that doesn't have UC or passthrough enabled.
 	DataSecurityMode types.String `tfsdk:"data_security_mode"`
 	// Controls dependency configuration for the cluster.
 	DependencyMode types.String `tfsdk:"dependency_mode"`
-	// Custom docker image BYOC
+	// Custom Docker image for the cluster's nodes, used with [Databricks
+	// Container Services].
+	//
+	// [Databricks Container Services]: https://docs.databricks.com/compute/custom-containers.html
 	DockerImage types.List `tfsdk:"docker_image"`
 	// The optional ID of the instance pool for the driver of the cluster
 	// belongs. The pool cluster uses the instance pool with id
@@ -24605,7 +25290,21 @@ type UpdateClusterResource_SdkV2 struct {
 	// When set to true, Databricks will automatically set single node related
 	// `custom_tags`, `spark_conf`, and `num_workers`
 	IsSingleNode types.Bool `tfsdk:"is_single_node"`
-
+	// The kind of compute described by this compute specification.
+	//
+	// Depending on `kind`, different validations and default values will be
+	// applied.
+	//
+	// Clusters with `kind = CLASSIC_PREVIEW` support the following fields,
+	// whereas clusters with no specified `kind` do not. * [is_single_node] *
+	// [use_ml_runtime]
+	//
+	// By using the [simple form], your clusters are automatically using `kind =
+	// CLASSIC_PREVIEW`.
+	//
+	// [is_single_node]: https://docs.databricks.com/api/workspace/clusters/create#is_single_node
+	// [simple form]: https://docs.databricks.com/compute/simple-form.html
+	// [use_ml_runtime]: https://docs.databricks.com/api/workspace/clusters/create#use_ml_runtime
 	Kind types.String `tfsdk:"kind"`
 	// This field encodes, through a single value, the resources available to
 	// each of the Spark nodes in this cluster. For example, the Spark nodes can
@@ -24683,7 +25382,8 @@ type UpdateClusterResource_SdkV2 struct {
 	UseMlRuntime types.Bool `tfsdk:"use_ml_runtime"`
 	// Flexible node type configuration for worker nodes.
 	WorkerNodeTypeFlexibility types.List `tfsdk:"worker_node_type_flexibility"`
-
+	// Types of workloads that can use the cluster, such as notebooks or jobs.
+	// If omitted, the cluster can be used for both notebooks and jobs.
 	WorkloadType types.List `tfsdk:"workload_type"`
 }
 
@@ -24723,6 +25423,12 @@ func (to *UpdateClusterResource_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx contex
 				to.SetClusterLogConf(ctx, toClusterLogConf)
 			}
 		}
+	}
+	if !from.CustomTags.IsNull() && !from.CustomTags.IsUnknown() && to.CustomTags.IsNull() && len(from.CustomTags.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for CustomTags, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.CustomTags = from.CustomTags
 	}
 	if !from.DockerImage.IsNull() && !from.DockerImage.IsUnknown() {
 		if toDockerImage, ok := to.GetDockerImage(ctx); ok {
@@ -24769,6 +25475,18 @@ func (to *UpdateClusterResource_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx contex
 				to.SetInitScripts(ctx, toInitScripts)
 			}
 		}
+	}
+	if !from.SparkConf.IsNull() && !from.SparkConf.IsUnknown() && to.SparkConf.IsNull() && len(from.SparkConf.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for SparkConf, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.SparkConf = from.SparkConf
+	}
+	if !from.SparkEnvVars.IsNull() && !from.SparkEnvVars.IsUnknown() && to.SparkEnvVars.IsNull() && len(from.SparkEnvVars.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for SparkEnvVars, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.SparkEnvVars = from.SparkEnvVars
 	}
 	if !from.SshPublicKeys.IsNull() && !from.SshPublicKeys.IsUnknown() && to.SshPublicKeys.IsNull() && len(from.SshPublicKeys.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.
@@ -24829,6 +25547,12 @@ func (to *UpdateClusterResource_SdkV2) SyncFieldsDuringRead(ctx context.Context,
 			}
 		}
 	}
+	if !from.CustomTags.IsNull() && !from.CustomTags.IsUnknown() && to.CustomTags.IsNull() && len(from.CustomTags.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for CustomTags, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.CustomTags = from.CustomTags
+	}
 	if !from.DockerImage.IsNull() && !from.DockerImage.IsUnknown() {
 		if toDockerImage, ok := to.GetDockerImage(ctx); ok {
 			if fromDockerImage, ok := from.GetDockerImage(ctx); ok {
@@ -24870,6 +25594,18 @@ func (to *UpdateClusterResource_SdkV2) SyncFieldsDuringRead(ctx context.Context,
 				to.SetInitScripts(ctx, toInitScripts)
 			}
 		}
+	}
+	if !from.SparkConf.IsNull() && !from.SparkConf.IsUnknown() && to.SparkConf.IsNull() && len(from.SparkConf.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for SparkConf, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.SparkConf = from.SparkConf
+	}
+	if !from.SparkEnvVars.IsNull() && !from.SparkEnvVars.IsUnknown() && to.SparkEnvVars.IsNull() && len(from.SparkEnvVars.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for SparkEnvVars, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.SparkEnvVars = from.SparkEnvVars
 	}
 	if !from.SshPublicKeys.IsNull() && !from.SshPublicKeys.IsUnknown() && to.SshPublicKeys.IsNull() && len(from.SshPublicKeys.Elements()) == 0 {
 		// The default representation of an empty list for TF autogenerated resources in the resource state is Null.

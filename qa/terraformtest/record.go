@@ -69,11 +69,34 @@ func recordFile(t *testing.T, path, profileName string) {
 	if err := validateRecordingSetup(definition); err != nil {
 		t.Fatal(err)
 	}
+	if err := validateRecordableCalls(definition); err != nil {
+		t.Fatal(err)
+	}
 	profile, err := loadRecordingProfile(profileName)
 	if err != nil {
 		t.Fatal(err)
 	}
 	recordLoadedFile(t, path, original, definition, profile)
+}
+
+// A live service cannot reproduce scripted wire behavior, and a refresh would
+// replace those calls with the captured ones, so such journeys are not recorded.
+func validateRecordableCalls(d *testDefinition) error {
+	for i, s := range d.Steps {
+		if err := recordableCalls(stepLabel(i, s.Name), s.Calls); err != nil {
+			return err
+		}
+	}
+	return recordableCalls("destroy", d.Destroy.Calls)
+}
+
+func recordableCalls(label string, calls []httpfixture.Call) error {
+	for i, call := range calls {
+		if r := call.Response; r.Delay != "" || r.Fault != "" || r.StatusLine != "" {
+			return fmt.Errorf("%s: call %d: recording cannot reproduce a response delay, fault or status_line; edit this journey by hand", label, i+1)
+		}
+	}
+	return nil
 }
 
 func recordLoadedFile(t *testing.T, path string, original []byte, definition *testDefinition, profile *recordingProfile) {

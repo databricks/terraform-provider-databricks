@@ -115,7 +115,8 @@ type TagAssignment struct {
 	// The key of the tag. The characters , . : / - = and leading/trailing
 	// spaces are not allowed
 	TagKey types.String `tfsdk:"tag_key"`
-	// The value of the tag
+	// The value of the tag. If the value is omitted, the tag is assigned with
+	// its key only.
 	TagValue       types.String `tfsdk:"tag_value"`
 	ProviderConfig types.Object `tfsdk:"provider_config"`
 }

@@ -43,11 +43,12 @@ The following arguments are supported:
 ## Attributes
 This data source exports a single attribute, `tag_policies`. It is a list of resources, each with the following attributes:
 * `create_time` (string) - Timestamp when the tag policy was created
-* `description` (string)
-* `id` (string)
-* `tag_key` (string)
+* `description` (string) - A description of the governed tag, such as its purpose or the meaning of its values
+* `id` (string) - The unique identifier of the tag policy, generated when the policy is created
+* `tag_key` (string) - The tag key that this policy governs. Tag keys are case-sensitive
 * `update_time` (string) - Timestamp when the tag policy was last updated
-* `values` (list of Value)
+* `values` (list of Value) - The allowed values of the governed tag. Only these values can be assigned to the tag key, and each
+  value must be unique. A policy without values defines a key-only governed tag
 
 ### Value
-* `name` (string)
+* `name` (string) - The value that can be assigned to the tag key. Values are case-sensitive

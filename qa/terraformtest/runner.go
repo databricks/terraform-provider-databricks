@@ -38,7 +38,7 @@ func RunNative(t *testing.T, path string, configure func(*resource.TestCase, fun
 	t.Helper()
 	definition, err := loadDefinition(path)
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("%s: %v", path, err)
 	}
 	if err := definition.validateNative(); err != nil {
 		t.Fatalf("%s: %v", path, err)
@@ -233,7 +233,7 @@ func (h replayHosts) fixtureConfig() func(*config.Config) error {
 		// configuration fields, including account/workspace routing identifiers.
 		cfg.Loaders = []config.Loader{fixtureLoader{}}
 		cfg.HTTPTransport = fixtureTransport{host: h.server, named: h.named,
-			transport: &http.Transport{}}
+			transport: httpfixture.NewClientTransport()}
 		return nil
 	}
 }

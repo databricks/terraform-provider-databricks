@@ -20,6 +20,7 @@ import (
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/config"
+	"github.com/databricks/databricks-sdk-go/logger"
 	"github.com/databricks/databricks-sdk-go/retries"
 	"github.com/databricks/databricks-sdk-go/service/ml"
 	"github.com/databricks/sdk-go/auth/credentials"
@@ -31,10 +32,9 @@ import (
 )
 
 // The tests make their calls over real connections to an httptest.Server, on
-// the fake clock of a synctest bubble, so that no test waits out a backoff.
-// The server runs outside the bubble. The clock of a bubble stands still while
-// a connection is in use, so whatever takes time happens in the transport,
-// before the request is sent.
+// the fake clock of a synctest bubble, so that no test waits out a backoff. The
+// server runs outside the bubble, whose clock stands still while a connection
+// is in use, so what takes time happens in the transport, before the request.
 
 // classicCallStep is how one attempt of a call ends: with a response, with a
 // connection that is refused, that the server resets or that the server holds
@@ -48,8 +48,7 @@ type classicCallStep struct {
 	takes time.Duration
 }
 
-var classicCallFound = classicCallStep{status: http.StatusOK,
-	body: `{"registered_model_databricks": {"id": "model"}, "registered_model": {"name": "model"}}`}
+var classicCallFound = classicCallStep{status: 200, body: `{"registered_model_databricks": {"id": "model"}, "registered_model": {"name": "model"}}`}
 
 func classicCallFails(status int, code, message string) classicCallStep {
 	return classicCallStep{status: status, body: fmt.Sprintf(`{"error_code": %q, "message": %q}`, code, message)}
@@ -58,9 +57,8 @@ func classicCallFails(status int, code, message string) classicCallStep {
 const (
 	classicCallGetPath    = "/api/2.0/mlflow/databricks/registered-models/get"
 	classicCallCreatePath = "/api/2.0/mlflow/registered-models/create"
-	// classicCallMaxAttempts is more attempts than any call of the tests
-	// makes. The transport fails the next one, so that a call that never stops
-	// retrying fails its test instead of hanging it.
+	// classicCallMaxAttempts is more attempts than any call of the tests makes.
+	// The transport fails the next one, so that no test hangs in endless retries.
 	classicCallMaxAttempts = 100
 	// classicCallRefusingAddress refuses connections: nothing listens on a
 	// port that only root can open.
@@ -81,8 +79,7 @@ type classicCallAPI struct {
 	script []classicCallStep
 	// held gets a value when the server holds a request.
 	held chan struct{}
-
-	mu sync.Mutex
+	mu   sync.Mutex
 	// attempts are the times at which the client started an attempt, and
 	// requests are the requests that the server received.
 	attempts []time.Time
@@ -166,8 +163,7 @@ func (a *classicCallAPI) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func (a *classicCallAPI) restart() (attempts []time.Time, requests []string) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
-	attempts, requests = a.attempts, a.requests
-	a.attempts, a.requests = nil, nil
+	attempts, requests, a.attempts, a.requests = a.attempts, a.requests, nil, nil
 	return attempts, requests
 }
 
@@ -190,8 +186,7 @@ func (a *classicCallAPI) client(t *testing.T) *modelregistry.Client {
 	token, err := credentials.NewPATCredentials("token")
 	require.NoError(t, err)
 	c, err := modelregistry.NewClient(t.Context(), client.WithHost(a.server.URL), client.WithCredentials(token),
-		client.WithHTTPClient(&http.Client{Transport: a}),
-		client.WithoutConfigFile(), client.WithoutEnv(), client.WithTimeout(0))
+		client.WithHTTPClient(&http.Client{Transport: a}), client.WithoutConfigFile(), client.WithoutEnv(), client.WithTimeout(0))
 	require.NoError(t, err)
 	return c
 }
@@ -257,19 +252,17 @@ var classicCallOps = []struct {
 	name, request, failed string
 	classic, modular      classicCallClient
 }{
-	{"GET", "GET " + classicCallGetPath + "?name=model", `Get "HOST` + classicCallGetPath + `?name=model": `,
-		classicCallClassicGet, classicCallModularGet},
-	{"POST", "POST " + classicCallCreatePath, `Post "HOST` + classicCallCreatePath + `": `,
-		classicCallClassicCreate, classicCallModularCreate},
+	{"GET", "GET " + classicCallGetPath + "?name=model", `Get "HOST` + classicCallGetPath + `?name=model": `, classicCallClassicGet, classicCallModularGet},
+	{"POST", "POST " + classicCallCreatePath, `Post "HOST` + classicCallCreatePath + `": `, classicCallClassicCreate, classicCallModularCreate},
 }
 
 // classicCallOutcome is what the server and the caller see of one call.
 type classicCallOutcome struct {
 	// attempts is the number of attempts of the client, and requests the
-	// number of those that the server received.
+	// number of those that the server received. model is what the call
+	// returned of the model.
 	attempts, requests int
-	// model is what the call returned of the model.
-	model string
+	model              string
 	// err is the message of the error, with HOST for the URL of the server and
 	// without the ports of local addresses. errType is its type, for the
 	// classic client the one inside the *retries.Err that it wraps every error
@@ -280,12 +273,26 @@ type classicCallOutcome struct {
 	missing, canceled bool
 }
 
-// classicCallResult is the outcome of a call, how long the call took and
-// whether its error came in a *retries.Err.
+// classicCallResult is the outcome of a call, how long the call took, whether
+// its error came in a *retries.Err, and how many lines the classic error
+// parser logged to the logger of the context of the call.
 type classicCallResult struct {
 	classicCallOutcome
 	took    time.Duration
 	wrapped bool
+	parsed  int
+}
+
+// classicCallLog counts the lines that the classic error parser logs.
+type classicCallLog struct {
+	logger.SimpleLogger
+	parsed int
+}
+
+func (l *classicCallLog) Tracef(_ context.Context, format string, _ ...any) {
+	if strings.Contains(format, "ErrorParser") {
+		l.parsed++
+	}
 }
 
 // classicCallPort matches the port of a local address, which differs from
@@ -312,12 +319,11 @@ func classicCallNewResult(host, model string, err error) classicCallResult {
 type classicCallScenario struct {
 	name   string
 	script []classicCallStep
-	// retryTimeoutSeconds and httpTimeoutSeconds are retry_timeout_seconds
-	// and http_timeout_seconds of the classic config.
+	// retry_timeout_seconds and http_timeout_seconds of the classic config.
 	retryTimeoutSeconds, httpTimeoutSeconds int
-	// deadline is the timeout of the context of the call, if it isn't zero.
-	deadline time.Duration
-	// cancelled is when the context of the call is cancelled, if it is.
+	// deadline is the timeout of the context of the call, and cancelled the
+	// moment at which that context is cancelled, if any.
+	deadline  time.Duration
 	cancelled string
 	// want is the outcome of both clients. Its err has REQUEST for the start
 	// of the message of a network error.
@@ -327,6 +333,9 @@ type classicCallScenario struct {
 	// when the last wait would start and the classic client when it ends.
 	took   time.Duration
 	sooner bool
+	// parsed is how many lines the classic client logs about a last response
+	// that is no JSON, while it parses the error.
+	parsed int
 }
 
 // run makes the call of tt with one of the two clients.
@@ -334,7 +343,8 @@ func (tt classicCallScenario) run(t *testing.T, api *classicCallAPI, request str
 	cfg := api.config(t, func(cfg *config.Config) {
 		cfg.RetryTimeoutSeconds, cfg.HTTPTimeoutSeconds = tt.retryTimeoutSeconds, tt.httpTimeoutSeconds
 	})
-	ctx, cancel := context.WithCancel(t.Context())
+	log := &classicCallLog{SimpleLogger: logger.SimpleLogger{Level: logger.LevelError + 1}}
+	ctx, cancel := context.WithCancel(logger.NewContext(t.Context(), log))
 	defer cancel()
 	if tt.deadline > 0 {
 		ctx, cancel = context.WithTimeout(ctx, tt.deadline)
@@ -352,7 +362,7 @@ func (tt classicCallScenario) run(t *testing.T, api *classicCallAPI, request str
 	start := time.Now()
 	model, err := call(ctx, t, cfg, api)
 	result := classicCallNewResult(api.server.URL, model, err)
-	result.took = time.Since(start)
+	result.took, result.parsed = time.Since(start), log.parsed
 	attempts, requests := api.restart()
 	result.attempts, result.requests = len(attempts), len(requests)
 	for _, received := range requests {
@@ -382,8 +392,7 @@ func TestClassicCallReturnsWhatTheClassicClientReturns(t *testing.T) {
 	network := func(attempts, requests int, message string) outcome {
 		return outcome{attempts: attempts, requests: requests, err: "REQUEST" + message, errType: "*url.Error"}
 	}
-	const refused = "dial tcp 127.0.0.1: connect: connection refused"
-	const reset = "read tcp 127.0.0.1->127.0.0.1: read: connection reset by peer"
+	const refused, reset = "dial tcp 127.0.0.1: connect: connection refused", "read tcp 127.0.0.1->127.0.0.1: read: connection reset by peer"
 	throttled, unavailable := fails(429, "TOO_MANY_REQUESTS", "slow down"), fails(503, "TEMPORARILY_UNAVAILABLE", "come back")
 	throttledOnce, throttledTwice := apiError(1, 429, "TOO_MANY_REQUESTS", "slow down"), apiError(2, 429, "TOO_MANY_REQUESTS", "slow down")
 	retryAfter := http.Header{"Retry-After": {"120"}}
@@ -400,33 +409,27 @@ func TestClassicCallReturnsWhatTheClassicClientReturns(t *testing.T) {
 		{name: "retried error code in a 500", script: steps{fails(500, "REQUEST_LIMIT_EXCEEDED", "too much"), found}, want: model(2), took: time.Second},
 		{name: "retried message in a 400", script: steps{fails(400, "BAD_REQUEST", "ClusterNotReadyException"), found}, want: model(2), took: time.Second},
 		{name: "retried message in a 500", script: steps{fails(500, "INTERNAL_ERROR", "Timed out after 30s"), found}, want: model(2), took: time.Second},
-		{name: "REQUEST_LIMIT_EXCEEDED in the message of a 400", script: steps{fails(400, "BAD_REQUEST", "REQUEST_LIMIT_EXCEEDED: too fast"), found},
-			want: model(2), took: time.Second},
+		{name: "retried text in the message of a 400", script: steps{fails(400, "BAD_REQUEST", "REQUEST_LIMIT_EXCEEDED"), found}, want: model(2), took: time.Second},
 		{name: "400", script: steps{fails(400, "INVALID_PARAMETER_VALUE", "bad name")}, want: apiError(1, 400, "INVALID_PARAMETER_VALUE", "bad name")},
 		{name: "401", script: steps{fails(401, "UNAUTHENTICATED", "who are you")}, want: apiError(1, 401, "UNAUTHENTICATED", "who are you")},
 		{name: "403", script: steps{fails(403, "PERMISSION_DENIED", "not yours")}, want: apiError(1, 403, "PERMISSION_DENIED", "not yours")},
 		{name: "409", script: steps{fails(409, "RESOURCE_ALREADY_EXISTS", "taken")}, want: apiError(1, 409, "RESOURCE_ALREADY_EXISTS", "taken")},
 		{name: "500", script: steps{fails(500, "INTERNAL_ERROR", "broken")}, want: apiError(1, 500, "INTERNAL_ERROR", "broken")},
-		{name: "404 with RESOURCE_DOES_NOT_EXIST", script: steps{fails(404, "RESOURCE_DOES_NOT_EXIST", "gone")},
-			want: missing(apiError(1, 404, "RESOURCE_DOES_NOT_EXIST", "gone"))},
-		{name: "404 with INVALID_PARAMETER_VALUE", script: steps{fails(404, "INVALID_PARAMETER_VALUE", "bad name")},
-			want: apiError(1, 404, "INVALID_PARAMETER_VALUE", "bad name")},
+		{name: "404 with RESOURCE_DOES_NOT_EXIST", script: steps{fails(404, "RESOURCE_DOES_NOT_EXIST", "gone")}, want: missing(apiError(1, 404, "RESOURCE_DOES_NOT_EXIST", "gone"))},
+		{name: "404 with INVALID_PARAMETER_VALUE", script: steps{fails(404, "INVALID_PARAMETER_VALUE", "bad")}, want: apiError(1, 404, "INVALID_PARAMETER_VALUE", "bad")},
 		{name: "404 with an empty body", script: steps{{status: 404}}, want: missing(apiError(1, 404, "", "Not Found"))},
 		{name: "404 with an HTML body", script: steps{{status: 404, body: "<html><h1>Nothing here</h1></html>"}},
-			want: apiError(1, 404, "UNKNOWN", "<html><h1>Nothing here</h1></html>")},
+			want: apiError(1, 404, "UNKNOWN", "<html><h1>Nothing here</h1></html>"), parsed: 3},
 		{name: "404 with an HTML body that has a pre block", script: steps{{status: 404, body: "<html><pre>Nothing here</pre></html>"}},
-			want: missing(apiError(1, 404, "NOT_FOUND", "Nothing here"))},
-		{name: "refused connection, then success", script: steps{{refused: true}, found},
-			want: outcome{attempts: 2, requests: 1, model: "model"}, took: time.Second},
+			want: missing(apiError(1, 404, "NOT_FOUND", "Nothing here")), parsed: 2},
+		{name: "refused connection, then success", script: steps{{refused: true}, found}, want: outcome{attempts: 2, requests: 1, model: "model"}, took: time.Second},
 		{name: "reset connection, then success", script: steps{{reset: true}, found}, want: model(2), took: time.Second},
 		{name: "refused connection until the retries run out", script: steps{{refused: true}}, retryTimeoutSeconds: 1,
 			want: network(1, 0, refused), took: time.Second, sooner: true},
 		{name: "reset connection until the retries run out", script: steps{{reset: true}}, retryTimeoutSeconds: 1,
 			want: network(1, 1, reset), took: time.Second, sooner: true},
-		{name: "retries run out after a retry timeout of 1 second", script: steps{throttled}, retryTimeoutSeconds: 1,
-			want: throttledOnce, took: time.Second, sooner: true},
-		{name: "retries run out after a retry timeout of 3 seconds", script: steps{throttled}, retryTimeoutSeconds: 3,
-			want: throttledTwice, took: 3 * time.Second, sooner: true},
+		{name: "retries run out after a retry timeout of 1 second", script: steps{throttled}, retryTimeoutSeconds: 1, want: throttledOnce, took: time.Second, sooner: true},
+		{name: "retries run out after a retry timeout of 3 seconds", script: steps{throttled}, retryTimeoutSeconds: 3, want: throttledTwice, took: 3 * time.Second, sooner: true},
 		// The first attempt ends 3 seconds before the 5 minutes of an unset
 		// retry timeout do, which leaves time for one retry.
 		{name: "retries run out after 5 minutes without a retry timeout", script: steps{after(297 * time.Second), throttled},
@@ -464,6 +467,8 @@ func TestClassicCallReturnsWhatTheClassicClientReturns(t *testing.T) {
 					// The differences from the classic client, all on purpose.
 					assert.Equal(t, want.err != "", classic.wrapped, "the classic client wraps every error in a *retries.Err")
 					assert.False(t, modular.wrapped, "ClassicCall returns the error itself")
+					// Retrier parses the last response to decide, and Call parses it again.
+					assert.Equal(t, []int{tt.parsed, 2 * tt.parsed}, []int{classic.parsed, modular.parsed})
 					low, high := tt.took, tt.took+time.Duration(max(want.attempts-1, 0))*classicCallMaxJitter
 					classicCallBetween(t, classic.took, low, high, "the classic client")
 					if tt.sooner {
@@ -481,8 +486,7 @@ func TestClassicCallReturnsWhatTheClassicClientReturns(t *testing.T) {
 
 // The classic client ends a request that gets no byte for http_timeout_seconds,
 // a minute by default, and doesn't retry it. ClassicCall sets no timeout: the
-// request lasts until the timeout of the modular client, which the tests turn
-// off, or until the context ends.
+// request lasts until the timeout of the modular client or the context ends it.
 func TestClassicCallLeavesARequestWithoutAnAnswerToTheClient(t *testing.T) {
 	api := classicCallNewAPI(t, classicCallStep{stalls: true})
 	synctest.Test(t, func(t *testing.T) {
@@ -493,14 +497,14 @@ func TestClassicCallLeavesARequestWithoutAnAnswerToTheClient(t *testing.T) {
 		assert.Equal(t, time.Minute, classic.took)
 		assert.Equal(t, op.failed+"context deadline exceeded", modular.err)
 		assert.Equal(t, 10*time.Minute, modular.took)
-		assert.Equal(t, 1, classic.attempts)
-		assert.Equal(t, 1, modular.attempts)
+		assert.Equal(t, []int{1, 1}, []int{classic.attempts, modular.attempts})
 	})
 }
 
 // A retrier counts the retries of its call and holds the retry timeout from
 // the start of that call. Calls that shared one would wait longer from retry
 // to retry, and would not retry once the retry timeout of the first has passed.
+// The calls of a round run at once, and the second round starts after that.
 func TestClassicCallGivesEveryCallARetrierOfItsOwn(t *testing.T) {
 	throttled := classicCallFails(429, "TOO_MANY_REQUESTS", "slow down")
 	apis := make([]*classicCallAPI, 8)
@@ -509,8 +513,6 @@ func TestClassicCallGivesEveryCallARetrierOfItsOwn(t *testing.T) {
 	}
 	synctest.Test(t, func(t *testing.T) {
 		cfg := apis[0].config(t, func(cfg *config.Config) { cfg.RetryTimeoutSeconds = 6 })
-		// The calls of a round run at once, and the second round starts after
-		// the retry timeout of the first has passed.
 		for round := range 2 {
 			var calls sync.WaitGroup
 			for _, api := range apis {
@@ -576,10 +578,9 @@ func TestClassicCallErrors(t *testing.T) {
 	runs := 0
 	method := func(context.Context, ...call.Option) (string, error) { runs++; return "result", nil }
 	tests := []struct {
-		name   string
-		cfg    *config.Config
-		method func(context.Context, ...call.Option) (string, error)
-		err    string
+		name, err string
+		cfg       *config.Config
+		method    func(context.Context, ...call.Option) (string, error)
 	}{
 		{name: "no config", method: method, err: "sdkgoutility.ClassicCall: cfg is nil"},
 		{name: "no method", cfg: &config.Config{}, err: "sdkgoutility.ClassicCall: method is nil"},

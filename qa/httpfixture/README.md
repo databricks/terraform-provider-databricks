@@ -65,7 +65,7 @@ including multiplicity and value order; extra query keys fail.
 
 A pattern requires a present string that the Go regular expression matches in full, as if wrapped in `^(?:...)$`. Write `{pattern: <regular expression>}` as a header or query matcher, and `pattern: <regular expression>` in place of `type` in a JSON matcher. A matcher sets either a type or a pattern. Header and query patterns, like `any_string`, require exactly one value; JSON patterns require a string, not null.
 
-`absent` requires a header to be missing; a header with an empty value fails. It rejects a sample for the same header in `headers`. Query and JSON matchers reject `absent`, because unlisted query keys and JSON fields already fail to match.
+`absent` requires a header to be missing; a header with an empty value fails. It rejects a sample for the same header in `headers`. Query and JSON matchers reject `absent`, because unlisted query keys and JSON fields already fail to match. Header matchers reject `Host`, `Transfer-Encoding` and `Trailer`, which `net/http` keeps outside `Request.Header`; a call's `host` matches the host.
 
 JSON paths use literal string keys and zero-based integer array indices, for
 example `[items, 0, request_id]`. An explicit `path: []` selects a scalar JSON

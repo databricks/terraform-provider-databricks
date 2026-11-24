@@ -3,7 +3,6 @@ package sdkgoutility
 import (
 	"context"
 	"errors"
-	"fmt"
 	"sync/atomic"
 	"time"
 
@@ -11,19 +10,18 @@ import (
 	"github.com/databricks/sdk-go/options/call"
 )
 
-// Call runs method, which wraps one method of a modular SDK client, and
-// returns what the classic SDK client returns for the same request.
+// Call runs method, which wraps one method of a modular SDK client, as the
+// classic SDK client runs a request: it retries by retrier, waits on limiter
+// before every attempt and returns the error that classic makes of a failure.
 //
 // The method runs once, with retrier as its call.WithRetrier option and
 // limiter as its call.WithLimiter option. A nil retrier or limiter leaves that
 // option out. When the method fails, Call returns the zero value of T and
 // classic(err), or err itself when classic is nil.
 //
-// Two failures are reported as the classic client reports them, not as the
-// modular SDK does:
-//   - When the context ends while the SDK waits before a retry, the error is
-//     that of the last attempt, not that of the context.
-//   - When limiter fails, the error starts with "failed in rate limiter: ".
+// One failure is reported as the classic client reports it, not as the modular
+// SDK does: when the context ends while the SDK waits before a retry, err is
+// the error of the last attempt, not that of the context.
 //
 // Call leaves to the caller which errors retrier retries, how fast limiter
 // lets requests through and what classic converts, as well as:
@@ -84,10 +82,7 @@ func (w *retryWatch) IsRetriable(err error) (time.Duration, bool) {
 func (w *retryWatch) Wait(ctx context.Context) error {
 	// The SDK asks for the next attempt, so its wait to retry is over.
 	w.retried.Store(nil)
-	if err := w.limiter.Wait(ctx); err != nil {
-		return fmt.Errorf("failed in rate limiter: %w", err)
-	}
-	return nil
+	return w.limiter.Wait(ctx)
 }
 
 // failure returns the error that the classic client returns where the SDK

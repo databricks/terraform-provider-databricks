@@ -4,6 +4,7 @@ go 1.26.10
 
 require (
 	github.com/databricks/databricks-sdk-go v0.202.0
+	github.com/databricks/sdk-go/uc/volumes v0.8.0
 	github.com/golang-jwt/jwt/v4 v4.5.2
 	github.com/google/go-cmp v0.7.0
 	github.com/hashicorp/go-cty v1.5.0
@@ -22,6 +23,7 @@ require (
 	github.com/stretchr/testify v1.11.1
 	github.com/zclconf/go-cty v1.17.0
 	golang.org/x/exp v0.0.0-20251023183803-a4bb9ffd2546
+	golang.org/x/tools v0.44.1-0.20260420230617-19499e7caabc
 	google.golang.org/api v0.267.0
 	gopkg.in/yaml.v3 v3.0.1
 )
@@ -37,6 +39,9 @@ require (
 	github.com/bitfield/gotestdox v0.2.2 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/cloudflare/circl v1.6.3 // indirect
+	github.com/databricks/sdk-go/auth v0.2.0 // indirect
+	github.com/databricks/sdk-go/core v0.1.0 // indirect
+	github.com/databricks/sdk-go/options v0.3.0 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/dnephin/pflag v1.0.7 // indirect
 	github.com/fatih/color v1.18.0 // indirect
@@ -96,7 +101,6 @@ require (
 	golang.org/x/term v0.43.0 // indirect
 	golang.org/x/text v0.37.0 // indirect
 	golang.org/x/time v0.14.0 // indirect
-	golang.org/x/tools v0.44.1-0.20260420230617-19499e7caabc // indirect
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260203192932-546029d2fa20 // indirect
 	google.golang.org/grpc v1.79.3 // indirect

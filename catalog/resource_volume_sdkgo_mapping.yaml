@@ -1,0 +1,23 @@
+# The mapping between the databricks_volume state and sdk-go uc/volumes/v1, which
+# tools/sdkgomapping generates into resource_volume_sdkgo_gen.go.
+output: resource_volume_sdkgo_gen.go
+schema:
+  file: resource_volume.go
+  struct: VolumeInfo
+sdk_go:
+  package: github.com/databricks/sdk-go/uc/volumes/v1
+  name: sdkvolumes
+from_data:
+  # The resource sets owner with an update after the create.
+  - function: volumeCreateRequestFromData
+    type: CreateVolumeRequest
+    attributes: [catalog_name, schema_name, name, volume_type, storage_location, comment]
+  # The resource sets the volume's full name, new_name, and an empty comment that clears
+  # it.
+  - function: volumeUpdateRequestFromData
+    type: UpdateVolumeRequest
+    attributes: [comment, owner]
+to_data:
+  - function: volumeInfoToData
+    type: VolumeInfo
+    attributes: [catalog_name, schema_name, name, volume_type, storage_location, owner, comment]

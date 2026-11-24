@@ -24,7 +24,7 @@ the previous step.
 
 `SetHosts(hosts, defaultHost)` names hosts by the authority (`host` or `host:port`) that requests carry in their `Host` header. A call's `Request.Host` (`host` in YAML) names the host it must match; a call without one matches `defaultHost`, or requests to unnamed authorities when `defaultHost` is empty. Without hosts, every request is on the unnamed host, as before. Calls naming an unknown host fail when installed, so set hosts first. Unexpected and unused calls name their host in errors. The handler only reads the `Host` header; the client's transport decides which hosts reach the server.
 
-Matching includes the host, method, escaped path, query parameters, JSON body, and
+Matching includes the method, escaped path, query parameters, JSON body, and
 listed request headers. JSON object key order and whitespace are ignored;
 array order and values matter. An absent body differs from JSON `null`.
 
@@ -57,15 +57,15 @@ response:
 ```
 
 `any_string` requires a present string, including an empty string; it does not
-match a missing value, JSON null, or another JSON type.
-
-A pattern requires a present string that the Go regular expression matches in full, as if wrapped in `^(?:...)$`. Write `{pattern: <regular expression>}` as a header or query matcher, and `pattern: <regular expression>` in place of `type` in a JSON matcher. A matcher sets either a type or a pattern. Header and query patterns, like `any_string`, require exactly one value; JSON patterns require a string, not null.
-
-`absent` requires a header to be missing; a header with an empty value fails. It rejects a sample for the same header in `headers`. Query and JSON matchers reject `absent`, because unlisted query keys and JSON fields already fail to match. Header names are
+match a missing value, JSON null, or another JSON type. Header names are
 case-insensitive. Header/query matchers require exactly one value and override
 the corresponding sample if supplied; the sample may also be omitted.
 Unlisted headers remain ignored. Unmatched query keys/values remain exact,
 including multiplicity and value order; extra query keys fail.
+
+A pattern requires a present string that the Go regular expression matches in full, as if wrapped in `^(?:...)$`. Write `{pattern: <regular expression>}` as a header or query matcher, and `pattern: <regular expression>` in place of `type` in a JSON matcher. A matcher sets either a type or a pattern. Header and query patterns, like `any_string`, require exactly one value; JSON patterns require a string, not null.
+
+`absent` requires a header to be missing; a header with an empty value fails. It rejects a sample for the same header in `headers`. Query and JSON matchers reject `absent`, because unlisted query keys and JSON fields already fail to match. Header matchers reject `Host`, `Transfer-Encoding` and `Trailer`, which `net/http` keeps outside `Request.Header`; a call's `host` matches the host.
 
 JSON paths use literal string keys and zero-based integer array indices, for
 example `[items, 0, request_id]`. An explicit `path: []` selects a scalar JSON
@@ -74,11 +74,12 @@ only a placeholder and does not make null match. Other fields, object keys,
 array lengths/order, and numeric values remain exact. Invalid matcher types,
 duplicate targets, and paths absent from the sample fail when fixtures are loaded.
 
-In Go, use `Request.Matchers` with `Matcher{Type: AnyString}`, `Matcher{Type: Absent}` or `Matcher{Pattern: ...}` values and `JSONMatcher` paths. Matchers
+In Go, use `Request.Matchers` with `AnyString` and `JSONMatcher` paths. Matchers
 do not modify the original samples, so a future recorder can keep captured
 values alongside these annotations. Response payloads remain literal; there
-are no captures, substitutions, or magic payload strings/objects, and patterns exist only in matchers.
+are no captures, substitutions, regexes, or magic payload strings/objects.
 `"any_string"` and `"****"` without annotations still match only those strings.
+`AnyString` and `Absent` go in a `Matcher`'s `Type`, as in `Matcher{Type: AnyString}`, and `Matcher{Pattern: ...}` sets a regular expression; patterns exist only in matchers, never in payloads.
 
 ## Consumption and ordering
 

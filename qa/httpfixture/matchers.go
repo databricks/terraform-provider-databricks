@@ -159,6 +159,12 @@ func compileMatchers(m Matchers, headerSamples map[string]string, body any,
 	return result, body, nil
 }
 
+// headersOutsideRequestHeader are moved by net/http's server into Request.Host,
+// Request.TransferEncoding and Request.Trailer, so a header matcher never sees them.
+var headersOutsideRequestHeader = map[string]bool{
+	"Host": true, "Transfer-Encoding": true, "Trailer": true,
+}
+
 func compileHeaderMatchers(matchers map[string]Matcher,
 	samples map[string]string) (map[string]compiledMatcher, error) {
 	sampled := map[string]bool{}
@@ -170,6 +176,11 @@ func compileHeaderMatchers(matchers map[string]Matcher,
 		canonical := http.CanonicalHeaderKey(key)
 		if _, duplicate := result[canonical]; duplicate {
 			return nil, fmt.Errorf("duplicate header matcher %q (case-insensitive)", key)
+		}
+		if headersOutsideRequestHeader[canonical] {
+			return nil, fmt.Errorf("headers[%q]: net/http keeps Host, Transfer-Encoding "+
+				"and Trailer outside the request headers, so a matcher cannot check them; "+
+				"a call's host matches the host", key)
 		}
 		compiled, err := compileKeyMatcher("headers", key, matcher)
 		if err != nil {

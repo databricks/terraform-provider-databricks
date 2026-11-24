@@ -349,6 +349,13 @@ func TestRejectInvalidAbsentAndPatternMatchers(t *testing.T) {
 			`query["id"]: absent applies only to headers`},
 		{"absent JSON", nil, json(JSONMatcher{Path: []any{"id"}, Type: Absent}),
 			"json[0]: absent applies only to headers"},
+		{"absent Transfer-Encoding", nil, Matchers{Headers: map[string]Matcher{
+			"transfer-encoding": {Type: Absent}}}, `headers["transfer-encoding"]: net/http ` +
+			"keeps Host, Transfer-Encoding and Trailer outside the request headers"},
+		{"absent Host", nil, Matchers{Headers: map[string]Matcher{"Host": {Type: Absent}}},
+			`headers["Host"]: net/http keeps Host`},
+		{"Trailer pattern", nil, Matchers{Headers: map[string]Matcher{
+			"Trailer": {Pattern: ".*"}}}, `headers["Trailer"]: net/http keeps Host`},
 		{"absent with sample", map[string]string{"x-id": "1"}, headers(Matcher{Type: Absent}),
 			`headers["X-Id"]: remove the header's sample from headers; it must be absent`},
 		{"invalid header pattern", nil, headers(Matcher{Pattern: "("}),

@@ -52,9 +52,19 @@ func TestDecodeEnvironmentRejectsInvalidVariables(t *testing.T) {
 	}
 }
 
+// isolateEnvironment unsets the variables the runner clears, so the agent, CI runner or
+// Databricks Runtime running the test cannot change what the SDK detects.
+func isolateEnvironment(t *testing.T) {
+	t.Helper()
+	require.NoError(t, unsetVariables(t, clearedVariables()))
+	useragent.ClearCache()
+	t.Cleanup(useragent.ClearCache)
+}
+
 // setAmbientEnvironment sets variables a coding agent, CI runner or shell could set.
 func setAmbientEnvironment(t *testing.T) {
 	t.Helper()
+	isolateEnvironment(t)
 	for name, value := range map[string]string{"CLAUDECODE": "1",
 		"GITHUB_ACTIONS": "true", "DATABRICKS_HOST": "https://example.com",
 		"DATABRICKS_TF_ENABLED_PF_RESOURCES": "databricks_share",
@@ -62,7 +72,6 @@ func setAmbientEnvironment(t *testing.T) {
 		"GOOGLE_CREDENTIALS": "{}"} {
 		t.Setenv(name, value)
 	}
-	t.Cleanup(useragent.ClearCache)
 }
 
 func TestApplyEnvironmentClearsThenSets(t *testing.T) {
@@ -116,9 +125,8 @@ func TestApplyEnvironmentRejectsProcessStartVariables(t *testing.T) {
 }
 
 func TestUndetectedEnvironmentReportsVariablesLeftSet(t *testing.T) {
+	isolateEnvironment(t)
 	t.Setenv("CLAUDECODE", "1")
-	useragent.ClearCache()
-	t.Cleanup(useragent.ClearCache)
 	require.EqualError(t, undetectedEnvironment(), "the SDK detects agent/claude-code "+
 		"from a variable that the runner does not clear; add it to userAgentVariables")
 }

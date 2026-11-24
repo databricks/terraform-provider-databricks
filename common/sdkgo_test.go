@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
-	"strings"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -17,7 +16,6 @@ import (
 	"github.com/databricks/databricks-sdk-go/client"
 	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/databricks-sdk-go/config/credentials"
-	"github.com/databricks/sdk-go/options/call"
 	sdkvolumes "github.com/databricks/sdk-go/uc/volumes/v1"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -82,12 +80,7 @@ func getVolume(ctx context.Context, t *testing.T, w *databricks.WorkspaceClient,
 	t.Helper()
 	vc, err := SdkGoVolumesClient(ctx, w)
 	require.NoError(t, err)
-	get := func(ctx context.Context,
-		opts ...call.Option) (*sdkvolumes.VolumeInfo, error) {
-		req := sdkvolumes.GetVolumeRequest{FullNameArg: &fullName}
-		return vc.GetVolume(ctx, req, opts...)
-	}
-	return CallSdkGoVolumes(ctx, vc, get)
+	return vc.ReadByName(ctx, fullName)
 }
 
 type handler = func(http.ResponseWriter, *http.Request)
@@ -261,10 +254,9 @@ func TestSdkGoClientReportsRefusedConnectionsLikeClassicClient(t *testing.T) {
 	assert.Contains(t, err.Error(), "connection refused")
 	classic := newVolumesTestWorkspaceClient(t, server, customize)
 	_, classicErr := classic.Volumes.ReadByName(ctx, sdkGoTestVolumeName)
-	// The existing client sends an empty query, so its URL ends in "?".
-	classicMessage := strings.Replace(err.Error(), sdkGoTestVolumePath+`"`,
-		sdkGoTestVolumePath+`?"`, 1)
-	assert.EqualError(t, classicErr, classicMessage)
+	assert.EqualError(t, classicErr, err.Error())
+	// Both clients send the empty query, so the URL in the message ends in "?".
+	assert.Contains(t, err.Error(), sdkGoTestVolumePath+`?"`)
 }
 
 // blockingCredentials authenticate only when the request's context ends, like a token

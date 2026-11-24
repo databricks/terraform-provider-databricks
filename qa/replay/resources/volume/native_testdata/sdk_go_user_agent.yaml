@@ -1,7 +1,7 @@
 # Supplies volume calls for TestVolumeSdkGoUserAgent, which checks their User-Agent in Go
-# with reads through sdk-go uc/volumes/v1. The GETs carry no Accept header. API responses
-# are inferred from the Unity Catalog API contract, not recorded. An empty header
-# expectation matches only requests without that header.
+# with reads through sdk-go uc/volumes/v1. The GETs send Accept: application/json, as the
+# existing client does. API responses are inferred from the Unity Catalog API contract,
+# not recorded.
 version: 1
 enforce_call_order: true
 host_metadata:
@@ -61,7 +61,7 @@ steps:
           method: GET
           path: /api/2.1/unity-catalog/volumes/main.replay.user_agent_volume
           headers:
-            Accept: ""
+            Accept: application/json
             X-Databricks-Workspace-Id: "12345"
           body: null
         response:

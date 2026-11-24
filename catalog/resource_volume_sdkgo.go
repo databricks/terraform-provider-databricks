@@ -6,7 +6,6 @@ import (
 
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
-	"github.com/databricks/sdk-go/options/call"
 	sdkvolumes "github.com/databricks/sdk-go/uc/volumes/v1"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
@@ -21,13 +20,7 @@ func readVolumeWithSdkGo(ctx context.Context, w *databricks.WorkspaceClient,
 	if err != nil {
 		return err
 	}
-	fullName := d.Id()
-	get := func(ctx context.Context,
-		opts ...call.Option) (*sdkvolumes.VolumeInfo, error) {
-		req := sdkvolumes.GetVolumeRequest{FullNameArg: &fullName}
-		return vc.GetVolume(ctx, req, opts...)
-	}
-	v, err := common.CallSdkGoVolumes(ctx, vc, get)
+	v, err := vc.ReadByName(ctx, d.Id())
 	if err != nil {
 		return err
 	}

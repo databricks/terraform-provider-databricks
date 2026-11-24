@@ -2,7 +2,9 @@ package common
 
 import (
 	"context"
+	"fmt"
 	"net/http"
+	"net/url"
 	"sync"
 
 	"github.com/databricks/databricks-sdk-go"
@@ -53,10 +55,10 @@ func withSdkGo[F ~resourceOperation](f F) F {
 	}
 }
 
-// SdkGoVolumes is a github.com/databricks/sdk-go/uc/volumes/v1 client that sends
-// requests the way the workspace client it was built from does.
+// SdkGoVolumes reads volumes through github.com/databricks/sdk-go/uc/volumes/v1. Each
+// call sends the request that the classic workspace client it was built from sends.
 type SdkGoVolumes struct {
-	*sdkvolumes.Client
+	client *sdkvolumes.Client
 	bridge *sdkGoBridge
 }
 
@@ -78,7 +80,22 @@ func SdkGoVolumesClient(ctx context.Context,
 	if err != nil {
 		return nil, err
 	}
-	return &SdkGoVolumes{Client: vc, bridge: b}, nil
+	return &SdkGoVolumes{client: vc, bridge: b}, nil
+}
+
+// ReadByName reads the volume fullName with the request that the classic
+// Volumes.ReadByName sends for it, so "#", "?" and "%" in the name act as they do there.
+func (vc *SdkGoVolumes) ReadByName(ctx context.Context,
+	fullName string) (*sdkvolumes.VolumeInfo, error) {
+	path := fmt.Sprintf("/api/2.1/unity-catalog/volumes/%v", fullName)
+	// The classic client adds an empty query to GETs.
+	classic := classicVolumeRequest(http.MethodGet, path, path+"?")
+	get := func(ctx context.Context,
+		opts ...call.Option) (*sdkvolumes.VolumeInfo, error) {
+		req := sdkvolumes.GetVolumeRequest{FullNameArg: &fullName}
+		return vc.client.GetVolume(ctx, req, opts...)
+	}
+	return callSdkGo(ctx, vc.bridge, classic, get)
 }
 
 // clientOptions returns the options that make an sdk-go client send requests to cfg's
@@ -95,16 +112,21 @@ func (b *sdkGoBridge) clientOptions(cfg *config.Config) []client.Option {
 	}
 }
 
-// CallSdkGoVolumes runs one method of vc with the classic client's retries and rate
-// limit, and returns the error the classic client would return for the same response.
-func CallSdkGoVolumes[T any](ctx context.Context, vc *SdkGoVolumes,
+// callSdkGo runs one sdk-go method with the classic client's retries and rate limit.
+// Every attempt is sent as classic, and a failure returns the classic client's error.
+func callSdkGo[T any](ctx context.Context, b *sdkGoBridge, classic classicRequest,
 	method func(context.Context, ...call.Option) (T, error)) (T, error) {
-	return callSdkGo(ctx, vc.bridge, method)
-}
-
-func callSdkGo[T any](ctx context.Context, b *sdkGoBridge,
-	method func(context.Context, ...call.Option) (T, error)) (T, error) {
-	attempt := &sdkGoAttempt{}
+	var zero T
+	classicURL, err := url.Parse(classic.url)
+	if err != nil {
+		// Like the classic client, the call fails after the rate limiter, without
+		// authenticating, sending or retrying.
+		if err := (classicLimiter{b.limiter}).Wait(ctx); err != nil {
+			return zero, err
+		}
+		return zero, fmt.Errorf("failed creating new request: %w", err)
+	}
+	attempt := &sdkGoAttempt{classic: classic, classicURL: classicURL}
 	ctx = context.WithValue(ctx, sdkGoAttemptKey{}, attempt)
 	retrier := b.newRetrier(ctx, attempt)
 	result, err := method(ctx,
@@ -114,7 +136,6 @@ func callSdkGo[T any](ctx context.Context, b *sdkGoBridge,
 	if err == nil {
 		return result, nil
 	}
-	var zero T
 	// Like the classic client, a cancellation during backoff returns the last error.
 	cancelled := err == context.Canceled || err == context.DeadlineExceeded
 	if retrier.lastErr != nil && cancelled {
@@ -125,11 +146,14 @@ func callSdkGo[T any](ctx context.Context, b *sdkGoBridge,
 
 type sdkGoAttemptKey struct{}
 
-// sdkGoAttempt carries state between the stages of one call: the last request sent,
-// which classic error parsing needs, and the timeout of the attempt being sent.
+// sdkGoAttempt carries state between the stages of one call: the classic request to
+// send, the last request sent, which classic error parsing needs, and the timeout of the
+// attempt being sent.
 type sdkGoAttempt struct {
-	request *http.Request
-	timeout *attemptTimeout
+	classic    classicRequest
+	classicURL *url.URL
+	request    *http.Request
+	timeout    *attemptTimeout
 }
 
 // keepTimeout stores the timeout started by authentication for the transport.

@@ -83,10 +83,9 @@ func TestVolumeSdkGoRefreshPastHTTPTimeoutIsNotRetried(t *testing.T) {
 
 	d, diags := refreshVolumeWithSdkGo(context.Background(), c)
 
-	// sdk-go sends no empty query, so the URL has no trailing "?", unlike on the
-	// existing path.
+	// As on the existing path, the URL ends in the empty query.
 	expected := fmt.Sprintf(
-		`cannot read volume: Get "%s%s": request timed out after 1s of inactivity`,
+		`cannot read volume: Get "%s%s?": request timed out after 1s of inactivity`,
 		server.URL, retryVolumePath)
 	assert.Equal(t, expected, diagnosticSummary(t, diags))
 	assert.Equal(t, int32(1), attempts.Load())

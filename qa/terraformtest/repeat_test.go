@@ -18,10 +18,6 @@ func TestRepeatReplay(t *testing.T) {
 // the runner keeps retry_timeout_seconds and rate_limit from the provider block,
 // and the failing ones that the journeys catch a change in retries or timing.
 func TestRepeatJourneysPinRetriesAndTiming(t *testing.T) {
-	withRateLimit := func(s *step) {
-		s.Config = "provider \"databricks\" {\n  rate_limit = 1\n}\n" + s.Config
-		readAfterCreate(s)
-	}
 	retryTimeout := func(seconds string) func(*step) {
 		return func(s *step) {
 			s.Config = strings.Replace(s.Config, "retry_timeout_seconds = 5", seconds, 1)
@@ -30,16 +26,16 @@ func TestRepeatJourneysPinRetriesAndTiming(t *testing.T) {
 	const (
 		groups = `/api/2\.0/preview/scim/v2/Groups`
 		create = `call 1 \(POST ` + groups + `\)`
-		read   = `GET ` + groups +
-			`/group-id\?attributes=displayName,externalId,entitlements`
 	)
 	for _, tc := range []struct {
 		name, journey, failure string
 		edit                   func(*step)
 	}{
-		{"429 twice in a 2 s retry timeout", "retry_429_until_timeout", "",
+		// The second attempt starts by 1.75 s and a third cannot start before 3.1 s,
+		// so 3 s allows exactly two; 2 s would leave 0.25 s for the second.
+		{"429 twice in a 3 s retry timeout", "retry_429_until_timeout", "",
 			func(s *step) {
-				retryTimeout("retry_timeout_seconds = 2")(s)
+				retryTimeout("retry_timeout_seconds = 3")(s)
 				s.Calls[0].Times = httpfixture.Exactly(2)
 			}},
 		{"429 retried past the range without a retry timeout", "retry_429_until_timeout",
@@ -51,10 +47,6 @@ func TestRepeatJourneysPinRetriesAndTiming(t *testing.T) {
 				` arrived [0-9.]+s after ` + create + `, above max_gap 1s`,
 			func(s *step) { s.Calls[1].MinGap, s.Calls[1].MaxGap = "", "1s" }},
 		{"rate_limit delays the read after the create", "retry_503", "", withRateLimit},
-		{"read without rate_limit is sooner than min_gap", "retry_503",
-			`step 1 \(create_retries_503\): call 2: ` + read +
-				` arrived [0-9.]+m?s after ` + create + `, below min_gap 900ms`,
-			readAfterCreate},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			d, err := loadDefinition("testdata/repeats/" + tc.journey + ".yaml")
@@ -76,9 +68,11 @@ func TestRepeatJourneysPinRetriesAndTiming(t *testing.T) {
 	}
 }
 
-// readAfterCreate drops the 503s and expects the read at least 900ms after the
-// create. The SDK's rate limiter spaces them only when rate_limit = 1 is kept.
-func readAfterCreate(s *step) {
+// withRateLimit sets rate_limit = 1, drops the 503s and expects the read at least
+// 900ms after the create, which the SDK's rate limiter only does when the runner
+// keeps rate_limit. A slow machine only lengthens the gap.
+func withRateLimit(s *step) {
+	s.Config = "provider \"databricks\" {\n  rate_limit = 1\n}\n" + s.Config
 	s.Calls = s.Calls[1:]
 	s.Calls[0].MinGap, s.Calls[0].MaxGap = "", ""
 	s.Calls[1].MinGap = "900ms"

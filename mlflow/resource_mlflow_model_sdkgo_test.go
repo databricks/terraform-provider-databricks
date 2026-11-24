@@ -43,8 +43,13 @@ func TestResourceMlflowModelSdkGoSchemaEqualsClassic(t *testing.T) {
 		})
 	}
 
-	// The comparison has to notice a change of any property, also in a nested block.
-	// Every field of schema.Schema is changed in turn on tags.key.
+	mlflowModelSchemaDiffNoticesChanges(t, classic)
+}
+
+// mlflowModelSchemaDiffNoticesChanges checks that the comparison notices a change
+// of any property, also in a nested block: it changes every field of schema.Schema
+// in turn on tags.key, and then an attribute that only one schema has.
+func mlflowModelSchemaDiffNoticesChanges(t *testing.T, classic map[string]*schema.Schema) {
 	nestedKey := func(s map[string]*schema.Schema) *schema.Schema {
 		return s["tags"].Elem.(*schema.Resource).Schema["key"]
 	}
@@ -95,19 +100,7 @@ func mlflowModelSchemaDiff(path string, classic, modular reflect.Value) []string
 			diff = append(diff, mlflowModelSchemaDiff(field, classic.Field(i), modular.Field(i))...)
 		}
 	case reflect.Map:
-		for _, key := range classic.MapKeys() {
-			entry := path + "." + key.String()
-			if !modular.MapIndex(key).IsValid() {
-				diff = append(diff, entry+": only in the classic schema")
-				continue
-			}
-			diff = append(diff, mlflowModelSchemaDiff(entry, classic.MapIndex(key), modular.MapIndex(key))...)
-		}
-		for _, key := range modular.MapKeys() {
-			if !classic.MapIndex(key).IsValid() {
-				diff = append(diff, path+"."+key.String()+": only in the modular schema")
-			}
-		}
+		diff = mlflowModelSchemaDiffMaps(path, classic, modular)
 	case reflect.Slice:
 		if classic.Len() != modular.Len() {
 			return []string{path + ": the lengths differ"}
@@ -122,6 +115,26 @@ func mlflowModelSchemaDiff(path string, classic, modular reflect.Value) []string
 	default:
 		if !classic.Equal(modular) {
 			diff = []string{path + ": the values differ"}
+		}
+	}
+	return diff
+}
+
+// mlflowModelSchemaDiffMaps is mlflowModelSchemaDiff for two maps, such as the
+// attributes of a schema or of a nested block.
+func mlflowModelSchemaDiffMaps(path string, classic, modular reflect.Value) []string {
+	var diff []string
+	for _, key := range classic.MapKeys() {
+		entry := path + "." + key.String()
+		if !modular.MapIndex(key).IsValid() {
+			diff = append(diff, entry+": only in the classic schema")
+			continue
+		}
+		diff = append(diff, mlflowModelSchemaDiff(entry, classic.MapIndex(key), modular.MapIndex(key))...)
+	}
+	for _, key := range modular.MapKeys() {
+		if !classic.MapIndex(key).IsValid() {
+			diff = append(diff, path+"."+key.String()+": only in the modular schema")
 		}
 	}
 	return diff

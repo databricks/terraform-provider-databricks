@@ -56,10 +56,14 @@ type FailoverGroup struct {
 	// Client-provided identifier for the failover group. Used to construct the
 	// resource name as {parent}/failover-groups/{failover_group_id}.
 	FailoverGroupId types.String `tfsdk:"failover_group_id"`
-	// True if errors currently block the replication point.
+	// True when replication errors are preventing the replication point from
+	// advancing. Populated only while the failover group is INITIAL_REPLICATION
+	// or ACTIVE; the blocking errors are listed in the
+	// system.replication.states system table.
 	HasReplicationPointBlockingErrors types.Bool `tfsdk:"has_replication_point_blocking_errors"`
 	// Initial primary region. Used only in Create requests to set the starting
-	// primary region. Not returned in responses.
+	// primary region, and must be one of the regions in `regions`. Not returned
+	// in responses.
 	InitialPrimaryRegion types.String `tfsdk:"initial_primary_region"`
 	// Initial replication progress of all in-scope assets. Set only when the
 	// FailoverGroup is in INITIAL_REPLICATION state.
@@ -69,17 +73,33 @@ type FailoverGroup struct {
 	Name types.String `tfsdk:"name"`
 	// The parent resource. Format: accounts/{account_id}.
 	Parent types.String `tfsdk:"parent"`
-	// List of all regions participating in this failover group.
+	// The two cloud regions that participate in this failover group, the
+	// primary and the secondary. Each workspace set contains one workspace in
+	// each region.
 	Regions types.List `tfsdk:"regions"`
-	// The latest point in time to which data has been replicated.
+	// The most recent point in time up to which all in-scope assets have been
+	// replicated to the secondary region. Data written after this point might
+	// not exist in the secondary yet and can be lost in an unplanned failover.
+	// When both Unity Catalog and workspace assets are replicated, this is the
+	// older of the two replication points. Not populated until the first
+	// replication point exists, and not populated in ListFailoverGroups
+	// responses.
 	ReplicationPoint timetypes.RFC3339 `tfsdk:"replication_point"`
-	// Aggregate state of the failover group.
+	// Aggregate state of the failover group across Unity Catalog and workspace
+	// asset replication. The group is INITIAL_REPLICATION until it has a
+	// replication point, ACTIVE while replication is in steady state and
+	// failover is available, and FAILING_OVER while a failover is in progress;
+	// the `*_FAILED` values mean that the last operation did not complete. Not
+	// populated in ListFailoverGroups responses.
 	State types.String `tfsdk:"state"`
-	// Unity Catalog replication configuration.
+	// Unity Catalog replication configuration: the catalogs to replicate and
+	// the storage location mappings for their data. Omit it to replicate
+	// workspace assets only.
 	UnityCatalogAssets types.Object `tfsdk:"unity_catalog_assets"`
 	// Time at which this failover group was last modified.
 	UpdateTime timetypes.RFC3339 `tfsdk:"update_time"`
 	// Workspace sets, each containing workspaces that replicate to each other.
+	// A failover group currently supports exactly one workspace set.
 	WorkspaceSets types.List `tfsdk:"workspace_sets"`
 }
 

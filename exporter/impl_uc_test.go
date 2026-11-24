@@ -10,6 +10,7 @@ import (
 
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/experimental/mocks"
+	"github.com/databricks/databricks-sdk-go/service/lakewatch"
 	"github.com/databricks/databricks-sdk-go/service/tags"
 
 	sdk_uc "github.com/databricks/databricks-sdk-go/service/catalog"
@@ -17,6 +18,8 @@ import (
 	sdk_sharing "github.com/databricks/databricks-sdk-go/service/sharing"
 	sdk_vs "github.com/databricks/databricks-sdk-go/service/vectorsearch"
 	tf_uc "github.com/databricks/terraform-provider-databricks/catalog"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
+	lakewatch_datasource_resource "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/lakewatch_datasource"
 	tf_vs "github.com/databricks/terraform-provider-databricks/vectorsearch"
 
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -1634,4 +1637,29 @@ func (t *testDataWrapper) IsPluginFramework() bool {
 
 func (t *testDataWrapper) GetTypedStruct(ctx context.Context, target interface{}) error {
 	return nil
+}
+
+func TestIsMatchingCatalogAndSchemaAndTablePluginFramework(t *testing.T) {
+	ic := importContextForTest()
+	ic.Context = context.Background()
+	var tfDs lakewatch_datasource_resource.Datasource
+	require.False(t, converters.GoSdkToTfSdkStruct(ic.Context, lakewatch.Datasource{
+		ExistingTable: &lakewatch.ExistingTable{Catalog: "src", Schema: "events", Name: "audit"},
+	}, &tfDs).HasError())
+	wrapper := newLakewatchTestWrapper(t, ic, "databricks_lakewatch_datasource", "datasources/d1",
+		map[string]any{"existing_table": tfDs.ExistingTable})
+	res := &resource{Resource: "databricks_lakewatch_datasource", ID: "datasources/d1", DataWrapper: wrapper}
+	tableApproximation := func(catalogName, schemaName, name string) *resourceApproximation {
+		return &resourceApproximation{
+			Type: "databricks_sql_table",
+			Instances: []instanceApproximation{{Attributes: map[string]any{
+				"catalog_name": catalogName,
+				"schema_name":  schemaName,
+				"name":         name,
+			}}},
+		}
+	}
+	matcher := createIsMatchingCatalogAndSchemaAndTable("catalog", "schema", "name")
+	assert.True(t, matcher(ic, res, tableApproximation("src", "events", "audit"), "existing_table.name"))
+	assert.False(t, matcher(ic, res, tableApproximation("src", "other", "audit"), "existing_table.name"))
 }

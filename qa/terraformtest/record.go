@@ -76,7 +76,11 @@ func recordFile(t *testing.T, path, profileName string) {
 
 // A live service cannot reproduce scripted wire behavior, and a refresh would
 // replace those calls with the captured ones, so such journeys are not recorded.
+// Nor is an expected destroy failure: forgetting its resources would leave them live.
 func validateRecordableCalls(d *testDefinition) error {
+	if d.Destroy.ExpectError != nil {
+		return fmt.Errorf("destroy: recording cannot leave the resources a failed destroy keeps in the workspace; edit this journey by hand")
+	}
 	for i, s := range d.Steps {
 		if err := recordableCalls(stepLabel(i, s.Name), s.Calls); err != nil {
 			return err

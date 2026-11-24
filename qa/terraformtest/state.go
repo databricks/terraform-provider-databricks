@@ -11,6 +11,7 @@ import (
 
 	tfjson "github.com/hashicorp/terraform-json"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 )
@@ -41,6 +42,21 @@ func (s stateAssertion) check(state *tfjson.State) error {
 		}
 	}
 	return nil
+}
+
+// keptStateAssertion checks the state a failed destroy leaves. The forget step's plan
+// doesn't refresh, so its prior state is that state.
+type keptStateAssertion struct {
+	label    string
+	expected expectedState
+}
+
+func (k keptStateAssertion) CheckPlan(_ context.Context, req plancheck.CheckPlanRequest, resp *plancheck.CheckPlanResponse) {
+	if req.Plan == nil {
+		resp.Error = fmt.Errorf("%s: terraform plan is unavailable", k.label)
+		return
+	}
+	resp.Error = stateAssertion(k).check(req.Plan.PriorState)
 }
 
 // emptyStateAssertion is mandatory cleanup validation, independent of optional

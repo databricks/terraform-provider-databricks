@@ -55,6 +55,39 @@ type step struct {
 
 type destroy struct {
 	Calls []httpfixture.Call `yaml:"calls"`
+	// Refresh false skips the refresh before the delete, as -refresh=false does.
+	Refresh *bool `yaml:"refresh,omitempty"`
+	// ExpectError pins a destroy that fails. State then lists every resource left, which
+	// the runner removes from state without calling the API.
+	ExpectError *string        `yaml:"expect_error,omitempty"`
+	State       *expectedState `yaml:"state,omitempty"`
+}
+
+// removableAddress matches the root-module managed resources that a removed block names.
+var removableAddress = regexp.MustCompile(`^[A-Za-z][A-Za-z0-9_-]*\.[A-Za-z_][A-Za-z0-9_-]*$`)
+
+func (d destroy) validate() error {
+	if d.ExpectError == nil {
+		if d.State != nil {
+			return fmt.Errorf("destroy: state requires expect_error; a successful destroy always leaves empty state")
+		}
+		return nil
+	}
+	if err := validateErrorPattern(*d.ExpectError); err != nil {
+		return fmt.Errorf("destroy: %w", err)
+	}
+	if d.State == nil || len(d.State.Resources) == 0 {
+		return fmt.Errorf("destroy: expect_error requires state listing every resource the failed destroy leaves")
+	}
+	if err := validateState(d.State); err != nil {
+		return fmt.Errorf("destroy: %w", err)
+	}
+	for address := range d.State.Resources {
+		if !removableAddress.MatchString(address) {
+			return fmt.Errorf("destroy: state resource %s must be a root-module managed resource without an index", address)
+		}
+	}
+	return nil
 }
 
 type expectedState struct {
@@ -145,6 +178,9 @@ func (d *testDefinition) validate() error {
 			hasPriorState = true
 		}
 	}
+	if err := d.Destroy.validate(); err != nil {
+		return err
+	}
 	return d.validateCalls()
 }
 
@@ -173,14 +209,21 @@ func (s step) validateExpectedError() error {
 	if s.ExpectError == nil {
 		return nil
 	}
-	if strings.TrimSpace(*s.ExpectError) == "" {
-		return fmt.Errorf("expect_error must be a nonempty regular expression")
-	}
-	if _, err := regexp.Compile(*s.ExpectError); err != nil {
-		return fmt.Errorf("invalid expect_error regular expression: %w", err)
+	if err := validateErrorPattern(*s.ExpectError); err != nil {
+		return err
 	}
 	if s.State != nil {
 		return fmt.Errorf("state checks on expected-error steps are not supported; check state in a subsequent successful step")
+	}
+	return nil
+}
+
+func validateErrorPattern(pattern string) error {
+	if strings.TrimSpace(pattern) == "" {
+		return fmt.Errorf("expect_error must be a nonempty regular expression")
+	}
+	if _, err := regexp.Compile(pattern); err != nil {
+		return fmt.Errorf("invalid expect_error regular expression: %w", err)
 	}
 	return nil
 }

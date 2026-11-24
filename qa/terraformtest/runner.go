@@ -3,16 +3,19 @@ package terraformtest
 import (
 	"errors"
 	"fmt"
+	"maps"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"os"
 	"os/exec"
 	"regexp"
+	"slices"
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 
 	"github.com/databricks/terraform-provider-databricks/qa/httpfixture"
@@ -87,6 +90,7 @@ func terraformCase(t *testing.T, definition *testDefinition, handler stepHTTP, c
 			return errors.Join(err, cleanupErr)
 		},
 	}
+	configureDestroy(t, definition, handler, &testCase)
 	configureProviderImplementations(definition, &testCase, customize)
 	if definition.InitialState != nil {
 		seedInitialCheckpoint(t, definition, &testCase)
@@ -148,8 +152,58 @@ func testSteps(t *testing.T, definition *testDefinition, handler stepHTTP) []res
 	cleanup := terraformStep(t, handler, label, cleanupConfig, definition.Destroy.Calls, nil)
 	cleanup.Destroy = true
 	cleanup.ConfigStateChecks = []statecheck.StateCheck{emptyStateAssertion{label: label}}
+	if definition.Destroy.ExpectError != nil {
+		cleanup.ExpectError = regexp.MustCompile(*definition.Destroy.ExpectError)
+		cleanup.ConfigStateChecks = nil
+	}
 	steps = append(steps, cleanup)
 	return steps
+}
+
+// configureDestroy skips the destroy's refresh when asked, and forgets what an expected
+// destroy failure leaves. HashiCorp reads the CLI options at each plan, so the option
+// set in a step's PreConfig applies to that step and every later one.
+func configureDestroy(t *testing.T, d *testDefinition, handler stepHTTP, tc *resource.TestCase) {
+	t.Helper()
+	skipRefresh := d.Destroy.Refresh != nil && !*d.Destroy.Refresh
+	if !skipRefresh && d.Destroy.ExpectError == nil {
+		return
+	}
+	cli := &resource.AdditionalCLIOptions{}
+	tc.AdditionalCLIOptions = cli
+	if skipRefresh {
+		disableRefresh(&tc.Steps[len(d.Steps)], cli)
+	}
+	if d.Destroy.ExpectError != nil {
+		forget := forgetStep(t, handler, d)
+		disableRefresh(&forget, cli)
+		tc.Steps = append(tc.Steps, forget)
+	}
+}
+
+func disableRefresh(s *resource.TestStep, cli *resource.AdditionalCLIOptions) {
+	start := s.PreConfig
+	s.PreConfig = func() {
+		cli.Plan.NoRefresh = true
+		start()
+	}
+}
+
+// forgetStep removes the resources a failed destroy leaves from state with removed blocks,
+// so HashiCorp's post-test destroy finds none. Its plan checks the state the destroy
+// kept; it sends no request and requires empty state after.
+func forgetStep(t *testing.T, handler stepHTTP, d *testDefinition) resource.TestStep {
+	t.Helper()
+	label := stepLabel(len(d.Steps)+1, "forget")
+	hcl := "provider \"databricks\" {}\n"
+	for _, address := range slices.Sorted(maps.Keys(d.Destroy.State.Resources)) {
+		hcl += fmt.Sprintf("\nremoved {\n  from = %s\n  lifecycle {\n    destroy = false\n  }\n}\n", address)
+	}
+	s := terraformStep(t, handler, label, hcl, nil, nil)
+	kept := keptStateAssertion{label: stepLabel(len(d.Steps), "destroy"), expected: *d.Destroy.State}
+	s.ConfigPlanChecks.PreApply = []plancheck.PlanCheck{kept}
+	s.ConfigStateChecks = []statecheck.StateCheck{emptyStateAssertion{label: label}}
+	return s
 }
 
 // configuredStep maps a YAML operation to native checks without changing the

@@ -1,0 +1,115 @@
+// Code generated from OpenAPI specs by Databricks SDK Generator. DO NOT EDIT.
+
+package computemigrations
+
+import (
+	"context"
+)
+
+// Manage migrations of Classic compute workloads to Serverless.
+//
+// Deprecated: Do not use this interface, it will be removed in a future version of the SDK.
+type ComputeMigrationsService interface {
+
+	// Approves migration execution at the MIGRATION_REVIEW gate, advancing to
+	// execution.
+	//
+	// Valid only when the migration is in MIGRATION_REVIEW. If supplied, the
+	// `etag` must match the current server value.
+	//
+	// Returns NOT_FOUND if the migration does not exist. Returns
+	// FAILED_PRECONDITION if the migration is not in MIGRATION_REVIEW. Returns
+	// ABORTED if the etag does not match the current resource version.
+	ApproveMigrationExecution(ctx context.Context, request ApproveMigrationExecutionRequest) (*Migration, error)
+
+	// Approves the working copy at the TRANSLATION_READY gate. If the migration
+	// was created with `run_validation`, the working copy is then run to verify
+	// it executes successfully before the migration is presented for execution
+	// review; otherwise it advances straight to MIGRATION_REVIEW.
+	//
+	// Valid only when the migration is in TRANSLATION_READY. If supplied, the
+	// `etag` must match the current server value.
+	//
+	// Returns NOT_FOUND if the migration does not exist. Returns
+	// FAILED_PRECONDITION if the migration is not in TRANSLATION_READY. Returns
+	// ABORTED if the etag does not match the current resource version.
+	ApproveMigrationTranslation(ctx context.Context, request ApproveMigrationTranslationRequest) (*Migration, error)
+
+	// Cancels the migration, transitioning it to CANCELLED.
+	//
+	// Valid from any non-terminal state, unlike the review-gate transitions,
+	// which each require a specific state. Any in-flight agent work is
+	// abandoned and the migration stops advancing. The resource is retained for
+	// auditability.
+	//
+	// Returns NOT_FOUND if the migration does not exist. Returns
+	// FAILED_PRECONDITION if the migration is already in a terminal state.
+	// Returns ABORTED if the etag does not match the current resource version.
+	CancelMigration(ctx context.Context, request CancelMigrationRequest) (*Migration, error)
+
+	// Creates a new migration for a Classic compute asset.
+	//
+	// The migration is created in PLANNING_PENDING and advances through the
+	// state machine as planning work is scheduled. The caller must have
+	// appropriate permissions: workspace admin for infrastructure-scoped
+	// migrations, job owner/admin for individual workload migrations.
+	//
+	// At most one migration may hold an asset. Returns ALREADY_EXISTS if the
+	// asset has a migration in flight, or one that already migrated it
+	// successfully; a migration that ended without succeeding, or was deleted,
+	// releases the asset so it can be migrated again. Returns
+	// INVALID_PARAMETER_VALUE if the asset is not eligible for migration.
+	Create(ctx context.Context, request CreateMigrationRequest) (*Migration, error)
+
+	// Deletes a migration (soft-delete).
+	//
+	// Allowed from any state. Deleting a migration marks the record deleted
+	// only — it does not roll back a migration that already ran, and
+	// resources created during the migration are not cleaned up. The migration
+	// resource is retained for auditability. To stop an in-flight migration
+	// (agent teardown, transition to CANCELLED), use CancelMigration instead.
+	//
+	// Returns NOT_FOUND if the migration does not exist, or was already
+	// deleted: a deleted migration is hidden from every method (Get, Update,
+	// List, and Delete), so it cannot be deleted again. Returns ABORTED if a
+	// supplied nonempty request etag does not match the resource version.
+	Delete(ctx context.Context, request DeleteMigrationRequest) (*Migration, error)
+
+	// Retrieves a migration by its ID.
+	//
+	// Returns the current state, configuration, and output artifacts of the
+	// migration. Use this to poll migration progress or inspect artifacts after
+	// state transitions. Returns NOT_FOUND if the migration does not exist in
+	// the caller's workspace.
+	Get(ctx context.Context, request GetMigrationRequest) (*Migration, error)
+
+	// Lists migrations in the caller's workspace, ordered by migration ID, with
+	// cursor-based pagination and filtering by asset type and state.
+	//
+	// Eventually consistent: results are read from a cache, and pagination is
+	// not a point-in-time snapshot, so a migration created during a List may
+	// not appear until a subsequent one.
+	List(ctx context.Context, request ListMigrationsRequest) (*ListMigrationsResponse, error)
+
+	// Rejects migration execution at the MIGRATION_REVIEW gate, sending the
+	// migration to REVISION_PENDING to loop back for re-planning.
+	//
+	// Valid only when the migration is in MIGRATION_REVIEW. If supplied, the
+	// `etag` must match the current server value.
+	//
+	// Returns NOT_FOUND if the migration does not exist. Returns
+	// FAILED_PRECONDITION if the migration is not in MIGRATION_REVIEW. Returns
+	// ABORTED if the etag does not match the current resource version.
+	RejectMigrationExecution(ctx context.Context, request RejectMigrationExecutionRequest) (*Migration, error)
+
+	// Rejects the working copy at the TRANSLATION_READY gate, sending the
+	// migration to REVISION_PENDING to loop back for re-planning.
+	//
+	// Valid only when the migration is in TRANSLATION_READY. If supplied, the
+	// `etag` must match the current server value.
+	//
+	// Returns NOT_FOUND if the migration does not exist. Returns
+	// FAILED_PRECONDITION if the migration is not in TRANSLATION_READY. Returns
+	// ABORTED if the etag does not match the current resource version.
+	RejectMigrationTranslation(ctx context.Context, request RejectMigrationTranslationRequest) (*Migration, error)
+}

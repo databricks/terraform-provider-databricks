@@ -20,7 +20,6 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/databricks-sdk-go/service/iam"
-	"github.com/databricks/databricks-sdk-go/service/lakewatch"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
@@ -171,10 +170,6 @@ type importContext struct {
 
 	builtInPolicies      map[string]compute.PolicyFamily
 	builtInPoliciesMutex sync.Mutex
-
-	// Lakewatch built-in parsers, keyed by parser ID
-	lakewatchBuiltinParsers      map[string]lakewatch.BuiltinParser
-	lakewatchBuiltinParsersMutex sync.RWMutex
 
 	// Workspace-level UC Metastore information
 	currentMetastore *catalog.GetMetastoreSummaryResponse
@@ -753,7 +748,7 @@ func (ic *importContext) Add(r *resource) {
 
 	// For Plugin Framework resources, we need to extract attributes differently
 	ir := ic.Importables[r.Resource]
-	if (ir.PluginFramework || ir.DataSourceOnly) && r.Data == nil && r.DataWrapper != nil {
+	if ir.PluginFramework && r.Data == nil && r.DataWrapper != nil {
 		// For Plugin Framework, we'll create a minimal approximation
 		// The actual attributes will be generated from the wrapper during HCL generation
 		// For now, we just need the ID and basic info for dependency resolution
@@ -770,8 +765,7 @@ func (ic *importContext) Add(r *resource) {
 					case string:
 						inst.Attributes[fieldName] = v
 					case int, int32, int64, float32, float64, bool:
-						// stored as strings, like in SDKv2 state, so they could be used for matching
-						inst.Attributes[fieldName] = fmt.Sprint(v)
+						inst.Attributes[fieldName] = v
 					}
 				}
 			}
@@ -903,7 +897,7 @@ func (ic *importContext) Emit(r *resource) {
 	// Check if resource is available in either SDKv2 or Plugin Framework provider
 	_, okSDKv2 := ic.Resources[r.Resource]
 	_, okPluginFW := ic.PluginFrameworkResources[r.Resource]
-	if !okSDKv2 && !okPluginFW && !ir.DataSourceOnly {
+	if !okSDKv2 && !okPluginFW {
 		log.Printf("[ERROR] %s is not available in provider", r)
 		return
 	}

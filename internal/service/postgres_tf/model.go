@@ -10188,6 +10188,8 @@ type ProjectStatus struct {
 	BudgetPolicyId types.String `tfsdk:"budget_policy_id"`
 	// The most recent time when any endpoint of this project was active.
 	ComputeLastActiveTime timetypes.RFC3339 `tfsdk:"compute_last_active_time"`
+	// The compute policy that is applied to the project.
+	ComputePolicyId types.String `tfsdk:"compute_policy_id"`
 	// The effective custom tags associated with the project.
 	CustomTags types.List `tfsdk:"custom_tags"`
 	// The full resource path of the default branch of the project.
@@ -10277,6 +10279,7 @@ func (m ProjectStatus) ApplySchemaCustomizations(attrs map[string]tfschema.Attri
 	attrs["branch_logical_size_limit_bytes"] = attrs["branch_logical_size_limit_bytes"].SetComputed()
 	attrs["budget_policy_id"] = attrs["budget_policy_id"].SetComputed()
 	attrs["compute_last_active_time"] = attrs["compute_last_active_time"].SetComputed()
+	attrs["compute_policy_id"] = attrs["compute_policy_id"].SetComputed()
 	attrs["custom_tags"] = attrs["custom_tags"].SetComputed()
 	attrs["default_branch"] = attrs["default_branch"].SetComputed()
 	attrs["default_endpoint_settings"] = attrs["default_endpoint_settings"].SetComputed()
@@ -10315,6 +10318,7 @@ func (m ProjectStatus) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 			"branch_logical_size_limit_bytes": m.BranchLogicalSizeLimitBytes,
 			"budget_policy_id":                m.BudgetPolicyId,
 			"compute_last_active_time":        m.ComputeLastActiveTime,
+			"compute_policy_id":               m.ComputePolicyId,
 			"custom_tags":                     m.CustomTags,
 			"default_branch":                  m.DefaultBranch,
 			"default_endpoint_settings":       m.DefaultEndpointSettings,
@@ -10335,6 +10339,7 @@ func (m ProjectStatus) Type(ctx context.Context) attr.Type {
 			"branch_logical_size_limit_bytes": types.Int64Type,
 			"budget_policy_id":                types.StringType,
 			"compute_last_active_time":        timetypes.RFC3339{}.Type(ctx),
+			"compute_policy_id":               types.StringType,
 			"custom_tags": basetypes.ListType{
 				ElemType: ProjectCustomTag{}.Type(ctx),
 			},

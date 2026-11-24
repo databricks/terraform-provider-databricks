@@ -75,7 +75,7 @@ This data source exports a single attribute, `endpoints`. It is a list of resour
 * `index_initialization_percentage` (integer) - Percentage of index initialization completed, from 0 to 100. Set only during the
   `INITIALIZING_INDEX` phase; unset in other phases or when progress is not available
 * `phase` (string) - Current phase of the in-progress scaling change. Unset when no scaling change is in
-  progress or the phase is not available. Possible values are: `ADJUSTING_CAPACITY`, `ESTIMATING`, `INITIALIZING_INDEX`
+  progress or the phase is not available. Possible values are: `ADJUSTING_CAPACITY`, `ESTIMATING`, `FINALIZING`, `INITIALIZING_INDEX`
 * `requested_target_qps` (integer) - The requested QPS target for the endpoint. Best-effort; the system does not
   guarantee this QPS will be achieved
 * `state` (string) - The current state of the scaling change request. Possible values are: `SCALING_CHANGE_APPLIED`, `SCALING_CHANGE_IN_PROGRESS`, `SCALING_CHANGE_UNSPECIFIED`

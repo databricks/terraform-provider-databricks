@@ -19,6 +19,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
@@ -1740,6 +1741,58 @@ func (m *ListSandboxesResponse) SetSandboxes(ctx context.Context, v []Sandbox) {
 	m.Sandboxes = types.ListValueMust(t, vs)
 }
 
+// Network configuration for the sandbox.
+type NetworkSpec struct {
+	// Whether the sandbox can reach the public internet. Defaults to true.
+	// Control-plane, PrivateLink, and workspace/UC/Delta-shared storage stay
+	// reachable either way.
+	InternetAccess types.Bool `tfsdk:"internet_access"`
+}
+
+func (to *NetworkSpec) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from NetworkSpec) {
+}
+
+func (to *NetworkSpec) SyncFieldsDuringRead(ctx context.Context, from NetworkSpec) {
+}
+
+func (m NetworkSpec) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["internet_access"] = attrs["internet_access"].SetOptional()
+	attrs["internet_access"] = attrs["internet_access"].(tfschema.BoolAttributeBuilder).AddPlanModifier(boolplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in NetworkSpec.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m NetworkSpec) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, NetworkSpec
+// only implements ToObjectValue() and Type().
+func (m NetworkSpec) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"internet_access": m.InternetAccess,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m NetworkSpec) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"internet_access": types.BoolType,
+		},
+	}
+}
+
 // Identifies the source and exact destination for a sandbox path rename.
 type RenamePathRequest struct {
 	// Exact absolute UTF-8 destination; it must not already exist.
@@ -2252,6 +2305,8 @@ type SandboxSpec struct {
 	// Software environment for the sandbox, such as the container image it
 	// runs.
 	Environment types.Object `tfsdk:"environment"`
+	// Network configuration requested for the sandbox.
+	Network types.Object `tfsdk:"network"`
 }
 
 func (to *SandboxSpec) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from SandboxSpec) {
@@ -2270,6 +2325,15 @@ func (to *SandboxSpec) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from 
 				// Recursively sync the fields of Environment
 				toEnvironment.SyncFieldsDuringCreateOrUpdate(ctx, fromEnvironment)
 				to.SetEnvironment(ctx, toEnvironment)
+			}
+		}
+	}
+	if !from.Network.IsNull() && !from.Network.IsUnknown() {
+		if toNetwork, ok := to.GetNetwork(ctx); ok {
+			if fromNetwork, ok := from.GetNetwork(ctx); ok {
+				// Recursively sync the fields of Network
+				toNetwork.SyncFieldsDuringCreateOrUpdate(ctx, fromNetwork)
+				to.SetNetwork(ctx, toNetwork)
 			}
 		}
 	}
@@ -2292,11 +2356,20 @@ func (to *SandboxSpec) SyncFieldsDuringRead(ctx context.Context, from SandboxSpe
 			}
 		}
 	}
+	if !from.Network.IsNull() && !from.Network.IsUnknown() {
+		if toNetwork, ok := to.GetNetwork(ctx); ok {
+			if fromNetwork, ok := from.GetNetwork(ctx); ok {
+				toNetwork.SyncFieldsDuringRead(ctx, fromNetwork)
+				to.SetNetwork(ctx, toNetwork)
+			}
+		}
+	}
 }
 
 func (m SandboxSpec) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["compute"] = attrs["compute"].SetOptional()
 	attrs["environment"] = attrs["environment"].SetOptional()
+	attrs["network"] = attrs["network"].SetOptional()
 
 	return attrs
 }
@@ -2312,6 +2385,7 @@ func (m SandboxSpec) GetComplexFieldTypes(ctx context.Context) map[string]reflec
 	return map[string]reflect.Type{
 		"compute":     reflect.TypeOf(ComputeSpec{}),
 		"environment": reflect.TypeOf(EnvironmentSpec{}),
+		"network":     reflect.TypeOf(NetworkSpec{}),
 	}
 }
 
@@ -2324,6 +2398,7 @@ func (m SandboxSpec) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 		map[string]attr.Value{
 			"compute":     m.Compute,
 			"environment": m.Environment,
+			"network":     m.Network,
 		})
 }
 
@@ -2333,6 +2408,7 @@ func (m SandboxSpec) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"compute":     ComputeSpec{}.Type(ctx),
 			"environment": EnvironmentSpec{}.Type(ctx),
+			"network":     NetworkSpec{}.Type(ctx),
 		},
 	}
 }
@@ -2385,6 +2461,31 @@ func (m *SandboxSpec) GetEnvironment(ctx context.Context) (EnvironmentSpec, bool
 func (m *SandboxSpec) SetEnvironment(ctx context.Context, v EnvironmentSpec) {
 	vs := v.ToObjectValue(ctx)
 	m.Environment = vs
+}
+
+// GetNetwork returns the value of the Network field in SandboxSpec as
+// a NetworkSpec value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *SandboxSpec) GetNetwork(ctx context.Context) (NetworkSpec, bool) {
+	var e NetworkSpec
+	if m.Network.IsNull() || m.Network.IsUnknown() {
+		return e, false
+	}
+	var v NetworkSpec
+	d := m.Network.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetNetwork sets the value of the Network field in SandboxSpec.
+func (m *SandboxSpec) SetNetwork(ctx context.Context, v NetworkSpec) {
+	vs := v.ToObjectValue(ctx)
+	m.Network = vs
 }
 
 type SandboxStatus struct {

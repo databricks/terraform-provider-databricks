@@ -1,0 +1,23 @@
+name: Sync label
+
+on:
+  pull_request:
+    types: [reopened, synchronize, labeled, unlabeled]
+  merge_group:
+    types: [checks_requested]
+
+permissions: {}
+
+jobs:
+  sync-label:
+    name: sync-label
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require a maintainer-approved sync
+        if: ${{ github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'sync') }}
+        run: |
+          echo "::error::This repository is a read-only mirror. A maintainer must apply the 'sync' label to an approved synchronization PR. See CONTRIBUTING.md."
+          exit 1
+      - name: Approved sync or merge queue
+        if: ${{ github.event_name == 'merge_group' || contains(github.event.pull_request.labels.*.name, 'sync') }}
+        run: echo "Sync label checked at PR level before entering the merge queue."

@@ -1,0 +1,42 @@
+name: Setup build environment
+description: Set up Go toolchain and dependencies for CI
+
+inputs:
+  go-version:
+    description: "Go version to install"
+    required: true
+  go-cache:
+    description: "Enable Go module caching in setup-go"
+    required: false
+    default: "true"
+
+runs:
+  using: composite
+  steps:
+    - name: Setup JFrog CLI with OIDC
+      uses: jfrog/setup-jfrog-cli@279b1f629f43dd5bc658d8361ac4802a7ef8d2d5 # v4.9.1
+      env:
+        JF_URL: https://databricks.jfrog.io
+      with:
+        oidc-provider-name: github-actions
+
+    - name: Setup Go
+      uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+      with:
+        go-version: ${{ inputs.go-version }}
+        cache: ${{ inputs.go-cache }}
+
+    - name: Download Go modules via JFrog
+      shell: bash
+      run: |
+        jf goc --repo-resolve=db-golang
+        jf go mod download
+        jf go install gotest.tools/gotestsum@c4a0df2e75a225d979a444342dd3db752b53619f # v1.13.0
+        jf go install honnef.co/go/tools/cmd/staticcheck@b8ec13ce4d00445d75da053c47498e6f9ec5d7d6 # v0.6.1
+
+        # Point native go commands at the local module cache instead of
+        # the network. go run pkg@version needs module lookups even when
+        # cached; file:// satisfies these from disk without network access.
+        echo "GOPROXY=file://$(go env GOMODCACHE)/cache/download" >> $GITHUB_ENV
+        echo "GONOSUMCHECK=*" >> $GITHUB_ENV
+        echo "GONOSUMDB=*" >> $GITHUB_ENV

@@ -28,8 +28,9 @@ The following arguments are supported:
 * `name` (string, required) - Resource name of the MCP service.
   Format: `mcp-services/{catalog}.{schema}.{mcp_service}`.
   Each `{...}` component is capped at 255 characters individually.
-  Server-derived on Create from `parent` +
-  `mcp_service_id`; required and immutable on Update/Get/Delete
+  The server derives the name on Create from
+  `parent` and `mcp_service_id`; it is required and immutable on Update,
+  Get, and Delete
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 
 ### ProviderConfig
@@ -42,20 +43,22 @@ The following attributes are exported:
   provide this field when `update_mask` contains `config` or one of its
   subpaths
 * `create_time` (string) - Time the MCP service was created
-* `created_by` (string) - Creator identity
-* `effective_owner` (string) - Owner of the MCP service
+* `created_by` (string) - Username or service principal application ID of the principal that created the MCP service
+* `effective_owner` (string) - Username, group name, or service principal application ID of the MCP service owner
 * `etag` (string) - Optimistic concurrency token returned on every read. To make an Update or
   Delete conditional, pass the last-read value in that request's `etag`
   field. In REST responses, this value is a base64 string; URL-encode it when
   setting the `etag` query parameter
-* `metastore_id` (string) - Metastore hosting the MCP service
+* `metastore_id` (string) - Unique identifier of the metastore that contains the MCP service
 * `name` (string) - Resource name of the MCP service.
   Format: `mcp-services/{catalog}.{schema}.{mcp_service}`.
   Each `{...}` component is capped at 255 characters individually.
-  Server-derived on Create from `parent` +
-  `mcp_service_id`; required and immutable on Update/Get/Delete
+  The server derives the name on Create from
+  `parent` and `mcp_service_id`; it is required and immutable on Update,
+  Get, and Delete
 * `update_time` (string) - Time the MCP service was last modified
-* `updated_by` (string) - Identity of the last updater
+* `updated_by` (string) - Username or service principal application ID of the principal that last updated the MCP
+  service
 
 ### McpServiceConfig
 * `include_tool_selectors` (list of string) - Tool names or prefix patterns to expose from the MCP server. Use exact

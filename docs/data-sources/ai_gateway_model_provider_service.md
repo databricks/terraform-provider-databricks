@@ -28,8 +28,9 @@ The following arguments are supported:
 * `name` (string, required) - Resource name of the provider service.
   Format: `model-provider-services/{catalog}.{schema}.{model_provider_service}`.
   Each `{...}` component is capped at 255 characters individually.
-  Server-derived on Create from `parent` +
-  `model_provider_service_id`; required and immutable on Update/Get/Delete
+  The server derives the name on Create from
+  `parent` and `model_provider_service_id`; it is required and immutable on
+  Update, Get, and Delete
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 
 ### ProviderConfig
@@ -42,20 +43,21 @@ The following attributes are exported:
   limits, and payload logging. Required on Create. On Update, it is required
   only when `config` or one of its subpaths appears in `update_mask`
 * `create_time` (string) - Time the provider service was created
-* `created_by` (string) - Creator identity
-* `effective_owner` (string) - Owner of the model provider service
+* `created_by` (string) - Username of the user who created the model provider service
+* `effective_owner` (string) - Username or group name of the model provider service owner
 * `etag` (string) - Optimistic concurrency token returned on every read. To make an Update or
   Delete conditional, pass the last-read value in that request's `etag`
   field. In REST responses, this value is a base64 string; URL-encode it when
   setting the `etag` query parameter
-* `metastore_id` (string) - Metastore hosting the provider service
+* `metastore_id` (string) - Unique identifier of the metastore that contains the model provider service
 * `name` (string) - Resource name of the provider service.
   Format: `model-provider-services/{catalog}.{schema}.{model_provider_service}`.
   Each `{...}` component is capped at 255 characters individually.
-  Server-derived on Create from `parent` +
-  `model_provider_service_id`; required and immutable on Update/Get/Delete
+  The server derives the name on Create from
+  `parent` and `model_provider_service_id`; it is required and immutable on
+  Update, Get, and Delete
 * `update_time` (string) - Time the provider service was last modified
-* `updated_by` (string) - Identity of the last updater
+* `updated_by` (string) - Username of the user who last updated the model provider service
 
 ### InferenceTableConfig
 * `is_deleted` (boolean) - Whether the referenced inference table has been deleted. The configuration
@@ -77,11 +79,17 @@ The following attributes are exported:
   addition to explicit `targets`. When false, only models listed in `targets`
   are routable. Defaults to false. CUSTOM providers have no built-in model
   catalog and must leave this false and list their models in `targets`
-* `amazon_bedrock` (ModelProviderServiceConfigAmazonBedrockProviderConfig)
-* `anthropic` (ModelProviderServiceConfigAnthropicProviderConfig)
-* `azure_openai` (ModelProviderServiceConfigAzureOpenAiProviderConfig)
-* `bedrock_mantle` (ModelProviderServiceConfigAmazonBedrockProviderConfig)
-* `custom` (ModelProviderServiceConfigCustomProviderConfig)
+* `amazon_bedrock` (ModelProviderServiceConfigAmazonBedrockProviderConfig) - Configuration for Amazon Bedrock. Set this field when `provider_type` is
+  `EXTERNAL_MODEL_PROVIDER_TYPE_AMAZON_BEDROCK`
+* `anthropic` (ModelProviderServiceConfigAnthropicProviderConfig) - Configuration for Anthropic. Set this field when `provider_type` is
+  `EXTERNAL_MODEL_PROVIDER_TYPE_ANTHROPIC`
+* `azure_openai` (ModelProviderServiceConfigAzureOpenAiProviderConfig) - Configuration for Azure OpenAI. Set this field when `provider_type` is
+  `EXTERNAL_MODEL_PROVIDER_TYPE_AZURE_OPENAI`
+* `bedrock_mantle` (ModelProviderServiceConfigAmazonBedrockProviderConfig) - Configuration for Amazon Bedrock Mantle, with the same fields as
+  `amazon_bedrock`. Set this field when `provider_type` is
+  `EXTERNAL_MODEL_PROVIDER_TYPE_BEDROCK_MANTLE`
+* `custom` (ModelProviderServiceConfigCustomProviderConfig) - Configuration for a custom OpenAI-compatible provider. Set this field when
+  `provider_type` is `EXTERNAL_MODEL_PROVIDER_TYPE_CUSTOM`
 * `forward_headers` (boolean) - Whether to forward incoming HTTP headers to the upstream provider. Defaults
   to false and is configured for the entire provider service, not per request.
   Upstream authentication is configured separately in the provider-specific
@@ -96,12 +104,15 @@ The following attributes are exported:
   surface exposed through the provider service. AI Gateway cannot evaluate
   Service Policies on opaque unmanaged requests, so unmanaged requests are
   rejected whenever Service Policies are attached to this securable
-* `gemini_enterprise` (ModelProviderServiceConfigGeminiEnterpriseProviderConfig)
+* `gemini_enterprise` (ModelProviderServiceConfigGeminiEnterpriseProviderConfig) - Configuration for Google Gemini Enterprise. Set this field when
+  `provider_type` is `EXTERNAL_MODEL_PROVIDER_TYPE_GEMINI_ENTERPRISE`
 * `inference_table` (InferenceTableConfig) - Payload logging configuration for requests sent directly to this provider
   service. Requests routed through a model service are captured by that model
   service's inference table instead
-* `microsoft_foundry` (ModelProviderServiceConfigMicrosoftFoundryProviderConfig)
-* `openai` (ModelProviderServiceConfigOpenAiProviderConfig)
+* `microsoft_foundry` (ModelProviderServiceConfigMicrosoftFoundryProviderConfig) - Configuration for Microsoft Foundry. Set this field when
+  `provider_type` is `EXTERNAL_MODEL_PROVIDER_TYPE_MICROSOFT_FOUNDRY`
+* `openai` (ModelProviderServiceConfigOpenAiProviderConfig) - Configuration for OpenAI. Set this field when `provider_type` is
+  `EXTERNAL_MODEL_PROVIDER_TYPE_OPENAI`
 * `pricing` (ModelProviderServiceConfigProviderPricingConfig) - Pricing configuration for this provider service. An explicitly empty
   configuration is retained on Create and Update and applies no adjustment
 * `provider_type` (string) - External model provider. Required on Create and immutable thereafter. Set
@@ -178,7 +189,7 @@ The following attributes are exported:
   `Ocp-Apim-Subscription-Key`). The value forwarded under this header is
   supplied via `api_key_value`
 * `api_key_value` (ModelProviderServiceConfigProviderSecret) - Secret value forwarded under the `api_key_name` header on outbound
-  requests. Supplied as inline plaintext via `ProviderSecret.plaintext`
+  requests. Supply the value in `api_key_value.plaintext`
 
 ### ModelProviderServiceConfigCustomProviderConfig
 * `direct` (ModelProviderServiceConfigCustomProviderDirectConfig) - Endpoint and authentication configuration for the custom provider
@@ -266,9 +277,10 @@ The following attributes are exported:
   value or zero leaves the estimate unchanged
 
 ### ModelProviderServiceConfigProviderSecret
-* `plaintext` (string) - Inline plaintext credential. INPUT_ONLY: the value never round-trips on
-  reads. Get and List responses omit `plaintext`; the enclosing secret
-  object remains present to indicate that a secret is configured
+* `plaintext` (string) - Inline plaintext credential. The value is write-only and never
+  round-trips on reads. Get and List responses omit `plaintext`; the
+  enclosing secret object remains present to indicate that a secret is
+  configured
 * `secret_reference` (ModelProviderServiceConfigSecretReference) - Reference to a customer-owned UC Secret that carries this secret value.
   The value is read at invoke time under the model provider service
   owner's access and is never copied onto the model provider service, so

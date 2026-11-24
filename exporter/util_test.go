@@ -514,3 +514,17 @@ func TestAnalyzeNotebook(t *testing.T) {
 	assert.True(t, ic.testEmits["databricks_file[<unknown>] (id: /Volumes/default/main/tmp/mypkg3.whl)"])
 	assert.True(t, ic.testEmits["databricks_workspace_file[<unknown>] (id: /Shared/tmp/mypkg4.whl)"])
 }
+
+func TestEmitVolumeByPath(t *testing.T) {
+	ic := importContextForTest()
+	ic.enableServices("uc-volumes")
+	ic.emitVolumeByPath("/Volumes/main/default/vol/some/dir/")
+	ic.emitVolumeByPath("/Volumes/main/default/vol2")
+	ic.emitVolumeByPath("/Volumes/main/default")
+	ic.emitVolumeByPath("/Workspace/main/default/vol")
+	ic.emitVolumeByPath("")
+	assert.Equal(t, map[string]bool{
+		"databricks_volume[<unknown>] (id: main.default.vol)":  true,
+		"databricks_volume[<unknown>] (id: main.default.vol2)": true,
+	}, ic.testEmits)
+}

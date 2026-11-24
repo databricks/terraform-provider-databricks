@@ -20,6 +20,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"slices"
 
 	"gopkg.in/yaml.v3"
 )
@@ -123,25 +124,26 @@ func decodeSpec(data []byte) (mappingSpec, error) {
 }
 
 func (s mappingSpec) validate() error {
-	required := map[string]string{
-		"output":         s.Output,
-		"schema.file":    s.Schema.File,
-		"schema.struct":  s.Schema.Struct,
-		"sdk_go.package": s.SdkGo.Package,
-		"sdk_go.name":    s.SdkGo.Name,
+	required := []struct{ field, value string }{
+		{"output", s.Output},
+		{"schema.file", s.Schema.File},
+		{"schema.struct", s.Schema.Struct},
+		{"sdk_go.package", s.SdkGo.Package},
+		{"sdk_go.name", s.SdkGo.Name},
 	}
-	for field, value := range required {
-		if value == "" {
-			return fmt.Errorf("%s is required", field)
+	for _, r := range required {
+		if r.value == "" {
+			return fmt.Errorf("%s is required", r.field)
 		}
 	}
 	if len(s.FromData)+len(s.ToData) == 0 {
 		return errors.New("from_data or to_data must name a function")
 	}
 	functions := map[string]bool{}
-	for _, f := range append(append([]mappingFunc{}, s.FromData...), s.ToData...) {
+	for _, f := range slices.Concat(s.FromData, s.ToData) {
 		if f.Function == "" || f.Type == "" || len(f.Attributes) == 0 {
-			return fmt.Errorf("function %q needs function, type and attributes", f.Function)
+			return fmt.Errorf("function %q needs function, type and attributes",
+				f.Function)
 		}
 		if functions[f.Function] {
 			return fmt.Errorf("function %s is named twice", f.Function)

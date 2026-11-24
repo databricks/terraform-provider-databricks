@@ -20,4 +20,5 @@ from_data:
 to_data:
   - function: volumeInfoToData
     type: VolumeInfo
-    attributes: [catalog_name, schema_name, name, volume_type, storage_location, owner, comment]
+    attributes:
+      [catalog_name, schema_name, name, volume_type, storage_location, owner, comment]

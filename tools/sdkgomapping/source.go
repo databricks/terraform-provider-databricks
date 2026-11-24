@@ -37,7 +37,8 @@ const (
 // readSchemaStruct returns the package name of the file at path and the fields of its
 // struct, keyed by attribute name.
 func readSchemaStruct(path, name string) (string, map[string]schemaField, error) {
-	file, err := parser.ParseFile(token.NewFileSet(), path, nil, parser.SkipObjectResolution)
+	fset := token.NewFileSet()
+	file, err := parser.ParseFile(fset, path, nil, parser.SkipObjectResolution)
 	if err != nil {
 		return "", nil, err
 	}
@@ -47,7 +48,8 @@ func readSchemaStruct(path, name string) (string, map[string]schemaField, error)
 	}
 	fields := map[string]schemaField{}
 	for _, f := range st.Fields.List {
-		// Embedded fields, such as common.Namespace, are in another file.
+		// Embedded fields, such as common.Namespace, are declared in other files, and
+		// fields without tags are not in the schema.
 		if len(f.Names) == 0 || f.Tag == nil {
 			continue
 		}
@@ -125,8 +127,10 @@ type sdkGoPackage struct {
 // module of dir. It doesn't type-check the package, so it doesn't depend on the export
 // data format of the Go toolchain.
 func loadSdkGoPackage(dir, path string) (sdkGoPackage, error) {
-	cfg := &packages.Config{Mode: packages.NeedName | packages.NeedFiles | packages.NeedSyntax,
-		Dir: dir}
+	cfg := &packages.Config{
+		Mode: packages.NeedName | packages.NeedFiles | packages.NeedSyntax,
+		Dir:  dir,
+	}
 	pkgs, err := packages.Load(cfg, path)
 	if err != nil {
 		return sdkGoPackage{}, err

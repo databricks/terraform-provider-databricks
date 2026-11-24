@@ -1,0 +1,218 @@
+# Runs volume/testdata/error_class_body_precedence.yaml with databricks_volume on sdk-go
+# uc/volumes/v1 in every step, and expects the same behavior. The volume requests carry no
+# Accept header, which an empty header expectation pins. The original's description:
+#
+# Pins which field of a JSON error body becomes the diagnostic. A message wins over a SCIM
+# detail, and an API 1.2 error field wins over a message. A body of {} or one with a null
+# message fails with an empty message. A message that is not a string makes the body fail
+# to parse, so the raw body becomes the message with error code UNKNOWN. That 404 does not
+# count as missing on refresh or DELETE, although its error_code is
+# RESOURCE_DOES_NOT_EXIST. API responses are handwritten for the classic SDK's error
+# parser, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: create
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: &config |
+      resource "databricks_volume" "this" {
+        name         = "body_precedence_volume"
+        catalog_name = "main"
+        schema_name  = "replay"
+        volume_type  = "MANAGED"
+      }
+    calls:
+      - request:
+          method: POST
+          path: /api/2.1/unity-catalog/volumes
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+            Accept: ""
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "body_precedence_volume", "volume_type": "MANAGED"}
+        response:
+          status: 200
+          body:
+            json: &created {"catalog_name": "main", "schema_name": "replay",
+                            "name": "body_precedence_volume",
+                            "full_name": "main.replay.body_precedence_volume",
+                            "volume_type": "MANAGED", "owner": "replay-admin@example.com",
+                            "storage_location": "s3://replay-metastore/volume-1961",
+                            "metastore_id": "11111111-1111-1111-1111-111111111111",
+                            "volume_id": "00000000-0000-4000-8000-000000001961"}
+      - &read_created
+        request: &read_request
+          method: GET
+          path: /api/2.1/unity-catalog/volumes/main.replay.body_precedence_volume
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+            Accept: ""
+          body: null
+        response:
+          status: 200
+          body:
+            json: *created
+      - *read_created
+  - name: refresh_answered_scim_body_with_message_fails_with_message
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: *config
+    expect_error: 'Error: cannot read volume: Volume message wins\.\n'
+    calls:
+      - request: *read_request
+        response:
+          status: 400
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:api:messages:2.0:Error"],
+                   "detail": "SCIM detail loses.", "status": "400",
+                   "scimType": "invalidValue", "message": "Volume message wins."}
+  - name: state_kept_after_scim_body_with_message
+    sdk_implementations:
+      databricks_volume: sdk_go
+    plan_only: true
+    config: *config
+    plan: &plan_empty
+      expect: empty
+      changes: {}
+    state: &state_kept
+      resources:
+        databricks_volume.this:
+          attributes:
+            - path: [id]
+              equals: main.replay.body_precedence_volume
+    calls:
+      - *read_created
+  - name: refresh_answered_api_1_2_body_with_message_fails_with_error_field
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: *config
+    expect_error: 'Error: cannot read volume: API 1\.2 error wins\.\n'
+    calls:
+      - request: *read_request
+        response:
+          status: 500
+          body:
+            json: {"error": "API 1.2 error wins.", "message": "Volume message loses."}
+  - name: state_kept_after_api_1_2_body_with_message
+    sdk_implementations:
+      databricks_volume: sdk_go
+    plan_only: true
+    config: *config
+    plan: *plan_empty
+    state: *state_kept
+    calls:
+      - *read_created
+  - name: refresh_answered_empty_json_object_fails_with_empty_message
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: *config
+    expect_error: 'Error: cannot read volume: \n'
+    calls:
+      - request: *read_request
+        response:
+          status: 400
+          body:
+            json: {}
+  - name: state_kept_after_empty_json_object
+    sdk_implementations:
+      databricks_volume: sdk_go
+    plan_only: true
+    config: *config
+    plan: *plan_empty
+    state: *state_kept
+    calls:
+      - *read_created
+  - name: refresh_answered_null_message_fails_with_empty_message
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: *config
+    expect_error: 'Error: cannot read volume: \n'
+    calls:
+      - request: *read_request
+        response:
+          status: 400
+          body:
+            json: {"error_code": "INVALID_PARAMETER_VALUE", "message": null}
+  - name: state_kept_after_null_message
+    sdk_implementations:
+      databricks_volume: sdk_go
+    plan_only: true
+    config: *config
+    plan: *plan_empty
+    state: *state_kept
+    calls:
+      - *read_created
+  - name: refresh_answered_404_with_non_string_message_fails_with_raw_body
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: *config
+    expect_error: 'Error: cannot read volume: \{"error_code": "RESOURCE_DOES_NOT_EXIST",
+      "message": 404\}\n'
+    calls:
+      - request: *read_request
+        response: &non_string_message_404
+          status: 404
+          headers:
+            Content-Type: application/json
+          body:
+            text: '{"error_code": "RESOURCE_DOES_NOT_EXIST", "message": 404}'
+  - name: state_kept_after_404_with_non_string_message
+    sdk_implementations:
+      databricks_volume: sdk_go
+    plan_only: true
+    config: *config
+    plan: *plan_empty
+    state: *state_kept
+    calls:
+      - *read_created
+  - name: delete_answered_404_with_non_string_message_fails_and_keeps_volume
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: &config_empty |
+      provider "databricks" {}
+    expect_error: 'Error: cannot delete volume: \{"error_code": "RESOURCE_DOES_NOT_EXIST",
+      "message": 404\}\n'
+    calls:
+      - *read_created
+      - request:
+          method: DELETE
+          path: /api/2.1/unity-catalog/volumes/main.replay.body_precedence_volume
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+            Accept: ""
+          body: null
+        response: *non_string_message_404
+  - name: state_kept_after_delete_with_non_string_message
+    sdk_implementations:
+      databricks_volume: sdk_go
+    plan_only: true
+    config: *config_empty
+    plan:
+      expect: non_empty
+      changes:
+        databricks_volume.this:
+          actions: [delete]
+    state: *state_kept
+    calls:
+      - *read_created
+destroy:
+  calls:
+    - *read_created
+    - request:
+        method: DELETE
+        path: /api/2.1/unity-catalog/volumes/main.replay.body_precedence_volume
+        headers:
+          X-Databricks-Workspace-Id: "12345"
+          Accept: ""
+        body: null
+      response:
+        status: 200
+        body:
+          json: {}

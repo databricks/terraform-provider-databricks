@@ -1,0 +1,189 @@
+# Runs volume/testdata/error_class_code_against_status_on_delete.yaml with
+# databricks_volume on sdk-go uc/volumes/v1 in every step, and expects the same behavior.
+# The volume requests carry no Accept header, which an empty header expectation pins. The
+# original's description:
+#
+# Pins that the classic SDK classifies a DELETE error by its error_code before its status.
+# A 404 with INVALID_PARAMETER_VALUE fails the delete and keeps the volume. A 429 with
+# INVALID_PARAMETER_VALUE, and a 429 with a plain-text body (error code UNKNOWN), are sent
+# once, not retried, and keep the volume. RESOURCE_DOES_NOT_EXIST counts as already
+# deleted on a 500 and on a 409. API responses are handwritten for the classic SDK's
+# error parser, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: create
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: &config |
+      resource "databricks_volume" "this" {
+        name         = "code_status_delete_volume"
+        catalog_name = "main"
+        schema_name  = "replay"
+        volume_type  = "MANAGED"
+      }
+    calls: &create_calls
+      - request:
+          method: POST
+          path: /api/2.1/unity-catalog/volumes
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+            Accept: ""
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "code_status_delete_volume", "volume_type": "MANAGED"}
+        response:
+          status: 200
+          body:
+            json: &created {"catalog_name": "main", "schema_name": "replay",
+                            "name": "code_status_delete_volume",
+                            "full_name": "main.replay.code_status_delete_volume",
+                            "volume_type": "MANAGED", "owner": "replay-admin@example.com",
+                            "storage_location": "s3://replay-metastore/volume-1964",
+                            "metastore_id": "11111111-1111-1111-1111-111111111111",
+                            "volume_id": "00000000-0000-4000-8000-000000001964"}
+      - &read_created
+        request:
+          method: GET
+          path: /api/2.1/unity-catalog/volumes/main.replay.code_status_delete_volume
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+            Accept: ""
+          body: null
+        response:
+          status: 200
+          body:
+            json: *created
+      - *read_created
+  - name: delete_answered_404_invalid_parameter_value_fails_and_keeps_volume
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: &config_empty |
+      provider "databricks" {}
+    expect_error: 'Error: cannot delete volume: Volume name is not valid\.\n'
+    calls:
+      - *read_created
+      - request: &delete_request
+          method: DELETE
+          path: /api/2.1/unity-catalog/volumes/main.replay.code_status_delete_volume
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+            Accept: ""
+          body: null
+        response:
+          status: 404
+          body:
+            json: {"error_code": "INVALID_PARAMETER_VALUE",
+                   "message": "Volume name is not valid."}
+  - name: state_kept_after_delete_404_invalid_parameter_value
+    sdk_implementations:
+      databricks_volume: sdk_go
+    plan_only: true
+    config: *config_empty
+    plan: &plan_delete
+      expect: non_empty
+      changes:
+        databricks_volume.this:
+          actions: [delete]
+    state: &state_kept
+      resources:
+        databricks_volume.this:
+          attributes:
+            - path: [id]
+              equals: main.replay.code_status_delete_volume
+    calls:
+      - *read_created
+  - name: delete_answered_429_invalid_parameter_value_is_not_retried
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: *config_empty
+    expect_error: 'Error: cannot delete volume: Volume name is not valid\.\n'
+    calls:
+      - *read_created
+      - request: *delete_request
+        response:
+          status: 429
+          body:
+            json: {"error_code": "INVALID_PARAMETER_VALUE",
+                   "message": "Volume name is not valid."}
+  - name: state_kept_after_delete_429_invalid_parameter_value
+    sdk_implementations:
+      databricks_volume: sdk_go
+    plan_only: true
+    config: *config_empty
+    plan: *plan_delete
+    state: *state_kept
+    calls:
+      - *read_created
+  - name: delete_answered_429_plain_text_is_not_retried
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: *config_empty
+    expect_error: 'Error: cannot delete volume: Too many requests, slow down\.\n'
+    calls:
+      - *read_created
+      - request: *delete_request
+        response:
+          status: 429
+          headers:
+            Content-Type: text/plain; charset=utf-8
+          body:
+            text: Too many requests, slow down.
+  - name: state_kept_after_delete_429_plain_text
+    sdk_implementations:
+      databricks_volume: sdk_go
+    plan_only: true
+    config: *config_empty
+    plan: *plan_delete
+    state: *state_kept
+    calls:
+      - *read_created
+  - name: delete_answered_500_resource_does_not_exist_counts_as_deleted
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: *config_empty
+    plan: *plan_delete
+    calls:
+      - *read_created
+      - request: *delete_request
+        response:
+          status: 500
+          body:
+            json: {"error_code": "RESOURCE_DOES_NOT_EXIST",
+                   "message": "Volume 'main.replay.code_status_delete_volume' does not
+                     exist."}
+  - name: create_after_500_resource_does_not_exist
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: *config
+    calls: *create_calls
+  - name: delete_answered_409_resource_does_not_exist_counts_as_deleted
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: *config_empty
+    plan: *plan_delete
+    calls:
+      - *read_created
+      - request: *delete_request
+        response:
+          status: 409
+          body:
+            json: {"error_code": "RESOURCE_DOES_NOT_EXIST",
+                   "message": "Volume 'main.replay.code_status_delete_volume' does not
+                     exist."}
+  - name: plan_after_delete_is_empty
+    sdk_implementations:
+      databricks_volume: sdk_go
+    plan_only: true
+    config: *config_empty
+    plan:
+      expect: empty
+      changes: {}
+    calls: []
+destroy:
+  calls: []

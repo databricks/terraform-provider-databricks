@@ -1,0 +1,165 @@
+# Runs volume/testdata/error_class_mapped_classes.yaml with databricks_volume on sdk-go
+# uc/volumes/v1 in every step, and expects the same behavior. The volume requests carry no
+# Accept header, which an empty header expectation pins. The original's description:
+#
+# Pins the refresh GET errors that the classic SDK maps to its cancelled, not implemented,
+# already exists and data loss classes: status 499, status 501, error_code ALREADY_EXISTS
+# and error_code DATA_LOSS. None of them is retried or counts as missing, so each GET is
+# sent once, fails with the API message and keeps the volume. API responses are
+# handwritten for the classic SDK's error parser, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: create
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: &config |
+      resource "databricks_volume" "this" {
+        name         = "mapped_classes_volume"
+        catalog_name = "main"
+        schema_name  = "replay"
+        volume_type  = "MANAGED"
+      }
+    calls:
+      - request:
+          method: POST
+          path: /api/2.1/unity-catalog/volumes
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+            Accept: ""
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "mapped_classes_volume", "volume_type": "MANAGED"}
+        response:
+          status: 200
+          body:
+            json: &created {"catalog_name": "main", "schema_name": "replay",
+                            "name": "mapped_classes_volume",
+                            "full_name": "main.replay.mapped_classes_volume",
+                            "volume_type": "MANAGED", "owner": "replay-admin@example.com",
+                            "storage_location": "s3://replay-metastore/volume-1966",
+                            "metastore_id": "11111111-1111-1111-1111-111111111111",
+                            "volume_id": "00000000-0000-4000-8000-000000001966"}
+      - &read_created
+        request: &read_request
+          method: GET
+          path: /api/2.1/unity-catalog/volumes/main.replay.mapped_classes_volume
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+            Accept: ""
+          body: null
+        response:
+          status: 200
+          body:
+            json: *created
+      - *read_created
+  - name: refresh_answered_499_fails
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: *config
+    expect_error: 'Error: cannot read volume: The request was cancelled\.\n'
+    calls:
+      - request: *read_request
+        response:
+          status: 499
+          body:
+            json: {"error_code": "CANCELLED", "message": "The request was cancelled."}
+  - name: state_kept_after_499
+    sdk_implementations:
+      databricks_volume: sdk_go
+    plan_only: true
+    config: *config
+    plan: &plan_empty
+      expect: empty
+      changes: {}
+    state: &state_kept
+      resources:
+        databricks_volume.this:
+          attributes:
+            - path: [id]
+              equals: main.replay.mapped_classes_volume
+    calls:
+      - *read_created
+  - name: refresh_answered_501_fails
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: *config
+    expect_error: 'Error: cannot read volume: Volume reads are not implemented here\.\n'
+    calls:
+      - request: *read_request
+        response:
+          status: 501
+          body:
+            json: {"error_code": "NOT_IMPLEMENTED",
+                   "message": "Volume reads are not implemented here."}
+  - name: state_kept_after_501
+    sdk_implementations:
+      databricks_volume: sdk_go
+    plan_only: true
+    config: *config
+    plan: *plan_empty
+    state: *state_kept
+    calls:
+      - *read_created
+  - name: refresh_answered_already_exists_fails
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: *config
+    expect_error: 'Error: cannot read volume: Volume
+      ''main\.replay\.mapped_classes_volume'' already exists\.\n'
+    calls:
+      - request: *read_request
+        response:
+          status: 409
+          body:
+            json: {"error_code": "ALREADY_EXISTS",
+                   "message": "Volume 'main.replay.mapped_classes_volume' already
+                     exists."}
+  - name: state_kept_after_already_exists
+    sdk_implementations:
+      databricks_volume: sdk_go
+    plan_only: true
+    config: *config
+    plan: *plan_empty
+    state: *state_kept
+    calls:
+      - *read_created
+  - name: refresh_answered_data_loss_fails
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: *config
+    expect_error: 'Error: cannot read volume: Volume metadata is corrupted\.\n'
+    calls:
+      - request: *read_request
+        response:
+          status: 500
+          body:
+            json: {"error_code": "DATA_LOSS", "message": "Volume metadata is corrupted."}
+  - name: state_kept_after_data_loss
+    sdk_implementations:
+      databricks_volume: sdk_go
+    plan_only: true
+    config: *config
+    plan: *plan_empty
+    state: *state_kept
+    calls:
+      - *read_created
+destroy:
+  calls:
+    - *read_created
+    - request:
+        method: DELETE
+        path: /api/2.1/unity-catalog/volumes/main.replay.mapped_classes_volume
+        headers:
+          X-Databricks-Workspace-Id: "12345"
+          Accept: ""
+        body: null
+      response:
+        status: 200
+        body:
+          json: {}

@@ -1,0 +1,281 @@
+# Runs volume/testdata/error_class_malformed_details.yaml with databricks_volume on sdk-go
+# uc/volumes/v1 in every step, and expects the same behavior. The volume requests carry no
+# Accept header, which an empty header expectation pins. The original's description:
+#
+# Pins that malformed error details do not change how the classic SDK reports or
+# classifies a refresh GET error: typed entries with wrong-shaped fields, null and scalar
+# entries, objects without a string @type, and a RetryInfo with an invalid duration. For
+# each one, a 400 is sent once and fails with the message alone, a 503 is retried once and
+# keeps the volume, and a 404 RESOURCE_DOES_NOT_EXIST counts as missing. API responses are
+# handwritten for the classic SDK's error parser, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: create
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: &config |
+      resource "databricks_volume" "this" {
+        name         = "malformed_details_volume"
+        catalog_name = "main"
+        schema_name  = "replay"
+        volume_type  = "MANAGED"
+      }
+    calls:
+      - request:
+          method: POST
+          path: /api/2.1/unity-catalog/volumes
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+            Accept: ""
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "malformed_details_volume", "volume_type": "MANAGED"}
+        response:
+          status: 200
+          body:
+            json: &created {"catalog_name": "main", "schema_name": "replay",
+                            "name": "malformed_details_volume",
+                            "full_name": "main.replay.malformed_details_volume",
+                            "volume_type": "MANAGED", "owner": "replay-admin@example.com",
+                            "storage_location": "s3://replay-metastore/volume-1968",
+                            "metastore_id": "11111111-1111-1111-1111-111111111111",
+                            "volume_id": "00000000-0000-4000-8000-000000001968"}
+      - &read_created
+        request: &read_request
+          method: GET
+          path: /api/2.1/unity-catalog/volumes/main.replay.malformed_details_volume
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+            Accept: ""
+          body: null
+        response:
+          status: 200
+          body:
+            json: *created
+      - *read_created
+  - name: refresh_answered_400_with_wrong_shaped_typed_entries_fails_with_message
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: *config
+    expect_error: &message_only 'Error: cannot read volume: Volume name is not valid\.\n'
+    calls:
+      - request: *read_request
+        response:
+          status: 400
+          body:
+            json:
+              error_code: INVALID_PARAMETER_VALUE
+              message: Volume name is not valid.
+              details: &wrong_shaped_typed_entries
+                - {"@type": "type.googleapis.com/google.rpc.ErrorInfo", "reason": 7,
+                   "metadata": "not-a-map"}
+                - {"@type": "type.googleapis.com/google.rpc.QuotaFailure",
+                   "violations": "none"}
+                - {"@type": "type.googleapis.com/google.rpc.RetryInfo", "retry_delay": 5}
+  - name: refresh_answered_503_with_wrong_shaped_typed_entries_is_retried_once
+    sdk_implementations:
+      databricks_volume: sdk_go
+    plan_only: true
+    config: *config
+    plan: &plan_empty
+      expect: empty
+      changes: {}
+    state: &state_kept
+      resources:
+        databricks_volume.this:
+          attributes:
+            - path: [id]
+              equals: main.replay.malformed_details_volume
+    calls:
+      - request: *read_request
+        response:
+          status: 503
+          body:
+            json:
+              error_code: TEMPORARILY_UNAVAILABLE
+              message: Volume service is unavailable.
+              details: *wrong_shaped_typed_entries
+      - *read_created
+  - name: refresh_answered_404_with_wrong_shaped_typed_entries_is_missing
+    sdk_implementations:
+      databricks_volume: sdk_go
+    plan_only: true
+    config: *config
+    plan: &plan_create
+      expect: non_empty
+      changes:
+        databricks_volume.this:
+          actions: [create]
+    calls:
+      - request: *read_request
+        response:
+          status: 404
+          body:
+            json:
+              error_code: RESOURCE_DOES_NOT_EXIST
+              message: Volume 'main.replay.malformed_details_volume' does not exist.
+              details: *wrong_shaped_typed_entries
+  - name: refresh_answered_400_with_null_and_scalar_entries_fails_with_message
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: *config
+    expect_error: *message_only
+    calls:
+      - request: *read_request
+        response:
+          status: 400
+          body:
+            json:
+              error_code: INVALID_PARAMETER_VALUE
+              message: Volume name is not valid.
+              details: &null_and_scalar_entries [null, 7, "INVALID_VOLUME_NAME", true]
+  - name: refresh_answered_503_with_null_and_scalar_entries_is_retried_once
+    sdk_implementations:
+      databricks_volume: sdk_go
+    plan_only: true
+    config: *config
+    plan: *plan_empty
+    state: *state_kept
+    calls:
+      - request: *read_request
+        response:
+          status: 503
+          body:
+            json:
+              error_code: TEMPORARILY_UNAVAILABLE
+              message: Volume service is unavailable.
+              details: *null_and_scalar_entries
+      - *read_created
+  - name: refresh_answered_404_with_null_and_scalar_entries_is_missing
+    sdk_implementations:
+      databricks_volume: sdk_go
+    plan_only: true
+    config: *config
+    plan: *plan_create
+    calls:
+      - request: *read_request
+        response:
+          status: 404
+          body:
+            json:
+              error_code: RESOURCE_DOES_NOT_EXIST
+              message: Volume 'main.replay.malformed_details_volume' does not exist.
+              details: *null_and_scalar_entries
+  - name: refresh_answered_400_with_objects_without_string_type_fails_with_message
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: *config
+    expect_error: *message_only
+    calls:
+      - request: *read_request
+        response:
+          status: 400
+          body:
+            json:
+              error_code: INVALID_PARAMETER_VALUE
+              message: Volume name is not valid.
+              details: &objects_without_string_type
+                - {"reason": "INVALID_VOLUME_NAME",
+                   "domain": "unity-catalog.databricks.com"}
+                - {"@type": 7, "reason": "INVALID_VOLUME_NAME"}
+                - {"@type": null, "retry_delay": "1s"}
+  - name: refresh_answered_503_with_objects_without_string_type_is_retried_once
+    sdk_implementations:
+      databricks_volume: sdk_go
+    plan_only: true
+    config: *config
+    plan: *plan_empty
+    state: *state_kept
+    calls:
+      - request: *read_request
+        response:
+          status: 503
+          body:
+            json:
+              error_code: TEMPORARILY_UNAVAILABLE
+              message: Volume service is unavailable.
+              details: *objects_without_string_type
+      - *read_created
+  - name: refresh_answered_404_with_objects_without_string_type_is_missing
+    sdk_implementations:
+      databricks_volume: sdk_go
+    plan_only: true
+    config: *config
+    plan: *plan_create
+    calls:
+      - request: *read_request
+        response:
+          status: 404
+          body:
+            json:
+              error_code: RESOURCE_DOES_NOT_EXIST
+              message: Volume 'main.replay.malformed_details_volume' does not exist.
+              details: *objects_without_string_type
+  - name: refresh_answered_400_with_invalid_retry_delay_fails_with_message
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: *config
+    expect_error: *message_only
+    calls:
+      - request: *read_request
+        response:
+          status: 400
+          body:
+            json:
+              error_code: INVALID_PARAMETER_VALUE
+              message: Volume name is not valid.
+              details: &invalid_retry_delay
+                - {"@type": "type.googleapis.com/google.rpc.RetryInfo",
+                   "retry_delay": "soon"}
+  - name: refresh_answered_503_with_invalid_retry_delay_is_retried_once
+    sdk_implementations:
+      databricks_volume: sdk_go
+    plan_only: true
+    config: *config
+    plan: *plan_empty
+    state: *state_kept
+    calls:
+      - request: *read_request
+        response:
+          status: 503
+          body:
+            json:
+              error_code: TEMPORARILY_UNAVAILABLE
+              message: Volume service is unavailable.
+              details: *invalid_retry_delay
+      - *read_created
+  - name: refresh_answered_404_with_invalid_retry_delay_is_missing
+    sdk_implementations:
+      databricks_volume: sdk_go
+    plan_only: true
+    config: *config
+    plan: *plan_create
+    calls:
+      - request: *read_request
+        response:
+          status: 404
+          body:
+            json:
+              error_code: RESOURCE_DOES_NOT_EXIST
+              message: Volume 'main.replay.malformed_details_volume' does not exist.
+              details: *invalid_retry_delay
+destroy:
+  calls:
+    - *read_created
+    - request:
+        method: DELETE
+        path: /api/2.1/unity-catalog/volumes/main.replay.malformed_details_volume
+        headers:
+          X-Databricks-Workspace-Id: "12345"
+          Accept: ""
+        body: null
+      response:
+        status: 200
+        body:
+          json: {}

@@ -1,0 +1,141 @@
+# Runs volume_call_sites/testdata/call_site_read_after_create.yaml with databricks_volume
+# on sdk-go uc/volumes/v1 in every step, and expects the same behavior. The volume
+# requests carry no Accept header, which an empty header expectation pins. The original's
+# description:
+#
+# Pins the read that follows a successful create POST failing: 403 PERMISSION_DENIED,
+# and 404 RESOURCE_DOES_NOT_EXIST, which create doesn't treat as missing as a refresh
+# does. Each fails apply with the read's error. The volume stays in state under the
+# created full name and is tainted, so the next plan replaces it although the
+# configuration is unchanged, and the next apply deletes it and creates it again. API
+# responses are inferred from the Unity Catalog API contract, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: read_403_after_create_fails_apply
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: &config |
+      resource "databricks_volume" "this" {
+        name         = "read_after_create_volume"
+        catalog_name = "main"
+        schema_name  = "replay"
+        volume_type  = "MANAGED"
+      }
+    expect_error: 'Error: cannot read volume: User does not have READ VOLUME on Volume
+      ''main\.replay\.read_after_create_volume''\.\n'
+    calls:
+      - &create
+        request:
+          method: POST
+          path: /api/2.1/unity-catalog/volumes
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+            Accept: ""
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "read_after_create_volume", "volume_type": "MANAGED"}
+        response:
+          status: 200
+          body:
+            json: &volume {"catalog_name": "main", "schema_name": "replay",
+                           "name": "read_after_create_volume",
+                           "full_name": "main.replay.read_after_create_volume",
+                           "volume_type": "MANAGED", "owner": "replay-admin@example.com",
+                           "storage_location": "s3://replay-metastore/volume-2313",
+                           "metastore_id": "11111111-1111-1111-1111-111111111111",
+                           "volume_id": "00000000-0000-4000-8000-000000002313"}
+      - request: &read_request
+          method: GET
+          path: /api/2.1/unity-catalog/volumes/main.replay.read_after_create_volume
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+            Accept: ""
+          body: null
+        response:
+          status: 403
+          body:
+            json: {"error_code": "PERMISSION_DENIED",
+                   "message": "User does not have READ VOLUME on Volume
+                     'main.replay.read_after_create_volume'."}
+  - name: plan_after_403_replaces_the_tainted_volume
+    sdk_implementations:
+      databricks_volume: sdk_go
+    plan_only: true
+    config: *config
+    plan: &replaces
+      expect: non_empty
+      changes:
+        databricks_volume.this:
+          actions: [delete, create]
+    state: &kept_id
+      resources:
+        databricks_volume.this:
+          attributes:
+            - path: [id]
+              equals: main.replay.read_after_create_volume
+    calls:
+      - &read_volume
+        request: *read_request
+        response:
+          status: 200
+          body:
+            json: *volume
+  - name: read_404_after_the_replacing_create_fails_apply
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: *config
+    expect_error: 'Error: cannot read volume: Volume
+      ''main\.replay\.read_after_create_volume'' does not exist\.\n'
+    calls:
+      # The plan's refresh, then the replacement.
+      - *read_volume
+      - &delete
+        request:
+          method: DELETE
+          path: /api/2.1/unity-catalog/volumes/main.replay.read_after_create_volume
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+            Accept: ""
+          body: null
+        response:
+          status: 200
+          body:
+            json: {}
+      - *create
+      - request: *read_request
+        response:
+          status: 404
+          body:
+            json: {"error_code": "RESOURCE_DOES_NOT_EXIST",
+                   "message": "Volume 'main.replay.read_after_create_volume' does not
+                     exist."}
+  - name: plan_after_404_replaces_the_tainted_volume
+    sdk_implementations:
+      databricks_volume: sdk_go
+    plan_only: true
+    config: *config
+    plan: *replaces
+    state: *kept_id
+    calls:
+      - *read_volume
+  - name: replacement_with_a_readable_volume_succeeds
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: *config
+    calls:
+      # The plan's refresh, the replacement and the post-apply refresh plan.
+      - *read_volume
+      - *delete
+      - *create
+      - *read_volume
+      - *read_volume
+destroy:
+  calls:
+    - *read_volume
+    - *delete

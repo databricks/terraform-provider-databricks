@@ -414,3 +414,50 @@ func testVolumeWithoutWorkspaceIDSendsNoWorkspaceHeader(t *testing.T, sdkGo bool
 		fmt.Sprintf(call, "DELETE "+routingVolumePath),
 	}, recorder.snapshot())
 }
+
+// TestVolumeWorkspaceIDChangeToAnotherWorkspaceFailsUpdate pins a change of
+// provider_config.workspace_id to a workspace other than that of a workspace-level
+// provider. The plan accepts it, and Update fails on the mismatch before any PATCH. The
+// failed update still records the new workspace ID in state, so the next refresh fails
+// on the same mismatch. A replay journey can't pin this, as its destroy would fail too.
+func TestVolumeWorkspaceIDChangeToAnotherWorkspaceFailsUpdate(t *testing.T) {
+	forEachVolumeClient(t, testVolumeWorkspaceIDChangeToAnotherWorkspaceFailsUpdate)
+}
+
+func testVolumeWorkspaceIDChangeToAnotherWorkspaceFailsUpdate(t *testing.T, sdkGo bool) {
+	_, workspaceURL := newRoutingServer(t, routingWorkspace12345JSON,
+		map[string]routingResponse{
+			"POST " + workspaceHostVolumesPath: {http.StatusOK,
+				nil, routingVolumeJSON("replay-admin@example.com", "")},
+			"GET " + routingVolumePath: {http.StatusOK,
+				nil, routingVolumeJSON("replay-admin@example.com", "")},
+		})
+	recorder := &routingRecorder{next: workspaceHostTransport{
+		workspaceHostWorkspaceDomain: workspaceURL,
+	}}
+	newClient := func() *common.DatabricksClient {
+		return newRoutingClient(t, workspaceHostWorkspaceDomain, "", recorder)
+	}
+
+	state, diags := routingApplyVolume(t, newClient(), nil, routingVolume{
+		attributes: routingVolumeAttributes(nil), workspaceID: "12345"}, sdkGo)
+	require.False(t, diags.HasError(), "%v", diags)
+	state, diags = routingApplyVolume(t, newClient(), state, routingVolume{
+		attributes: routingVolumeAttributes(nil), workspaceID: "67890"}, sdkGo)
+
+	mismatch := "failed to validate workspace_id: workspace_id mismatch: provider is " +
+		"configured for workspace 12345 but got 67890 in provider_config. please check " +
+		"the workspace_id provided in provider_config"
+	require.Len(t, diags, 1)
+	assert.Equal(t, "cannot update volume: "+mismatch, diags[0].Summary)
+	require.NotNil(t, state)
+	assert.Equal(t, "67890", state.Attributes["provider_config.0.workspace_id"])
+	_, diags = routingRefreshVolume(newClient(), state, sdkGo)
+	require.Len(t, diags, 1)
+	assert.Equal(t, "cannot read volume: "+mismatch, diags[0].Summary)
+	volumeCall := workspaceHostWorkspaceDomain + ` %s workspace_id=["12345"]`
+	assert.Equal(t, []string{
+		fmt.Sprintf(volumeCall, "POST "+workspaceHostVolumesPath),
+		fmt.Sprintf(volumeCall, "GET "+routingVolumePath),
+	}, recorder.snapshot())
+}

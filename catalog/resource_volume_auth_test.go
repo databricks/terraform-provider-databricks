@@ -414,6 +414,34 @@ func testVolumeAuthM2MTokenEndpointFailure(t *testing.T, sdkGo bool) {
 	}
 }
 
+// TestVolumeAuthM2MTokenFailureFailsCreateBeforePost pins that a create whose token
+// request fails sends no POST and records no volume.
+func TestVolumeAuthM2MTokenFailureFailsCreateBeforePost(t *testing.T) {
+	forEachVolumeClient(t, testVolumeAuthM2MTokenFailureFailsCreateBeforePost)
+}
+
+func testVolumeAuthM2MTokenFailureFailsCreateBeforePost(t *testing.T, sdkGo bool) {
+	s := &authServer{metadata: authAWSMetadata(), script: []authExchange{
+		authOIDCDiscovery,
+		authM2MToken(http.StatusUnauthorized, authM2MRejected),
+	}}
+	c, err := newAuthClient(t, s, authM2MConfig("oauth-m2m"))
+	require.NoError(t, err)
+
+	state, diags := routingApplyVolume(t, c, nil, routingVolume{
+		attributes: routingVolumeAttributes(map[string]string{"name": "auth_volume"}),
+	}, sdkGo)
+
+	assert.Equal(t, s.expected(), s.received())
+	require.Len(t, diags, 1)
+	assert.Equal(t, `cannot create volume: failed during request visitor: error `+
+		`getting token: Post "https://`+authAWSHost+`/oidc/v1/token": `+authM2MRejected,
+		diags[0].Summary)
+	if state != nil {
+		assert.Empty(t, state.ID)
+	}
+}
+
 func TestVolumeAuthM2MTokenEndpointNotFoundDropsVolume(t *testing.T) {
 	forEachVolumeClient(t, testVolumeAuthM2MTokenEndpointNotFoundDropsVolume)
 }

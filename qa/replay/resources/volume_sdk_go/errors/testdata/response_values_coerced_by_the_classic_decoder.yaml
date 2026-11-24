@@ -1,0 +1,158 @@
+# Runs volume_errors/testdata/response_values_coerced_by_the_classic_decoder.yaml with
+# databricks_volume on sdk-go uc/volumes/v1 in every step, and expects the same behavior.
+# The volume requests carry no Accept header, which an empty header expectation pins. The
+# original's description:
+#
+# Pins how the classic decoder treats wrongly typed values in a 200 refresh. It coerces
+# a value into a string field to its text, so an unconfigured owner answered true is
+# adopted as the owner "true", and it reads a quoted number into an int64 field and an
+# empty encryption_details object, so the plan is empty. It fails a quoted non-number
+# for an int64 field, a string for a bool field and a top-level array, each with its
+# unmarshal error and a request log; the volume stays in state and the next plan is
+# empty. API responses are inferred from the Unity Catalog API contract, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: create
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: &config |
+      resource "databricks_volume" "this" {
+        name         = "coerced_volume"
+        catalog_name = "main"
+        schema_name  = "replay"
+        volume_type  = "MANAGED"
+      }
+    calls:
+      - request:
+          method: POST
+          path: /api/2.1/unity-catalog/volumes
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+            Accept: ""
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "coerced_volume", "volume_type": "MANAGED"}
+        response:
+          status: 200
+          body:
+            json: &volume {"catalog_name": "main", "schema_name": "replay",
+                           "name": "coerced_volume",
+                           "full_name": "main.replay.coerced_volume",
+                           "volume_type": "MANAGED", "owner": "replay-admin@example.com",
+                           "storage_location": "s3://replay-metastore/volume-2314",
+                           "metastore_id": "11111111-1111-1111-1111-111111111111",
+                           "volume_id": "00000000-0000-4000-8000-000000002314"}
+      - &read_volume
+        request: &read_request
+          method: GET
+          path: /api/2.1/unity-catalog/volumes/main.replay.coerced_volume
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+            Accept: ""
+          body: null
+        response:
+          status: 200
+          body:
+            json: *volume
+      - *read_volume
+  - name: refresh_with_coerced_values_adopts_the_owner_text
+    sdk_implementations:
+      databricks_volume: sdk_go
+    plan_only: true
+    config: *config
+    plan: &empty
+      expect: empty
+      changes: {}
+    state:
+      resources:
+        databricks_volume.this:
+          attributes:
+            - path: [owner]
+              equals: "true"
+    calls:
+      - &read_coerced
+        request: *read_request
+        response:
+          status: 200
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "coerced_volume",
+                   "full_name": "main.replay.coerced_volume",
+                   "volume_type": "MANAGED", "owner": true,
+                   "created_at": "1700000000000", "updated_at": 1700000000001,
+                   "encryption_details": {},
+                   "storage_location": "s3://replay-metastore/volume-2314",
+                   "metastore_id": "11111111-1111-1111-1111-111111111111",
+                   "volume_id": "00000000-0000-4000-8000-000000002314"}
+  - name: refresh_with_non_numeric_quoted_created_at_fails
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: *config
+    expect_error: 'Error: cannot read volume: failed to unmarshal response body:
+      strconv\.ParseInt: parsing "abc": invalid syntax\. This is likely a bug in the
+      Databricks SDK for Go or the underlying REST API\.'
+    calls:
+      - request: *read_request
+        response:
+          status: 200
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "coerced_volume",
+                   "full_name": "main.replay.coerced_volume",
+                   "volume_type": "MANAGED", "owner": "true", "created_at": "abc"}
+  - name: refresh_with_string_for_browse_only_fails
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: *config
+    expect_error: 'Error: cannot read volume: failed to unmarshal response body: json:
+      cannot unmarshal string into Go value of type bool\. This is likely a bug in the
+      Databricks SDK for Go or the underlying REST API\.'
+    calls:
+      - request: *read_request
+        response:
+          status: 200
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "coerced_volume",
+                   "full_name": "main.replay.coerced_volume",
+                   "volume_type": "MANAGED", "owner": "true", "browse_only": "true"}
+  - name: refresh_with_top_level_array_fails
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: *config
+    expect_error: 'Error: cannot read volume: failed to unmarshal response body: json:
+      cannot unmarshal array into Go value of type map\[string\]'
+    calls:
+      - request: *read_request
+        response:
+          status: 200
+          body:
+            json: [{"full_name": "main.replay.coerced_volume"}]
+  - name: plan_after_failed_refreshes_is_empty
+    sdk_implementations:
+      databricks_volume: sdk_go
+    plan_only: true
+    config: *config
+    plan: *empty
+    calls:
+      - *read_coerced
+destroy:
+  calls:
+    - *read_coerced
+    - request:
+        method: DELETE
+        path: /api/2.1/unity-catalog/volumes/main.replay.coerced_volume
+        headers:
+          X-Databricks-Workspace-Id: "12345"
+          Accept: ""
+        body: null
+      response:
+        status: 200
+        body:
+          json: {}

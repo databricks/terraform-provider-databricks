@@ -14,6 +14,10 @@ import (
 // run after a refresh that reads the old description back. The bodies are synthetic:
 // inferred from the MLflow Model Registry API.
 func TestModelUpdatePatchErrorKeepsPlannedDescriptionInState(t *testing.T) {
+	mlflowModelOnBothPaths(t, testModelUpdatePatchErrorKeepsPlannedDescriptionInState)
+}
+
+func testModelUpdatePatchErrorKeepsPlannedDescriptionInState(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{

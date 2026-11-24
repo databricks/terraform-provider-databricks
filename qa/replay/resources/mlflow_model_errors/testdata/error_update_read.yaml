@@ -1,0 +1,134 @@
+# Pins a failed read after a successful update PATCH. A GET answered 500 fails the apply
+# with its exact diagnostic, and neither call is repeated. The new description is
+# already in state, so once the GET succeeds the next plan is empty and no second PATCH
+# is sent. API responses are synthetic: inferred from the MLflow Model Registry API, not
+# recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: create
+    config: |
+      resource "databricks_mlflow_model" "this" {
+        name        = "error_update_read_model"
+        description = "Before the update"
+      }
+    calls:
+      - request:
+          method: POST
+          path: /api/2.0/mlflow/registered-models/create
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"name": "error_update_read_model",
+                   "description": "Before the update"}
+        response:
+          status: 200
+          body:
+            json: {"registered_model": {"name": "error_update_read_model",
+                                        "description": "Before the update",
+                                        "creation_timestamp": 1700000000000,
+                                        "last_updated_timestamp": 1700000000000,
+                                        "user_id": "tester@example.com"}}
+      - &read_before
+        request: &read_request
+          method: GET
+          path: /api/2.0/mlflow/databricks/registered-models/get
+          query:
+            name: [error_update_read_model]
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"registered_model_databricks": {
+                     "name": "error_update_read_model",
+                     "id": "0a1b2c3d4e5f60718293a4b5c6d7e851",
+                     "description": "Before the update",
+                     "creation_timestamp": 1700000000000,
+                     "last_updated_timestamp": 1700000000000,
+                     "user_id": "tester@example.com",
+                     "permission_level": "CAN_MANAGE"}}
+      - *read_before
+  - name: read_after_update_answered_500_fails
+    config: &config_updated |
+      resource "databricks_mlflow_model" "this" {
+        name        = "error_update_read_model"
+        description = "After the update"
+      }
+    expect_error: 'Error: cannot read mlflow model: An internal error occurred while
+      reading the registered model\.\n'
+    calls:
+      - *read_before
+      - request:
+          method: PATCH
+          path: /api/2.0/mlflow/registered-models/update
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"name": "error_update_read_model",
+                   "description": "After the update"}
+        response:
+          status: 200
+          body:
+            json: {"registered_model": {"name": "error_update_read_model",
+                                        "description": "After the update",
+                                        "creation_timestamp": 1700000000000,
+                                        "last_updated_timestamp": 1700000100000,
+                                        "user_id": "tester@example.com"}}
+      - request: *read_request
+        response:
+          status: 500
+          body:
+            json: {"error_code": "INTERNAL_ERROR",
+                   "message": "An internal error occurred while reading the registered
+                     model."}
+  - name: plan_after_500_is_empty_with_new_description
+    plan_only: true
+    config: *config_updated
+    plan:
+      expect: empty
+      changes: {}
+    state:
+      resources:
+        databricks_mlflow_model.this:
+          attributes:
+            - path: [id]
+              equals: error_update_read_model
+            - path: [description]
+              equals: After the update
+    calls:
+      - &read_after
+        request: *read_request
+        response:
+          status: 200
+          body:
+            json: {"registered_model_databricks": {
+                     "name": "error_update_read_model",
+                     "id": "0a1b2c3d4e5f60718293a4b5c6d7e851",
+                     "description": "After the update",
+                     "creation_timestamp": 1700000000000,
+                     "last_updated_timestamp": 1700000100000,
+                     "user_id": "tester@example.com",
+                     "permission_level": "CAN_MANAGE"}}
+destroy:
+  calls:
+    - *read_after
+    - request:
+        method: DELETE
+        path: /api/2.0/mlflow/registered-models/delete
+        query:
+          name: [error_update_read_model]
+        headers:
+          X-Databricks-Workspace-Id: "12345"
+        body: null
+      response:
+        status: 200
+        body:
+          json: {}

@@ -1,0 +1,125 @@
+# Pins a create answered 200 without the registered_model envelope, as an empty object
+# and as an explicit null. Create takes the ID from registered_model.name without
+# checking that the envelope is there, so it panics on the nil pointer; the provider
+# turns the panic into the diagnostic. Nothing reaches the state although the service
+# accepted the POST, so the next plan creates the model again, and that apply sends a
+# second POST for the same name. That is a known defect: a fix is expected to fail with
+# a clear error instead of a panic; update these steps with it. API responses are
+# synthetic: inferred from the MLflow Model Registry API, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: create_answered_200_with_empty_object_fails_with_nil_pointer_panic
+    config: &config |
+      resource "databricks_mlflow_model" "this" {
+        name        = "decode_model"
+        description = "first description"
+      }
+    expect_error: &nil_pointer_panic 'Error: cannot create mlflow model: panic: runtime
+      error: invalid memory address or nil pointer dereference\n'
+    calls:
+      - request: &create_request
+          method: POST
+          path: /api/2.0/mlflow/registered-models/create
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"name": "decode_model", "description": "first description"}
+        response:
+          status: 200
+          body:
+            json: {}
+  - name: plan_after_empty_object_has_no_model_in_state_and_plans_the_create_again
+    plan_only: true
+    config: *config
+    plan: &plans_create
+      expect: non_empty
+      changes:
+        databricks_mlflow_model.this:
+          actions: [create]
+          after:
+            - path: [name]
+              equals: decode_model
+            - path: [id]
+              unknown: true
+    calls: []
+  - name: create_answered_200_with_null_registered_model_fails_with_nil_pointer_panic
+    config: *config
+    expect_error: *nil_pointer_panic
+    calls:
+      - request: *create_request
+        response:
+          status: 200
+          body:
+            json: {"registered_model": null}
+  - name: plan_after_null_registered_model_has_no_model_in_state_and_plans_the_create_again
+    plan_only: true
+    config: *config
+    plan: *plans_create
+    calls: []
+  - name: create_answered_with_registered_model_sends_the_post_again_and_succeeds
+    config: *config
+    plan:
+      changes:
+        databricks_mlflow_model.this:
+          actions: [create]
+    calls:
+      - request: *create_request
+        response:
+          status: 200
+          body:
+            json: {"registered_model": {
+                     "name": "decode_model",
+                     "description": "first description",
+                     "user_id": "replay-admin@example.com",
+                     "creation_timestamp": 1700000000000,
+                     "last_updated_timestamp": 1700000000000}}
+      - &read
+        request:
+          method: GET
+          path: /api/2.0/mlflow/databricks/registered-models/get
+          query:
+            name: [decode_model]
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"registered_model_databricks": {
+                     "name": "decode_model",
+                     "id": "0123456789abcdef0123456789abcdef",
+                     "description": "first description",
+                     "user_id": "replay-admin@example.com",
+                     "creation_timestamp": 1700000000000,
+                     "last_updated_timestamp": 1700000000000,
+                     "permission_level": "CAN_MANAGE"}}
+      - *read
+    state:
+      resources:
+        databricks_mlflow_model.this:
+          attributes:
+            - path: [id]
+              equals: decode_model
+            - path: [registered_model_id]
+              equals: 0123456789abcdef0123456789abcdef
+destroy:
+  calls:
+    - *read
+    - request:
+        method: DELETE
+        path: /api/2.0/mlflow/registered-models/delete
+        query:
+          name: [decode_model]
+        headers:
+          X-Databricks-Workspace-Id: "12345"
+        body: null
+      response:
+        status: 200
+        body:
+          json: {}

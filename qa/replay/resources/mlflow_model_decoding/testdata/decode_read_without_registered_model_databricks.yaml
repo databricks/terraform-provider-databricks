@@ -1,0 +1,156 @@
+# Pins a read answered 200 without the registered_model_databricks envelope: as an
+# empty object after create, and on refresh as an explicit null and as the
+# registered_model envelope that the MLflow endpoint without /databricks/ returns. Read
+# converts the missing envelope to state without checking it, so each fails with the
+# reflection error. After create the ID is already set, so the model stays in the state
+# tainted and the next plan replaces it; that apply deletes and creates it again. A
+# failed refresh leaves the state as it was. The reflection error is a known defect: a
+# fix is expected to fail with a clear error; update these steps with it. API responses
+# are synthetic: inferred from the MLflow Model Registry API, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: read_after_create_answered_200_with_empty_object_fails_with_reflection_error
+    config: &config |
+      resource "databricks_mlflow_model" "this" {
+        name        = "decode_model"
+        description = "first description"
+      }
+    expect_error: &reflection_error 'Error: cannot read mlflow model: value of Struct is
+      expected, but got other: <invalid reflect\.Value>\n'
+    calls:
+      - &create
+        request:
+          method: POST
+          path: /api/2.0/mlflow/registered-models/create
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"name": "decode_model", "description": "first description"}
+        response:
+          status: 200
+          body:
+            json: {"registered_model": {
+                     "name": "decode_model",
+                     "description": "first description",
+                     "user_id": "replay-admin@example.com",
+                     "creation_timestamp": 1700000000000,
+                     "last_updated_timestamp": 1700000000000}}
+      - request: &read_request
+          method: GET
+          path: /api/2.0/mlflow/databricks/registered-models/get
+          query:
+            name: [decode_model]
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 200
+          body:
+            json: {}
+  - name: plan_after_failed_read_keeps_the_tainted_model_and_plans_replacement
+    plan_only: true
+    config: *config
+    plan:
+      expect: non_empty
+      changes:
+        databricks_mlflow_model.this:
+          actions: [delete, create]
+          before:
+            - path: [id]
+              equals: decode_model
+          after:
+            - path: [name]
+              equals: decode_model
+            - path: [id]
+              unknown: true
+    state: &state
+      resources:
+        databricks_mlflow_model.this:
+          attributes:
+            - path: [id]
+              equals: decode_model
+            - path: [name]
+              equals: decode_model
+            - path: [registered_model_id]
+              equals: 0123456789abcdef0123456789abcdef
+    calls:
+      - &read
+        request: *read_request
+        response:
+          status: 200
+          body:
+            json: {"registered_model_databricks": {
+                     "name": "decode_model",
+                     "id": "0123456789abcdef0123456789abcdef",
+                     "description": "first description",
+                     "user_id": "replay-admin@example.com",
+                     "creation_timestamp": 1700000000000,
+                     "last_updated_timestamp": 1700000000000,
+                     "permission_level": "CAN_MANAGE"}}
+  - name: apply_after_failed_read_deletes_the_tainted_model_and_creates_it_again
+    config: *config
+    plan:
+      changes:
+        databricks_mlflow_model.this:
+          actions: [delete, create]
+    calls:
+      - *read
+      - &delete
+        request:
+          method: DELETE
+          path: /api/2.0/mlflow/registered-models/delete
+          query:
+            name: [decode_model]
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 200
+          body:
+            json: {}
+      - *create
+      - *read
+      - *read
+    state: *state
+  - name: refresh_answered_200_with_null_envelope_fails_with_reflection_error
+    config: *config
+    expect_error: *reflection_error
+    calls:
+      - request: *read_request
+        response:
+          status: 200
+          body:
+            json: {"registered_model_databricks": null}
+  - name: refresh_answered_200_with_registered_model_envelope_fails_with_reflection_error
+    config: *config
+    expect_error: *reflection_error
+    calls:
+      - request: *read_request
+        response:
+          status: 200
+          body:
+            json: {"registered_model": {
+                     "name": "decode_model",
+                     "description": "first description",
+                     "user_id": "replay-admin@example.com",
+                     "creation_timestamp": 1700000000000,
+                     "last_updated_timestamp": 1700000000000}}
+  - name: plan_after_failed_refreshes_keeps_the_model_and_plans_nothing
+    plan_only: true
+    config: *config
+    plan:
+      expect: empty
+      changes: {}
+    state: *state
+    calls:
+      - *read
+destroy:
+  calls:
+    - *read
+    - *delete

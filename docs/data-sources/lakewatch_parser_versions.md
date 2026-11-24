@@ -6,9 +6,23 @@ subcategory: "Lakewatch"
 
 [API Documentation](https://docs.databricks.com/api/workspace/lakewatch)
 
+Lists the remaining versions of a custom Lakewatch parser, oldest first. Results contain version metadata without specs. Use `databricks_lakewatch_parser_version` to retrieve one version's content. Deleted versions are absent, so version numbers can have gaps.
+
+This data source can only be used with a workspace-level provider.
 
 
 ## Example Usage
+List the versions of an existing parser:
+
+```hcl
+data "databricks_lakewatch_parser_versions" "logs" {
+  parent = "parsers/11111111-1111-4111-8111-111111111111"
+}
+
+output "parser_version_names" {
+  value = [for version in data.databricks_lakewatch_parser_versions.logs.parser_versions : version.name]
+}
+```
 
 
 ## Arguments

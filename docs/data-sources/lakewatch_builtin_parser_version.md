@@ -6,9 +6,23 @@ subcategory: "Lakewatch"
 
 [API Documentation](https://docs.databricks.com/api/workspace/lakewatch)
 
+Reads a built-in Lakewatch parser version, including its YAML spec. Use a numbered canonical name to select a fixed version. Built-in versions are read-only. To customize a built-in version, use its spec as the starting point for a custom parser.
+
+This data source can only be used with a workspace-level provider.
 
 
 ## Example Usage
+Replace the example name with a version returned by `databricks_lakewatch_builtin_parser_versions`:
+
+```hcl
+data "databricks_lakewatch_builtin_parser_version" "logs" {
+  name = "builtin-parsers/22222222-2222-4222-8222-222222222222/versions/1"
+}
+
+output "builtin_parser_spec" {
+  value = data.databricks_lakewatch_builtin_parser_version.logs.spec
+}
+```
 
 
 ## Arguments

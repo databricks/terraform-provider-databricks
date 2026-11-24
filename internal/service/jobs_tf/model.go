@@ -10000,7 +10000,9 @@ type JobCompletionTriggerStateMonitoredJobState struct {
 	// may become stale while the trigger is paused or evaluation cannot access
 	// the upstream job.
 	IsDeleted types.Bool `tfsdk:"is_deleted"`
-	// The ID of the upstream job.
+	// The ID of the upstream job. For a job monitored by name, the ID of the
+	// job that the name last resolved to. Omitted until the name resolves to a
+	// job.
 	JobId types.String `tfsdk:"job_id"`
 	// The completion time of the latest matching upstream run observed by the
 	// trigger.
@@ -15591,8 +15593,7 @@ type PythonOperatorTask struct {
 	// Fully qualified name of the main class or function. For example,
 	// `my_project.my_function` or `my_project.MyOperator`.
 	Main types.String `tfsdk:"main"`
-	// An ordered list of task parameters. TODO(JOBS-30885): Add limits for
-	// parameters.
+	// An ordered list of task parameters.
 	Parameters types.List `tfsdk:"parameters"`
 }
 

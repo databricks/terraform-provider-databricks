@@ -1,0 +1,13 @@
+template: testify
+template-data:
+  unroll-variadic: true
+include-auto-generated: true
+filename: "mock_{{.InterfaceName | snakecase}}.go"
+dir: "experimental/mocks/service/{{.SrcPackageName | snakecase}}"
+structname: "Mock{{.InterfaceName}}"
+pkgname: "{{.SrcPackageName}}"
+packages:
+  github.com/databricks/databricks-sdk-go/service:
+    config:
+      recursive: true
+      include-interface-regex: ".*Interface"

@@ -48,6 +48,10 @@ This data source exports a single attribute, `sandboxes`. It is a list of resour
   exact version. When omitted, the sandbox runs the default sandbox image. See
   [custom images](https://docs.databricks.com/en/compute/serverless/sandbox-custom-image)
 
+### NetworkSpec
+* `internet_access` (boolean) - Whether the sandbox can reach the public internet. Defaults to true. Control-plane,
+  PrivateLink, and workspace/UC/Delta-shared storage stay reachable either way
+
 ### SandboxMetadata
 * `custom_tags` (object) - Key-value tags associated with the sandbox. Supports up to 54 tags. Keys must be between
   1 and 512 characters, and values must not exceed 256 characters
@@ -55,6 +59,7 @@ This data source exports a single attribute, `sandboxes`. It is a list of resour
 ### SandboxSpec
 * `compute` (ComputeSpec) - Compute settings requested for the sandbox, such as the inactivity timeout
 * `environment` (EnvironmentSpec) - Software environment for the sandbox, such as the container image it runs
+* `network` (NetworkSpec) - Network configuration requested for the sandbox
 
 ### SandboxStatus
 * `state` (string) - Lifecycle state of the sandbox.

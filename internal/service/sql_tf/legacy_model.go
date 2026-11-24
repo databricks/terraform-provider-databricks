@@ -82,44 +82,57 @@ func (m AccessControl_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// A legacy Databricks SQL alert. An alert runs a saved query, compares a column
+// of the result against a threshold, and notifies its subscribers when the
+// condition is met. See
+// https://docs.databricks.com/aws/en/sql/user/alerts/legacy for details.
 type Alert_SdkV2 struct {
-	// Trigger conditions of the alert.
+	// Condition that triggers the alert: a column of the query result, a
+	// comparison operator, and a threshold value. The value in the first row of
+	// the column is evaluated; aggregations are not supported through this API.
 	Condition types.List `tfsdk:"condition"`
 	// The timestamp indicating when the alert was created.
 	CreateTime types.String `tfsdk:"create_time"`
-	// Custom body of alert notification, if it exists. See [here] for custom
-	// templating instructions.
-	//
-	// [here]: https://docs.databricks.com/sql/user/alerts/index.html
+	// Custom body of the alert notification. It can use the template variables
+	// and HTML described at
+	// https://docs.databricks.com/aws/en/sql/user/alerts/legacy. If omitted,
+	// the default notification body is used.
 	CustomBody types.String `tfsdk:"custom_body"`
-	// Custom subject of alert notification, if it exists. This can include
-	// email subject entries and Slack notification headers, for example. See
-	// [here] for custom templating instructions.
-	//
-	// [here]: https://docs.databricks.com/sql/user/alerts/index.html
+	// Custom subject of the alert notification, used as the email subject or
+	// the Slack message header. It can use the template variables described at
+	// https://docs.databricks.com/aws/en/sql/user/alerts/legacy. If omitted,
+	// the default subject is used.
 	CustomSubject types.String `tfsdk:"custom_subject"`
-	// The display name of the alert.
+	// Display name of the alert, shown in list views and notifications. It must
+	// not be empty.
 	DisplayName types.String `tfsdk:"display_name"`
 	// UUID identifying the alert.
 	Id types.String `tfsdk:"id"`
-	// The workspace state of the alert. Used for tracking trashed status.
+	// Lifecycle state of the alert: `ACTIVE`, or `TRASHED` after it has been
+	// moved to the trash.
 	LifecycleState types.String `tfsdk:"lifecycle_state"`
-	// Whether to notify alert subscribers when alert returns back to normal.
+	// Whether to notify subscribers when the alert state changes from
+	// `TRIGGERED` back to `OK`. Defaults to true.
 	NotifyOnOk types.Bool `tfsdk:"notify_on_ok"`
 	// The owner's username. This field is set to "Unavailable" if the user has
 	// been deleted.
 	OwnerUserName types.String `tfsdk:"owner_user_name"`
-	// The workspace path of the folder containing the alert.
+	// Workspace path of the folder containing the alert. Defaults to the
+	// creator's home folder when omitted on create. It cannot be changed after
+	// creation.
 	ParentPath types.String `tfsdk:"parent_path"`
-	// UUID of the query attached to the alert.
+	// UUID of the saved query whose result the alert evaluates. The caller must
+	// have permission to view the query.
 	QueryId types.String `tfsdk:"query_id"`
-	// Number of seconds an alert must wait after being triggered to rearm
-	// itself. After rearming, it can be triggered again. If 0 or not specified,
-	// the alert will not be triggered again.
+	// Number of seconds the alert waits after a notification before it can
+	// notify again while its state stays `TRIGGERED`. If 0 or not specified,
+	// the alert notifies once when its state changes to `TRIGGERED` and does
+	// not notify again until its state has changed.
 	SecondsToRetrigger types.Int64 `tfsdk:"seconds_to_retrigger"`
-	// Current state of the alert's trigger status. This field is set to UNKNOWN
-	// if the alert has not yet been evaluated or ran into an error during the
-	// last evaluation.
+	// Current state of the alert's trigger status: `TRIGGERED` if the condition
+	// was met on the last evaluation, `OK` if it was not, and `UNKNOWN` if the
+	// alert has not yet been evaluated or ran into an error during the last
+	// evaluation.
 	State types.String `tfsdk:"state"`
 	// Timestamp when the alert was last triggered, if the alert has been
 	// triggered before.
@@ -262,14 +275,20 @@ func (m *Alert_SdkV2) SetCondition(ctx context.Context, v AlertCondition_SdkV2) 
 }
 
 type AlertCondition_SdkV2 struct {
-	// Alert state if result is empty.
+	// State the alert takes when the query returns no rows. Defaults to
+	// `UNKNOWN` when not set.
 	EmptyResultState types.String `tfsdk:"empty_result_state"`
-	// Operator used for comparison in alert evaluation.
+	// Comparison operator applied between the operand column value and the
+	// threshold. The alert is triggered when the comparison is true. `IS_NULL`
+	// triggers when the column value is null; a threshold must still be
+	// supplied but its value is ignored.
 	Op types.String `tfsdk:"op"`
-	// Name of the column from the query result to use for comparison in alert
-	// evaluation.
+	// Left-hand side of the comparison. Through this API it must be a `column`
+	// naming a column of the query result; the value in the first row of that
+	// column is compared against the threshold.
 	Operand types.List `tfsdk:"operand"`
-	// Threshold value used for comparison in alert evaluation.
+	// Right-hand side of the comparison. Through this API it must be a fixed
+	// `value` whose type matches the operand column.
 	Threshold types.List `tfsdk:"threshold"`
 }
 
@@ -421,6 +440,7 @@ func (m *AlertCondition_SdkV2) SetThreshold(ctx context.Context, v AlertConditio
 }
 
 type AlertConditionOperand_SdkV2 struct {
+	// A column of the query result. Used for the `operand` of a condition.
 	Column types.List `tfsdk:"column"`
 }
 
@@ -516,6 +536,7 @@ func (m *AlertConditionOperand_SdkV2) SetColumn(ctx context.Context, v AlertOper
 }
 
 type AlertConditionThreshold_SdkV2 struct {
+	// A fixed value. Used for the `threshold` of a condition.
 	Value types.List `tfsdk:"value"`
 }
 
@@ -611,6 +632,7 @@ func (m *AlertConditionThreshold_SdkV2) SetValue(ctx context.Context, v AlertOpe
 }
 
 type AlertOperandColumn_SdkV2 struct {
+	// Name of the column in the query result.
 	Name types.String `tfsdk:"name"`
 }
 
@@ -658,10 +680,11 @@ func (m AlertOperandColumn_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type AlertOperandValue_SdkV2 struct {
+	// Boolean threshold, for boolean columns.
 	BoolValue types.Bool `tfsdk:"bool_value"`
-
+	// Numeric threshold, for numeric columns.
 	DoubleValue types.Float64 `tfsdk:"double_value"`
-
+	// String threshold, for string or timestamp columns.
 	StringValue types.String `tfsdk:"string_value"`
 }
 
@@ -2734,6 +2757,8 @@ func (m *CreateAlert_SdkV2) SetOptions(ctx context.Context, v AlertOptions_SdkV2
 }
 
 type CreateAlertRequest_SdkV2 struct {
+	// The alert to create. A display name, a `query_id`, and a `condition` are
+	// required.
 	Alert types.List `tfsdk:"alert"`
 	// If true, automatically resolve alert display name conflicts. Otherwise,
 	// fail the request if the alert's display name conflicts with an existing
@@ -2835,31 +2860,42 @@ func (m *CreateAlertRequest_SdkV2) SetAlert(ctx context.Context, v CreateAlertRe
 	m.Alert = types.ListValueMust(t, vs)
 }
 
+// A legacy Databricks SQL alert. An alert runs a saved query, compares a column
+// of the result against a threshold, and notifies its subscribers when the
+// condition is met. See
+// https://docs.databricks.com/aws/en/sql/user/alerts/legacy for details.
 type CreateAlertRequestAlert_SdkV2 struct {
-	// Trigger conditions of the alert.
+	// Condition that triggers the alert: a column of the query result, a
+	// comparison operator, and a threshold value. The value in the first row of
+	// the column is evaluated; aggregations are not supported through this API.
 	Condition types.List `tfsdk:"condition"`
-	// Custom body of alert notification, if it exists. See [here] for custom
-	// templating instructions.
-	//
-	// [here]: https://docs.databricks.com/sql/user/alerts/index.html
+	// Custom body of the alert notification. It can use the template variables
+	// and HTML described at
+	// https://docs.databricks.com/aws/en/sql/user/alerts/legacy. If omitted,
+	// the default notification body is used.
 	CustomBody types.String `tfsdk:"custom_body"`
-	// Custom subject of alert notification, if it exists. This can include
-	// email subject entries and Slack notification headers, for example. See
-	// [here] for custom templating instructions.
-	//
-	// [here]: https://docs.databricks.com/sql/user/alerts/index.html
+	// Custom subject of the alert notification, used as the email subject or
+	// the Slack message header. It can use the template variables described at
+	// https://docs.databricks.com/aws/en/sql/user/alerts/legacy. If omitted,
+	// the default subject is used.
 	CustomSubject types.String `tfsdk:"custom_subject"`
-	// The display name of the alert.
+	// Display name of the alert, shown in list views and notifications. It must
+	// not be empty.
 	DisplayName types.String `tfsdk:"display_name"`
-	// Whether to notify alert subscribers when alert returns back to normal.
+	// Whether to notify subscribers when the alert state changes from
+	// `TRIGGERED` back to `OK`. Defaults to true.
 	NotifyOnOk types.Bool `tfsdk:"notify_on_ok"`
-	// The workspace path of the folder containing the alert.
+	// Workspace path of the folder containing the alert. Defaults to the
+	// creator's home folder when omitted on create. It cannot be changed after
+	// creation.
 	ParentPath types.String `tfsdk:"parent_path"`
-	// UUID of the query attached to the alert.
+	// UUID of the saved query whose result the alert evaluates. The caller must
+	// have permission to view the query.
 	QueryId types.String `tfsdk:"query_id"`
-	// Number of seconds an alert must wait after being triggered to rearm
-	// itself. After rearming, it can be triggered again. If 0 or not specified,
-	// the alert will not be triggered again.
+	// Number of seconds the alert waits after a notification before it can
+	// notify again while its state stays `TRIGGERED`. If 0 or not specified,
+	// the alert notifies once when its state changes to `TRIGGERED` and does
+	// not notify again until its state has changed.
 	SecondsToRetrigger types.Int64 `tfsdk:"seconds_to_retrigger"`
 }
 
@@ -3755,7 +3791,7 @@ type CreateWarehouseRequest_SdkV2 struct {
 	// Name of the user who created the warehouse. Set by the server and ignored
 	// in requests.
 	CreatorName types.String `tfsdk:"creator_name"`
-	// Compute version label for a REALTIME warehouse. This field is output
+	// Compute version label for a Real-Time warehouse. This field is output
 	// only.
 	CustomerVersionLabel types.String `tfsdk:"customer_version_label"`
 	// Configures whether the warehouse should use Photon optimized clusters.
@@ -3766,10 +3802,10 @@ type CreateWarehouseRequest_SdkV2 struct {
 	EnableServerlessCompute types.Bool `tfsdk:"enable_serverless_compute"`
 	// Deprecated. Instance profile used to pass IAM role to the cluster
 	InstanceProfileArn types.String `tfsdk:"instance_profile_arn"`
-	// Maximum compute capacity of a real-time SQL warehouse, in DBU per hour.
-	// Must be at least the minimum DBU for the selected warehouse size and no
-	// greater than the configured DBU limit. Actual capacity may be below this
-	// ceiling.
+	// Maximum autoscaling capacity of a Real-Time SQL warehouse, in DBU per
+	// hour. Must be at least the minimum DBU for the selected warehouse size
+	// and no greater than the configured DBU limit. Actual capacity may be
+	// below this ceiling.
 	MaxDbu types.Int64 `tfsdk:"max_dbu"`
 	// Maximum number of clusters that the autoscaler will create to handle
 	// concurrent queries.
@@ -3816,9 +3852,10 @@ type CreateWarehouseRequest_SdkV2 struct {
 	//
 	// Supported values: - Number of tags < 45.
 	Tags types.List `tfsdk:"tags"`
-	// Warehouse type: `PRO` or `CLASSIC`. If you want to use serverless
-	// compute, you must set to `PRO` and also set the field
-	// `enable_serverless_compute` to `true`.
+	// Warehouse type: `PRO`, `CLASSIC`, or `REALTIME`. For serverless compute,
+	// use `PRO` or `REALTIME` with `enable_serverless_compute=true`. `REALTIME`
+	// requires serverless compute and Photon; `enable_photon` defaults to
+	// `true`.
 	WarehouseType types.String `tfsdk:"warehouse_type"`
 }
 
@@ -5737,7 +5774,7 @@ type EditWarehouseRequest_SdkV2 struct {
 	// Name of the user who created the warehouse. Set by the server and ignored
 	// in requests.
 	CreatorName types.String `tfsdk:"creator_name"`
-	// Compute version label for a REALTIME warehouse. This field is output
+	// Compute version label for a Real-Time warehouse. This field is output
 	// only.
 	CustomerVersionLabel types.String `tfsdk:"customer_version_label"`
 	// Configures whether the warehouse should use Photon optimized clusters.
@@ -5750,10 +5787,10 @@ type EditWarehouseRequest_SdkV2 struct {
 	Id types.String `tfsdk:"-"`
 	// Deprecated. Instance profile used to pass IAM role to the cluster
 	InstanceProfileArn types.String `tfsdk:"instance_profile_arn"`
-	// Maximum compute capacity of a real-time SQL warehouse, in DBU per hour.
-	// Must be at least the minimum DBU for the selected warehouse size and no
-	// greater than the configured DBU limit. Actual capacity may be below this
-	// ceiling.
+	// Maximum autoscaling capacity of a Real-Time SQL warehouse, in DBU per
+	// hour. Must be at least the minimum DBU for the selected warehouse size
+	// and no greater than the configured DBU limit. Actual capacity may be
+	// below this ceiling.
 	MaxDbu types.Int64 `tfsdk:"max_dbu"`
 	// Maximum number of clusters that the autoscaler will create to handle
 	// concurrent queries.
@@ -5800,9 +5837,10 @@ type EditWarehouseRequest_SdkV2 struct {
 	//
 	// Supported values: - Number of tags < 45.
 	Tags types.List `tfsdk:"tags"`
-	// Warehouse type: `PRO` or `CLASSIC`. If you want to use serverless
-	// compute, you must set to `PRO` and also set the field
-	// `enable_serverless_compute` to `true`.
+	// Warehouse type: `PRO`, `CLASSIC`, or `REALTIME`. For serverless compute,
+	// use `PRO` or `REALTIME` with `enable_serverless_compute=true`. `REALTIME`
+	// requires serverless compute and Photon; `enable_photon` defaults to
+	// `true`.
 	WarehouseType types.String `tfsdk:"warehouse_type"`
 }
 
@@ -6272,7 +6310,7 @@ type EndpointInfo_SdkV2 struct {
 	// Name of the user who created the warehouse. Set by the server and ignored
 	// in requests.
 	CreatorName types.String `tfsdk:"creator_name"`
-	// Compute version label for a REALTIME warehouse. This field is output
+	// Compute version label for a Real-Time warehouse. This field is output
 	// only.
 	CustomerVersionLabel types.String `tfsdk:"customer_version_label"`
 	// Configures whether the warehouse should use Photon optimized clusters.
@@ -6290,10 +6328,10 @@ type EndpointInfo_SdkV2 struct {
 	InstanceProfileArn types.String `tfsdk:"instance_profile_arn"`
 	// JDBC connection string for the warehouse.
 	JdbcUrl types.String `tfsdk:"jdbc_url"`
-	// Maximum compute capacity of a real-time SQL warehouse, in DBU per hour.
-	// Must be at least the minimum DBU for the selected warehouse size and no
-	// greater than the configured DBU limit. Actual capacity may be below this
-	// ceiling.
+	// Maximum autoscaling capacity of a Real-Time SQL warehouse, in DBU per
+	// hour. Must be at least the minimum DBU for the selected warehouse size
+	// and no greater than the configured DBU limit. Actual capacity may be
+	// below this ceiling.
 	MaxDbu types.Int64 `tfsdk:"max_dbu"`
 	// Maximum number of clusters that the autoscaler will create to handle
 	// concurrent queries.
@@ -6349,9 +6387,10 @@ type EndpointInfo_SdkV2 struct {
 	//
 	// Supported values: - Number of tags < 45.
 	Tags types.List `tfsdk:"tags"`
-	// Warehouse type: `PRO` or `CLASSIC`. If you want to use serverless
-	// compute, you must set to `PRO` and also set the field
-	// `enable_serverless_compute` to `true`.
+	// Warehouse type: `PRO`, `CLASSIC`, or `REALTIME`. For serverless compute,
+	// use `PRO` or `REALTIME` with `enable_serverless_compute=true`. `REALTIME`
+	// requires serverless compute and Photon; `enable_photon` defaults to
+	// `true`.
 	WarehouseType types.String `tfsdk:"warehouse_type"`
 }
 
@@ -7679,6 +7718,7 @@ func (m ExternalQuerySourceJobInfo_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type GetAlertRequest_SdkV2 struct {
+	// UUID of the alert to fetch.
 	Id types.String `tfsdk:"-"`
 }
 
@@ -8616,7 +8656,7 @@ type GetWarehouseResponse_SdkV2 struct {
 	// Name of the user who created the warehouse. Set by the server and ignored
 	// in requests.
 	CreatorName types.String `tfsdk:"creator_name"`
-	// Compute version label for a REALTIME warehouse. This field is output
+	// Compute version label for a Real-Time warehouse. This field is output
 	// only.
 	CustomerVersionLabel types.String `tfsdk:"customer_version_label"`
 	// Configures whether the warehouse should use Photon optimized clusters.
@@ -8634,10 +8674,10 @@ type GetWarehouseResponse_SdkV2 struct {
 	InstanceProfileArn types.String `tfsdk:"instance_profile_arn"`
 	// JDBC connection string for the warehouse.
 	JdbcUrl types.String `tfsdk:"jdbc_url"`
-	// Maximum compute capacity of a real-time SQL warehouse, in DBU per hour.
-	// Must be at least the minimum DBU for the selected warehouse size and no
-	// greater than the configured DBU limit. Actual capacity may be below this
-	// ceiling.
+	// Maximum autoscaling capacity of a Real-Time SQL warehouse, in DBU per
+	// hour. Must be at least the minimum DBU for the selected warehouse size
+	// and no greater than the configured DBU limit. Actual capacity may be
+	// below this ceiling.
 	MaxDbu types.Int64 `tfsdk:"max_dbu"`
 	// Maximum number of clusters that the autoscaler will create to handle
 	// concurrent queries.
@@ -8693,9 +8733,10 @@ type GetWarehouseResponse_SdkV2 struct {
 	//
 	// Supported values: - Number of tags < 45.
 	Tags types.List `tfsdk:"tags"`
-	// Warehouse type: `PRO` or `CLASSIC`. If you want to use serverless
-	// compute, you must set to `PRO` and also set the field
-	// `enable_serverless_compute` to `true`.
+	// Warehouse type: `PRO`, `CLASSIC`, or `REALTIME`. For serverless compute,
+	// use `PRO` or `REALTIME` with `enable_serverless_compute=true`. `REALTIME`
+	// requires serverless compute and Photon; `enable_photon` defaults to
+	// `true`.
 	WarehouseType types.String `tfsdk:"warehouse_type"`
 }
 
@@ -10285,8 +10326,10 @@ func (m *LegacyVisualization_SdkV2) SetQuery(ctx context.Context, v LegacyQuery_
 }
 
 type ListAlertsRequest_SdkV2 struct {
+	// Maximum number of alerts to return per page.
 	PageSize types.Int64 `tfsdk:"-"`
-
+	// Token from the `next_page_token` of a previous response. Omit it to fetch
+	// the first page.
 	PageToken types.String `tfsdk:"-"`
 }
 
@@ -10337,8 +10380,10 @@ func (m ListAlertsRequest_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type ListAlertsResponse_SdkV2 struct {
+	// Token to pass as `page_token` to fetch the next page. Omitted when there
+	// are no more pages.
 	NextPageToken types.String `tfsdk:"next_page_token"`
-
+	// Alerts on this page.
 	Results types.List `tfsdk:"results"`
 }
 
@@ -10455,42 +10500,53 @@ func (m *ListAlertsResponse_SdkV2) SetResults(ctx context.Context, v []ListAlert
 	m.Results = types.ListValueMust(t, vs)
 }
 
+// A legacy Databricks SQL alert. An alert runs a saved query, compares a column
+// of the result against a threshold, and notifies its subscribers when the
+// condition is met. See
+// https://docs.databricks.com/aws/en/sql/user/alerts/legacy for details.
 type ListAlertsResponseAlert_SdkV2 struct {
-	// Trigger conditions of the alert.
+	// Condition that triggers the alert: a column of the query result, a
+	// comparison operator, and a threshold value. The value in the first row of
+	// the column is evaluated; aggregations are not supported through this API.
 	Condition types.List `tfsdk:"condition"`
 	// The timestamp indicating when the alert was created.
 	CreateTime types.String `tfsdk:"create_time"`
-	// Custom body of alert notification, if it exists. See [here] for custom
-	// templating instructions.
-	//
-	// [here]: https://docs.databricks.com/sql/user/alerts/index.html
+	// Custom body of the alert notification. It can use the template variables
+	// and HTML described at
+	// https://docs.databricks.com/aws/en/sql/user/alerts/legacy. If omitted,
+	// the default notification body is used.
 	CustomBody types.String `tfsdk:"custom_body"`
-	// Custom subject of alert notification, if it exists. This can include
-	// email subject entries and Slack notification headers, for example. See
-	// [here] for custom templating instructions.
-	//
-	// [here]: https://docs.databricks.com/sql/user/alerts/index.html
+	// Custom subject of the alert notification, used as the email subject or
+	// the Slack message header. It can use the template variables described at
+	// https://docs.databricks.com/aws/en/sql/user/alerts/legacy. If omitted,
+	// the default subject is used.
 	CustomSubject types.String `tfsdk:"custom_subject"`
-	// The display name of the alert.
+	// Display name of the alert, shown in list views and notifications. It must
+	// not be empty.
 	DisplayName types.String `tfsdk:"display_name"`
 	// UUID identifying the alert.
 	Id types.String `tfsdk:"id"`
-	// The workspace state of the alert. Used for tracking trashed status.
+	// Lifecycle state of the alert: `ACTIVE`, or `TRASHED` after it has been
+	// moved to the trash.
 	LifecycleState types.String `tfsdk:"lifecycle_state"`
-	// Whether to notify alert subscribers when alert returns back to normal.
+	// Whether to notify subscribers when the alert state changes from
+	// `TRIGGERED` back to `OK`. Defaults to true.
 	NotifyOnOk types.Bool `tfsdk:"notify_on_ok"`
 	// The owner's username. This field is set to "Unavailable" if the user has
 	// been deleted.
 	OwnerUserName types.String `tfsdk:"owner_user_name"`
-	// UUID of the query attached to the alert.
+	// UUID of the saved query whose result the alert evaluates. The caller must
+	// have permission to view the query.
 	QueryId types.String `tfsdk:"query_id"`
-	// Number of seconds an alert must wait after being triggered to rearm
-	// itself. After rearming, it can be triggered again. If 0 or not specified,
-	// the alert will not be triggered again.
+	// Number of seconds the alert waits after a notification before it can
+	// notify again while its state stays `TRIGGERED`. If 0 or not specified,
+	// the alert notifies once when its state changes to `TRIGGERED` and does
+	// not notify again until its state has changed.
 	SecondsToRetrigger types.Int64 `tfsdk:"seconds_to_retrigger"`
-	// Current state of the alert's trigger status. This field is set to UNKNOWN
-	// if the alert has not yet been evaluated or ran into an error during the
-	// last evaluation.
+	// Current state of the alert's trigger status: `TRIGGERED` if the condition
+	// was met on the last evaluation, `OK` if it was not, and `UNKNOWN` if the
+	// alert has not yet been evaluated or ran into an error during the last
+	// evaluation.
 	State types.String `tfsdk:"state"`
 	// Timestamp when the alert was last triggered, if the alert has been
 	// triggered before.
@@ -17692,6 +17748,7 @@ func (m *TransferOwnershipRequest_SdkV2) SetObjectId(ctx context.Context, v Tran
 }
 
 type TrashAlertRequest_SdkV2 struct {
+	// UUID of the alert to move to the trash.
 	Id types.String `tfsdk:"-"`
 }
 
@@ -17841,13 +17898,19 @@ func (m TrashQueryRequest_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type UpdateAlertRequest_SdkV2 struct {
+	// Alert fields to update. Only the fields named in `update_mask` are
+	// changed.
 	Alert types.List `tfsdk:"alert"`
 	// If true, automatically resolve alert display name conflicts. Otherwise,
 	// fail the request if the alert's display name conflicts with an existing
 	// alert's display name.
 	AutoResolveDisplayName types.Bool `tfsdk:"auto_resolve_display_name"`
-
+	// UUID of the alert to update.
 	Id types.String `tfsdk:"-"`
+	// Comma-separated list of the alert fields to update, such as
+	// `display_name` or `condition`. Fields not listed keep their current
+	// values.
+	//
 	// The field mask must be a single string, with multiple fields separated by
 	// commas (no spaces). The field path is relative to the resource object,
 	// using a dot (`.`) to navigate sub-fields (e.g., `author.given_name`).
@@ -17962,32 +18025,41 @@ func (m *UpdateAlertRequest_SdkV2) SetAlert(ctx context.Context, v UpdateAlertRe
 	m.Alert = types.ListValueMust(t, vs)
 }
 
+// A legacy Databricks SQL alert. An alert runs a saved query, compares a column
+// of the result against a threshold, and notifies its subscribers when the
+// condition is met. See
+// https://docs.databricks.com/aws/en/sql/user/alerts/legacy for details.
 type UpdateAlertRequestAlert_SdkV2 struct {
-	// Trigger conditions of the alert.
+	// Condition that triggers the alert: a column of the query result, a
+	// comparison operator, and a threshold value. The value in the first row of
+	// the column is evaluated; aggregations are not supported through this API.
 	Condition types.List `tfsdk:"condition"`
-	// Custom body of alert notification, if it exists. See [here] for custom
-	// templating instructions.
-	//
-	// [here]: https://docs.databricks.com/sql/user/alerts/index.html
+	// Custom body of the alert notification. It can use the template variables
+	// and HTML described at
+	// https://docs.databricks.com/aws/en/sql/user/alerts/legacy. If omitted,
+	// the default notification body is used.
 	CustomBody types.String `tfsdk:"custom_body"`
-	// Custom subject of alert notification, if it exists. This can include
-	// email subject entries and Slack notification headers, for example. See
-	// [here] for custom templating instructions.
-	//
-	// [here]: https://docs.databricks.com/sql/user/alerts/index.html
+	// Custom subject of the alert notification, used as the email subject or
+	// the Slack message header. It can use the template variables described at
+	// https://docs.databricks.com/aws/en/sql/user/alerts/legacy. If omitted,
+	// the default subject is used.
 	CustomSubject types.String `tfsdk:"custom_subject"`
-	// The display name of the alert.
+	// Display name of the alert, shown in list views and notifications. It must
+	// not be empty.
 	DisplayName types.String `tfsdk:"display_name"`
-	// Whether to notify alert subscribers when alert returns back to normal.
+	// Whether to notify subscribers when the alert state changes from
+	// `TRIGGERED` back to `OK`. Defaults to true.
 	NotifyOnOk types.Bool `tfsdk:"notify_on_ok"`
 	// The owner's username. This field is set to "Unavailable" if the user has
 	// been deleted.
 	OwnerUserName types.String `tfsdk:"owner_user_name"`
-	// UUID of the query attached to the alert.
+	// UUID of the saved query whose result the alert evaluates. The caller must
+	// have permission to view the query.
 	QueryId types.String `tfsdk:"query_id"`
-	// Number of seconds an alert must wait after being triggered to rearm
-	// itself. After rearming, it can be triggered again. If 0 or not specified,
-	// the alert will not be triggered again.
+	// Number of seconds the alert waits after a notification before it can
+	// notify again while its state stays `TRIGGERED`. If 0 or not specified,
+	// the alert notifies once when its state changes to `TRIGGERED` and does
+	// not notify again until its state has changed.
 	SecondsToRetrigger types.Int64 `tfsdk:"seconds_to_retrigger"`
 }
 

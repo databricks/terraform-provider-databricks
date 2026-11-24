@@ -62,14 +62,16 @@ resource "databricks_app_space" "with_resources" {
 ## Arguments
 The following arguments are supported:
 * `name` (string, required) - The name of the app space. The name must contain only lowercase alphanumeric characters and hyphens.
-  It must be unique within the workspace
+  It must be unique within the workspace.
+  It can't start or end with a hyphen, and it can't be changed after the space is created
 * `assume_group_id` (string, optional) - The group whose permissions users assume via Role Authorization for apps in this space. When
   set, user tokens assume the role of this group instead of doing regular obo token downscoping.
   Set only at space creation
 * `description` (string, optional) - The description of the app space
 * `resources` (list of AppResource, optional) - Resources for the app space. Resources configured at the space level are available to all apps in the space
 * `usage_policy_id` (string, optional) - The usage policy ID for managing cost at the space level
-* `user_api_scopes` (list of string, optional) - OAuth scopes for apps in the space
+* `user_api_scopes` (list of string, optional) - API scopes that apps in the space can request for user authorization. See
+  https://docs.databricks.com/aws/en/dev-tools/databricks-apps/auth
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 
 ### ProviderConfig
@@ -142,16 +144,16 @@ The following arguments are supported:
 
 ## Attributes
 In addition to the above arguments, the following attributes are exported:
-* `create_time` (string) - The creation time of the app space. Formatted timestamp in ISO 6801
+* `create_time` (string) - The creation time of the app space. Formatted timestamp in ISO 8601
 * `creator` (string) - The email of the user that created the app space
 * `effective_usage_policy_id` (string) - The effective usage policy ID used by apps in the space
 * `effective_user_api_scopes` (list of string) - The effective api scopes granted to the user access token
 * `id` (string) - The unique identifier of the app space
-* `service_principal_client_id` (string) - The service principal client ID for the app space
-* `service_principal_id` (integer) - The service principal ID for the app space
-* `service_principal_name` (string) - The service principal name for the app space
+* `service_principal_client_id` (string) - OAuth client ID of the app space's service principal
+* `service_principal_id` (integer) - Numeric ID of the app space's service principal
+* `service_principal_name` (string) - Display name of the app space's service principal
 * `status` (SpaceStatus) - The status of the app space
-* `update_time` (string) - The update time of the app space. Formatted timestamp in ISO 6801
+* `update_time` (string) - The update time of the app space. Formatted timestamp in ISO 8601
 * `updater` (string) - The email of the user that last updated the app space
 
 ### AppResourceUcSecurable

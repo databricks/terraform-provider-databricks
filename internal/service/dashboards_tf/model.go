@@ -1593,10 +1593,12 @@ type GenieCreateSpaceRequest struct {
 	Description types.String `tfsdk:"description"`
 	// Path of the workspace folder in which to create the space.
 	ParentPath types.String `tfsdk:"parent_path"`
-	// Configuration of the new space as a JSON string. To copy an existing
-	// space, use the value that [Get Genie Space](:method:genie/getspace)
-	// returns when `include_serialized_space` is true. For the JSON format and
-	// its validation rules, see
+	// Configuration of the new space as a JSON string. The configuration must
+	// include at least one table, metric view, volume, MCP connection, or
+	// sub-agent data source. To copy an existing space, use the value that [Get
+	// Genie Space](:method:genie/getspace) returns when
+	// `include_serialized_space` is true. For the JSON format and its
+	// validation rules, see
 	// https://docs.databricks.com/aws/en/genie-agents/conversation-api.
 	SerializedSpace types.String `tfsdk:"serialized_space"`
 	// Display name of the new space. A default name is assigned when omitted.

@@ -22,16 +22,18 @@ import (
 //   - a list for a slice of scalars or enums;
 //   - the map of a map[string]string.
 //
-// A nil pointer to a scalar is read as the zero value of that scalar. That is
-// what the classic struct holds for a field that the response leaves out, so
-// the rules below see the same value on both paths.
+// A nil pointer to a scalar is read as the zero value of that scalar: a nil
+// *string as "", a nil *int64 as 0, a nil *float64 as 0 and a nil *bool as
+// false. That is what the classic struct holds for a field that the response
+// leaves out, so the rules below see the same value on both paths.
 //
 // The rules that decide whether a field is written are those of
 // common.StructToData:
 //
 //   - An optional field is skipped when it is empty: an empty string, a nil
-//     message, or a slice or map without entries. A zero number and false
-//     aren't empty.
+//     message, or a slice or map without entries. So a nil *string is skipped,
+//     while 0 and false aren't empty, and a nil *int64, *float64 or *bool is
+//     written as 0 or false like any other value.
 //   - Unless d is a new resource, a field that the configuration doesn't set
 //     is skipped, except when its schema is computed or a bool.
 //   - A list of nested blocks is never written empty.
@@ -49,19 +51,21 @@ import (
 //
 //   - use the difference between a nil pointer and a pointer to a zero value,
 //     because the classic path can't see it and the state would change;
-//   - read json or tf tags, aliases or embedded structs. Classic SDK structs
-//     and the provider's own structs stay with common.StructToData;
+//   - read json or tf tags or aliases, or flatten an embedded struct. Classic
+//     SDK structs and the provider's own structs stay with
+//     common.StructToData;
 //   - support the interface of a oneof group, a body stream, raw JSON or a map
-//     of anything but strings. Such a field is an error once s has its name;
+//     of anything but strings. Such a field is an error once s has its name,
+//     whatever it holds;
 //   - check that s fits result. A field without an entry in s is skipped, and
 //     an entry without a field is left to its default.
 func StructToData(result any, s map[string]*schema.Schema, d *schema.ResourceData) error {
-	message, err := messageOf(result)
+	message, err := structToDataMessage(result)
 	if err != nil {
 		return err
 	}
-	err = eachField(message, s, func(name string, field reflect.Value, fieldSchema *schema.Schema) error {
-		value, err := convert(field, fieldSchema)
+	err = structToDataEachField(message, s, func(name string, field reflect.Value, fieldSchema *schema.Schema) error {
+		value, err := structToDataConvert(field, fieldSchema)
 		if err != nil {
 			return err
 		}
@@ -83,11 +87,11 @@ func StructToData(result any, s map[string]*schema.Schema, d *schema.ResourceDat
 	if err != nil {
 		return err
 	}
-	return writeDefaults(s, d)
+	return structToDataWriteDefaults(s, d)
 }
 
-// messageOf returns the struct that result is or points to.
-func messageOf(result any) (reflect.Value, error) {
+// structToDataMessage returns the struct that result is or points to.
+func structToDataMessage(result any) (reflect.Value, error) {
 	v := reflect.ValueOf(result)
 	if !v.IsValid() {
 		return v, fmt.Errorf("result is nil, want a struct or a pointer to one")
@@ -104,9 +108,10 @@ func messageOf(result any) (reflect.Value, error) {
 	return v, nil
 }
 
-// eachField calls visit for every exported field of message whose FieldName
-// has an entry in s, and names the field in the error that visit returns.
-func eachField(message reflect.Value, s map[string]*schema.Schema,
+// structToDataEachField calls visit for every exported field of message whose
+// FieldName has an entry in s, and names the field in the error that visit
+// returns.
+func structToDataEachField(message reflect.Value, s map[string]*schema.Schema,
 	visit func(name string, field reflect.Value, fieldSchema *schema.Schema) error,
 ) error {
 	messageType := message.Type()
@@ -126,11 +131,11 @@ func eachField(message reflect.Value, s map[string]*schema.Schema,
 	return nil
 }
 
-// writeDefaults sets every optional, non-computed field of s that has a
-// default and no value to the value that d reads for it. Such a field has no
-// counterpart in the struct, as force_destroy, and would stay null in the
-// state after an import, while the plan resolves null to the default.
-func writeDefaults(s map[string]*schema.Schema, d *schema.ResourceData) error {
+// structToDataWriteDefaults sets every optional, non-computed field of s that
+// has a default and no value to the value that d reads for it. Such a field
+// has no counterpart in the struct, as force_destroy, and would stay null in
+// the state after an import, while the plan resolves null to the default.
+func structToDataWriteDefaults(s map[string]*schema.Schema, d *schema.ResourceData) error {
 	for name, fieldSchema := range s {
 		if !fieldSchema.Optional || fieldSchema.Computed || fieldSchema.Default == nil {
 			continue
@@ -145,8 +150,9 @@ func writeDefaults(s map[string]*schema.Schema, d *schema.ResourceData) error {
 	return nil
 }
 
-// converted is the value of a struct field in the form that d.Set takes.
-type converted struct {
+// structToDataValue is the value of a struct field in the form that d.Set
+// takes.
+type structToDataValue struct {
 	value any
 	// empty is true for an empty string, a nil message and a slice or map
 	// without entries.
@@ -155,48 +161,49 @@ type converted struct {
 	blocks bool
 }
 
-// convert returns the value of field in the form that d.Set takes for
-// fieldSchema. It decides by the Go type of the field alone, so that a type
-// that it doesn't support is an error whatever the field holds.
-func convert(field reflect.Value, fieldSchema *schema.Schema) (converted, error) {
+// structToDataConvert returns the value of field in the form that d.Set takes
+// for fieldSchema. It decides by the Go type of the field alone, so that a
+// type that it doesn't support is an error whatever the field holds.
+func structToDataConvert(field reflect.Value, fieldSchema *schema.Schema) (structToDataValue, error) {
 	t := field.Type()
 	switch {
-	case isScalar(indirect(t)):
-		value := scalarOf(field)
-		return converted{value: value, empty: value == ""}, nil
-	case indirect(t).Kind() == reflect.Struct:
-		return blocksOf([]reflect.Value{field}, fieldSchema)
-	case t.Kind() == reflect.Slice && isScalar(t.Elem()):
+	case structToDataIsScalar(structToDataIndirect(t)):
+		value := structToDataScalar(field)
+		return structToDataValue{value: value, empty: value == ""}, nil
+	case structToDataIndirect(t).Kind() == reflect.Struct:
+		return structToDataBlocks([]reflect.Value{field}, fieldSchema)
+	case t.Kind() == reflect.Slice && structToDataIsScalar(t.Elem()):
 		list := make([]any, field.Len())
 		for i := range list {
-			list[i] = scalarOf(field.Index(i))
+			list[i] = structToDataScalar(field.Index(i))
 		}
-		return converted{value: list, empty: len(list) == 0}, nil
-	case t.Kind() == reflect.Slice && indirect(t.Elem()).Kind() == reflect.Struct:
+		return structToDataValue{value: list, empty: len(list) == 0}, nil
+	case t.Kind() == reflect.Slice && structToDataIndirect(t.Elem()).Kind() == reflect.Struct:
 		messages := make([]reflect.Value, field.Len())
 		for i := range messages {
 			messages[i] = field.Index(i)
 		}
-		return blocksOf(messages, fieldSchema)
+		return structToDataBlocks(messages, fieldSchema)
 	case t.Kind() == reflect.Map && t.Key().Kind() == reflect.String && t.Elem().Kind() == reflect.String:
-		return converted{value: field.Interface(), empty: field.Len() == 0}, nil
+		return structToDataValue{value: field.Interface(), empty: field.Len() == 0}, nil
 	}
-	return converted{}, fmt.Errorf("type %s is not supported", t)
+	return structToDataValue{}, fmt.Errorf("type %s is not supported", t)
 }
 
-// indirect returns the type that t points to, and t itself when it is not a
-// pointer.
-func indirect(t reflect.Type) reflect.Type {
+// structToDataIndirect returns the type that t points to, and t itself when it
+// is not a pointer.
+func structToDataIndirect(t reflect.Type) reflect.Type {
 	if t.Kind() == reflect.Pointer {
 		return t.Elem()
 	}
 	return t
 }
 
-// isScalar reports whether t is a string, a bool, a signed integer or a float,
-// or a type named after one, as an enum. Unsigned integers are left out, so
-// that a slice of bytes, which holds raw JSON, isn't taken for a list.
-func isScalar(t reflect.Type) bool {
+// structToDataIsScalar reports whether t is a string, a bool, a signed integer
+// or a float, or a type named after one, as an enum. Unsigned integers are
+// left out, so that a slice of bytes, which holds raw JSON, isn't taken for a
+// list.
+func structToDataIsScalar(t reflect.Type) bool {
 	switch t.Kind() {
 	case reflect.String, reflect.Bool, reflect.Float32, reflect.Float64,
 		reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
@@ -205,10 +212,11 @@ func isScalar(t reflect.Type) bool {
 	return false
 }
 
-// scalarOf returns the scalar that v is or points to as a string, bool, int64
-// or float64, whatever the name of its type. A nil pointer gives the zero
-// value.
-func scalarOf(v reflect.Value) any {
+// structToDataScalar returns the scalar that v is or points to as a string,
+// bool, int64 or float64, whatever the name of its type. A nil pointer gives
+// the zero value, which is what the classic struct holds for a field that the
+// response leaves out.
+func structToDataScalar(v reflect.Value) any {
 	if v.Kind() == reflect.Pointer {
 		if v.IsNil() {
 			v = reflect.Zero(v.Type().Elem())
@@ -227,13 +235,13 @@ func scalarOf(v reflect.Value) any {
 	return v.Int()
 }
 
-// blocksOf returns messages, structs or pointers to them, as the list of maps
-// that d.Set takes for the nested blocks of fieldSchema. A nil pointer adds no
-// block.
-func blocksOf(messages []reflect.Value, fieldSchema *schema.Schema) (converted, error) {
+// structToDataBlocks returns messages, structs or pointers to them, as the
+// list of maps that d.Set takes for the nested blocks of fieldSchema. A nil
+// pointer adds no block.
+func structToDataBlocks(messages []reflect.Value, fieldSchema *schema.Schema) (structToDataValue, error) {
 	nested, ok := fieldSchema.Elem.(*schema.Resource)
 	if !ok {
-		return converted{}, fmt.Errorf("the field is a message, but its schema is not a nested block")
+		return structToDataValue{}, fmt.Errorf("a message needs a nested block, but the schema is a %s without one", fieldSchema.Type)
 	}
 	blocks := []any{}
 	for _, message := range messages {
@@ -244,8 +252,8 @@ func blocksOf(messages []reflect.Value, fieldSchema *schema.Schema) (converted, 
 			message = message.Elem()
 		}
 		block := map[string]any{}
-		err := eachField(message, nested.Schema, func(name string, field reflect.Value, fieldSchema *schema.Schema) error {
-			value, err := convert(field, fieldSchema)
+		err := structToDataEachField(message, nested.Schema, func(name string, field reflect.Value, fieldSchema *schema.Schema) error {
+			value, err := structToDataConvert(field, fieldSchema)
 			if err != nil {
 				return err
 			}
@@ -257,9 +265,9 @@ func blocksOf(messages []reflect.Value, fieldSchema *schema.Schema) (converted, 
 			return nil
 		})
 		if err != nil {
-			return converted{}, err
+			return structToDataValue{}, err
 		}
 		blocks = append(blocks, block)
 	}
-	return converted{value: blocks, empty: len(blocks) == 0, blocks: true}, nil
+	return structToDataValue{value: blocks, empty: len(blocks) == 0, blocks: true}, nil
 }

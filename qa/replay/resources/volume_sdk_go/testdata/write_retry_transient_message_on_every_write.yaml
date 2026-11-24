@@ -1,9 +1,6 @@
 # Runs volume_retries/testdata/write_retry_transient_message_on_every_write.yaml with
-# databricks_volume on sdk-go uc/volumes/v1 in every step, and expects the same
-# behavior. The volume POST, GET, PATCH and DELETE requests carry no Accept header, which
-# an empty header expectation pins. Each PATCH body also carries full_name_arg, the full
-# name in its path, because sdk-go serializes the path field into the body. The
-# original's description:
+# databricks_volume on sdk-go uc/volumes/v1 in every step, and expects exactly the same
+# requests and behavior. The original's description:
 #
 # This journey pins that the classic SDK client retries every databricks_volume write
 # once when a 400's message matches one of its transient patterns: the create POST, the
@@ -37,7 +34,6 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body:
             json: {"catalog_name": "main", "schema_name": "replay",
                    "name": "write_retry_volume", "volume_type": "MANAGED",
@@ -65,10 +61,8 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body:
-            json: {"full_name_arg": "main.replay.write_retry_volume",
-                   "comment": "first", "owner": "owner-a@example.com"}
+            json: {"comment": "first", "owner": "owner-a@example.com"}
         response: *transient_error
       - request: *owner_patch_on_create
         response: &volume_owner_a
@@ -87,7 +81,6 @@ steps:
           path: /api/2.1/unity-catalog/volumes/main.replay.write_retry_volume
           headers:
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body: null
         response: *volume_owner_a
       - request: *read
@@ -121,10 +114,8 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body:
-            json: {"full_name_arg": "main.replay.write_retry_volume",
-                   "owner": "owner-b@example.com"}
+            json: {"owner": "owner-b@example.com"}
         response:
           status: 200
           body:
@@ -143,10 +134,8 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body:
-            json: {"full_name_arg": "main.replay.write_retry_volume",
-                   "comment": "second"}
+            json: {"comment": "second"}
         response: *transient_error
       - request: *update_patch
         response: &volume_owner_b
@@ -197,10 +186,8 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body:
-            json: {"full_name_arg": "main.replay.write_retry_volume",
-                   "owner": "owner-c@example.com"}
+            json: {"owner": "owner-c@example.com"}
         response:
           status: 200
           body:
@@ -218,10 +205,8 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body:
-            json: {"full_name_arg": "main.replay.write_retry_volume",
-                   "comment": "third"}
+            json: {"comment": "third"}
         response:
           status: 400
           body:
@@ -233,10 +218,8 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body:
-            json: {"full_name_arg": "main.replay.write_retry_volume",
-                   "owner": "owner-b@example.com"}
+            json: {"owner": "owner-b@example.com"}
         response: *transient_error
       - request: *rollback_patch
         response: *volume_owner_b
@@ -278,7 +261,6 @@ destroy:
         path: /api/2.1/unity-catalog/volumes/main.replay.write_retry_volume
         headers:
           X-Databricks-Workspace-Id: "12345"
-          Accept: ""
         body: null
       response: *transient_error
     - request: *delete

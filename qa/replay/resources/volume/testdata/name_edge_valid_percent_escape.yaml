@@ -1,9 +1,10 @@
 # Pins volume names containing "%2F" and "%20" literally on the existing path. The
-# journey creates raw%2F2, renames it to raw%202 and destroys it. Every call sends the
-# "%" once as %25, so the path reads %252F and %25202: the escape is neither decoded,
-# which would send "/" or a space, nor escaped twice, which would send %25252F. The ID,
-# name and volume_path keep the literal "%2F" and "%20". API responses are inferred from
-# the Unity Catalog API contract, not recorded.
+# journey creates raw%2F2, renames it to raw%202 and destroys it. The classic client
+# formats the full name into the path unescaped, so every call sends the escape as is:
+# the path reads raw%2F2 and raw%202, not %252F or %2520. A server that decodes the path
+# reads the names raw/2 and "raw 2", not the volume's own name. The ID, name and
+# volume_path keep the literal "%2F" and "%20". API responses are inferred from the Unity
+# Catalog API contract, not recorded.
 version: 1
 enforce_call_order: true
 host_metadata:
@@ -11,7 +12,7 @@ host_metadata:
   cloud: AWS
   workspace_id: "12345"
 steps:
-  - name: create_reads_the_encoded_slash_escape
+  - name: create_reads_the_slash_escape_as_is
     config: &config_created |
       resource "databricks_volume" "this" {
         name         = "raw%2F2"
@@ -41,7 +42,7 @@ steps:
       - &read_created
         request:
           method: GET
-          path: /api/2.1/unity-catalog/volumes/main.replay.raw%252F2
+          path: /api/2.1/unity-catalog/volumes/main.replay.raw%2F2
           headers:
             X-Databricks-Workspace-Id: "12345"
           body: null
@@ -66,7 +67,7 @@ steps:
       changes: {}
     calls:
       - *read_created
-  - name: rename_patches_the_encoded_slash_escape
+  - name: rename_patches_the_slash_escape_as_is
     config: &config_renamed |
       resource "databricks_volume" "this" {
         name         = "raw%202"
@@ -89,7 +90,7 @@ steps:
       - *read_created
       - request:
           method: PATCH
-          path: /api/2.1/unity-catalog/volumes/main.replay.raw%252F2
+          path: /api/2.1/unity-catalog/volumes/main.replay.raw%2F2
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
@@ -107,7 +108,7 @@ steps:
       - &read_renamed
         request:
           method: GET
-          path: /api/2.1/unity-catalog/volumes/main.replay.raw%25202
+          path: /api/2.1/unity-catalog/volumes/main.replay.raw%202
           headers:
             X-Databricks-Workspace-Id: "12345"
           body: null
@@ -139,7 +140,7 @@ destroy:
     - *read_renamed
     - request:
         method: DELETE
-        path: /api/2.1/unity-catalog/volumes/main.replay.raw%25202
+        path: /api/2.1/unity-catalog/volumes/main.replay.raw%202
         headers:
           X-Databricks-Workspace-Id: "12345"
         body: null

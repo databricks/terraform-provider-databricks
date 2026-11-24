@@ -1,7 +1,7 @@
 # Pins a volume full name containing "/" on the existing path. The journey imports
-# main.replay.raw/2, updates its comment and destroys it. The provider keeps "/" as a
-# path separator, so the GET, the PATCH and the DELETE go to .../volumes/main.replay.raw/2,
-# one segment deeper than a volume path, instead of escaping it as %2F. volume_path
+# main.replay.raw/2, updates its comment and destroys it. The classic client formats the
+# full name into the path unescaped, so the GET, the PATCH and the DELETE go to
+# .../volumes/main.replay.raw/2, one segment deeper than a volume path. volume_path
 # replaces every "." with "/" and keeps the slash, so it reads /Volumes/main/replay/raw/2,
 # the path of a file "2" in the volume main.replay.raw. API responses are inferred from
 # the Unity Catalog API contract, not recorded.

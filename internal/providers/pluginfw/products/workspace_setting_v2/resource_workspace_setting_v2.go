@@ -181,7 +181,8 @@ type Setting struct {
 	// Setting value for integer type setting. This is the setting value set by
 	// consumers, check effective_integer_val for final setting value.
 	IntegerVal types.Object `tfsdk:"integer_val"`
-	// Name of the setting.
+	// Name of the setting. The settings metadata endpoint lists the names
+	// available at each scope.
 	Name types.String `tfsdk:"name"`
 	// Setting value for operational_email_custom_recipient setting. This is the
 	// setting value set by consumers, check

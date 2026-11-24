@@ -885,10 +885,9 @@ func (m *GenieAgentConfig) SetSampleQuestions(ctx context.Context, v []GenieAgen
 type GenieAgentDataSources struct {
 	// Unity Catalog MCP connections, sorted by `mcp_connection`.
 	McpConnections types.List `tfsdk:"mcp_connections"`
-	// Unity Catalog tables, views, and metric views, in the order they were
-	// added.
+	// Unity Catalog tables, views, and metric views, sorted by `identifier`.
 	Tables types.List `tfsdk:"tables"`
-	// Unity Catalog volumes, in the order they were added.
+	// Unity Catalog volumes, sorted by `path`.
 	Volumes types.List `tfsdk:"volumes"`
 }
 

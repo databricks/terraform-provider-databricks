@@ -229,7 +229,9 @@ mandatory and needs no YAML state assertion.
   with `any_string`. It requires a present string; missing values and JSON null
   still fail. Do not mask names, IDs, or other values that the scenario should
   verify, and do not use `"****"` as a wildcard (it is just a literal string).
-- For polling/retry scenarios, check meaningful requests and outcomes, not incidental scheduling. Bound elapsed time only when it is the behavior under test, such as a backoff; see [repeated calls and retry timing](#test-repeated-calls-and-retry-timing).
+- For polling/retry scenarios, check meaningful requests and outcomes, not
+  elapsed time or incidental scheduling.
+  Bound elapsed time only when it is the behavior under test, such as a backoff; see [repeated calls and retry timing](#test-repeated-calls-and-retry-timing).
 - Independent request signatures can interleave. Repeated identical signatures
   consume responses FIFO, so preserve their response order. Do not assume a
   global or per-resource request order is enforced.
@@ -362,13 +364,16 @@ client the provider uses.
     `Content-Length` and the first half of the body, then closes it.
   - `stall_body` writes the same first half, then waits until the client closes
     the connection.
-- `status_line`: the literal status line, such as `HTTP/1.1 404` with no reason
-  phrase. Its code must equal `status`; headers and body are written as usual.
+- `status_line`: the literal HTTP/1.0 or HTTP/1.1 status line, such as
+  `HTTP/1.1 404` with no reason phrase. Its code must equal `status`; headers
+  and body are written as usual, and a `HEAD` response keeps its fixture
+  `Content-Length`.
 
 `reset` and `close` write no response, so they omit `status`, `headers`, `body`
-and `status_line`. The body faults need a nonempty `body`. `delay` combines
-with every other field. Invalid values fail when the journey loads, naming the
-file, step and call.
+and `status_line`. The body faults need a nonempty `body` on a response that can
+carry one: not a `HEAD` request or a 1xx, 204 or 304 status, whose bodies
+`net/http` never reads. `delay` combines with every other field. Invalid values
+fail when the journey loads, naming the file, step and call.
 
 A faulted call is consumed like any other, so `enforce_call_order` and the
 unused-fixture check still apply. Follow it with a normal call to pin a retry,
@@ -407,9 +412,10 @@ fails or retries a group create, with this classic SDK diagnostic:
 | `fault: stall_body`, `http_timeout_seconds = 1` | [stall_body](testdata/faults/stall_body.yaml) | `response body: context canceled`, not retried |
 | `status: 404`, `status_line: HTTP/1.1 404` | [status_line](testdata/faults/status_line.yaml) | `Not Found` |
 
-The replay transport opens one connection per request. Go's HTTP client
-silently resends a replayable request, such as a GET, that fails on a reused
-connection, so a fresh connection is what lets each fault reach the provider.
+The replay transport, which `qa/replay/clienttest` shares, opens one connection
+per request. Go's HTTP client silently resends a replayable request, such as a
+GET, that fails on a reused connection, so a fresh connection is what lets each
+fault reach the provider.
 Faults and `status_line` close the connection and frame the body by its
 `Content-Length`, replacing those headers in the fixture.
 

@@ -32,7 +32,7 @@ func RunNative(t *testing.T, path string, configure func(*resource.TestCase, fun
 	t.Helper()
 	definition, err := loadDefinition(path)
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("%s: %v", path, err)
 	}
 	runNative(t, definition, configure)
 }
@@ -207,7 +207,7 @@ func fixtureConfig(host string) func(*config.Config) error {
 		// An explicit loader prevents ambient credentials and profiles from filling
 		// configuration fields, including account/workspace routing identifiers.
 		cfg.Loaders = []config.Loader{fixtureLoader{}}
-		cfg.HTTPTransport = fixtureTransport{host: host, transport: &http.Transport{}}
+		cfg.HTTPTransport = fixtureTransport{host: host, transport: httpfixture.NewClientTransport()}
 		return nil
 	}
 }

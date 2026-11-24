@@ -1,0 +1,122 @@
+# Pins provider_config population without a provider_config block when host metadata
+# has no workspace ID. The model calls carry no X-Databricks-Workspace-Id header that
+# the fixtures require. After create reads the model, the provider resolves the ID from
+# the X-Databricks-Org-Id header of SCIM /Me and writes it to
+# provider_config.workspace_id. Every later Terraform command starts a fresh client and
+# calls /Me again: a plan without refresh calls it from CustomizeDiff, and a refresh or
+# delete calls it to check the state ID against the provider's workspace before the
+# model call. Fixtures are synthetic: API responses are inferred from the MLflow Model
+# Registry and SCIM API contracts, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+steps:
+  - name: create_resolves_workspace_id_through_me_after_read
+    config: &config |
+      resource "databricks_mlflow_model" "this" {
+        name = "routing_me_model"
+      }
+    calls:
+      - request:
+          method: POST
+          path: /api/2.0/mlflow/registered-models/create
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: ""
+          body:
+            json: {"name": "routing_me_model"}
+        response:
+          status: 200
+          body:
+            json: {"registered_model": {"name": "routing_me_model",
+                                        "creation_timestamp": 1700000000001,
+                                        "last_updated_timestamp": 1700000000001,
+                                        "user_id": "replay-admin@example.com"}}
+      - &read_model
+        request:
+          method: GET
+          path: /api/2.0/mlflow/databricks/registered-models/get
+          query:
+            name: [routing_me_model]
+          headers:
+            X-Databricks-Workspace-Id: ""
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"registered_model_databricks": {
+                     "name": "routing_me_model",
+                     "id": "00000000000000000000000000000901",
+                     "creation_timestamp": 1700000000001,
+                     "last_updated_timestamp": 1700000000001,
+                     "user_id": "replay-admin@example.com",
+                     "permission_level": "CAN_MANAGE"}}
+      # provider_config population after create's read.
+      - &me
+        request:
+          method: GET
+          path: /api/2.0/preview/scim/v2/Me
+          query:
+            excludedAttributes: [entitlements]
+          headers:
+            X-Databricks-Workspace-Id: ""
+          body: null
+        response:
+          status: 200
+          headers:
+            X-Databricks-Org-Id: "12345"
+          body:
+            json: {"id": "1001", "userName": "replay-admin@example.com",
+                   "schemas": ["urn:ietf:params:scim:schemas:core:2.0:User"]}
+      # The post-apply plan without refresh.
+      - *me
+      # The post-apply refresh plan.
+      - *me
+      - *read_model
+    state:
+      resources:
+        databricks_mlflow_model.this:
+          attributes:
+            - path: [id]
+              equals: routing_me_model
+            - path: [provider_config, 0, workspace_id]
+              equals: "12345"
+  - name: refresh_checks_state_workspace_id_through_me
+    plan_only: true
+    config: *config
+    plan:
+      expect: empty
+      changes: {}
+    calls:
+      # The plan without refresh.
+      - *me
+      # The refresh plan.
+      - *me
+      - *read_model
+    state:
+      resources:
+        databricks_mlflow_model.this:
+          attributes:
+            - path: [provider_config, 0, workspace_id]
+              equals: "12345"
+destroy:
+  calls:
+    # The destroy plan's refresh.
+    - *me
+    - *read_model
+    # The apply.
+    - *me
+    - request:
+        method: DELETE
+        path: /api/2.0/mlflow/registered-models/delete
+        query:
+          name: [routing_me_model]
+        headers:
+          X-Databricks-Workspace-Id: ""
+        body: null
+      response:
+        status: 200
+        body:
+          json: {}

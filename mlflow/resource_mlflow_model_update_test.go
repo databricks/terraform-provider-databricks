@@ -15,8 +15,9 @@ import (
 // which has only name and description, so the PATCH never carries tags and no other
 // call sets them. The read after the update then decides the state (StructToData in
 // common/reflect_resource.go). A changed tag leaves a diff after apply, which the
-// replay harness rejects, so the tag updates are Go tests and not journeys in
-// qa/replay/resources/mlflow_model_updates.
+// replay harness rejects, so that case cannot be a journey in
+// qa/replay/resources/mlflow_model_updates. Adding and removing tags leave no diff,
+// and are kept here beside it.
 //
 // Fixtures are synthetic: request and response bodies are literal wire JSON inferred
 // from the MLflow Model Registry API, not recorded. They are not classic SDK structs or

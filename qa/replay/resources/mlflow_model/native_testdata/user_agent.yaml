@@ -1,0 +1,105 @@
+# Supplies registered model calls for the User-Agent tests in user_agent_test.go, which
+# check the User-Agent of every call in Go. API responses are inferred from the MLflow
+# Model Registry API contract, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: create
+    config: |
+      resource "databricks_mlflow_model" "this" {
+        name        = "user_agent_model"
+        description = "created"
+      }
+    calls:
+      - request:
+          method: POST
+          path: /api/2.0/mlflow/registered-models/create
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"name": "user_agent_model", "description": "created"}
+        response:
+          status: 200
+          body:
+            json: {"registered_model": {"name": "user_agent_model",
+                                        "description": "created",
+                                        "creation_timestamp": 1700000000000,
+                                        "last_updated_timestamp": 1700000000000,
+                                        "user_id": "replay-admin@example.com"}}
+      - &read_created
+        request: &read
+          method: GET
+          path: /api/2.0/mlflow/databricks/registered-models/get
+          query:
+            name: [user_agent_model]
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"registered_model_databricks": {
+                     "name": "user_agent_model", "description": "created",
+                     "id": "0123456789abcdef0123456789abcdef",
+                     "creation_timestamp": 1700000000000,
+                     "last_updated_timestamp": 1700000000000,
+                     "user_id": "replay-admin@example.com",
+                     "permission_level": "CAN_MANAGE"}}
+      - *read_created
+  - name: update_description
+    config: |
+      resource "databricks_mlflow_model" "this" {
+        name        = "user_agent_model"
+        description = "updated"
+      }
+    calls:
+      - *read_created
+      - request:
+          method: PATCH
+          path: /api/2.0/mlflow/registered-models/update
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"name": "user_agent_model", "description": "updated"}
+        response:
+          status: 200
+          body:
+            json: {"registered_model": {"name": "user_agent_model",
+                                        "description": "updated",
+                                        "creation_timestamp": 1700000000000,
+                                        "last_updated_timestamp": 1700000060000,
+                                        "user_id": "replay-admin@example.com"}}
+      - &read_updated
+        request: *read
+        response:
+          status: 200
+          body:
+            json: {"registered_model_databricks": {
+                     "name": "user_agent_model", "description": "updated",
+                     "id": "0123456789abcdef0123456789abcdef",
+                     "creation_timestamp": 1700000000000,
+                     "last_updated_timestamp": 1700000060000,
+                     "user_id": "replay-admin@example.com",
+                     "permission_level": "CAN_MANAGE"}}
+      - *read_updated
+destroy:
+  calls:
+    - *read_updated
+    - request:
+        method: DELETE
+        path: /api/2.0/mlflow/registered-models/delete
+        query:
+          name: [user_agent_model]
+        headers:
+          X-Databricks-Workspace-Id: "12345"
+        body: null
+      response:
+        status: 200
+        body:
+          json: {}

@@ -1,0 +1,126 @@
+# Pins importing a model that has a description and two tags. The import writes the
+# name, the description, both tags in the API's order, registered_model_id and
+# provider_config.workspace_id to state. A configuration that sets the same description
+# and tags then plans no change, and one that sets only the name plans an in-place
+# update that removes them, which is what issues #1225 and #3477 report. API responses
+# are inferred from the MLflow Model Registry API contract, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: import_model_with_description_and_tags
+    config: &config_with_description_and_tags |
+      resource "databricks_mlflow_model" "this" {
+        name        = "tagged-model"
+        description = "created outside terraform"
+        tags {
+          key   = "team"
+          value = "ml-platform"
+        }
+        tags {
+          key   = "stage"
+          value = "pilot"
+        }
+      }
+    import:
+      resource: databricks_mlflow_model.this
+      id: tagged-model
+      persist: true
+    calls:
+      # The importer's GET, then the refresh GET after import.
+      - &read_model
+        request:
+          method: GET
+          path: /api/2.0/mlflow/databricks/registered-models/get
+          query:
+            name: [tagged-model]
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"registered_model_databricks": {
+                     "name": "tagged-model",
+                     "description": "created outside terraform",
+                     "tags": [{"key": "team", "value": "ml-platform"},
+                              {"key": "stage", "value": "pilot"}],
+                     "creation_timestamp": 1700000000000,
+                     "last_updated_timestamp": 1700000000000,
+                     "user_id": "replay-admin@example.com",
+                     "id": "0a1b2c3d4e5f60718293a4b5c6d7e8f3",
+                     "permission_level": "CAN_MANAGE"}}
+      - *read_model
+  - name: plan_with_description_and_tags_is_empty
+    plan_only: true
+    config: *config_with_description_and_tags
+    plan:
+      expect: empty
+      changes: {}
+    state:
+      resources:
+        databricks_mlflow_model.this:
+          attributes:
+            - path: [id]
+              equals: tagged-model
+            - path: [name]
+              equals: tagged-model
+            - path: [description]
+              equals: created outside terraform
+            - path: [tags, 0, key]
+              equals: team
+            - path: [tags, 0, value]
+              equals: ml-platform
+            - path: [tags, 1, key]
+              equals: stage
+            - path: [tags, 1, value]
+              equals: pilot
+            - path: [registered_model_id]
+              equals: 0a1b2c3d4e5f60718293a4b5c6d7e8f3
+            - path: [provider_config, 0, workspace_id]
+              equals: "12345"
+    calls:
+      - *read_model
+  - name: plan_without_description_and_tags_removes_them
+    plan_only: true
+    config: |
+      resource "databricks_mlflow_model" "this" {
+        name = "tagged-model"
+      }
+    plan:
+      expect: non_empty
+      changes:
+        databricks_mlflow_model.this:
+          actions: [update]
+          before:
+            - path: [description]
+              equals: created outside terraform
+            - path: [tags, 0, key]
+              equals: team
+            - path: [tags, 1, key]
+              equals: stage
+          after:
+            - path: [name]
+              equals: tagged-model
+            - path: [description]
+              equals: null
+    calls:
+      - *read_model
+destroy:
+  calls:
+    - *read_model
+    - request:
+        method: DELETE
+        path: /api/2.0/mlflow/registered-models/delete
+        query:
+          name: [tagged-model]
+        headers:
+          X-Databricks-Workspace-Id: "12345"
+        body: null
+      response:
+        status: 200
+        body:
+          json: {}

@@ -5,6 +5,7 @@
 # the cloud token error before the GET. The volume stays in state, so the next plan,
 # with tokens again, is empty. API responses are inferred from the Azure AD and Unity
 # Catalog API contracts, not recorded.
+# Credential headers use patterns, not samples, so that a repeated header fails.
 version: 1
 enforce_call_order: true
 provider_host: workspace
@@ -38,10 +39,9 @@ steps:
           method: POST
           host: aad
           path: /replay-tenant/oauth2/token
-          headers:
-            Authorization: Basic cmVwbGF5LWF6dXJlLXNwOnJlcGxheS1henVyZS1zZWNyZXQ=
           matchers: &only_authorization
             headers:
+              Authorization: {pattern: 'Basic cmVwbGF5LWF6dXJlLXNwOnJlcGxheS1henVyZS1zZWNyZXQ='}
               Metadata: absent
               X-Databricks-Azure-Sp-Management-Token: absent
               X-Databricks-Azure-Workspace-Resource-Id: absent
@@ -58,8 +58,6 @@ steps:
           method: POST
           host: aad
           path: /replay-tenant/oauth2/token
-          headers:
-            Authorization: Basic cmVwbGF5LWF6dXJlLXNwOnJlcGxheS1henVyZS1zZWNyZXQ=
           matchers: *only_authorization
           body:
             text: grant_type=client_credentials&resource=https%3A%2F%2Fmanagement.core.windows.net%2F
@@ -72,14 +70,14 @@ steps:
           method: POST
           path: /api/2.1/unity-catalog/volumes
           headers:
-            Authorization: Bearer aad-token
             Content-Type: application/json
-            X-Databricks-Azure-Sp-Management-Token: management-token
-            X-Databricks-Azure-Workspace-Resource-Id: /subscriptions/replay-subscription/resourceGroups/replay-group/providers/Microsoft.Databricks/workspaces/replay-workspace
             X-Databricks-Workspace-Id: "12345"
-          matchers: &no_metadata_or_gcp_token
+          matchers: &azure_credentials
             headers:
+              Authorization: {pattern: 'Bearer aad-token'}
               Metadata: absent
+              X-Databricks-Azure-Sp-Management-Token: {pattern: 'management-token'}
+              X-Databricks-Azure-Workspace-Resource-Id: {pattern: '/subscriptions/replay-subscription/resourceGroups/replay-group/providers/Microsoft\.Databricks/workspaces/replay-workspace'}
               X-Databricks-Gcp-Sa-Access-Token: absent
           body:
             json: {"catalog_name": "main", "schema_name": "replay",
@@ -98,11 +96,8 @@ steps:
           method: GET
           path: /api/2.1/unity-catalog/volumes/main.replay.auth_volume
           headers:
-            Authorization: Bearer aad-token
-            X-Databricks-Azure-Sp-Management-Token: management-token
-            X-Databricks-Azure-Workspace-Resource-Id: /subscriptions/replay-subscription/resourceGroups/replay-group/providers/Microsoft.Databricks/workspaces/replay-workspace
             X-Databricks-Workspace-Id: "12345"
-          matchers: *no_metadata_or_gcp_token
+          matchers: *azure_credentials
           body: null
         response: *volume
       # The post-apply plan configures a new provider, which fetches its own tokens.
@@ -173,11 +168,8 @@ destroy:
         method: DELETE
         path: /api/2.1/unity-catalog/volumes/main.replay.auth_volume
         headers:
-          Authorization: Bearer aad-token
-          X-Databricks-Azure-Sp-Management-Token: management-token
-          X-Databricks-Azure-Workspace-Resource-Id: /subscriptions/replay-subscription/resourceGroups/replay-group/providers/Microsoft.Databricks/workspaces/replay-workspace
           X-Databricks-Workspace-Id: "12345"
-        matchers: *no_metadata_or_gcp_token
+        matchers: *azure_credentials
         body: null
       response:
         status: 200

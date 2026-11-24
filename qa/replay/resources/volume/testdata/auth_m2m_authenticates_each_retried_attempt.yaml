@@ -2,6 +2,7 @@
 # attempt. The first token expires during the 1.05 to 1.75 s backoff after the GET's
 # 429, so the retried GET fetches and sends a second token. API responses are inferred
 # from the OAuth and Unity Catalog API contracts, not recorded.
+# Credential headers use patterns, not samples, so that a repeated header fails.
 version: 1
 enforce_call_order: true
 provider_host: workspace
@@ -48,10 +49,9 @@ steps:
         request: &token_request
           method: POST
           path: /oidc/v1/token
-          headers:
-            Authorization: Basic cmVwbGF5LXNwOnJlcGxheS1zZWNyZXQ=
-          matchers: &no_cloud_credentials
+          matchers: &client_secret_basic
             headers:
+              Authorization: {pattern: 'Basic cmVwbGF5LXNwOnJlcGxheS1zZWNyZXQ='}
               Metadata: absent
               X-Databricks-Azure-Sp-Management-Token: absent
               X-Databricks-Azure-Workspace-Resource-Id: absent
@@ -67,11 +67,11 @@ steps:
           method: POST
           path: /api/2.1/unity-catalog/volumes
           headers:
-            Authorization: Bearer m2m-token
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
           matchers: &bearer_m2m_token
             headers:
+              Authorization: {pattern: 'Bearer m2m-token'}
               Metadata: absent
               X-Databricks-Azure-Sp-Management-Token: absent
               X-Databricks-Azure-Workspace-Resource-Id: absent
@@ -93,7 +93,6 @@ steps:
           method: GET
           path: /api/2.1/unity-catalog/volumes/main.replay.auth_volume
           headers:
-            Authorization: Bearer m2m-token
             X-Databricks-Workspace-Id: "12345"
           matchers: *bearer_m2m_token
           body: null
@@ -134,9 +133,14 @@ steps:
           method: GET
           path: /api/2.1/unity-catalog/volumes/main.replay.auth_volume
           headers:
-            Authorization: Bearer m2m-token-1
             X-Databricks-Workspace-Id: "12345"
-          matchers: *no_cloud_credentials
+          matchers:
+            headers:
+              Authorization: {pattern: 'Bearer m2m-token-1'}
+              Metadata: absent
+              X-Databricks-Azure-Sp-Management-Token: absent
+              X-Databricks-Azure-Workspace-Resource-Id: absent
+              X-Databricks-Gcp-Sa-Access-Token: absent
           body: null
         response:
           status: 429
@@ -153,9 +157,14 @@ steps:
           method: GET
           path: /api/2.1/unity-catalog/volumes/main.replay.auth_volume
           headers:
-            Authorization: Bearer m2m-token-2
             X-Databricks-Workspace-Id: "12345"
-          matchers: *no_cloud_credentials
+          matchers:
+            headers:
+              Authorization: {pattern: 'Bearer m2m-token-2'}
+              Metadata: absent
+              X-Databricks-Azure-Sp-Management-Token: absent
+              X-Databricks-Azure-Workspace-Resource-Id: absent
+              X-Databricks-Gcp-Sa-Access-Token: absent
           body: null
         response: *volume
 destroy:
@@ -170,7 +179,6 @@ destroy:
         method: DELETE
         path: /api/2.1/unity-catalog/volumes/main.replay.auth_volume
         headers:
-          Authorization: Bearer m2m-token
           X-Databricks-Workspace-Id: "12345"
         matchers: *bearer_m2m_token
         body: null

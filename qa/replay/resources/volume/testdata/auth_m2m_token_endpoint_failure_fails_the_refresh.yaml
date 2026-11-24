@@ -3,6 +3,7 @@
 # it, so the refresh fails before the GET is sent. The volume stays in state, so the
 # next plan, with a token again, is empty. API responses are inferred from the OAuth
 # and Unity Catalog API contracts, not recorded.
+# Credential headers use patterns, not samples, so that a repeated header fails.
 version: 1
 enforce_call_order: true
 provider_host: workspace
@@ -49,10 +50,9 @@ steps:
         request: &token_request
           method: POST
           path: /oidc/v1/token
-          headers:
-            Authorization: Basic cmVwbGF5LXNwOnJlcGxheS1zZWNyZXQ=
-          matchers: &no_cloud_credentials
+          matchers: &client_secret_basic
             headers:
+              Authorization: {pattern: 'Basic cmVwbGF5LXNwOnJlcGxheS1zZWNyZXQ='}
               Metadata: absent
               X-Databricks-Azure-Sp-Management-Token: absent
               X-Databricks-Azure-Workspace-Resource-Id: absent
@@ -68,11 +68,11 @@ steps:
           method: POST
           path: /api/2.1/unity-catalog/volumes
           headers:
-            Authorization: Bearer m2m-token
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
           matchers: &bearer_m2m_token
             headers:
+              Authorization: {pattern: 'Bearer m2m-token'}
               Metadata: absent
               X-Databricks-Azure-Sp-Management-Token: absent
               X-Databricks-Azure-Workspace-Resource-Id: absent
@@ -94,7 +94,6 @@ steps:
           method: GET
           path: /api/2.1/unity-catalog/volumes/main.replay.auth_volume
           headers:
-            Authorization: Bearer m2m-token
             X-Databricks-Workspace-Id: "12345"
           matchers: *bearer_m2m_token
           body: null
@@ -158,7 +157,6 @@ destroy:
         method: DELETE
         path: /api/2.1/unity-catalog/volumes/main.replay.auth_volume
         headers:
-          Authorization: Bearer m2m-token
           X-Databricks-Workspace-Id: "12345"
         matchers: *bearer_m2m_token
         body: null

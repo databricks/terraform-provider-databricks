@@ -3,6 +3,7 @@
 # basic auth, with no cloud credential headers, and reports auth/basic in its
 # User-Agent. API responses are inferred from the Unity Catalog API contract, not
 # recorded.
+# Credential headers use patterns, not samples, so that a repeated header fails.
 version: 1
 enforce_call_order: true
 provider_host: workspace
@@ -35,11 +36,11 @@ steps:
           method: POST
           path: /api/2.1/unity-catalog/volumes
           headers:
-            Authorization: Basic cmVwbGF5LXVzZXI6cmVwbGF5LXBhc3N3b3Jk
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
           matchers: &basic_only
             headers:
+              Authorization: {pattern: 'Basic cmVwbGF5LXVzZXI6cmVwbGF5LXBhc3N3b3Jk'}
               User-Agent: {pattern: '.* resource/volume auth/basic( .*)?'}
               Metadata: absent
               X-Databricks-Azure-Sp-Management-Token: absent
@@ -62,7 +63,6 @@ steps:
           method: GET
           path: /api/2.1/unity-catalog/volumes/main.replay.auth_volume
           headers:
-            Authorization: Basic cmVwbGF5LXVzZXI6cmVwbGF5LXBhc3N3b3Jk
             X-Databricks-Workspace-Id: "12345"
           matchers: *basic_only
           body: null
@@ -83,7 +83,6 @@ destroy:
         method: DELETE
         path: /api/2.1/unity-catalog/volumes/main.replay.auth_volume
         headers:
-          Authorization: Basic cmVwbGF5LXVzZXI6cmVwbGF5LXBhc3N3b3Jk
           X-Databricks-Workspace-Id: "12345"
         matchers: *basic_only
         body: null

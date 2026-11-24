@@ -13,9 +13,9 @@ import (
 	"github.com/databricks/sdk-go/options/client"
 )
 
-// classicRetryTimeout is how long the classic client keeps retrying a call
-// when Config.RetryTimeoutSeconds is zero.
-const classicRetryTimeout = 5 * time.Minute
+// clientOptionsClassicRetryTimeout is how long the classic client keeps
+// retrying a call when Config.RetryTimeoutSeconds is zero.
+const clientOptionsClassicRetryTimeout = 5 * time.Minute
 
 // ClientOptions returns the options that point a modular SDK client, such as
 // the one modelregistry.NewClient builds, at the workspace of cfg, the
@@ -52,12 +52,12 @@ func ClientOptions(cfg *config.Config, credentials auth.Credentials, transport h
 	switch {
 	case cfg == nil:
 		return nil, errors.New("modular SDK client options: config is nil")
-	case isNil(credentials):
+	case clientOptionsIsNil(credentials):
 		return nil, errors.New("modular SDK client options: credentials are nil")
-	case isNil(transport):
+	case clientOptionsIsNil(transport):
 		return nil, errors.New("modular SDK client options: transport is nil")
 	}
-	if err := checkResolvedHost(cfg.Host); err != nil {
+	if err := clientOptionsCheckResolvedHost(cfg.Host); err != nil {
 		return nil, err
 	}
 	return []client.Option{
@@ -68,14 +68,15 @@ func ClientOptions(cfg *config.Config, credentials auth.Credentials, transport h
 		client.WithHTTPClient(&http.Client{Transport: transport}),
 		client.WithoutConfigFile(),
 		client.WithoutEnv(),
-		client.WithTimeout(callTimeout(cfg.RetryTimeoutSeconds)),
+		client.WithTimeout(clientOptionsCallTimeout(cfg.RetryTimeoutSeconds)),
 	}, nil
 }
 
-// isNil reports whether value is nil or a nil pointer, map, slice, func or
-// channel in an interface. A comparison with nil misses the latter, and the
-// modular client would then panic on its first call instead of failing here.
-func isNil(value any) bool {
+// clientOptionsIsNil reports whether value is nil or a nil pointer, map, slice,
+// func or channel in an interface. A comparison with nil misses the latter, and
+// the modular client would then panic on its first call instead of failing
+// here.
+func clientOptionsIsNil(value any) bool {
 	if value == nil {
 		return true
 	}
@@ -86,12 +87,12 @@ func isNil(value any) bool {
 	return false
 }
 
-// checkResolvedHost returns an error unless host is scheme://host with an
-// optional port, the form in which EnsureResolved stores the host of a classic
-// config. The modular client uses the host as it is: without a scheme every
-// call fails, and it drops a path and a query, where an unresolved classic
-// config can still carry the workspace ID.
-func checkResolvedHost(host string) error {
+// clientOptionsCheckResolvedHost returns an error unless host is scheme://host
+// with an optional port, the form in which EnsureResolved stores the host of a
+// classic config. The modular client uses the host as it is: without a scheme
+// every call fails, and it drops a path and a query, where an unresolved
+// classic config can still carry the workspace ID.
+func clientOptionsCheckResolvedHost(host string) error {
 	if host == "" {
 		return errors.New("modular SDK client options: config has no host")
 	}
@@ -103,15 +104,15 @@ func checkResolvedHost(host string) error {
 	return nil
 }
 
-// callTimeout turns Config.RetryTimeoutSeconds into the value for
+// clientOptionsCallTimeout turns Config.RetryTimeoutSeconds into the value for
 // client.WithTimeout. The two read zero differently: the classic client takes
 // it as unset and retries for 5 minutes, and client.WithTimeout takes it as no
 // timeout. The classic client sets no deadline for a negative value, while the
 // modular client would start every call with a deadline that has passed.
-func callTimeout(retryTimeoutSeconds int) time.Duration {
+func clientOptionsCallTimeout(retryTimeoutSeconds int) time.Duration {
 	switch {
 	case retryTimeoutSeconds == 0:
-		return classicRetryTimeout
+		return clientOptionsClassicRetryTimeout
 	case retryTimeoutSeconds < 0:
 		return 0
 	}

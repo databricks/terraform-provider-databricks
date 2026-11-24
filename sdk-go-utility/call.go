@@ -37,7 +37,7 @@ func Call[T any](
 	limiter ops.Limiter,
 	classic func(error) error,
 ) (T, error) {
-	watch := &retryWatch{retrier: retrier, limiter: limiter}
+	watch := &callWatch{retrier: retrier, limiter: limiter}
 	var opts []call.Option
 	if retrier != nil {
 		opts = append(opts, call.WithRetrier(func() ops.Retrier { return watch }))
@@ -57,10 +57,10 @@ func Call[T any](
 	return zero, err
 }
 
-// retryWatch stands between the SDK and the retrier and limiter of one Call.
+// callWatch stands between the SDK and the retrier and limiter of one Call.
 // The SDK asks the retrier after every failed attempt and the limiter before
 // every attempt, which tells whether it was waiting to retry when it gave up.
-type retryWatch struct {
+type callWatch struct {
 	retrier ops.Retrier
 	limiter ops.Limiter
 	// retried is the error of the attempt that the SDK is waiting to retry, and
@@ -69,7 +69,7 @@ type retryWatch struct {
 	retried atomic.Pointer[error]
 }
 
-func (w *retryWatch) IsRetriable(err error) (time.Duration, bool) {
+func (w *callWatch) IsRetriable(err error) (time.Duration, bool) {
 	delay, retry := w.retrier.IsRetriable(err)
 	if retry {
 		w.retried.Store(&err)
@@ -79,7 +79,7 @@ func (w *retryWatch) IsRetriable(err error) (time.Duration, bool) {
 	return delay, retry
 }
 
-func (w *retryWatch) Wait(ctx context.Context) error {
+func (w *callWatch) Wait(ctx context.Context) error {
 	// The SDK asks for the next attempt, so its wait to retry is over.
 	w.retried.Store(nil)
 	return w.limiter.Wait(ctx)
@@ -89,7 +89,7 @@ func (w *retryWatch) Wait(ctx context.Context) error {
 // returned err. The SDK returns the error of the context when the context ends
 // during a wait to retry; the classic client returns the error it would have
 // retried.
-func (w *retryWatch) failure(err error) error {
+func (w *callWatch) failure(err error) error {
 	retried := w.retried.Load()
 	contextEnded := errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded)
 	if retried != nil && contextEnded {

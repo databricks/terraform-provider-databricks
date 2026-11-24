@@ -1,12 +1,12 @@
 # Pins provider_config population without a provider_config block when host metadata
-# has no workspace ID. The model calls carry no X-Databricks-Workspace-Id header that
-# the fixtures require. After create reads the model, the provider resolves the ID from
-# the X-Databricks-Org-Id header of SCIM /Me and writes it to
-# provider_config.workspace_id. Every later Terraform command starts a fresh client and
-# calls /Me again: a plan without refresh calls it from CustomizeDiff, and a refresh or
-# delete calls it to check the state ID against the provider's workspace before the
-# model call. Fixtures are synthetic: API responses are inferred from the MLflow Model
-# Registry and SCIM API contracts, not recorded.
+# has no workspace ID. No call carries an X-Databricks-Workspace-Id header. After
+# create reads the model, the provider resolves the ID from the X-Databricks-Org-Id
+# header of SCIM /Me and writes it to provider_config.workspace_id. Every later
+# Terraform command starts a fresh client and calls /Me again: a plan without refresh
+# calls it from CustomizeDiff, and a refresh or delete calls it to check the state ID
+# against the provider's workspace before the model call. Fixtures are synthetic: API
+# responses are inferred from the MLflow Model Registry and SCIM API contracts, not
+# recorded.
 version: 1
 enforce_call_order: true
 host_metadata:
@@ -24,6 +24,7 @@ steps:
           path: /api/2.0/mlflow/registered-models/create
           headers:
             Content-Type: application/json
+            # An empty expected value matches only a request without the header.
             X-Databricks-Workspace-Id: ""
           body:
             json: {"name": "routing_me_model"}

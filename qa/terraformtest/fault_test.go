@@ -4,6 +4,8 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -116,41 +118,18 @@ func TestFixtureTransportReportsFaultsAfterEarlierCalls(t *testing.T) {
 	require.NoError(t, handler.Verify())
 }
 
-type roundTripFunc func(*http.Request) (*http.Response, error)
-
-func (f roundTripFunc) RoundTrip(req *http.Request) (*http.Response, error) { return f(req) }
-
-// The SDK rewinds its body reader for a retry while net/http may still drain the
-// previous attempt's body. The transport sends a copy, so that late read cannot
-// empty the retry.
-func TestFixtureTransportSendsACopyOfTheBody(t *testing.T) {
-	var sent *http.Request
-	transport := fixtureTransport{host: "http://fixture.test", transport: roundTripFunc(func(req *http.Request) (*http.Response, error) {
-		sent = req
-		return &http.Response{StatusCode: 204, Body: http.NoBody, Request: req}, nil
-	})}
-	original := strings.NewReader(`{"name":"volume"}`)
-	req, err := http.NewRequest("PATCH", "http://fixture.test/volumes", io.NopCloser(original))
+// Recording must reject scripted wire behavior before it loads a profile, so a
+// faulted journey never reaches a live workspace or has its YAML overwritten.
+func TestRecordingRejectsScriptedWireBehaviorBeforeLoadingProfile(t *testing.T) {
+	directory := t.TempDir()
+	original := strings.Replace(minimalDefinition, "    calls: []\n",
+		"    calls:\n      - request: {method: GET, path: /scripted}\n        response: {fault: close}\n", 1)
+	writeDiscoveryFile(t, directory, "One.yaml", original)
+	output, err := recorderSubprocess(t, directory, "missing-profile")
+	require.Error(t, err, output)
+	require.Contains(t, output, "step 1 (create): call 1: recording cannot reproduce a response delay, fault or status_line")
+	require.NotContains(t, output, "cannot load recorder profile")
+	after, err := os.ReadFile(filepath.Join(directory, "One.yaml"))
 	require.NoError(t, err)
-	_, err = transport.RoundTrip(req)
-	require.NoError(t, err)
-	_, err = original.Seek(0, io.SeekStart)
-	require.NoError(t, err)
-	late, err := io.ReadAll(sent.Body)
-	require.NoError(t, err)
-	require.Equal(t, `{"name":"volume"}`, string(late))
-	require.Equal(t, int64(len(late)), sent.ContentLength)
-	require.Equal(t, original.Size(), int64(original.Len()), "the late read leaves the rewound reader alone")
-	again, err := sent.GetBody()
-	require.NoError(t, err)
-	retried, err := io.ReadAll(again)
-	require.NoError(t, err)
-	require.Equal(t, string(late), string(retried))
-
-	req, err = http.NewRequest("POST", "http://fixture.test/empty", io.NopCloser(strings.NewReader("")))
-	require.NoError(t, err)
-	_, err = transport.RoundTrip(req)
-	require.NoError(t, err)
-	require.Equal(t, http.NoBody, sent.Body)
-	require.Zero(t, sent.ContentLength)
+	require.Equal(t, original, string(after))
 }

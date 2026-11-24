@@ -106,11 +106,13 @@ func (r ProviderConfig) Type(ctx context.Context) attr.Type {
 
 // DefaultWorkspaceBaseEnvironment extends the main model with additional fields.
 type DefaultWorkspaceBaseEnvironment struct {
-	// The default workspace base environment for CPU compute. Format:
-	// workspace-base-environments/{workspace_base_environment}
+	// The default workspace base environment for CPU compute. If unset, CPU
+	// compute defaults to the Databricks Standard base environment (Standard
+	// Latest). Format: workspace-base-environments/{workspace_base_environment}
 	CpuWorkspaceBaseEnvironment types.String `tfsdk:"cpu_workspace_base_environment"`
-	// The default workspace base environment for GPU compute. Format:
-	// workspace-base-environments/{workspace_base_environment}
+	// The default workspace base environment for GPU compute. If unset, GPU
+	// compute defaults to the Databricks Standard base environment (Standard
+	// Latest). Format: workspace-base-environments/{workspace_base_environment}
 	GpuWorkspaceBaseEnvironment types.String `tfsdk:"gpu_workspace_base_environment"`
 	// The resource name of this singleton resource. Format:
 	// default-workspace-base-environment

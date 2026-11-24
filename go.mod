@@ -4,6 +4,7 @@ go 1.26.10
 
 require (
 	github.com/databricks/databricks-sdk-go v0.202.0
+	github.com/databricks/sdk-go/core v0.1.0
 	github.com/databricks/sdk-go/modelregistry v0.7.0
 	github.com/golang-jwt/jwt/v4 v4.5.2
 	github.com/google/go-cmp v0.7.0
@@ -39,7 +40,6 @@ require (
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/cloudflare/circl v1.6.3 // indirect
 	github.com/databricks/sdk-go/auth v0.2.0 // indirect
-	github.com/databricks/sdk-go/core v0.1.0 // indirect
 	github.com/databricks/sdk-go/options v0.3.0 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/dnephin/pflag v1.0.7 // indirect

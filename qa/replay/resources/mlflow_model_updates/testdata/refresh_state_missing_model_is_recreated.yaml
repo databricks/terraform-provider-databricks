@@ -15,8 +15,7 @@ steps:
         description = "first description"
       }
     calls:
-      - &create
-        request:
+      - request:
           method: POST
           path: /api/2.0/mlflow/registered-models/create
           headers:
@@ -75,6 +74,7 @@ steps:
           body:
             json: {"error_code": "RESOURCE_DOES_NOT_EXIST",
                    "message": "RegisteredModel 'replay-model' does not exist. It might have been deleted."}
+      # Apply sends the same POST as the first create.
       - request:
           method: POST
           path: /api/2.0/mlflow/registered-models/create
@@ -113,6 +113,14 @@ steps:
               equals: replay-model
             - path: [registered_model_id]
               equals: fedcba9876543210fedcba9876543210
+  - name: plan_after_recreate_is_empty
+    plan_only: true
+    config: *config
+    plan:
+      expect: empty
+      changes: {}
+    calls:
+      - *read_recreated
 destroy:
   calls:
     - *read_recreated

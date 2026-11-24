@@ -8,6 +8,7 @@ import (
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/databricks-sdk-go/httpclient"
+	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/sdk-go/core/ops"
 	"github.com/databricks/sdk-go/options/call"
 	"github.com/databricks/sdk-go/options/client"
@@ -95,16 +96,26 @@ func (b *sdkGoBridge) clientOptions(cfg *config.Config) []client.Option {
 	}
 }
 
-// CallSdkGoVolumes runs one method of vc with the classic client's retries and rate
-// limit, and returns the error the classic client would return for the same response.
+// CallSdkGoVolumes runs one method of vc with the classic client's retries, rate limit
+// and response decoding, and returns the error the classic client would return for the
+// same response.
 func CallSdkGoVolumes[T any](ctx context.Context, vc *SdkGoVolumes,
 	method func(context.Context, ...call.Option) (T, error)) (T, error) {
-	return callSdkGo(ctx, vc.bridge, method)
+	return callSdkGo(ctx, vc.bridge, classicVolumesResponse[T](), method)
 }
 
-func callSdkGo[T any](ctx context.Context, b *sdkGoBridge,
+// classicVolumesResponse returns a constructor of the classic type that the classic
+// client decodes a T response into, or nil if it decodes none, as for a delete.
+func classicVolumesResponse[T any]() func() any {
+	if _, ok := any(*new(T)).(*sdkvolumes.VolumeInfo); ok {
+		return func() any { return &catalog.VolumeInfo{} }
+	}
+	return nil
+}
+
+func callSdkGo[T any](ctx context.Context, b *sdkGoBridge, classicResponse func() any,
 	method func(context.Context, ...call.Option) (T, error)) (T, error) {
-	attempt := &sdkGoAttempt{}
+	attempt := &sdkGoAttempt{classicResponse: classicResponse}
 	ctx = context.WithValue(ctx, sdkGoAttemptKey{}, attempt)
 	retrier := b.newRetrier(ctx, attempt)
 	result, err := method(ctx,
@@ -125,24 +136,19 @@ func callSdkGo[T any](ctx context.Context, b *sdkGoBridge,
 
 type sdkGoAttemptKey struct{}
 
-// sdkGoAttempt carries state between the stages of one call: the last exchange, which
-// classic error parsing needs, and the timeout of the attempt being sent.
+// sdkGoAttempt carries state between the stages of one call: the last request sent and
+// its response, which classic error parsing needs, the timeout of the attempt being
+// sent, and the classic type that successful responses are decoded into.
 type sdkGoAttempt struct {
-	request      *http.Request
-	requestBody  []byte
-	response     *http.Response
-	responseBody []byte
-	timeout      *attemptTimeout
+	request         *http.Request
+	response        *http.Response
+	timeout         *attemptTimeout
+	classicResponse func() any
 }
 
-// record keeps the last exchange of the call. resp is nil if the request failed.
-func (a *sdkGoAttempt) record(r *http.Request, requestBody []byte, resp *http.Response,
-	responseBody []byte) {
-	a.request, a.requestBody = r, requestBody
-	a.response, a.responseBody = resp, responseBody
-	if resp != nil {
-		a.request = resp.Request
-	}
+// succeeded reports whether the last attempt got a successful response.
+func (a *sdkGoAttempt) succeeded() bool {
+	return a != nil && a.response != nil && a.response.StatusCode < http.StatusBadRequest
 }
 
 // keepTimeout stores the timeout started by authentication for the transport.

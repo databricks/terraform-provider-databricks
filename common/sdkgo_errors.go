@@ -3,7 +3,6 @@ package common
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -14,16 +13,14 @@ import (
 
 	"github.com/databricks/databricks-sdk-go/apierr"
 	sdkcommon "github.com/databricks/databricks-sdk-go/common"
-	"github.com/databricks/databricks-sdk-go/httpclient"
 	"github.com/databricks/databricks-sdk-go/logger"
-	"github.com/databricks/databricks-sdk-go/logger/httplog"
 	sdkapierr "github.com/databricks/sdk-go/core/apierr"
 	"golang.org/x/time/rate"
 )
 
 // classicError returns the error the classic client returns for the same failure. API
 // errors are parsed again from the response, so apierr.IsMissing, the retry rules and
-// the messages stay the same. attempt holds the last exchange of the call, if any.
+// the messages stay the same. attempt holds the last request and response, if any.
 func (b *sdkGoBridge) classicError(ctx context.Context, err error,
 	attempt *sdkGoAttempt) error {
 	// http.Client wraps transport failures in a url.Error, which the classic client
@@ -34,28 +31,35 @@ func (b *sdkGoBridge) classicError(ctx context.Context, err error,
 	if bodyErr, ok := errors.AsType[*responseBodyError](err); ok {
 		return bodyErr
 	}
+	if decodeErr, ok := errors.AsType[*responseDecodeError](err); ok {
+		return decodeErr
+	}
 	if classicErr, ok := errors.AsType[*apierr.APIError](err); ok {
 		return classicErr
 	}
 	apiErr, ok := errors.AsType[*sdkapierr.APIError](err)
 	if !ok || apiErr.HTTPStatusCode() < 0 {
-		var syntaxErr *json.SyntaxError
-		var typeErr *json.UnmarshalTypeError
-		if errors.As(err, &syntaxErr) || errors.As(err, &typeErr) {
-			return &responseDecodeError{classicDecodeError(err, attempt)}
+		// After a successful response, only decoding it can fail, whatever error the
+		// sdk-go wire types return.
+		if attempt.succeeded() {
+			return &responseDecodeError{
+				fmt.Errorf("failed to unmarshal response body: %w", err)}
 		}
 		return err
-	}
-	req := &http.Request{URL: &url.URL{}}
-	if attempt != nil && attempt.request != nil {
-		req = attempt.request
 	}
 	body := apiErr.HTTPBody()
 	resp := &http.Response{
 		StatusCode: apiErr.HTTPStatusCode(),
 		Header:     apiErr.HTTPHeader(),
 		Body:       io.NopCloser(bytes.NewReader(body)),
-		Request:    req,
+		Request:    &http.Request{URL: &url.URL{}},
+	}
+	// The classic client classifies HTML error pages by the status text.
+	if attempt != nil && attempt.request != nil {
+		resp.Request = attempt.request
+		if attempt.response != nil {
+			resp.Status = attempt.response.Status
+		}
 	}
 	mapped := b.httpConfig.ErrorMapper(ctx, sdkcommon.ResponseWrapper{
 		Response:   resp,
@@ -80,34 +84,6 @@ func (e *responseDecodeError) Error() string {
 
 func (e *responseDecodeError) Unwrap() error {
 	return e.err
-}
-
-// Mirrors the unexported httpclient.makeUnexpectedResponse.
-const classicDecodeErrorRequestLog = "This is likely a bug in the Databricks SDK for " +
-	"Go or the underlying REST API. Please report this issue with the following " +
-	"debugging information to the SDK issue tracker at " +
-	"https://github.com/databricks/databricks-sdk-go/issues. Request log:\n```\n%s\n```"
-
-// classicDecodeError mirrors the error of httpclient.WithResponseUnmarshal for err, the
-// failure to decode the response body of attempt.
-func classicDecodeError(err error, attempt *sdkGoAttempt) error {
-	if attempt == nil || attempt.response == nil {
-		return fmt.Errorf("failed to unmarshal response body: %w", err)
-	}
-	if _, ok := errors.AsType[*json.SyntaxError](err); ok &&
-		bytes.HasPrefix(attempt.responseBody, []byte("<")) {
-		return httpclient.ErrHTMLContent
-	}
-	requestLog := httplog.RoundTripStringer{
-		Request:            attempt.request,
-		Response:           attempt.response,
-		RequestBody:        attempt.requestBody,
-		ResponseBody:       attempt.responseBody,
-		DebugHeaders:       true,
-		DebugTruncateBytes: 10 * 1024,
-	}
-	return fmt.Errorf("failed to unmarshal response body: %w. "+
-		classicDecodeErrorRequestLog, err, requestLog.String())
 }
 
 // visitorError is a failure before a request is sent: in authentication or in a request

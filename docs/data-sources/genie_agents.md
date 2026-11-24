@@ -86,8 +86,8 @@ This data source exports a single attribute, `genie_agents`. It is a list of res
 
 ### GenieAgentDataSources
 * `mcp_connections` (list of GenieAgentMcpConnection) - Unity Catalog MCP connections, sorted by `mcp_connection`
-* `tables` (list of GenieAgentTable) - Unity Catalog tables, views, and metric views, in the order they were added
-* `volumes` (list of GenieAgentVolume) - Unity Catalog volumes, in the order they were added
+* `tables` (list of GenieAgentTable) - Unity Catalog tables, views, and metric views, sorted by `identifier`
+* `volumes` (list of GenieAgentVolume) - Unity Catalog volumes, sorted by `path`
 
 ### GenieAgentDefinition
 * `benchmarks` (GenieAgentBenchmarks) - Benchmarks for evaluating the quality of the Genie Agent's answers

@@ -201,6 +201,12 @@ func TestSdkGoVolumesClientFailsToDecodeLikeClassicClient(t *testing.T) {
 		"not JSON":                "not json",
 		"transient error message": `{"message": "REQUEST_LIMIT_EXCEEDED: retry later.`,
 		"HTML":                    "<html><body>Sign in</body></html>",
+		"timestamp that isn't a number": `{"full_name": "main.replay.volume",
+			"created_at": "yesterday"}`,
+		"timestamp out of range": `{"full_name": "main.replay.volume",
+			"created_at": "99999999999999999999"}`,
+		"timestamp with a transient error message": `{"full_name": "main.replay.volume",
+			"created_at": "REQUEST_LIMIT_EXCEEDED"}`,
 	} {
 		t.Run(name, func(t *testing.T) {
 			r := readBothWays(t, context.Background, nil, respond(http.StatusOK, body),
@@ -222,6 +228,36 @@ func TestSdkGoVolumesClientDecodeErrorPrintsTheRequestLog(t *testing.T) {
 		"literal null (expecting 'u'). "+fmt.Sprintf(classicDecodeErrorRequestLog,
 		"GET "+sdkGoTestVolumePath+"\n< HTTP/1.1 200 OK\n< not json"),
 		withoutHeaderLines(r.err))
+}
+
+// The classic decoder reads a value it can't decode into a string field as that value's
+// text, so a response with a number for a comment reads as a comment.
+func TestSdkGoVolumesClientCoercesValuesLikeClassicClient(t *testing.T) {
+	for name, tc := range map[string]struct {
+		value, comment string
+	}{
+		"number":  {`123`, "123"},
+		"boolean": {`true`, "true"},
+		"object":  {`{"text":"x"}`, `{"text":"x"}`},
+	} {
+		t.Run(name, func(t *testing.T) {
+			body := `{"full_name": "main.replay.volume", "created_at": "1700000000000",
+				"comment": ` + tc.value + `}`
+			server, _ := serveSequence(t, respond(http.StatusOK, body),
+				respond(http.StatusOK, body))
+			w := newVolumesTestWorkspaceClient(t, server, nil)
+			ctx := context.Background()
+			v, err := getVolume(ctx, t, w, sdkGoTestVolumeName)
+			require.NoError(t, err)
+			classic, err := w.Volumes.ReadByName(ctx, sdkGoTestVolumeName)
+			require.NoError(t, err)
+			assert.Equal(t, tc.comment, classic.Comment)
+			require.NotNil(t, v.Comment)
+			assert.Equal(t, classic.Comment, *v.Comment)
+			require.NotNil(t, v.CreatedAt)
+			assert.Equal(t, classic.CreatedAt, *v.CreatedAt)
+		})
+	}
 }
 
 // The existing client doesn't decode an empty 200 body, so it reads a volume without

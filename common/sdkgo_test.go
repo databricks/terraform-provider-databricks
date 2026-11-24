@@ -17,6 +17,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/client"
 	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/databricks-sdk-go/config/credentials"
+	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/sdk-go/options/call"
 	sdkvolumes "github.com/databricks/sdk-go/uc/volumes/v1"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -227,6 +228,70 @@ func TestSdkGoClientWaitsForAResponsePastRetryTimeoutLikeClassicClient(t *testin
 	assert.EqualValues(t, 1, r.calls)
 	assert.NoError(t, r.classicErr)
 	assert.Equal(t, r.classicCalls, r.calls)
+}
+
+// htmlError answers like the legacy APIs that return an HTML page, which the classic
+// client classifies by the response's status text.
+func htmlError(status int, message string) handler {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/html")
+		respond(status, "<html><body><pre>"+message+"</pre></body></html>")(w, r)
+	}
+}
+
+func TestSdkGoClientReadsHTMLNotFoundAsMissingLikeClassicClient(t *testing.T) {
+	r := readBothWays(t, context.Background, nil,
+		htmlError(http.StatusNotFound, "Volume not found."))
+	var apiErr, classicAPIErr *apierr.APIError
+	require.ErrorAs(t, r.err, &apiErr)
+	require.ErrorAs(t, r.classicErr, &classicAPIErr)
+	assert.Equal(t, "NOT_FOUND", classicAPIErr.ErrorCode)
+	assert.Equal(t, classicAPIErr.ErrorCode, apiErr.ErrorCode)
+	assert.True(t, apierr.IsMissing(r.err))
+	assert.EqualError(t, r.err, r.classicErr.Error())
+	assert.Equal(t, r.classicCalls, r.calls)
+}
+
+func TestSdkGoClientRetriesHTMLTooManyRequestsLikeClassicClient(t *testing.T) {
+	r := readBothWays(t, context.Background, nil,
+		htmlError(http.StatusTooManyRequests, "Too many requests."),
+		respond(http.StatusOK, sdkGoTestVolume))
+	assert.NoError(t, r.classicErr)
+	assert.NoError(t, r.err)
+	assert.EqualValues(t, 2, r.calls)
+	assert.Equal(t, r.classicCalls, r.calls)
+}
+
+// The classic client decodes a successful response only after its retries, so a write
+// whose response fails to decode isn't sent again, even when the decode error contains
+// a transient error message.
+func TestSdkGoClientDoesNotRetryUndecodableSuccessfulResponses(t *testing.T) {
+	undecodable := respond(http.StatusOK, `{"full_name": "main.replay.volume",
+		"created_at": "REQUEST_LIMIT_EXCEEDED"}`)
+	ctx := context.Background()
+	name, catalogName, schemaName := "volume", "main", "replay"
+	server, calls := serveSequence(t, undecodable)
+	vc, err := SdkGoVolumesClient(ctx, newVolumesTestWorkspaceClient(t, server, nil))
+	require.NoError(t, err)
+	create := func(ctx context.Context,
+		opts ...call.Option) (*sdkvolumes.VolumeInfo, error) {
+		return vc.CreateVolume(ctx, sdkvolumes.CreateVolumeRequest{
+			CatalogName: &catalogName, SchemaName: &schemaName, Name: &name,
+			VolumeType: sdkvolumes.VolumeType_Managed,
+		}, opts...)
+	}
+	_, err = CallSdkGoVolumes(ctx, vc, create)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "failed to unmarshal response body")
+	assert.EqualValues(t, 1, calls.Load())
+	classicServer, classicCalls := serveSequence(t, undecodable)
+	classic := newVolumesTestWorkspaceClient(t, classicServer, nil)
+	_, err = classic.Volumes.Create(ctx, catalog.CreateVolumeRequestContent{
+		CatalogName: catalogName, SchemaName: schemaName, Name: name,
+		VolumeType: catalog.VolumeTypeManaged,
+	})
+	require.Error(t, err)
+	assert.EqualValues(t, 1, classicCalls.Load())
 }
 
 func TestSdkGoClientReturnsLastErrorWhenCancelledDuringBackoff(t *testing.T) {

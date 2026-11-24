@@ -17,9 +17,9 @@ import (
 	"github.com/databricks/databricks-sdk-go/useragent"
 )
 
-// sdkGoUserAgentPrefix starts the User-Agent segments that name a module of
+// transportModularUserAgentPrefix starts the User-Agent segments that name a module of
 // the modular SDK, such as sdk-go-core/0.1.0 and sdk-go-modelregistry/0.7.0.
-const sdkGoUserAgentPrefix = "sdk-go-"
+const transportModularUserAgentPrefix = "sdk-go-"
 
 // Transport returns a transport that sends the requests of a modular SDK
 // client with the headers that the classic client sends for cfg. Pass it to
@@ -69,14 +69,14 @@ func Transport(cfg *config.Config) (http.RoundTripper, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &classicHeadersTransport{
-		base:     classicBaseTransport(clientCfg),
+	return &transportRoundTripper{
+		base:     transportClassicBase(clientCfg),
 		visitors: clientCfg.Visitors,
 	}, nil
 }
 
-// classicHeadersTransport is the http.RoundTripper that Transport returns.
-type classicHeadersTransport struct {
+// transportRoundTripper is the http.RoundTripper that Transport returns.
+type transportRoundTripper struct {
 	base     http.RoundTripper
 	visitors []httpclient.RequestVisitor
 }
@@ -84,7 +84,7 @@ type classicHeadersTransport struct {
 // RoundTrip sends a clone of req with the classic headers over the base
 // transport. It closes the body of req when it fails before sending, as the
 // http.RoundTripper contract asks.
-func (t *classicHeadersTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+func (t *transportRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 	out := req.Clone(req.Context())
 	if out.Header == nil {
 		out.Header = http.Header{}
@@ -124,7 +124,7 @@ func (t *classicHeadersTransport) RoundTrip(req *http.Request) (*http.Response, 
 // returns a panic of a visitor as an error: the classic client authenticates
 // before it runs the visitors, so they never see a config without an
 // authentication type there, and here they can.
-func (t *classicHeadersTransport) visit(req *http.Request) (err error) {
+func (t *transportRoundTripper) visit(req *http.Request) (err error) {
 	defer func() {
 		if recovered := recover(); recovered != nil {
 			err = fmt.Errorf("panic: %v", recovered)
@@ -143,23 +143,23 @@ func (t *classicHeadersTransport) visit(req *http.Request) (err error) {
 func transportUserAgent(ctx context.Context, modularUserAgent string) string {
 	segments := []string{useragent.FromContext(ctx)}
 	for _, segment := range strings.Fields(modularUserAgent) {
-		if strings.HasPrefix(segment, sdkGoUserAgentPrefix) {
+		if strings.HasPrefix(segment, transportModularUserAgentPrefix) {
 			segments = append(segments, segment)
 		}
 	}
 	return strings.Join(segments, " ")
 }
 
-// classicDefaultTransport is the transport that modular clients share when
+// transportClassicDefault is the transport that modular clients share when
 // the config sets neither HTTPTransport nor InsecureSkipVerify, as classic
 // clients share theirs.
-var classicDefaultTransport = newClassicDefaultTransport()
+var transportClassicDefault = transportNewClassicDefault()
 
-// newClassicDefaultTransport mirrors makeDefaultTransport of the classic SDK
+// transportNewClassicDefault mirrors makeDefaultTransport of the classic SDK
 // package httpclient, which is unexported. Keep the two in step when the
 // classic SDK is upgraded: TestTransport_MirrorsClassicDefault fails when
 // they differ.
-func newClassicDefaultTransport() *http.Transport {
+func transportNewClassicDefault() *http.Transport {
 	return &http.Transport{
 		Proxy: http.ProxyFromEnvironment,
 		DialContext: (&net.Dialer{
@@ -175,16 +175,16 @@ func newClassicDefaultTransport() *http.Transport {
 	}
 }
 
-// classicBaseTransport mirrors the unexported httpTransport method of
+// transportClassicBase mirrors the unexported httpTransport method of
 // httpclient.ClientConfig, which picks the transport of a classic client.
-func classicBaseTransport(clientCfg httpclient.ClientConfig) http.RoundTripper {
+func transportClassicBase(clientCfg httpclient.ClientConfig) http.RoundTripper {
 	if clientCfg.Transport != nil {
 		return clientCfg.Transport
 	}
 	if clientCfg.InsecureSkipVerify {
-		transport := newClassicDefaultTransport()
+		transport := transportNewClassicDefault()
 		transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 		return transport
 	}
-	return classicDefaultTransport
+	return transportClassicDefault
 }

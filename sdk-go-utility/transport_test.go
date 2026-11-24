@@ -81,7 +81,7 @@ type transportTestServer struct {
 	requests   []transportTestRequest
 }
 
-func newTransportTestServer(t *testing.T, useTLS bool) *transportTestServer {
+func transportTestNewServer(t *testing.T, useTLS bool) *transportTestServer {
 	s := &transportTestServer{status: http.StatusOK}
 	s.Server = httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		body, _ := io.ReadAll(r.Body)
@@ -245,7 +245,7 @@ func TestTransport_MatchesClassicClient(t *testing.T) {
 			// The classic SDK caches what it detects in the environment.
 			useragent.ClearCache()
 			t.Cleanup(useragent.ClearCache)
-			server, target := newTransportTestServer(t, false), newTransportTestServer(t, false)
+			server, target := transportTestNewServer(t, false), transportTestNewServer(t, false)
 			if tc.redirect {
 				server.redirectTo = target.URL
 			}
@@ -422,7 +422,7 @@ func TestTransport_VisitorErrors(t *testing.T) {
 		})
 	}
 	// A real modular call, which has no body, returns the error to its caller.
-	server := newTransportTestServer(t, false)
+	server := transportTestNewServer(t, false)
 	cfg := transportTestConfig(server.URL)
 	cfg.Headers = func(*http.Request) error { return errTransportTest }
 	err := transportTestGet(t.Context(), transportTestModularClient(t, cfg), "model")
@@ -475,10 +475,10 @@ func TestTransport_Config(t *testing.T) {
 		configure(cfg)
 		transport, err := Transport(cfg)
 		require.NoError(t, err)
-		return transport.(*classicHeadersTransport).base
+		return transport.(*transportRoundTripper).base
 	}
 	custom := &transportTestBase{}
-	assert.Same(t, classicDefaultTransport, base(func(*config.Config) {}), "modular clients share one default transport")
+	assert.Same(t, transportClassicDefault, base(func(*config.Config) {}), "modular clients share one default transport")
 	assert.Same(t, custom, base(func(cfg *config.Config) { cfg.HTTPTransport = custom }))
 	assert.Same(t, custom, base(func(cfg *config.Config) { cfg.HTTPTransport, cfg.InsecureSkipVerify = custom, true }))
 	insecure := base(func(cfg *config.Config) { cfg.InsecureSkipVerify = true }).(*http.Transport)
@@ -494,7 +494,7 @@ func TestTransport_MirrorsClassicDefault(t *testing.T) {
 	clientCfg := httpclient.ClientConfig{InsecureSkipVerify: true}
 	classic := reflect.ValueOf(httpclient.NewApiClient(clientCfg)).Elem().
 		FieldByName("httpClient").Elem().FieldByName("Transport").Elem().Elem()
-	mirror := reflect.ValueOf(classicBaseTransport(clientCfg)).Elem()
+	mirror := reflect.ValueOf(transportClassicBase(clientCfg)).Elem()
 	require.Equal(t, classic.Type(), mirror.Type())
 	transportTestSameFields(t, "Transport", classic, mirror)
 }
@@ -521,7 +521,7 @@ func transportTestSameFields(t *testing.T, path string, classic, mirror reflect.
 // TestTransport_InsecureSkipVerify calls a TLS server with a self-signed certificate.
 func TestTransport_InsecureSkipVerify(t *testing.T) {
 	for _, skipVerify := range []bool{true, false} {
-		server := newTransportTestServer(t, true)
+		server := transportTestNewServer(t, true)
 		cfg := transportTestConfig(server.URL)
 		cfg.InsecureSkipVerify = skipVerify
 		err := transportTestGet(t.Context(), transportTestModularClient(t, cfg), "model")
@@ -542,7 +542,7 @@ func TestTransport_InsecureSkipVerify(t *testing.T) {
 // request once, without credentials, and returns an error response as it is.
 func TestTransport_ReturnsResponsesAsTheyAre(t *testing.T) {
 	for _, status := range []int{200, 401, 404, 429, 503} {
-		server := newTransportTestServer(t, false)
+		server := transportTestNewServer(t, false)
 		server.status = status
 		cfg := transportTestConfig(server.URL)
 		cfg.AuthType = "pat"
@@ -564,7 +564,7 @@ func TestTransport_ReturnsResponsesAsTheyAre(t *testing.T) {
 // with one config, each with its own User-Agent data in the context.
 func TestTransport_ConcurrentRequests(t *testing.T) {
 	const workers, callsPerWorker = 8, 10
-	server := newTransportTestServer(t, false)
+	server := transportTestNewServer(t, false)
 	cfg := transportTestConfig(server.URL)
 	cfg.RateLimitPerSecond = 1000 // the classic client would wait between its calls
 	modular := transportTestModularClient(t, cfg)

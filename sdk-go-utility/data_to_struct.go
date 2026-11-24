@@ -76,7 +76,8 @@ func DataToStruct(d *schema.ResourceData, s map[string]*schema.Schema, result an
 	return dataToStructMessage(d, s, "", message.Elem())
 }
 
-// dataToStructField is a struct field that dataToStructMessage fills from the resource data.
+// dataToStructField is a struct field that dataToStructMessage fills from the
+// resource data.
 type dataToStructField struct {
 	d      *schema.ResourceData
 	schema *schema.Schema
@@ -94,9 +95,9 @@ func (f dataToStructField) errorf(format string, args ...any) error {
 	return fmt.Errorf("%s: %s.%s of type %s %s", f.path, f.owner, f.field.Name, f.field.Type, problem)
 }
 
-// dataToStructMessage fills message, a struct, from the values that d holds under
-// prefix: the empty string for the resource itself, and the key of a block
-// with a trailing dot, such as "tags.0.", for a nested message. s is the
+// dataToStructMessage fills message, a struct, from the values that d holds
+// under prefix: the empty string for the resource itself, and the key of a
+// block with a trailing dot, such as "tags.0.", for a nested message. s is the
 // schema at that level.
 func dataToStructMessage(d *schema.ResourceData, s map[string]*schema.Schema, prefix string, message reflect.Value) error {
 	owner := message.Type()
@@ -141,9 +142,10 @@ func dataToStructSupports(t reflect.Type) bool {
 	}
 }
 
-// dataToStructIsScalar reports whether t has one of the kinds that a schema.TypeString,
-// TypeBool, TypeInt or TypeFloat value can be stored in. Unsigned integers are
-// not among them: the modular SDK has none, and []byte is a slice of them.
+// dataToStructIsScalar reports whether t has one of the kinds that a
+// schema.TypeString, TypeBool, TypeInt or TypeFloat value can be stored in.
+// Unsigned integers are not among them: the modular SDK has no such field, and
+// []byte is a slice of them.
 func dataToStructIsScalar(t reflect.Type) bool {
 	switch t.Kind() {
 	case reflect.String, reflect.Bool, reflect.Float32, reflect.Float64,
@@ -238,17 +240,17 @@ func (f dataToStructField) setMap(target reflect.Value, raw any) error {
 	for key, entry := range entries {
 		value := reflect.New(mapType.Elem()).Elem()
 		if !dataToStructSetScalar(value, entry) {
-			return f.errorf("can't hold the value of the key %q, which is of type %T", key, entry)
+			return f.errorf("can't hold a value of the map, which is of type %T", entry)
 		}
 		target.SetMapIndex(reflect.ValueOf(key).Convert(mapType.Key()), value)
 	}
 	return nil
 }
 
-// dataToStructSetScalar sets target from raw and reports whether raw fits: raw has the Go
-// type that the Terraform SDK gives a value of the kind of target, and a
-// number doesn't overflow target. It leaves target untouched otherwise, and
-// for a target of any other kind.
+// dataToStructSetScalar sets target from raw and reports whether raw fits: raw
+// has the Go type that the Terraform SDK gives a value of the kind of target,
+// and a number doesn't overflow target. It leaves target untouched otherwise,
+// and for a target of any other kind.
 func dataToStructSetScalar(target reflect.Value, raw any) bool {
 	switch value := raw.(type) {
 	case string:

@@ -59,8 +59,10 @@ resource "databricks_environments_default_workspace_base_environment" "this" {}
 ## Arguments
 The following arguments are supported:
 * `cpu_workspace_base_environment` (string, optional) - The default workspace base environment for CPU compute.
+  If unset, CPU compute defaults to the Databricks Standard base environment (Standard Latest).
   Format: workspace-base-environments/{workspace_base_environment}
 * `gpu_workspace_base_environment` (string, optional) - The default workspace base environment for GPU compute.
+  If unset, GPU compute defaults to the Databricks Standard base environment (Standard Latest).
   Format: workspace-base-environments/{workspace_base_environment}
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 

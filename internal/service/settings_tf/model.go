@@ -17,8 +17,6 @@ import (
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 
-	// .tmpl
-
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
@@ -336,6 +334,10 @@ func (m *AccountNetworkPolicy) SetIngressDryRun(ctx context.Context, v CustomerF
 }
 
 type AibiDashboardEmbeddingAccessPolicy struct {
+	// Where AI/BI dashboards can be embedded: in any domain
+	// (ALLOW_ALL_DOMAINS), only in the approved domains configured for the
+	// workspace (ALLOW_APPROVED_DOMAINS), or nowhere (DENY_ALL_DOMAINS).
+	// Defaults to ALLOW_APPROVED_DOMAINS.
 	AccessPolicyType types.String `tfsdk:"access_policy_type"`
 }
 
@@ -494,6 +496,9 @@ func (m *AibiDashboardEmbeddingAccessPolicySetting) SetAibiDashboardEmbeddingAcc
 }
 
 type AibiDashboardEmbeddingApprovedDomains struct {
+	// Domains allowed to host embedded AI/BI dashboards. A leading wildcard
+	// allows every subdomain of a domain. The list applies, and can only be
+	// changed, while the embedding access policy is ALLOW_APPROVED_DOMAINS.
 	ApprovedDomains types.List `tfsdk:"approved_domains"`
 }
 
@@ -852,14 +857,25 @@ func (m BooleanMessage) Type(ctx context.Context) attr.Type {
 }
 
 type ClusterAutoRestartMessage struct {
+	// Whether the workspace can change the enabled state. Databricks computes
+	// this value: it is false when the compliance security profile forces the
+	// feature on or when the workspace lacks the Enhanced Security and
+	// Compliance entitlement. A value sent in an update request has no effect.
 	CanToggle types.Bool `tfsdk:"can_toggle"`
-
+	// Whether automatic cluster update is enabled for the workspace. The
+	// effective value is always true while the compliance security profile is
+	// enabled on the workspace.
 	Enabled types.Bool `tfsdk:"enabled"`
-
+	// Why the feature is forced on or unavailable. Databricks sets these
+	// details for information only; they do not determine whether the feature
+	// is enabled.
 	EnablementDetails types.Object `tfsdk:"enablement_details"`
-
+	// When the maintenance window runs. When unset, it defaults to the first
+	// Sunday of every month at 01:00 UTC.
 	MaintenanceWindow types.Object `tfsdk:"maintenance_window"`
-
+	// Whether compute resources restart during every maintenance window even
+	// when no update is available. When false, they restart only when an update
+	// is available.
 	RestartEvenIfNoUpdatesAvailable types.Bool `tfsdk:"restart_even_if_no_updates_available"`
 }
 
@@ -1014,8 +1030,8 @@ func (m *ClusterAutoRestartMessage) SetMaintenanceWindow(ctx context.Context, v 
 type ClusterAutoRestartMessageEnablementDetails struct {
 	// The feature is force enabled if compliance mode is active
 	ForcedForComplianceMode types.Bool `tfsdk:"forced_for_compliance_mode"`
-	// The feature is unavailable if the corresponding entitlement disabled (see
-	// getShieldEntitlementEnable)
+	// The feature is unavailable because the workspace does not have the
+	// Enhanced Security and Compliance entitlement.
 	UnavailableForDisabledEntitlement types.Bool `tfsdk:"unavailable_for_disabled_entitlement"`
 	// The feature is unavailable if the customer doesn't have enterprise tier
 	UnavailableForNonEnterpriseTier types.Bool `tfsdk:"unavailable_for_non_enterprise_tier"`
@@ -1071,6 +1087,8 @@ func (m ClusterAutoRestartMessageEnablementDetails) Type(ctx context.Context) at
 }
 
 type ClusterAutoRestartMessageMaintenanceWindow struct {
+	// Schedule anchored to a day of the week, either every week or on given
+	// weeks of the month.
 	WeekDayBasedSchedule types.Object `tfsdk:"week_day_based_schedule"`
 }
 
@@ -1162,10 +1180,12 @@ func (m *ClusterAutoRestartMessageMaintenanceWindow) SetWeekDayBasedSchedule(ctx
 }
 
 type ClusterAutoRestartMessageMaintenanceWindowWeekDayBasedSchedule struct {
+	// Day of the week on which the maintenance window starts.
 	DayOfWeek types.String `tfsdk:"day_of_week"`
-
+	// How often the maintenance window occurs: every week, or only on the
+	// listed occurrences of the day of the week within each month.
 	Frequency types.String `tfsdk:"frequency"`
-
+	// Time of day, in UTC, at which the maintenance window starts.
 	WindowStartTime types.Object `tfsdk:"window_start_time"`
 }
 
@@ -1263,8 +1283,9 @@ func (m *ClusterAutoRestartMessageMaintenanceWindowWeekDayBasedSchedule) SetWind
 }
 
 type ClusterAutoRestartMessageMaintenanceWindowWindowStartTime struct {
+	// Hour of the day on a 24-hour clock.
 	Hours types.Int64 `tfsdk:"hours"`
-
+	// Minute of the hour.
 	Minutes types.Int64 `tfsdk:"minutes"`
 }
 
@@ -4910,10 +4931,7 @@ func (m *CustomerFacingIngressNetworkPolicyPrivateAccess) SetDenyRules(ctx conte
 // — including request origin, destination, and authentication.
 type CustomerFacingIngressNetworkPolicyPrivateIngressRule struct {
 	// The authenticated identity the request must match. When unset, the rule
-	// matches all users and service principals. On the account-level network
-	// policy, scoping to specific identities is not currently supported, so
-	// this field must be unset (the rule matches all users and service
-	// principals).
+	// matches all users and service principals.
 	Authentication types.Object `tfsdk:"authentication"`
 	// The destination the request must match — the resource being accessed,
 	// for example the workspace UI, workspace APIs, or account-level APIs. See
@@ -18136,7 +18154,15 @@ type RestrictWorkspaceAdminsMessage struct {
 	// When true, workspace admins cannot create governance tags. ALLOW_ALL
 	// status does not override this; they are independent.
 	DisableGovTagCreation types.Bool `tfsdk:"disable_gov_tag_creation"`
-
+	// Controls what workspace admins can do with service principal tokens and
+	// job identities. With ALLOW_ALL, workspace admins can create personal
+	// access tokens on behalf of any service principal in the workspace, change
+	// a job owner to any workspace user, and set a job's run_as identity to any
+	// workspace user or to a service principal they have the Service Principal
+	// User role on. With RESTRICT_TOKENS_AND_JOB_RUN_AS, they can only create
+	// tokens for service principals they have the Service Principal User role
+	// on, change a job owner to themselves, and set run_as to themselves or to
+	// a service principal they have that role on.
 	Status types.String `tfsdk:"status"`
 }
 

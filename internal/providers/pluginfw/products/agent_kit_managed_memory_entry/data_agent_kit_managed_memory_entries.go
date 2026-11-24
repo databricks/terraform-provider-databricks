@@ -39,9 +39,10 @@ type ManagedMemoryEntriesData struct {
 	Parent types.String `tfsdk:"parent"`
 	// Optional path prefix used to restrict entries within the actor partition.
 	PathPrefix types.String `tfsdk:"path_prefix"`
-	// Optional session identifier. When set, only entries with this exact
-	// `session_id` are returned. Omitted-session (cross-session) entries are
-	// not included. Ignored when path is set.
+	// Deprecated: the service will ignore this filter. Until then, when set,
+	// only entries with this exact `session_id` are returned, and
+	// omitted-session (cross-session) entries are not included. Ignored when
+	// path is set.
 	SessionId types.String `tfsdk:"session_id"`
 	// Controls whether each returned entry includes memory content. Defaults to
 	// `FULL`.

@@ -37,10 +37,9 @@ import (
 // client for every operation. The clients of one cfg share what is not
 // theirs: the token, which only cfg caches and refreshes, and the
 // connections, which are those of cfg.HTTPTransport when it is set and
-// otherwise one pool for the modular clients of every config. The exception
-// is cfg.InsecureSkipVerify without cfg.HTTPTransport: Transport then gives
-// every client a pool of its own, so a client built for every operation
-// connects anew each time.
+// otherwise a pool that Transport keeps for the modular clients of every
+// config: one for the configs that verify TLS certificates and one for
+// those with cfg.InsecureSkipVerify.
 //
 // NewClient leaves to the caller:
 //

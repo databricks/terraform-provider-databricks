@@ -18,7 +18,7 @@ import (
 // keeps the result. When that doesn't yield a name, the name is the fieldmask
 // tag of the field, which the SDK generator sets to the API name on the
 // messages that field masks address, and otherwise the snake_case form of the
-// Go name, as snakeCase derives it. That is the case when:
+// Go name, as fieldNameSnakeCase derives it. That is the case when:
 //
 //   - structType has no MarshalJSON method, as the wrapper struct of a oneof
 //     variant, or is nil or not a struct;
@@ -47,53 +47,54 @@ func FieldName(structType reflect.Type, field reflect.StructField) string {
 	if !field.IsExported() {
 		return ""
 	}
-	if name, ok := probedNames(structType)[field.Name]; ok {
+	if name, ok := fieldNameProbeCached(structType)[field.Name]; ok {
 		return name
 	}
 	if name := field.Tag.Get("fieldmask"); name != "" {
 		return name
 	}
-	return snakeCase(field.Name)
+	return fieldNameSnakeCase(field.Name)
 }
 
-var jsonMarshalerType = reflect.TypeFor[json.Marshaler]()
+var fieldNameMarshalerType = reflect.TypeFor[json.Marshaler]()
 
-// probedNamesCache holds the result of probe for every struct type that
-// FieldName has seen, as a map[string]string by reflect.Type.
-var probedNamesCache sync.Map
+// fieldNameProbeCache holds the result of fieldNameProbe for every struct type
+// that FieldName has seen, as a map[string]string by reflect.Type.
+var fieldNameProbeCache sync.Map
 
-// probedNames returns the JSON keys of the fields of structType by Go name, as
-// far as probe finds them. It returns nil for a type that probe can't work on.
-func probedNames(structType reflect.Type) map[string]string {
+// fieldNameProbeCached returns the JSON keys of the fields of structType by Go
+// name, as far as fieldNameProbe finds them. It returns nil for a type that
+// fieldNameProbe can't work on.
+func fieldNameProbeCached(structType reflect.Type) map[string]string {
 	for structType != nil && structType.Kind() == reflect.Pointer {
 		structType = structType.Elem()
 	}
 	if structType == nil || structType.Kind() != reflect.Struct ||
-		!reflect.PointerTo(structType).Implements(jsonMarshalerType) {
+		!reflect.PointerTo(structType).Implements(fieldNameMarshalerType) {
 		return nil
 	}
-	names, ok := probedNamesCache.Load(structType)
+	names, ok := fieldNameProbeCache.Load(structType)
 	if !ok {
-		names, _ = probedNamesCache.LoadOrStore(structType, probe(structType))
+		names, _ = fieldNameProbeCache.LoadOrStore(structType, fieldNameProbe(structType))
 	}
 	return names.(map[string]string)
 }
 
-// probe finds the JSON key of every field of structType that it can. It sets
-// one field at a time on an otherwise empty message, marshals the message and
-// takes the one key that the empty message doesn't have. Comparing with the
-// empty message keeps a key that the message always writes from hiding the
-// keys of the other fields.
-func probe(structType reflect.Type) map[string]string {
+// fieldNameProbe finds the JSON key of every field of structType that it can.
+// It sets one field at a time on an otherwise empty message, marshals the
+// message and takes the one key that the empty message doesn't have. Comparing
+// with the empty message keeps a key that the message always writes from
+// hiding the keys of the other fields.
+func fieldNameProbe(structType reflect.Type) map[string]string {
 	names := map[string]string{}
-	empty := jsonKeys(reflect.New(structType))
+	empty := fieldNameJSONKeys(reflect.New(structType))
 	for i := range structType.NumField() {
 		message := reflect.New(structType)
-		if !structType.Field(i).IsExported() || !setNonEmpty(message.Elem().Field(i)) {
+		if !structType.Field(i).IsExported() || !fieldNameSetNonEmpty(message.Elem().Field(i)) {
 			continue
 		}
 		var added []string
-		for key := range jsonKeys(message) {
+		for key := range fieldNameJSONKeys(message) {
 			if _, always := empty[key]; !always {
 				added = append(added, key)
 			}
@@ -105,9 +106,10 @@ func probe(structType reflect.Type) map[string]string {
 	return names
 }
 
-// jsonKeys returns the keys of the JSON object that message marshals to. It
-// returns nil when message fails to marshal or marshals to something else.
-func jsonKeys(message reflect.Value) map[string]json.RawMessage {
+// fieldNameJSONKeys returns the keys of the JSON object that message marshals
+// to. It returns nil when message fails to marshal or marshals to something
+// else.
+func fieldNameJSONKeys(message reflect.Value) map[string]json.RawMessage {
 	data, err := json.Marshal(message.Interface())
 	if err != nil {
 		return nil
@@ -119,11 +121,11 @@ func jsonKeys(message reflect.Value) map[string]json.RawMessage {
 	return keys
 }
 
-// setNonEmpty gives field a value that the omitempty option of a json tag
-// doesn't drop, and reports whether it could. It can't for an interface, which
-// needs a concrete type that only the declaring package knows, and for a
+// fieldNameSetNonEmpty gives field a value that the omitempty option of a json
+// tag doesn't drop, and reports whether it could. It can't for an interface,
+// which needs a concrete type that only the declaring package knows, and for a
 // struct, which omitempty never drops.
-func setNonEmpty(field reflect.Value) bool {
+func fieldNameSetNonEmpty(field reflect.Value) bool {
 	switch field.Kind() {
 	case reflect.Pointer:
 		field.Set(reflect.New(field.Type().Elem()))
@@ -154,14 +156,15 @@ func setNonEmpty(field reflect.Value) bool {
 	return true
 }
 
-// snakeCase inverts the naming of the SDK generator, which builds the Go name
-// of a field by capitalizing the first letter of every underscore-separated
-// word of its API name: registered_model_id becomes RegisteredModelId. So a
-// capital letter starts a new word, and nothing else does:
+// fieldNameSnakeCase inverts the naming of the SDK generator, which builds the
+// Go name of a field by capitalizing the first letter of every
+// underscore-separated word of its API name: registered_model_id becomes
+// RegisteredModelId. So a capital letter starts a new word, and nothing else
+// does:
 //
 //   - Every capital in a run of capitals is a word of its own. The generator
 //     capitalizes only the first letter of a word (http_status is HttpStatus
-//     and t_shirt_size is TShirtSize), so snakeCase doesn't guess acronyms:
+//     and t_shirt_size is TShirtSize), so the rule doesn't guess acronyms:
 //     HTTPStatus gives h_t_t_p_status, not http_status.
 //   - A digit never starts a word and stays with the letters before it:
 //     Ipv6Cidr gives ipv6_cidr, S3Uri gives s3_uri and Oauth2Token gives
@@ -171,9 +174,9 @@ func setNonEmpty(field reflect.Value) bool {
 //   - An underscore that the Go name already has is kept, and the capital
 //     after it adds no second one.
 //
-// snakeCase is only the fallback of FieldName, because not every API name is
-// in snake_case: SCIM has displayName and $ref, for instance.
-func snakeCase(goName string) string {
+// It is only the fallback of FieldName, because not every API name is in
+// snake_case: SCIM has displayName and $ref, for instance.
+func fieldNameSnakeCase(goName string) string {
 	var b strings.Builder
 	var previous rune
 	for i, r := range goName {

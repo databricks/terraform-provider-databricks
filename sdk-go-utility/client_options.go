@@ -34,21 +34,20 @@ const classicRetryTimeout = 5 * time.Minute
 //
 // ClientOptions returns an error when cfg, credentials or transport is nil,
 // including a nil pointer in the interface, or when cfg.Host is not the
-// scheme://host that EnsureResolved leaves there. It reads cfg and neither
-// resolves nor changes it.
+// scheme://host that EnsureResolved leaves there. It only reads cfg, and of
+// cfg only Host, WorkspaceID, AccountID and RetryTimeoutSeconds.
 //
 // It leaves to the caller:
 //
-//   - resolving cfg. An unresolved config still has the workspace ID in the
-//     query of its host and nothing loaded from its own sources, so
-//     ClientOptions rejects the hosts it can tell apart and trusts the rest;
+//   - resolving cfg, which building a classic client does. Before that, the
+//     host can lack its scheme and still hold the workspace ID in its query.
+//     ClientOptions tells an unresolved config only by such a host;
 //   - credentials and transport. ClientOptions doesn't derive them from cfg
 //     and doesn't wrap them, so authentication, the User-Agent, TLS settings,
-//     logging and cfg.HTTPTimeoutSeconds are theirs to bring;
+//     request logging and cfg.HTTPTimeoutSeconds are theirs to bring;
 //   - what a single call needs: a retrier, without which a modular client
 //     doesn't retry, a rate limiter and a timeout of its own;
-//   - building the client. An option the caller appends after these wins over
-//     them.
+//   - building the client, with further options such as a logger.
 func ClientOptions(cfg *config.Config, credentials auth.Credentials, transport http.RoundTripper) ([]client.Option, error) {
 	switch {
 	case cfg == nil:

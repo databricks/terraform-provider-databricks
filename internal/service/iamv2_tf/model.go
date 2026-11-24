@@ -1947,7 +1947,12 @@ func (m DeleteWorkspaceAssignmentRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// A user, service principal, or group that's a direct member of a group.
+// A user, service principal, or group that's a direct member of a group. To
+// address a membership, put its resource name in the URL: `GET
+// /api/2.0/identity/accounts/{account_id}/groups/{group_id}/direct-members/{principal_id}`
+// in account APIs, or `GET
+// /api/2.0/identity/groups/{group_id}/direct-members/{principal_id}` in
+// workspace APIs.
 type DirectGroupMember struct {
 	// The member's display name.
 	DisplayName types.String `tfsdk:"display_name"`
@@ -2093,7 +2098,10 @@ func (m ExactMatchRule) Type(ctx context.Context) attr.Type {
 // This resource is read-only. Getting an external group syncs its name and
 // parent groups from your IdP, and adds it to your account if it isn't already
 // there. If your account has group visibility filters, the group must match
-// them.
+// them. To address an external group, put its resource name in the URL: `GET
+// /api/2.0/identity/accounts/{account_id}/external-groups/{external_group_id}`
+// in account APIs, or `GET
+// /api/2.0/identity/external-groups/{external_group_id}` in workspace APIs.
 type ExternalGroup struct {
 	// The ID of the account that contains the group.
 	AccountId types.String `tfsdk:"account_id"`
@@ -2170,7 +2178,12 @@ func (m ExternalGroup) Type(ctx context.Context) attr.Type {
 // in your IdP. This resource is read-only and requires Microsoft Entra ID as
 // your IdP. Getting an external service principal syncs its details and group
 // memberships from your IdP, and adds it to your account if it isn't already
-// there.
+// there. To address an external service principal, put its resource name in the
+// URL: `GET
+// /api/2.0/identity/accounts/{account_id}/external-service-principals/{external_service_principal_id}`
+// in account APIs, or `GET
+// /api/2.0/identity/external-service-principals/{external_service_principal_id}`
+// in workspace APIs.
 type ExternalServicePrincipal struct {
 	// The ID of the account that contains the service principal.
 	AccountId types.String `tfsdk:"account_id"`
@@ -2257,7 +2270,11 @@ func (m ExternalServicePrincipal) Type(ctx context.Context) attr.Type {
 // A user from your identity provider (IdP), identified by their ID in your IdP.
 // This resource is read-only. Getting an external user syncs the user's details
 // and group memberships from your IdP, and adds the user to your account if
-// they aren't already there.
+// they aren't already there. To address an external user, put its resource name
+// in the URL: `GET
+// /api/2.0/identity/accounts/{account_id}/external-users/{external_user_id}` in
+// account APIs, or `GET /api/2.0/identity/external-users/{external_user_id}` in
+// workspace APIs.
 type ExternalUser struct {
 	// The ID of the account that contains the user.
 	AccountId types.String `tfsdk:"account_id"`
@@ -3534,15 +3551,23 @@ func (m GetWorkspaceIdentityDetailRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// A group in your Databricks account.
+// A group in your Databricks account. To address a group, put its resource name
+// in the URL: `GET /api/2.0/identity/accounts/{account_id}/groups/{group_id}`
+// in account APIs, or `GET /api/2.0/identity/groups/{group_id}` in workspace
+// APIs.
 type Group struct {
 	// The ID of the account that contains the group.
 	AccountId types.String `tfsdk:"account_id"`
 	// The ID of the group in your identity provider (IdP).
 	ExternalId types.String `tfsdk:"external_id"`
-	// The Databricks ID of the group.
+	// The Databricks ID of the group. It is a numeric string that Databricks
+	// assigns when the group is created, and it is the `{group_id}` segment of
+	// `name`.
 	GroupId types.String `tfsdk:"group_id"`
-	// The name of the group.
+	// The display name of the group. It must be unique in the account, must not
+	// be blank, and must be shorter than 255 characters. Databricks trims
+	// surrounding whitespace. You can't use the name of a group that Databricks
+	// manages, such as `admins` or `users`.
 	GroupName types.String `tfsdk:"group_name"`
 	// The resource name of the group, in one of these formats: - Account APIs:
 	// `accounts/{account_id}/groups/{group_id}` - Workspace APIs:
@@ -3626,6 +3651,9 @@ func (m Group) Type(ctx context.Context) attr.Type {
 // You can only create group filters. Filters don't affect provisioning or
 // sign-in for users and service principals. You can't change a filter: to
 // change a rule, delete it and create a new one.
+//
+// To address a filter, put its resource name in the URL: `GET
+// /api/2.0/identity/accounts/{account_id}/identity-visibility-filters/{identity_visibility_filter_id}`.
 type IdentityVisibilityFilter struct {
 	// Matches a group by its ID in your IdP.
 	Exact types.Object `tfsdk:"exact"`
@@ -6419,7 +6447,12 @@ func (m *ResolveUserResponse) SetUser(ctx context.Context, v User) {
 	m.User = vs
 }
 
-// A service principal in your Databricks account.
+// A service principal in your Databricks account. To address a service
+// principal, put its resource name in the URL: `GET
+// /api/2.0/identity/accounts/{account_id}/service-principals/{service_principal_id}`
+// in account APIs, or `GET
+// /api/2.0/identity/service-principals/{service_principal_id}` in workspace
+// APIs.
 type ServicePrincipal struct {
 	// The ID of the account that contains the service principal.
 	AccountId types.String `tfsdk:"account_id"`
@@ -6515,7 +6548,12 @@ func (m ServicePrincipal) Type(ctx context.Context) attr.Type {
 }
 
 // A group that a principal belongs to, either directly or through another
-// group.
+// group. To list a principal's parent groups, put the principal's resource name
+// in the URL: `GET
+// /api/2.0/identity/accounts/{account_id}/principals/{principal_id}/transitive-parent-groups`
+// in account APIs, or `GET
+// /api/2.0/identity/principals/{principal_id}/transitive-parent-groups` in
+// workspace APIs.
 type TransitiveParentGroup struct {
 	// The ID of the account that contains the group.
 	AccountId types.String `tfsdk:"account_id"`
@@ -7745,7 +7783,9 @@ func (m *UpdateWorkspaceIdentityDetailRequest) SetWorkspaceIdentityDetail(ctx co
 	m.WorkspaceIdentityDetail = vs
 }
 
-// A user in your Databricks account.
+// A user in your Databricks account. To address a user, put its resource name
+// in the URL: `GET /api/2.0/identity/accounts/{account_id}/users/{user_id}` in
+// account APIs, or `GET /api/2.0/identity/users/{user_id}` in workspace APIs.
 type User struct {
 	// The ID of the account that contains the user.
 	AccountId types.String `tfsdk:"account_id"`
@@ -8080,6 +8120,11 @@ func (m *WorkspaceAccessDetail) SetPermissions(ctx context.Context, v []types.St
 // includes the entitlements the principal gets through its groups. An
 // assignment must grant at least one entitlement. To remove a principal's
 // direct access, delete the assignment.
+//
+// To address an assignment, put its resource name in the URL: `GET
+// /api/2.0/identity/accounts/{account_id}/workspaces/{workspace_id}/workspace-assignments/{principal_id}`
+// in account APIs, or `GET
+// /api/2.0/identity/workspace-assignments/{principal_id}` in workspace APIs.
 type WorkspaceAssignment struct {
 	// The ID of the account that contains the workspace.
 	AccountId types.String `tfsdk:"account_id"`
@@ -8446,7 +8491,9 @@ func (m *WorkspaceAssignmentDetail) SetEntitlements(ctx context.Context, v []typ
 
 // A user, service principal, or group's status in a workspace, and whether it
 // has access to the workspace directly or through a group. Update it to
-// activate or deactivate a user or service principal in the workspace.
+// activate or deactivate a user or service principal in the workspace. To
+// address it, put its resource name in the URL: `GET
+// /api/2.0/identity/principals/{principal_id}/workspace-identity-detail`.
 type WorkspaceIdentityDetail struct {
 	// Whether the principal is assigned to the workspace directly or has access
 	// through a group.

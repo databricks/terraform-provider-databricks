@@ -108,26 +108,28 @@ type ModelProviderServiceData struct {
 	Config types.Object `tfsdk:"config"`
 	// Time the provider service was created.
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
-	// Creator identity.
+	// Username of the user who created the model provider service.
 	CreatedBy types.String `tfsdk:"created_by"`
-	// Owner of the model provider service.
+	// Username or group name of the model provider service owner.
 	EffectiveOwner types.String `tfsdk:"effective_owner"`
 	// Optimistic concurrency token returned on every read. To make an Update or
 	// Delete conditional, pass the last-read value in that request's `etag`
 	// field. In REST responses, this value is a base64 string; URL-encode it
 	// when setting the `etag` query parameter.
 	Etag types.String `tfsdk:"etag"`
-	// Metastore hosting the provider service.
+	// Unique identifier of the metastore that contains the model provider
+	// service.
 	MetastoreId types.String `tfsdk:"metastore_id"`
 	// Resource name of the provider service. Format:
 	// `model-provider-services/{catalog}.{schema}.{model_provider_service}`.
-	// Each `{...}` component is capped at 255 characters individually.
-	// Server-derived on Create from `parent` + `model_provider_service_id`;
-	// required and immutable on Update/Get/Delete.
+	// Each `{...}` component is capped at 255 characters individually. The
+	// server derives the name on Create from `parent` and
+	// `model_provider_service_id`; it is required and immutable on Update, Get,
+	// and Delete.
 	Name types.String `tfsdk:"name"`
 	// Time the provider service was last modified.
 	UpdateTime timetypes.RFC3339 `tfsdk:"update_time"`
-	// Identity of the last updater.
+	// Username of the user who last updated the model provider service.
 	UpdatedBy          types.String `tfsdk:"updated_by"`
 	ProviderConfigData types.Object `tfsdk:"provider_config"`
 }

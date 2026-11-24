@@ -1,13 +1,12 @@
 # NEXT CHANGELOG
 
-## Release v1.144.0
+## Release v1.146.0
 
 ### Important Changes
 
 ### Breaking Changes
 
 ### New Features and Improvements
-* Support `statement_timeout` for all SQL warehouse types; omitting or removing the argument preserves the existing warehouse timeout, while explicit `0` clears the override ([#6144](https://github.com/databricks/terraform-provider-databricks/pull/6144)).
 
 ### Bug Fixes
 
@@ -19,6 +18,6 @@
 
 ### Exporter
 
-* Preserve `statement_timeout`, including `0`, in exports of all SQL warehouse types ([#6144](https://github.com/databricks/terraform-provider-databricks/pull/6144)).
+* Added support for exporting Lakewatch resources (`databricks_lakewatch_rule`, `databricks_lakewatch_datasource`, `databricks_lakewatch_parser`, `databricks_lakewatch_parser_version`, and per-catalog configurations) as dependencies of `databricks_catalog` ([#6171](https://github.com/databricks/terraform-provider-databricks/pull/6171)).
 
 ### Internal Changes

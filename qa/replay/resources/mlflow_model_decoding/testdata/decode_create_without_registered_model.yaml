@@ -1,11 +1,11 @@
 # Pins a create answered 200 without the registered_model envelope, as an empty object
 # and as an explicit null. Create takes the ID from registered_model.name without
 # checking that the envelope is there, so it panics on the nil pointer; the provider
-# turns the panic into the diagnostic. Nothing reaches the state although the service
-# accepted the POST, so the next plan creates the model again, and that apply sends a
-# second POST for the same name. That is a known defect: a fix is expected to fail with
-# a clear error instead of a panic; update these steps with it. API responses are
-# synthetic: inferred from the MLflow Model Registry API, not recorded.
+# turns the panic into the diagnostic. Nothing reaches the state although the POST was
+# answered 200, so the next plan creates the model again, and that apply sends a second
+# POST for the same name. The panic is a suspected defect; if it is fixed, update these
+# steps with the new error. API responses are synthetic: inferred from the MLflow Model
+# Registry API, not recorded.
 version: 1
 enforce_call_order: true
 host_metadata:

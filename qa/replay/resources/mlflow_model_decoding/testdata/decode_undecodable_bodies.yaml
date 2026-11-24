@@ -5,9 +5,9 @@
 # unmarshal error and a request log; the pattern checks its message, request line and
 # echoed body, and skips the generated headers in between. A failed create leaves
 # nothing in the state, so each next apply sends the POST again; a failed refresh
-# leaves the state as it was. The panic and the reflection error are known defects: a
-# fix is expected to fail with a clear error; update those steps with it. API responses
-# are synthetic: inferred from the MLflow Model Registry API, not recorded.
+# leaves the state as it was. The panic and the reflection error are suspected defects;
+# if they are fixed, update those steps with the new errors. API responses are
+# synthetic: inferred from the MLflow Model Registry API, not recorded.
 version: 1
 enforce_call_order: true
 host_metadata:

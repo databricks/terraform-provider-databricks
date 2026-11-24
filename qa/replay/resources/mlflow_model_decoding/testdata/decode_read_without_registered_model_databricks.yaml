@@ -4,9 +4,9 @@
 # converts the missing envelope to state without checking it, so each fails with the
 # reflection error. After create the ID is already set, so the model stays in the state
 # tainted and the next plan replaces it; that apply deletes and creates it again. A
-# failed refresh leaves the state as it was. The reflection error is a known defect: a
-# fix is expected to fail with a clear error; update these steps with it. API responses
-# are synthetic: inferred from the MLflow Model Registry API, not recorded.
+# failed refresh leaves the state as it was. The reflection error is a suspected
+# defect; if it is fixed, update these steps with the new error. API responses are
+# synthetic: inferred from the MLflow Model Registry API, not recorded.
 version: 1
 enforce_call_order: true
 host_metadata:

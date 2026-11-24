@@ -153,12 +153,15 @@ func (w *attemptTimeoutWatch) stop() {
 	w.cancel(nil)
 }
 
-// failure returns the error of an attempt that failed with err. If the watch
-// ended the attempt before its parent context did, a transport reports that
-// as context.Canceled, which becomes the timeout error here, or as the cause
-// of the context, as net/http does, which is the timeout error already.
+// failure returns the error of an attempt that failed with err, or whose
+// response body ended with err. If the watch ended the attempt before its
+// parent context did, a transport reports that as the cause of the context,
+// as net/http does, which is the timeout error already, or as
+// context.Canceled. It can also report the end of the body, because a server
+// may end its response in good order when the client hangs up. Both become
+// the timeout error.
 func (w *attemptTimeoutWatch) failure(err error) error {
-	if context.Cause(w.ctx) == w.expired && errors.Is(err, context.Canceled) {
+	if context.Cause(w.ctx) == w.expired && (errors.Is(err, context.Canceled) || err == io.EOF) {
 		return w.expired
 	}
 	return err

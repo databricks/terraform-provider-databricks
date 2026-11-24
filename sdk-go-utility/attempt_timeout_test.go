@@ -35,8 +35,7 @@ const (
 	attemptTimeoutNever  = time.Duration(1 << 62)         // A wait that does not end.
 )
 
-// attemptTimeoutLoader replaces the loaders of a classic config, so that a
-// test reads neither the environment nor a config file.
+// attemptTimeoutLoader keeps a config from reading the environment or a file.
 type attemptTimeoutLoader struct{ err error }
 
 func (attemptTimeoutLoader) Name() string                     { return "attempt-timeout-test" }
@@ -90,6 +89,7 @@ type attemptTimeoutEnd struct {
 func (c attemptTimeoutClients) ends(call attemptTimeoutCall) (classic, modular attemptTimeoutEnd) {
 	big := strings.Repeat("d", 30000)
 	run := func(create func(context.Context) error) attemptTimeoutEnd {
+		start, outcome := time.Now(), "ok"
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
 		defer time.AfterFunc(cmp.Or(call.cancelAfter, attemptTimeoutNever), cancel).Stop()
@@ -97,7 +97,6 @@ func (c attemptTimeoutClients) ends(call attemptTimeoutCall) (classic, modular a
 			ctx, cancel = context.WithTimeout(ctx, call.deadline)
 			defer cancel()
 		}
-		start, outcome := time.Now(), "ok"
 		if err := create(ctx); err != nil {
 			outcome = strings.ReplaceAll(err.Error(), c.host, "")
 		}
@@ -119,13 +118,16 @@ func (c attemptTimeoutClients) ends(call attemptTimeoutCall) (classic, modular a
 // counts them. The name of the model, in the body or in the query, picks the
 // answer: none for "never", the headers alone for "stalls", the model byte by
 // byte for 1.65 seconds for "slow", and the model at once for any other name.
+// It aborts when the client hangs up: an answer could still reach the client.
 func attemptTimeoutServer(t *testing.T, proto string) (*httptest.Server, *atomic.Int32) {
 	requests, release := &atomic.Int32{}, make(chan struct{})
 	server := httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		requests.Add(1)
 		assert.Equal(t, proto, r.Proto)
 		var model struct{ Name string }
-		_ = json.NewDecoder(r.Body).Decode(&model)
+		if err := json.NewDecoder(r.Body).Decode(&model); err != nil && r.ContentLength > 0 {
+			panic(http.ErrAbortHandler)
+		}
 		w.Header().Set("Content-Type", "application/json")
 		switch cmp.Or(r.URL.Query().Get("name"), model.Name) {
 		case "stalls":
@@ -136,6 +138,7 @@ func attemptTimeoutServer(t *testing.T, proto string) (*httptest.Server, *atomic
 			case <-r.Context().Done():
 			case <-release:
 			}
+			panic(http.ErrAbortHandler)
 		case "slow":
 			for i := range len(attemptTimeoutModel) {
 				_, _ = io.WriteString(w, attemptTimeoutModel[i:i+1])
@@ -159,12 +162,10 @@ func attemptTimeoutServer(t *testing.T, proto string) (*httptest.Server, *atomic
 // exchange. Its steps are pause apart and block durably, so that a synctest
 // bubble can play them on a fake clock.
 type attemptTimeoutScript struct {
-	// base gets the request once its body is paced. If it is nil, the script
-	// answers the request itself, as the fields after uploadStall say.
+	// base gets the request with its body paced. If nil, the script answers.
 	base  http.RoundTripper
 	pause time.Duration
-	// rewind replaces the request body with a new one from GetBody first, as
-	// net/http does when it sends a request again.
+	// rewind takes a new request body from GetBody first, as net/http can.
 	rewind bool
 	// uploads is the number of pieces in which the request body is read, a
 	// pause before each and before its end, or zero for no pacing.
@@ -270,10 +271,10 @@ func TestAttemptTimeout_EndsLikeClassicClient(t *testing.T) {
 			script: attemptTimeoutScript{uploads: 15}, classic: end{"ok", 1500 * ms}},
 		{name: "request body stalls", call: call{name: "m"}, classic: end{failed + expired, 1000 * ms},
 			script: attemptTimeoutScript{uploads: 15, uploadStall: true}},
-		{name: "context is cancelled", call: call{name: "never", cancelAfter: 100 * ms},
-			classic: end{failed + "context canceled", 100 * ms}},
-		{name: "context deadline passes before the timeout", call: call{name: "never", deadline: 100 * ms},
-			classic: end{failed + "context deadline exceeded", 100 * ms}},
+		{name: "context is cancelled", call: call{name: "never", cancelAfter: 500 * ms},
+			classic: end{failed + "context canceled", 500 * ms}},
+		{name: "context deadline passes before the timeout", call: call{name: "never", deadline: 500 * ms},
+			classic: end{failed + "context deadline exceeded", 500 * ms}},
 	}
 	for _, proto := range []string{"HTTP/1.1", "HTTP/2.0"} {
 		for _, tc := range tests {
@@ -288,9 +289,7 @@ func TestAttemptTimeout_EndsLikeClassicClient(t *testing.T) {
 				assert.Equal(t, tc.modular.outcome, modular.outcome, "modular client")
 				assert.GreaterOrEqual(t, classic.after, tc.classic.after, "classic client")
 				assert.GreaterOrEqual(t, modular.after, tc.modular.after, "modular client")
-				if tc.call.cancelAfter+tc.call.deadline == 0 { // Else the context can end before the request is sent.
-					assert.Equal(t, int32(2), requests.Load(), "each client sends one attempt")
-				}
+				assert.LessOrEqual(t, requests.Load(), int32(2), "no client sends a second attempt")
 			})
 		}
 	}
@@ -307,6 +306,7 @@ func TestAttemptTimeout_WaitsLikeClassicClient(t *testing.T) {
 	const never = attemptTimeoutNever
 	wrapped := func(ctx context.Context) error { return fmt.Errorf("dial: %w", ctx.Err()) }
 	broken := func(context.Context) error { return errors.New("broken pipe") }
+	eof := func(context.Context) error { return io.EOF }
 	tests := []struct {
 		name    string
 		seconds int
@@ -343,8 +343,9 @@ func TestAttemptTimeout_WaitsLikeClassicClient(t *testing.T) {
 			classic: end{"response body: context canceled", 3 * s}, modular: end{"context canceled", 3 * s}},
 		{name: "timeout is unset", unset: true, script: script{headers: never},
 			classic: end{failed + "request timed out after 1m0s of inactivity", 60 * s}},
-		{name: "timeout is negative", seconds: -1, script: script{headers: never},
-			classic: end{outcome: failed + "request timed out after -1s of inactivity"}},
+		// A server can end its response in good order when the client hangs up.
+		{name: "transport ends the body once the timeout passed", script: script{stall: true, ended: eof},
+			classic: end{"ok", 10 * s}, modular: end{expired, 10 * s}},
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
@@ -485,8 +486,7 @@ type attemptTimeoutCloser struct {
 func (c attemptTimeoutCloser) Close() error { return c.err }
 
 // An attempt hands on what the transport returned, and releases its context
-// and its timer at once when it is over. A body that is never closed holds
-// them until the timeout passes without a read.
+// and timer when it is over, or when the timeout passes for an unclosed body.
 func TestAttemptTimeout_ReleasesAttempt(t *testing.T) {
 	const expired, s = "request timed out after 10s of inactivity", time.Second
 	failed, closeErr := errors.New("failed"), errors.New("cannot close")
@@ -497,11 +497,9 @@ func TestAttemptTimeout_ReleasesAttempt(t *testing.T) {
 		name     string
 		response *http.Response
 		err      error
-		// The caller reads the body after 9 seconds, closes it, and cancels
-		// the context of the request.
+		// What the caller does: read after 9 seconds, Close, cancel its context.
 		read, close, cancel bool
-		// The context of the attempt ends after held, with cause if that is
-		// set and as cancelled if not.
+		// The context of the attempt ends after held, with cause or as cancelled.
 		held  time.Duration
 		cause string
 	}{

@@ -66,7 +66,7 @@ steps:
           attributes:
             - path: [registered_model_id]
               equals: 9f8e7d6c5b4a39281706f5e4d3c2b161
-  - name: refresh_answered_404_invalid_parameter_value_with_details_fails_with_message_only
+  - name: refresh_answered_404_invalid_parameter_value_with_details_fails
     config: *config
     expect_error: 'Error: cannot read mlflow model: Registered model name
       ''error_body_refresh_details_model'' is not valid\.\n'
@@ -82,7 +82,7 @@ steps:
                                 "reason": "RESOURCE_DOES_NOT_EXIST",
                                 "domain": "mlflow.databricks.com",
                                 "metadata": {
-                                  "registered_model": "error_body_refresh_details_model"}},
+                                  "name": "error_body_refresh_details_model"}},
                                {"@type": "type.googleapis.com/google.rpc.RequestInfo",
                                 "request_id": "b7c1d3e5-0f2a-4b6c-8d9e-1a2b3c4d5e61",
                                 "serving_data": ""}]}
@@ -121,7 +121,7 @@ steps:
                                 "reason": "RESOURCE_DOES_NOT_EXIST",
                                 "domain": "mlflow.databricks.com",
                                 "metadata": {
-                                  "registered_model": "error_body_refresh_details_model"}},
+                                  "name": "error_body_refresh_details_model"}},
                                {"@type": "type.googleapis.com/google.rpc.RequestInfo",
                                 "request_id": "b7c1d3e5-0f2a-4b6c-8d9e-1a2b3c4d5e62",
                                 "serving_data": ""}]}

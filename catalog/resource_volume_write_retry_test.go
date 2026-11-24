@@ -62,28 +62,6 @@ type volumeRequest struct {
 	body   string
 }
 
-// volumeRequestsOnWire returns requests as the existing client sends them, or as sdk-go
-// sends them if sdkGo is set: a PATCH body also carries the path field full_name_arg,
-// and a DELETE has no empty query, so its URI has no trailing "?".
-func volumeRequestsOnWire(sdkGo bool, requests ...volumeRequest) []volumeRequest {
-	if !sdkGo {
-		return requests
-	}
-	onWire := make([]volumeRequest, len(requests))
-	for i, request := range requests {
-		switch request.method {
-		case http.MethodPatch:
-			fullName := strings.TrimPrefix(request.uri, volumesAPIPath+"/")
-			request.body = fmt.Sprintf(`{"full_name_arg": %q, %s`, fullName,
-				strings.TrimPrefix(strings.TrimSpace(request.body), "{"))
-		case http.MethodDelete:
-			request.uri = strings.TrimSuffix(request.uri, "?")
-		}
-		onWire[i] = request
-	}
-	return onWire
-}
-
 // volumeResponse is how the fake volume API answers one request.
 type volumeResponse struct {
 	status int
@@ -202,14 +180,12 @@ func (api *scriptedVolumeAPI) sdkGoRequestCount() int {
 	return api.sdkGoReceived
 }
 
-// assertVolumeRequests compares methods and URIs exactly and bodies as JSON, after
-// volumeRequestsOnWire, and checks that sdk-go sent all requests if sdkGo is set, and
-// none otherwise.
+// assertVolumeRequests compares methods and URIs exactly and bodies as JSON, and checks
+// that sdk-go sent all requests if sdkGo is set, and none otherwise.
 func assertVolumeRequests(
 	t *testing.T, sdkGo bool, expected []volumeRequest, api *scriptedVolumeAPI,
 ) {
 	t.Helper()
-	expected = volumeRequestsOnWire(sdkGo, expected...)
 	actual := api.requests()
 	assert.Equal(t, sdkGoCalls(sdkGo, len(actual)), api.sdkGoRequestCount(),
 		"requests sent by sdk-go")
@@ -392,8 +368,8 @@ func testVolumeWritesPastHTTPTimeoutAreNotRetried(t *testing.T, sdkGo bool) {
 			run:       destroyVolume,
 			requests:  []volumeRequest{deleteVolumeRequest},
 			diagnostic: func(u string) string {
-				deleteURI := volumeRequestsOnWire(sdkGo, deleteVolumeRequest)[0].uri
-				return "cannot delete volume: " + timedOut("Delete", u+deleteURI)
+				return "cannot delete volume: " +
+					timedOut("Delete", u+retryVolumePath+"?")
 			},
 			id: retryVolumeID,
 		},

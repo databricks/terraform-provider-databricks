@@ -70,7 +70,7 @@ Use the wrapper name in your own suite.
 Recording makes real API calls and destroys the resources it manages. It
 is rejected in CI, with broad selection, or with Terraform debug logging enabled,
 and for journeys whose responses script a `delay`, `fault` or `status_line`.
-It is also rejected for journeys whose calls set `times`, `min_gap` or `max_gap`.
+Recording is also rejected for journeys whose calls set `times`, `min_gap` or `max_gap`.
 Ordinary replay remains hermetic regardless of ambient Databricks credentials.
 Recording an `initial_state` requires its setup template before loading a
 profile or making requests; see below.

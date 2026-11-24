@@ -428,11 +428,21 @@ would replace them; edit such journeys by hand.
 
 Optional call fields, next to `request` and `response`, say how often a call repeats and how long the client waits between calls, so a retry sequence needs no copies of the call and its backoff can be pinned.
 
-- `times: N` expects the call exactly N times in a row, each with the same response. It is shorthand for N copies of the call.
-- `times: {min: 2, max: 3}` expects between `min` and `max` repetitions, for a count that depends on timing, such as retries that end with `retry_timeout_seconds`. The unused-fixture check needs `min`; a repetition past `max` is an unexpected call. A `min` of 0 makes the call optional.
-- `min_gap` and `max_gap` are Go durations, such as `1s` or `1500ms`, bounding the time between arrivals at the fixture server, taken before each request's body is read. Without `times`, they bound the gap since the previous matched call in the step. With `times`, they bound the gap before each repetition since the previous one; the first repetition is not bounded, because it usually is the attempt that the retries follow. List it as its own call to bound it too.
+- `times: N` expects the call exactly N times in a row, each with the same response.
+  It is shorthand for N copies of the call.
+- `times: {min: 2, max: 3}` expects between `min` and `max` repetitions, for a count that depends on timing, such as retries that end with `retry_timeout_seconds`.
+  The unused-fixture check needs `min`; a repetition past `max` is an unexpected call.
+  A `min` of 0 makes the call optional.
+- `min_gap` and `max_gap` are Go durations, such as `1s` or `1500ms`, bounding the time between arrivals at the fixture server, taken before each request's body is read.
+  Without `times`, they bound the gap since the previous matched call in the step.
+  With `times`, they bound the gap before each repetition since the previous one; the first repetition is not bounded, because it usually is the attempt that the retries follow.
+  List it as its own call to bound it too.
 
-A gap out of bounds fails the step with the observed gap, such as `call 2: POST /api/2.0/preview/scim/v2/Groups arrived 2.1s after call 1 (POST /api/2.0/preview/scim/v2/Groups), above max_gap 1s`. The call is still answered, so the failure names the gap rather than whatever the provider does next. A bounded call without `times` that arrives first in its step fails too, since nothing precedes it. Host metadata is not a matched call and does not count. Invalid values fail when the journey loads, naming the file, step and call.
+A gap out of bounds fails the step with the observed gap, such as `call 2: POST /api/2.0/preview/scim/v2/Groups arrived 2.1s after call 1 (POST /api/2.0/preview/scim/v2/Groups), above max_gap 1s`.
+The call is still answered, so the failure names the gap rather than whatever the provider does next.
+A bounded call without `times` that arrives first in its step fails too, since nothing precedes it.
+Host metadata is not a matched call and does not count.
+Invalid values fail when the journey loads, naming the file, step and call.
 
 This create gets 503 twice and succeeds on its second retry:
 
@@ -491,15 +501,25 @@ calls:
     max_gap: 4s
 ```
 
-The complete journeys are [retry_503](testdata/repeats/retry_503.yaml) and [retry_429_until_timeout](testdata/repeats/retry_429_until_timeout.yaml). The runner keeps `retry_timeout_seconds`, `http_timeout_seconds` and `rate_limit` from the journey's provider block. Set a short `retry_timeout_seconds` for a journey that retries until the timeout: the provider's default retries indefinitely.
+The complete journeys are [retry_503](testdata/repeats/retry_503.yaml) and [retry_429_until_timeout](testdata/repeats/retry_429_until_timeout.yaml).
+The runner keeps `retry_timeout_seconds`, `http_timeout_seconds` and `rate_limit` from the journey's provider block.
+Set a short `retry_timeout_seconds` for a journey that retries until the timeout: the provider's default retries indefinitely.
 
-Choose bounds from the client's backoff, with room for a slow CI machine. The classic SDK waits `min(n, 10)` seconds plus 50-750 ms of jitter before retry n: 1.05-1.75 s before the first, 2.05-2.75 s before the second, and 10.05-10.75 s from the tenth on. The observed gap adds the time to answer the previous call and reconnect, so it is never shorter than the wait.
+Choose bounds from the client's backoff, with room for a slow CI machine.
+The classic SDK waits `min(n, 10)` seconds plus 50-750 ms of jitter before retry n: 1.05-1.75 s before the first, 2.05-2.75 s before the second, and 10.05-10.75 s from the tenth on.
+The observed gap adds the time to answer the previous call and reconnect, so it is never shorter than the wait.
 
-- Set `min_gap` to the shortest wait, rounded down, such as `1s` before the first retry. A slow machine only makes the gap longer.
+- Set `min_gap` to the shortest wait, rounded down, such as `1s` before the first retry.
+  A slow machine only makes the gap longer.
 - Set `max_gap` to the longest wait plus at least 1 s, such as `3s` before the first retry, because a slow machine can stall between calls.
-- For a range, attempt n starts after the sum of the earlier waits: attempt 2 at 1.05-1.75 s, attempt 3 at 3.1-4.5 s and attempt 4 at 6.15-8.25 s. Set `max` to the attempts that can start before the timeout, and `min` to those that start well before it on a slow machine.
+- For a range, attempt n starts after the sum of the earlier waits: attempt 2 at 1.05-1.75 s, attempt 3 at 3.1-4.5 s and attempt 4 at 6.15-8.25 s.
+  Set `max` to the attempts that can start before the timeout, and `min` to those that start well before it on a slow machine.
 
-Repetitions match like copies of the call. Without `enforce_call_order`, other calls can arrive between them. With it, a call must reach its `min` before the next listed call, and cannot repeat once a later call arrives. A range takes every matching request until it reaches `max`, so an identical call listed after a range answers only once the range is full; end a retry sequence with the range, as in the 429 example. Recording rejects journeys with these fields, because a refresh would replace a repeated call with captured copies; edit such journeys by hand.
+Repetitions match like copies of the call.
+Without `enforce_call_order`, other calls can arrive between them.
+With it, a call must reach its `min` before the next listed call, and cannot repeat once a later call arrives.
+A range takes every matching request until it reaches `max`, so an identical call listed after a range answers only once the range is full; end a retry sequence with the range, as in the 429 example.
+Recording rejects journeys with these fields, because a refresh would replace a repeated call with captured copies; edit such journeys by hand.
 
 ## Start from existing state
 

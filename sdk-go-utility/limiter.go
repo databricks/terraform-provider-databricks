@@ -24,12 +24,12 @@ var budgets sync.Map
 // large apply doesn't flood the workspace API. A modular client has none, and
 // limits only the calls that are given one: call.WithLimiter(Limiter(cfg)).
 //
-// The limiter is the one that httpclient.NewApiClient of the classic SDK
-// builds for cfg. It admits cfg.RateLimitPerSecond calls per second, or 15
-// when that is unset, and at most that many at once. It doesn't hold back the
-// calls of a config whose HTTPTransport reports SkipRetryOnIO, as the HTTP
-// fixtures of the classic SDK do. A nil cfg is limited as a config that sets
-// no rate.
+// The limiter is built as httpclient.NewApiClient of the classic SDK builds
+// the limiter of a classic client for cfg. It admits cfg.RateLimitPerSecond
+// calls per second, or 15 when that is unset, and at most that many at once.
+// It doesn't hold back the calls of a config whose HTTPTransport reports
+// SkipRetryOnIO, as the HTTP fixtures of the classic SDK do. A nil cfg is
+// limited as a config that sets no rate.
 //
 // Wait blocks until the limiter admits the call. It returns an error at once
 // when ctx has already ended, when the deadline of ctx comes before the turn
@@ -43,7 +43,8 @@ var budgets sync.Map
 // of one provider configuration are limited together, whichever client makes
 // them. Two configs have separate budgets, even when their fields are equal.
 // The budget is built on the first call for cfg, from the rate and the
-// transport that cfg has then, and lasts as long as the process.
+// transport that cfg has then. It is kept, and keeps cfg, for as long as the
+// process runs.
 //
 // Limiter leaves to the caller:
 //
@@ -51,6 +52,9 @@ var budgets sync.Map
 //     it from the provider block or the environment.
 //   - passing the limiter to every call. A call without it isn't limited and
 //     doesn't draw from the budget.
+//   - how long a call may wait. The modular client hands Wait a ctx that
+//     ends with the timeout of the call, which call.WithTimeout and
+//     client.WithTimeout set.
 //   - the budget of the classic client. Its limiter is unexported, so the
 //     classic and the modular calls of one config are limited separately,
 //     each at the rate of cfg.

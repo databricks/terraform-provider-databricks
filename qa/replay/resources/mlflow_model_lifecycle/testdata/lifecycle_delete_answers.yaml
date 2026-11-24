@@ -1,0 +1,106 @@
+# Pins the DELETE answers that remove the model from state. A 200 with an empty JSON
+# object and a 200 with no body at all both delete the model; the classic client decodes
+# no DELETE response. A 404 with RESOURCE_DOES_NOT_EXIST counts as already deleted, so
+# the final destroy succeeds. Each delete sends one DELETE with the name in the query and
+# no body, and no read follows it. API responses are synthetic, inferred from the MLflow
+# Model Registry API, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: create
+    config: &config |
+      resource "databricks_mlflow_model" "this" {
+        name = "lifecycle-delete-answers"
+      }
+    calls: &create_calls
+      - request:
+          method: POST
+          path: /api/2.0/mlflow/registered-models/create
+          body:
+            json: {"name": "lifecycle-delete-answers"}
+        response:
+          status: 200
+          body:
+            json: {"registered_model": {"name": "lifecycle-delete-answers",
+                                        "creation_timestamp": 1700000000901,
+                                        "last_updated_timestamp": 1700000000901,
+                                        "user_id": "replay-admin@example.com"}}
+      - &read
+        request:
+          method: GET
+          path: /api/2.0/mlflow/databricks/registered-models/get
+          query:
+            name: ["lifecycle-delete-answers"]
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"registered_model_databricks": {
+                     "name": "lifecycle-delete-answers",
+                     "id": "18293a4b5c6d7e8f0102030405060708",
+                     "creation_timestamp": 1700000000901,
+                     "last_updated_timestamp": 1700000000901,
+                     "user_id": "replay-admin@example.com",
+                     "permission_level": "CAN_MANAGE"}}
+      - *read
+  - name: delete_answered_200_with_an_empty_json_object
+    config: &config_empty |
+      provider "databricks" {}
+    plan: &plans_delete
+      expect: non_empty
+      changes:
+        databricks_mlflow_model.this:
+          actions: [delete]
+    calls:
+      - *read
+      - request: &delete_request
+          method: DELETE
+          path: /api/2.0/mlflow/registered-models/delete
+          query:
+            name: ["lifecycle-delete-answers"]
+          body: null
+        response:
+          status: 200
+          body:
+            json: {}
+  - name: plan_after_delete_answered_empty_json_object_is_empty
+    plan_only: true
+    config: *config_empty
+    plan: &plans_nothing
+      expect: empty
+      changes: {}
+    calls: []
+  - name: create_again_after_empty_json_object
+    config: *config
+    calls: *create_calls
+  - name: delete_answered_200_with_an_empty_body
+    config: *config_empty
+    plan: *plans_delete
+    calls:
+      - *read
+      - request: *delete_request
+        response:
+          status: 200
+          body: null
+  - name: plan_after_delete_answered_empty_body_is_empty
+    plan_only: true
+    config: *config_empty
+    plan: *plans_nothing
+    calls: []
+  - name: create_again_after_empty_body
+    config: *config
+    calls: *create_calls
+destroy:
+  calls:
+    - *read
+    - request: *delete_request
+      response:
+        status: 404
+        body:
+          json: {"error_code": "RESOURCE_DOES_NOT_EXIST",
+                 "message": "RegisteredModel 'lifecycle-delete-answers' does not exist.
+                   It might have been deleted."}

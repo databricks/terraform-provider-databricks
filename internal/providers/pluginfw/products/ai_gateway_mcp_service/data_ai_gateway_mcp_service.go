@@ -107,25 +107,29 @@ type McpServiceData struct {
 	Config types.Object `tfsdk:"config"`
 	// Time the MCP service was created.
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
-	// Creator identity.
+	// Username or service principal application ID of the principal that
+	// created the MCP service.
 	CreatedBy types.String `tfsdk:"created_by"`
-	// Owner of the MCP service.
+	// Username, group name, or service principal application ID of the MCP
+	// service owner.
 	EffectiveOwner types.String `tfsdk:"effective_owner"`
 	// Optimistic concurrency token returned on every read. To make an Update or
 	// Delete conditional, pass the last-read value in that request's `etag`
 	// field. In REST responses, this value is a base64 string; URL-encode it
 	// when setting the `etag` query parameter.
 	Etag types.String `tfsdk:"etag"`
-	// Metastore hosting the MCP service.
+	// Unique identifier of the metastore that contains the MCP service.
 	MetastoreId types.String `tfsdk:"metastore_id"`
 	// Resource name of the MCP service. Format:
 	// `mcp-services/{catalog}.{schema}.{mcp_service}`. Each `{...}` component
-	// is capped at 255 characters individually. Server-derived on Create from
-	// `parent` + `mcp_service_id`; required and immutable on Update/Get/Delete.
+	// is capped at 255 characters individually. The server derives the name on
+	// Create from `parent` and `mcp_service_id`; it is required and immutable
+	// on Update, Get, and Delete.
 	Name types.String `tfsdk:"name"`
 	// Time the MCP service was last modified.
 	UpdateTime timetypes.RFC3339 `tfsdk:"update_time"`
-	// Identity of the last updater.
+	// Username or service principal application ID of the principal that last
+	// updated the MCP service.
 	UpdatedBy          types.String `tfsdk:"updated_by"`
 	ProviderConfigData types.Object `tfsdk:"provider_config"`
 }

@@ -29,7 +29,7 @@ func DataSourceMonitors() datasource.DataSource {
 // MonitorsData extends the main model with additional fields.
 type MonitorsData struct {
 	DataQuality types.List `tfsdk:"monitors"`
-
+	// The maximum number of monitors to return in one page.
 	PageSize           types.Int64  `tfsdk:"page_size"`
 	ProviderConfigData types.Object `tfsdk:"provider_config"`
 }

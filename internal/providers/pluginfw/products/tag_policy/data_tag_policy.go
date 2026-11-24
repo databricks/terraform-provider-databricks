@@ -100,15 +100,19 @@ func (r ProviderConfigData) Type(ctx context.Context) attr.Type {
 type TagPolicyData struct {
 	// Timestamp when the tag policy was created
 	CreateTime types.String `tfsdk:"create_time"`
-
+	// A description of the governed tag, such as its purpose or the meaning of
+	// its values.
 	Description types.String `tfsdk:"description"`
-
+	// The unique identifier of the tag policy, generated when the policy is
+	// created.
 	Id types.String `tfsdk:"id"`
-
+	// The tag key that this policy governs. Tag keys are case-sensitive.
 	TagKey types.String `tfsdk:"tag_key"`
 	// Timestamp when the tag policy was last updated
 	UpdateTime types.String `tfsdk:"update_time"`
-
+	// The allowed values of the governed tag. Only these values can be assigned
+	// to the tag key, and each value must be unique. A policy without values
+	// defines a key-only governed tag.
 	Values             types.Set    `tfsdk:"values"`
 	ProviderConfigData types.Object `tfsdk:"provider_config"`
 }

@@ -247,11 +247,18 @@ func refreshAuthVolume(t *testing.T, s *authServer, cfg *config.Config) authRefr
 }
 
 // assertKept checks that the refresh left state unchanged and the next plan empty.
+// The volume has a resource identity, so the SDK diff carries the unchanged
+// identity from state and is not nil even when nothing changes.
 func (a authRefresh) assertKept(t *testing.T) {
 	t.Helper()
 	require.NotNil(t, a.state)
 	assert.Equal(t, authVolumeState().Attributes, a.state.Attributes)
-	assert.Nil(t, a.plan, "the next plan must be empty")
+	if a.plan == nil {
+		return
+	}
+	assert.Empty(t, a.plan.Attributes, "the next plan must be empty")
+	assert.False(t, a.plan.Destroy || a.plan.DestroyTainted, "the next plan must not destroy the volume")
+	assert.Equal(t, a.state.Identity, a.plan.Identity, "the next plan must keep the identity")
 }
 
 func (a authRefresh) assertSucceeded(t *testing.T) {

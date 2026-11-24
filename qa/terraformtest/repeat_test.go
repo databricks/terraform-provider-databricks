@@ -31,9 +31,11 @@ func TestRepeatJourneysPinRetriesAndTiming(t *testing.T) {
 		name, journey, failure string
 		edit                   func(*step)
 	}{
-		{"429 twice in a 2 s retry timeout", "retry_429_until_timeout", "",
+		// The second attempt starts by 1.75 s and a third cannot start before 3.1 s,
+		// so 3 s allows exactly two; 2 s would leave 0.25 s for the second.
+		{"429 twice in a 3 s retry timeout", "retry_429_until_timeout", "",
 			func(s *step) {
-				retryTimeout("retry_timeout_seconds = 2")(s)
+				retryTimeout("retry_timeout_seconds = 3")(s)
 				s.Calls[0].Times = httpfixture.Exactly(2)
 			}},
 		{"429 retried past the range without a retry timeout", "retry_429_until_timeout",

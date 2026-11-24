@@ -87,10 +87,11 @@ var modelRegistryMessages = []any{
 	modelregistry.UpdateRegistryWebhookResponse{},
 }
 
-// setOnlyField gives a field of a modelregistry message a non-zero value and
-// returns the shape of the field. It is written apart from setNonEmpty, so
-// that the test doesn't prove the probe with the probe's own code.
-func setOnlyField(t *testing.T, field reflect.Value) string {
+// fieldNameSetOnlyField gives a field of a modelregistry message a non-zero
+// value and returns the shape of the field. It is written apart from
+// fieldNameSetNonEmpty, so that the test doesn't prove the probe with the
+// probe's own code.
+func fieldNameSetOnlyField(t *testing.T, field reflect.Value) string {
 	switch field.Kind() {
 	case reflect.Pointer:
 		field.Set(reflect.New(field.Type().Elem()))
@@ -123,7 +124,7 @@ func setOnlyField(t *testing.T, field reflect.Value) string {
 			return "repeated scalar"
 		}
 	}
-	t.Fatalf("setOnlyField can't set a %s", field.Type())
+	t.Fatalf("fieldNameSetOnlyField can't set a %s", field.Type())
 	return ""
 }
 
@@ -137,7 +138,7 @@ func TestFieldName_ModelRegistryMatchesMarshalJSON(t *testing.T) {
 			field := structType.Field(i)
 			t.Run(structType.Name()+"."+field.Name, func(t *testing.T) {
 				value := reflect.New(structType)
-				shapes[setOnlyField(t, value.Elem().Field(i))]++
+				shapes[fieldNameSetOnlyField(t, value.Elem().Field(i))]++
 				data, err := json.Marshal(value.Interface())
 				require.NoError(t, err)
 				var object map[string]json.RawMessage
@@ -154,9 +155,10 @@ func TestFieldName_ModelRegistryMatchesMarshalJSON(t *testing.T) {
 	}
 }
 
-// fieldNames returns FieldName of every field of structType, which it passes
-// to FieldName as passedType: the struct type itself or a pointer to it.
-func fieldNames(passedType, structType reflect.Type) []string {
+// fieldNameOfEveryField returns FieldName of every field of structType, which
+// it passes to FieldName as passedType: the struct type itself or a pointer to
+// it.
+func fieldNameOfEveryField(passedType, structType reflect.Type) []string {
 	var names []string
 	for i := range structType.NumField() {
 		names = append(names, FieldName(passedType, structType.Field(i)))
@@ -191,8 +193,8 @@ func TestFieldName_ModelRegistryNames(t *testing.T) {
 	for _, tt := range tests {
 		structType := reflect.TypeOf(tt.message)
 		t.Run(structType.Name(), func(t *testing.T) {
-			assert.Equal(t, tt.want, fieldNames(structType, structType))
-			assert.Equal(t, tt.want, fieldNames(reflect.PointerTo(structType), structType), "pointer to the struct")
+			assert.Equal(t, tt.want, fieldNameOfEveryField(structType, structType))
+			assert.Equal(t, tt.want, fieldNameOfEveryField(reflect.PointerTo(structType), structType), "pointer to the struct")
 		})
 	}
 }
@@ -206,24 +208,25 @@ type testNested struct {
 	Value *string
 }
 
-type isTestChoice interface{ isTestChoice() }
+type fieldNameTestChoice interface{ isFieldNameTestChoice() }
 
-// testChoiceText is the wrapper struct of a oneof variant, which has no
-// MarshalJSON method in the SDK either.
-type testChoiceText struct {
+// fieldNameTestChoiceText is the wrapper struct of a oneof variant, which has
+// no MarshalJSON method in the SDK either.
+type fieldNameTestChoiceText struct {
 	Text      string `fieldmask:"text"`
 	PlainText string
 }
 
-func (*testChoiceText) isTestChoice() {}
+func (*fieldNameTestChoiceText) isFieldNameTestChoice() {}
 
-// Embedded is exported so that the embedded field is.
-type Embedded struct {
+// FieldNameEmbedded is exported so that the embedded field is.
+type FieldNameEmbedded struct {
 	Value *string
 }
 
 // testMessage has a field of every kind that the probe can set, each with an
-// API name that snakeCase gets wrong, and fields that the probe can't set.
+// API name that fieldNameSnakeCase gets wrong, and fields that the probe can't
+// set.
 type testMessage struct {
 	DisplayName            *string
 	Ref                    *string
@@ -239,10 +242,10 @@ type testMessage struct {
 	Payload                json.RawMessage
 	Checksum               []byte
 	Spec                   *testNested
-	Choice                 isTestChoice
+	Choice                 fieldNameTestChoice
 	Inline                 testNested
 	Contents               io.ReadCloser
-	Embedded
+	FieldNameEmbedded
 	hidden *string `fieldmask:"hidden"`
 	_      [0]int  `fieldmask_oneof:"Choice"`
 }
@@ -273,7 +276,7 @@ func (m testMessage) MarshalJSON() ([]byte, error) {
 
 func TestFieldName_ProbesMarshalJSON(t *testing.T) {
 	want := map[string]string{
-		// The JSON key, where snakeCase gives another name.
+		// The JSON key, where fieldNameSnakeCase gives another name.
 		"DisplayName":            "displayName",
 		"Ref":                    "$ref",
 		"Resources":              "Resources",
@@ -293,10 +296,10 @@ func TestFieldName_ProbesMarshalJSON(t *testing.T) {
 		// Fields that the probe can't set get their snake_case name: a oneof
 		// group, a struct that is not a pointer, whose key the message always
 		// writes, a body stream and an embedded struct.
-		"Choice":   "choice",
-		"Inline":   "inline",
-		"Contents": "contents",
-		"Embedded": "embedded",
+		"Choice":            "choice",
+		"Inline":            "inline",
+		"Contents":          "contents",
+		"FieldNameEmbedded": "field_name_embedded",
 		// Unexported fields have no name, with or without a tag.
 		"hidden": "",
 		"_":      "",
@@ -314,8 +317,8 @@ func TestFieldName_ProbesMarshalJSON(t *testing.T) {
 	}
 }
 
-// testPicky marshals to an object, but not for every field.
-type testPicky struct {
+// fieldNameTestPicky marshals to an object, but not for every field.
+type fieldNameTestPicky struct {
 	Good       *string
 	Broken     *string
 	Twice      *string
@@ -323,7 +326,7 @@ type testPicky struct {
 	MaskedName *string `fieldmask:"masked"`
 }
 
-func (m testPicky) MarshalJSON() ([]byte, error) {
+func (m fieldNameTestPicky) MarshalJSON() ([]byte, error) {
 	if m.Broken != nil {
 		return nil, errors.New("broken is set")
 	}
@@ -337,50 +340,50 @@ func (m testPicky) MarshalJSON() ([]byte, error) {
 	return json.Marshal(object)
 }
 
-type testNeverMarshals struct {
+type fieldNameTestNeverMarshals struct {
 	UserName *string
 }
 
-func (testNeverMarshals) MarshalJSON() ([]byte, error) {
+func (fieldNameTestNeverMarshals) MarshalJSON() ([]byte, error) {
 	return nil, errors.New("never")
 }
 
-type testMarshalsToList struct {
+type fieldNameTestMarshalsToList struct {
 	UserName *string
 }
 
-func (testMarshalsToList) MarshalJSON() ([]byte, error) {
+func (fieldNameTestMarshalsToList) MarshalJSON() ([]byte, error) {
 	return []byte(`["userName"]`), nil
 }
 
-type testMarshalsToNull struct {
+type fieldNameTestMarshalsToNull struct {
 	UserName *string
 }
 
-func (testMarshalsToNull) MarshalJSON() ([]byte, error) {
+func (fieldNameTestMarshalsToNull) MarshalJSON() ([]byte, error) {
 	return []byte(`null`), nil
 }
 
-type testPointerReceiver struct {
+type fieldNameTestPointerReceiver struct {
 	UserName *string
 }
 
-func (m *testPointerReceiver) MarshalJSON() ([]byte, error) {
+func (m *fieldNameTestPointerReceiver) MarshalJSON() ([]byte, error) {
 	if m.UserName == nil {
 		return []byte(`{}`), nil
 	}
 	return []byte(`{"userName":"x"}`), nil
 }
 
-// testScalar has a MarshalJSON method and is not a struct.
-type testScalar string
+// fieldNameTestScalar has a MarshalJSON method and is not a struct.
+type fieldNameTestScalar string
 
-func (testScalar) MarshalJSON() ([]byte, error) {
+func (fieldNameTestScalar) MarshalJSON() ([]byte, error) {
 	return []byte(`{"userName":"x"}`), nil
 }
 
-// testPlain has no MarshalJSON method.
-type testPlain struct {
+// fieldNameTestPlain has no MarshalJSON method.
+type fieldNameTestPlain struct {
 	UserName *string
 	Masked   *string `fieldmask:"maskedName"`
 	EmptyTag *string `fieldmask:""`
@@ -394,9 +397,9 @@ func TestFieldName_FallsBackToTagAndSnakeCase(t *testing.T) {
 		require.True(t, ok, name)
 		return found
 	}
-	picky := reflect.TypeOf(testPicky{})
-	plain := reflect.TypeOf(testPlain{})
-	variant := reflect.TypeOf(testChoiceText{})
+	picky := reflect.TypeOf(fieldNameTestPicky{})
+	plain := reflect.TypeOf(fieldNameTestPlain{})
+	variant := reflect.TypeOf(fieldNameTestChoiceText{})
 	userName := field(plain, "UserName")
 	tests := []struct {
 		name       string
@@ -409,11 +412,11 @@ func TestFieldName_FallsBackToTagAndSnakeCase(t *testing.T) {
 		{"field adds two keys", picky, field(picky, "Twice"), "twice"},
 		{"field adds no key", picky, field(picky, "Silent"), "silent"},
 		{"field adds no key and has a tag", picky, field(picky, "MaskedName"), "masked"},
-		{"marshal always fails", reflect.TypeOf(testNeverMarshals{}), userName, "user_name"},
-		{"marshals to a list", reflect.TypeOf(testMarshalsToList{}), userName, "user_name"},
-		{"marshals to null", reflect.TypeOf(testMarshalsToNull{}), userName, "user_name"},
-		{"MarshalJSON on the pointer", reflect.TypeOf(testPointerReceiver{}), userName, "userName"},
-		{"MarshalJSON on a type that is not a struct", reflect.TypeOf(testScalar("")), userName, "user_name"},
+		{"marshal always fails", reflect.TypeOf(fieldNameTestNeverMarshals{}), userName, "user_name"},
+		{"marshals to a list", reflect.TypeOf(fieldNameTestMarshalsToList{}), userName, "user_name"},
+		{"marshals to null", reflect.TypeOf(fieldNameTestMarshalsToNull{}), userName, "user_name"},
+		{"MarshalJSON on the pointer", reflect.TypeOf(fieldNameTestPointerReceiver{}), userName, "userName"},
+		{"MarshalJSON on a type that is not a struct", reflect.TypeOf(fieldNameTestScalar("")), userName, "user_name"},
 		{"no MarshalJSON", plain, userName, "user_name"},
 		{"no MarshalJSON, fieldmask tag", plain, field(plain, "Masked"), "maskedName"},
 		{"no MarshalJSON, empty fieldmask tag", plain, field(plain, "EmptyTag"), "empty_tag"},
@@ -434,15 +437,15 @@ func TestFieldName_FallsBackToTagAndSnakeCase(t *testing.T) {
 	}
 }
 
-var testCountedMarshals int
+var fieldNameTestCountedMarshals int
 
-type testCounted struct {
+type fieldNameTestCounted struct {
 	First  *string
 	Second *string
 }
 
-func (m testCounted) MarshalJSON() ([]byte, error) {
-	testCountedMarshals++
+func (m fieldNameTestCounted) MarshalJSON() ([]byte, error) {
+	fieldNameTestCountedMarshals++
 	object := map[string]any{}
 	if m.First != nil {
 		object["firstKey"] = m.First
@@ -454,21 +457,21 @@ func (m testCounted) MarshalJSON() ([]byte, error) {
 }
 
 func TestFieldName_ProbesStructOnce(t *testing.T) {
-	structType := reflect.TypeOf(testCounted{})
+	structType := reflect.TypeOf(fieldNameTestCounted{})
 	assert.Equal(t, "firstKey", FieldName(structType, structType.Field(0)))
-	assert.Equal(t, 3, testCountedMarshals, "the empty message and one per field")
+	assert.Equal(t, 3, fieldNameTestCountedMarshals, "the empty message and one per field")
 	for range 3 {
 		assert.Equal(t, "firstKey", FieldName(structType, structType.Field(0)))
 		assert.Equal(t, "secondKey", FieldName(reflect.PointerTo(structType), structType.Field(1)))
 	}
-	assert.Equal(t, 3, testCountedMarshals, "later calls don't marshal")
+	assert.Equal(t, 3, fieldNameTestCountedMarshals, "later calls don't marshal")
 }
 
-type testConcurrent struct {
+type fieldNameTestConcurrent struct {
 	UserName *string
 }
 
-func (m testConcurrent) MarshalJSON() ([]byte, error) {
+func (m fieldNameTestConcurrent) MarshalJSON() ([]byte, error) {
 	if m.UserName == nil {
 		return []byte(`{}`), nil
 	}
@@ -476,7 +479,7 @@ func (m testConcurrent) MarshalJSON() ([]byte, error) {
 }
 
 func TestFieldName_Concurrent(t *testing.T) {
-	structType := reflect.TypeOf(testConcurrent{})
+	structType := reflect.TypeOf(fieldNameTestConcurrent{})
 	names := make([]string, 32)
 	var wg sync.WaitGroup
 	for i := range names {
@@ -490,7 +493,7 @@ func TestFieldName_Concurrent(t *testing.T) {
 	}
 }
 
-func TestSetNonEmpty(t *testing.T) {
+func TestFieldName_SetNonEmpty(t *testing.T) {
 	type kinds struct {
 		Pointer   *string
 		Struct    *testNested
@@ -505,7 +508,7 @@ func TestSetNonEmpty(t *testing.T) {
 		Bytes     []byte
 		Raw       json.RawMessage
 		Map       map[string]testNested
-		Interface isTestChoice
+		Interface fieldNameTestChoice
 		Any       any
 		Nested    testNested
 		Array     [2]string
@@ -521,7 +524,7 @@ func TestSetNonEmpty(t *testing.T) {
 	for i := range value.NumField() {
 		name := value.Type().Field(i).Name
 		t.Run(name, func(t *testing.T) {
-			assert.Equal(t, wantSet[name], setNonEmpty(value.Field(i)))
+			assert.Equal(t, wantSet[name], fieldNameSetNonEmpty(value.Field(i)))
 			assert.Equal(t, !wantSet[name], value.Field(i).IsZero(), "a field is zero exactly when it wasn't set")
 		})
 	}
@@ -534,7 +537,7 @@ func TestSetNonEmpty(t *testing.T) {
 	assert.Equal(t, string(set.Raw), string(data))
 }
 
-func TestSnakeCase(t *testing.T) {
+func TestFieldName_SnakeCase(t *testing.T) {
 	tests := []struct{ goName, want string }{
 		{"", ""},
 		{"A", "a"},
@@ -568,7 +571,7 @@ func TestSnakeCase(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.goName, func(t *testing.T) {
-			assert.Equal(t, tt.want, snakeCase(tt.goName))
+			assert.Equal(t, tt.want, fieldNameSnakeCase(tt.goName))
 		})
 	}
 }

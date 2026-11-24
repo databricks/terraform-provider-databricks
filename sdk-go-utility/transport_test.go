@@ -66,9 +66,10 @@ func (c transportTestCredentials) AuthHeaders(ctx context.Context) ([]auth.Heade
 }
 
 // transportTestRequest is what the test server received for one request.
+// Remote is the address of the client, which names the connection.
 type transportTestRequest struct {
-	Method, Path, Query, Host, Body string
-	Header                          http.Header
+	Method, Path, Query, Host, Body, Remote string
+	Header                                  http.Header
 }
 
 // transportTestServer records every request and answers it with status, or
@@ -86,7 +87,7 @@ func transportTestNewServer(t *testing.T, useTLS bool) *transportTestServer {
 	s.Server = httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		body, _ := io.ReadAll(r.Body)
 		s.mu.Lock()
-		s.requests = append(s.requests, transportTestRequest{r.Method, r.URL.Path, r.URL.RawQuery, r.Host, string(body), r.Header.Clone()})
+		s.requests = append(s.requests, transportTestRequest{r.Method, r.URL.Path, r.URL.RawQuery, r.Host, string(body), r.RemoteAddr, r.Header.Clone()})
 		s.mu.Unlock()
 		if s.redirectTo != "" {
 			http.Redirect(w, r, s.redirectTo+r.URL.RequestURI(), http.StatusTemporaryRedirect)
@@ -299,8 +300,8 @@ func TestTransport_MatchesClassicClient(t *testing.T) {
 	}
 }
 
-// transportTestSameAsClassic checks that a server received the same request
-// from both clients, apart from the sdk-go- marker and the traceparent value.
+// transportTestSameAsClassic checks that a server received the same request from
+// both clients, apart from the sdk-go- marker, the traceparent and the connection.
 func transportTestSameAsClassic(t *testing.T, classic, modular transportTestRequest) {
 	t.Helper()
 	classicUserAgent := classic.Header.Get("User-Agent")
@@ -310,11 +311,11 @@ func transportTestSameAsClassic(t *testing.T, classic, modular transportTestRequ
 	assert.NotEqual(t, classic.Header.Get("Traceparent"), modular.Header.Get("Traceparent"))
 	modular.Header.Set("User-Agent", classicUserAgent)
 	modular.Header.Set("Traceparent", classic.Header.Get("Traceparent"))
+	modular.Remote = classic.Remote
 	assert.Equal(t, classic, modular)
 }
 
-// TestTransport_Headers calls RoundTrip with a request and checks the headers
-// of the request that the base transport is asked to send.
+// TestTransport_Headers checks the headers that the base transport is asked to send.
 func TestTransport_Headers(t *testing.T) {
 	hook := func(key, value string) func(*http.Request) error {
 		return config.StaticHeaders(map[string]string{key: value})
@@ -481,9 +482,7 @@ func TestTransport_Config(t *testing.T) {
 	assert.Same(t, transportClassicDefault, base(func(*config.Config) {}), "modular clients share one default transport")
 	assert.Same(t, custom, base(func(cfg *config.Config) { cfg.HTTPTransport = custom }))
 	assert.Same(t, custom, base(func(cfg *config.Config) { cfg.HTTPTransport, cfg.InsecureSkipVerify = custom, true }))
-	insecure := base(func(cfg *config.Config) { cfg.InsecureSkipVerify = true }).(*http.Transport)
-	assert.True(t, insecure.TLSClientConfig.InsecureSkipVerify)
-	assert.NotSame(t, insecure, base(func(cfg *config.Config) { cfg.InsecureSkipVerify = true }), "one per call, as one per classic client")
+	assert.Same(t, transportClassicSkipVerify, base(func(cfg *config.Config) { cfg.InsecureSkipVerify = true }), "and one for InsecureSkipVerify")
 }
 
 // TestTransport_MirrorsClassicDefault compares every exported field of the
@@ -494,7 +493,7 @@ func TestTransport_MirrorsClassicDefault(t *testing.T) {
 	clientCfg := httpclient.ClientConfig{InsecureSkipVerify: true}
 	classic := reflect.ValueOf(httpclient.NewApiClient(clientCfg)).Elem().
 		FieldByName("httpClient").Elem().FieldByName("Transport").Elem().Elem()
-	mirror := reflect.ValueOf(transportClassicBase(clientCfg)).Elem()
+	mirror := reflect.ValueOf(transportNewClassicSkipVerify()).Elem()
 	require.Equal(t, classic.Type(), mirror.Type())
 	transportTestSameFields(t, "Transport", classic, mirror)
 }
@@ -518,28 +517,29 @@ func transportTestSameFields(t *testing.T, path string, classic, mirror reflect.
 	}
 }
 
-// TestTransport_InsecureSkipVerify calls a TLS server with a self-signed certificate.
+// TestTransport_InsecureSkipVerify calls a TLS server with a self-signed
+// certificate. Each call has its own config, Transport and modular client.
 func TestTransport_InsecureSkipVerify(t *testing.T) {
-	for _, skipVerify := range []bool{true, false} {
-		server := transportTestNewServer(t, true)
+	server := transportTestNewServer(t, true)
+	call := func(skipVerify bool) error {
 		cfg := transportTestConfig(server.URL)
 		cfg.InsecureSkipVerify = skipVerify
-		err := transportTestGet(t.Context(), transportTestModularClient(t, cfg), "model")
-		if !skipVerify {
-			assert.ErrorContains(t, err, "failed to verify certificate")
-			assert.NotContains(t, err.Error(), transportTestVisitorError)
-			assert.Empty(t, server.received())
-			continue
-		}
-		require.NoError(t, err)
-		require.Len(t, server.received(), 1)
-		assert.Equal(t, "Bearer transport-test-token", server.received()[0].Header.Get("Authorization"))
-		assert.Regexp(t, ` auth/pat\b.*`+transportTestModularMarker, server.received()[0].Header.Get("User-Agent"))
+		return transportTestGet(t.Context(), transportTestModularClient(t, cfg), "model")
 	}
+	require.NoError(t, call(true))
+	require.NoError(t, call(true))
+	received := server.received()
+	require.Len(t, received, 2)
+	assert.Equal(t, received[0].Remote, received[1].Remote, "the second client reuses the connection of the first")
+	assert.Regexp(t, ` auth/pat\b.*`+transportTestModularMarker, received[1].Header.Get("User-Agent"))
+	// A config that verifies doesn't use the connection that skipped it.
+	err := call(false)
+	assert.ErrorContains(t, err, "failed to verify certificate")
+	assert.NotContains(t, err.Error(), transportTestVisitorError)
+	assert.Len(t, server.received(), 2)
 }
 
-// TestTransport_ReturnsResponsesAsTheyAre checks that the transport sends a
-// request once, without credentials, and returns an error response as it is.
+// TestTransport_ReturnsResponsesAsTheyAre sends once, without credentials.
 func TestTransport_ReturnsResponsesAsTheyAre(t *testing.T) {
 	for _, status := range []int{200, 401, 404, 429, 503} {
 		server := transportTestNewServer(t, false)

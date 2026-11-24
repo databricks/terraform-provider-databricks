@@ -1,9 +1,5 @@
 # Runs volume/testdata/redirect_not_followed_counts_as_success.yaml with databricks_volume
-# on sdk-go uc/volumes/v1 in every step, and expects the same behavior except for the 304.
-# Its empty body fails the refresh with "failed to unmarshal response body: unexpected end
-# of JSON input" and keeps the volume in state, where the existing client decodes it as a
-# volume without fields, blanks the state and plans a replacement. The volume POST, GET
-# and DELETE requests carry no Accept header, which an empty header expectation pins. The
+# on sdk-go uc/volumes/v1 in every step, and expects the same requests and behavior. The
 # original's description:
 #
 # Pins refresh answers in the 3xx range that Go's client returns without following: a
@@ -37,7 +33,6 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body:
             json: {"catalog_name": "main", "schema_name": "replay",
                    "name": "redirect_unfollowed_volume", "volume_type": "MANAGED",
@@ -59,7 +54,6 @@ steps:
           path: /api/2.1/unity-catalog/volumes/main.replay.redirect_unfollowed_volume
           headers:
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body: null
         response:
           status: 200
@@ -105,12 +99,31 @@ steps:
                    "storage_location": "s3://replay-metastore/volume-1940",
                    "metastore_id": "11111111-1111-1111-1111-111111111111",
                    "volume_id": "00000000-0000-4000-8000-000000001940"}
-  - name: refresh_answered_304_fails_and_keeps_state
+  - name: refresh_answered_304_blanks_state_and_plans_replacement
     sdk_implementations:
       databricks_volume: sdk_go
+    plan_only: true
     config: *config
-    expect_error: 'Error: cannot read volume: failed to unmarshal response body:
-      unexpected end of JSON input\n'
+    plan:
+      expect: non_empty
+      changes:
+        databricks_volume.this:
+          actions: [delete, create]
+          before:
+            - path: [name]
+              equals: ""
+            - path: [catalog_name]
+              equals: ""
+            - path: [volume_path]
+              equals: /Volumes/
+    state:
+      resources:
+        databricks_volume.this:
+          attributes:
+            - path: [id]
+              equals: main.replay.redirect_unfollowed_volume
+            - path: [name]
+              equals: ""
     calls:
       - request: *read_request
         response:
@@ -134,7 +147,6 @@ destroy:
         path: /api/2.1/unity-catalog/volumes/main.replay.redirect_unfollowed_volume
         headers:
           X-Databricks-Workspace-Id: "12345"
-          Accept: ""
         body: null
       response:
         status: 200

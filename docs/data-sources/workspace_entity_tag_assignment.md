@@ -51,4 +51,4 @@ The following attributes are exported:
 * `entity_id` (string) - The identifier of the entity to which the tag is assigned. For apps, the entity_id is the app name
 * `entity_type` (string) - The type of entity to which the tag is assigned. Allowed values are apps, dashboards, geniespaces, notebooks
 * `tag_key` (string) - The key of the tag. The characters , . : / - = and leading/trailing spaces are not allowed
-* `tag_value` (string) - The value of the tag
+* `tag_value` (string) - The value of the tag. If the value is omitted, the tag is assigned with its key only

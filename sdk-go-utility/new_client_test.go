@@ -396,9 +396,8 @@ func TestNewClient_HandsEachHelperWhatItNeeds(t *testing.T) {
 		order = append(order, "constructor")
 		assert.Equal(t, "caller", got.Value(key{}), "the context of the caller")
 		applied := internaloptions.ClientOptions{}
-		for _, option := range options {
-			require.NoError(t, option(&applied))
-		}
+		require.Len(t, options, 1)
+		require.NoError(t, options[0](&applied))
 		return applied.Host, nil
 	}, newClientSteps{
 		credentials: func(got *config.Config) auth.Credentials {
@@ -428,7 +427,7 @@ func TestNewClient_HandsEachHelperWhatItNeeds(t *testing.T) {
 
 func TestNewClient_EndsStalledAttemptLikeClassicClient(t *testing.T) {
 	ws := newClientStart(t, &newClientWorkspace{answer: func(_ http.ResponseWriter, r *http.Request, _ int) { <-r.Context().Done() }})
-	cfg := ws.config(func(cfg *config.Config) { cfg.HTTPTimeoutSeconds = 1 })
+	cfg := ws.config(func(cfg *config.Config) { cfg.HTTPTimeoutSeconds, cfg.RetryTimeoutSeconds = 1, 5 })
 	classic := newClientClassic(t, cfg)
 	modular, err := NewClient(t.Context(), cfg, modelregistry.NewClient)
 	require.NoError(t, err)

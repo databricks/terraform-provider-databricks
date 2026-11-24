@@ -17,9 +17,9 @@ import (
 // ClassicError turns the error of a failed modular SDK call into the error
 // that the classic client, github.com/databricks/databricks-sdk-go, returns
 // for the same response. Code that reads classic errors then works on it as
-// before: apierr.IsMissing, by which common.Resource drops a resource from
-// state, errors.Is against the sentinel errors of the classic apierr package,
-// and the message that users see in diagnostics.
+// before: apierr.IsMissing, by which the provider's common.Resource drops a
+// resource from state, errors.Is against the sentinel errors of the classic
+// apierr package, and the message that users see in diagnostics.
 //
 // For a modular *apierr.APIError anywhere in the chain of err, ClassicError
 // rebuilds the HTTP response from the status code, the header and the body

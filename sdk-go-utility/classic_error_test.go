@@ -353,7 +353,9 @@ func TestClassicError_DiffersByStatusText(t *testing.T) {
 
 // The classic parser reports a 400 with INVALID_PARAMETER_VALUE from three GET
 // paths as a missing resource. ClassicError doesn't have the request, so the
-// same response stays an invalid parameter.
+// same response stays an invalid parameter. The modular client gets the
+// response through a model registry call, because go.mod has no modular client
+// for these APIs.
 func TestClassicError_DiffersByRequestOverride(t *testing.T) {
 	tests := []struct {
 		name, message string

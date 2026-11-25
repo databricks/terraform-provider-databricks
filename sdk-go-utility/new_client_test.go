@@ -108,6 +108,8 @@ func (ws *newClientWorkspace) serve(w http.ResponseWriter, r *http.Request) {
 	token := ws.tokens
 	ws.mu.Unlock()
 	w.Header().Set("Content-Type", "application/json")
+	// A fixed date, so that the debug logs of two calls don't differ by it.
+	w.Header().Set("Date", "Mon, 02 Jan 2006 15:04:05 GMT")
 	switch {
 	case r.URL.Path == "/oidc/.well-known/oauth-authorization-server":
 		fmt.Fprintf(w, `{"authorization_endpoint":"%[1]s/oidc/v1/authorize","token_endpoint":"%[1]s/oidc/v1/token"}`, ws.URL)
@@ -395,7 +397,8 @@ func TestNewClient_Errors(t *testing.T) {
 func TestNewClient_HandsEachHelperWhatItNeeds(t *testing.T) {
 	type key struct{}
 	ctx, cfg := context.WithValue(t.Context(), key{}, "caller"), &config.Config{}
-	credentials, bare, watched, logged := Credentials(cfg), &newClientCounter{}, &newClientCounter{}, &newClientCounter{}
+	credentials, connection := Credentials(cfg), &newClientCounter{}
+	timed, logged, outermost := &newClientCounter{}, &newClientCounter{}, &newClientCounter{}
 	var order []string
 	step := func(name string, got *config.Config) {
 		order = append(order, name)
@@ -413,24 +416,26 @@ func TestNewClient_HandsEachHelperWhatItNeeds(t *testing.T) {
 			step("Credentials", got)
 			return credentials
 		},
-		transport: func(got *config.Config) (http.RoundTripper, error) {
+		transport: func(got *config.Config, wrap func(http.RoundTripper) (http.RoundTripper, error)) (http.RoundTripper, error) {
 			step("Transport", got)
-			return bare, nil
+			sendsOver, err := wrap(connection)
+			assert.Same(t, logged, sendsOver, "Transport sends over the transport of DebugLog")
+			return outermost, err
 		},
 		attemptTimeout: func(got *config.Config, transport http.RoundTripper) (http.RoundTripper, error) {
 			step("AttemptTimeout", got)
-			assert.Same(t, bare, transport, "AttemptTimeout goes around the transport of Transport")
-			return watched, nil
+			assert.Same(t, connection, transport, "AttemptTimeout sends over the connection that Transport picks")
+			return timed, nil
 		},
 		debugLog: func(got *config.Config, transport http.RoundTripper) (http.RoundTripper, error) {
 			step("DebugLog", got)
-			assert.Same(t, watched, transport, "DebugLog goes around the transport of AttemptTimeout")
+			assert.Same(t, timed, transport, "DebugLog sends over the transport of AttemptTimeout")
 			return logged, nil
 		},
 		clientOptions: func(got *config.Config, gotCredentials auth.Credentials, transport http.RoundTripper) ([]client.Option, error) {
 			step("ClientOptions", got)
 			assert.Equal(t, credentials, gotCredentials)
-			assert.Same(t, logged, transport, "the client sends over the transport of DebugLog")
+			assert.Same(t, outermost, transport, "the client sends over the transport of Transport")
 			return []client.Option{client.WithHost("https://from-client-options")}, nil
 		},
 	})

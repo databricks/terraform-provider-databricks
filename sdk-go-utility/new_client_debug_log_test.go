@@ -50,9 +50,8 @@ func newClientLogged(ctx context.Context, call func(context.Context) (any, error
 }
 
 // newClientLogDiffers matches the request header lines that the debug log of
-// a client of NewClient doesn't share with the one of the classic client,
-// because DebugLog logs the request before Transport has set its headers.
-var newClientLogDiffers = regexp.MustCompile(`(?m)^> \* (Host|Accept|Traceparent|User-Agent): .*\n`)
+// a client of NewClient doesn't share with the one of the classic client.
+var newClientLogDiffers = regexp.MustCompile(`(?m)^> \* (Host|Traceparent|User-Agent): .*\n`)
 
 // newClientLogOnlyIn returns the names of the differing header lines of
 // message that other doesn't have, and every other such line as it is.
@@ -68,7 +67,12 @@ func newClientLogOnlyIn(message, other string) (lines []string) {
 func TestNewClient_WritesDebugLogOfClassicClient(t *testing.T) {
 	for _, headers := range []bool{false, true} {
 		ws := newClientStart(t, &newClientWorkspace{})
-		cfg := ws.config(func(cfg *config.Config) { cfg.DebugHeaders, cfg.WorkspaceID = headers, "42" })
+		cfg := ws.config(func(cfg *config.Config) {
+			cfg.DebugHeaders, cfg.WorkspaceID = headers, "42"
+			if headers { // Shows the User-Agent to its end.
+				cfg.DebugTruncateBytes = 1000
+			}
+		})
 		classic := newClientClassic(t, cfg)
 		modular, err := NewClient(t.Context(), cfg, modelregistry.NewClient)
 		require.NoError(t, err)
@@ -94,18 +98,21 @@ func TestNewClient_WritesDebugLogOfClassicClient(t *testing.T) {
 					return
 				}
 				assert.Equal(t, newClientLogDiffers.ReplaceAllString(want, ""), newClientLogDiffers.ReplaceAllString(got, ""))
-				assert.Contains(t, got, "\n> * Authorization: Bearer dapi-secret\n")
+				assert.Contains(t, got, "\n> * Accept: application/json\n> * Authorization: Bearer dapi-secret\n")
 				assert.Contains(t, got, "\n> * X-Databricks-Workspace-Id: 42\n")
 				assert.Contains(t, got, "\n< * Content-Type: application/json\n")
-				// The log shows the request as the modular SDK built it, and
-				// the workspace received the headers of the classic client.
-				assert.Equal(t, []string{"Host", "Accept", "Traceparent", "User-Agent"}, newClientLogOnlyIn(want, got))
-				assert.Equal(t, []string{"Host", "User-Agent"}, newClientLogOnlyIn(got, want))
-				assert.Contains(t, want, "\n> * Host: \n> * Accept: application/json\n")
-				assert.Contains(t, got, "\n> * Host: "+received[1].Host+"\n> * Authorization: ")
-				assert.Contains(t, got, "\n> * User-Agent: sdk-go-core/")
-				assert.NotContains(t, want, "sdk-go-")
-				assert.Contains(t, received[1].Header.Get("User-Agent"), " databricks-sdk-go/")
+				assert.Equal(t, []string{"Host", "Traceparent", "User-Agent"}, newClientLogOnlyIn(want, got))
+				assert.Equal(t, []string{"Host", "Traceparent", "User-Agent"}, newClientLogOnlyIn(got, want))
+				// Both logs show the headers that the workspace received, but
+				// for the Host, which the classic client logs as empty.
+				for i, message := range []string{want, got} {
+					for _, name := range []string{"Traceparent", "User-Agent"} {
+						assert.Contains(t, message, "\n> * "+name+": "+received[i].Header.Get(name)+"\n")
+					}
+				}
+				assert.Contains(t, want, "\n> * Host: \n")
+				assert.Contains(t, got, "\n> * Host: "+received[1].Host+"\n")
+				assert.Equal(t, received[0].Host, received[1].Host)
 			})
 		}
 	}
@@ -167,9 +174,10 @@ func TestNewClient_EndsStalledAttemptLikeClassicClient(t *testing.T) {
 	}
 }
 
-// TestNewClient_DebugLogOutsideTransport pins what the debug log loses
-// because DebugLog is outside Transport, beyond the header lines above.
-func TestNewClient_DebugLogOutsideTransport(t *testing.T) {
+// TestNewClient_DebugLogShowsWhatIsSent covers the requests that Transport
+// changes, refuses or answers itself: DebugLog is inside Transport, so the
+// log shows each request as it is sent and each response as it arrives.
+func TestNewClient_DebugLogShowsWhatIsSent(t *testing.T) {
 	refused := errors.New("hook refused")
 	redirect := func(w http.ResponseWriter, r *http.Request, _ int) {
 		http.Redirect(w, r, "/login.html?error=private-link-validation-error", http.StatusFound)
@@ -179,6 +187,7 @@ func TestNewClient_DebugLogOutsideTransport(t *testing.T) {
 		name      string
 		configure func(*config.Config)
 		answer    func(http.ResponseWriter, *http.Request, int)
+		wantErr   string   // a part of the error of both calls
 		classic   []string // how each message of the classic client starts
 		modular   []string
 	}{{
@@ -189,15 +198,21 @@ func TestNewClient_DebugLogOutsideTransport(t *testing.T) {
 		classic: []string{request + "> * Host: \n> * Accept: application/json\n> * Authorization: Bearer dapi-secret\n> * Traceparent: "},
 		modular: []string{request + "> * Host: 127.0.0.1:"},
 	}, {
+		// Only the retry loop of the classic client writes a message.
 		name:      "request that the cfg.Headers hook refuses",
 		configure: func(cfg *config.Config) { cfg.Headers = func(*http.Request) error { return refused } },
+		wantErr:   "failed during request visitor: hook refused",
 		classic:   []string{"non-retriable error: failed during request visitor: hook refused"},
-		modular:   []string{request + "< Error: Delete \"http://127.0.0.1:"},
 	}, {
+		// The classic client logs the first request with the last response.
+		// DebugLog logs each request of the redirect, and the login page
+		// without its text, because Transport closes the page unread. Both
+		// calls fail, although the workspace answers the delete with a 200.
 		name:    "private link login page",
 		answer:  redirect,
+		wantErr: "The requested workspace has AWS PrivateLink enabled",
 		classic: []string{request + "< HTTP/1.1 200 OK\n< " + newClientLoginPage, "non-retriable error: The requested workspace has "},
-		modular: []string{request + "< HTTP/1.1 302 Found", "GET /login.html?error=private-link-validation-error\n< HTTP/1.1 403 Forbidden\n< {\n<   \"error_code\": \"PRIVATE_LINK_VALIDATION_ERROR\",\n"},
+		modular: []string{request + "< HTTP/1.1 302 Found", "GET /login.html?error=private-link-validation-error\n< HTTP/1.1 200 OK"},
 	}} {
 		t.Run(tc.name, func(t *testing.T) {
 			ws := newClientStart(t, &newClientWorkspace{answer: tc.answer})
@@ -205,16 +220,53 @@ func TestNewClient_DebugLogOutsideTransport(t *testing.T) {
 			classic := newClientClassic(t, cfg)
 			modular, err := NewClient(t.Context(), cfg, modelregistry.NewClient)
 			require.NoError(t, err)
-			fromClassic, _ := newClientLogged(t.Context(), func(ctx context.Context) (any, error) { return newClientCalls[3].classic(ctx, classic) })
-			fromModular, _ := newClientLogged(t.Context(), func(ctx context.Context) (any, error) { return newClientCalls[3].modular(ctx, modular) })
+			fromClassic, classicErr := newClientLogged(t.Context(), func(ctx context.Context) (any, error) { return newClientCalls[3].classic(ctx, classic) })
+			fromModular, modularErr := newClientLogged(t.Context(), func(ctx context.Context) (any, error) { return newClientCalls[3].modular(ctx, modular) })
+			for who, err := range map[string]error{"classic": classicErr, "modular": modularErr} {
+				if tc.wantErr == "" {
+					assert.NoError(t, err, who)
+				} else {
+					assert.ErrorContains(t, err, tc.wantErr, who)
+				}
+			}
 			for who, logged := range map[string][2][]string{"classic": {tc.classic, fromClassic}, "modular": {tc.modular, fromModular}} {
 				require.Len(t, logged[1], len(logged[0]), who)
 				for i, want := range logged[0] {
 					assert.True(t, strings.HasPrefix(logged[1][i], want), "%s message %d is %q", who, i+1, logged[1][i])
 				}
 			}
-			assert.Equal(t, cfg.DebugHeaders, strings.Contains(fromClassic[0], "\n> * X-From-Hook: hook\n"))
-			assert.NotContains(t, fromModular[0], "X-From-Hook")
+			for who, logged := range map[string][]string{"classic": fromClassic, "modular": fromModular} {
+				all := strings.Join(logged, "\n")
+				assert.Equal(t, cfg.DebugHeaders, strings.Contains(all, "\n> * X-From-Hook: hook\n"), who)
+				assert.Equal(t, who == "classic" && tc.answer != nil, strings.Contains(all, newClientLoginPage), who)
+			}
 		})
 	}
+}
+
+// TestNewClient_TimesAttemptFromTheConnection pins a difference from the
+// classic client, whose inactivity timeout runs while its request visitors
+// do: a cfg.Headers hook that outlasts the timeout fails the classic attempt.
+// AttemptTimeout is inside Transport, which runs the visitors, so the wait of
+// the modular client starts after them and the call succeeds.
+func TestNewClient_TimesAttemptFromTheConnection(t *testing.T) {
+	t.Parallel()
+	ws := newClientStart(t, &newClientWorkspace{})
+	cfg := ws.config(func(cfg *config.Config) {
+		cfg.HTTPTimeoutSeconds, cfg.RetryTimeoutSeconds = 1, 5
+		cfg.Headers = func(*http.Request) error { time.Sleep(1300 * time.Millisecond); return nil }
+	})
+	classic := newClientClassic(t, cfg)
+	modular, err := NewClient(t.Context(), cfg, modelregistry.NewClient)
+	require.NoError(t, err)
+	var classicErr, modularErr error
+	var wg sync.WaitGroup
+	wg.Go(func() { _, classicErr = newClientCalls[1].classic(t.Context(), classic) })
+	wg.Go(func() { _, modularErr = newClientCalls[1].modular(t.Context(), modular) })
+	wg.Wait()
+	assert.ErrorContains(t, classicErr, ": request timed out after 1s of inactivity")
+	assert.NoError(t, modularErr)
+	received := ws.received()
+	require.Len(t, received, 1, "the classic client sends nothing")
+	assert.Contains(t, received[0].Header.Get("User-Agent"), " sdk-go-modelregistry/")
 }

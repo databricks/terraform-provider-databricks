@@ -98,7 +98,8 @@ func (t *sdkGoTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	if err != nil {
 		return nil, err
 	}
-	if err := attempt.useClassicResponseBody(resp, responseBody); err != nil {
+	resp, err = attempt.sdkGoResponse(resp, responseBody)
+	if err != nil {
 		return nil, err
 	}
 	if resp.StatusCode < http.StatusBadRequest && len(responseBody) == 0 {

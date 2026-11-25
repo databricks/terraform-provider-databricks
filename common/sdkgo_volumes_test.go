@@ -367,3 +367,61 @@ func TestSdkGoVolumesClientDoesNotRetryUndecodableBodies(t *testing.T) {
 	}
 	assert.Equal(t, normalize(r.classicErr), normalize(r.err))
 }
+
+// A host that doesn't parse fails each call in the classic host visitor, after the rate
+// limiter and authentication, so neither client sends a request.
+func TestSdkGoVolumesClientFailsHostsThatDontParseLikeClassicClient(t *testing.T) {
+	badHost := func(cfg *config.Config) { cfg.Host = "https://bad host.example.com" }
+	r := readBothWays(t, context.Background, badHost)
+	assert.EqualError(t, r.err, `failed during request visitor: parse `+
+		`"https://bad host.example.com": invalid character " " in host name`)
+	assert.EqualError(t, r.classicErr, r.err.Error())
+	assert.EqualValues(t, 0, r.calls)
+	assert.EqualValues(t, 0, r.classicCalls)
+}
+
+// switchingProtocols answers with a 101 that no request asked for, then closes the
+// connection, which ends the response body.
+func switchingProtocols(w http.ResponseWriter, _ *http.Request) {
+	conn, buf, err := w.(http.Hijacker).Hijack()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer conn.Close()
+	_, _ = buf.WriteString("HTTP/1.1 101 Switching Protocols\r\n" +
+		"Connection: Upgrade\r\nUpgrade: websocket\r\n\r\n")
+	_ = buf.Flush()
+}
+
+// The classic client reads every status below 400 as a success, so sdk-go reads the
+// same volume for each, and a delete answered with one succeeds on both.
+func TestSdkGoVolumesClientReadsSuccessStatusesLikeClassicClient(t *testing.T) {
+	for name, answer := range map[string]handler{
+		"101 Switching Protocols": switchingProtocols,
+		"202 Accepted":            respond(http.StatusAccepted, sdkGoTestVolume),
+		"304 Not Modified":        respond(http.StatusNotModified, ""),
+	} {
+		t.Run(name, func(t *testing.T) {
+			ctx := context.Background()
+			server, calls := serveSequence(t, answer, answer)
+			vc, err := SdkGoVolumesClient(ctx, newVolumesTestWorkspaceClient(t, server, nil))
+			require.NoError(t, err)
+			v, err := vc.ReadByName(ctx, sdkGoTestVolumeName)
+			require.NoError(t, err)
+			require.NoError(t, vc.DeleteByName(ctx, sdkGoTestVolumeName))
+			classicServer, classicCalls := serveSequence(t, answer, answer)
+			classic := newVolumesTestWorkspaceClient(t, classicServer, nil).Volumes
+			classicVolume, err := classic.ReadByName(ctx, sdkGoTestVolumeName)
+			require.NoError(t, err)
+			require.NoError(t, classic.DeleteByName(ctx, sdkGoTestVolumeName))
+			var fullName string
+			if v.FullName != nil {
+				fullName = *v.FullName
+			}
+			assert.Equal(t, classicVolume.FullName, fullName)
+			assert.EqualValues(t, 2, calls.Load())
+			assert.Equal(t, classicCalls.Load(), calls.Load())
+		})
+	}
+}

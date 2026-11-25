@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go/service/ml"
+	"github.com/databricks/sdk-go/core/types"
 	modelregistry "github.com/databricks/sdk-go/modelregistry/v1"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -14,9 +15,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// Every identifier of this file starts with the name of the helper, because
-// the other helpers of the package declare their own test types. The types have
-// no MarshalJSON method, so FieldName gives the snake_case name of each field.
+// Every identifier of this file starts with the name of the helper, because the other helpers of the
+// package declare their own. The types have no MarshalJSON method, so FieldName gives snake_case names.
 
 type dataToStructEnum string
 
@@ -63,8 +63,7 @@ type dataToStructShapes struct {
 	EnumLabels     map[dataToStructEnum]dataToStructEnum
 }
 
-// dataToStructOne is a struct whose only field has the type T and the key
-// "field".
+// dataToStructOne has one field, of the type T and with the key "field".
 type dataToStructOne[T any] struct{ Field T }
 
 // dataToStructChoice has the shape of the interface of a oneof group.
@@ -72,29 +71,22 @@ type dataToStructChoice interface{ isDataToStructChoice() }
 
 func dataToStructPtr[T any](v T) *T { return &v }
 
-// dataToStructScalars returns the schema of an optional string, bool, integer
-// and float.
+// dataToStructScalars returns the schema of an optional string, bool, integer and float.
 func dataToStructScalars() (str, boolean, integer, float *schema.Schema) {
 	optional := func(t schema.ValueType) *schema.Schema { return &schema.Schema{Type: t, Optional: true} }
 	return optional(schema.TypeString), optional(schema.TypeBool), optional(schema.TypeInt), optional(schema.TypeFloat)
 }
 
-// dataToStructList is the schema of a list of elem, which is a *schema.Schema
-// for scalars and a *schema.Resource for blocks.
-func dataToStructList(elem any) *schema.Schema {
-	return &schema.Schema{Type: schema.TypeList, Optional: true, Elem: elem}
+// dataToStructOf is the schema of a list, a set or a map of elem: a
+// *schema.Schema for scalars and a *schema.Resource for blocks.
+func dataToStructOf(t schema.ValueType, elem any) *schema.Schema {
+	return &schema.Schema{Type: t, Optional: true, Elem: elem}
 }
-
+func dataToStructList(elem any) *schema.Schema { return dataToStructOf(schema.TypeList, elem) }
+func dataToStructSet(elem any) *schema.Schema  { return dataToStructOf(schema.TypeSet, elem) }
+func dataToStructMap(elem any) *schema.Schema  { return dataToStructOf(schema.TypeMap, elem) }
 func dataToStructBlocks(block map[string]*schema.Schema) *schema.Schema {
 	return dataToStructList(&schema.Resource{Schema: block})
-}
-
-func dataToStructSet(elem any) *schema.Schema {
-	return &schema.Schema{Type: schema.TypeSet, Optional: true, Elem: elem}
-}
-
-func dataToStructMap(elem *schema.Schema) *schema.Schema {
-	return &schema.Schema{Type: schema.TypeMap, Optional: true, Elem: elem}
 }
 
 func dataToStructLeafSchema() map[string]*schema.Schema {
@@ -104,10 +96,8 @@ func dataToStructLeafSchema() map[string]*schema.Schema {
 
 func dataToStructBranchSchema() map[string]*schema.Schema {
 	str, _, _, _ := dataToStructScalars()
-	return map[string]*schema.Schema{
-		"label": str, "leaf": dataToStructBlocks(dataToStructLeafSchema()),
-		"inline": dataToStructBlocks(dataToStructLeafSchema()), "leaves": dataToStructBlocks(dataToStructLeafSchema()),
-	}
+	leaves := dataToStructBlocks(dataToStructLeafSchema())
+	return map[string]*schema.Schema{"label": str, "leaf": leaves, "inline": leaves, "leaves": leaves}
 }
 
 func dataToStructShapesSchema() map[string]*schema.Schema {
@@ -237,10 +227,7 @@ func TestDataToStruct_ModelRegistryMessages(t *testing.T) {
 		want   any
 	}{
 		{
-			s: map[string]*schema.Schema{
-				"name": str, "description": str,
-				"tags": dataToStructBlocks(map[string]*schema.Schema{"key": str, "value": str}),
-			},
+			s: map[string]*schema.Schema{"name": str, "description": str, "tags": dataToStructBlocks(map[string]*schema.Schema{"key": str, "value": str})},
 			config: map[string]any{"name": "model", "description": "about", "tags": []any{
 				map[string]any{"key": "a", "value": "1"}, map[string]any{"key": "b"},
 			}},
@@ -254,12 +241,8 @@ func TestDataToStruct_ModelRegistryMessages(t *testing.T) {
 			// Enums by value and in a slice, and messages by pointer with a bool.
 			s: map[string]*schema.Schema{
 				"model_name": str, "events": dataToStructList(str), "description": str, "status": str,
-				"http_url_spec": dataToStructBlocks(map[string]*schema.Schema{
-					"url": str, "enable_ssl_verification": boolean, "secret": str, "authorization": str,
-				}),
-				"job_spec": dataToStructBlocks(map[string]*schema.Schema{
-					"job_id": str, "workspace_url": str, "access_token": str,
-				}),
+				"http_url_spec": dataToStructBlocks(map[string]*schema.Schema{"url": str, "enable_ssl_verification": boolean, "secret": str, "authorization": str}),
+				"job_spec":      dataToStructBlocks(map[string]*schema.Schema{"job_id": str, "workspace_url": str, "access_token": str}),
 			},
 			config: map[string]any{
 				"model_name": "model", "events": []any{"MODEL_VERSION_CREATED", "COMMENT_CREATED"}, "status": "ACTIVE",
@@ -268,19 +251,15 @@ func TestDataToStruct_ModelRegistryMessages(t *testing.T) {
 			},
 			result: &modelregistry.CreateRegistryWebhookRequest{},
 			want: &modelregistry.CreateRegistryWebhookRequest{
-				ModelName: dataToStructPtr("model"),
-				Events: []modelregistry.RegistryWebhookEvent{
-					modelregistry.RegistryWebhookEvent_ModelVersionCreated, modelregistry.RegistryWebhookEvent_CommentCreated,
-				},
+				ModelName:   dataToStructPtr("model"),
+				Events:      []modelregistry.RegistryWebhookEvent{modelregistry.RegistryWebhookEvent_ModelVersionCreated, modelregistry.RegistryWebhookEvent_CommentCreated},
 				Status:      modelregistry.RegistryWebhookStatus_Active,
 				HttpUrlSpec: &modelregistry.HttpUrlSpec{Url: dataToStructPtr("https://example.com"), EnableSslVerification: dataToStructPtr(true)},
 				JobSpec:     &modelregistry.JobSpec{JobId: dataToStructPtr("1"), AccessToken: dataToStructPtr("token")},
 			},
 		},
 		{
-			s: map[string]*schema.Schema{
-				"filter": str, "max_results": integer, "order_by": dataToStructList(str), "page_token": str,
-			},
+			s:      map[string]*schema.Schema{"filter": str, "max_results": integer, "order_by": dataToStructList(str), "page_token": str},
 			config: map[string]any{"filter": "name LIKE 'm%'", "max_results": 50, "order_by": []any{"name ASC", "timestamp DESC"}},
 			result: &modelregistry.SearchRegisteredModelsRequest{},
 			want: &modelregistry.SearchRegisteredModelsRequest{
@@ -295,14 +274,10 @@ func TestDataToStruct_ModelRegistryMessages(t *testing.T) {
 		},
 		{
 			// A false bool is left out, like the other zero values.
-			s: map[string]*schema.Schema{
-				"name": str, "version": str, "stage": str, "archive_existing_versions": boolean,
-			},
+			s:      map[string]*schema.Schema{"name": str, "version": str, "stage": str, "archive_existing_versions": boolean},
 			config: map[string]any{"name": "model", "version": "1", "stage": "Staging", "archive_existing_versions": false},
 			result: &modelregistry.TransitionModelVersionStageDatabricksRequest{},
-			want: &modelregistry.TransitionModelVersionStageDatabricksRequest{
-				Name: dataToStructPtr("model"), Version: dataToStructPtr("1"), Stage: dataToStructPtr("Staging"),
-			},
+			want:   &modelregistry.TransitionModelVersionStageDatabricksRequest{Name: dataToStructPtr("model"), Version: dataToStructPtr("1"), Stage: dataToStructPtr("Staging")},
 		},
 	} {
 		t.Run(reflect.TypeOf(tc.result).Elem().Name(), func(t *testing.T) {
@@ -326,12 +301,8 @@ type dataToStructSkips struct {
 
 func TestDataToStruct_SkipsFieldsAndEntries(t *testing.T) {
 	str, _, _, _ := dataToStructScalars()
-	inData := map[string]*schema.Schema{
-		"known": str, "no_entry": str, "nil_entry": str, "unsupported": str, "hidden": str, "no_field": str, "name": str,
-	}
-	d := schema.TestResourceDataRaw(t, inData, map[string]any{
-		"known": "new", "no_entry": "x", "nil_entry": "x", "unsupported": "x", "hidden": "x", "no_field": "x", "name": "x",
-	})
+	inData := map[string]*schema.Schema{"known": str, "no_entry": str, "nil_entry": str, "unsupported": str, "hidden": str, "no_field": str, "name": str}
+	d := schema.TestResourceDataRaw(t, inData, map[string]any{"known": "new", "no_entry": "x", "nil_entry": "x", "unsupported": "x", "hidden": "x", "no_field": "x", "name": "x"})
 	// The empty string is the FieldName of the unexported fields.
 	s := map[string]*schema.Schema{"known": str, "nil_entry": nil, "hidden": str, "": str, "no_field": str, "name": str}
 	got := dataToStructSkips{Known: dataToStructPtr("old"), NoEntry: dataToStructPtr("kept"), hidden: dataToStructPtr("kept")}
@@ -355,20 +326,15 @@ func TestDataToStruct_ResultMustBePointerToStruct(t *testing.T) {
 	d := schema.TestResourceDataRaw(t, s, map[string]any{"name": "model"})
 	request := &modelregistry.CreateRegisteredModelRequest{}
 	var nilRequest *modelregistry.CreateRegisteredModelRequest
-	for name, tc := range map[string]struct {
-		result any
-		want   string
-	}{
-		"nil":                  {nil, "DataToStruct: result is <nil>, not a pointer to a struct"},
-		"a struct":             {*request, "DataToStruct: result is modelregistry.CreateRegisteredModelRequest, not a pointer to a struct"},
-		"a pointer to string":  {dataToStructPtr("x"), "DataToStruct: result is *string, not a pointer to a struct"},
-		"a pointer to pointer": {&request, "DataToStruct: result is **modelregistry.CreateRegisteredModelRequest, not a pointer to a struct"},
-		"a map":                {map[string]any{}, "DataToStruct: result is map[string]interface {}, not a pointer to a struct"},
-		"a nil pointer":        {nilRequest, "DataToStruct: result is a nil *modelregistry.CreateRegisteredModelRequest"},
+	for want, result := range map[string]any{
+		"DataToStruct: result is <nil>, not a pointer to a struct":                                        nil,
+		"DataToStruct: result is modelregistry.CreateRegisteredModelRequest, not a pointer to a struct":   *request,
+		"DataToStruct: result is *string, not a pointer to a struct":                                      dataToStructPtr("x"),
+		"DataToStruct: result is **modelregistry.CreateRegisteredModelRequest, not a pointer to a struct": &request,
+		"DataToStruct: result is map[string]interface {}, not a pointer to a struct":                      map[string]any{},
+		"DataToStruct: result is a nil *modelregistry.CreateRegisteredModelRequest":                       nilRequest,
 	} {
-		t.Run(name, func(t *testing.T) {
-			assert.EqualError(t, DataToStruct(d, s, tc.result), tc.want)
-		})
+		assert.EqualError(t, DataToStruct(d, s, result), want)
 	}
 }
 
@@ -381,15 +347,12 @@ func TestDataToStruct_UnsupportedFieldType(t *testing.T) {
 		for _, result := range []any{
 			// The interface of a oneof group and a body stream are interfaces.
 			&dataToStructOne[any]{}, &dataToStructOne[dataToStructChoice]{}, &dataToStructOne[io.ReadCloser]{},
-			&dataToStructOne[json.RawMessage]{}, &dataToStructOne[[]byte]{},
-			&dataToStructOne[[][]string]{}, &dataToStructOne[[]json.RawMessage]{},
-			&dataToStructOne[[]*dataToStructLeaf]{}, &dataToStructOne[[]any]{},
-			&dataToStructOne[map[string]int]{}, &dataToStructOne[map[string]any]{},
-			&dataToStructOne[map[string]json.RawMessage]{}, &dataToStructOne[map[int]string]{},
-			&dataToStructOne[**string]{}, &dataToStructOne[*[]string]{}, &dataToStructOne[*map[string]string]{},
-			&dataToStructOne[*any]{}, &dataToStructOne[uint]{}, &dataToStructOne[*uint64]{},
-			&dataToStructOne[[2]string]{}, &dataToStructOne[complex128]{}, &dataToStructOne[chan int]{},
-			&dataToStructOne[func()]{},
+			&dataToStructOne[json.RawMessage]{}, &dataToStructOne[[]byte]{}, &dataToStructOne[[][]string]{}, &dataToStructOne[[]json.RawMessage]{},
+			&dataToStructOne[[]*dataToStructLeaf]{}, &dataToStructOne[[]any]{}, &dataToStructOne[[]*types.Time]{}, &dataToStructOne[**types.Time]{},
+			&dataToStructOne[map[string]int]{}, &dataToStructOne[map[string]any]{}, &dataToStructOne[map[string]json.RawMessage]{},
+			&dataToStructOne[map[int]string]{}, &dataToStructOne[map[string]types.Duration]{}, &dataToStructOne[**string]{}, &dataToStructOne[*[]string]{},
+			&dataToStructOne[*map[string]string]{}, &dataToStructOne[*any]{}, &dataToStructOne[uint]{}, &dataToStructOne[*uint64]{},
+			&dataToStructOne[[2]string]{}, &dataToStructOne[complex128]{}, &dataToStructOne[chan int]{}, &dataToStructOne[func()]{},
 		} {
 			// The names come from reflect, because json.RawMessage has another
 			// one in a Go version where it is an alias.
@@ -428,7 +391,10 @@ func TestDataToStruct_ValueDoesNotFit(t *testing.T) {
 	oneLeaf := []any{map[string]any{"name": "secret"}}
 	const notBlocks = " takes a list of blocks, but the value in the resource data is of type "
 	const noBlock = " takes a list of blocks, but the schema of the field has no block"
-	const notScalar = " can't hold the value in the resource data, which is of type "
+	const notHeld = " can't hold the value in the resource data, which is "
+	const notScalar = notHeld + "of type "
+	const notTime = "not a timestamp that types.Time decodes, such as 2006-01-02T15:04:05Z"
+	const notDuration = "not a duration that types.Duration decodes, such as 3.5s"
 	for _, tc := range []struct {
 		name   string
 		schema *schema.Schema
@@ -445,6 +411,11 @@ func TestDataToStruct_ValueDoesNotFit(t *testing.T) {
 		{"an integer overflows int8", integer, 300, &dataToStructOne[int8]{}, "int8" + notScalar + "int"},
 		{"an integer overflows *int32", integer, 1 << 40, &dataToStructOne[*int32]{}, "*int32" + notScalar + "int"},
 		{"a float overflows float32", float, 1e300, &dataToStructOne[float32]{}, "float32" + notScalar + "float64"},
+		{"a word in a timestamp", str, "secret", &dataToStructOne[*types.Time]{}, "*types.Time" + notHeld + notTime},
+		{"a date in a timestamp", str, "2025-11-25", &dataToStructOne[types.Time]{}, "types.Time" + notHeld + notTime},
+		{"a word in a duration", str, "secret", &dataToStructOne[types.Duration]{}, "types.Duration" + notHeld + notDuration},
+		{"minutes in a duration", str, "5m", &dataToStructOne[*types.Duration]{}, "*types.Duration" + notHeld + notDuration},
+		{"an integer in a timestamp", integer, 1764028800, &dataToStructOne[*types.Time]{}, "*types.Time" + notScalar + "int"},
 		{"a string in a message", str, "secret", &dataToStructOne[*dataToStructLeaf]{}, "*sdkgoutility.dataToStructLeaf" + notBlocks + "string"},
 		{"a map in a message", dataToStructMap(str), map[string]any{"name": "secret"}, &dataToStructOne[dataToStructLeaf]{},
 			"sdkgoutility.dataToStructLeaf" + notBlocks + "map[string]interface {}"},
@@ -467,6 +438,8 @@ func TestDataToStruct_ValueDoesNotFit(t *testing.T) {
 			"[]int64 can't hold item 0 of the list, which is of type string"},
 		{"an empty string in a slice of strings", dataToStructList(str), []any{"secret", ""}, &dataToStructOne[[]string]{},
 			"[]string can't hold item 1 of the list, which is of type <nil>"},
+		{"the second timestamp isn't one", dataToStructList(str), []any{"2025-11-25T00:00:00Z", "secret"}, &dataToStructOne[[]types.Time]{},
+			"[]types.Time can't hold item 1 of the list, which is " + notTime},
 		{"the second integer overflows", dataToStructList(integer), []any{1, 300}, &dataToStructOne[[]int8]{},
 			"[]int8 can't hold item 1 of the list, which is of type int"},
 		{"a string in a map", str, "secret", &dataToStructOne[map[string]string]{},
@@ -511,15 +484,51 @@ func TestDataToStruct_ErrorNamesNestedField(t *testing.T) {
 	}
 }
 
+// dataToStructReadsJSON checks that DataToStruct reads the string that the JSON encoding of want writes into a
+// field of its type by value, by pointer and in a slice, and that an unset attribute leaves those fields as they came.
+func dataToStructReadsJSON[T any](t *testing.T, want T) {
+	encoded, err := json.Marshal([]T{want, want})
+	require.NoError(t, err)
+	var texts []any
+	require.NoError(t, json.Unmarshal(encoded, &texts))
+	str, _, _, _ := dataToStructScalars()
+	s := map[string]*schema.Schema{"value": str, "pointer": str, "slice": dataToStructList(str)}
+	var got, filled struct {
+		Value   T
+		Pointer *T
+		Slice   []T
+	}
+	filled.Value, filled.Pointer, filled.Slice = want, &want, []T{want, want}
+	d := schema.TestResourceDataRaw(t, s, map[string]any{"value": texts[0], "pointer": texts[0], "slice": texts})
+	require.NoError(t, DataToStruct(d, s, &got), texts[0])
+	assert.Equal(t, filled, got, texts[0])
+	require.NoError(t, DataToStruct(schema.TestResourceDataRaw(t, s, map[string]any{}), s, &got))
+	assert.Equal(t, filled, got, "an unset attribute changed a field")
+}
+
+func TestDataToStruct_ReadsTimeAndDuration(t *testing.T) {
+	for _, want := range []types.Time{{}, {Seconds: 1764028800, Nanos: 120000000}, {Seconds: -1, Nanos: 999999999}, {Seconds: types.MaxTimestampSeconds}} {
+		dataToStructReadsJSON(t, want)
+	}
+	for _, want := range []types.Duration{{}, {Seconds: 3, Nanos: 500000000}, {Seconds: -90}, {Nanos: -1}, {Seconds: 315576000000}} {
+		dataToStructReadsJSON(t, want)
+	}
+	// The decoding of types.Time also takes a numeric offset, which its encoding never writes.
+	str, _, _, _ := dataToStructScalars()
+	s := map[string]*schema.Schema{"field": str}
+	var got dataToStructOne[types.Time]
+	require.NoError(t, DataToStruct(schema.TestResourceDataRaw(t, s, map[string]any{"field": "2025-11-25T05:30:00.5+05:30"}), s, &got))
+	assert.Equal(t, types.Time{Seconds: 1764028800, Nanos: 500000000}, got.Field)
+}
+
 func dataToStructJSON(t *testing.T, message any) string {
 	data, err := json.Marshal(message)
 	require.NoError(t, err)
 	return string(data)
 }
 
-// TestDataToStruct_SameRequestsAsClassic fills a classic request and the
-// modular request that replaces it from the same resource data, and compares
-// the JSON that the two send.
+// TestDataToStruct_SameRequestsAsClassic fills a classic request and the modular request that replaces it from the
+// same resource data, and compares the JSON that the two send.
 func TestDataToStruct_SameRequestsAsClassic(t *testing.T) {
 	createSchema := common.StructToSchema(ml.CreateModelRequest{}, nil)
 	newCreate := func() (any, any) { return &ml.CreateModelRequest{}, &modelregistry.CreateRegisteredModelRequest{} }
@@ -535,13 +544,7 @@ func TestDataToStruct_SameRequestsAsClassic(t *testing.T) {
 		// databricks_mlflow_model passes the schema of the create request to every request.
 		{"update with the schema of create", createSchema, newUpdate, false},
 	}
-	tag := func(pairs ...string) map[string]any {
-		block := map[string]any{}
-		for i := 0; i < len(pairs); i += 2 {
-			block[pairs[i]] = pairs[i+1]
-		}
-		return block
-	}
+	type tag = map[string]any
 	for _, tc := range []struct {
 		name   string
 		config map[string]any
@@ -550,15 +553,15 @@ func TestDataToStruct_SameRequestsAsClassic(t *testing.T) {
 	}{
 		{"only name", map[string]any{"name": "model"}, `{"name":"model"}`, ""},
 		{"name, description and two tags",
-			map[string]any{"name": "model", "description": "about", "tags": []any{tag("key", "a", "value", "1"), tag("key", "b", "value", "2")}},
+			map[string]any{"name": "model", "description": "about", "tags": []any{tag{"key": "a", "value": "1"}, tag{"key": "b", "value": "2"}}},
 			`{"name":"model","description":"about"}`, `[{"key":"a","value":"1"},{"key":"b","value":"2"}]`},
-		{"a tag with only a key", map[string]any{"name": "model", "tags": []any{tag("key", "a")}}, `{"name":"model"}`, `[{"key":"a"}]`},
-		{"a tag with only a value", map[string]any{"name": "model", "tags": []any{tag("value", "1")}}, `{"name":"model"}`, `[{"value":"1"}]`},
-		{"a tag with an empty value", map[string]any{"name": "model", "tags": []any{tag("key", "a", "value", "")}}, `{"name":"model"}`, `[{"key":"a"}]`},
+		{"a tag with only a key", map[string]any{"name": "model", "tags": []any{tag{"key": "a"}}}, `{"name":"model"}`, `[{"key":"a"}]`},
+		{"a tag with only a value", map[string]any{"name": "model", "tags": []any{tag{"value": "1"}}}, `{"name":"model"}`, `[{"value":"1"}]`},
+		{"a tag with an empty value", map[string]any{"name": "model", "tags": []any{tag{"key": "a", "value": ""}}}, `{"name":"model"}`, `[{"key":"a"}]`},
 		{"an empty description", map[string]any{"name": "model", "description": ""}, `{"name":"model"}`, ""},
 		{"no tags", map[string]any{"name": "model", "description": "about", "tags": []any{}}, `{"name":"model","description":"about"}`, ""},
-		{"an empty tags block", map[string]any{"name": "model", "tags": []any{tag()}}, `{"name":"model"}`, `[{}]`},
-		{"an empty tags block before a tag", map[string]any{"name": "model", "tags": []any{tag(), tag("key", "a", "value", "1")}},
+		{"an empty tags block", map[string]any{"name": "model", "tags": []any{tag{}}}, `{"name":"model"}`, `[{}]`},
+		{"an empty tags block before a tag", map[string]any{"name": "model", "tags": []any{tag{}, tag{"key": "a", "value": "1"}}},
 			`{"name":"model"}`, `[{},{"key":"a","value":"1"}]`},
 	} {
 		for _, twin := range twins {
@@ -578,10 +581,9 @@ func TestDataToStruct_SameRequestsAsClassic(t *testing.T) {
 	}
 }
 
-// TestDataToStruct_LeavesOutZeroThatClassicSends pins the request that differs
-// from the classic path: name has no omitempty in the classic struct, so the
-// classic client sends an empty name, and DataToStruct leaves it out until the
-// caller sets the pointer.
+// TestDataToStruct_LeavesOutZeroThatClassicSends pins the request that differs from the classic path: name has no
+// omitempty in the classic struct, so the classic client sends an empty name, and DataToStruct leaves it out until
+// the caller sets the pointer.
 func TestDataToStruct_LeavesOutZeroThatClassicSends(t *testing.T) {
 	s := common.StructToSchema(ml.CreateModelRequest{}, nil)
 	d := schema.TestResourceDataRaw(t, s, map[string]any{"name": ""})

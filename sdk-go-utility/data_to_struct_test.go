@@ -77,8 +77,7 @@ func dataToStructScalars() (str, boolean, integer, float *schema.Schema) {
 	return optional(schema.TypeString), optional(schema.TypeBool), optional(schema.TypeInt), optional(schema.TypeFloat)
 }
 
-// dataToStructOf is the schema of a list, a set or a map of elem: a
-// *schema.Schema for scalars and a *schema.Resource for blocks.
+// dataToStructOf is the schema of a list, a set or a map of elem: a *schema.Schema for scalars and a *schema.Resource for blocks.
 func dataToStructOf(t schema.ValueType, elem any) *schema.Schema {
 	return &schema.Schema{Type: t, Optional: true, Elem: elem}
 }
@@ -227,15 +226,11 @@ func TestDataToStruct_ModelRegistryMessages(t *testing.T) {
 		want   any
 	}{
 		{
-			s: map[string]*schema.Schema{"name": str, "description": str, "tags": dataToStructBlocks(map[string]*schema.Schema{"key": str, "value": str})},
-			config: map[string]any{"name": "model", "description": "about", "tags": []any{
-				map[string]any{"key": "a", "value": "1"}, map[string]any{"key": "b"},
-			}},
+			s:      map[string]*schema.Schema{"name": str, "description": str, "tags": dataToStructBlocks(map[string]*schema.Schema{"key": str, "value": str})},
+			config: map[string]any{"name": "model", "description": "about", "tags": []any{map[string]any{"key": "a", "value": "1"}, map[string]any{"key": "b"}}},
 			result: &modelregistry.CreateRegisteredModelRequest{},
-			want: &modelregistry.CreateRegisteredModelRequest{
-				Name: dataToStructPtr("model"), Description: dataToStructPtr("about"),
-				Tags: []modelregistry.RegisteredModelTag{{Key: dataToStructPtr("a"), Value: dataToStructPtr("1")}, {Key: dataToStructPtr("b")}},
-			},
+			want: &modelregistry.CreateRegisteredModelRequest{Name: dataToStructPtr("model"), Description: dataToStructPtr("about"),
+				Tags: []modelregistry.RegisteredModelTag{{Key: dataToStructPtr("a"), Value: dataToStructPtr("1")}, {Key: dataToStructPtr("b")}}},
 		},
 		{
 			// Enums by value and in a slice, and messages by pointer with a bool.
@@ -287,16 +282,15 @@ func TestDataToStruct_ModelRegistryMessages(t *testing.T) {
 	}
 }
 
-// dataToStructSkips has the fields that DataToStruct must leave alone.
+// dataToStructSkips has the fields that DataToStruct must leave alone. Unsupported has no schema entry, so its type
+// doesn't matter. The fields of the embedded struct, name and count, are not looked into. A field mask is never read.
 type dataToStructSkips struct {
-	Known    *string
-	NoEntry  *string
-	NilEntry *string
-	// Unsupported has no schema entry, so that its type doesn't matter.
-	Unsupported any
-	hidden      *string
-	// The fields of an embedded struct, name and count, are not looked into.
+	Known, NoEntry, NilEntry *string
+	Unsupported              any
+	hidden                   *string
 	dataToStructLeaf
+	Mask        types.FieldMask[dataToStructLeaf]
+	MaskPointer *types.FieldMask[dataToStructLeaf]
 }
 
 func TestDataToStruct_SkipsFieldsAndEntries(t *testing.T) {
@@ -318,6 +312,19 @@ func TestDataToStruct_SkipsFieldsAndEntries(t *testing.T) {
 	got = dataToStructSkips{}
 	require.NoError(t, DataToStruct(d, nil, &got))
 	assert.Equal(t, dataToStructSkips{}, got)
+
+	// A field mask is left as it came, empty or set, with a schema entry of its name that the data sets and without one.
+	masks := map[string]*schema.Schema{"mask": str, "mask_pointer": dataToStructBlocks(dataToStructLeafSchema())}
+	d = schema.TestResourceDataRaw(t, masks, map[string]any{"mask": "*", "mask_pointer": []any{map[string]any{"name": "x"}}})
+	mask, err := types.NewFieldMask[dataToStructLeaf]("*")
+	require.NoError(t, err)
+	for _, s := range []map[string]*schema.Schema{masks, {"known": str}} {
+		for _, came := range []dataToStructSkips{{}, {Mask: *mask, MaskPointer: mask}} {
+			got = came
+			require.NoError(t, DataToStruct(d, s, &got))
+			assert.Equal(t, came, got)
+		}
+	}
 }
 
 func TestDataToStruct_ResultMustBePointerToStruct(t *testing.T) {
@@ -354,8 +361,7 @@ func TestDataToStruct_UnsupportedFieldType(t *testing.T) {
 			&dataToStructOne[*map[string]string]{}, &dataToStructOne[*any]{}, &dataToStructOne[uint]{}, &dataToStructOne[*uint64]{},
 			&dataToStructOne[[2]string]{}, &dataToStructOne[complex128]{}, &dataToStructOne[chan int]{}, &dataToStructOne[func()]{},
 		} {
-			// The names come from reflect, because json.RawMessage has another
-			// one in a Go version where it is an alias.
+			// The names come from reflect, because json.RawMessage has another one in a Go version where it is an alias.
 			owner := reflect.TypeOf(result).Elem()
 			fieldType := owner.Field(0).Type.String()
 			t.Run(fieldType, func(t *testing.T) {
@@ -372,8 +378,7 @@ func TestDataToStruct_UnsupportedFieldType(t *testing.T) {
 func TestDataToStruct_UnsupportedFieldTypeInBlock(t *testing.T) {
 	str, _, _, _ := dataToStructScalars()
 	s := map[string]*schema.Schema{"field": dataToStructBlocks(map[string]*schema.Schema{"field": str})}
-	// The fields of a block are walked, and their types checked, when the
-	// block is set.
+	// The fields of a block are walked, and their types checked, when the block is set.
 	var unset dataToStructOne[[]dataToStructOne[any]]
 	require.NoError(t, DataToStruct(schema.TestResourceDataRaw(t, s, map[string]any{}), s, &unset))
 	assert.Nil(t, unset.Field)
@@ -395,6 +400,8 @@ func TestDataToStruct_ValueDoesNotFit(t *testing.T) {
 	const notScalar = notHeld + "of type "
 	const notTime = "not a timestamp that types.Time decodes, such as 2006-01-02T15:04:05Z"
 	const notDuration = "not a duration that types.Duration decodes, such as 3.5s"
+	const notList = " takes a list, but the value in the resource data is of type "
+	const notMap = " takes a map, but the value in the resource data is of type "
 	for _, tc := range []struct {
 		name   string
 		schema *schema.Schema
@@ -426,26 +433,18 @@ func TestDataToStruct_ValueDoesNotFit(t *testing.T) {
 		{"a string in messages", str, "secret", &dataToStructOne[[]dataToStructLeaf]{}, "[]sdkgoutility.dataToStructLeaf" + notBlocks + "string"},
 		{"a set of blocks in messages", dataToStructSet(&schema.Resource{Schema: dataToStructLeafSchema()}), oneLeaf, &dataToStructOne[[]dataToStructLeaf]{},
 			"[]sdkgoutility.dataToStructLeaf" + notBlocks + "*schema.Set"},
-		{"a string in a slice", str, "secret", &dataToStructOne[[]string]{},
-			"[]string takes a list, but the value in the resource data is of type string"},
-		{"a set in a slice", dataToStructSet(str), []any{"secret"}, &dataToStructOne[[]string]{},
-			"[]string takes a list, but the value in the resource data is of type *schema.Set"},
-		{"a map in a slice", dataToStructMap(str), map[string]any{"a": "secret"}, &dataToStructOne[[]string]{},
-			"[]string takes a list, but the value in the resource data is of type map[string]interface {}"},
-		{"blocks in a slice of strings", leaves, oneLeaf, &dataToStructOne[[]string]{},
-			"[]string can't hold item 0 of the list, which is of type map[string]interface {}"},
-		{"strings in a slice of integers", dataToStructList(str), []any{"secret"}, &dataToStructOne[[]int64]{},
-			"[]int64 can't hold item 0 of the list, which is of type string"},
+		{"a string in a slice", str, "secret", &dataToStructOne[[]string]{}, "[]string" + notList + "string"},
+		{"a set in a slice", dataToStructSet(str), []any{"secret"}, &dataToStructOne[[]string]{}, "[]string" + notList + "*schema.Set"},
+		{"a map in a slice", dataToStructMap(str), map[string]any{"a": "secret"}, &dataToStructOne[[]string]{}, "[]string" + notList + "map[string]interface {}"},
+		{"blocks in a slice of strings", leaves, oneLeaf, &dataToStructOne[[]string]{}, "[]string can't hold item 0 of the list, which is of type map[string]interface {}"},
+		{"strings in a slice of integers", dataToStructList(str), []any{"secret"}, &dataToStructOne[[]int64]{}, "[]int64 can't hold item 0 of the list, which is of type string"},
 		{"an empty string in a slice of strings", dataToStructList(str), []any{"secret", ""}, &dataToStructOne[[]string]{},
 			"[]string can't hold item 1 of the list, which is of type <nil>"},
 		{"the second timestamp isn't one", dataToStructList(str), []any{"2025-11-25T00:00:00Z", "secret"}, &dataToStructOne[[]types.Time]{},
 			"[]types.Time can't hold item 1 of the list, which is " + notTime},
-		{"the second integer overflows", dataToStructList(integer), []any{1, 300}, &dataToStructOne[[]int8]{},
-			"[]int8 can't hold item 1 of the list, which is of type int"},
-		{"a string in a map", str, "secret", &dataToStructOne[map[string]string]{},
-			"map[string]string takes a map, but the value in the resource data is of type string"},
-		{"a list in a map", dataToStructList(str), []any{"secret"}, &dataToStructOne[map[string]string]{},
-			"map[string]string takes a map, but the value in the resource data is of type []interface {}"},
+		{"the second integer overflows", dataToStructList(integer), []any{1, 300}, &dataToStructOne[[]int8]{}, "[]int8 can't hold item 1 of the list, which is of type int"},
+		{"a string in a map", str, "secret", &dataToStructOne[map[string]string]{}, "map[string]string" + notMap + "string"},
+		{"a list in a map", dataToStructList(str), []any{"secret"}, &dataToStructOne[map[string]string]{}, "map[string]string" + notMap + "[]interface {}"},
 		{"a map of integers in a map of strings", dataToStructMap(integer), map[string]any{"a": 1}, &dataToStructOne[map[string]string]{},
 			"map[string]string can't hold a value of the map, which is of type int"},
 	} {

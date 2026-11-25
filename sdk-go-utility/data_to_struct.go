@@ -1,10 +1,12 @@
 package sdkgoutility
 
 import (
+	"encoding/json"
 	"fmt"
 	"reflect"
 	"strconv"
 
+	"github.com/databricks/sdk-go/core/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -24,9 +26,13 @@ import (
 //   - a string, a bool, an integer or a float, or a pointer to one, from a
 //     value of that schema type. A named string type, which is how the SDK
 //     declares an enum, is a string.
+//   - a types.Time or a types.Duration of the SDK's core/types package, or a
+//     pointer to one, from a string, parsed with the JSON decoding of the type
+//     itself. So it takes exactly what the API sends and what the JSON
+//     encoding of the type writes, such as 2006-01-02T15:04:05Z and 3.500s.
 //   - a message, by pointer or by value, from a list of one block.
 //   - a slice of messages from a list of blocks, or a slice of strings, bools,
-//     integers or floats from a list of them.
+//     integers, floats, timestamps or durations from a list of them.
 //   - a map of strings to strings from a map of strings.
 //
 // The fields of a message are read the same way at every depth, each under
@@ -44,9 +50,10 @@ import (
 //     the value is read, so the error doesn't wait for a configuration that
 //     sets the field.
 //   - the value doesn't fit the field: its schema type is not the one that the
-//     field takes, a number overflows the field, or a list has more than one
-//     block for a single message. An empty string in a list of strings doesn't
-//     fit either: the Terraform SDK passes it as nil, on which
+//     field takes, a number overflows the field, a string is not one that the
+//     JSON decoding of types.Time or types.Duration takes, or a list has more
+//     than one block for a single message. An empty string in a list of
+//     strings doesn't fit either: the Terraform SDK passes it as nil, on which
 //     common.DataToStructPointer panics.
 //
 // DataToStruct deliberately doesn't:
@@ -58,9 +65,9 @@ import (
 //     even when it is zero, and DataToStruct leaves it nil.
 //   - read a set. A field whose schema type is schema.TypeSet gets the error
 //     of a value that doesn't fit.
-//   - convert a string to a timestamp, a duration or a field mask. Those are
-//     structs in the SDK, so a string doesn't fit them, and the caller sets
-//     them itself.
+//   - read a field mask. A types.FieldMask says which fields a request
+//     updates and is no attribute of the resource, so the caller sets it
+//     itself.
 //   - look into embedded structs, or read json tags, tf tags or aliases. The
 //     structs that need those stay with the helpers in package common.
 //   - validate the resource data. It relies on the validation that the
@@ -128,6 +135,21 @@ func dataToStructMessage(d *schema.ResourceData, s map[string]*schema.Schema, pr
 	return nil
 }
 
+// dataToStructTexts are the struct types of the SDK that are a string in JSON
+// and in the schema, each with what an error says of a string that the type
+// doesn't decode.
+var dataToStructTexts = map[reflect.Type]string{
+	reflect.TypeFor[types.Time]():     "not a timestamp that types.Time decodes, such as 2006-01-02T15:04:05Z",
+	reflect.TypeFor[types.Duration](): "not a duration that types.Duration decodes, such as 3.5s",
+}
+
+// dataToStructIsMessage reports whether t is a struct that is read from a
+// block, which is every struct but those of dataToStructTexts.
+func dataToStructIsMessage(t reflect.Type) bool {
+	_, isText := dataToStructTexts[t]
+	return t.Kind() == reflect.Struct && !isText
+}
+
 // dataToStructSupports reports whether DataToStruct fills a field of type t.
 func dataToStructSupports(t reflect.Type) bool {
 	switch t.Kind() {
@@ -159,12 +181,12 @@ func dataToStructIsScalar(t reflect.Type) bool {
 // set fills target, a zero value of a supported type, from raw, the value that
 // GetOk returned for the field.
 func (f dataToStructField) set(target reflect.Value, raw any) error {
-	switch target.Kind() {
-	case reflect.Pointer:
+	switch kind := target.Kind(); {
+	case kind == reflect.Pointer:
 		pointee := reflect.New(target.Type().Elem())
 		target.Set(pointee)
 		return f.set(pointee.Elem(), raw)
-	case reflect.Struct:
+	case dataToStructIsMessage(target.Type()):
 		blocks, blockSchema, err := f.blocks(raw)
 		if err != nil {
 			return err
@@ -173,16 +195,15 @@ func (f dataToStructField) set(target reflect.Value, raw any) error {
 			return f.errorf("takes one block, but the resource data has %d", len(blocks))
 		}
 		return dataToStructMessage(f.d, blockSchema, f.path+".0.", target)
-	case reflect.Slice:
+	case kind == reflect.Slice:
 		return f.setSlice(target, raw)
-	case reflect.Map:
+	case kind == reflect.Map:
 		return f.setMap(target, raw)
-	default:
-		if !dataToStructSetScalar(target, raw) {
-			return f.errorf("can't hold the value in the resource data, which is of type %T", raw)
-		}
-		return nil
 	}
+	if problem := dataToStructSetScalar(target, raw); problem != "" {
+		return f.errorf("can't hold the value in the resource data, which is %s", problem)
+	}
+	return nil
 }
 
 // blocks returns raw as the list of blocks that a message or a slice of
@@ -202,7 +223,7 @@ func (f dataToStructField) blocks(raw any) ([]any, map[string]*schema.Schema, er
 
 // setSlice fills target, an empty slice of messages or of scalars, from raw.
 func (f dataToStructField) setSlice(target reflect.Value, raw any) error {
-	if target.Type().Elem().Kind() == reflect.Struct {
+	if dataToStructIsMessage(target.Type().Elem()) {
 		blocks, blockSchema, err := f.blocks(raw)
 		if err != nil {
 			return err
@@ -222,8 +243,8 @@ func (f dataToStructField) setSlice(target reflect.Value, raw any) error {
 	}
 	target.Set(reflect.MakeSlice(target.Type(), len(items), len(items)))
 	for i, item := range items {
-		if !dataToStructSetScalar(target.Index(i), item) {
-			return f.errorf("can't hold item %d of the list, which is of type %T", i, item)
+		if problem := dataToStructSetScalar(target.Index(i), item); problem != "" {
+			return f.errorf("can't hold item %d of the list, which is %s", i, problem)
 		}
 	}
 	return nil
@@ -239,40 +260,51 @@ func (f dataToStructField) setMap(target reflect.Value, raw any) error {
 	target.Set(reflect.MakeMapWithSize(mapType, len(entries)))
 	for key, entry := range entries {
 		value := reflect.New(mapType.Elem()).Elem()
-		if !dataToStructSetScalar(value, entry) {
-			return f.errorf("can't hold a value of the map, which is of type %T", entry)
+		if problem := dataToStructSetScalar(value, entry); problem != "" {
+			return f.errorf("can't hold a value of the map, which is %s", problem)
 		}
 		target.SetMapIndex(reflect.ValueOf(key).Convert(mapType.Key()), value)
 	}
 	return nil
 }
 
-// dataToStructSetScalar sets target from raw and reports whether raw fits: raw
-// has the Go type that the Terraform SDK gives a value of the kind of target,
-// and a number doesn't overflow target. It leaves target untouched otherwise,
-// and for a target of any other kind.
-func dataToStructSetScalar(target reflect.Value, raw any) bool {
+// dataToStructSetScalar sets target from raw and returns the empty string when
+// raw fits: raw has the Go type that the Terraform SDK gives a value of the
+// kind of target, a number doesn't overflow target, and a string for a type of
+// dataToStructTexts is one that the JSON decoding of that type takes.
+// Otherwise it leaves target untouched and returns what raw is instead, in
+// words that name the type of raw and never its value.
+func dataToStructSetScalar(target reflect.Value, raw any) string {
 	switch value := raw.(type) {
 	case string:
+		if notDecoded, isText := dataToStructTexts[target.Type()]; isText {
+			// A string always marshals. The decoding leaves target as it is
+			// when it fails, and its error is dropped because it quotes value.
+			encoded, _ := json.Marshal(value)
+			if json.Unmarshal(encoded, target.Addr().Interface()) != nil {
+				return notDecoded
+			}
+			return ""
+		}
 		if target.Kind() == reflect.String {
 			target.SetString(value)
-			return true
+			return ""
 		}
 	case bool:
 		if target.Kind() == reflect.Bool {
 			target.SetBool(value)
-			return true
+			return ""
 		}
 	case int:
 		if target.CanInt() && !target.OverflowInt(int64(value)) {
 			target.SetInt(int64(value))
-			return true
+			return ""
 		}
 	case float64:
 		if target.CanFloat() && !target.OverflowFloat(value) {
 			target.SetFloat(value)
-			return true
+			return ""
 		}
 	}
-	return false
+	return fmt.Sprintf("of type %T", raw)
 }

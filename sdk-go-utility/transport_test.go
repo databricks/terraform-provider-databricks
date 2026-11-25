@@ -332,13 +332,13 @@ func TestTransport_Headers(t *testing.T) {
 		{"keeps the traceparent of the request", http.Header{"Traceparent": {traceparent}}, nil, map[string]string{"Traceparent": traceparent}},
 		{"request without headers", nil, nil, map[string]string{"Accept": "application/json"}},
 		{"does not authenticate", http.Header{}, nil, map[string]string{"Authorization": ""}},
-		{"keeps the credentials and the call headers", http.Header{"Authorization": {"Bearer modular"}, "Content-Type": {"text/plain"}}, nil,
-			map[string]string{"Authorization": "Bearer modular", "Content-Type": "text/plain"}},
+		{"keeps the credentials and the call headers", http.Header{"Authorization": {"Bearer modular"}, "Content-Type": {"text/plain"}}, nil, map[string]string{"Authorization": "Bearer modular", "Content-Type": "text/plain"}},
 		{"Headers hook adds a header", http.Header{}, hook("X-Transport-Test", "hook"), map[string]string{"X-Transport-Test": "hook"}},
-		{"Headers hook overrides the credentials", http.Header{"Authorization": {"Bearer modular"}}, hook("Authorization", "Bearer hook"),
-			map[string]string{"Authorization": "Bearer hook"}},
-		// The classic call sets Accept and User-Agent after the visitors as well.
+		{"Headers hook adds the credentials", http.Header{}, hook("Authorization", "Bearer hook"), map[string]string{"Authorization": "Bearer hook"}},
+		{"Headers hook overrides the credentials", http.Header{"Authorization": {"Bearer modular"}}, hook("Authorization", "Bearer hook"), map[string]string{"Authorization": "Bearer hook"}},
+		// The classic call sets its own headers and the User-Agent after the visitors as well.
 		{"Headers hook sets Accept", http.Header{}, hook("Accept", "text/csv"), map[string]string{"Accept": "application/json"}},
+		{"Headers hook sets the Accept of the request", http.Header{"Accept": {"text/plain"}}, hook("Accept", "text/csv"), map[string]string{"Accept": "text/plain"}},
 		{"Headers hook sets traceparent", http.Header{}, hook("traceparent", "hook"), map[string]string{"Traceparent": "hook"}},
 		{"Headers hook sets User-Agent", http.Header{}, hook("User-Agent", "hook/1.0.0"), nil},
 		{"Headers hook removes the URL", http.Header{}, func(r *http.Request) error { r.URL = nil; return nil }, nil},

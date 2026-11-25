@@ -1,0 +1,170 @@
+# Pins a provider-level workspace_id on a workspace host, without a provider_config
+# block and without a workspace ID in host metadata. Every Terraform command that
+# touches the model first checks the provider-level ID against the X-Databricks-Org-Id
+# header of SCIM /Me, then sends the model call, and all of them carry that ID in the
+# X-Databricks-Workspace-Id header. Create writes the ID to
+# provider_config.workspace_id without a further /Me call. Fixtures are synthetic: API
+# responses are inferred from the MLflow Model Registry and SCIM API contracts, not
+# recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+steps:
+  - name: create_checks_provider_workspace_id_through_me_before_post
+    config: |
+      provider "databricks" {
+        workspace_id = "12345"
+      }
+      resource "databricks_mlflow_model" "this" {
+        name = "routing_provider_ws_model"
+      }
+    calls:
+      - &me
+        request:
+          method: GET
+          path: /api/2.0/preview/scim/v2/Me
+          query:
+            excludedAttributes: [entitlements]
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 200
+          headers:
+            X-Databricks-Org-Id: "12345"
+          body:
+            json: {"id": "1001", "userName": "replay-admin@example.com",
+                   "schemas": ["urn:ietf:params:scim:schemas:core:2.0:User"]}
+      - request:
+          method: POST
+          path: /api/2.0/mlflow/registered-models/create
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"name": "routing_provider_ws_model"}
+        response:
+          status: 200
+          body:
+            json: {"registered_model": {"name": "routing_provider_ws_model",
+                                        "creation_timestamp": 1700000000002,
+                                        "last_updated_timestamp": 1700000000002,
+                                        "user_id": "replay-admin@example.com"}}
+      - &read_model
+        request:
+          method: GET
+          path: /api/2.0/mlflow/databricks/registered-models/get
+          query:
+            name: [routing_provider_ws_model]
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"registered_model_databricks": {
+                     "name": "routing_provider_ws_model",
+                     "id": "00000000000000000000000000000902",
+                     "creation_timestamp": 1700000000002,
+                     "last_updated_timestamp": 1700000000002,
+                     "user_id": "replay-admin@example.com",
+                     "permission_level": "CAN_MANAGE"}}
+      # The post-apply refresh plan.
+      - *me
+      - *read_model
+    state:
+      resources:
+        databricks_mlflow_model.this:
+          attributes:
+            - path: [provider_config, 0, workspace_id]
+              equals: "12345"
+  - name: update_patches_with_provider_workspace_id
+    config: |
+      provider "databricks" {
+        workspace_id = "12345"
+      }
+      resource "databricks_mlflow_model" "this" {
+        name        = "routing_provider_ws_model"
+        description = "routed by the provider"
+      }
+    plan:
+      expect: non_empty
+      changes:
+        databricks_mlflow_model.this:
+          actions: [update]
+          after:
+            - path: [provider_config, 0, workspace_id]
+              equals: "12345"
+    calls:
+      # The plan's refresh.
+      - *me
+      - *read_model
+      # The apply.
+      - *me
+      - request:
+          method: PATCH
+          path: /api/2.0/mlflow/registered-models/update
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"name": "routing_provider_ws_model",
+                   "description": "routed by the provider"}
+        response:
+          status: 200
+          body:
+            json: {"registered_model": {"name": "routing_provider_ws_model",
+                                        "description": "routed by the provider",
+                                        "creation_timestamp": 1700000000002,
+                                        "last_updated_timestamp": 1700000000102,
+                                        "user_id": "replay-admin@example.com"}}
+      - &read_described
+        request:
+          method: GET
+          path: /api/2.0/mlflow/databricks/registered-models/get
+          query:
+            name: [routing_provider_ws_model]
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"registered_model_databricks": {
+                     "name": "routing_provider_ws_model",
+                     "id": "00000000000000000000000000000902",
+                     "description": "routed by the provider",
+                     "creation_timestamp": 1700000000002,
+                     "last_updated_timestamp": 1700000000102,
+                     "user_id": "replay-admin@example.com",
+                     "permission_level": "CAN_MANAGE"}}
+      # The post-apply refresh plan.
+      - *me
+      - *read_described
+    state:
+      resources:
+        databricks_mlflow_model.this:
+          attributes:
+            - path: [provider_config, 0, workspace_id]
+              equals: "12345"
+destroy:
+  calls:
+    # The destroy plan's refresh.
+    - *me
+    - *read_described
+    # The apply.
+    - *me
+    - request:
+        method: DELETE
+        path: /api/2.0/mlflow/registered-models/delete
+        query:
+          name: [routing_provider_ws_model]
+        headers:
+          X-Databricks-Workspace-Id: "12345"
+        body: null
+      response:
+        status: 200
+        body:
+          json: {}

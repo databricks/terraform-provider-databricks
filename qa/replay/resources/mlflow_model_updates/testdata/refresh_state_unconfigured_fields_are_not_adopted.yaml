@@ -1,0 +1,105 @@
+# Pins a refresh whose GET returns a description and tags that the configuration does
+# not set. Neither is computed, so StructToData (common/reflect_resource.go) skips
+# them: state has no description and no tags, and the plan is empty. API responses are
+# inferred from the MLflow Model Registry API, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: create_with_name_only
+    config: &config |
+      resource "databricks_mlflow_model" "this" {
+        name = "replay-model"
+      }
+    calls:
+      - request:
+          method: POST
+          path: /api/2.0/mlflow/registered-models/create
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"name": "replay-model"}
+        response:
+          status: 200
+          body:
+            json: {"registered_model": {"name": "replay-model",
+                                        "creation_timestamp": 1700000000000,
+                                        "last_updated_timestamp": 1700000000000,
+                                        "user_id": "replay-admin@example.com"}}
+      - &read_created
+        request: &read_request
+          method: GET
+          path: /api/2.0/mlflow/databricks/registered-models/get
+          query:
+            name: [replay-model]
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"registered_model_databricks": {
+                     "name": "replay-model",
+                     "creation_timestamp": 1700000000000,
+                     "last_updated_timestamp": 1700000000000,
+                     "user_id": "replay-admin@example.com",
+                     "id": "0123456789abcdef0123456789abcdef",
+                     "permission_level": "CAN_MANAGE"}}
+      - *read_created
+  - name: remote_description_and_tags_are_not_adopted
+    config: *config
+    plan:
+      expect: empty
+      changes: {}
+    calls:
+      # The plan's refresh and the post-apply refresh plan.
+      - &read_with_remote_fields
+        request: *read_request
+        response:
+          status: 200
+          body:
+            json: {"registered_model_databricks": {
+                     "name": "replay-model",
+                     "creation_timestamp": 1700000000000,
+                     "last_updated_timestamp": 1700000001000,
+                     "user_id": "replay-admin@example.com",
+                     "description": "set outside terraform",
+                     "tags": [{"key": "team", "value": "ml"}],
+                     "id": "0123456789abcdef0123456789abcdef",
+                     "permission_level": "CAN_MANAGE"}}
+      - *read_with_remote_fields
+    state:
+      resources:
+        databricks_mlflow_model.this:
+          attributes:
+            - path: [description]
+              equals: null
+            - path: [registered_model_id]
+              equals: 0123456789abcdef0123456789abcdef
+  - name: plan_after_refresh_is_empty
+    plan_only: true
+    config: *config
+    plan:
+      expect: empty
+      changes: {}
+    calls:
+      - *read_with_remote_fields
+destroy:
+  calls:
+    - *read_with_remote_fields
+    - request:
+        method: DELETE
+        path: /api/2.0/mlflow/registered-models/delete
+        query:
+          name: [replay-model]
+        headers:
+          X-Databricks-Workspace-Id: "12345"
+        body: null
+      response:
+        status: 200
+        body:
+          json: {}

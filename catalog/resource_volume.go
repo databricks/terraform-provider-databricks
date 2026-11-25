@@ -97,6 +97,9 @@ func ResourceVolume() common.Resource {
 			if err != nil {
 				return err
 			}
+			if common.UsesSdkGo(ctx) {
+				return readVolumeWithSdkGo(ctx, w, s, d)
+			}
 			v, err := w.Volumes.ReadByName(ctx, d.Id())
 			if err != nil {
 				return err

@@ -59,8 +59,15 @@ import (
 //     options of that call.
 //   - recognize the redirect to the login page by which a workspace refuses a
 //     request from outside its private link. The classic client reports it as
-//     PRIVATE_LINK_VALIDATION_ERROR; a modular client follows the redirect
-//     and fails to decode the page, which is no APIError.
+//     a 403 with the error code PRIVATE_LINK_VALIDATION_ERROR. A modular
+//     client follows the redirect and gets the login page with a 200. A call
+//     that decodes its response then fails to decode the page, which is no
+//     APIError, and a call that decodes none, such as DeleteRegisteredModel,
+//     succeeds although the workspace did nothing. Neither leaves an error to
+//     convert, so the transport of the client answers the redirect itself:
+//     for a 403 whose JSON body has that error code and the message of the
+//     classic client, which names the private link product of the host's
+//     cloud, ClassicError returns the error of the classic client.
 //   - carry the request. ResponseWrapper of the result holds the rebuilt
 //     response with the stand-in request and no request body.
 func ClassicError(ctx context.Context, err error) error {

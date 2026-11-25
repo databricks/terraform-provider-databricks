@@ -43,6 +43,11 @@ const (
 		`{"@type":"type.googleapis.com/google.rpc.ErrorInfo","reason":"INVALID_NAME","domain":"mlflow","metadata":{"name":"a/b"}},` +
 		`{"@type":"type.googleapis.com/google.rpc.RequestInfo","request_id":"r-1","serving_data":"s"},` +
 		`{"@type":"type.googleapis.com/google.rpc.RetryInfo","retry_delay":"3s"},{"@type":"unknown","x":1},"not an object"]}`
+	// classicErrorPrivateLinkMessage is the message of the classic client for
+	// the private link redirect of a host that is in no cloud's DNS zone.
+	classicErrorPrivateLinkMessage = "The requested workspace has AWS PrivateLink enabled and is not accessible from the current network. " +
+		"Ensure that AWS PrivateLink is properly configured and that your device has access to the AWS VPC endpoint. " +
+		"For more information, see https://docs.databricks.com/en/security/network/classic/privatelink.html."
 )
 
 // classicErrorResponses are failed responses with what the classic client
@@ -221,6 +226,16 @@ func classicErrorRespondRaw(statusLine, body string) http.HandlerFunc {
 	}
 }
 
+// classicErrorPrivateLinkRedirect answers like a workspace that refuses a
+// request from outside its private link: it redirects to its login page.
+func classicErrorPrivateLinkRedirect(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path != "/login.html" {
+		http.Redirect(w, r, "/login.html?error=private-link-validation-error", http.StatusFound)
+		return
+	}
+	_, _ = io.WriteString(w, "<html><body>Log in</body></html>")
+}
+
 // classicErrorServe starts a server for handler, over HTTP/2 with TLS when
 // http2 is set and over HTTP/1.1 otherwise.
 func classicErrorServe(t *testing.T, handler http.Handler, http2 bool) *httptest.Server {
@@ -256,10 +271,21 @@ func classicErrorConvert(t *testing.T, modular *modelregistry.Client) (modularEr
 
 // classicErrorAssertSame fails the test unless converted, the result of
 // ClassicError, reads like classicErr, the error of the classic client for the
-// same response.
+// same response, and holds the body and a header of that response.
 func classicErrorAssertSame(t *testing.T, classicErr, converted error) {
 	t.Helper()
-	want := classicErrorAPIError(t, classicErr)
+	want, got := classicErrorAssertSameError(t, classicErr, converted)
+	assert.Equal(t, want.ResponseWrapper.DebugBytes, got.ResponseWrapper.DebugBytes, "body")
+	assert.Equal(t, want.ResponseWrapper.Response.Header.Get("X-Request-Id"),
+		got.ResponseWrapper.Response.Header.Get("X-Request-Id"), "header")
+}
+
+// classicErrorAssertSameError fails the test unless converted, the result of
+// ClassicError, reads like classicErr, an error of the classic client. It
+// returns the classic APIError of both.
+func classicErrorAssertSameError(t *testing.T, classicErr, converted error) (want, got *apierr.APIError) {
+	t.Helper()
+	want = classicErrorAPIError(t, classicErr)
 	got, ok := converted.(*apierr.APIError)
 	require.True(t, ok, "ClassicError returned %#v", converted)
 	assert.Equal(t, classicErr.Error(), converted.Error(), "Error()")
@@ -273,9 +299,7 @@ func classicErrorAssertSame(t *testing.T, classicErr, converted error) {
 	assert.Equal(t, want.Details, got.Details, "Details")
 	assert.Equal(t, want.ErrorDetails(), got.ErrorDetails(), "ErrorDetails()")
 	assert.Equal(t, want.IsRetriable(t.Context()), got.IsRetriable(t.Context()), "IsRetriable")
-	assert.Equal(t, want.ResponseWrapper.DebugBytes, got.ResponseWrapper.DebugBytes, "body")
-	assert.Equal(t, want.ResponseWrapper.Response.Header.Get("X-Request-Id"),
-		got.ResponseWrapper.Response.Header.Get("X-Request-Id"), "header")
+	return want, got
 }
 
 func TestClassicError_SameAsClassicClient(t *testing.T) {
@@ -395,26 +419,63 @@ func TestClassicError_DiffersByRequestOverride(t *testing.T) {
 
 // A workspace refuses a request from outside its private link with a redirect
 // to its login page. The classic client reports it as an error of its own. A
-// modular client follows the redirect and fails to decode the page, which is
-// no APIError, so ClassicError returns that error as it is.
+// modular client follows the redirect and gets the page with a 200. A call
+// that decodes its response fails to decode the page, which is no APIError, so
+// ClassicError returns that error as it is. DeleteRegisteredModel decodes no
+// response and succeeds, so there is no error at all.
 func TestClassicError_DiffersForPrivateLinkRedirect(t *testing.T) {
-	server := classicErrorServe(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path != "/login.html" {
-			http.Redirect(w, r, "/login.html?error=private-link-validation-error", http.StatusFound)
-			return
-		}
-		_, _ = io.WriteString(w, "<html><body>Log in</body></html>")
-	}), false)
-	classic, modular := classicErrorClients(t, server)
+	classic, modular := classicErrorClients(t, classicErrorServe(t, http.HandlerFunc(classicErrorPrivateLinkRedirect), false))
+	for _, call := range classicErrorModelCalls {
+		t.Run(call.name, func(t *testing.T) {
+			t.Parallel()
+			classicErr := classicErrorAPIError(t, call.classic(t.Context(), classic))
+			assert.Equal(t, http.StatusForbidden, classicErr.StatusCode)
+			assert.Equal(t, "PRIVATE_LINK_VALIDATION_ERROR", classicErr.ErrorCode)
+			assert.Equal(t, classicErrorPrivateLinkMessage, classicErr.Message)
+			assert.ErrorIs(t, classicErr, apierr.ErrPermissionDenied)
 
-	classicErr := classicErrorAPIError(t, classicErrorModelCalls[0].classic(t.Context(), classic))
-	assert.Equal(t, "PRIVATE_LINK_VALIDATION_ERROR", classicErr.ErrorCode)
-	assert.ErrorIs(t, classicErr, apierr.ErrPermissionDenied)
+			modularErr := call.modular(t.Context(), modular)
+			converted := ClassicError(t.Context(), modularErr)
+			if call.name == "delete" {
+				assert.NoError(t, modularErr)
+				assert.NoError(t, converted)
+				return
+			}
+			_, ok := errors.AsType[*json.SyntaxError](modularErr)
+			assert.True(t, ok, "no JSON syntax error in %#v", modularErr)
+			_, ok = errors.AsType[*modularerr.APIError](modularErr)
+			assert.False(t, ok, "modular APIError in %#v", modularErr)
+			assert.True(t, converted == modularErr, "ClassicError returned %#v", converted)
+		})
+	}
+}
 
-	modularErr, converted := classicErrorConvert(t, modular)
-	_, ok := errors.AsType[*modularerr.APIError](modularErr)
-	assert.False(t, ok, "modular APIError in %#v", modularErr)
-	assert.True(t, converted == modularErr, "ClassicError returned %#v", converted)
+// A transport in front of the modular client can answer the private link
+// redirect itself. When it answers with a 403 whose JSON body has the error
+// code and the message of the classic client, ClassicError returns what the
+// classic client makes of the redirect.
+func TestClassicError_ConvertsPrivateLinkValidationError(t *testing.T) {
+	body, err := json.Marshal(map[string]string{"error_code": "PRIVATE_LINK_VALIDATION_ERROR", "message": classicErrorPrivateLinkMessage})
+	require.NoError(t, err)
+	classic, _ := classicErrorClients(t, classicErrorServe(t, http.HandlerFunc(classicErrorPrivateLinkRedirect), false))
+	_, modular := classicErrorClients(t, classicErrorServe(t, classicErrorRespond(http.StatusForbidden, string(body)), false))
+	for _, call := range classicErrorModelCalls {
+		t.Run(call.name, func(t *testing.T) {
+			t.Parallel()
+			modularErr := call.modular(t.Context(), modular)
+			_, ok := errors.AsType[*modularerr.APIError](modularErr)
+			require.True(t, ok, "no modular APIError in %#v", modularErr)
+			converted := ClassicError(t.Context(), modularErr)
+
+			_, got := classicErrorAssertSameError(t, call.classic(t.Context(), classic), converted)
+			assert.Equal(t, http.StatusForbidden, got.StatusCode)
+			assert.Equal(t, "PRIVATE_LINK_VALIDATION_ERROR", got.ErrorCode)
+			assert.Equal(t, classicErrorPrivateLinkMessage, got.Message)
+			assert.Equal(t, classicErrorPrivateLinkMessage, converted.Error())
+			assert.ErrorIs(t, converted, apierr.ErrPermissionDenied)
+			assert.False(t, apierr.IsMissing(converted))
+		})
+	}
 }
 
 func TestClassicError_ReturnsOtherErrorsUnchanged(t *testing.T) {

@@ -1,0 +1,179 @@
+# Pins a 200 whose body isn't the JSON the call expects, on the POST and on the GET. An
+# empty body decodes to a response without its envelope: Create panics on the nil
+# pointer and Read fails with the reflection error, as they do for an empty object. An
+# HTML body fails with the SDK's HTML error. Truncated JSON fails with the SDK's
+# unmarshal error and a request log; the pattern checks its message, request line and
+# echoed body, and skips the generated headers in between. A failed create leaves
+# nothing in the state, so each next apply sends the POST again; a failed refresh
+# leaves the state as it was. The panic and the reflection error are suspected defects;
+# if they are fixed, update those steps with the new errors. API responses are
+# synthetic: inferred from the MLflow Model Registry API, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: create_answered_200_with_empty_body_fails_with_nil_pointer_panic
+    config: &config |
+      resource "databricks_mlflow_model" "this" {
+        name        = "decode_model"
+        description = "first description"
+      }
+    expect_error: 'Error: cannot create mlflow model: panic: runtime error: invalid
+      memory address or nil pointer dereference\n'
+    calls:
+      - request: &create_request
+          method: POST
+          path: /api/2.0/mlflow/registered-models/create
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"name": "decode_model", "description": "first description"}
+        response:
+          status: 200
+          body: null
+  - name: create_answered_200_with_html_fails_with_html_error
+    config: *config
+    expect_error: 'Error: cannot create mlflow model: received HTML response instead of
+      JSON\n'
+    calls:
+      - request: *create_request
+        response:
+          status: 200
+          headers:
+            Content-Type: text/html; charset=utf-8
+          body:
+            text: <html><body>Sign in</body></html>
+  - name: create_answered_200_with_truncated_json_fails_with_request_log
+    config: *config
+    expect_error: 'Error: cannot create mlflow model: failed to unmarshal response body:
+      unexpected end of JSON input\. This is likely a bug in the Databricks SDK for Go or
+      the underlying REST API\. Please report this issue with the following debugging
+      information to the SDK issue tracker at
+      https://github\.com/databricks/databricks-sdk-go/issues\. Request
+      log:\n```\nPOST /api/2\.0/mlflow/registered-models/create\n(?s:.*)<
+      \{"registered_model": \{"name": "decode_model",\n```\n'
+    calls:
+      - request: *create_request
+        response:
+          status: 200
+          headers:
+            Content-Type: application/json
+          body:
+            text: '{"registered_model": {"name": "decode_model",'
+  - name: create_answered_with_registered_model_sends_the_post_again_and_succeeds
+    config: *config
+    plan:
+      changes:
+        databricks_mlflow_model.this:
+          actions: [create]
+    calls:
+      - request: *create_request
+        response:
+          status: 200
+          body:
+            json: {"registered_model": {
+                     "name": "decode_model",
+                     "description": "first description",
+                     "user_id": "replay-admin@example.com",
+                     "creation_timestamp": 1700000000000,
+                     "last_updated_timestamp": 1700000000000}}
+      - &read
+        request: &read_request
+          method: GET
+          path: /api/2.0/mlflow/databricks/registered-models/get
+          query:
+            name: [decode_model]
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"registered_model_databricks": {
+                     "name": "decode_model",
+                     "id": "0123456789abcdef0123456789abcdef",
+                     "description": "first description",
+                     "user_id": "replay-admin@example.com",
+                     "creation_timestamp": 1700000000000,
+                     "last_updated_timestamp": 1700000000000,
+                     "permission_level": "CAN_MANAGE"}}
+      - *read
+    state: &state
+      resources:
+        databricks_mlflow_model.this:
+          attributes:
+            - path: [id]
+              equals: decode_model
+            - path: [name]
+              equals: decode_model
+            - path: [registered_model_id]
+              equals: 0123456789abcdef0123456789abcdef
+            - path: [description]
+              equals: first description
+  - name: refresh_answered_200_with_empty_body_fails_with_reflection_error
+    config: *config
+    expect_error: 'Error: cannot read mlflow model: value of Struct is expected, but got
+      other: <invalid reflect\.Value>\n'
+    calls:
+      - request: *read_request
+        response:
+          status: 200
+          body: null
+  - name: refresh_answered_200_with_html_fails_with_html_error
+    config: *config
+    expect_error: 'Error: cannot read mlflow model: received HTML response instead of
+      JSON\n'
+    calls:
+      - request: *read_request
+        response:
+          status: 200
+          headers:
+            Content-Type: text/html; charset=utf-8
+          body:
+            text: <html><body>Sign in</body></html>
+  - name: refresh_answered_200_with_truncated_json_fails_with_request_log
+    config: *config
+    expect_error: 'Error: cannot read mlflow model: failed to unmarshal response body:
+      unexpected end of JSON input\. This is likely a bug in the Databricks SDK for Go or
+      the underlying REST API\. Please report this issue with the following debugging
+      information to the SDK issue tracker at
+      https://github\.com/databricks/databricks-sdk-go/issues\. Request
+      log:\n```\nGET
+      /api/2\.0/mlflow/databricks/registered-models/get\?name=decode_model\n(?s:.*)<
+      \{"registered_model_databricks": \{"name": "decode_model",\n```\n'
+    calls:
+      - request: *read_request
+        response:
+          status: 200
+          headers:
+            Content-Type: application/json
+          body:
+            text: '{"registered_model_databricks": {"name": "decode_model",'
+  - name: plan_after_failed_refreshes_keeps_the_model_and_plans_nothing
+    plan_only: true
+    config: *config
+    plan:
+      expect: empty
+      changes: {}
+    state: *state
+    calls:
+      - *read
+destroy:
+  calls:
+    - *read
+    - request:
+        method: DELETE
+        path: /api/2.0/mlflow/registered-models/delete
+        query:
+          name: [decode_model]
+        headers:
+          X-Databricks-Workspace-Id: "12345"
+        body: null
+      response:
+        status: 200
+        body:
+          json: {}

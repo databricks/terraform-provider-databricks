@@ -2,7 +2,7 @@
 
 Package `sdkgoutility` lets an SDKv2 resource call the modular Databricks SDK
 (`github.com/databricks/sdk-go`) and behave as it does on the classic one
-(`github.com/databricks/databricks-sdk-go`). It has 15 helpers, each in its own file next to
+(`github.com/databricks/databricks-sdk-go`). It has 16 helpers, each in its own file next to
 its tests. `databricks_mlflow_model` is the first resource that uses them, and this document
 uses it as the example of every step.
 
@@ -30,7 +30,8 @@ One operation on the modular path, `mlflowModelSdkGoCall`:
 1. `c.WorkspaceClientUnifiedProvider(ctx, d)` returns the classic workspace client, as on the
    classic path, so `provider_config` routes the call the same way.
 2. `NewClient(ctx, w.Config, modelregistry.NewClient)` builds a modular client from the config
-   of that client. It costs no request, so the resource builds one for every operation.
+   of that client, which sends with the headers, the debug log and the attempt timeout of the
+   classic client. It costs no request, so the resource builds one for every operation.
 3. `ClassicCall(ctx, w.Config, method)` runs one method of the client with the retries, the
    rate limit and the errors of the classic client.
 
@@ -127,22 +128,23 @@ of each helper has the details.
 |---|---|---|---|
 | [`FieldName`](field_name.go) | `FieldName(structType reflect.Type, field reflect.StructField) string` | The API name of a field of a modular SDK struct, read from the JSON that the struct marshals to, then from the `fieldmask` tag, then by snake_case. | Recognizing a field that is not in the JSON at all: a oneof group, a body stream, a field sent in a header. |
 | [`StructToSchema`](struct_to_schema.go) | `StructToSchema(v any, customize func(map[string]*schema.Schema) map[string]*schema.Schema) map[string]*schema.Schema` | An SDKv2 schema from a modular SDK struct, every attribute `Optional`. Panics on a field without a schema type. | Required, computed, `ForceNew`, sensitive, defaults, sets and `provider_config`, all in `customize`. Checking that SDKv2 accepts the names. |
-| [`DataToStruct`](data_to_struct.go) | `DataToStruct(d *schema.ResourceData, s map[string]*schema.Schema, result any) error` | Fills a modular SDK struct from resource data. A value that is unset or zero stays nil. A timestamp and a duration are read from a string. | Setting a pointer that must be sent although it is zero. Sets and field masks. |
-| [`StructToData`](struct_to_data.go) | `StructToData(result any, s map[string]*schema.Schema, d *schema.ResourceData) error` | Writes a modular SDK struct into resource data, by the rules of `common.StructToData`. A timestamp and a duration are written as the string that the SDK marshals. | A non-nil result. Attributes that have no field of their name. |
+| [`DataToStruct`](data_to_struct.go) | `DataToStruct(d *schema.ResourceData, s map[string]*schema.Schema, result any) error` | Fills a modular SDK struct from resource data. A value that is unset or zero stays nil. A timestamp and a duration are read from a string, and a field mask is skipped. | Setting a pointer that must be sent although it is zero, and a field mask. Sets. |
+| [`StructToData`](struct_to_data.go) | `StructToData(result any, s map[string]*schema.Schema, d *schema.ResourceData) error` | Writes a modular SDK struct into resource data, by the rules of `common.StructToData`. A timestamp and a duration are written as the string that the SDK marshals, and a field mask is skipped. | A non-nil result. Attributes that have no field of their name. |
 | [`Credentials`](credentials.go) | `Credentials(cfg *config.Config) auth.Credentials` | Credentials that call `cfg.Authenticate`, so both clients share one token. | A resolved config. Everything but the authentication headers. |
-| [`Transport`](transport.go) | `Transport(cfg *config.Config) (http.RoundTripper, error)` | A transport that sends with the classic `User-Agent`, `traceparent`, `Accept`, `Headers` hook, proxy and TLS settings. It answers the login page of a private link redirect with the 403 that the classic client reports. | Credentials that authenticate `cfg` first. Retries, rate limit, HTTP timeout, request logging, every other error. |
+| [`Transport`](transport.go) | `Transport(cfg *config.Config, wrap func(base http.RoundTripper) (http.RoundTripper, error)) (http.RoundTripper, error)` | A transport that sends with the classic `User-Agent`, `traceparent`, `Accept`, `Headers` hook, proxy and TLS settings. It answers the login page of a private link redirect with the 403 that the classic client reports. `wrap` puts a transport of the caller between these steps and the connection. | Credentials that authenticate `cfg` first. Retries, rate limit, every other error. The HTTP timeout and request logging, for which `wrap` is the place. |
 | [`ClientOptions`](client_options.go) | `ClientOptions(cfg *config.Config, credentials auth.Credentials, transport http.RoundTripper) ([]client.Option, error)` | The options that point a modular client at the host and workspace of `cfg`, without environment or config file, bounded by `retry_timeout_seconds`. | A config that has authenticated. Credentials and transport. A retrier and a limiter for each call. A logger. |
 | [`AttemptTimeout`](attempt_timeout.go) | `AttemptTimeout(cfg *config.Config, transport http.RoundTripper) (http.RoundTripper, error)` | Ends an attempt after `http_timeout_seconds` without progress, with the error of the classic client. | Closing the response body. Whether a timed-out attempt is retried. The limit on the whole call. |
+| [`DebugLog`](debug_log.go) | `DebugLog(cfg *config.Config, transport http.RoundTripper) (http.RoundTripper, error)` | Writes each attempt to the debug log as the classic client does: the method and the URL, the headers with `debug_headers`, the bodies and the status or the error, redacted and cut to `debug_truncate_bytes`. It only passes the request on when debug logging is off. | Its place among the transports: inside the one that sets the headers, outside the one that ends an attempt. Retries. |
 | [`ClassicError`](classic_error.go) | `ClassicError(ctx context.Context, err error) error` | Turns the error of a modular call into the classic `*apierr.APIError` for the same response, by parsing the response again. | Retries. The overrides by request path, which it can't see. The private link redirect, which `Transport` answers. |
 | [`Retrier`](retrier.go) | `Retrier(ctx context.Context, cfg *config.Config, classic func(error) error) (ops.Retrier, error)` | A retrier for one call that retries what the classic client retries, with its backoff and its retry timeout. | Converting errors. A new retrier for every call. The timeout of the call. Rate limiting. |
 | [`Limiter`](limiter.go) | `Limiter(cfg *config.Config) ops.Limiter` | The rate limiter of the classic client, with one budget for each `*config.Config`. | A resolved config, the same pointer every time. Passing it to every call. |
 | [`Call`](call.go) | `Call[T any](ctx context.Context, method func(context.Context, ...call.Option) (T, error), retrier ops.Retrier, limiter ops.Limiter, classic func(error) error) (T, error)` | Runs one method with a retrier, a limiter and an error converter, and returns the last error when the context ends during a wait to retry. | The three arguments. The timeout. A method that returns an iterator. |
 | [`Enabled`](enabled.go) | `Enabled(resource string) bool` | Whether `USE_SDK_GO_RESOURCES` names the resource. Reads the variable on every call. | The resource type as Terraform spells it. Branching, and asking again for every operation. |
-| [`NewClient`](new_client.go) | `NewClient[C any](ctx context.Context, cfg *config.Config, construct func(context.Context, ...client.Option) (C, error)) (C, error)` | Builds a modular client from `Credentials`, `Transport`, `AttemptTimeout` and `ClientOptions`. | A config that has authenticated. A retrier and a limiter for each call. The error of a failed call. |
+| [`NewClient`](new_client.go) | `NewClient[C any](ctx context.Context, cfg *config.Config, construct func(context.Context, ...client.Option) (C, error)) (C, error)` | Builds a modular client from `Credentials`, `Transport`, `DebugLog`, `AttemptTimeout` and `ClientOptions`. A request goes through `Transport`, then `DebugLog`, then `AttemptTimeout`, then the connection. | A config that has authenticated. A retrier and a limiter for each call. The error of a failed call. |
 | [`ClassicCall`](classic_call.go) | `ClassicCall[T any](ctx context.Context, cfg *config.Config, method func(context.Context, ...call.Option) (T, error)) (T, error)` | Runs one method through `Call` with a new `Retrier`, `Limiter(cfg)` and `ClassicError`. | The client. The same config pointer for every call. A method that makes exactly one call. |
 
 A resource calls `Enabled`, `StructToSchema`, `DataToStruct`, `StructToData`, `NewClient` and
-`ClassicCall`. The other nine are their parts.
+`ClassicCall`. The other ten are their parts.
 
 ## Differences from the classic client
 
@@ -155,12 +157,12 @@ says otherwise. `sdkgo twin` is the journey of that name in
 |---|---|---|---|
 | 1 | `User-Agent` ends with the `sdk-go-` segments of the modular SDK, such as ` sdk-go-core/0.1.0 sdk-go-modelregistry/0.7.0` | wire | `TestMlflowModelUserAgentDimensions` and `TestMlflowModelUserAgentExtra` in [`user_agent_test.go`](../qa/replay/resources/mlflow_model/user_agent_test.go), `TestTransport_UserAgent` |
 | 2 | The keys of a JSON request body come in another order | wire | `TestNewClient_DifferencesFromClassicClient` |
-| 3 | The transport runs again on a redirected request, so it gets a new `traceparent` and the `Headers` hook runs on it once more | wire | no test asserts either. `TestTransport_MatchesClassicClient` follows a redirect and compares the rest of the request. |
+| 3 | The transport runs again on a redirected request, so it gets a new `traceparent` and the `Headers` hook runs on it once more | wire | no test asserts either. `TestTransport_WrapSeesThePrivateLinkLoginPage` shows that both requests of a redirect get the classic headers. |
 | 4 | A `Headers` hook wins over the headers of the call, such as `Content-Type`. The provider sets no hook. | wire | `TestTransport_Headers` for `Authorization`; no test for a header of the call |
 | 5 | The credentials strategy is given `GET /` instead of the request, and only the headers it sets are used | wire | `TestCredentials_RequestGivenToStrategy` |
 | 6 | Modular clients have connection pools of their own: one for all configs that verify certificates, one for all with `InsecureSkipVerify` | wire | `TestTransport_Config`, `TestTransport_InsecureSkipVerify`, `TestNewClient_KeepsNoState` |
 | 7 | The classic and the modular calls of one config have separate rate limit budgets, so together they can send twice the rate. The modular budget is one for each config, where the classic client has one for each client. | wire | `TestLimiterHoldsModularCallsToClassicRate`, `TestLimiterBudgets`, `TestClassicCallSharesTheRateLimitOfAConfig` |
-| 8 | Requests and responses are not written to the debug log | text | no test |
+| 8 | With `debug_headers`, the debug log shows the `Host` that is sent, which the classic client logs as empty, and the `Traceparent` and `User-Agent` lines differ as the headers do. Without `debug_headers` the message of a call is byte for byte the classic one. | text | `TestNewClient_WritesDebugLogOfClassicClient` |
 | 9 | The classic error parser logs twice about the last response when its body is not JSON | text | `TestClassicCallReturnsWhatTheClassicClientReturns` |
 | 10 | An error comes without the `*retries.Err` wrapper, and the result next to it is the zero value instead of an empty response. Its `ResponseWrapper` holds a rebuilt response without the request, and for the private link error the 403 that `Transport` made in place of the login page. | only code that reads these sees it | `TestClassicCallReturnsWhatTheClassicClientReturns`, `TestClassicError_RebuildsResponse`, `TestTransport_PrivateLinkResponse` |
 | 11 | A success response that can't be decoded reports the error of `encoding/json` alone, without the request to report a bug and the request log | text | sdkgo twins `decode_timestamps`, `decode_undecodable_bodies` |
@@ -178,23 +180,32 @@ says otherwise. `sdkgo twin` is the journey of that name in
 | 23 | Under a `cfg.HTTPTransport` that wraps `context.Canceled`, a timed-out attempt reports the timeout, where the classic client reports the wrapped cancellation | text | `TestAttemptTimeout_WaitsLikeClassicClient` |
 | 24 | A 400 with `INVALID_PARAMETER_VALUE` from a read of a cluster, a job or a job run is not a missing resource. No call of `databricks_mlflow_model` is affected: see the next section. | **outcome** | `TestClassicError_DiffersByRequestOverride` |
 | 25 | With a fixture transport of the classic SDK (`SkipRetryOnIO`) and `retry_timeout_seconds` 0, the classic client retries for 20 minutes and the modular call ends after 5. The provider sets -1, so this shows in tests only. | **outcome** in such a test | no test |
+| 26 | The debug log has a message for each request of a redirect, where the classic client writes one with the first request and the last response. For the private link login page that is two messages, and the one for the page has no text. | text | `TestNewClient_DebugLogShowsWhatIsSent` |
+| 27 | The debug log shows a request body only when it is JSON, and `<io.Reader>` otherwise, where the classic client also logs a string or a byte slice. A response to a request without `Accept` is taken for JSON, so a stream that sets none is copied while the caller reads it and logged at its end. No call of `databricks_mlflow_model` is affected. | text | `TestDebugLog_Message` |
+| 28 | The inactivity timeout of an attempt starts after the request visitors have run. On the classic client it starts before them, so a `Headers` hook that takes longer than `http_timeout_seconds` fails the attempt there. | **outcome** with such a hook | `TestNewClient_TimesAttemptFromTheConnection` |
 
 Not in the list, because the helpers remove them together:
 
 - A context that is cancelled during a wait to retry returns the error of the last attempt, as
   on the classic client. `Retrier` alone can't do that, and `Call` does
   (`TestCallWhenTheContextEnds`).
-- A stalled attempt ends with the same text on both paths and is not retried.
-  `TestNewClient_EndsStalledAttemptLikeClassicClient` pins that for a client without a retrier.
-  No test runs it through `ClassicCall`.
+- A stalled attempt ends with the same text on both paths, in the error and in the debug log,
+  and is not retried. `TestNewClient_EndsStalledAttemptLikeClassicClient` pins that for a
+  client without a retrier. No test runs it through `ClassicCall`.
+- After a failed attempt that is not retried, the retry loop of the classic client writes
+  `non-retriable error: ...` to the debug log. A client of `NewClient` alone doesn't
+  (`TestDebugLog_MatchesClassicClient`), and the `Retrier` of `ClassicCall` does. No test
+  compares the log of a call through `ClassicCall` with the classic one: that was seen in a
+  one-off run when this document was written.
 - A workspace that refuses a request from outside its private link redirects it to its login
   page, which answers 200. A modular client alone fails to decode the page, and succeeds when
   the call decodes no response, as a delete does (`TestClassicError_DiffersForPrivateLinkRedirect`).
   `Transport` answers the page with the 403 and `PRIVATE_LINK_VALIDATION_ERROR` of the classic
   client, and `ClassicError` converts it, so every call fails as on the classic path
   (`TestTransport_PrivateLinkMatchesClassicClient`,
-  `TestClassicError_ConvertsPrivateLinkValidationError`). No test runs it through `NewClient`
-  and `ClassicCall`, or through the resource.
+  `TestClassicError_ConvertsPrivateLinkValidationError`).
+  `TestNewClient_DebugLogShowsWhatIsSent` runs a delete through `NewClient`. No test runs it
+  through `ClassicCall`, or through the resource.
 
 The reflection helpers differ from their classic twins in ways that change what a resource has
 to write, which step 3 covers:
@@ -219,7 +230,7 @@ each of these first.
 | A message that contains itself | `StructToSchema` panics, where `common.StructToSchema` cuts at the depth that the resource declares | the classic schema struct has a `MaxDepthForTypes` method, or the panic names the message |
 | An API name that is not snake_case | `StructToSchema` keeps the name, and SDKv2 rejects it as an attribute name | `InternalValidate` of the resource fails. `TestStructToSchema_KeepsNameThatIsNotInSnakeCase` shows it. |
 | A set | `StructToSchema` never makes one, and `DataToStruct` returns an error for a field whose schema is a set | `schema.TypeSet` in the classic schema, or a `slice_set` tag |
-| A field mask (`types.FieldMask` in `core/types` of the modular SDK) | `StructToSchema` gives it no attribute and `DataToStruct` doesn't fill it, so the request goes out without one. Set it in the resource. | a field of type `types.FieldMask` in the request |
+| A field mask (`types.FieldMask` in `core/types` of the modular SDK) | `StructToSchema` gives it no attribute, and `DataToStruct` and `StructToData` skip it, so the request goes out without one. Set it in the resource. | a field of type `types.FieldMask` in the request. `TestDataToStruct_SkipsFieldsAndEntries` shows it. |
 | A timestamp or a duration (`types.Time`, `types.Duration`) | both are string attributes, written and sent in the form of the modular SDK, difference 15. `DataToStruct` returns an error for a string that the type doesn't decode, such as `5m` (`TestDataToStruct_ValueDoesNotFit`). | a field of one of the two types in the request or the response. Compare the text that the API sends with the form of the SDK. |
 | A zero value that must be sent | `DataToStruct` leaves it nil, so the request doesn't have it | a field without `omitempty` in the classic struct, or a `ForceSendFields` entry in the resource |
 | A method that returns an iterator | its requests run after the method has returned, outside `ClassicCall`: no classic retries, rate limit or errors. One retrier would also count the pages together. | the resource lists, or the method of the modular client returns an iterator |
@@ -227,7 +238,8 @@ each of these first.
 | An account-level client | every helper was tested with a workspace client only. `ClientOptions` passes the account ID of the config, and no test sends a call that uses it. | the resource calls `c.AccountClient()` or has an account-level variant |
 | An endpoint that can answer with an empty body, or with a number for a string field | the call fails on the modular path, differences 13 and 14 | pin both with a decoding journey for every call whose response has fields |
 | A read of a cluster, a job or a job run | the classic client reports a 400 with `INVALID_PARAMETER_VALUE` as a missing resource for these three paths. `ClassicError` can't, so the resource stays in the state with an error. Recognize the response in the resource. | the resource reads `clusters/get`, `jobs/get` or `jobs/runs/get`. `TestClassicError_DiffersByRequestOverride` shows it. |
-| A `Headers` hook, or an authentication type that signs the request | the hook wins over the headers of the call. A strategy that reads the method, the URL or the body of the request gets `GET /` instead. | `Headers` set on the config, which the provider doesn't do, or a custom credentials strategy |
+| A `Headers` hook, or an authentication type that signs the request | the hook wins over the headers of the call, and one that takes longer than `http_timeout_seconds` no longer fails the attempt, difference 28. A strategy that reads the method, the URL or the body of the request gets `GET /` instead. | `Headers` set on the config, which the provider doesn't do, or a custom credentials strategy |
+| A call that streams its response, or sends a body that is not JSON | the debug log differs, difference 27: the request body is logged as `<io.Reader>`, and a streamed response to a request without `Accept` is copied while the caller reads it | the method of the modular client takes or returns a reader |
 | A config that is made for every call | `Limiter` keeps one budget for each config pointer, for as long as the process runs, so such calls share no rate limit | the resource gets its client from `ClientForHost` and not from `WorkspaceClientUnifiedProvider` |
 | Unit tests on a mocked classic client | on the modular path they fail with `modular SDK client: config is nil`, because the mock has no config | `MockWorkspaceClientFunc` in the tests of the resource |
 

@@ -1,6 +1,7 @@
 package sdkgoutility
 
 import (
+	"cmp"
 	"context"
 	"net/http"
 	"net/http/httptest"
@@ -80,23 +81,25 @@ func (t *clientOptionsPlainTransport) RoundTrip(r *http.Request) (*http.Response
 }
 
 // clientOptionsServer records the requests that it gets and answers them all
-// the same, after delay.
+// the same, after delay, unless the client gives up first.
 type clientOptionsServer struct {
 	*httptest.Server
 	mu       sync.Mutex
 	requests []*http.Request
-	delay    time.Duration
 }
 
-func clientOptionsNewServer(t *testing.T, status int, body string) *clientOptionsServer {
+func clientOptionsNewServer(t *testing.T, status int, body string, delay time.Duration) *clientOptionsServer {
 	t.Helper()
 	s := &clientOptionsServer{}
 	s.Server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		s.mu.Lock()
 		s.requests = append(s.requests, r)
-		delay := s.delay
 		s.mu.Unlock()
-		time.Sleep(delay)
+		select {
+		case <-time.After(delay):
+		case <-r.Context().Done():
+			return
+		}
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(status)
 		_, _ = w.Write([]byte(body))
@@ -232,19 +235,18 @@ func TestClientOptions_SetEveryOption(t *testing.T) {
 		name        string
 		cfg         *config.Config
 		credentials auth.Credentials // clientOptionsTestCredentials when nil
-		wantTimeout time.Duration
 	}{
-		{name: "host only", cfg: &config.Config{Host: clientOptionsTestHost}, wantTimeout: 5 * time.Minute},
-		{name: "workspace ID", cfg: &config.Config{Host: clientOptionsTestHost, WorkspaceID: "1234567890123456"}, wantTimeout: 5 * time.Minute},
-		{name: "account ID", cfg: &config.Config{Host: clientOptionsTestHost, AccountID: "8f4c2a10-account"}, wantTimeout: 5 * time.Minute},
-		{name: "workspace ID and account ID", cfg: &config.Config{Host: clientOptionsTestHost, WorkspaceID: "conn-1a2b", AccountID: "8f4c2a10-account"}, wantTimeout: 5 * time.Minute},
-		{name: "host with an IPv6 address and a port", cfg: &config.Config{Host: "http://[::1]:8080"}, wantTimeout: 5 * time.Minute},
-		{name: "credentials that are a pointer", cfg: &config.Config{Host: clientOptionsTestHost}, credentials: &clientOptionsTestCredentials, wantTimeout: 5 * time.Minute},
-		{name: "credentials that are a map", cfg: &config.Config{Host: clientOptionsTestHost}, credentials: clientOptionsNilMap{}, wantTimeout: 5 * time.Minute},
-		{name: "retry timeout of a second", cfg: &config.Config{Host: clientOptionsTestHost, RetryTimeoutSeconds: 1}, wantTimeout: time.Second},
-		{name: "retry timeout of an hour", cfg: &config.Config{Host: clientOptionsTestHost, RetryTimeoutSeconds: 3600}, wantTimeout: time.Hour},
-		{name: "negative retry timeout turns the timeout off", cfg: &config.Config{Host: clientOptionsTestHost, RetryTimeoutSeconds: -1}, wantTimeout: 0},
-		{name: "HTTP timeout and rate limit are not carried", cfg: &config.Config{Host: clientOptionsTestHost, HTTPTimeoutSeconds: 65, RateLimitPerSecond: 3}, wantTimeout: 5 * time.Minute},
+		{name: "host only", cfg: &config.Config{Host: clientOptionsTestHost}},
+		{name: "workspace ID", cfg: &config.Config{Host: clientOptionsTestHost, WorkspaceID: "1234567890123456"}},
+		{name: "account ID", cfg: &config.Config{Host: clientOptionsTestHost, AccountID: "8f4c2a10-account"}},
+		{name: "workspace ID and account ID", cfg: &config.Config{Host: clientOptionsTestHost, WorkspaceID: "conn-1a2b", AccountID: "8f4c2a10-account"}},
+		{name: "host with an IPv6 address and a port", cfg: &config.Config{Host: "http://[::1]:8080"}},
+		{name: "credentials that are a pointer", cfg: &config.Config{Host: clientOptionsTestHost}, credentials: &clientOptionsTestCredentials},
+		{name: "credentials that are a map", cfg: &config.Config{Host: clientOptionsTestHost}, credentials: clientOptionsNilMap{}},
+		{name: "retry timeout of a second is not carried", cfg: &config.Config{Host: clientOptionsTestHost, RetryTimeoutSeconds: 1}},
+		{name: "retry timeout of an hour is not carried", cfg: &config.Config{Host: clientOptionsTestHost, RetryTimeoutSeconds: 3600}},
+		{name: "negative retry timeout is not carried", cfg: &config.Config{Host: clientOptionsTestHost, RetryTimeoutSeconds: -1}},
+		{name: "HTTP timeout and rate limit are not carried", cfg: &config.Config{Host: clientOptionsTestHost, HTTPTimeoutSeconds: 65, RateLimitPerSecond: 3}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -274,8 +276,8 @@ func TestClientOptions_SetEveryOption(t *testing.T) {
 			assert.True(t, got.DisableEnv)
 			assert.Empty(t, got.ConfigFile)
 			assert.Empty(t, got.ProfileName)
-			require.NotNil(t, got.Timeout)
-			assert.Equal(t, tt.wantTimeout, *got.Timeout)
+			require.NotNil(t, got.Timeout, "the client keeps the timeout of each method")
+			assert.Zero(t, *got.Timeout, "the client sets a timeout of its own")
 		})
 	}
 }
@@ -302,7 +304,7 @@ func TestClientOptions_CallsLikeClassicClient(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			server := clientOptionsNewServer(t, http.StatusOK, clientOptionsModelBody)
+			server := clientOptionsNewServer(t, http.StatusOK, clientOptionsModelBody, 0)
 			w := clientOptionsClassicClient(t, &config.Config{Host: server.URL + tt.host, WorkspaceID: tt.workspaceID, AccountID: tt.accountID})
 			classicModel, err := w.ModelRegistry.GetModel(ctx, ml.GetModelRequest{Name: "m"})
 			require.NoError(t, err)
@@ -391,8 +393,8 @@ func TestClientOptions_IgnoresEnvironment(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			clientOptionsCleanEnvironment(t)
-			workspace := clientOptionsNewServer(t, http.StatusOK, clientOptionsModelBody)
-			elsewhere := clientOptionsNewServer(t, http.StatusOK, clientOptionsModelBody)
+			workspace := clientOptionsNewServer(t, http.StatusOK, clientOptionsModelBody, 0)
+			elsewhere := clientOptionsNewServer(t, http.StatusOK, clientOptionsModelBody, 0)
 			// The provider resolves the classic config before it builds a
 			// modular client, so here before the environment points elsewhere.
 			configs := []*config.Config{
@@ -442,30 +444,34 @@ func TestClientOptions_IgnoresEnvironment(t *testing.T) {
 	}
 }
 
+// A call has no deadline but the one of the context of the caller, whatever
+// cfg.RetryTimeoutSeconds is, as the attempts of a classic call have.
 func TestClientOptions_CallTimeout(t *testing.T) {
 	clientOptionsCleanEnvironment(t)
-	server := clientOptionsNewServer(t, http.StatusOK, clientOptionsModelBody)
+	const slow = 1300 * time.Millisecond
 	tests := []struct {
 		name                string
 		retryTimeoutSeconds int
-		// callerTimeout is the timeout of the context of the caller, if any.
-		callerTimeout time.Duration
-		// want is how far ahead the deadline of the request is, or zero when
-		// the request has no deadline.
-		want time.Duration
+		callerTimeout       time.Duration // of the context of the caller, if any
+		delay               time.Duration // of the answer of the server
+		// want is how far ahead the deadline of the request is, zero for none.
+		want    time.Duration
+		wantErr error
 	}{
-		{name: "unset is the 5 minutes of the classic client", retryTimeoutSeconds: 0, want: 5 * time.Minute},
-		{name: "1 second", retryTimeoutSeconds: 1, want: time.Second},
-		{name: "1 hour", retryTimeoutSeconds: 3600, want: time.Hour},
-		{name: "minus one is no bound, as the provider sets it", retryTimeoutSeconds: -1},
-		{name: "any negative value is no bound", retryTimeoutSeconds: -300},
-		{name: "earlier deadline of the caller wins", retryTimeoutSeconds: 60, callerTimeout: 10 * time.Second, want: 10 * time.Second},
-		{name: "later deadline of the caller loses", retryTimeoutSeconds: 60, callerTimeout: time.Hour, want: time.Minute},
-		{name: "deadline of the caller is the only one without a bound", retryTimeoutSeconds: -1, callerTimeout: 20 * time.Minute, want: 20 * time.Minute},
-		{name: "deadline of the caller after the 5 minutes loses", retryTimeoutSeconds: 0, callerTimeout: 20 * time.Minute, want: 5 * time.Minute},
+		{name: "unset retry timeout is no deadline", retryTimeoutSeconds: 0},
+		{name: "retry timeout of 1 second is no deadline", retryTimeoutSeconds: 1},
+		{name: "minus one, as the provider sets it, is no deadline", retryTimeoutSeconds: -1},
+		{name: "any negative retry timeout is no deadline", retryTimeoutSeconds: -300},
+		{name: "deadline of the caller before the retry timeout", retryTimeoutSeconds: 60, callerTimeout: 10 * time.Second, want: 10 * time.Second},
+		{name: "deadline of the caller after the retry timeout", retryTimeoutSeconds: 60, callerTimeout: time.Hour, want: time.Hour},
+		{name: "deadline of the caller after the 5 minutes of a modular method", callerTimeout: 20 * time.Minute, want: 20 * time.Minute},
+		{name: "retry timeout doesn't end a slower attempt", retryTimeoutSeconds: 1, delay: slow},
+		{name: "deadline of the caller ends a slower attempt after the retry timeout", retryTimeoutSeconds: 1,
+			callerTimeout: slow, delay: 2 * slow, want: slow, wantErr: context.DeadlineExceeded},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			server := clientOptionsNewServer(t, http.StatusOK, clientOptionsModelBody, tt.delay)
 			transport := &clientOptionsPlainTransport{}
 			w := clientOptionsClassicClient(t, &config.Config{Host: server.URL, RetryTimeoutSeconds: tt.retryTimeoutSeconds})
 			c := clientOptionsModularClient(t, w.Config, transport)
@@ -480,7 +486,9 @@ func TestClientOptions_CallTimeout(t *testing.T) {
 			_, err := clientOptionsGetModel(ctx, c)
 			after := time.Now()
 
-			require.NoError(t, err)
+			require.ErrorIs(t, err, tt.wantErr)
+			// The attempt ran until the server answered or the caller gave up.
+			assert.GreaterOrEqual(t, after.Sub(before), min(tt.delay, cmp.Or(tt.callerTimeout, tt.delay)))
 			require.Len(t, transport.deadlines, 1)
 			deadline := transport.deadlines[0]
 			if tt.want == 0 {
@@ -493,32 +501,28 @@ func TestClientOptions_CallTimeout(t *testing.T) {
 	}
 }
 
-// Both clients give a call the time of cfg.RetryTimeoutSeconds, here a second.
-// The classic client looks at it between attempts and returns what the last
-// attempt returned. The modular client puts it on the context of the call. No
-// client option changes that, so these cases also pin where the two differ.
-func TestClientOptions_BoundsCallLikeClassicClient(t *testing.T) {
-	throttled := `{"error_code":"REQUEST_LIMIT_EXCEEDED","message":"slow down"}`
+// Both clients get cfg.RetryTimeoutSeconds of a second, and neither ends an
+// attempt that outlasts it. Ending the retries is left to the retrier of a
+// call: with one that never stops, as here, the modular call goes on until ctx.
+func TestClientOptions_LeavesRetryTimeoutToRetrier(t *testing.T) {
+	const callerTimeout = 2 * time.Second // of the modular call only
 	tests := []struct {
-		name           string
-		status         int
-		body           string
-		delay          time.Duration // of every answer of the server
-		wantClassicErr error         // nil when the classic call succeeds
-		wantRetries    bool
+		name                             string
+		status                           int
+		body                             string
+		delay                            time.Duration // of every answer of the server
+		wantClassicErr, wantModularErr   error         // nil when the call succeeds
+		wantClassicTook, wantModularTook time.Duration // at least, and less than 2 seconds more
 	}{
-		{name: "every attempt is throttled", status: http.StatusTooManyRequests, body: throttled,
-			wantClassicErr: apierr.ErrTooManyRequests, wantRetries: true},
-		{name: "one attempt outlasts the bound", status: http.StatusOK, body: clientOptionsModelBody, delay: 1300 * time.Millisecond},
+		{name: "one attempt outlasts the retry timeout", status: http.StatusOK, body: clientOptionsModelBody,
+			delay: 1300 * time.Millisecond, wantClassicTook: 1300 * time.Millisecond, wantModularTook: 1300 * time.Millisecond},
+		{name: "every attempt is throttled", status: http.StatusTooManyRequests, body: `{"error_code":"REQUEST_LIMIT_EXCEEDED","message":"slow down"}`,
+			wantClassicErr: apierr.ErrTooManyRequests, wantModularErr: context.DeadlineExceeded, wantClassicTook: time.Second, wantModularTook: callerTimeout},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			clientOptionsCleanEnvironment(t)
-			ctx := context.Background()
-			server := clientOptionsNewServer(t, tt.status, tt.body)
-			server.mu.Lock()
-			server.delay = tt.delay
-			server.mu.Unlock()
+			server := clientOptionsNewServer(t, tt.status, tt.body, tt.delay)
 			w := clientOptionsClassicClient(t, &config.Config{Host: server.URL, RetryTimeoutSeconds: 1})
 			c := clientOptionsModularClient(t, w.Config, &clientOptionsPlainTransport{})
 			// A modular client retries only with a retrier, a call option.
@@ -526,13 +530,15 @@ func TestClientOptions_BoundsCallLikeClassicClient(t *testing.T) {
 				backoff := ops.BackoffPolicy{Initial: 50 * time.Millisecond, Maximum: 50 * time.Millisecond}
 				return ops.RetryIf(backoff, func(error) bool { return true })
 			})
+			ctx, cancel := context.WithTimeout(context.Background(), callerTimeout)
+			defer cancel()
 
 			var classicErr, modularErr error
 			var classicTook, modularTook time.Duration
 			var wg sync.WaitGroup
 			wg.Go(func() {
 				start := time.Now()
-				_, classicErr = w.ModelRegistry.GetModel(ctx, ml.GetModelRequest{Name: "m"})
+				_, classicErr = w.ModelRegistry.GetModel(context.Background(), ml.GetModelRequest{Name: "m"})
 				classicTook = time.Since(start)
 			})
 			wg.Go(func() {
@@ -543,12 +549,11 @@ func TestClientOptions_BoundsCallLikeClassicClient(t *testing.T) {
 			wg.Wait()
 
 			assert.ErrorIs(t, classicErr, tt.wantClassicErr)
-			assert.ErrorIs(t, modularErr, context.DeadlineExceeded)
-			for name, took := range map[string]time.Duration{"classic": classicTook, "modular": modularTook} {
-				assert.GreaterOrEqual(t, took, time.Second, "the %s client gave up early", name)
-				assert.Less(t, took, 6*time.Second, "the %s client went on", name)
-			}
-			assert.Equal(t, tt.wantRetries, len(server.received()) > 2, "retries of the modular client")
+			assert.ErrorIs(t, modularErr, tt.wantModularErr)
+			assert.GreaterOrEqual(t, classicTook, tt.wantClassicTook, "the classic call ended early")
+			assert.Less(t, classicTook, tt.wantClassicTook+2*time.Second, "the classic call went on")
+			assert.GreaterOrEqual(t, modularTook, tt.wantModularTook, "the modular call ended early")
+			assert.Less(t, modularTook, tt.wantModularTook+2*time.Second, "the modular call went on")
 		})
 	}
 }
@@ -558,7 +563,7 @@ func TestClientOptions_BoundsCallLikeClassicClient(t *testing.T) {
 func TestClientOptions_Concurrent(t *testing.T) {
 	clientOptionsCleanEnvironment(t)
 	ctx := context.Background()
-	server := clientOptionsNewServer(t, http.StatusOK, clientOptionsModelBody)
+	server := clientOptionsNewServer(t, http.StatusOK, clientOptionsModelBody, 0)
 	w := clientOptionsClassicClient(t, &config.Config{Host: server.URL, WorkspaceID: "42"})
 	const builders, classicCalls = 32, 10
 	errs := make(chan error, builders+classicCalls)

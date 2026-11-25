@@ -1,0 +1,152 @@
+# Pins a description change. Update builds a classic ml.UpdateModelRequest, which has
+# only name and description, so the PATCH carries those two fields and not the tags in
+# the configuration. API responses are inferred from the MLflow Model Registry API,
+# not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: create_with_description_and_tags
+    config: |
+      resource "databricks_mlflow_model" "this" {
+        name        = "replay-model"
+        description = "first description"
+
+        tags {
+          key   = "team"
+          value = "ml"
+        }
+      }
+    calls:
+      - request:
+          method: POST
+          path: /api/2.0/mlflow/registered-models/create
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"name": "replay-model", "description": "first description",
+                   "tags": [{"key": "team", "value": "ml"}]}
+        response:
+          status: 200
+          body:
+            json: {"registered_model": {"name": "replay-model",
+                                        "creation_timestamp": 1700000000000,
+                                        "last_updated_timestamp": 1700000000000,
+                                        "user_id": "replay-admin@example.com",
+                                        "description": "first description",
+                                        "tags": [{"key": "team", "value": "ml"}]}}
+      - &read_created
+        request: &read_request
+          method: GET
+          path: /api/2.0/mlflow/databricks/registered-models/get
+          query:
+            name: [replay-model]
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"registered_model_databricks": {
+                     "name": "replay-model",
+                     "creation_timestamp": 1700000000000,
+                     "last_updated_timestamp": 1700000000000,
+                     "user_id": "replay-admin@example.com",
+                     "description": "first description",
+                     "tags": [{"key": "team", "value": "ml"}],
+                     "id": "0123456789abcdef0123456789abcdef",
+                     "permission_level": "CAN_MANAGE"}}
+      - *read_created
+  - name: description_change_sends_name_and_description
+    config: &config_updated |
+      resource "databricks_mlflow_model" "this" {
+        name        = "replay-model"
+        description = "second description"
+
+        tags {
+          key   = "team"
+          value = "ml"
+        }
+      }
+    plan:
+      expect: non_empty
+      changes:
+        databricks_mlflow_model.this:
+          actions: [update]
+          before:
+            - path: [description]
+              equals: first description
+          after:
+            - path: [description]
+              equals: second description
+    calls:
+      - *read_created
+      - request:
+          method: PATCH
+          path: /api/2.0/mlflow/registered-models/update
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"name": "replay-model", "description": "second description"}
+        response:
+          status: 200
+          body:
+            json: {"registered_model": {"name": "replay-model",
+                                        "creation_timestamp": 1700000000000,
+                                        "last_updated_timestamp": 1700000001000,
+                                        "user_id": "replay-admin@example.com",
+                                        "description": "second description",
+                                        "tags": [{"key": "team", "value": "ml"}]}}
+      - &read_updated
+        request: *read_request
+        response:
+          status: 200
+          body:
+            json: {"registered_model_databricks": {
+                     "name": "replay-model",
+                     "creation_timestamp": 1700000000000,
+                     "last_updated_timestamp": 1700000001000,
+                     "user_id": "replay-admin@example.com",
+                     "description": "second description",
+                     "tags": [{"key": "team", "value": "ml"}],
+                     "id": "0123456789abcdef0123456789abcdef",
+                     "permission_level": "CAN_MANAGE"}}
+      - *read_updated
+    state:
+      resources:
+        databricks_mlflow_model.this:
+          attributes:
+            - path: [id]
+              equals: replay-model
+            - path: [description]
+              equals: second description
+            - path: [registered_model_id]
+              equals: 0123456789abcdef0123456789abcdef
+  - name: plan_after_update_is_empty
+    plan_only: true
+    config: *config_updated
+    plan:
+      expect: empty
+      changes: {}
+    calls:
+      - *read_updated
+destroy:
+  calls:
+    - *read_updated
+    - request:
+        method: DELETE
+        path: /api/2.0/mlflow/registered-models/delete
+        query:
+          name: [replay-model]
+        headers:
+          X-Databricks-Workspace-Id: "12345"
+        body: null
+      response:
+        status: 200
+        body:
+          json: {}

@@ -1,0 +1,211 @@
+# This journey pins that the classic SDK client sends the refresh GET, the update PATCH
+# and the DELETE exactly once for statuses it does not retry: 400, 403, 404 and 500.
+# Each one fails apply with the API message and keeps the model in state, except a 404
+# on two of the calls: on refresh the provider drops the model and plans a create, and
+# on DELETE it counts the model as already deleted. None of the messages match a
+# transient error pattern. API responses are synthetic, inferred from the MLflow Model
+# Registry API, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: create
+    config: &config_first |
+      resource "databricks_mlflow_model" "this" {
+        name        = "retry-model"
+        description = "first"
+      }
+    calls:
+      - request:
+          method: POST
+          path: /api/2.0/mlflow/registered-models/create
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"name": "retry-model", "description": "first"}
+        response:
+          status: 200
+          body:
+            json: {"registered_model": {"name": "retry-model", "description": "first",
+                                        "creation_timestamp": 1700000000000,
+                                        "last_updated_timestamp": 1700000000000,
+                                        "user_id": "replay-admin@example.com"}}
+      - &read_first
+        request: &read
+          method: GET
+          path: /api/2.0/mlflow/databricks/registered-models/get
+          query:
+            name: ["retry-model"]
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"registered_model_databricks": {
+                     "name": "retry-model", "description": "first",
+                     "id": "0123456789abcdef0123456789abcdef",
+                     "creation_timestamp": 1700000000000,
+                     "last_updated_timestamp": 1700000000000,
+                     "user_id": "replay-admin@example.com",
+                     "permission_level": "CAN_MANAGE"}}
+      - *read_first
+  - name: refresh_400_is_not_retried
+    config: *config_first
+    expect_error: 'Error: cannot read mlflow model: Invalid model name from fixture\n'
+    calls:
+      - request: *read
+        response: &invalid_parameter
+          status: 400
+          body:
+            json: {"error_code": "INVALID_PARAMETER_VALUE",
+                   "message": "Invalid model name from fixture"}
+  - name: refresh_403_is_not_retried
+    config: *config_first
+    expect_error: 'Error: cannot read mlflow model: No permission in fixture\n'
+    calls:
+      - request: *read
+        response: &permission_denied
+          status: 403
+          body:
+            json: {"error_code": "PERMISSION_DENIED",
+                   "message": "No permission in fixture"}
+  - name: refresh_500_is_not_retried
+    config: *config_first
+    expect_error: 'Error: cannot read mlflow model: Internal error from fixture\n'
+    calls:
+      - request: *read
+        response: &internal_error
+          status: 500
+          body:
+            json: {"error_code": "INTERNAL_ERROR",
+                   "message": "Internal error from fixture"}
+  # A plan does not save the refreshed state, so the later steps still find the model.
+  - name: refresh_404_is_not_retried_and_plans_a_create
+    plan_only: true
+    config: *config_first
+    plan:
+      expect: non_empty
+      changes:
+        databricks_mlflow_model.this:
+          actions: [create]
+    calls:
+      - request: *read
+        response: &not_found
+          status: 404
+          body:
+            json: {"error_code": "RESOURCE_DOES_NOT_EXIST",
+                   "message": "Registered Model with name=retry-model not found"}
+  - name: update_400_is_not_retried
+    config: &config_second |
+      resource "databricks_mlflow_model" "this" {
+        name        = "retry-model"
+        description = "second"
+      }
+    expect_error: 'Error: cannot update mlflow model: Invalid model name from fixture\n'
+    calls:
+      - *read_first
+      - request: &update
+          method: PATCH
+          path: /api/2.0/mlflow/registered-models/update
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"name": "retry-model", "description": "second"}
+        response: *invalid_parameter
+  - name: update_403_is_not_retried
+    config: *config_second
+    expect_error: 'Error: cannot update mlflow model: No permission in fixture\n'
+    calls:
+      - *read_first
+      - request: *update
+        response: *permission_denied
+  - name: update_404_is_not_retried
+    config: *config_second
+    expect_error: 'Error: cannot update mlflow model: Registered Model with
+      name=retry-model not found\n'
+    calls:
+      - *read_first
+      - request: *update
+        response: *not_found
+  - name: update_500_is_not_retried
+    config: *config_second
+    expect_error: 'Error: cannot update mlflow model: Internal error from fixture\n'
+    calls:
+      - *read_first
+      - request: *update
+        response: *internal_error
+  - name: plan_after_rejected_updates_shows_the_update
+    plan_only: true
+    config: *config_second
+    plan:
+      expect: non_empty
+      changes:
+        databricks_mlflow_model.this:
+          actions: [update]
+          before:
+            - path: [description]
+              equals: first
+          after:
+            - path: [description]
+              equals: second
+    state: &state_kept
+      resources:
+        databricks_mlflow_model.this:
+          attributes:
+            - path: [id]
+              equals: retry-model
+    calls:
+      - *read_first
+  - name: delete_400_is_not_retried
+    config: &config_empty |
+      provider "databricks" {}
+    expect_error: 'Error: cannot delete mlflow model: Invalid model name from fixture\n'
+    calls:
+      - *read_first
+      - request: &delete
+          method: DELETE
+          path: /api/2.0/mlflow/registered-models/delete
+          query:
+            name: ["retry-model"]
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response: *invalid_parameter
+  - name: delete_403_is_not_retried
+    config: *config_empty
+    expect_error: 'Error: cannot delete mlflow model: No permission in fixture\n'
+    calls:
+      - *read_first
+      - request: *delete
+        response: *permission_denied
+  - name: delete_500_is_not_retried
+    config: *config_empty
+    expect_error: 'Error: cannot delete mlflow model: Internal error from fixture\n'
+    calls:
+      - *read_first
+      - request: *delete
+        response: *internal_error
+  - name: plan_after_rejected_deletes_keeps_the_model
+    plan_only: true
+    config: *config_first
+    plan:
+      expect: empty
+      changes: {}
+    state: *state_kept
+    calls:
+      - *read_first
+  # The apply succeeds and nothing is left in state, so destroy sends no request.
+  - name: delete_404_is_not_retried_and_counts_as_deleted
+    config: *config_empty
+    calls:
+      - *read_first
+      - request: *delete
+        response: *not_found
+destroy:
+  calls: []

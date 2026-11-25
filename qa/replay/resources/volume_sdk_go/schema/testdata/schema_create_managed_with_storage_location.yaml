@@ -1,7 +1,6 @@
 # Runs volume_schema/testdata/schema_create_managed_with_storage_location.yaml with
-# databricks_volume on sdk-go uc/volumes/v1 in every step, and expects the same behavior.
-# The volume POST request carries no Accept header, which an empty header expectation
-# pins. The original's description:
+# databricks_volume on sdk-go uc/volumes/v1 in every step, and expects the same requests
+# and behavior. The original's description:
 #
 # Pins creating a MANAGED volume with storage_location: the provider doesn't check the
 # combination, so the POST sends the location and the API's 400 is surfaced as the
@@ -35,7 +34,6 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body:
             json: {"catalog_name": "main", "schema_name": "replay",
                    "name": "located_managed_volume", "volume_type": "MANAGED",

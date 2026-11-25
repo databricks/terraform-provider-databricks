@@ -1,8 +1,6 @@
 # Runs volume_lifecycle/testdata/response_extra_fields_keep_the_same_state.yaml with
-# databricks_volume on sdk-go uc/volumes/v1 in every step, and expects the same behavior.
-# The volume POST, GET and PATCH requests carry no Accept header, which an empty header
-# expectation pins. The PATCH body also carries full_name_arg, the full name in its path,
-# because sdk-go serializes the path field into the body. The original's description:
+# databricks_volume on sdk-go uc/volumes/v1 in every step, and expects the same requests
+# and behavior. The original's description:
 #
 # Pins that response fields the resource doesn't map (encryption_details, browse_only,
 # access_point, created_at, created_by, updated_at, updated_by, volume_id and
@@ -33,7 +31,6 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body:
             json: {"catalog_name": "main", "schema_name": "replay",
                    "name": "extra_fields_volume", "volume_type": "MANAGED"}
@@ -51,7 +48,6 @@ steps:
           path: /api/2.1/unity-catalog/volumes/main.replay.extra_fields_volume
           headers:
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body: null
         response:
           status: 200
@@ -118,10 +114,8 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body:
-            json: {"full_name_arg": "main.replay.extra_fields_volume",
-                   "comment": "extra fields"}
+            json: {"comment": "extra fields"}
         response:
           status: 200
           body:

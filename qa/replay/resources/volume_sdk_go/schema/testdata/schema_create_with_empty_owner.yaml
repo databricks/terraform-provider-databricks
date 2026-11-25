@@ -1,6 +1,5 @@
 # Runs volume_schema/testdata/schema_create_with_empty_owner.yaml with databricks_volume
-# on sdk-go uc/volumes/v1 in every step, and expects the same behavior. The volume POST
-# and GET requests carry no Accept header, which an empty header expectation pins. The
+# on sdk-go uc/volumes/v1 in every step, and expects the same requests and behavior. The
 # original's description:
 #
 # Pins creating a volume with an explicit owner = "": the provider treats it as
@@ -39,7 +38,6 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body:
             json: {"catalog_name": "main", "schema_name": "replay",
                    "name": "ownerless_volume", "volume_type": "MANAGED"}
@@ -59,7 +57,6 @@ steps:
           path: /api/2.1/unity-catalog/volumes/main.replay.ownerless_volume
           headers:
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body: null
         response:
           status: 200

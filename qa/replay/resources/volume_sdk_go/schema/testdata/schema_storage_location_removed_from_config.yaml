@@ -1,7 +1,6 @@
 # Runs volume_schema/testdata/schema_storage_location_removed_from_config.yaml with
-# databricks_volume on sdk-go uc/volumes/v1 in every step, and expects the same behavior.
-# The volume POST and GET requests carry no Accept header, which an empty header
-# expectation pins. The original's description:
+# databricks_volume on sdk-go uc/volumes/v1 in every step, and expects the same requests
+# and behavior. The original's description:
 #
 # Pins removing a configured storage_location from an EXTERNAL volume's configuration:
 # diff suppression treats the empty value as no change, so the apply plans nothing,
@@ -32,7 +31,6 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body:
             json: {"catalog_name": "main", "schema_name": "replay",
                    "name": "unlocated_volume", "volume_type": "EXTERNAL",
@@ -53,7 +51,6 @@ steps:
           path: /api/2.1/unity-catalog/volumes/main.replay.unlocated_volume
           headers:
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body: null
         response:
           status: 200

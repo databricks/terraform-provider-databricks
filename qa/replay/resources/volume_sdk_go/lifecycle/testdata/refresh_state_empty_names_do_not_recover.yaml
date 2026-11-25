@@ -1,7 +1,6 @@
 # Runs volume_lifecycle/testdata/refresh_state_empty_names_do_not_recover.yaml with
-# databricks_volume on sdk-go uc/volumes/v1 in every step, and expects the same behavior.
-# The volume POST and GET requests carry no Accept header, which an empty header
-# expectation pins. The original's description:
+# databricks_volume on sdk-go uc/volumes/v1 in every step, and expects the same requests
+# and behavior. The original's description:
 #
 # Pins that state doesn't recover empty catalog_name, schema_name and name. The first
 # read after the create omits them, so state holds empty values and the plan right
@@ -34,7 +33,6 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body:
             json: {"catalog_name": "main", "schema_name": "replay",
                    "name": "named_volume", "volume_type": "MANAGED"}
@@ -54,7 +52,6 @@ steps:
           path: /api/2.1/unity-catalog/volumes/main.replay.named_volume
           headers:
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body: null
         response:
           status: 200

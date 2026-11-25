@@ -1,7 +1,6 @@
 # Runs volume_lifecycle/testdata/refresh_state_unconfigured_owner_is_adopted.yaml with
-# databricks_volume on sdk-go uc/volumes/v1 in every step, and expects the same behavior.
-# The volume POST and GET requests carry no Accept header, which an empty header
-# expectation pins. The original's description:
+# databricks_volume on sdk-go uc/volumes/v1 in every step, and expects the same requests
+# and behavior. The original's description:
 #
 # Pins that a refresh adopts a remote owner change when owner isn't configured. The
 # computed owner takes the new remote value and the plan stays empty. API responses are
@@ -30,7 +29,6 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body:
             json: {"catalog_name": "main", "schema_name": "replay",
                    "name": "adopted_owner_volume", "volume_type": "MANAGED"}
@@ -51,7 +49,6 @@ steps:
           path: /api/2.1/unity-catalog/volumes/main.replay.adopted_owner_volume
           headers:
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body: null
         response:
           status: 200

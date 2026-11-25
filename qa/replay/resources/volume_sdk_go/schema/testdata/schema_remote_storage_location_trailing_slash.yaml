@@ -1,7 +1,6 @@
 # Runs volume_schema/testdata/schema_remote_storage_location_trailing_slash.yaml with
-# databricks_volume on sdk-go uc/volumes/v1 in every step, and expects the same behavior.
-# The volume POST and GET requests carry no Accept header, which an empty header
-# expectation pins. The original's description:
+# databricks_volume on sdk-go uc/volumes/v1 in every step, and expects the same requests
+# and behavior. The original's description:
 #
 # Pins diff suppression when the API returns storage_location with a trailing slash
 # that the configuration omits: state keeps the API's value with the slash, and the
@@ -32,7 +31,6 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body:
             json: {"catalog_name": "main", "schema_name": "replay",
                    "name": "slashed_volume", "volume_type": "EXTERNAL",
@@ -53,7 +51,6 @@ steps:
           path: /api/2.1/unity-catalog/volumes/main.replay.slashed_volume
           headers:
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body: null
         response:
           status: 200

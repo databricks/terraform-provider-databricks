@@ -1,6 +1,6 @@
 # Runs volume_schema/testdata/schema_unconfigurable_arguments.yaml with databricks_volume
-# on sdk-go uc/volumes/v1 in every step, and expects the same behavior. It sends no API
-# calls, so it has no fixtures to change. The original's description:
+# on sdk-go uc/volumes/v1 in every step, and expects the same requests and behavior. The
+# original's description:
 #
 # Pins plan-time validation of arguments a configuration can't set: the computed
 # volume_path, and full_name_arg, which isn't in the schema. Each fails before any API

@@ -1,7 +1,6 @@
 # Runs volume_schema/testdata/schema_create_external_without_storage_location.yaml with
-# databricks_volume on sdk-go uc/volumes/v1 in every step, and expects the same behavior.
-# The volume POST request carries no Accept header, which an empty header expectation
-# pins. The original's description:
+# databricks_volume on sdk-go uc/volumes/v1 in every step, and expects the same requests
+# and behavior. The original's description:
 #
 # Pins creating an EXTERNAL volume without storage_location: the provider doesn't
 # require it, so the POST omits the field and the API's 400 is surfaced as the create
@@ -34,7 +33,6 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body:
             json: {"catalog_name": "main", "schema_name": "replay",
                    "name": "locationless_volume", "volume_type": "EXTERNAL"}

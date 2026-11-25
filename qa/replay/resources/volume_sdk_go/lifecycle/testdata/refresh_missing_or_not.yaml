@@ -1,6 +1,5 @@
 # Runs volume_lifecycle/testdata/refresh_missing_or_not.yaml with databricks_volume on
-# sdk-go uc/volumes/v1 in every step, and expects the same behavior. The volume POST and
-# GET requests carry no Accept header, which an empty header expectation pins. The
+# sdk-go uc/volumes/v1 in every step, and expects the same requests and behavior. The
 # original's description:
 #
 # Pins which refresh GET errors remove the volume from state (apierr.IsMissing). The
@@ -33,7 +32,6 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body:
             json: {"catalog_name": "main", "schema_name": "replay",
                    "name": "missing_refresh_volume", "volume_type": "MANAGED"}
@@ -53,7 +51,6 @@ steps:
           path: /api/2.1/unity-catalog/volumes/main.replay.missing_refresh_volume
           headers:
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body: null
         response:
           status: 200

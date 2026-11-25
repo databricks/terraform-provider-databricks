@@ -1,7 +1,6 @@
 # Runs volume_lifecycle/testdata/refresh_state_unconfigured_comment_is_not_adopted.yaml
 # with databricks_volume on sdk-go uc/volumes/v1 in every step, and expects the same
-# behavior. The volume POST and GET requests carry no Accept header, which an empty header
-# expectation pins. The original's description:
+# requests and behavior. The original's description:
 #
 # Pins that a refresh skips a remote comment when comment isn't configured and state
 # holds none. The volume is created without a comment, a later read returns one set
@@ -31,7 +30,6 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body:
             json: {"catalog_name": "main", "schema_name": "replay",
                    "name": "uncommented_volume", "volume_type": "MANAGED"}
@@ -52,7 +50,6 @@ steps:
           path: /api/2.1/unity-catalog/volumes/main.replay.uncommented_volume
           headers:
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body: null
         response:
           status: 200

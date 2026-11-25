@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"reflect"
 	"strconv"
+	"strings"
 
 	"github.com/databricks/sdk-go/core/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -17,11 +18,11 @@ import (
 //
 // For each exported field of the struct whose FieldName has an entry in s,
 // DataToStruct reads the value with d.GetOk. A field without a schema entry is
-// skipped, and so is a schema entry without a field. When GetOk reports the
-// value unset or zero, the field keeps the value it came with, which is nil or
-// empty in a new struct, so the SDK leaves it out of the request, as the
-// classic client leaves out an empty omitempty field. Otherwise the field is
-// replaced with:
+// skipped, and so are a schema entry without a field and a field mask. When
+// GetOk reports the value unset or zero, the field keeps the value it came
+// with, which is nil or empty in a new struct, so the SDK leaves it out of the
+// request, as the classic client leaves out an empty omitempty field.
+// Otherwise the field is replaced with:
 //
 //   - a string, a bool, an integer or a float, or a pointer to one, from a
 //     value of that schema type. A named string type, which is how the SDK
@@ -66,8 +67,9 @@ import (
 //   - read a set. A field whose schema type is schema.TypeSet gets the error
 //     of a value that doesn't fit.
 //   - read a field mask. A types.FieldMask says which fields a request
-//     updates and is no attribute of the resource, so the caller sets it
-//     itself.
+//     updates and is no attribute of the resource. A field of that type, by
+//     value or by pointer, is left as it came even when s has an entry of its
+//     name, and the caller sets it itself.
 //   - look into embedded structs, or read json tags, tf tags or aliases. The
 //     structs that need those stay with the helpers in package common.
 //   - validate the resource data. It relies on the validation that the
@@ -113,7 +115,7 @@ func dataToStructMessage(d *schema.ResourceData, s map[string]*schema.Schema, pr
 		name := FieldName(owner, field)
 		// A nil entry is no entry: a missing key gives nil as well.
 		fieldSchema := s[name]
-		if fieldSchema == nil || !field.IsExported() {
+		if fieldSchema == nil || !field.IsExported() || dataToStructIsFieldMask(field.Type) {
 			continue
 		}
 		f := dataToStructField{d: d, schema: fieldSchema, path: prefix + name, owner: owner, field: field}
@@ -133,6 +135,16 @@ func dataToStructMessage(d *schema.ResourceData, s map[string]*schema.Schema, pr
 		message.Field(i).Set(value)
 	}
 	return nil
+}
+
+// dataToStructIsFieldMask reports whether t is a types.FieldMask of any
+// message, or a pointer to one. The type is generic, so it is told by its
+// package and by its name up to the type argument.
+func dataToStructIsFieldMask(t reflect.Type) bool {
+	if t.Kind() == reflect.Pointer {
+		t = t.Elem()
+	}
+	return t.PkgPath() == reflect.TypeFor[types.Time]().PkgPath() && strings.HasPrefix(t.Name(), "FieldMask[")
 }
 
 // dataToStructTexts are the struct types of the SDK that are a string in JSON

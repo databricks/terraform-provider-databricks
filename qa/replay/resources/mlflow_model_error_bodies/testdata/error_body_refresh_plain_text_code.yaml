@@ -1,0 +1,197 @@
+# Pins how a refresh GET answered with plain text of the form "CODE: message" is classed.
+# The classic SDK takes CODE as the error code and reports only the message, then classes
+# the error by that code before the status:
+# - MALFORMED_REQUEST maps to no class, so a 400 fails and keeps the model.
+# - INVALID_PARAMETER_VALUE is a bad request, so even a 404 fails and keeps the model.
+# - NOT_FOUND maps to no class, so the 404 status classes it as a missing model.
+# - RESOURCE_DOES_NOT_EXIST is a missing model, even on a 400.
+# A failing refresh is sent once and its diagnostic has no CODE prefix. A missing model
+# raises no diagnostic: the plan is a create and the same apply sends the POST again. API
+# responses are synthetic: inferred from the MLflow Model Registry API and the classic
+# SDK's string error parser, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: create
+    config: &config |
+      resource "databricks_mlflow_model" "this" {
+        name        = "error_body_refresh_text_model"
+        description = "Pins refresh errors with a CODE: message body"
+      }
+    calls:
+      - &create
+        request:
+          method: POST
+          path: /api/2.0/mlflow/registered-models/create
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"name": "error_body_refresh_text_model",
+                   "description": "Pins refresh errors with a CODE: message body"}
+        response:
+          status: 200
+          body:
+            json: {"registered_model": {
+                     "name": "error_body_refresh_text_model",
+                     "description": "Pins refresh errors with a CODE: message body",
+                     "creation_timestamp": 1700000000000,
+                     "last_updated_timestamp": 1700000000000,
+                     "user_id": "tester@example.com"}}
+      - &read_first
+        request: &read_request
+          method: GET
+          path: /api/2.0/mlflow/databricks/registered-models/get
+          query:
+            name: [error_body_refresh_text_model]
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"registered_model_databricks": {
+                     "name": "error_body_refresh_text_model",
+                     "id": "9f8e7d6c5b4a39281706f5e4d3c2b141",
+                     "description": "Pins refresh errors with a CODE: message body",
+                     "creation_timestamp": 1700000000000,
+                     "last_updated_timestamp": 1700000000000,
+                     "user_id": "tester@example.com",
+                     "permission_level": "CAN_MANAGE"}}
+      - *read_first
+    state:
+      resources:
+        databricks_mlflow_model.this:
+          attributes:
+            - path: [registered_model_id]
+              equals: 9f8e7d6c5b4a39281706f5e4d3c2b141
+  - name: refresh_answered_400_plain_text_code_fails_with_message_only
+    config: *config
+    expect_error: 'Error: cannot read mlflow model: Registered model name is
+      malformed\.\n'
+    calls:
+      - request: *read_request
+        response:
+          status: 400
+          body:
+            text: "MALFORMED_REQUEST: Registered model name is malformed."
+  - name: state_kept_after_400_plain_text_code
+    plan_only: true
+    config: *config
+    plan: &plan_empty
+      expect: empty
+      changes: {}
+    state: &state_kept
+      resources:
+        databricks_mlflow_model.this:
+          attributes:
+            - path: [id]
+              equals: error_body_refresh_text_model
+            - path: [registered_model_id]
+              equals: 9f8e7d6c5b4a39281706f5e4d3c2b141
+    calls:
+      - *read_first
+  - name: refresh_answered_404_plain_text_invalid_parameter_value_fails_with_message_only
+    config: *config
+    expect_error: 'Error: cannot read mlflow model: Registered model name
+      ''error_body_refresh_text_model'' is not valid\.\n'
+    calls:
+      - request: *read_request
+        response:
+          status: 404
+          body:
+            text: "INVALID_PARAMETER_VALUE: Registered model name
+              'error_body_refresh_text_model' is not valid."
+  - name: state_kept_after_404_plain_text_invalid_parameter_value
+    plan_only: true
+    config: *config
+    plan: *plan_empty
+    state: *state_kept
+    calls:
+      - *read_first
+  - name: refresh_answered_404_plain_text_code_removes_and_recreates
+    config: *config
+    plan: &plan_create
+      expect: non_empty
+      changes:
+        databricks_mlflow_model.this:
+          actions: [create]
+    calls:
+      - request: *read_request
+        response:
+          status: 404
+          body:
+            text: "NOT_FOUND: Registered model 'error_body_refresh_text_model' not
+              found."
+      - *create
+      - &read_second
+        request: *read_request
+        response:
+          status: 200
+          body:
+            json: {"registered_model_databricks": {
+                     "name": "error_body_refresh_text_model",
+                     "id": "9f8e7d6c5b4a39281706f5e4d3c2b142",
+                     "description": "Pins refresh errors with a CODE: message body",
+                     "creation_timestamp": 1700000100000,
+                     "last_updated_timestamp": 1700000100000,
+                     "user_id": "tester@example.com",
+                     "permission_level": "CAN_MANAGE"}}
+      - *read_second
+    state:
+      resources:
+        databricks_mlflow_model.this:
+          attributes:
+            - path: [registered_model_id]
+              equals: 9f8e7d6c5b4a39281706f5e4d3c2b142
+  - name: refresh_answered_400_plain_text_resource_does_not_exist_removes_and_recreates
+    config: *config
+    plan: *plan_create
+    calls:
+      - request: *read_request
+        response:
+          status: 400
+          body:
+            text: "RESOURCE_DOES_NOT_EXIST: RegisteredModel
+              'error_body_refresh_text_model' does not exist. It might have been
+              deleted."
+      - *create
+      - &read_third
+        request: *read_request
+        response:
+          status: 200
+          body:
+            json: {"registered_model_databricks": {
+                     "name": "error_body_refresh_text_model",
+                     "id": "9f8e7d6c5b4a39281706f5e4d3c2b143",
+                     "description": "Pins refresh errors with a CODE: message body",
+                     "creation_timestamp": 1700000200000,
+                     "last_updated_timestamp": 1700000200000,
+                     "user_id": "tester@example.com",
+                     "permission_level": "CAN_MANAGE"}}
+      - *read_third
+    state:
+      resources:
+        databricks_mlflow_model.this:
+          attributes:
+            - path: [registered_model_id]
+              equals: 9f8e7d6c5b4a39281706f5e4d3c2b143
+destroy:
+  calls:
+    - *read_third
+    - request:
+        method: DELETE
+        path: /api/2.0/mlflow/registered-models/delete
+        query:
+          name: [error_body_refresh_text_model]
+        headers:
+          X-Databricks-Workspace-Id: "12345"
+        body: null
+      response:
+        status: 200
+        body:
+          json: {}

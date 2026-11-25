@@ -6,9 +6,23 @@ subcategory: "Lakewatch"
 
 [API Documentation](https://docs.databricks.com/api/workspace/lakewatch)
 
+Reads a custom Lakewatch parser version, including its YAML spec and description. Use a numbered canonical name to select a fixed version. The `latest` alias selects the highest version that still exists and returns an error if the parser is empty.
+
+This data source can only be used with a workspace-level provider.
 
 
 ## Example Usage
+Read a fixed version:
+
+```hcl
+data "databricks_lakewatch_parser_version" "logs" {
+  name = "parsers/11111111-1111-4111-8111-111111111111/versions/2"
+}
+
+output "parser_spec" {
+  value = data.databricks_lakewatch_parser_version.logs.spec
+}
+```
 
 
 ## Arguments

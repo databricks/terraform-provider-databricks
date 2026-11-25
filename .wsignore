@@ -2,10 +2,8 @@
 # Can contain patterns in Python's glob module format.
 
 # Generated files:
+.codegen/_last_sha
 .codegen/_openapi_sha
-.release_metadata.json
-.github/workflows/next-changelog.yml
-tagging.py
 
 # Binary files
 **/*.zip

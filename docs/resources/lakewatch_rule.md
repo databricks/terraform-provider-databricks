@@ -21,7 +21,6 @@ The following arguments are supported:
 * `rule_name` (string, required) - Name of the rule within its Unity Catalog schema. Required on create; can be updated
   within the same catalog and schema. Get synchronizes this field with the current Unity Catalog
   name, also reported in `effective_rule_name`
-* `schedule` (RuleSchedule, required) - When the rule executes
 * `schema_name` (string, required) - Name of the Unity Catalog schema that contains the rule. Required. Cannot be changed after
   creation. Reads return the value as supplied; the schema's current name is reported in
   `effective_schema_name`
@@ -47,7 +46,11 @@ The following arguments are supported:
   include `run_as_principal` keeps the current identity, and the requester must
   still be authorized to delegate to it; an editor who is not must supply a
   run_as_principal they can delegate to (for example, their own identity), or
-  clear it, either of which reassigns the rule. An update whose mask includes
+  clear it, either of which reassigns the rule. An update that only enables or
+  disables the rule (changes `schedule.enabled` and nothing else) does not
+  require delegate permission and keeps the current identity. Enabling the rule
+  still requires the current identity to have the access the rule needs to run,
+  or the request is rejected. An update whose mask includes
   `run_as_principal` but supplies no value clears it: the rule then runs as the
   requester, exactly as when it is omitted on create. Reads return the value as
   supplied; the identity the rule runs as is reported in
@@ -55,6 +58,10 @@ The following arguments are supported:
 * `runbook` (string, optional) - Long-form operational guidance carried from the authored rule metadata. Supports up to 4096
   characters. Requests exceeding this limit are rejected. Supports Markdown; analysts and the
   investigation agent follow it when triaging this rule's alerts
+* `schedule` (RuleSchedule, optional) - When the rule executes. Required for scheduled rules. A streaming rule accepts only
+  `enabled`, and an omitted schedule means enabled
+* `streaming` (RuleInputStreaming, optional) - Native streaming rule input: one source table filtered by one stateless row predicate.
+  Permanent field number; must not be renumbered
 * `suppress_until_time` (string, optional) - If set, this rule's signals do not open new alerts until the given time
 * `timerange` (RuleTimeRange, optional) - Time-range configuration for scheduled detections. If unset, the execution time range is
   extended by a fixed `15m` lookback
@@ -87,6 +94,10 @@ The following arguments are supported:
   notebook directory
 * `options` (object, optional) - Optional arguments supplied when invoking the custom function
 
+### RuleInputStreaming
+* `predicate` (StreamingPredicate, required) - Row predicate that selects matching rows
+* `source` (StreamingSource, required) - Source table whose rows are evaluated
+
 ### RuleMitreMapping
 * `sub_technique` (string, optional) - Human-readable MITRE sub-technique name
 * `sub_technique_id` (string, optional) - MITRE sub-technique ID, such as `T1078.001`
@@ -118,6 +129,13 @@ The following arguments are supported:
   Zero duration disables extension. Unset or empty uses a fixed `15m` at execution
   time. Only the start moves; the end is unchanged. Has no effect on a detection
   query that does not use `IN_TIMERANGE`. Values must fit signed 64-bit microseconds
+
+### StreamingPredicate
+* `expression` (string, required) - A SQL expression suitable for a WHERE clause, not a SELECT query. Evaluated
+  per input row; only stateless, row-local expressions are accepted
+
+### StreamingSource
+* `table` (string, required) - Fully-qualified Unity Catalog table in `catalog.schema.table` form
 
 ## Attributes
 In addition to the above arguments, the following attributes are exported:

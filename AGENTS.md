@@ -149,12 +149,9 @@ Within each section, maintain alphabetical order.
 - Use Terraform Registry Doc Preview Tool for validation
 
 ### Changelog Requirements
-All user-facing changes must be documented in `NEXT_CHANGELOG.md` with format:
-```
-* <Summary of change> ([#<PR number>](<PR link>)).
-
-  <Optional additional information>
-```
+For changes that need a release note, follow [Changelog](CONTRIBUTING.md#changelog).
+Public PRs include the note in their description. In the source checkout,
+follow `.nextchanges/README.md`.
 
 ### Migration Verification
 When migrating resources to Plugin Framework, always run `make diff-schema` to ensure no breaking changes to the Terraform schema.

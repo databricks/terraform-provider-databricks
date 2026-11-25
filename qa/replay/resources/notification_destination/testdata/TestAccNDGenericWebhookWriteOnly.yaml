@@ -1,0 +1,421 @@
+# Write-only (`*_wo`) generic webhook URL and password, with config_wo_version.
+# All responses are inferred, not recorded. GET returns *_set flags, never the values,
+# and (checked against a live workspace) a PATCH with `config` replaces the whole
+# webhook config, so the write-only values must be sent with every update.
+# Password literals are fake test inputs.
+version: 1
+host_metadata:
+  host_type: "workspace"
+  workspace_id: "12345"
+steps:
+  - name: "create"
+    config: |
+      variable "webhook_password" {
+        type      = string
+        ephemeral = true
+        default   = "fake-password"
+      }
+
+      resource "databricks_notification_destination" "this" {
+        display_name = "Notification Destination - write-only"
+        config_wo_version = 1
+        config {
+          generic_webhook {
+            url_wo      = "https://webhook.site/replay-wo?token=fake"
+            username    = "svc"
+            password_wo = var.webhook_password
+          }
+        }
+      }
+    calls:
+      - request:
+          method: "POST"
+          path: "/api/2.0/notification-destinations"
+          body:
+            json:
+              display_name: "Notification Destination - write-only"
+              config:
+                generic_webhook:
+                  url: "https://webhook.site/replay-wo?token=fake"
+                  username: "svc"
+                  password: "fake-password"
+        response: # Inferred from the notification API model; not recorded.
+          status: 200
+          body:
+            json:
+              id: "00000000-0000-4000-8000-000000000001"
+              display_name: "Notification Destination - write-only"
+              destination_type: "WEBHOOK"
+              config:
+                generic_webhook:
+                  url_set: true
+                  username_set: true
+                  password_set: true
+      - request:
+          method: "GET"
+          path: "/api/2.0/notification-destinations/00000000-0000-4000-8000-000000000001"
+          body: null
+        response: # Inferred from the notification API model; not recorded.
+          status: 200
+          body:
+            json:
+              id: "00000000-0000-4000-8000-000000000001"
+              display_name: "Notification Destination - write-only"
+              destination_type: "WEBHOOK"
+              config:
+                generic_webhook:
+                  url_set: true
+                  username_set: true
+                  password_set: true
+      - request:
+          method: "GET"
+          path: "/api/2.0/notification-destinations/00000000-0000-4000-8000-000000000001"
+          body: null
+        response: # Inferred from the notification API model; not recorded.
+          status: 200
+          body:
+            json:
+              id: "00000000-0000-4000-8000-000000000001"
+              display_name: "Notification Destination - write-only"
+              destination_type: "WEBHOOK"
+              config:
+                generic_webhook:
+                  url_set: true
+                  username_set: true
+                  password_set: true
+    state:
+      resources:
+        databricks_notification_destination.this:
+          attributes:
+            - path:
+                - "config"
+                - 0
+                - "generic_webhook"
+                - 0
+                - "url"
+              equals: ""
+            - path:
+                - "config"
+                - 0
+                - "generic_webhook"
+                - 0
+                - "password"
+              equals: ""
+            - path:
+                - "config"
+                - 0
+                - "generic_webhook"
+                - 0
+                - "url_wo"
+              equals: null
+            - path:
+                - "config"
+                - 0
+                - "generic_webhook"
+                - 0
+                - "password_wo"
+              equals: null
+            - path:
+                - "config"
+                - 0
+                - "generic_webhook"
+                - 0
+                - "username"
+              equals: "svc"
+            - path:
+                - "config_wo_version"
+              equals: 1
+  - name: "rename_resends_write_only_values"
+    config: |
+      variable "webhook_password" {
+        type      = string
+        ephemeral = true
+        default   = "fake-password"
+      }
+
+      resource "databricks_notification_destination" "this" {
+        display_name = "Notification Destination - write-only renamed"
+        config_wo_version = 1
+        config {
+          generic_webhook {
+            url_wo      = "https://webhook.site/replay-wo?token=fake"
+            username    = "svc"
+            password_wo = var.webhook_password
+          }
+        }
+      }
+    calls:
+      - request:
+          method: "GET"
+          path: "/api/2.0/notification-destinations/00000000-0000-4000-8000-000000000001"
+          body: null
+        response: # Inferred from the notification API model; not recorded.
+          status: 200
+          body:
+            json:
+              id: "00000000-0000-4000-8000-000000000001"
+              display_name: "Notification Destination - write-only"
+              destination_type: "WEBHOOK"
+              config:
+                generic_webhook:
+                  url_set: true
+                  username_set: true
+                  password_set: true
+      - request:
+          method: "PATCH"
+          path: "/api/2.0/notification-destinations/00000000-0000-4000-8000-000000000001"
+          body:
+            json:
+              display_name: "Notification Destination - write-only renamed"
+              config:
+                generic_webhook:
+                  url: "https://webhook.site/replay-wo?token=fake"
+                  username: "svc"
+                  password: "fake-password"
+                  url_set: true
+                  username_set: true
+                  password_set: true
+        response: # Inferred from the notification API model; not recorded.
+          status: 200
+          body:
+            json:
+              id: "00000000-0000-4000-8000-000000000001"
+              display_name: "Notification Destination - write-only renamed"
+              destination_type: "WEBHOOK"
+              config:
+                generic_webhook:
+                  url_set: true
+                  username_set: true
+                  password_set: true
+      - request:
+          method: "GET"
+          path: "/api/2.0/notification-destinations/00000000-0000-4000-8000-000000000001"
+          body: null
+        response: # Inferred from the notification API model; not recorded.
+          status: 200
+          body:
+            json:
+              id: "00000000-0000-4000-8000-000000000001"
+              display_name: "Notification Destination - write-only renamed"
+              destination_type: "WEBHOOK"
+              config:
+                generic_webhook:
+                  url_set: true
+                  username_set: true
+                  password_set: true
+      - request:
+          method: "GET"
+          path: "/api/2.0/notification-destinations/00000000-0000-4000-8000-000000000001"
+          body: null
+        response: # Inferred from the notification API model; not recorded.
+          status: 200
+          body:
+            json:
+              id: "00000000-0000-4000-8000-000000000001"
+              display_name: "Notification Destination - write-only renamed"
+              destination_type: "WEBHOOK"
+              config:
+                generic_webhook:
+                  url_set: true
+                  username_set: true
+                  password_set: true
+    state:
+      resources:
+        databricks_notification_destination.this:
+          attributes:
+            - path:
+                - "config"
+                - 0
+                - "generic_webhook"
+                - 0
+                - "url"
+              equals: ""
+            - path:
+                - "config"
+                - 0
+                - "generic_webhook"
+                - 0
+                - "password"
+              equals: ""
+            - path:
+                - "config"
+                - 0
+                - "generic_webhook"
+                - 0
+                - "url_wo"
+              equals: null
+            - path:
+                - "config"
+                - 0
+                - "generic_webhook"
+                - 0
+                - "password_wo"
+              equals: null
+            - path:
+                - "config"
+                - 0
+                - "generic_webhook"
+                - 0
+                - "username"
+              equals: "svc"
+  - name: "rotate_password_with_version_bump"
+    config: |
+      variable "webhook_password" {
+        type      = string
+        ephemeral = true
+        default   = "fake-password"
+      }
+
+      resource "databricks_notification_destination" "this" {
+        display_name = "Notification Destination - write-only renamed"
+        config_wo_version = 2
+        config {
+          generic_webhook {
+            url_wo      = "https://webhook.site/replay-wo?token=fake"
+            username    = "svc"
+            password_wo = "fake-password-2"
+          }
+        }
+      }
+    calls:
+      - request:
+          method: "GET"
+          path: "/api/2.0/notification-destinations/00000000-0000-4000-8000-000000000001"
+          body: null
+        response: # Inferred from the notification API model; not recorded.
+          status: 200
+          body:
+            json:
+              id: "00000000-0000-4000-8000-000000000001"
+              display_name: "Notification Destination - write-only renamed"
+              destination_type: "WEBHOOK"
+              config:
+                generic_webhook:
+                  url_set: true
+                  username_set: true
+                  password_set: true
+      - request:
+          method: "PATCH"
+          path: "/api/2.0/notification-destinations/00000000-0000-4000-8000-000000000001"
+          body:
+            json:
+              display_name: "Notification Destination - write-only renamed"
+              config:
+                generic_webhook:
+                  url: "https://webhook.site/replay-wo?token=fake"
+                  username: "svc"
+                  password: "fake-password-2"
+                  url_set: true
+                  username_set: true
+                  password_set: true
+        response: # Inferred from the notification API model; not recorded.
+          status: 200
+          body:
+            json:
+              id: "00000000-0000-4000-8000-000000000001"
+              display_name: "Notification Destination - write-only renamed"
+              destination_type: "WEBHOOK"
+              config:
+                generic_webhook:
+                  url_set: true
+                  username_set: true
+                  password_set: true
+      - request:
+          method: "GET"
+          path: "/api/2.0/notification-destinations/00000000-0000-4000-8000-000000000001"
+          body: null
+        response: # Inferred from the notification API model; not recorded.
+          status: 200
+          body:
+            json:
+              id: "00000000-0000-4000-8000-000000000001"
+              display_name: "Notification Destination - write-only renamed"
+              destination_type: "WEBHOOK"
+              config:
+                generic_webhook:
+                  url_set: true
+                  username_set: true
+                  password_set: true
+      - request:
+          method: "GET"
+          path: "/api/2.0/notification-destinations/00000000-0000-4000-8000-000000000001"
+          body: null
+        response: # Inferred from the notification API model; not recorded.
+          status: 200
+          body:
+            json:
+              id: "00000000-0000-4000-8000-000000000001"
+              display_name: "Notification Destination - write-only renamed"
+              destination_type: "WEBHOOK"
+              config:
+                generic_webhook:
+                  url_set: true
+                  username_set: true
+                  password_set: true
+    state:
+      resources:
+        databricks_notification_destination.this:
+          attributes:
+            - path:
+                - "config"
+                - 0
+                - "generic_webhook"
+                - 0
+                - "url"
+              equals: ""
+            - path:
+                - "config"
+                - 0
+                - "generic_webhook"
+                - 0
+                - "password"
+              equals: ""
+            - path:
+                - "config"
+                - 0
+                - "generic_webhook"
+                - 0
+                - "url_wo"
+              equals: null
+            - path:
+                - "config"
+                - 0
+                - "generic_webhook"
+                - 0
+                - "password_wo"
+              equals: null
+            - path:
+                - "config"
+                - 0
+                - "generic_webhook"
+                - 0
+                - "username"
+              equals: "svc"
+            - path:
+                - "config_wo_version"
+              equals: 2
+destroy:
+  calls:
+    - request:
+        method: "GET"
+        path: "/api/2.0/notification-destinations/00000000-0000-4000-8000-000000000001"
+        body: null
+      response: # Inferred from the notification API model; not recorded.
+        status: 200
+        body:
+          json:
+            id: "00000000-0000-4000-8000-000000000001"
+            display_name: "Notification Destination - write-only renamed"
+            destination_type: "WEBHOOK"
+            config:
+              generic_webhook:
+                url_set: true
+                username_set: true
+                password_set: true
+    - request:
+        method: "DELETE"
+        path: "/api/2.0/notification-destinations/00000000-0000-4000-8000-000000000001"
+        body: null
+      response: # Inferred from the notification API model; not recorded.
+        status: 200
+        body: null

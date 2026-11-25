@@ -61,6 +61,34 @@ func TestImportAppEmitsUnityCatalogDependencies(t *testing.T) {
 	}
 }
 
+// Regression test for https://github.com/databricks/terraform-provider-databricks/issues/6205.
+// The backend returned an enum value the Go SDK does not know about, which made
+// the conversion back to the Go SDK struct panic and crashed the export.
+func TestImportAppWithEnumValueUnknownToSdk(t *testing.T) {
+	ctx := context.Background()
+	ic := importContextForTest()
+	ic.Context = ctx
+	services, _ := ic.allServicesAndListing()
+	ic.enableServices(services)
+
+	app := apps.App{
+		Name: "test-app",
+		ActiveDeployment: &apps.AppDeployment{
+			DeploymentId: "deployment-id",
+			ScanStatus:   apps.AppDeploymentScanStatus("APP_DEPLOYMENT_SCAN_STATUS_UNSPECIFIED"),
+		},
+	}
+	var tfApp app_resource.AppResource
+	diags := converters.GoSdkToTfSdkStruct(ctx, app, &tfApp)
+	require.False(t, diags.HasError(), diags.Errors())
+	wrapper, state := newPluginFrameworkTestState(t, ic, ctx, "databricks_app", app.Name)
+	require.Empty(t, state.SetAttribute(ctx, path.Root("name"), tfApp.Name).Errors())
+	require.Empty(t, state.SetAttribute(ctx, path.Root("active_deployment"), tfApp.ActiveDeployment).Errors())
+
+	err := importApp(ic, &resource{Resource: "databricks_app", ID: app.Name, Name: "test_app", DataWrapper: wrapper})
+	require.NoError(t, err)
+}
+
 func TestAppExport(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		meAdminFixture,

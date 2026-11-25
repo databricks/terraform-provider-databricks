@@ -1,0 +1,67 @@
+# Runs volume/testdata/import_missing_volume.yaml with databricks_volume on sdk-go
+# uc/volumes/v1 in every step, and expects the same requests and behavior. The original's
+# description:
+#
+# Pins importing a volume whose GET answers 404. The importer's read doesn't ignore a
+# missing volume, but the default importer in common/resource.go returns
+# diags[0].Validate(), which is nil for any diagnostic with a summary, so the 404 is
+# dropped and Terraform refreshes the imported ID. That refresh ignores the 404 and
+# clears the ID, so the user sees Terraform's own error and the following plan creates
+# the volume because nothing was imported. API responses are inferred from the Unity
+# Catalog API contract, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: import_answered_404_fails_with_terraform_error
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: &config |
+      resource "databricks_volume" "this" {
+        name         = "missing_import_volume"
+        catalog_name = "main"
+        schema_name  = "replay"
+        volume_type  = "MANAGED"
+      }
+    import:
+      resource: databricks_volume.this
+      id: main.replay.missing_import_volume
+      persist: true
+    expect_error: 'Error: Cannot import non-existent remote object\n\nWhile attempting
+      to import an existing object to "databricks_volume\.this",\nthe provider detected
+      that no object exists with the given id\. Only\npre-existing objects can be
+      imported; check that the id is correct and that\nit is associated with the
+      provider''s configured region or endpoint, or use\n"terraform apply" to create a
+      new remote object for this resource\.\n'
+    calls:
+      # The importer's GET, then the refresh GET after import.
+      - &read_missing
+        request:
+          method: GET
+          path: /api/2.1/unity-catalog/volumes/main.replay.missing_import_volume
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 404
+          body:
+            json: {"error_code": "RESOURCE_DOES_NOT_EXIST",
+                   "message": "Volume 'main.replay.missing_import_volume' does not
+                     exist."}
+      - *read_missing
+  - name: nothing_imported_so_plan_creates
+    sdk_implementations:
+      databricks_volume: sdk_go
+    plan_only: true
+    config: *config
+    plan:
+      expect: non_empty
+      changes:
+        databricks_volume.this:
+          actions: [create]
+    calls: []
+destroy:
+  calls: []

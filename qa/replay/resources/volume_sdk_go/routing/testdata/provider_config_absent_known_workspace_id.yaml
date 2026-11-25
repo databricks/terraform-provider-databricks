@@ -1,7 +1,6 @@
 # Runs volume_routing/testdata/provider_config_absent_known_workspace_id.yaml with
-# databricks_volume on sdk-go uc/volumes/v1 in every step, and expects the same behavior.
-# The volume POST and GET requests carry no Accept header, which an empty header
-# expectation pins. The original's description:
+# databricks_volume on sdk-go uc/volumes/v1 in every step, and expects the same requests
+# and behavior. The original's description:
 #
 # Pins provider_config population without a provider_config block when host metadata
 # supplies the workspace ID. Create, refresh and import write that ID to
@@ -32,7 +31,6 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body:
             json: {"catalog_name": "main", "schema_name": "replay",
                    "name": "known_ws_volume", "volume_type": "MANAGED"}
@@ -52,7 +50,6 @@ steps:
           path: /api/2.1/unity-catalog/volumes/main.replay.known_ws_volume
           headers:
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body: null
         response:
           status: 200

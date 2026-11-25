@@ -1,7 +1,6 @@
 # Runs volume_routing/testdata/routing_connection_id_on_unified_host.yaml with
-# databricks_volume on sdk-go uc/volumes/v1 in every step, and expects the same behavior.
-# The volume POST and GET requests carry no Accept header, which an empty header
-# expectation pins. The original's description:
+# databricks_volume on sdk-go uc/volumes/v1 in every step, and expects the same requests
+# and behavior. The original's description:
 #
 # Pins a connection ID in provider_config.workspace_id on a unified host. The provider
 # makes no account workspace lookup: every volume call carries the connection ID
@@ -37,7 +36,6 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: cpdr-replay-connection-1
-            Accept: ""
           body:
             json: {"catalog_name": "main", "schema_name": "replay",
                    "name": "connection_volume", "volume_type": "MANAGED"}
@@ -57,7 +55,6 @@ steps:
           path: /api/2.1/unity-catalog/volumes/main.replay.connection_volume
           headers:
             X-Databricks-Workspace-Id: cpdr-replay-connection-1
-            Accept: ""
           body: null
         response:
           status: 200

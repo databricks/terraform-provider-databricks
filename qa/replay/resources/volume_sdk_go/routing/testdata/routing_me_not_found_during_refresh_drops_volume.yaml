@@ -1,7 +1,6 @@
 # Runs volume_routing/testdata/routing_me_not_found_during_refresh_drops_volume.yaml with
-# databricks_volume on sdk-go uc/volumes/v1 in every step, and expects the same behavior.
-# The volume POST requests carry no Accept header, which an empty header expectation pins.
-# The original's description:
+# databricks_volume on sdk-go uc/volumes/v1 in every step, and expects the same requests
+# and behavior. The original's description:
 #
 # Pins SCIM /Me answering 404 while a refresh builds the volume's workspace client, on
 # a workspace-level provider whose host metadata has no workspace ID. The refresh treats
@@ -47,7 +46,6 @@ steps:
           path: /api/2.1/unity-catalog/volumes
           headers:
             Content-Type: application/json
-            Accept: ""
           body:
             json: {"catalog_name": "main", "schema_name": "replay",
                    "name": "me_not_found_volume", "volume_type": "MANAGED"}

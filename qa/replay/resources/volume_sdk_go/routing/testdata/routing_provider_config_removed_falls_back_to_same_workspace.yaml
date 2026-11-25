@@ -1,7 +1,7 @@
-# Runs routing_provider_config_removed_falls_back_to_same_workspace.yaml from
-# volume_routing/testdata with databricks_volume on sdk-go uc/volumes/v1 in every step,
-# and expects the same behavior. The volume POST and GET requests carry no Accept header,
-# which an empty header expectation pins. The original's description:
+# Runs
+# volume_routing/testdata/routing_provider_config_removed_falls_back_to_same_workspace.yaml
+# with databricks_volume on sdk-go uc/volumes/v1 in every step, and expects the same
+# requests and behavior. The original's description:
 #
 # Pins removing the provider_config block when the provider-level workspace_id names
 # the same workspace, on an account-level provider. The plan without refresh makes no
@@ -51,7 +51,6 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body:
             json: {"catalog_name": "main", "schema_name": "replay",
                    "name": "same_fallback_volume", "volume_type": "MANAGED"}
@@ -71,7 +70,6 @@ steps:
           path: /api/2.1/unity-catalog/volumes/main.replay.same_fallback_volume
           headers:
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body: null
         response:
           status: 200

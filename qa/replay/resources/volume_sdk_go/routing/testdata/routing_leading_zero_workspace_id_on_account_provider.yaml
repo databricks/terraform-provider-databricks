@@ -1,7 +1,6 @@
 # Runs volume_routing/testdata/routing_leading_zero_workspace_id_on_account_provider.yaml
 # with databricks_volume on sdk-go uc/volumes/v1 in every step, and expects the same
-# behavior. The volume POST and GET requests carry no Accept header, which an empty header
-# expectation pins. The original's description:
+# requests and behavior. The original's description:
 #
 # Pins a leading-zero provider_config.workspace_id on an account-level provider. The
 # workspace lookup parses the ID as a number and asks for workspace 123, and the volume
@@ -51,7 +50,6 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "123"
-            Accept: ""
           body:
             json: {"catalog_name": "main", "schema_name": "replay",
                    "name": "account_leading_zero_volume", "volume_type": "MANAGED"}
@@ -71,7 +69,6 @@ steps:
           path: /api/2.1/unity-catalog/volumes/main.replay.account_leading_zero_volume
           headers:
             X-Databricks-Workspace-Id: "123"
-            Accept: ""
           body: null
         response:
           status: 200

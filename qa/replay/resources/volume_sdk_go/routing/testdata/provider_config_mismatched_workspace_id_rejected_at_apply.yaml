@@ -1,8 +1,7 @@
 # Runs
 # volume_routing/testdata/provider_config_mismatched_workspace_id_rejected_at_apply.yaml
 # with databricks_volume on sdk-go uc/volumes/v1 in every step, and expects the same
-# behavior. It makes no volume call, so its fixtures are unchanged. The original's
-# description:
+# requests and behavior. The original's description:
 #
 # Pins provider_config.workspace_id different from the workspace of a workspace-level
 # provider. The plan succeeds without any call, and apply fails on the mismatch before

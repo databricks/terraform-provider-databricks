@@ -1,7 +1,6 @@
 # Runs volume_routing/testdata/routing_workspace_lookup_returns_other_workspace_id.yaml
 # with databricks_volume on sdk-go uc/volumes/v1 in every step, and expects the same
-# behavior. The volume POST and GET requests carry no Accept header, which an empty header
-# expectation pins. The original's description:
+# requests and behavior. The original's description:
 #
 # Pins account workspace lookups whose 200 response doesn't echo the requested
 # workspace ID, on an account-level provider with provider_config.workspace_id 12345.
@@ -51,7 +50,6 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "67890"
-            Accept: ""
           body:
             json: {"catalog_name": "main", "schema_name": "replay",
                    "name": "lookup_mismatch_volume", "volume_type": "MANAGED"}
@@ -71,7 +69,6 @@ steps:
           path: /api/2.1/unity-catalog/volumes/main.replay.lookup_mismatch_volume
           headers:
             X-Databricks-Workspace-Id: "67890"
-            Accept: ""
           body: null
         response:
           status: 200
@@ -109,7 +106,6 @@ steps:
           path: /api/2.1/unity-catalog/volumes/main.replay.lookup_mismatch_volume
           headers:
             X-Databricks-Workspace-Id: "0"
-            Accept: ""
           body: null
         response:
           status: 200

@@ -1,4 +1,5 @@
-// Package routing_test runs the sdk-go twins of the ../../volume_routing journeys, in their own package so it stays within the go test timeout.
+// Package routing_test runs the sdk-go twins of the ../../volume_routing journeys. They
+// are a separate package so that each package stays within the go test timeout.
 package routing_test
 
 import (

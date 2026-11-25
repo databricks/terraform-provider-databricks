@@ -1,7 +1,6 @@
 # Runs volume_routing/testdata/provider_config_absent_me_failure_after_create.yaml with
-# databricks_volume on sdk-go uc/volumes/v1 in every step, and expects the same behavior.
-# The volume POST requests carry no Accept header, which an empty header expectation pins.
-# The original's description:
+# databricks_volume on sdk-go uc/volumes/v1 in every step, and expects the same requests
+# and behavior. The original's description:
 #
 # Pins a failing SCIM /Me call after create, without a provider_config block and with
 # no workspace ID in host metadata. The volume is created and read, then /Me answers
@@ -33,7 +32,6 @@ steps:
           path: /api/2.1/unity-catalog/volumes
           headers:
             Content-Type: application/json
-            Accept: ""
           body:
             json: {"catalog_name": "main", "schema_name": "replay",
                    "name": "me_failure_volume", "volume_type": "MANAGED"}

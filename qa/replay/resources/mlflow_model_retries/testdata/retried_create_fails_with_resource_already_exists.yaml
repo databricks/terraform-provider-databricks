@@ -1,0 +1,53 @@
+# This journey pins a create whose first POST took effect but was answered 503. The
+# classic SDK client sends the POST again, the retry is answered 400
+# RESOURCE_ALREADY_EXISTS, which is sent once, and apply fails with that message. No ID
+# is stored, so the model the first POST created is not in state and the next plan
+# creates it again. API responses are synthetic, inferred from the MLflow Model Registry
+# API, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: create_post_retried_after_503_fails_with_already_exists
+    config: &config |
+      resource "databricks_mlflow_model" "this" {
+        name        = "retry-model"
+        description = "first"
+      }
+    expect_error: 'Error: cannot create mlflow model: Registered Model
+      \(name=retry-model\) already exists\.\n'
+    calls:
+      - request: &create
+          method: POST
+          path: /api/2.0/mlflow/registered-models/create
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"name": "retry-model", "description": "first"}
+        response:
+          status: 503
+          body:
+            json: {"error_code": "TEMPORARILY_UNAVAILABLE",
+                   "message": "The service is temporarily unavailable."}
+      - request: *create
+        response:
+          status: 400
+          body:
+            json: {"error_code": "RESOURCE_ALREADY_EXISTS",
+                   "message": "Registered Model (name=retry-model) already exists."}
+  # Nothing is in state, so the plan reads nothing and creates the model.
+  - name: plan_after_failed_retry_creates_the_model
+    plan_only: true
+    config: *config
+    plan:
+      expect: non_empty
+      changes:
+        databricks_mlflow_model.this:
+          actions: [create]
+    calls: []
+destroy:
+  calls: []

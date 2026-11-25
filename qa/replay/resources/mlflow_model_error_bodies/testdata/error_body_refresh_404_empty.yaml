@@ -1,0 +1,113 @@
+# Pins that a refresh GET answered 404 with an empty body drops the model. The classic
+# SDK gives an empty body no error code, so the status alone classes it as a missing
+# model: the refresh raises no diagnostic, the plan is a create, and the same apply sends
+# the POST again. The state check reads back the id of the recreated model. API responses
+# are synthetic: inferred from the MLflow Model Registry API, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: create
+    config: &config |
+      resource "databricks_mlflow_model" "this" {
+        name        = "error_body_refresh_empty_model"
+        description = "Pins a refresh 404 with an empty body"
+      }
+    calls:
+      - &create
+        request:
+          method: POST
+          path: /api/2.0/mlflow/registered-models/create
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"name": "error_body_refresh_empty_model",
+                   "description": "Pins a refresh 404 with an empty body"}
+        response:
+          status: 200
+          body:
+            json: {"registered_model": {
+                     "name": "error_body_refresh_empty_model",
+                     "description": "Pins a refresh 404 with an empty body",
+                     "creation_timestamp": 1700000000000,
+                     "last_updated_timestamp": 1700000000000,
+                     "user_id": "tester@example.com"}}
+      - &read_first
+        request: &read_request
+          method: GET
+          path: /api/2.0/mlflow/databricks/registered-models/get
+          query:
+            name: [error_body_refresh_empty_model]
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"registered_model_databricks": {
+                     "name": "error_body_refresh_empty_model",
+                     "id": "9f8e7d6c5b4a39281706f5e4d3c2b121",
+                     "description": "Pins a refresh 404 with an empty body",
+                     "creation_timestamp": 1700000000000,
+                     "last_updated_timestamp": 1700000000000,
+                     "user_id": "tester@example.com",
+                     "permission_level": "CAN_MANAGE"}}
+      - *read_first
+    state:
+      resources:
+        databricks_mlflow_model.this:
+          attributes:
+            - path: [registered_model_id]
+              equals: 9f8e7d6c5b4a39281706f5e4d3c2b121
+  - name: refresh_answered_404_with_empty_body_removes_and_recreates
+    config: *config
+    plan:
+      expect: non_empty
+      changes:
+        databricks_mlflow_model.this:
+          actions: [create]
+    calls:
+      - request: *read_request
+        response:
+          status: 404
+          body: null
+      - *create
+      - &read_second
+        request: *read_request
+        response:
+          status: 200
+          body:
+            json: {"registered_model_databricks": {
+                     "name": "error_body_refresh_empty_model",
+                     "id": "9f8e7d6c5b4a39281706f5e4d3c2b122",
+                     "description": "Pins a refresh 404 with an empty body",
+                     "creation_timestamp": 1700000100000,
+                     "last_updated_timestamp": 1700000100000,
+                     "user_id": "tester@example.com",
+                     "permission_level": "CAN_MANAGE"}}
+      - *read_second
+    state:
+      resources:
+        databricks_mlflow_model.this:
+          attributes:
+            - path: [registered_model_id]
+              equals: 9f8e7d6c5b4a39281706f5e4d3c2b122
+destroy:
+  calls:
+    - *read_second
+    - request:
+        method: DELETE
+        path: /api/2.0/mlflow/registered-models/delete
+        query:
+          name: [error_body_refresh_empty_model]
+        headers:
+          X-Databricks-Workspace-Id: "12345"
+        body: null
+      response:
+        status: 200
+        body:
+          json: {}

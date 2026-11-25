@@ -1,0 +1,115 @@
+# Pins a failing SCIM /Me call after create, without a provider_config block and with
+# no workspace ID in host metadata. The model is created and read, then /Me answers
+# 403 and apply fails with the provider_config diagnostic. Terraform keeps the model in
+# state as tainted, so the next plan refreshes it, resolves the ID through /Me and
+# plans a replacement of a model that exists. No call carries an
+# X-Databricks-Workspace-Id header. Fixtures are synthetic: API responses are inferred
+# from the MLflow Model Registry and SCIM API contracts, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+steps:
+  - name: me_failure_after_create_fails_apply
+    config: &config |
+      resource "databricks_mlflow_model" "this" {
+        name = "routing_me_failure_model"
+      }
+    expect_error: 'cannot populate provider_config for mlflow model: failed to resolve
+      workspace_id: failed to get the workspace_id: Caller cannot read /Me'
+    calls:
+      - request:
+          method: POST
+          path: /api/2.0/mlflow/registered-models/create
+          headers:
+            Content-Type: application/json
+            # An empty expected value matches only a request without the header.
+            X-Databricks-Workspace-Id: ""
+          body:
+            json: {"name": "routing_me_failure_model"}
+        response:
+          status: 200
+          body:
+            json: {"registered_model": {"name": "routing_me_failure_model",
+                                        "creation_timestamp": 1700000000009,
+                                        "last_updated_timestamp": 1700000000009,
+                                        "user_id": "replay-admin@example.com"}}
+      - &read_model
+        request:
+          method: GET
+          path: /api/2.0/mlflow/databricks/registered-models/get
+          query:
+            name: [routing_me_failure_model]
+          headers:
+            X-Databricks-Workspace-Id: ""
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"registered_model_databricks": {
+                     "name": "routing_me_failure_model",
+                     "id": "00000000000000000000000000000909",
+                     "creation_timestamp": 1700000000009,
+                     "last_updated_timestamp": 1700000000009,
+                     "user_id": "replay-admin@example.com",
+                     "permission_level": "CAN_MANAGE"}}
+      - request: &me_request
+          method: GET
+          path: /api/2.0/preview/scim/v2/Me
+          query:
+            excludedAttributes: [entitlements]
+          headers:
+            X-Databricks-Workspace-Id: ""
+          body: null
+        response:
+          status: 403
+          body:
+            json: {"error_code": "PERMISSION_DENIED",
+                   "message": "Caller cannot read /Me"}
+  - name: next_plan_replaces_the_tainted_model
+    plan_only: true
+    config: *config
+    plan:
+      expect: non_empty
+      changes:
+        databricks_mlflow_model.this:
+          actions: [delete, create]
+    calls:
+      - *read_model
+      - &me
+        request: *me_request
+        response:
+          status: 200
+          headers:
+            X-Databricks-Org-Id: "12345"
+          body:
+            json: {"id": "1001", "userName": "replay-admin@example.com",
+                   "schemas": ["urn:ietf:params:scim:schemas:core:2.0:User"]}
+    state:
+      resources:
+        databricks_mlflow_model.this:
+          attributes:
+            - path: [id]
+              equals: routing_me_failure_model
+            - path: [provider_config, 0, workspace_id]
+              equals: "12345"
+destroy:
+  calls:
+    # The destroy plan's refresh.
+    - *read_model
+    - *me
+    # The apply.
+    - *me
+    - request:
+        method: DELETE
+        path: /api/2.0/mlflow/registered-models/delete
+        query:
+          name: [routing_me_failure_model]
+        headers:
+          X-Databricks-Workspace-Id: ""
+        body: null
+      response:
+        status: 200
+        body:
+          json: {}

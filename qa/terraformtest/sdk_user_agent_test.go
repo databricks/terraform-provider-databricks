@@ -17,10 +17,8 @@ const (
 	testVolumeRead       = "/api/2.1/unity-catalog/volumes/main.replay.volume"
 	testClassicUserAgent = "databricks-tf-provider/1.0.0 databricks-sdk-go/0.202.0 " +
 		"resource/volume"
-	testSdkGoUserAgent = testClassicUserAgent + " sdk-go-core/0.1.0 " +
-		"sdk-go-uc-volumes/0.8.0"
-	testDataSourceUserAgent = "databricks-tf-provider/1.0.0 databricks-sdk-go/0.202.0 " +
-		"data/yes resource/volume"
+	testSdkGoUserAgent = testClassicUserAgent +
+		" sdk-go-core/0.1.0 sdk-go-uc-volumes/0.8.0"
 )
 
 func requestWithUserAgent(method, path, userAgent string) *http.Request {
@@ -32,9 +30,9 @@ func requestWithUserAgent(method, path, userAgent string) *http.Request {
 func TestSdkGoUserAgentCheck(t *testing.T) {
 	sdkGo := sdkImplementations{"databricks_volume": sdkGoImplementation}
 	classic := sdkImplementations{"databricks_volume": classicSdkImplementation}
+	lacks := `GET ` + testVolumeRead + ` selects sdk_go, but its User-Agent has no ` +
+		`sdk-go module: "` + testClassicUserAgent + `"`
 	selectsWithoutModule := " selects sdk_go, but its User-Agent has no sdk-go module: "
-	lacks := "GET " + testVolumeRead + selectsWithoutModule +
-		`"` + testClassicUserAgent + `"`
 	carries := " doesn't select sdk_go, but its User-Agent has an sdk-go module: "
 	for _, tc := range []struct {
 		name                    string
@@ -60,10 +58,14 @@ func TestSdkGoUserAgentCheck(t *testing.T) {
 			testClassicUserAgent, "DELETE " + testVolumeRead + selectsWithoutModule},
 		{"classic update with module", classic, http.MethodPatch, testVolumeRead,
 			testSdkGoUserAgent, "PATCH " + testVolumeRead + carries},
-		{"data source read in sdk-go step", sdkGo, http.MethodGet, testVolumeRead,
-			testDataSourceUserAgent, ""},
-		{"data source read with module", sdkGo, http.MethodGet, testVolumeRead,
-			testDataSourceUserAgent + " sdk-go-uc-volumes/0.8.0",
+		{"redirect follow-up with module in sdk-go step", sdkGo, http.MethodGet,
+			"/login.html", testSdkGoUserAgent, ""},
+		{"redirect follow-up with module in classic step", classic, http.MethodGet,
+			"/login.html", testSdkGoUserAgent, "GET /login.html" + carries},
+		{"data source read without module in sdk-go step", sdkGo, http.MethodGet,
+			testVolumeRead, testClassicUserAgent + " data/yes", ""},
+		{"data source read with module in sdk-go step", sdkGo, http.MethodGet,
+			testVolumeRead, testSdkGoUserAgent + " data/yes",
 			"GET " + testVolumeRead + carries},
 		{"existing-path lookup in sdk-go step", sdkGo, http.MethodGet,
 			"/api/2.0/preview/scim/v2/Me", testClassicUserAgent, ""},
@@ -109,7 +111,8 @@ func TestUserAgentCheckFailsTheStepThatSendsTheRequest(t *testing.T) {
 	d := &testDefinition{Steps: []step{
 		{Name: "classic", Config: `provider "databricks" {}`},
 		{Name: "sdk_go", Config: `provider "databricks" {}`,
-			SdkImplementations: sdkImplementations{"databricks_volume": sdkGoImplementation}},
+			SdkImplementations: sdkImplementations{
+				"databricks_volume": sdkGoImplementation}},
 	}}
 	check := newUserAgentCheck(httpfixture.NewHandler(), d)
 	read := []httpfixture.Call{{

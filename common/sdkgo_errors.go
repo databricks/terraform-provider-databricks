@@ -3,6 +3,7 @@ package common
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -20,7 +21,7 @@ import (
 
 // classicError returns the error the classic client returns for the same failure. API
 // errors are parsed again from the response, so apierr.IsMissing, the retry rules and
-// the messages stay the same. attempt holds the last request and response, if any.
+// the messages stay the same. attempt holds the last exchange, if any.
 func (b *sdkGoBridge) classicError(ctx context.Context, err error,
 	attempt *sdkGoAttempt) error {
 	// sdk-go's http.Client wraps the url.Error of the request sdkGoTransport sent, which
@@ -43,27 +44,31 @@ func (b *sdkGoBridge) classicError(ctx context.Context, err error,
 	}
 	apiErr, ok := errors.AsType[*sdkapierr.APIError](err)
 	if !ok || apiErr.HTTPStatusCode() < 0 {
-		// After a successful response, only decoding it can fail, whatever error the
-		// sdk-go wire types return.
-		if attempt.succeeded() {
-			return &responseDecodeError{
-				fmt.Errorf("failed to unmarshal response body: %w", err)}
+		// After a success response, sdk-go can only fail to decode its body.
+		var syntaxErr *json.SyntaxError
+		var typeErr *json.UnmarshalTypeError
+		decodeErr := errors.As(err, &syntaxErr) || errors.As(err, &typeErr)
+		if attempt.gotSuccess() || decodeErr {
+			return &responseDecodeError{attempt.classicDecodeError(err)}
 		}
 		return err
 	}
+	req := &http.Request{URL: &url.URL{}}
+	if attempt != nil && attempt.request != nil {
+		req = attempt.request
+	}
 	body := apiErr.HTTPBody()
+	code := apiErr.HTTPStatusCode()
 	resp := &http.Response{
-		StatusCode: apiErr.HTTPStatusCode(),
+		StatusCode: code,
+		Status:     fmt.Sprintf("%d %s", code, http.StatusText(code)),
 		Header:     apiErr.HTTPHeader(),
 		Body:       io.NopCloser(bytes.NewReader(body)),
-		Request:    &http.Request{URL: &url.URL{}},
+		Request:    req,
 	}
-	// The classic client classifies HTML error pages by the status text.
-	if attempt != nil && attempt.request != nil {
-		resp.Request = attempt.request
-		if attempt.response != nil {
-			resp.Status = attempt.response.Status
-		}
+	// The classic HTML error parser reads the error code from the status line.
+	if attempt != nil && attempt.response != nil && attempt.response.StatusCode == code {
+		resp.Status = attempt.response.Status
 	}
 	mapped := b.httpConfig.ErrorMapper(ctx, sdkcommon.ResponseWrapper{
 		Response:   resp,

@@ -1,0 +1,113 @@
+# Pins whether a DELETE answered 404 counts as a deleted model for an empty body and for
+# a non-JSON body. The classic SDK gives a non-JSON body the error code UNKNOWN, an
+# internal error: the apply fails with the body, the DELETE is sent once, the model
+# stays in state and the next plan deletes it again. It gives an empty body no error
+# code, so the status classes it as a missing model: the apply succeeds without a
+# diagnostic, the model leaves state and the next plan is empty without a read. API
+# responses are synthetic: inferred from the MLflow Model Registry API and from proxy
+# error pages, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: create
+    config: |
+      resource "databricks_mlflow_model" "this" {
+        name        = "error_body_delete_empty_model"
+        description = "Pins a delete 404 with an empty or non-JSON body"
+      }
+    calls:
+      - request:
+          method: POST
+          path: /api/2.0/mlflow/registered-models/create
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"name": "error_body_delete_empty_model",
+                   "description": "Pins a delete 404 with an empty or non-JSON body"}
+        response:
+          status: 200
+          body:
+            json: {"registered_model": {
+                     "name": "error_body_delete_empty_model",
+                     "description": "Pins a delete 404 with an empty or non-JSON body",
+                     "creation_timestamp": 1700000000000,
+                     "last_updated_timestamp": 1700000000000,
+                     "user_id": "tester@example.com"}}
+      - &read_created
+        request:
+          method: GET
+          path: /api/2.0/mlflow/databricks/registered-models/get
+          query:
+            name: [error_body_delete_empty_model]
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"registered_model_databricks": {
+                     "name": "error_body_delete_empty_model",
+                     "id": "9f8e7d6c5b4a39281706f5e4d3c2b171",
+                     "description": "Pins a delete 404 with an empty or non-JSON body",
+                     "creation_timestamp": 1700000000000,
+                     "last_updated_timestamp": 1700000000000,
+                     "user_id": "tester@example.com",
+                     "permission_level": "CAN_MANAGE"}}
+      - *read_created
+  - name: delete_answered_404_with_non_json_body_fails
+    config: &config_empty |
+      provider "databricks" {}
+    expect_error: 'Error: cannot delete mlflow model: 404 page not found\n'
+    calls:
+      - *read_created
+      - request: &delete_request
+          method: DELETE
+          path: /api/2.0/mlflow/registered-models/delete
+          query:
+            name: [error_body_delete_empty_model]
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 404
+          body:
+            text: 404 page not found
+  - name: plan_after_404_with_non_json_body_deletes_again
+    plan_only: true
+    config: *config_empty
+    plan: &plan_delete
+      expect: non_empty
+      changes:
+        databricks_mlflow_model.this:
+          actions: [delete]
+    state:
+      resources:
+        databricks_mlflow_model.this:
+          attributes:
+            - path: [id]
+              equals: error_body_delete_empty_model
+    calls:
+      - *read_created
+  - name: delete_answered_404_with_empty_body_counts_as_deleted
+    config: *config_empty
+    plan: *plan_delete
+    calls:
+      - *read_created
+      - request: *delete_request
+        response:
+          status: 404
+          body: null
+  - name: plan_after_404_with_empty_body_is_empty
+    plan_only: true
+    config: *config_empty
+    plan:
+      expect: empty
+      changes: {}
+    calls: []
+destroy:
+  calls: []

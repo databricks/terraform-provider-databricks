@@ -1,0 +1,149 @@
+# Pins how a refresh GET answered 404 with an HTML body is classed. Without a <pre>
+# element the classic SDK keeps the raw body as the message and gives it the error code
+# UNKNOWN, an internal error: the refresh fails, is sent once and keeps the model. With a
+# <pre> element the code comes from the status line ("404 Not Found" becomes NOT_FOUND),
+# which the SDK maps to no class, so the status classes it as a missing model: no
+# diagnostic, the plan is a create, and the same apply sends the POST again. API
+# responses are synthetic: inferred from the MLflow Model Registry API and from proxy
+# error pages, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: create
+    config: &config |
+      resource "databricks_mlflow_model" "this" {
+        name        = "error_body_refresh_html_model"
+        description = "Pins a refresh 404 with an HTML body"
+      }
+    calls:
+      - &create
+        request:
+          method: POST
+          path: /api/2.0/mlflow/registered-models/create
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"name": "error_body_refresh_html_model",
+                   "description": "Pins a refresh 404 with an HTML body"}
+        response:
+          status: 200
+          body:
+            json: {"registered_model": {
+                     "name": "error_body_refresh_html_model",
+                     "description": "Pins a refresh 404 with an HTML body",
+                     "creation_timestamp": 1700000000000,
+                     "last_updated_timestamp": 1700000000000,
+                     "user_id": "tester@example.com"}}
+      - &read_first
+        request: &read_request
+          method: GET
+          path: /api/2.0/mlflow/databricks/registered-models/get
+          query:
+            name: [error_body_refresh_html_model]
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"registered_model_databricks": {
+                     "name": "error_body_refresh_html_model",
+                     "id": "9f8e7d6c5b4a39281706f5e4d3c2b131",
+                     "description": "Pins a refresh 404 with an HTML body",
+                     "creation_timestamp": 1700000000000,
+                     "last_updated_timestamp": 1700000000000,
+                     "user_id": "tester@example.com",
+                     "permission_level": "CAN_MANAGE"}}
+      - *read_first
+    state:
+      resources:
+        databricks_mlflow_model.this:
+          attributes:
+            - path: [registered_model_id]
+              equals: 9f8e7d6c5b4a39281706f5e4d3c2b131
+  - name: refresh_answered_404_html_without_pre_fails_with_raw_body
+    config: *config
+    expect_error: 'Error: cannot read mlflow model: <html><head><title>Error
+      404</title></head><body><h2>Registered model not found</h2></body></html>\n'
+    calls:
+      - request: *read_request
+        response:
+          status: 404
+          headers:
+            Content-Type: text/html; charset=utf-8
+          body:
+            text: "<html><head><title>Error 404</title></head><body><h2>Registered model
+              not found</h2></body></html>"
+  - name: state_kept_after_404_html_without_pre
+    plan_only: true
+    config: *config
+    plan:
+      expect: empty
+      changes: {}
+    state:
+      resources:
+        databricks_mlflow_model.this:
+          attributes:
+            - path: [id]
+              equals: error_body_refresh_html_model
+            - path: [registered_model_id]
+              equals: 9f8e7d6c5b4a39281706f5e4d3c2b131
+    calls:
+      - *read_first
+  - name: refresh_answered_404_html_with_pre_removes_and_recreates
+    config: *config
+    plan:
+      expect: non_empty
+      changes:
+        databricks_mlflow_model.this:
+          actions: [create]
+    calls:
+      - request: *read_request
+        response:
+          status: 404
+          headers:
+            Content-Type: text/html; charset=utf-8
+          body:
+            text: "<html><head><title>Error 404</title></head><body><h2>HTTP ERROR
+              404</h2><pre>Registered model not found.</pre></body></html>"
+      - *create
+      - &read_second
+        request: *read_request
+        response:
+          status: 200
+          body:
+            json: {"registered_model_databricks": {
+                     "name": "error_body_refresh_html_model",
+                     "id": "9f8e7d6c5b4a39281706f5e4d3c2b132",
+                     "description": "Pins a refresh 404 with an HTML body",
+                     "creation_timestamp": 1700000100000,
+                     "last_updated_timestamp": 1700000100000,
+                     "user_id": "tester@example.com",
+                     "permission_level": "CAN_MANAGE"}}
+      - *read_second
+    state:
+      resources:
+        databricks_mlflow_model.this:
+          attributes:
+            - path: [registered_model_id]
+              equals: 9f8e7d6c5b4a39281706f5e4d3c2b132
+destroy:
+  calls:
+    - *read_second
+    - request:
+        method: DELETE
+        path: /api/2.0/mlflow/registered-models/delete
+        query:
+          name: [error_body_refresh_html_model]
+        headers:
+          X-Databricks-Workspace-Id: "12345"
+        body: null
+      response:
+        status: 200
+        body:
+          json: {}

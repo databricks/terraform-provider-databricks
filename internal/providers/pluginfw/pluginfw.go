@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -102,8 +103,35 @@ func providerSchemaPluginFramework() schema.Schema {
 			}
 		}
 	}
+	// user_agent_extra is not an SDK configuration attribute: it is handled
+	// by the provider itself in configureDatabricksClient.
+	ps["user_agent_extra"] = schema.StringAttribute{
+		Optional:   true,
+		Validators: []validator.String{userAgentExtraValidator{}},
+	}
 	return schema.Schema{
 		Attributes: ps,
+	}
+}
+
+// userAgentExtraValidator reports invalid product strings at validate time
+// rather than only when the provider is configured.
+type userAgentExtraValidator struct{}
+
+func (v userAgentExtraValidator) Description(ctx context.Context) string {
+	return "value must be a whitespace-separated list of RFC 9110 product strings, each with a version"
+}
+
+func (v userAgentExtraValidator) MarkdownDescription(ctx context.Context) string {
+	return v.Description(ctx)
+}
+
+func (v userAgentExtraValidator) ValidateString(ctx context.Context, req validator.StringRequest, resp *validator.StringResponse) {
+	if req.ConfigValue.IsNull() || req.ConfigValue.IsUnknown() {
+		return
+	}
+	if _, err := providercommon.ParseUserAgentExtra(req.ConfigValue.ValueString()); err != nil {
+		resp.Diagnostics.AddAttributeError(req.Path, "Invalid user_agent_extra", err.Error())
 	}
 }
 
@@ -188,6 +216,17 @@ func (p *DatabricksProviderPluginFramework) setAttribute(
 }
 
 func (p *DatabricksProviderPluginFramework) configureDatabricksClient(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) any {
+	var userAgentExtra types.String
+	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("user_agent_extra"), &userAgentExtra)...)
+	if resp.Diagnostics.HasError() {
+		return nil
+	}
+	if !userAgentExtra.IsNull() && !userAgentExtra.IsUnknown() {
+		if err := providercommon.ApplyUserAgentExtra(userAgentExtra.ValueString()); err != nil {
+			resp.Diagnostics.AddError("Failed to parse user_agent_extra", err.Error())
+			return nil
+		}
+	}
 	cfg := &config.Config{}
 	attrsUsed := []string{}
 	for _, attr := range config.ConfigAttributes {

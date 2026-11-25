@@ -1,0 +1,77 @@
+# Pins the create of a model whose description is the empty string. The POST body
+# carries only name: an empty description is left out, exactly as when the argument is
+# not set. API responses are synthetic, inferred from the MLflow Model Registry API, not
+# recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: create_leaves_out_the_empty_description
+    config: &config |
+      resource "databricks_mlflow_model" "this" {
+        name        = "lifecycle-empty-description"
+        description = ""
+      }
+    calls:
+      - request:
+          method: POST
+          path: /api/2.0/mlflow/registered-models/create
+          body:
+            json: {"name": "lifecycle-empty-description"}
+        response:
+          status: 200
+          body:
+            json: {"registered_model": {"name": "lifecycle-empty-description",
+                                        "creation_timestamp": 1700000000401,
+                                        "last_updated_timestamp": 1700000000401,
+                                        "user_id": "replay-admin@example.com"}}
+      - &read
+        request:
+          method: GET
+          path: /api/2.0/mlflow/databricks/registered-models/get
+          query:
+            name: ["lifecycle-empty-description"]
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"registered_model_databricks": {
+                     "name": "lifecycle-empty-description",
+                     "id": "d4e5f60718293a4b5c6d7e8f01020304",
+                     "creation_timestamp": 1700000000401,
+                     "last_updated_timestamp": 1700000000401,
+                     "user_id": "replay-admin@example.com",
+                     "permission_level": "CAN_MANAGE"}}
+      - *read
+    state:
+      resources:
+        databricks_mlflow_model.this:
+          attributes:
+            - path: [id]
+              equals: lifecycle-empty-description
+            - path: [description]
+              equals: ""
+  - name: plan_after_create_is_empty
+    plan_only: true
+    config: *config
+    plan:
+      expect: empty
+      changes: {}
+    calls:
+      - *read
+destroy:
+  calls:
+    - *read
+    - request:
+        method: DELETE
+        path: /api/2.0/mlflow/registered-models/delete
+        query:
+          name: ["lifecycle-empty-description"]
+        body: null
+      response:
+        status: 200
+        body:
+          json: {}

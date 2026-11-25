@@ -6,9 +6,23 @@ subcategory: "Lakewatch"
 
 [API Documentation](https://docs.databricks.com/api/workspace/lakewatch)
 
+Lists published versions of a built-in Lakewatch parser, oldest first. Results contain version metadata without specs. Use `databricks_lakewatch_builtin_parser_version` to read one version's content.
+
+This data source can only be used with a workspace-level provider.
 
 
 ## Example Usage
+Replace the example parent with a name returned by `databricks_lakewatch_builtin_parsers`:
+
+```hcl
+data "databricks_lakewatch_builtin_parser_versions" "logs" {
+  parent = "builtin-parsers/22222222-2222-4222-8222-222222222222"
+}
+
+output "builtin_parser_version_names" {
+  value = [for version in data.databricks_lakewatch_builtin_parser_versions.logs.builtin_parser_versions : version.name]
+}
+```
 
 
 ## Arguments

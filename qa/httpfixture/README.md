@@ -127,3 +127,12 @@ Additional part headers are ignored. Part order and the transport boundary are
 ignored; missing or extra parts fail. The request must use `multipart/form-data`.
 Multipart responses and JSON matchers on non-JSON bodies are unsupported.
 Header and query matchers work with every body representation.
+
+## Authentication configuration tests
+
+`NewOfflineAuthTransport(t)` can be assigned to an SDK config's `HTTPTransport`
+when testing credential selection against example hosts. It returns 404 for
+external host-metadata and OAuth discovery requests, allows HTTP requests to
+local fixture servers, and fails the test on any other external request.
+This keeps the default authentication chain active without contacting real
+Databricks workspaces.

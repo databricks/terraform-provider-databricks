@@ -1,8 +1,6 @@
 # Runs volume_call_sites/testdata/call_site_update_owner_patch_errors.yaml with
 # databricks_volume on sdk-go uc/volumes/v1 in every step, and expects the same requests
-# and behavior, except that an owner PATCH answered 200 with malformed JSON fails update
-# with the same unmarshal error, but without the existing client's request log, so its
-# pattern ends at the error. The original's description:
+# and behavior. The original's description:
 #
 # Pins Update's first PATCH, the one that changes only the owner, failing with errors the
 # classic SDK does not retry: 400 INVALID_PARAMETER_VALUE, 401, 403, 404, 409, 502, 504
@@ -288,7 +286,13 @@ steps:
       databricks_volume: sdk_go
     config: *config_updated
     expect_error: 'Error: cannot update volume: failed to unmarshal response body:
-      unexpected end of JSON input\n'
+      unexpected end of JSON input\. This is likely a bug in the Databricks SDK for Go or
+      the underlying REST API\. Please report this issue with the following debugging
+      information to the SDK issue tracker at
+      https://github\.com/databricks/databricks-sdk-go/issues\. Request
+      log:\n```\nPATCH
+      /api/2\.1/unity-catalog/volumes/main\.replay\.owner_update_volume\n(?s:.*)<
+      \{"full_name": "main\.replay\.owner_update_volume",\n```\n'
     calls:
       - *read_created
       - request: *owner_patch_request

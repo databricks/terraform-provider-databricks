@@ -1,16 +1,6 @@
 # Runs volume_errors/testdata/response_decoding_errors.yaml with databricks_volume on
-# sdk-go uc/volumes/v1 in every step, and expects the same requests and behavior, except
-# in how it decodes 200 responses. Malformed JSON on the POST, GET or PATCH fails with the
-# same unmarshal error, but without the existing client's request log, so those patterns
-# end at the error and the step names say so. An HTML body fails with sdk-go's JSON decode
-# error, "invalid character '<' looking for beginning of value", instead of the existing
-# client's "received HTML response instead of JSON", which points users to Private Link
-# troubleshooting. That is a known defect in new mode: #6247 is expected to restore the
-# HTML error, and that step should then expect it again. An empty GET body fails the
-# refresh with "unexpected end of JSON input" instead of blanking the state and planning a
-# replacement, so that step expects the error instead of a plan, and the later steps show
-# that the volume keeps its ID. A PATCH answered {} or without full_name has the same
-# empty-ID defect as on the existing path. The original's description:
+# sdk-go uc/volumes/v1 in every step, and expects the same requests and behavior. The
+# original's description:
 #
 # Pins how the classic client decodes 200 responses. Malformed JSON on the POST, GET or
 # PATCH fails with the SDK's unmarshal error and a request log; the pattern checks its
@@ -30,7 +20,7 @@ host_metadata:
   cloud: AWS
   workspace_id: "12345"
 steps:
-  - name: create_answered_200_with_malformed_json_fails_without_request_log
+  - name: create_answered_200_with_malformed_json_fails_with_request_log
     sdk_implementations:
       databricks_volume: sdk_go
     config: &config |
@@ -42,7 +32,12 @@ steps:
         comment      = "first comment"
       }
     expect_error: 'Error: cannot create volume: failed to unmarshal response body:
-      unexpected end of JSON input\n'
+      unexpected end of JSON input\. This is likely a bug in the Databricks SDK for Go or
+      the underlying REST API\. Please report this issue with the following debugging
+      information to the SDK issue tracker at
+      https://github\.com/databricks/databricks-sdk-go/issues\. Request
+      log:\n```\nPOST /api/2\.1/unity-catalog/volumes\n(?s:.*)<
+      \{"full_name": "main\.replay\.decode_volume",\n```\n'
     calls:
       - request: &create_request
           method: POST
@@ -89,12 +84,11 @@ steps:
           body:
             json: *created
       - *read_created
-  - name: refresh_answered_200_with_html_fails_with_a_decode_error
+  - name: refresh_answered_200_with_html_fails_with_html_error
     sdk_implementations:
       databricks_volume: sdk_go
     config: *config
-    expect_error: 'Error: cannot read volume: failed to unmarshal response body: invalid
-      character ''<'' looking for beginning of value\n'
+    expect_error: 'Error: cannot read volume: received HTML response instead of JSON\n'
     calls:
       - request: *read_request
         response:
@@ -103,23 +97,45 @@ steps:
             Content-Type: text/html; charset=utf-8
           body:
             text: <html><body>Sign in</body></html>
-  - name: refresh_answered_200_with_empty_body_fails
+  - name: refresh_answered_200_with_empty_body_blanks_the_state_and_plans_replacement
     sdk_implementations:
       databricks_volume: sdk_go
+    plan_only: true
     config: *config
-    expect_error: 'Error: cannot read volume: failed to unmarshal response body:
-      unexpected end of JSON input\n'
+    plan:
+      expect: non_empty
+      changes:
+        databricks_volume.this:
+          actions: [delete, create]
+          before:
+            - path: [catalog_name]
+              equals: ""
+            - path: [name]
+              equals: ""
+    state:
+      resources:
+        databricks_volume.this:
+          attributes:
+            - path: [id]
+              equals: main.replay.decode_volume
+            - path: [volume_path]
+              equals: /Volumes/
     calls:
       - request: *read_request
         response:
           status: 200
           body: null
-  - name: refresh_answered_200_with_malformed_json_fails_without_request_log
+  - name: refresh_answered_200_with_malformed_json_fails_with_request_log
     sdk_implementations:
       databricks_volume: sdk_go
     config: *config
     expect_error: 'Error: cannot read volume: failed to unmarshal response body:
-      unexpected end of JSON input\n'
+      unexpected end of JSON input\. This is likely a bug in the Databricks SDK for Go or
+      the underlying REST API\. Please report this issue with the following debugging
+      information to the SDK issue tracker at
+      https://github\.com/databricks/databricks-sdk-go/issues\. Request
+      log:\n```\nGET /api/2\.1/unity-catalog/volumes/main\.replay\.decode_volume\n(?s:.*)<
+      \{"full_name": "main\.replay\.decode_volume",\n```\n'
     calls:
       - request: *read_request
         response:
@@ -128,7 +144,7 @@ steps:
             Content-Type: application/json
           body:
             text: '{"full_name": "main.replay.decode_volume",'
-  - name: update_answered_200_with_malformed_json_fails_without_request_log
+  - name: update_answered_200_with_malformed_json_fails_with_request_log
     sdk_implementations:
       databricks_volume: sdk_go
     config: &config_commented |
@@ -140,7 +156,13 @@ steps:
         comment      = "decoded"
       }
     expect_error: 'Error: cannot update volume: failed to unmarshal response body:
-      unexpected end of JSON input\n'
+      unexpected end of JSON input\. This is likely a bug in the Databricks SDK for Go or
+      the underlying REST API\. Please report this issue with the following debugging
+      information to the SDK issue tracker at
+      https://github\.com/databricks/databricks-sdk-go/issues\. Request
+      log:\n```\nPATCH
+      /api/2\.1/unity-catalog/volumes/main\.replay\.decode_volume\n(?s:.*)<
+      \{"full_name": "main\.replay\.decode_volume",\n```\n'
     calls:
       - *read_created
       - request: &patch_request

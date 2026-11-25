@@ -75,6 +75,149 @@ func TestResourceNccPrivateEndpointRulePrivateEndpointRuleCreate_Error(t *testin
 	assert.Equal(t, "", d.Id())
 }
 
+// TestResourceNccPrivateEndpointRuleCreate_AsyncPolling exercises the
+// happy-path of the async API rollout: Create returns CREATING, the first
+// poll Get returns CREATING, and the second Get returns PENDING with
+// vpc_endpoint_id populated.
+func TestResourceNccPrivateEndpointRuleCreate_AsyncPolling(t *testing.T) {
+	creating := &settings.NccPrivateEndpointRule{
+		RuleId:                      "rule_id",
+		NetworkConnectivityConfigId: "ncc_id",
+		ResourceId:                  "resource_id",
+		GroupId:                     "blob",
+		ConnectionState:             "CREATING",
+	}
+	pending := &settings.NccPrivateEndpointRule{
+		RuleId:                      "rule_id",
+		NetworkConnectivityConfigId: "ncc_id",
+		ResourceId:                  "resource_id",
+		GroupId:                     "blob",
+		ConnectionState:             "PENDING",
+		VpcEndpointId:               "vpce-abc",
+		EndpointName:                "endpoint_name",
+	}
+	qa.ResourceFixture{
+		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
+			e := a.GetMockNetworkConnectivityAPI().EXPECT()
+			e.CreatePrivateEndpointRule(mock.Anything, settings.CreatePrivateEndpointRuleRequest{
+				NetworkConnectivityConfigId: "ncc_id",
+				PrivateEndpointRule: settings.CreatePrivateEndpointRule{
+					ResourceId: "resource_id",
+					GroupId:    "blob",
+				},
+			}).Return(creating, nil)
+			// Two sequential Gets while polling, then a third for the auto-Read
+			// pass that common.Resource fires after Create.
+			e.GetPrivateEndpointRuleByNetworkConnectivityConfigIdAndPrivateEndpointRuleId(mock.Anything, "ncc_id", "rule_id").Return(creating, nil).Once()
+			e.GetPrivateEndpointRuleByNetworkConnectivityConfigIdAndPrivateEndpointRuleId(mock.Anything, "ncc_id", "rule_id").Return(pending, nil).Once()
+			e.GetPrivateEndpointRuleByNetworkConnectivityConfigIdAndPrivateEndpointRuleId(mock.Anything, "ncc_id", "rule_id").Return(pending, nil)
+		},
+		Resource:  ResourceMwsNccPrivateEndpointRule(),
+		AccountID: "abc",
+		Host:      "https://accounts.cloud.databricks.com",
+		HCL: `
+		network_connectivity_config_id = "ncc_id"
+		resource_id = "resource_id"
+		group_id = "blob"
+		`,
+		Create: true,
+	}.ApplyAndExpectData(t, map[string]any{
+		"id":               "ncc_id/rule_id",
+		"connection_state": "PENDING",
+		"vpc_endpoint_id":  "vpce-abc",
+		"endpoint_name":    "endpoint_name",
+	})
+}
+
+// TestResourceNccPrivateEndpointRuleCreate_AsyncCreateFailed verifies that
+// the poller surfaces error_message on CREATE_FAILED. The resource ID is
+// still packed before polling so the user can `terraform destroy` the
+// orphaned rule.
+func TestResourceNccPrivateEndpointRuleCreate_AsyncCreateFailed(t *testing.T) {
+	creating := &settings.NccPrivateEndpointRule{
+		RuleId:                      "rule_id",
+		NetworkConnectivityConfigId: "ncc_id",
+		ResourceId:                  "resource_id",
+		GroupId:                     "blob",
+		ConnectionState:             "CREATING",
+	}
+	failed := &settings.NccPrivateEndpointRule{
+		RuleId:                      "rule_id",
+		NetworkConnectivityConfigId: "ncc_id",
+		ResourceId:                  "resource_id",
+		GroupId:                     "blob",
+		ConnectionState:             "CREATE_FAILED",
+		ErrorMessage:                "quota exceeded",
+	}
+	d, err := qa.ResourceFixture{
+		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
+			e := a.GetMockNetworkConnectivityAPI().EXPECT()
+			e.CreatePrivateEndpointRule(mock.Anything, settings.CreatePrivateEndpointRuleRequest{
+				NetworkConnectivityConfigId: "ncc_id",
+				PrivateEndpointRule: settings.CreatePrivateEndpointRule{
+					ResourceId: "resource_id",
+					GroupId:    "blob",
+				},
+			}).Return(creating, nil)
+			e.GetPrivateEndpointRuleByNetworkConnectivityConfigIdAndPrivateEndpointRuleId(mock.Anything, "ncc_id", "rule_id").Return(failed, nil)
+		},
+		Resource:  ResourceMwsNccPrivateEndpointRule(),
+		AccountID: "abc",
+		Host:      "https://accounts.cloud.databricks.com",
+		HCL: `
+		network_connectivity_config_id = "ncc_id"
+		resource_id = "resource_id"
+		group_id = "blob"
+		`,
+		Create: true,
+	}.Apply(t)
+	assert.ErrorContains(t, err, "quota exceeded")
+	assert.Equal(t, "ncc_id/rule_id", d.Id())
+}
+
+// TestResourceNccPrivateEndpointRuleCreate_AsyncRejected is defense-in-depth:
+// REJECTED is not expected on a fresh Create, but the poller should fail
+// fast rather than retry forever if the server reports it.
+func TestResourceNccPrivateEndpointRuleCreate_AsyncRejected(t *testing.T) {
+	creating := &settings.NccPrivateEndpointRule{
+		RuleId:                      "rule_id",
+		NetworkConnectivityConfigId: "ncc_id",
+		ResourceId:                  "resource_id",
+		GroupId:                     "blob",
+		ConnectionState:             "CREATING",
+	}
+	rejected := &settings.NccPrivateEndpointRule{
+		RuleId:                      "rule_id",
+		NetworkConnectivityConfigId: "ncc_id",
+		ResourceId:                  "resource_id",
+		GroupId:                     "blob",
+		ConnectionState:             "REJECTED",
+	}
+	_, err := qa.ResourceFixture{
+		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
+			e := a.GetMockNetworkConnectivityAPI().EXPECT()
+			e.CreatePrivateEndpointRule(mock.Anything, settings.CreatePrivateEndpointRuleRequest{
+				NetworkConnectivityConfigId: "ncc_id",
+				PrivateEndpointRule: settings.CreatePrivateEndpointRule{
+					ResourceId: "resource_id",
+					GroupId:    "blob",
+				},
+			}).Return(creating, nil)
+			e.GetPrivateEndpointRuleByNetworkConnectivityConfigIdAndPrivateEndpointRuleId(mock.Anything, "ncc_id", "rule_id").Return(rejected, nil)
+		},
+		Resource:  ResourceMwsNccPrivateEndpointRule(),
+		AccountID: "abc",
+		Host:      "https://accounts.cloud.databricks.com",
+		HCL: `
+		network_connectivity_config_id = "ncc_id"
+		resource_id = "resource_id"
+		group_id = "blob"
+		`,
+		Create: true,
+	}.Apply(t)
+	assert.ErrorContains(t, err, "REJECTED")
+}
+
 func TestResourceNccPrivateEndpointRuleRead(t *testing.T) {
 	qa.ResourceFixture{
 		MockAccountClientFunc: func(a *mocks.MockAccountClient) {

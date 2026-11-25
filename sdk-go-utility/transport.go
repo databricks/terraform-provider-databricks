@@ -44,7 +44,9 @@ const transportModularUserAgentPrefix = "sdk-go-"
 //
 // It then sends the request over cfg.HTTPTransport when that is set, and
 // otherwise over a transport with the proxy, connection and TLS settings of
-// the classic default, including cfg.InsecureSkipVerify.
+// the classic default, including cfg.InsecureSkipVerify. Every result of
+// Transport for such a config sends over the same transport, so a caller can
+// build a modular client for each call and still reuse connections.
 //
 // Transport resolves cfg, as building a classic client does, and returns the
 // error of that resolution.
@@ -150,10 +152,17 @@ func transportUserAgent(ctx context.Context, modularUserAgent string) string {
 	return strings.Join(segments, " ")
 }
 
-// transportClassicDefault is the transport that modular clients share when
-// the config sets neither HTTPTransport nor InsecureSkipVerify, as classic
-// clients share theirs.
-var transportClassicDefault = transportNewClassicDefault()
+// transportClassicDefault and transportClassicSkipVerify are the transports
+// that modular clients share when the config sets no HTTPTransport, without
+// and with InsecureSkipVerify. Classic clients share their default as well,
+// but each classic client with InsecureSkipVerify makes its own transport.
+// Modular clients are built far more often than classic ones, up to one for
+// every operation, so a transport for each would cost a TLS handshake per
+// client and leave its idle connection open.
+var (
+	transportClassicDefault    = transportNewClassicDefault()
+	transportClassicSkipVerify = transportNewClassicSkipVerify()
+)
 
 // transportNewClassicDefault mirrors makeDefaultTransport of the classic SDK
 // package httpclient, which is unexported. Keep the two in step when the
@@ -175,16 +184,22 @@ func transportNewClassicDefault() *http.Transport {
 	}
 }
 
-// transportClassicBase mirrors the unexported httpTransport method of
-// httpclient.ClientConfig, which picks the transport of a classic client.
+// transportNewClassicSkipVerify mirrors the transport that the classic SDK
+// makes for a client with InsecureSkipVerify.
+func transportNewClassicSkipVerify() *http.Transport {
+	transport := transportNewClassicDefault()
+	transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+	return transport
+}
+
+// transportClassicBase picks the transport as the unexported httpTransport
+// method of httpclient.ClientConfig does for a classic client.
 func transportClassicBase(clientCfg httpclient.ClientConfig) http.RoundTripper {
 	if clientCfg.Transport != nil {
 		return clientCfg.Transport
 	}
 	if clientCfg.InsecureSkipVerify {
-		transport := transportNewClassicDefault()
-		transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
-		return transport
+		return transportClassicSkipVerify
 	}
 	return transportClassicDefault
 }

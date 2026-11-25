@@ -454,15 +454,14 @@ func TestNewClient_EndsStalledAttemptLikeClassicClient(t *testing.T) {
 
 func TestNewClient_KeepsNoState(t *testing.T) {
 	tests := []struct {
-		name            string
-		useTLS          bool
-		configure       func(*config.Config)
-		wantConnections int
-		wantTokens      int
+		name       string
+		useTLS     bool
+		configure  func(*config.Config)
+		wantTokens int
 	}{
-		{name: "clients share the token and the connections", configure: newClientM2M, wantConnections: 1, wantTokens: 1},
-		{name: "InsecureSkipVerify gives every client a pool of its own", useTLS: true,
-			configure: func(cfg *config.Config) { cfg.InsecureSkipVerify = true }, wantConnections: 3},
+		{name: "clients share the token and the connections", configure: newClientM2M, wantTokens: 1},
+		{name: "clients that skip TLS verification share the connections", useTLS: true,
+			configure: func(cfg *config.Config) { cfg.InsecureSkipVerify = true }},
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
@@ -483,7 +482,7 @@ func TestNewClient_KeepsNoState(t *testing.T) {
 			}
 			served, tokens := ws.counts()
 			assert.Len(t, clients, 3, "every call builds a new client")
-			assert.Len(t, connections, tc.wantConnections)
+			assert.Len(t, connections, 1, "the clients share their connections")
 			assert.Equal(t, tc.wantTokens, tokens)
 			var err error
 			goroutines := runtime.NumGoroutine()

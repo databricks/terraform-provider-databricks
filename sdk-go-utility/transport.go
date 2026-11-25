@@ -11,6 +11,7 @@ import (
 	"net"
 	"net/http"
 	"runtime"
+	"slices"
 	"strings"
 	"time"
 
@@ -26,6 +27,17 @@ import (
 // the modular SDK, such as sdk-go-core/0.1.0 and sdk-go-modelregistry/0.7.0.
 const transportModularUserAgentPrefix = "sdk-go-"
 
+// transportCallHeaders are the headers that the classic generated calls set
+// themselves, after the request visitors have run.
+var transportCallHeaders = []string{"Accept", "Content-Type", "X-Databricks-Workspace-Id"}
+
+// transportCredentialHeaders are the headers that http.Client leaves out of a
+// request that it redirects to another domain. The list mirrors the one in
+// the redirect code of net/http, which is not exported.
+var transportCredentialHeaders = []string{
+	"Authorization", "Www-Authenticate", "Cookie", "Cookie2", "Proxy-Authorization", "Proxy-Authenticate",
+}
+
 // Transport returns a transport that sends the requests of a modular SDK
 // client with the headers that the classic client sends for cfg. Pass it to
 // the modular client in the http.Client of client.WithHTTPClient.
@@ -40,12 +52,22 @@ const transportModularUserAgentPrefix = "sdk-go-"
 //     returned wrapped, starting with "failed during request visitor: ". A
 //     redirect that the http.Client follows keeps the target that the server
 //     gave it, as it does with the classic client;
-//  2. adds the traceparent header unless the request has one;
-//  3. sets User-Agent to the classic one for the context that the visitors
+//  2. puts back the Accept, Content-Type and X-Databricks-Workspace-Id that
+//     the caller's request had, and sets Accept to application/json when it
+//     had none. The classic generated calls set these headers after the
+//     visitors, so with both clients the cfg.Headers hook changes one of them
+//     only when the call doesn't set it;
+//  3. on a request that the http.Client made to follow a redirect, removes
+//     every credential header, such as Authorization and Cookie, that the
+//     request arrived without. The http.Client leaves these out of a request
+//     that it redirects to another domain, and the hook, which has run again
+//     on that request, must not send them there. The price is that a
+//     credential header which only the hook sets is on no redirected request,
+//     where the classic client sends it within the domain;
+//  4. adds the traceparent header unless the request has one;
+//  5. sets User-Agent to the classic one for the context that the visitors
 //     left, followed by the sdk-go- segments of the User-Agent that the
-//     modular SDK set, which mark the call as coming from the modular SDK;
-//  4. sets Accept to application/json unless the caller's request has an
-//     Accept, as the classic generated calls do.
+//     modular SDK set, which mark the call as coming from the modular SDK.
 //
 // It then sends the request over cfg.HTTPTransport when that is set, and
 // otherwise over a transport with the proxy, connection and TLS settings of
@@ -146,19 +168,42 @@ func (t *transportRoundTripper) RoundTrip(req *http.Request) (*http.Response, er
 			out.Host = out.URL.Host
 		}
 	}
-	traceparent.AddTraceparent(out)
-	// The context of out holds the User-Agent data that the visitors added.
-	out.Header.Set("User-Agent", transportUserAgent(out.Context(), req.Header.Get("User-Agent")))
-	// The classic generated call sets Accept after the visitors, so the Headers
-	// hook can't change it. The modular SDK sends none.
-	if req.Header.Get("Accept") == "" {
-		out.Header.Set("Accept", "application/json")
-	}
+	transportClassicHeaders(req, out)
 	resp, err := t.base.RoundTrip(out)
 	if err != nil || resp == nil {
 		return resp, err
 	}
 	return transportPrivateLinkResponse(out, resp), nil
+}
+
+// transportClassicHeaders gives out, the clone of req that the visitors have
+// run on, the headers that the classic client sends after its visitors.
+func transportClassicHeaders(req, out *http.Request) {
+	// The classic generated call sets its headers after the visitors, so the
+	// cfg.Headers hook changes one of them only when the call doesn't set it.
+	for _, name := range transportCallHeaders {
+		if values := req.Header.Values(name); len(values) > 0 {
+			out.Header[name] = slices.Clone(values)
+		}
+	}
+	// The classic generated calls ask for JSON. The modular SDK sends no Accept.
+	if req.Header.Get("Accept") == "" {
+		out.Header.Set("Accept", "application/json")
+	}
+	if req.Response != nil {
+		// http.Client made req to follow a redirect, without the credentials
+		// when it goes to another domain. The classic client runs the hook
+		// before http.Client, so there the credentials of the hook are left
+		// out as well. Here the hook has just run on the redirected request.
+		for _, name := range transportCredentialHeaders {
+			if len(req.Header.Values(name)) == 0 {
+				out.Header.Del(name)
+			}
+		}
+	}
+	traceparent.AddTraceparent(out)
+	// The context of out holds the User-Agent data that the visitors added.
+	out.Header.Set("User-Agent", transportUserAgent(out.Context(), req.Header.Get("User-Agent")))
 }
 
 // visit runs the visitors on req in order and stops at the first error. It

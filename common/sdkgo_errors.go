@@ -49,7 +49,7 @@ func (b *sdkGoBridge) classicError(ctx context.Context, err error,
 		var typeErr *json.UnmarshalTypeError
 		decodeErr := errors.As(err, &syntaxErr) || errors.As(err, &typeErr)
 		if attempt.gotSuccess() || decodeErr {
-			return &responseDecodeError{attempt.classicDecodeError(err)}
+			return attempt.classicDecodeError(err)
 		}
 		return err
 	}
@@ -81,20 +81,6 @@ func (b *sdkGoBridge) classicError(ctx context.Context, err error,
 	return mapped
 }
 
-// responseDecodeError is a successful response whose body can't be decoded. The classic
-// client decodes after its retries, so it never retries this.
-type responseDecodeError struct {
-	err error
-}
-
-func (e *responseDecodeError) Error() string {
-	return e.err.Error()
-}
-
-func (e *responseDecodeError) Unwrap() error {
-	return e.err
-}
-
 // visitorError is a failure before a request is sent: in authentication or in a request
 // visitor. The classic client reports it with this message and never retries it.
 type visitorError struct {
@@ -123,10 +109,6 @@ var classicRetryableURLErrors = []string{
 func (b *sdkGoBridge) isRetriable(ctx context.Context, err error) bool {
 	// The classic client halts on these, whatever error they wrap.
 	if _, ok := errors.AsType[*visitorError](err); ok {
-		return false
-	}
-	// It decodes responses only after its retries.
-	if _, ok := errors.AsType[*responseDecodeError](err); ok {
 		return false
 	}
 	if b.httpConfig.ErrorRetriable != nil && b.httpConfig.ErrorRetriable(ctx, err) {
@@ -171,6 +153,11 @@ func (b *sdkGoBridge) newRetrier(ctx context.Context,
 }
 
 func (r *classicRetrier) IsRetriable(err error) (time.Duration, bool) {
+	// sdk-go decodes a success body inside its retries, but the classic client decodes it
+	// after them, so it never retries a body that doesn't decode.
+	if r.attempt.gotSuccess() {
+		return 0, false
+	}
 	classic := r.bridge.classicError(r.ctx, err, r.attempt)
 	if !r.bridge.isRetriable(r.ctx, classic) {
 		logger.Debugf(r.ctx, "non-retriable error: %s", classic)

@@ -329,3 +329,20 @@ func TestSdkGoVolumesClientRejectsStringFieldsOfAnotherType(t *testing.T) {
 	assert.NoError(t, r.classicErr)
 	assert.Equal(t, r.classicCalls, r.calls)
 }
+
+// The classic client decodes a success body after its retries, so a body that doesn't
+// decode isn't retried, even when its request log holds a transient error message.
+func TestSdkGoVolumesClientDoesNotRetryUndecodableBodies(t *testing.T) {
+	body := `{"message": "REQUEST_LIMIT_EXCEEDED: retry later",`
+	// A retry would send a second request within this timeout.
+	customize := func(cfg *config.Config) { cfg.RetryTimeoutSeconds = 5 }
+	r := readBothWays(t, context.Background, customize, respond(http.StatusOK, body))
+	require.Error(t, r.err)
+	assert.Contains(t, r.err.Error(), "REQUEST_LIMIT_EXCEEDED")
+	assert.EqualValues(t, 1, r.calls)
+	assert.Equal(t, r.classicCalls, r.calls)
+	normalize := func(err error) string {
+		return requestLogHeaders.ReplaceAllString(err.Error(), "> * $1: ...")
+	}
+	assert.Equal(t, normalize(r.classicErr), normalize(r.err))
+}

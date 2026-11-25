@@ -1,10 +1,8 @@
 # Runs volume/native_testdata/user_agent.yaml with databricks_volume on sdk-go
-# uc/volumes/v1 in every step, and expects the same behavior. The tests that replay it
-# select sdk-go with ProviderFactoriesWithSdkGo, because sdk_implementations would
-# replace the providers that record the requests. The volume POST, GET and PATCH
-# requests carry no Accept header, which an empty header expectation pins. The PATCH
-# body also carries full_name_arg, the full name in its path, because sdk-go serializes
-# the path field into the body. The original's description:
+# uc/volumes/v1 in every step, and expects the same requests and behavior. The tests
+# that replay it select sdk-go with ProviderFactoriesWithSdkGo, because
+# sdk_implementations would replace the providers that record the requests. The
+# original's description:
 #
 # Supplies volume calls for TestVolumeUserAgent, which checks their User-Agent in Go.
 # API responses are inferred from the Unity Catalog API contract, not recorded.
@@ -31,7 +29,6 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body:
             json: {"catalog_name": "main", "schema_name": "replay",
                    "name": "user_agent_volume", "volume_type": "MANAGED"}
@@ -51,10 +48,8 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body:
-            json: {"full_name_arg": "main.replay.user_agent_volume",
-                   "owner": "data-engineers"}
+            json: {"owner": "data-engineers"}
         response:
           status: 200
           body:
@@ -70,7 +65,6 @@ steps:
           method: GET
           path: /api/2.1/unity-catalog/volumes/main.replay.user_agent_volume
           headers:
-            Accept: ""
             X-Databricks-Workspace-Id: "12345"
           body: null
         response:

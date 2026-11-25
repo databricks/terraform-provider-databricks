@@ -1,0 +1,118 @@
+# Pins three headers on each of the four model calls of the classic client. POST, GET,
+# PATCH and DELETE all send Accept: application/json; the SDK adds it to the DELETE too,
+# although that call decodes no response. POST and PATCH send Content-Type:
+# application/json, and GET and DELETE send none. Every call sends
+# X-Databricks-Workspace-Id with the workspace ID from the host metadata. An empty header
+# expectation matches a request without that header, or with an empty value. API
+# responses are synthetic, inferred from the MLflow Model Registry API, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: create_sends_json_headers_on_the_post
+    config: |
+      resource "databricks_mlflow_model" "this" {
+        name = "lifecycle-request-headers"
+      }
+    calls:
+      - request:
+          method: POST
+          path: /api/2.0/mlflow/registered-models/create
+          headers:
+            Accept: application/json
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"name": "lifecycle-request-headers"}
+        response:
+          status: 200
+          body:
+            json: {"registered_model": {"name": "lifecycle-request-headers",
+                                        "creation_timestamp": 1700000000501,
+                                        "last_updated_timestamp": 1700000000501,
+                                        "user_id": "replay-admin@example.com"}}
+      - &read_created
+        request: &read_request
+          method: GET
+          path: /api/2.0/mlflow/databricks/registered-models/get
+          query:
+            name: ["lifecycle-request-headers"]
+          headers:
+            Accept: application/json
+            Content-Type: ""
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"registered_model_databricks": {
+                     "name": "lifecycle-request-headers",
+                     "id": "e5f60718293a4b5c6d7e8f0102030405",
+                     "creation_timestamp": 1700000000501,
+                     "last_updated_timestamp": 1700000000501,
+                     "user_id": "replay-admin@example.com",
+                     "permission_level": "CAN_MANAGE"}}
+      - *read_created
+  - name: update_sends_json_headers_on_the_patch
+    config: |
+      resource "databricks_mlflow_model" "this" {
+        name        = "lifecycle-request-headers"
+        description = "headers"
+      }
+    calls:
+      - *read_created
+      - request:
+          method: PATCH
+          path: /api/2.0/mlflow/registered-models/update
+          headers:
+            Accept: application/json
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"name": "lifecycle-request-headers", "description": "headers"}
+        response:
+          status: 200
+          body:
+            json: {"registered_model": {"name": "lifecycle-request-headers",
+                                        "description": "headers",
+                                        "creation_timestamp": 1700000000501,
+                                        "last_updated_timestamp": 1700000000502,
+                                        "user_id": "replay-admin@example.com"}}
+      - &read_described
+        request: *read_request
+        response:
+          status: 200
+          body:
+            json: {"registered_model_databricks": {
+                     "name": "lifecycle-request-headers",
+                     "id": "e5f60718293a4b5c6d7e8f0102030405",
+                     "description": "headers",
+                     "creation_timestamp": 1700000000501,
+                     "last_updated_timestamp": 1700000000502,
+                     "user_id": "replay-admin@example.com",
+                     "permission_level": "CAN_MANAGE"}}
+      - *read_described
+  - name: delete_sends_accept_but_no_content_type
+    config: |
+      provider "databricks" {}
+    calls:
+      - *read_described
+      - request:
+          method: DELETE
+          path: /api/2.0/mlflow/registered-models/delete
+          query:
+            name: ["lifecycle-request-headers"]
+          headers:
+            Accept: application/json
+            Content-Type: ""
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 200
+          body:
+            json: {}
+destroy:
+  calls: []

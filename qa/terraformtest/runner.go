@@ -39,25 +39,37 @@ func RunNative(t *testing.T, path string, configure func(*resource.TestCase, fun
 
 func runNative(t *testing.T, definition *testDefinition, configure func(*resource.TestCase, func(*config.Config) error)) {
 	t.Helper()
-	handler, host := replayBoundary(t, definition)
+	// A native customizer may select providers that the steps' sdk_implementations
+	// don't describe, so only YAML-selected providers get the User-Agent check.
+	handler, host := replayBoundary(t, definition, configure == nil)
 	runTerraform(t, definition, handler, fixtureConfig(host), configure)
 }
 
-func replayBoundary(t *testing.T, definition *testDefinition) (*httpfixture.Handler, string) {
+// replayBoundary serves the fixtures. With checkUserAgents, requests must also carry an
+// sdk-go module in their User-Agent exactly where the steps send them through sdk-go.
+func replayBoundary(t *testing.T, definition *testDefinition,
+	checkUserAgents bool) (stepHTTP, string) {
 	t.Helper()
 	handler := httpfixture.NewHandler()
 	handler.SetEnforceCallOrder(definition.EnforceCallOrder)
 	if err := handler.SetReusableFixtures(definition.metadataCalls()); err != nil {
 		t.Fatal(err)
 	}
-	server := httptest.NewServer(handler)
+	var boundary interface {
+		stepHTTP
+		http.Handler
+	} = handler
+	if checkUserAgents {
+		boundary = newUserAgentCheck(handler, definition)
+	}
+	server := httptest.NewServer(boundary)
 	t.Cleanup(func() {
 		server.Close()
-		if err := handler.Verify(); err != nil {
+		if err := boundary.Verify(); err != nil {
 			t.Error(err)
 		}
 	})
-	return handler, server.URL
+	return boundary, server.URL
 }
 
 // stepHTTP is shared by replay and recording. Terraform operations and checks

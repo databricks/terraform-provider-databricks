@@ -1,7 +1,6 @@
 # Runs volume_errors/testdata/no_retry_on_create_errors.yaml with databricks_volume on
-# sdk-go uc/volumes/v1 in every step, and expects the same behavior. The volume POST
-# requests carry no Accept header, which an empty header expectation pins. The original's
-# description:
+# sdk-go uc/volumes/v1 in every step, and expects the same requests and behavior. The
+# original's description:
 #
 # This journey pins that the classic SDK client sends the create POST exactly once and
 # reports the API message for statuses it does not retry: 401, 403, 409, 500, 502 and 504.
@@ -34,7 +33,6 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body:
             json: {"catalog_name": "main", "schema_name": "replay",
                    "name": "retry_volume", "volume_type": "MANAGED"}

@@ -1,11 +1,9 @@
 # Imports an existing volume by full name with databricks_volume on the existing client,
 # then plans, updates comment and owner, and destroys it on sdk-go uc/volumes/v1. The
 # first plan after the switch is empty, state keeps the imported ID, volume_path and
-# owner, and the update sends the owner PATCH first and then the comment PATCH.
-# Existing-path requests carry Accept application/json; sdk-go requests carry no Accept
-# header, which an empty header expectation pins, and their PATCH bodies also carry
-# full_name_arg, the full name in their path. API responses are inferred from the Unity
-# Catalog API contract, not recorded.
+# owner, and the update sends the owner PATCH first and then the comment PATCH. Both paths
+# send the same requests, including Accept: application/json. API responses are inferred
+# from the Unity Catalog API contract, not recorded.
 version: 1
 enforce_call_order: true
 host_metadata:
@@ -75,7 +73,7 @@ steps:
           path: /api/2.1/unity-catalog/volumes/main.replay.existing_volume
           headers:
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
+            Accept: application/json
           body: null
         response: *existing
   - name: update_comment_and_owner_on_sdk_go
@@ -98,10 +96,9 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
+            Accept: application/json
           body:
-            json: {"full_name_arg": "main.replay.existing_volume",
-                   "owner": "data-engineers"}
+            json: {"owner": "data-engineers"}
         response:
           status: 200
           body:
@@ -118,10 +115,9 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
+            Accept: application/json
           body:
-            json: {"full_name_arg": "main.replay.existing_volume",
-                   "comment": "managed by terraform"}
+            json: {"comment": "managed by terraform"}
         response:
           status: 200
           body:

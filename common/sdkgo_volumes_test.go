@@ -2,6 +2,8 @@ package common
 
 import (
 	"context"
+	"encoding/json"
+	"io"
 	"net/http"
 	"strings"
 	"testing"
@@ -12,6 +14,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/databricks-sdk-go/useragent"
+	"github.com/databricks/sdk-go/options/call"
 	sdkvolumes "github.com/databricks/sdk-go/uc/volumes/v1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -20,12 +23,11 @@ import (
 func TestSdkGoVolumesClientWorkspaceRequest(t *testing.T) {
 	server, calls := serveSequence(t, func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, sdkGoTestVolumePath, r.URL.Path)
-		assert.Equal(t, sdkGoTestVolumePath, r.RequestURI,
-			"no query, not even an empty one")
+		assert.Equal(t, sdkGoTestVolumePath+"?", r.RequestURI, "the classic empty query")
 		assert.Equal(t, "12345", r.Header.Get("X-Databricks-Workspace-Id"))
 		assert.Equal(t, "Bearer test-token", r.Header.Get("Authorization"))
 		assert.NotEmpty(t, r.Header.Get("Traceparent"))
-		assert.Empty(t, r.Header.Values("Accept"), "the existing client sends Accept")
+		assert.Equal(t, "application/json", r.Header.Get("Accept"))
 		userAgent := r.Header.Get("User-Agent")
 		assert.Contains(t, userAgent, "databricks-sdk-go/")
 		assert.Contains(t, userAgent, "resource/volume")
@@ -156,35 +158,116 @@ func TestSdkGoVolumesClientRetriesLikeClassicClient(t *testing.T) {
 	}
 }
 
-// Volume names may contain "#", "?" and "%". sdk-go escapes them in the path, while the
-// existing client parses them as a fragment, a query or an escape.
-func TestSdkGoVolumesClientEscapesReservedCharactersInNames(t *testing.T) {
-	for _, tc := range []struct {
-		name, sdkGoURI, classicURI string
-	}{
-		{"main.replay.a#b", "/api/2.1/unity-catalog/volumes/main.replay.a%23b",
-			"/api/2.1/unity-catalog/volumes/main.replay.a"},
-		{"main.replay.a?b", "/api/2.1/unity-catalog/volumes/main.replay.a%3Fb",
-			"/api/2.1/unity-catalog/volumes/main.replay.a?b?"},
-		{"main.replay.a%41", "/api/2.1/unity-catalog/volumes/main.replay.a%2541",
-			"/api/2.1/unity-catalog/volumes/main.replay.a%41?"},
-	} {
-		t.Run(tc.name, func(t *testing.T) {
-			var uris []string
+// sentRequest is a request as the server received it, without its random Traceparent.
+type sentRequest struct {
+	method, requestURI, userAgent, body string
+	header                              http.Header
+}
+
+func recordRequest(t *testing.T, r *http.Request) sentRequest {
+	body, err := io.ReadAll(r.Body)
+	require.NoError(t, err)
+	header := r.Header.Clone()
+	header.Del("Traceparent")
+	header.Del("User-Agent")
+	return sentRequest{r.Method, r.RequestURI, r.Header.Get("User-Agent"), string(body),
+		header}
+}
+
+// The classic client formats the name into the URL unescaped, so in a name "#" drops the
+// rest, "?" starts a query and "%41" is decoded. sdk-go reads send the same request for
+// every name, and only add the sdk-go modules to the User-Agent.
+func TestSdkGoVolumesClientSendsTheClassicRequestForEveryName(t *testing.T) {
+	for _, name := range []string{"main.replay.volume", "main.replay.a#b",
+		"main.replay.a?b", "main.replay.a%41", "main.replay.a b", "main.replay.a`b",
+		"main.replay.caf\u00e9", "main.replay.a-b", "main.replay.A",
+		"main.replay.a(b);c,d"} {
+		t.Run(name, func(t *testing.T) {
+			var sent []sentRequest
 			record := func(w http.ResponseWriter, r *http.Request) {
-				uris = append(uris, r.RequestURI)
+				sent = append(sent, recordRequest(t, r))
 				respond(http.StatusOK, sdkGoTestVolume)(w, r)
 			}
 			server, _ := serveSequence(t, record, record)
 			w := newVolumesTestWorkspaceClient(t, server, nil)
-			ctx := context.Background()
-			_, err := getVolume(ctx, t, w, tc.name)
+			ctx := useragent.InContext(context.Background(), "resource", "volume")
+			_, err := getVolume(ctx, t, w, name)
 			require.NoError(t, err)
-			_, err = w.Volumes.ReadByName(ctx, tc.name)
+			_, err = w.Volumes.ReadByName(ctx, name)
 			require.NoError(t, err)
-			assert.Equal(t, []string{tc.sdkGoURI, tc.classicURI}, uris)
+			require.Len(t, sent, 2)
+			sdkGo, classic := sent[0], sent[1]
+			modules, ok := strings.CutPrefix(sdkGo.userAgent, classic.userAgent+" ")
+			require.True(t, ok, "%q extends %q", sdkGo.userAgent, classic.userAgent)
+			for _, module := range strings.Fields(modules) {
+				assert.True(t, strings.HasPrefix(module, "sdk-go-"), module)
+			}
+			sdkGo.userAgent, classic.userAgent = "", ""
+			assert.Equal(t, classic, sdkGo)
 		})
 	}
+}
+
+// A "%" that starts no valid escape fails to build the classic URL, so neither client
+// authenticates or sends a request.
+func TestSdkGoVolumesClientFailsUnparsableNamesLikeClassicClient(t *testing.T) {
+	server, calls := serveSequence(t)
+	w := newVolumesTestWorkspaceClient(t, server, nil)
+	ctx := context.Background()
+	_, err := getVolume(ctx, t, w, "main.replay.50%_raw")
+	assert.EqualError(t, err, `failed creating new request: parse `+
+		`"/api/2.1/unity-catalog/volumes/main.replay.50%_raw?": invalid URL escape "%_r"`)
+	_, classicErr := w.Volumes.ReadByName(ctx, "main.replay.50%_raw")
+	assert.EqualError(t, classicErr, err.Error())
+	assert.EqualValues(t, 0, calls.Load())
+}
+
+// A classic request's body hook replaces the body sdk-go built on every attempt.
+func TestSdkGoVolumesClientSendsTheClassicBody(t *testing.T) {
+	var bodies []string
+	record := func(status int, body string) handler {
+		return func(w http.ResponseWriter, r *http.Request) {
+			sent := recordRequest(t, r)
+			bodies = append(bodies, sent.body)
+			assert.Equal(t, r.ContentLength, int64(len(sent.body)))
+			respond(status, body)(w, r)
+		}
+	}
+	server, _ := serveSequence(t, record(429, sdkGoTestTooManyRequests),
+		record(http.StatusOK, sdkGoTestVolume))
+	ctx := context.Background()
+	vc, err := SdkGoVolumesClient(ctx, newVolumesTestWorkspaceClient(t, server, nil))
+	require.NoError(t, err)
+	classic := classicVolumeRequest(http.MethodPatch, sdkGoTestVolumePath,
+		sdkGoTestVolumePath)
+	classic.body = func(body []byte) ([]byte, error) {
+		var fields map[string]any
+		if err := json.Unmarshal(body, &fields); err != nil {
+			return nil, err
+		}
+		delete(fields, "full_name_arg")
+		return json.Marshal(fields)
+	}
+	name, comment := sdkGoTestVolumeName, "updated"
+	update := func(ctx context.Context,
+		opts ...call.Option) (*sdkvolumes.VolumeInfo, error) {
+		req := sdkvolumes.UpdateVolumeRequest{FullNameArg: &name, Comment: &comment}
+		return vc.client.UpdateVolume(ctx, req, opts...)
+	}
+	_, err = callSdkGo(ctx, vc.bridge, classic, update)
+	require.NoError(t, err)
+	assert.Equal(t, []string{`{"comment":"updated"}`, `{"comment":"updated"}`}, bodies)
+}
+
+func TestSdkGoAttemptRejectsAnotherRequestThanTheClassicOne(t *testing.T) {
+	classic := classicVolumeRequest(http.MethodGet, sdkGoTestVolumePath,
+		sdkGoTestVolumePath+"?")
+	attempt := &sdkGoAttempt{classic: classic}
+	other := sdkGoTestVolumePath + "_other"
+	r, err := http.NewRequest(http.MethodGet, "https://example.com"+other, nil)
+	require.NoError(t, err)
+	assert.EqualError(t, attempt.useClassicRequest(r), "sdk-go requested GET "+other+
+		" instead of the classic GET "+sdkGoTestVolumePath)
 }
 
 // Like the existing client, sdk-go reads an empty success body as a volume without

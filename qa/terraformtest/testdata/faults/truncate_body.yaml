@@ -1,0 +1,29 @@
+# The create response declares its full Content-Length but ends halfway through
+# the body. The SDK reports the body read error and does not retry.
+version: 1
+host_metadata:
+  workspace_id: "12345"
+steps:
+  - name: create_reads_truncated_body
+    config: |
+      resource "databricks_group" "this" {
+        display_name = "Example group"
+      }
+    expect_error: 'cannot create group: response body: unexpected EOF'
+    calls:
+      - request:
+          method: POST
+          path: /api/2.0/preview/scim/v2/Groups
+          body:
+            json:
+              displayName: Example group
+              schemas: [urn:ietf:params:scim:schemas:core:2.0:Group]
+              entitlements: [{}]
+        response:
+          fault: truncate_body
+          status: 201
+          body:
+            json:
+              id: group-id
+destroy:
+  calls: []

@@ -1,0 +1,35 @@
+# This repository is a read-only mirror; the only PRs that should
+# merge are the release sync PRs from the internal source of truth.
+# This check fails unless the PR carries the `sync` label, which only
+# maintainers can apply — making every merge a deliberate act.
+# Temporary guard until release automation takes over merging.
+name: Sync label
+
+on:
+  pull_request:
+    types: [reopened, synchronize, labeled, unlabeled]
+  # The label gate runs at PR level — a PR can't enter the merge queue
+  # until this check passes there. Merge-group events carry no label
+  # context, so on them the job passes trivially; without this trigger
+  # a required sync-label check would stall every queue entry.
+  merge_group:
+    types: [checks_requested]
+
+permissions: {}
+
+jobs:
+  sync-label:
+    name: sync-label
+    runs-on: ubuntu-latest
+    steps:
+      - name: Merge queue — gate already applied at PR level
+        if: ${{ github.event_name == 'merge_group' }}
+        run: echo "merge group — sync label was enforced when the PR entered the queue."
+      - name: Require the `sync` label
+        if: ${{ github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'sync') }}
+        run: |
+          echo "::error::This PR does not carry the 'sync' label. This repository is a read-only mirror — only release sync PRs merge here. If this IS a release sync PR, a maintainer must apply the 'sync' label; community contributions are re-applied in the internal repository instead (see CONTRIBUTING.md)."
+          exit 1
+      - name: Label present
+        if: ${{ github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'sync') }}
+        run: echo "sync label present — this is a release sync PR."

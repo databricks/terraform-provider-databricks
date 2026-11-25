@@ -123,8 +123,22 @@ type AccessRequestDestinations struct {
 	// modified or read.
 	Securable types.Object `tfsdk:"securable"`
 	// The type of the securable, repeated from **securable** as a plain string.
-	SecurableType  types.String `tfsdk:"securable_type"`
-	ProviderConfig types.Object `tfsdk:"provider_config"`
+	SecurableType types.String `tfsdk:"securable_type"`
+	// The access request URLs shared by every workspace in the metastore. Only
+	// set when the securable is a metastore. These URLs are used when neither
+	// the requested securable nor its parents have an explicit destination or a
+	// default owner email destination, and they take precedence over metastore
+	// destinations.
+	//
+	// A **dynamic_url** and default owner email destinations cannot both be on:
+	// saving one turns the other off. Saving a **dynamic_url** while they are
+	// on requires a metastore admin.
+	//
+	// Setting this field removes the metastore destinations in this workspace.
+	// The first save also removes the metastore URL destinations of other
+	// workspaces. Once set, the configuration can be cleared but not removed.
+	UrlConfiguration types.Object `tfsdk:"url_configuration"`
+	ProviderConfig   types.Object `tfsdk:"provider_config"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in the extended
@@ -139,6 +153,7 @@ func (m AccessRequestDestinations) GetComplexFieldTypes(ctx context.Context) map
 		"destination_source_securable": reflect.TypeOf(catalog_tf.Securable{}),
 		"destinations":                 reflect.TypeOf(catalog_tf.NotificationDestination{}),
 		"securable":                    reflect.TypeOf(catalog_tf.Securable{}),
+		"url_configuration":            reflect.TypeOf(catalog_tf.UrlConfiguration{}),
 		"provider_config":              reflect.TypeOf(ProviderConfig{}),
 	}
 }
@@ -158,6 +173,7 @@ func (m AccessRequestDestinations) ToObjectValue(ctx context.Context) basetypes.
 			"full_name":                    m.FullName,
 			"securable":                    m.Securable,
 			"securable_type":               m.SecurableType,
+			"url_configuration":            m.UrlConfiguration,
 
 			"provider_config": m.ProviderConfig,
 		},
@@ -173,9 +189,10 @@ func (m AccessRequestDestinations) Type(ctx context.Context) attr.Type {
 			"destinations": basetypes.SetType{
 				ElemType: catalog_tf.NotificationDestination{}.Type(ctx),
 			},
-			"full_name":      types.StringType,
-			"securable":      catalog_tf.Securable{}.Type(ctx),
-			"securable_type": types.StringType,
+			"full_name":         types.StringType,
+			"securable":         catalog_tf.Securable{}.Type(ctx),
+			"securable_type":    types.StringType,
+			"url_configuration": catalog_tf.UrlConfiguration{}.Type(ctx),
 
 			"provider_config": ProviderConfig{}.Type(ctx),
 		},
@@ -210,6 +227,15 @@ func (to *AccessRequestDestinations) SyncFieldsDuringCreateOrUpdate(ctx context.
 			}
 		}
 	}
+	if !from.UrlConfiguration.IsNull() && !from.UrlConfiguration.IsUnknown() {
+		if toUrlConfiguration, ok := to.GetUrlConfiguration(ctx); ok {
+			if fromUrlConfiguration, ok := from.GetUrlConfiguration(ctx); ok {
+				// Recursively sync the fields of UrlConfiguration
+				toUrlConfiguration.SyncFieldsDuringCreateOrUpdate(ctx, fromUrlConfiguration)
+				to.SetUrlConfiguration(ctx, toUrlConfiguration)
+			}
+		}
+	}
 	to.ProviderConfig = from.ProviderConfig
 
 }
@@ -240,6 +266,14 @@ func (to *AccessRequestDestinations) SyncFieldsDuringRead(ctx context.Context, f
 			}
 		}
 	}
+	if !from.UrlConfiguration.IsNull() && !from.UrlConfiguration.IsUnknown() {
+		if toUrlConfiguration, ok := to.GetUrlConfiguration(ctx); ok {
+			if fromUrlConfiguration, ok := from.GetUrlConfiguration(ctx); ok {
+				toUrlConfiguration.SyncFieldsDuringRead(ctx, fromUrlConfiguration)
+				to.SetUrlConfiguration(ctx, toUrlConfiguration)
+			}
+		}
+	}
 	to.ProviderConfig = from.ProviderConfig
 
 }
@@ -251,6 +285,7 @@ func (m AccessRequestDestinations) ApplySchemaCustomizations(attrs map[string]tf
 	attrs["full_name"] = attrs["full_name"].SetComputed()
 	attrs["securable"] = attrs["securable"].SetRequired()
 	attrs["securable_type"] = attrs["securable_type"].SetComputed()
+	attrs["url_configuration"] = attrs["url_configuration"].SetOptional()
 
 	attrs["securable_type"] = attrs["securable_type"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
 	attrs["full_name"] = attrs["full_name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.UseStateForUnknown()).(tfschema.AttributeBuilder)
@@ -335,6 +370,31 @@ func (m *AccessRequestDestinations) GetSecurable(ctx context.Context) (catalog_t
 func (m *AccessRequestDestinations) SetSecurable(ctx context.Context, v catalog_tf.Securable) {
 	vs := v.ToObjectValue(ctx)
 	m.Securable = vs
+}
+
+// GetUrlConfiguration returns the value of the UrlConfiguration field in AccessRequestDestinations as
+// a catalog_tf.UrlConfiguration value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *AccessRequestDestinations) GetUrlConfiguration(ctx context.Context) (catalog_tf.UrlConfiguration, bool) {
+	var e catalog_tf.UrlConfiguration
+	if m.UrlConfiguration.IsNull() || m.UrlConfiguration.IsUnknown() {
+		return e, false
+	}
+	var v catalog_tf.UrlConfiguration
+	d := m.UrlConfiguration.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetUrlConfiguration sets the value of the UrlConfiguration field in AccessRequestDestinations.
+func (m *AccessRequestDestinations) SetUrlConfiguration(ctx context.Context, v catalog_tf.UrlConfiguration) {
+	vs := v.ToObjectValue(ctx)
+	m.UrlConfiguration = vs
 }
 
 func (r *AccessRequestDestinationResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -445,7 +505,7 @@ func (r *AccessRequestDestinationResource) update(ctx context.Context, plan Acce
 
 	updateRequest := catalog.UpdateAccessRequestDestinationsRequest{
 		AccessRequestDestinations: access_request_destinations,
-		UpdateMask:                "destinations,securable",
+		UpdateMask:                "destinations,securable,url_configuration",
 	}
 
 	var namespace ProviderConfig

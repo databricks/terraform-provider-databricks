@@ -117,8 +117,9 @@ type ManagedMemoryEntry struct {
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
 	// Human-readable description of the memory entry.
 	Description types.String `tfsdk:"description"`
-	// Optional caller-selected memory entry ID. The service generates an ID
-	// when omitted.
+	// Caller-selected memory entry ID. It must contain 1-255 letters, digits,
+	// hyphens, or underscores, and it becomes the last segment of the entry's
+	// `name`. The service generates a UUID when it is omitted.
 	ManagedMemoryEntryId types.String `tfsdk:"managed_memory_entry_id"`
 	// Resource name in the form
 	// `memory-stores/{managed_memory_store_id}/entries/{managed_memory_entry_id}`.

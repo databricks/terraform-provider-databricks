@@ -3953,6 +3953,53 @@ func (m PersonalComputeMessage) Type(ctx context.Context) attr.Type {
 	}
 }
 
+type ReposAllowListPermissionMessage struct {
+	Permission types.String `tfsdk:"permission"`
+}
+
+func (to *ReposAllowListPermissionMessage) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ReposAllowListPermissionMessage) {
+}
+
+func (to *ReposAllowListPermissionMessage) SyncFieldsDuringRead(ctx context.Context, from ReposAllowListPermissionMessage) {
+}
+
+func (m ReposAllowListPermissionMessage) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["permission"] = attrs["permission"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ReposAllowListPermissionMessage.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m ReposAllowListPermissionMessage) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ReposAllowListPermissionMessage
+// only implements ToObjectValue() and Type().
+func (m ReposAllowListPermissionMessage) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"permission": m.Permission,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m ReposAllowListPermissionMessage) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"permission": types.StringType,
+		},
+	}
+}
+
 type RestrictWorkspaceAdminsMessage struct {
 	// When true, workspace admins cannot create governance tags. ALLOW_ALL
 	// status does not override this; they are independent.
@@ -4081,6 +4128,9 @@ type Setting struct {
 	// Effective setting value for personal_compute setting. This is the final
 	// effective value of setting. To set a value use personal_compute.
 	EffectivePersonalCompute types.Object `tfsdk:"effective_personal_compute"`
+	// Evaluated Git folder allowlist permission. To set a value, use
+	// repo_allowlist_permission.
+	EffectiveRepoAllowlistPermission types.Object `tfsdk:"effective_repo_allowlist_permission"`
 	// Effective setting value for restrict_workspace_admins setting. This is
 	// the final effective value of setting. To set a value use
 	// restrict_workspace_admins.
@@ -4108,6 +4158,9 @@ type Setting struct {
 	// Setting value for personal_compute setting. This is the setting value set
 	// by consumers, check effective_personal_compute for final setting value.
 	PersonalCompute types.Object `tfsdk:"personal_compute"`
+	// Saved Git folder allowlist permission. Check
+	// effective_repo_allowlist_permission for the evaluated value.
+	RepoAllowlistPermission types.Object `tfsdk:"repo_allowlist_permission"`
 	// Setting value for restrict_workspace_admins setting. This is the setting
 	// value set by consumers, check effective_restrict_workspace_admins for
 	// final setting value.
@@ -4260,6 +4313,15 @@ func (to *Setting) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Sett
 			}
 		}
 	}
+	if !from.EffectiveRepoAllowlistPermission.IsNull() && !from.EffectiveRepoAllowlistPermission.IsUnknown() {
+		if toEffectiveRepoAllowlistPermission, ok := to.GetEffectiveRepoAllowlistPermission(ctx); ok {
+			if fromEffectiveRepoAllowlistPermission, ok := from.GetEffectiveRepoAllowlistPermission(ctx); ok {
+				// Recursively sync the fields of EffectiveRepoAllowlistPermission
+				toEffectiveRepoAllowlistPermission.SyncFieldsDuringCreateOrUpdate(ctx, fromEffectiveRepoAllowlistPermission)
+				to.SetEffectiveRepoAllowlistPermission(ctx, toEffectiveRepoAllowlistPermission)
+			}
+		}
+	}
 	if !from.EffectiveRestrictWorkspaceAdmins.IsNull() && !from.EffectiveRestrictWorkspaceAdmins.IsUnknown() {
 		if toEffectiveRestrictWorkspaceAdmins, ok := to.GetEffectiveRestrictWorkspaceAdmins(ctx); ok {
 			if fromEffectiveRestrictWorkspaceAdmins, ok := from.GetEffectiveRestrictWorkspaceAdmins(ctx); ok {
@@ -4320,6 +4382,15 @@ func (to *Setting) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Sett
 				// Recursively sync the fields of PersonalCompute
 				toPersonalCompute.SyncFieldsDuringCreateOrUpdate(ctx, fromPersonalCompute)
 				to.SetPersonalCompute(ctx, toPersonalCompute)
+			}
+		}
+	}
+	if !from.RepoAllowlistPermission.IsNull() && !from.RepoAllowlistPermission.IsUnknown() {
+		if toRepoAllowlistPermission, ok := to.GetRepoAllowlistPermission(ctx); ok {
+			if fromRepoAllowlistPermission, ok := from.GetRepoAllowlistPermission(ctx); ok {
+				// Recursively sync the fields of RepoAllowlistPermission
+				toRepoAllowlistPermission.SyncFieldsDuringCreateOrUpdate(ctx, fromRepoAllowlistPermission)
+				to.SetRepoAllowlistPermission(ctx, toRepoAllowlistPermission)
 			}
 		}
 	}
@@ -4482,6 +4553,14 @@ func (to *Setting) SyncFieldsDuringRead(ctx context.Context, from Setting) {
 			}
 		}
 	}
+	if !from.EffectiveRepoAllowlistPermission.IsNull() && !from.EffectiveRepoAllowlistPermission.IsUnknown() {
+		if toEffectiveRepoAllowlistPermission, ok := to.GetEffectiveRepoAllowlistPermission(ctx); ok {
+			if fromEffectiveRepoAllowlistPermission, ok := from.GetEffectiveRepoAllowlistPermission(ctx); ok {
+				toEffectiveRepoAllowlistPermission.SyncFieldsDuringRead(ctx, fromEffectiveRepoAllowlistPermission)
+				to.SetEffectiveRepoAllowlistPermission(ctx, toEffectiveRepoAllowlistPermission)
+			}
+		}
+	}
 	if !from.EffectiveRestrictWorkspaceAdmins.IsNull() && !from.EffectiveRestrictWorkspaceAdmins.IsUnknown() {
 		if toEffectiveRestrictWorkspaceAdmins, ok := to.GetEffectiveRestrictWorkspaceAdmins(ctx); ok {
 			if fromEffectiveRestrictWorkspaceAdmins, ok := from.GetEffectiveRestrictWorkspaceAdmins(ctx); ok {
@@ -4538,6 +4617,14 @@ func (to *Setting) SyncFieldsDuringRead(ctx context.Context, from Setting) {
 			}
 		}
 	}
+	if !from.RepoAllowlistPermission.IsNull() && !from.RepoAllowlistPermission.IsUnknown() {
+		if toRepoAllowlistPermission, ok := to.GetRepoAllowlistPermission(ctx); ok {
+			if fromRepoAllowlistPermission, ok := from.GetRepoAllowlistPermission(ctx); ok {
+				toRepoAllowlistPermission.SyncFieldsDuringRead(ctx, fromRepoAllowlistPermission)
+				to.SetRepoAllowlistPermission(ctx, toRepoAllowlistPermission)
+			}
+		}
+	}
 	if !from.RestrictWorkspaceAdmins.IsNull() && !from.RestrictWorkspaceAdmins.IsUnknown() {
 		if toRestrictWorkspaceAdmins, ok := to.GetRestrictWorkspaceAdmins(ctx); ok {
 			if fromRestrictWorkspaceAdmins, ok := from.GetRestrictWorkspaceAdmins(ctx); ok {
@@ -4588,6 +4675,7 @@ func (m Setting) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBu
 	attrs["effective_integer_val"] = attrs["effective_integer_val"].SetComputed()
 	attrs["effective_operational_email_custom_recipient"] = attrs["effective_operational_email_custom_recipient"].SetComputed()
 	attrs["effective_personal_compute"] = attrs["effective_personal_compute"].SetOptional()
+	attrs["effective_repo_allowlist_permission"] = attrs["effective_repo_allowlist_permission"].SetComputed()
 	attrs["effective_restrict_workspace_admins"] = attrs["effective_restrict_workspace_admins"].SetOptional()
 	attrs["effective_string_val"] = attrs["effective_string_val"].SetComputed()
 	attrs["effective_workspace_dashboard_theme"] = attrs["effective_workspace_dashboard_theme"].SetComputed()
@@ -4596,6 +4684,7 @@ func (m Setting) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBu
 	attrs["name"] = attrs["name"].SetOptional()
 	attrs["operational_email_custom_recipient"] = attrs["operational_email_custom_recipient"].SetOptional()
 	attrs["personal_compute"] = attrs["personal_compute"].SetOptional()
+	attrs["repo_allowlist_permission"] = attrs["repo_allowlist_permission"].SetOptional()
 	attrs["restrict_workspace_admins"] = attrs["restrict_workspace_admins"].SetOptional()
 	attrs["string_val"] = attrs["string_val"].SetOptional()
 	attrs["workspace_dashboard_theme"] = attrs["workspace_dashboard_theme"].SetOptional()
@@ -4628,6 +4717,7 @@ func (m Setting) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Ty
 		"effective_integer_val":                               reflect.TypeOf(IntegerMessage{}),
 		"effective_operational_email_custom_recipient":        reflect.TypeOf(OperationalEmailCustomRecipientMessage{}),
 		"effective_personal_compute":                          reflect.TypeOf(PersonalComputeMessage{}),
+		"effective_repo_allowlist_permission":                 reflect.TypeOf(ReposAllowListPermissionMessage{}),
 		"effective_restrict_workspace_admins":                 reflect.TypeOf(RestrictWorkspaceAdminsMessage{}),
 		"effective_string_val":                                reflect.TypeOf(StringMessage{}),
 		"effective_workspace_dashboard_theme":                 reflect.TypeOf(DashboardTheme{}),
@@ -4635,6 +4725,7 @@ func (m Setting) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Ty
 		"integer_val":                                         reflect.TypeOf(IntegerMessage{}),
 		"operational_email_custom_recipient":                  reflect.TypeOf(OperationalEmailCustomRecipientMessage{}),
 		"personal_compute":                                    reflect.TypeOf(PersonalComputeMessage{}),
+		"repo_allowlist_permission":                           reflect.TypeOf(ReposAllowListPermissionMessage{}),
 		"restrict_workspace_admins":                           reflect.TypeOf(RestrictWorkspaceAdminsMessage{}),
 		"string_val":                                          reflect.TypeOf(StringMessage{}),
 		"workspace_dashboard_theme":                           reflect.TypeOf(DashboardTheme{}),
@@ -4664,6 +4755,7 @@ func (m Setting) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"effective_integer_val":                               m.EffectiveIntegerVal,
 			"effective_operational_email_custom_recipient":        m.EffectiveOperationalEmailCustomRecipient,
 			"effective_personal_compute":                          m.EffectivePersonalCompute,
+			"effective_repo_allowlist_permission":                 m.EffectiveRepoAllowlistPermission,
 			"effective_restrict_workspace_admins":                 m.EffectiveRestrictWorkspaceAdmins,
 			"effective_string_val":                                m.EffectiveStringVal,
 			"effective_workspace_dashboard_theme":                 m.EffectiveWorkspaceDashboardTheme,
@@ -4672,6 +4764,7 @@ func (m Setting) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"name":                                                m.Name,
 			"operational_email_custom_recipient":                  m.OperationalEmailCustomRecipient,
 			"personal_compute":                                    m.PersonalCompute,
+			"repo_allowlist_permission":                           m.RepoAllowlistPermission,
 			"restrict_workspace_admins":                           m.RestrictWorkspaceAdmins,
 			"string_val":                                          m.StringVal,
 			"workspace_dashboard_theme":                           m.WorkspaceDashboardTheme,
@@ -4698,6 +4791,7 @@ func (m Setting) Type(ctx context.Context) attr.Type {
 			"effective_integer_val":                               IntegerMessage{}.Type(ctx),
 			"effective_operational_email_custom_recipient":        OperationalEmailCustomRecipientMessage{}.Type(ctx),
 			"effective_personal_compute":                          PersonalComputeMessage{}.Type(ctx),
+			"effective_repo_allowlist_permission":                 ReposAllowListPermissionMessage{}.Type(ctx),
 			"effective_restrict_workspace_admins":                 RestrictWorkspaceAdminsMessage{}.Type(ctx),
 			"effective_string_val":                                StringMessage{}.Type(ctx),
 			"effective_workspace_dashboard_theme":                 DashboardTheme{}.Type(ctx),
@@ -4706,6 +4800,7 @@ func (m Setting) Type(ctx context.Context) attr.Type {
 			"name":                                                types.StringType,
 			"operational_email_custom_recipient":                  OperationalEmailCustomRecipientMessage{}.Type(ctx),
 			"personal_compute":                                    PersonalComputeMessage{}.Type(ctx),
+			"repo_allowlist_permission":                           ReposAllowListPermissionMessage{}.Type(ctx),
 			"restrict_workspace_admins":                           RestrictWorkspaceAdminsMessage{}.Type(ctx),
 			"string_val":                                          StringMessage{}.Type(ctx),
 			"workspace_dashboard_theme":                           DashboardTheme{}.Type(ctx),
@@ -5089,6 +5184,31 @@ func (m *Setting) SetEffectivePersonalCompute(ctx context.Context, v PersonalCom
 	m.EffectivePersonalCompute = vs
 }
 
+// GetEffectiveRepoAllowlistPermission returns the value of the EffectiveRepoAllowlistPermission field in Setting as
+// a ReposAllowListPermissionMessage value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *Setting) GetEffectiveRepoAllowlistPermission(ctx context.Context) (ReposAllowListPermissionMessage, bool) {
+	var e ReposAllowListPermissionMessage
+	if m.EffectiveRepoAllowlistPermission.IsNull() || m.EffectiveRepoAllowlistPermission.IsUnknown() {
+		return e, false
+	}
+	var v ReposAllowListPermissionMessage
+	d := m.EffectiveRepoAllowlistPermission.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetEffectiveRepoAllowlistPermission sets the value of the EffectiveRepoAllowlistPermission field in Setting.
+func (m *Setting) SetEffectiveRepoAllowlistPermission(ctx context.Context, v ReposAllowListPermissionMessage) {
+	vs := v.ToObjectValue(ctx)
+	m.EffectiveRepoAllowlistPermission = vs
+}
+
 // GetEffectiveRestrictWorkspaceAdmins returns the value of the EffectiveRestrictWorkspaceAdmins field in Setting as
 // a RestrictWorkspaceAdminsMessage value.
 // If the field is unknown or null, the boolean return value is false.
@@ -5262,6 +5382,31 @@ func (m *Setting) GetPersonalCompute(ctx context.Context) (PersonalComputeMessag
 func (m *Setting) SetPersonalCompute(ctx context.Context, v PersonalComputeMessage) {
 	vs := v.ToObjectValue(ctx)
 	m.PersonalCompute = vs
+}
+
+// GetRepoAllowlistPermission returns the value of the RepoAllowlistPermission field in Setting as
+// a ReposAllowListPermissionMessage value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *Setting) GetRepoAllowlistPermission(ctx context.Context) (ReposAllowListPermissionMessage, bool) {
+	var e ReposAllowListPermissionMessage
+	if m.RepoAllowlistPermission.IsNull() || m.RepoAllowlistPermission.IsUnknown() {
+		return e, false
+	}
+	var v ReposAllowListPermissionMessage
+	d := m.RepoAllowlistPermission.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetRepoAllowlistPermission sets the value of the RepoAllowlistPermission field in Setting.
+func (m *Setting) SetRepoAllowlistPermission(ctx context.Context, v ReposAllowListPermissionMessage) {
+	vs := v.ToObjectValue(ctx)
+	m.RepoAllowlistPermission = vs
 }
 
 // GetRestrictWorkspaceAdmins returns the value of the RestrictWorkspaceAdmins field in Setting as

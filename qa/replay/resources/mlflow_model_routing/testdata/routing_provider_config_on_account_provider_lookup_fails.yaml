@@ -1,0 +1,123 @@
+# Pins an account-level provider whose workspace lookup fails: it answers 403 while the
+# model is created and 404 on every later command. Either way the provider falls back
+# to the account host and still sends each model call with the
+# X-Databricks-Workspace-Id header of provider_config.workspace_id, so a workspace the
+# account API reports as missing is not an error. Every Terraform command that touches
+# the model makes the failing lookup once, as with a found workspace, and never retries
+# it. Fixtures are synthetic: API responses are inferred from the account and MLflow
+# Model Registry API contracts, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: account
+  cloud: AWS
+  account_id: replay-account
+steps:
+  - name: create_after_lookup_forbidden_routes_with_workspace_header
+    config: &config |
+      provider "databricks" {
+        account_id = "replay-account"
+      }
+      resource "databricks_mlflow_model" "this" {
+        name = "routing_lookup_fails_model"
+        provider_config {
+          workspace_id = "12345"
+        }
+      }
+    calls:
+      - &lookup_forbidden
+        request: &lookup_request
+          method: GET
+          path: /api/2.0/accounts/replay-account/workspaces/12345
+          headers:
+            # An empty expected value matches only a request without the header.
+            X-Databricks-Workspace-Id: ""
+          body: null
+        response:
+          status: 403
+          body:
+            json: {"error_code": "PERMISSION_DENIED",
+                   "message": "Caller cannot read workspace 12345"}
+      - request:
+          method: POST
+          path: /api/2.0/mlflow/registered-models/create
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"name": "routing_lookup_fails_model"}
+        response:
+          status: 200
+          body:
+            json: {"registered_model": {"name": "routing_lookup_fails_model",
+                                        "creation_timestamp": 1700000000006,
+                                        "last_updated_timestamp": 1700000000006,
+                                        "user_id": "replay-admin@example.com"}}
+      - &read_model
+        request:
+          method: GET
+          path: /api/2.0/mlflow/databricks/registered-models/get
+          query:
+            name: [routing_lookup_fails_model]
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"registered_model_databricks": {
+                     "name": "routing_lookup_fails_model",
+                     "id": "00000000000000000000000000000906",
+                     "creation_timestamp": 1700000000006,
+                     "last_updated_timestamp": 1700000000006,
+                     "user_id": "replay-admin@example.com",
+                     "permission_level": "CAN_MANAGE"}}
+      # The post-apply refresh plan.
+      - *lookup_forbidden
+      - *read_model
+    state:
+      resources:
+        databricks_mlflow_model.this:
+          attributes:
+            - path: [provider_config, 0, workspace_id]
+              equals: "12345"
+  - name: refresh_after_lookup_not_found_routes_with_workspace_header
+    plan_only: true
+    config: *config
+    plan:
+      expect: empty
+      changes: {}
+    calls:
+      - &lookup_not_found
+        request: *lookup_request
+        response:
+          status: 404
+          body:
+            json: {"error_code": "RESOURCE_DOES_NOT_EXIST",
+                   "message": "Workspace 12345 does not exist"}
+      - *read_model
+    state:
+      resources:
+        databricks_mlflow_model.this:
+          attributes:
+            - path: [provider_config, 0, workspace_id]
+              equals: "12345"
+destroy:
+  calls:
+    # The destroy plan's refresh.
+    - *lookup_not_found
+    - *read_model
+    # The apply.
+    - *lookup_not_found
+    - request:
+        method: DELETE
+        path: /api/2.0/mlflow/registered-models/delete
+        query:
+          name: [routing_lookup_fails_model]
+        headers:
+          X-Databricks-Workspace-Id: "12345"
+        body: null
+      response:
+        status: 200
+        body:
+          json: {}

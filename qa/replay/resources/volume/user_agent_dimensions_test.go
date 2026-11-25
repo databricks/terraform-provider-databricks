@@ -45,23 +45,19 @@ const userAgentExtraVariable = "DATABRICKS_USER_AGENT_EXTRA"
 const userAgentExtraChild = "DATABRICKS_TF_TEST_USER_AGENT_EXTRA_CHILD"
 
 // volumeJourneyClients are the clients the volume calls of a native journey go
-// through: the existing client, or sdk-go uc/volumes/v1 with its own fixture, whose
-// requests differ in their Accept header and PATCH body.
+// through: the existing client, or sdk-go uc/volumes/v1, which sends the same requests.
 var volumeJourneyClients = []struct {
-	name    string
-	sdkGo   bool
-	fixture string
+	name  string
+	sdkGo bool
 }{
-	{"existing_path", false, ""},
-	{"sdk_go", true, "sdk_go_"},
+	{"existing_path", false},
+	{"sdk_go", true},
 }
 
-// forEachVolumeJourneyClient runs test once per client, with the native fixture prefix
-// that client's requests match.
-func forEachVolumeJourneyClient(t *testing.T,
-	test func(t *testing.T, sdkGo bool, prefix string)) {
+// forEachVolumeJourneyClient runs test once per client.
+func forEachVolumeJourneyClient(t *testing.T, test func(t *testing.T, sdkGo bool)) {
 	for _, client := range volumeJourneyClients {
-		t.Run(client.name, func(t *testing.T) { test(t, client.sdkGo, client.fixture) })
+		t.Run(client.name, func(t *testing.T) { test(t, client.sdkGo) })
 	}
 }
 
@@ -196,10 +192,9 @@ func TestVolumeUserAgentDimensions(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			forEachVolumeJourneyClient(t, func(t *testing.T, sdkGo bool, prefix string) {
+			forEachVolumeJourneyClient(t, func(t *testing.T, sdkGo bool) {
 				setUserAgentEnvironment(t, tc.env)
-				requests := runVolumeJourney(t,
-					"native_testdata/"+prefix+"user_agent.yaml", sdkGo)
+				requests := runVolumeJourney(t, "native_testdata/user_agent.yaml", sdkGo)
 				want := wantUserAgent(t, nil, tc.upstream, tc.detected)
 				assertUserAgent(t, requests, want, sdkGo)
 			})
@@ -233,9 +228,8 @@ func TestVolumeUserAgentExtra(t *testing.T) {
 	parsed := []string{
 		"partner-a/1.2.3", "team_b/0.0.1", "partner-a/2.0.0", "resource/volume",
 	}
-	forEachVolumeJourneyClient(t, func(t *testing.T, sdkGo bool, prefix string) {
-		requests := runVolumeJourney(t, "native_testdata/"+prefix+"user_agent.yaml",
-			sdkGo)
+	forEachVolumeJourneyClient(t, func(t *testing.T, sdkGo bool) {
+		requests := runVolumeJourney(t, "native_testdata/user_agent.yaml", sdkGo)
 		assertUserAgent(t, requests, wantUserAgent(t, parsed, nil, nil), sdkGo)
 	})
 }
@@ -243,8 +237,8 @@ func TestVolumeUserAgentExtra(t *testing.T) {
 // TestVolumeTraceparent pins the W3C traceparent header of every volume call,
 // including both attempts of each retried call, on both clients.
 func TestVolumeTraceparent(t *testing.T) {
-	forEachVolumeJourneyClient(t, func(t *testing.T, sdkGo bool, prefix string) {
-		path := "native_testdata/" + prefix + "traceparent_retry.yaml"
+	forEachVolumeJourneyClient(t, func(t *testing.T, sdkGo bool) {
+		path := "native_testdata/traceparent_retry.yaml"
 		testVolumeTraceparent(t, runVolumeJourney(t, path, sdkGo))
 	})
 }

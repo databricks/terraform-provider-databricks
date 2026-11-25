@@ -12,18 +12,21 @@ import (
 	"testing/synctest"
 	"time"
 
+	"github.com/databricks/databricks-sdk-go/client"
 	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/databricks/terraform-provider-databricks/common"
 )
 
-// These tests pin transport behavior of databricks_volume refreshes on both clients that
-// replay faults cannot express: transport errors with a given message, a response body
-// that keeps arriving past the HTTP timeout, and a panic below the client.
+// These tests pin transport behavior of databricks_volume on both clients that replay
+// faults cannot express: transport errors with a given message, a response body that
+// keeps arriving past the HTTP timeout, a panic below the client in a refresh or a plan,
+// and skip_verify with a self-signed certificate.
 
 // scriptedVolumeTransport answers volume GETs with respond, numbering attempts from 1,
 // and anything else with 404.
@@ -200,4 +203,77 @@ func testVolumeRefreshTurnsATransportPanicIntoAnError(t *testing.T, sdkGo bool) 
 	assert.Equal(t, "cannot read volume: panic: transport exploded", diags[0].Summary)
 	assert.Equal(t, int32(1), api.attempts.Load())
 	assert.Equal(t, retryVolumeID, d.Id(), "a panic must not remove the volume from state")
+}
+
+// meTransport panics on the SCIM /Me request and answers anything else with 404.
+type meTransport struct{}
+
+func (meTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	if strings.HasSuffix(req.URL.Path, "/scim/v2/Me") {
+		panic("transport exploded")
+	}
+	recorder := httptest.NewRecorder()
+	http.NotFound(recorder, req)
+	resp := recorder.Result()
+	resp.Request = req
+	return resp, nil
+}
+
+// A plan that drops provider_config resolves the workspace ID through /Me. A panic below
+// the client there becomes a plan error, as it does in a refresh.
+func TestVolumePlanTurnsATransportPanicIntoAnError(t *testing.T) {
+	forEachVolumeClient(t, testVolumePlanTurnsATransportPanicIntoAnError)
+}
+
+func testVolumePlanTurnsATransportPanicIntoAnError(t *testing.T, sdkGo bool) {
+	inner, err := client.New(&config.Config{Host: "https://volume-api.test",
+		Token: "fixture-token", HTTPTransport: meTransport{}})
+	require.NoError(t, err)
+	// No cached workspace ID, so the plan calls /Me.
+	c := &common.DatabricksClient{DatabricksClient: inner}
+	state := &terraform.InstanceState{ID: retryVolumeID, Attributes: map[string]string{
+		"id":                             retryVolumeID,
+		"name":                           "retry_volume",
+		"catalog_name":                   "main",
+		"schema_name":                    "replay",
+		"volume_type":                    "MANAGED",
+		"provider_config.#":              "1",
+		"provider_config.0.workspace_id": "12345",
+	}}
+	withoutProviderConfig := terraform.NewResourceConfigRaw(map[string]any{
+		"name":         "retry_volume",
+		"catalog_name": "main",
+		"schema_name":  "replay",
+		"volume_type":  "MANAGED",
+	})
+
+	_, err = volumeResource(sdkGo).SimpleDiff(volumeContext(context.Background()), state,
+		withoutProviderConfig, c)
+
+	assert.EqualError(t, err, "cannot customize diff for volume: panic: transport exploded")
+}
+
+// skip_verify selects a transport that accepts the server's self-signed certificate,
+// which is otherwise rejected.
+func TestVolumeRefreshSkipVerifyAcceptsAnUntrustedCertificate(t *testing.T) {
+	forEachVolumeClient(t, testVolumeRefreshSkipVerifyAcceptsAnUntrustedCertificate)
+}
+
+func testVolumeRefreshSkipVerifyAcceptsAnUntrustedCertificate(t *testing.T, sdkGo bool) {
+	server := httptest.NewTLSServer(http.HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = w.Write([]byte(retryVolumeJSON))
+		}))
+	t.Cleanup(server.Close)
+
+	verified := newVolumeClient(t, &config.Config{Host: server.URL})
+	_, diags := refreshVolumeWith(context.Background(), verified, sdkGo)
+	assert.Contains(t, diagnosticSummary(t, diags),
+		"tls: failed to verify certificate: x509: certificate signed by unknown authority")
+
+	skipped := newVolumeClient(t, &config.Config{Host: server.URL, InsecureSkipVerify: true})
+	d, diags := refreshVolumeWith(context.Background(), skipped, sdkGo)
+	require.False(t, diags.HasError(), "%v", diags)
+	assert.Equal(t, refreshedVolumePath, d.Get("volume_path"))
 }

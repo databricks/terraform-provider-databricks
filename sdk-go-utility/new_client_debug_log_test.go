@@ -187,6 +187,7 @@ func TestNewClient_DebugLogShowsWhatIsSent(t *testing.T) {
 		name      string
 		configure func(*config.Config)
 		answer    func(http.ResponseWriter, *http.Request, int)
+		wantErr   string   // a part of the error of both calls
 		classic   []string // how each message of the classic client starts
 		modular   []string
 	}{{
@@ -200,13 +201,16 @@ func TestNewClient_DebugLogShowsWhatIsSent(t *testing.T) {
 		// Only the retry loop of the classic client writes a message.
 		name:      "request that the cfg.Headers hook refuses",
 		configure: func(cfg *config.Config) { cfg.Headers = func(*http.Request) error { return refused } },
+		wantErr:   "failed during request visitor: hook refused",
 		classic:   []string{"non-retriable error: failed during request visitor: hook refused"},
 	}, {
 		// The classic client logs the first request with the last response.
 		// DebugLog logs each request of the redirect, and the login page
-		// without its text, because Transport closes the page unread.
+		// without its text, because Transport closes the page unread. Both
+		// calls fail, although the workspace answers the delete with a 200.
 		name:    "private link login page",
 		answer:  redirect,
+		wantErr: "The requested workspace has AWS PrivateLink enabled",
 		classic: []string{request + "< HTTP/1.1 200 OK\n< " + newClientLoginPage, "non-retriable error: The requested workspace has "},
 		modular: []string{request + "< HTTP/1.1 302 Found", "GET /login.html?error=private-link-validation-error\n< HTTP/1.1 200 OK"},
 	}} {
@@ -216,8 +220,15 @@ func TestNewClient_DebugLogShowsWhatIsSent(t *testing.T) {
 			classic := newClientClassic(t, cfg)
 			modular, err := NewClient(t.Context(), cfg, modelregistry.NewClient)
 			require.NoError(t, err)
-			fromClassic, _ := newClientLogged(t.Context(), func(ctx context.Context) (any, error) { return newClientCalls[3].classic(ctx, classic) })
-			fromModular, _ := newClientLogged(t.Context(), func(ctx context.Context) (any, error) { return newClientCalls[3].modular(ctx, modular) })
+			fromClassic, classicErr := newClientLogged(t.Context(), func(ctx context.Context) (any, error) { return newClientCalls[3].classic(ctx, classic) })
+			fromModular, modularErr := newClientLogged(t.Context(), func(ctx context.Context) (any, error) { return newClientCalls[3].modular(ctx, modular) })
+			for who, err := range map[string]error{"classic": classicErr, "modular": modularErr} {
+				if tc.wantErr == "" {
+					assert.NoError(t, err, who)
+				} else {
+					assert.ErrorContains(t, err, tc.wantErr, who)
+				}
+			}
 			for who, logged := range map[string][2][]string{"classic": {tc.classic, fromClassic}, "modular": {tc.modular, fromModular}} {
 				require.Len(t, logged[1], len(logged[0]), who)
 				for i, want := range logged[0] {

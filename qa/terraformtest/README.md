@@ -398,7 +398,7 @@ steps:
     # calls omitted
 ```
 
-Values are `classic` or `sdk_go`. Keys must name resource types that have an sdk-go implementation; other names and values fail before Terraform runs. Unlisted resource types use the existing clients. Replay ignores `USE_SDK_GO_RESOURCES`, so the process environment cannot change a transcript.
+Values are `classic` or `sdk_go`. Keys must name resource types that have an sdk-go implementation; other names and values fail before Terraform runs. Unlisted resource types use the existing clients. Replay ignores `USE_SDK_GO_RESOURCES`, so the process environment cannot change a transcript. Because sdk-go requests are otherwise the existing clients' requests, replay fails a step when a request whose User-Agent names a resource with a `resource/<name>` segment lacks an `sdk-go-<module>/` segment although the selection sends it through sdk-go, or carries one although it doesn't; the failure names the method, path and User-Agent. Requests that name no resource, such as the importer's read, aren't checked.
 
 Each step declares its own selection, and it combines with `provider_implementations`, initial checkpoints and local input files. Destroy uses the selection retained with its cleanup configuration, following the same rules as provider implementation selection. Native Go replays build the same providers with `ProviderFactoriesWithSdkGo`. The [volume sdk-go journeys](../replay/resources/volume_sdk_go/testdata) use this selection, including switches in both directions.
 

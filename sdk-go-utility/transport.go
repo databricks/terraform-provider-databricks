@@ -64,6 +64,17 @@ const transportModularUserAgentPrefix = "sdk-go-"
 // body with its error code, PRIVATE_LINK_VALIDATION_ERROR, and its message,
 // which a modular client reads as an API error.
 //
+// wrap, when it isn't nil, puts a transport of the caller between the steps
+// above and the connection, which a caller can't do around the result,
+// because Transport picks the transport to send over itself. Transport calls
+// wrap once, with that transport, and sends every request over the one that
+// wrap returns. That one is asked to send each request as it is sent: after
+// the visitors, with the headers above, and never a request that a visitor
+// refused. It returns the response before the exception above is made, so for
+// a private link redirect it sees the login page and the caller gets the 403.
+// This is where the classic client writes its debug log. An error of wrap,
+// and a nil transport from it, are errors of Transport.
+//
 // Transport resolves cfg, as building a classic client does, and returns the
 // error of that resolution.
 //
@@ -79,7 +90,7 @@ const transportModularUserAgentPrefix = "sdk-go-"
 //     mapping of error responses, which the classic client does around its
 //     transport;
 //   - the host, the workspace ID and the call headers of the modular client.
-func Transport(cfg *config.Config) (http.RoundTripper, error) {
+func Transport(cfg *config.Config, wrap func(base http.RoundTripper) (http.RoundTripper, error)) (http.RoundTripper, error) {
 	if cfg == nil {
 		return nil, errors.New("cannot build a transport for a nil config")
 	}
@@ -87,13 +98,21 @@ func Transport(cfg *config.Config) (http.RoundTripper, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &transportRoundTripper{
-		base:     transportClassicBase(clientCfg),
-		visitors: clientCfg.Visitors,
-	}, nil
+	base := transportClassicBase(clientCfg)
+	if wrap != nil {
+		if base, err = wrap(base); err != nil {
+			return nil, fmt.Errorf("cannot wrap the transport: %w", err)
+		}
+		if base == nil {
+			return nil, errors.New("cannot wrap the transport: wrap returned no transport")
+		}
+	}
+	return &transportRoundTripper{base: base, visitors: clientCfg.Visitors}, nil
 }
 
-// transportRoundTripper is the http.RoundTripper that Transport returns.
+// transportRoundTripper is the http.RoundTripper that Transport returns. base
+// is the transport that it sends over: the one of the classic client for the
+// config, or what the wrap of the caller made of it.
 type transportRoundTripper struct {
 	base     http.RoundTripper
 	visitors []httpclient.RequestVisitor

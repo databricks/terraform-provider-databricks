@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
-	"strings"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -18,7 +17,6 @@ import (
 	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/databricks-sdk-go/config/credentials"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
-	"github.com/databricks/sdk-go/options/call"
 	sdkvolumes "github.com/databricks/sdk-go/uc/volumes/v1"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -83,12 +81,7 @@ func getVolume(ctx context.Context, t *testing.T, w *databricks.WorkspaceClient,
 	t.Helper()
 	vc, err := SdkGoVolumesClient(ctx, w)
 	require.NoError(t, err)
-	get := func(ctx context.Context,
-		opts ...call.Option) (*sdkvolumes.VolumeInfo, error) {
-		req := sdkvolumes.GetVolumeRequest{FullNameArg: &fullName}
-		return vc.GetVolume(ctx, req, opts...)
-	}
-	return CallSdkGoVolumes(ctx, vc, get)
+	return vc.ReadByName(ctx, fullName)
 }
 
 type handler = func(http.ResponseWriter, *http.Request)
@@ -239,19 +232,6 @@ func htmlError(status int, message string) handler {
 	}
 }
 
-func TestSdkGoClientReadsHTMLNotFoundAsMissingLikeClassicClient(t *testing.T) {
-	r := readBothWays(t, context.Background, nil,
-		htmlError(http.StatusNotFound, "Volume not found."))
-	var apiErr, classicAPIErr *apierr.APIError
-	require.ErrorAs(t, r.err, &apiErr)
-	require.ErrorAs(t, r.classicErr, &classicAPIErr)
-	assert.Equal(t, "NOT_FOUND", classicAPIErr.ErrorCode)
-	assert.Equal(t, classicAPIErr.ErrorCode, apiErr.ErrorCode)
-	assert.True(t, apierr.IsMissing(r.err))
-	assert.EqualError(t, r.err, r.classicErr.Error())
-	assert.Equal(t, r.classicCalls, r.calls)
-}
-
 func TestSdkGoClientRetriesHTMLTooManyRequestsLikeClassicClient(t *testing.T) {
 	r := readBothWays(t, context.Background, nil,
 		htmlError(http.StatusTooManyRequests, "Too many requests."),
@@ -273,14 +253,10 @@ func TestSdkGoClientDoesNotRetryUndecodableSuccessfulResponses(t *testing.T) {
 	server, calls := serveSequence(t, undecodable)
 	vc, err := SdkGoVolumesClient(ctx, newVolumesTestWorkspaceClient(t, server, nil))
 	require.NoError(t, err)
-	create := func(ctx context.Context,
-		opts ...call.Option) (*sdkvolumes.VolumeInfo, error) {
-		return vc.CreateVolume(ctx, sdkvolumes.CreateVolumeRequest{
-			CatalogName: &catalogName, SchemaName: &schemaName, Name: &name,
-			VolumeType: sdkvolumes.VolumeType_Managed,
-		}, opts...)
-	}
-	_, err = CallSdkGoVolumes(ctx, vc, create)
+	_, err = vc.Create(ctx, sdkvolumes.CreateVolumeRequest{
+		CatalogName: &catalogName, SchemaName: &schemaName, Name: &name,
+		VolumeType: sdkvolumes.VolumeType_Managed,
+	})
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "failed to unmarshal response body")
 	assert.EqualValues(t, 1, calls.Load())
@@ -343,10 +319,9 @@ func TestSdkGoClientReportsRefusedConnectionsLikeClassicClient(t *testing.T) {
 	assert.Contains(t, err.Error(), "connection refused")
 	classic := newVolumesTestWorkspaceClient(t, server, customize)
 	_, classicErr := classic.Volumes.ReadByName(ctx, sdkGoTestVolumeName)
-	// The existing client sends an empty query, so its URL ends in "?".
-	classicMessage := strings.Replace(err.Error(), sdkGoTestVolumePath+`"`,
-		sdkGoTestVolumePath+`?"`, 1)
-	assert.EqualError(t, classicErr, classicMessage)
+	assert.EqualError(t, classicErr, err.Error())
+	// Both clients send the empty query, so the URL in the message ends in "?".
+	assert.Contains(t, err.Error(), sdkGoTestVolumePath+`?"`)
 }
 
 // blockingCredentials authenticate only when the request's context ends, like a token

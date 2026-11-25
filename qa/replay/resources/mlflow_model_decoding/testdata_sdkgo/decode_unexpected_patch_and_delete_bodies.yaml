@@ -1,17 +1,23 @@
 # The modular SDK twin of testdata_classic/decode_unexpected_patch_and_delete_bodies.yaml.
-# It differs in the diagnostic of the update that is answered with a JSON array: the
-# modular SDK reports the decoding error alone, where the classic client wraps it with
-# a request to report an SDK bug and a log of the request. The requests, the state and
-# the plans are the same.
+# It differs in the two updates whose response the modular SDK can't decode:
+#   - answered with an empty body, the update fails with the error of encoding/json,
+#     where the classic client decodes an empty body as an empty response and the
+#     update succeeds. The service accepted the PATCH on both paths, and the planned
+#     description is in the state all the same, so the next plan is empty on both;
+#   - answered with a JSON array, the update fails on both paths. The modular SDK
+#     reports the decoding error alone, where the classic client wraps it with a
+#     request to report an SDK bug and a log of the request.
+# The requests are the same, apart from the two reads after the update that the
+# classic path makes once the empty body is decoded. Once the modular client takes an
+# empty body as the classic one does, update the first of these steps from the classic
+# journey.
 #
-# Pins a PATCH and a DELETE answered 200 with JSON the call doesn't expect. The PATCH
+# Pins a PATCH and a DELETE answered 200 with a body the call doesn't expect. The PATCH
 # response is decoded and then dropped: answered with another model, the update
-# succeeds and the state comes from the read that follows. Its shape still matters: a
-# JSON array fails the update after the service accepted the PATCH. The planned
-# description is in the state all the same, so the next plan is empty without a
-# refresh. The DELETE response is never decoded: answered with another model or with an
-# array, the model is gone from the state. API responses are synthetic: inferred from
-# the MLflow Model Registry API, not recorded.
+# succeeds and the state comes from the read that follows. The DELETE response is never
+# decoded: answered with another model or with an array, the model is gone from the
+# state. API responses are synthetic: inferred from the MLflow Model Registry API, not
+# recorded.
 version: 1
 enforce_call_order: true
 host_metadata:
@@ -117,14 +123,13 @@ steps:
               equals: decode_model
             - path: [description]
               equals: second description
-  - name: update_answered_200_with_json_array_fails_to_decode
+  - name: update_answered_200_with_empty_body_fails_to_decode
     config: &config_third |
       resource "databricks_mlflow_model" "this" {
         name        = "decode_model"
         description = "third description"
       }
-    expect_error: 'Error: cannot update mlflow model: json: cannot unmarshal array into Go
-      value of type modelregistry\.updateRegisteredModelResponseWire\n'
+    expect_error: 'Error: cannot update mlflow model: unexpected end of JSON input\n'
     calls:
       - *read_second
       - request:
@@ -137,9 +142,8 @@ steps:
             json: {"name": "decode_model", "description": "third description"}
         response:
           status: 200
-          body:
-            json: []
-  - name: plan_after_failed_update_has_the_planned_description_and_plans_nothing
+          body: null
+  - name: plan_after_failed_empty_body_update_has_the_planned_description_and_plans_nothing
     plan_only: true
     config: *config_third
     plan:
@@ -167,18 +171,68 @@ steps:
                      "creation_timestamp": 1700000000000,
                      "last_updated_timestamp": 1700000002000,
                      "permission_level": "CAN_MANAGE"}}
+  - name: update_answered_200_with_json_array_fails_to_decode
+    config: &config_fourth |
+      resource "databricks_mlflow_model" "this" {
+        name        = "decode_model"
+        description = "fourth description"
+      }
+    expect_error: 'Error: cannot update mlflow model: json: cannot unmarshal array into Go
+      value of type modelregistry\.updateRegisteredModelResponseWire\n'
+    calls:
+      - *read_third
+      - request:
+          method: PATCH
+          path: /api/2.0/mlflow/registered-models/update
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"name": "decode_model", "description": "fourth description"}
+        response:
+          status: 200
+          body:
+            json: []
+  - name: plan_after_failed_update_has_the_planned_description_and_plans_nothing
+    plan_only: true
+    config: *config_fourth
+    plan:
+      expect: empty
+      changes: {}
+    state:
+      resources:
+        databricks_mlflow_model.this:
+          attributes:
+            - path: [id]
+              equals: decode_model
+            - path: [description]
+              equals: fourth description
+    calls:
+      - &read_fourth
+        request: *read_request
+        response:
+          status: 200
+          body:
+            json: {"registered_model_databricks": {
+                     "name": "decode_model",
+                     "id": "0123456789abcdef0123456789abcdef",
+                     "description": "fourth description",
+                     "user_id": "replay-admin@example.com",
+                     "creation_timestamp": 1700000000000,
+                     "last_updated_timestamp": 1700000003000,
+                     "permission_level": "CAN_MANAGE"}}
   - name: replace_with_delete_answered_200_with_another_model_removes_the_model
     config: |
       resource "databricks_mlflow_model" "this" {
         name        = "decode_model_replaced"
-        description = "third description"
+        description = "fourth description"
       }
     plan:
       changes:
         databricks_mlflow_model.this:
           actions: [delete, create]
     calls:
-      - *read_third
+      - *read_fourth
       - request:
           method: DELETE
           path: /api/2.0/mlflow/registered-models/delete
@@ -198,16 +252,16 @@ steps:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
           body:
-            json: {"name": "decode_model_replaced", "description": "third description"}
+            json: {"name": "decode_model_replaced", "description": "fourth description"}
         response:
           status: 200
           body:
             json: {"registered_model": {
                      "name": "decode_model_replaced",
-                     "description": "third description",
+                     "description": "fourth description",
                      "user_id": "replay-admin@example.com",
-                     "creation_timestamp": 1700000003000,
-                     "last_updated_timestamp": 1700000003000}}
+                     "creation_timestamp": 1700000004000,
+                     "last_updated_timestamp": 1700000004000}}
       - &read_replaced
         request:
           method: GET
@@ -223,10 +277,10 @@ steps:
             json: {"registered_model_databricks": {
                      "name": "decode_model_replaced",
                      "id": "fedcba9876543210fedcba9876543210",
-                     "description": "third description",
+                     "description": "fourth description",
                      "user_id": "replay-admin@example.com",
-                     "creation_timestamp": 1700000003000,
-                     "last_updated_timestamp": 1700000003000,
+                     "creation_timestamp": 1700000004000,
+                     "last_updated_timestamp": 1700000004000,
                      "permission_level": "CAN_MANAGE"}}
       - *read_replaced
     state:

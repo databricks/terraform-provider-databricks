@@ -293,21 +293,19 @@ func transportTestBothClients(t *testing.T, cfg *config.Config, create bool, opt
 	require.NoError(t, transportTestGet(t.Context(), modular, name))
 }
 
-// TestTransport_HeadersHookSetsAHeaderOfTheCall pins a difference from the
-// classic client. The classic client sets the headers of the generated call
-// after the cfg.Headers hook, so the call wins where both set a header.
-// Transport runs the hook on a request that already has the headers of the
-// modular call, so the hook wins. A header that the call doesn't set is the
-// one of the hook with both clients.
+// TestTransport_HeadersHookSetsAHeaderOfTheCall checks a cfg.Headers hook that
+// sets headers which the call sets as well. The classic client sets the
+// headers of the generated call after the hook, and Transport puts those of
+// the modular call back after it. So with both clients the call wins where
+// both set a header, and the hook where the call sets none.
 func TestTransport_HeadersHookSetsAHeaderOfTheCall(t *testing.T) {
 	const hookContentType, hookWorkspaceID = "text/hook", "hook"
 	testCases := []struct {
 		name        string
 		create      bool
 		workspaceID string
-		// What the server receives from the classic client. From the modular
-		// client it receives the values of the hook in every case.
-		classicContentType, classicWorkspaceID string
+		// What the server receives from both clients.
+		wantContentType, wantWorkspaceID string
 	}{
 		{"POST to a workspace with an ID", true, "1234567890", "application/json", "1234567890"},
 		{"GET, which has no Content-Type of its own", false, "1234567890", hookContentType, "1234567890"},
@@ -329,15 +327,11 @@ func TestTransport_HeadersHookSetsAHeaderOfTheCall(t *testing.T) {
 			transportTestBothClients(t, cfg, tc.create, opts...)
 			received := server.received()
 			require.Len(t, received, 2)
-			classic, modular := received[0], received[1]
-			assert.Equal(t, tc.classicContentType, classic.Header.Get("Content-Type"), "classic client")
-			assert.Equal(t, tc.classicWorkspaceID, classic.Header.Get("X-Databricks-Workspace-Id"), "classic client")
-			assert.Equal(t, hookContentType, modular.Header.Get("Content-Type"), "modular client")
-			assert.Equal(t, hookWorkspaceID, modular.Header.Get("X-Databricks-Workspace-Id"), "modular client")
-			// Apart from these two headers the server received the same request.
-			modular.Header.Set("Content-Type", classic.Header.Get("Content-Type"))
-			modular.Header.Set("X-Databricks-Workspace-Id", classic.Header.Get("X-Databricks-Workspace-Id"))
-			transportTestSameAsClassic(t, classic, modular)
+			for i, client := range []string{"classic client", "modular client"} {
+				assert.Equal(t, tc.wantContentType, received[i].Header.Get("Content-Type"), client)
+				assert.Equal(t, tc.wantWorkspaceID, received[i].Header.Get("X-Databricks-Workspace-Id"), client)
+			}
+			transportTestSameAsClassic(t, received[0], received[1])
 		})
 	}
 }
@@ -413,45 +407,69 @@ func (h *transportTestRedirectHosts) RoundTrip(req *http.Request) (*http.Respons
 	return resp, nil
 }
 
-// TestTransport_RedirectAndAuthorization checks the Authorization header that
-// the host of a redirect receives from each client. http.Client leaves that
-// header out of a request that it redirects to another domain. With the
-// classic client that holds for the header of a cfg.Headers hook as well.
-// Transport runs the hook again on the redirected request, so a hook that sets
-// Authorization sets it there too: the one case where the hosts differ.
+// TestTransport_RedirectAndAuthorization checks the credential headers that
+// the host of a redirect receives from each client. http.Client leaves them
+// out of a request that it redirects to another domain. With the classic
+// client that holds for the headers of a cfg.Headers hook as well, which runs
+// before http.Client. Transport runs the hook again on the redirected request
+// and then removes the credential headers that the request arrived without,
+// so the host receives the same from both clients. The exception is in
+// onlyClassic: a credential header that only the hook sets is one that every
+// redirected request arrives without, so Transport removes it within the
+// domain as well, where the classic client sends it.
 func TestTransport_RedirectAndAuthorization(t *testing.T) {
-	const workspace, credentials, hook = "workspace.test", "Bearer transport-test-token", "Bearer hook"
+	const workspace, sub, other, credentials = "workspace.test", "sub.workspace.test", "other.test", "Bearer transport-test-token"
+	authorization := map[string]string{"Authorization": "Bearer hook", "X-Transport-Test": "hook"}
+	// The other headers that http.Client treats as credentials. The request
+	// of the modular client has none of them.
+	others := map[string]string{"Cookie": "hook=1", "Cookie2": "hook=2", "Proxy-Authorization": "Basic hook",
+		"Proxy-Authenticate": "Basic", "Www-Authenticate": "Bearer", "X-Transport-Test": "hook"}
+	othersOnly := []string{"Cookie", "Cookie2", "Proxy-Authorization", "Proxy-Authenticate", "Www-Authenticate"}
 	testCases := []struct {
-		name, to                 string
-		hookSetsIt               bool
-		wantClassic, wantModular string
+		name, to string
+		hook     map[string]string
+		// The headers of hook that the host of the redirect receives from the
+		// classic client, next to the Authorization that it receives. From the
+		// modular client it receives the same, without those in onlyClassic.
+		wantAuthorization string
+		wantOfHook        []string
+		onlyClassic       []string
 	}{
-		{"credentials, to a subdomain", "sub." + workspace, false, credentials, credentials},
-		{"credentials, to another domain", "other.test", false, "", ""},
-		{"hook, to a subdomain", "sub." + workspace, true, hook, hook},
-		{"hook, to another domain", "other.test", true, "", hook},
+		{"credentials, to a subdomain", sub, nil, credentials, nil, nil},
+		{"credentials, to another domain", other, nil, "", nil, nil},
+		{"hook sets Authorization, to a subdomain", sub, authorization, "Bearer hook", []string{"X-Transport-Test"}, nil},
+		{"hook sets Authorization, to another domain", other, authorization, "", []string{"X-Transport-Test"}, nil},
+		{"hook sets the other credentials, to another domain", other, others, "", []string{"X-Transport-Test"}, nil},
+		{"hook sets the other credentials, to a subdomain", sub, others, credentials, append([]string{"X-Transport-Test"}, othersOnly...), othersOnly},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			hosts := &transportTestRedirectHosts{from: workspace, to: tc.to, received: map[string][]http.Header{}}
 			cfg := transportTestConfig("https://" + workspace)
 			cfg.HTTPTransport = hosts
-			sent := credentials
-			if tc.hookSetsIt {
-				cfg.Headers = config.StaticHeaders(map[string]string{"Authorization": hook, "X-Transport-Test": "hook"})
-				sent = hook
+			if tc.hook != nil {
+				cfg.Headers = config.StaticHeaders(tc.hook)
 			}
 			transportTestBothClients(t, cfg, false)
 			first, redirected := hosts.received[workspace], hosts.received[tc.to]
 			require.Len(t, first, 2)
 			require.Len(t, redirected, 2)
-			assert.Equal(t, sent, first[0].Get("Authorization"), "classic client, first request")
-			assert.Equal(t, sent, first[1].Get("Authorization"), "modular client, first request")
-			assert.Equal(t, tc.wantClassic, redirected[0].Get("Authorization"), "classic client, redirected request")
-			assert.Equal(t, tc.wantModular, redirected[1].Get("Authorization"), "modular client, redirected request")
-			// A header of the hook that is no credential reaches both hosts.
-			assert.Equal(t, redirected[0].Get("X-Transport-Test"), redirected[1].Get("X-Transport-Test"))
-			assert.Equal(t, tc.hookSetsIt, redirected[1].Get("X-Transport-Test") == "hook")
+			for i, client := range []string{"classic client", "modular client"} {
+				// The workspace receives every header of the hook.
+				for name, value := range tc.hook {
+					assert.Equal(t, value, first[i].Get(name), "%s, first request, %s", client, name)
+				}
+				assert.Equal(t, tc.wantAuthorization, redirected[i].Get("Authorization"), client)
+				for name, value := range tc.hook {
+					if name == "Authorization" {
+						continue
+					}
+					if !slices.Contains(tc.wantOfHook, name) || (i == 1 && slices.Contains(tc.onlyClassic, name)) {
+						value = ""
+					}
+					assert.Equal(t, value, redirected[i].Get(name), "%s, redirected request, %s", client, name)
+				}
+			}
 		})
 	}
 }

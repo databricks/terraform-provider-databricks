@@ -243,7 +243,7 @@ func transportPrivateLinkOverBase(t *testing.T, host string, base transportPriva
 	t.Helper()
 	cfg := transportTestConfig(host)
 	cfg.AuthType, cfg.HTTPTransport = "pat", base
-	transport, err := Transport(cfg)
+	transport, err := Transport(cfg, nil)
 	require.NoError(t, err)
 	return transport
 }

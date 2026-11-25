@@ -84,7 +84,7 @@ type newClientSteps struct {
 // newClientHelpers are the steps of NewClient.
 var newClientHelpers = newClientSteps{
 	credentials:    Credentials,
-	transport:      Transport,
+	transport:      func(cfg *config.Config) (http.RoundTripper, error) { return Transport(cfg, nil) },
 	attemptTimeout: AttemptTimeout,
 	debugLog:       DebugLog,
 	clientOptions:  ClientOptions,

@@ -1,0 +1,143 @@
+# Pins the delete errors that keep the model. A DELETE answered 403, 400 or 500 fails
+# the apply with its exact diagnostic and is sent once; the model stays in state, and
+# the next plan deletes it again. API responses are synthetic: inferred from the MLflow
+# Model Registry API, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: create
+    config: |
+      resource "databricks_mlflow_model" "this" {
+        name        = "error_delete_keeps_model"
+        description = "Pins delete errors that keep the model"
+      }
+    calls:
+      - request:
+          method: POST
+          path: /api/2.0/mlflow/registered-models/create
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"name": "error_delete_keeps_model",
+                   "description": "Pins delete errors that keep the model"}
+        response:
+          status: 200
+          body:
+            json: {"registered_model": {
+                     "name": "error_delete_keeps_model",
+                     "description": "Pins delete errors that keep the model",
+                     "creation_timestamp": 1700000000000,
+                     "last_updated_timestamp": 1700000000000,
+                     "user_id": "tester@example.com"}}
+      - &read_created
+        request:
+          method: GET
+          path: /api/2.0/mlflow/databricks/registered-models/get
+          query:
+            name: [error_delete_keeps_model]
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"registered_model_databricks": {
+                     "name": "error_delete_keeps_model",
+                     "id": "0a1b2c3d4e5f60718293a4b5c6d7e861",
+                     "description": "Pins delete errors that keep the model",
+                     "creation_timestamp": 1700000000000,
+                     "last_updated_timestamp": 1700000000000,
+                     "user_id": "tester@example.com",
+                     "permission_level": "CAN_MANAGE"}}
+      - *read_created
+  - name: delete_answered_403_fails
+    config: &config_empty |
+      provider "databricks" {}
+    expect_error: 'Error: cannot delete mlflow model: User does not have permission
+      ''CAN_MANAGE'' on registered model ''error_delete_keeps_model''\.\n'
+    calls:
+      - *read_created
+      - request: &delete_request
+          method: DELETE
+          path: /api/2.0/mlflow/registered-models/delete
+          query:
+            name: [error_delete_keeps_model]
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 403
+          body:
+            json: {"error_code": "PERMISSION_DENIED",
+                   "message": "User does not have permission 'CAN_MANAGE' on registered
+                     model 'error_delete_keeps_model'."}
+  - name: plan_after_403_deletes_again
+    plan_only: true
+    config: *config_empty
+    plan: &plan_delete
+      expect: non_empty
+      changes:
+        databricks_mlflow_model.this:
+          actions: [delete]
+    state: &state_kept
+      resources:
+        databricks_mlflow_model.this:
+          attributes:
+            - path: [id]
+              equals: error_delete_keeps_model
+    calls:
+      - *read_created
+  - name: delete_answered_400_fails
+    config: *config_empty
+    expect_error: 'Error: cannot delete mlflow model: Registered model
+      ''error_delete_keeps_model'' has model versions in the Production stage and cannot
+      be deleted\.\n'
+    calls:
+      - *read_created
+      - request: *delete_request
+        response:
+          status: 400
+          body:
+            json: {"error_code": "INVALID_STATE",
+                   "message": "Registered model 'error_delete_keeps_model' has model
+                     versions in the Production stage and cannot be deleted."}
+  - name: plan_after_400_deletes_again
+    plan_only: true
+    config: *config_empty
+    plan: *plan_delete
+    state: *state_kept
+    calls:
+      - *read_created
+  - name: delete_answered_500_fails
+    config: *config_empty
+    expect_error: 'Error: cannot delete mlflow model: An internal error occurred while
+      deleting the registered model\.\n'
+    calls:
+      - *read_created
+      - request: *delete_request
+        response:
+          status: 500
+          body:
+            json: {"error_code": "INTERNAL_ERROR",
+                   "message": "An internal error occurred while deleting the registered
+                     model."}
+  - name: plan_after_500_deletes_again
+    plan_only: true
+    config: *config_empty
+    plan: *plan_delete
+    state: *state_kept
+    calls:
+      - *read_created
+destroy:
+  calls:
+    - *read_created
+    - request: *delete_request
+      response:
+        status: 200
+        body:
+          json: {}

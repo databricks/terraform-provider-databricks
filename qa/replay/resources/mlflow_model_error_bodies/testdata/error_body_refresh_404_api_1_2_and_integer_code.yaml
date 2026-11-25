@@ -1,0 +1,149 @@
+# Pins that a refresh GET answered 404 drops the model for two older JSON body shapes.
+# An API 1.2 body has only "error", so the classic SDK finds no error code in it. An
+# integer error_code becomes the string "404". Neither maps to a class, so the status
+# classes both as a missing model: the refresh raises no diagnostic, the plan is a
+# create, and the same apply sends the POST again. Each state check reads back the id of
+# the recreated model. API responses are synthetic: inferred from the MLflow Model
+# Registry API and the classic SDK's error parser, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: create
+    config: &config |
+      resource "databricks_mlflow_model" "this" {
+        name        = "error_body_refresh_legacy_model"
+        description = "Pins a refresh 404 with older JSON bodies"
+      }
+    calls:
+      - &create
+        request:
+          method: POST
+          path: /api/2.0/mlflow/registered-models/create
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"name": "error_body_refresh_legacy_model",
+                   "description": "Pins a refresh 404 with older JSON bodies"}
+        response:
+          status: 200
+          body:
+            json: {"registered_model": {
+                     "name": "error_body_refresh_legacy_model",
+                     "description": "Pins a refresh 404 with older JSON bodies",
+                     "creation_timestamp": 1700000000000,
+                     "last_updated_timestamp": 1700000000000,
+                     "user_id": "tester@example.com"}}
+      - &read_first
+        request: &read_request
+          method: GET
+          path: /api/2.0/mlflow/databricks/registered-models/get
+          query:
+            name: [error_body_refresh_legacy_model]
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"registered_model_databricks": {
+                     "name": "error_body_refresh_legacy_model",
+                     "id": "9f8e7d6c5b4a39281706f5e4d3c2b151",
+                     "description": "Pins a refresh 404 with older JSON bodies",
+                     "creation_timestamp": 1700000000000,
+                     "last_updated_timestamp": 1700000000000,
+                     "user_id": "tester@example.com",
+                     "permission_level": "CAN_MANAGE"}}
+      - *read_first
+    state:
+      resources:
+        databricks_mlflow_model.this:
+          attributes:
+            - path: [registered_model_id]
+              equals: 9f8e7d6c5b4a39281706f5e4d3c2b151
+  - name: refresh_answered_404_api_1_2_error_removes_and_recreates
+    config: *config
+    plan: &plan_create
+      expect: non_empty
+      changes:
+        databricks_mlflow_model.this:
+          actions: [create]
+    calls:
+      - request: *read_request
+        response:
+          status: 404
+          body:
+            json: {"error": "RegisteredModel 'error_body_refresh_legacy_model' does not
+                     exist."}
+      - *create
+      - &read_second
+        request: *read_request
+        response:
+          status: 200
+          body:
+            json: {"registered_model_databricks": {
+                     "name": "error_body_refresh_legacy_model",
+                     "id": "9f8e7d6c5b4a39281706f5e4d3c2b152",
+                     "description": "Pins a refresh 404 with older JSON bodies",
+                     "creation_timestamp": 1700000100000,
+                     "last_updated_timestamp": 1700000100000,
+                     "user_id": "tester@example.com",
+                     "permission_level": "CAN_MANAGE"}}
+      - *read_second
+    state:
+      resources:
+        databricks_mlflow_model.this:
+          attributes:
+            - path: [registered_model_id]
+              equals: 9f8e7d6c5b4a39281706f5e4d3c2b152
+  - name: refresh_answered_404_integer_error_code_removes_and_recreates
+    config: *config
+    plan: *plan_create
+    calls:
+      - request: *read_request
+        response:
+          status: 404
+          body:
+            json: {"error_code": 404,
+                   "message": "RegisteredModel 'error_body_refresh_legacy_model' does
+                     not exist."}
+      - *create
+      - &read_third
+        request: *read_request
+        response:
+          status: 200
+          body:
+            json: {"registered_model_databricks": {
+                     "name": "error_body_refresh_legacy_model",
+                     "id": "9f8e7d6c5b4a39281706f5e4d3c2b153",
+                     "description": "Pins a refresh 404 with older JSON bodies",
+                     "creation_timestamp": 1700000200000,
+                     "last_updated_timestamp": 1700000200000,
+                     "user_id": "tester@example.com",
+                     "permission_level": "CAN_MANAGE"}}
+      - *read_third
+    state:
+      resources:
+        databricks_mlflow_model.this:
+          attributes:
+            - path: [registered_model_id]
+              equals: 9f8e7d6c5b4a39281706f5e4d3c2b153
+destroy:
+  calls:
+    - *read_third
+    - request:
+        method: DELETE
+        path: /api/2.0/mlflow/registered-models/delete
+        query:
+          name: [error_body_refresh_legacy_model]
+        headers:
+          X-Databricks-Workspace-Id: "12345"
+        body: null
+      response:
+        status: 200
+        body:
+          json: {}

@@ -1,0 +1,177 @@
+# Pins whether a DELETE answered 400 or 404 counts as a deleted model for plain text of
+# the form "CODE: message" and for an API 1.2 body that has only "error". The classic SDK
+# takes CODE as the error code and reports only the message; it finds no error code in an
+# API 1.2 body and reports its "error" field. MALFORMED_REQUEST, NOT_FOUND and a missing
+# code map to no class, so the status decides:
+# - A 400 fails the apply, the DELETE is sent once, the model stays in state and the next
+#   plan deletes it again.
+# - A 404 counts as a missing model: the apply succeeds without a diagnostic, the model
+#   leaves state and the next plan is empty without a read.
+# API responses are synthetic: inferred from the MLflow Model Registry API and the
+# classic SDK's error parsers, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: create
+    config: &config |
+      resource "databricks_mlflow_model" "this" {
+        name        = "error_body_delete_text_model"
+        description = "Pins delete errors with a CODE: message or API 1.2 body"
+      }
+    calls:
+      - &create
+        request:
+          method: POST
+          path: /api/2.0/mlflow/registered-models/create
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"name": "error_body_delete_text_model",
+                   "description": "Pins delete errors with a CODE: message or API 1.2
+                     body"}
+        response:
+          status: 200
+          body:
+            json: {"registered_model": {
+                     "name": "error_body_delete_text_model",
+                     "description": "Pins delete errors with a CODE: message or API 1.2
+                       body",
+                     "creation_timestamp": 1700000000000,
+                     "last_updated_timestamp": 1700000000000,
+                     "user_id": "tester@example.com"}}
+      - &read_first
+        request: &read_request
+          method: GET
+          path: /api/2.0/mlflow/databricks/registered-models/get
+          query:
+            name: [error_body_delete_text_model]
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"registered_model_databricks": {
+                     "name": "error_body_delete_text_model",
+                     "id": "9f8e7d6c5b4a39281706f5e4d3c2b1a1",
+                     "description": "Pins delete errors with a CODE: message or API 1.2
+                       body",
+                     "creation_timestamp": 1700000000000,
+                     "last_updated_timestamp": 1700000000000,
+                     "user_id": "tester@example.com",
+                     "permission_level": "CAN_MANAGE"}}
+      - *read_first
+  - name: delete_answered_400_plain_text_code_fails_with_message_only
+    config: &config_empty |
+      provider "databricks" {}
+    expect_error: 'Error: cannot delete mlflow model: Registered model name is
+      malformed\.\n'
+    calls:
+      - *read_first
+      - request: &delete_request
+          method: DELETE
+          path: /api/2.0/mlflow/registered-models/delete
+          query:
+            name: [error_body_delete_text_model]
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 400
+          body:
+            text: "MALFORMED_REQUEST: Registered model name is malformed."
+  - name: plan_after_400_plain_text_code_deletes_again
+    plan_only: true
+    config: *config_empty
+    plan: &plan_delete
+      expect: non_empty
+      changes:
+        databricks_mlflow_model.this:
+          actions: [delete]
+    state: &state_kept
+      resources:
+        databricks_mlflow_model.this:
+          attributes:
+            - path: [id]
+              equals: error_body_delete_text_model
+    calls:
+      - *read_first
+  - name: delete_answered_400_api_1_2_error_fails_with_error_field
+    config: *config_empty
+    expect_error: 'Error: cannot delete mlflow model: Registered model
+      ''error_body_delete_text_model'' could not be deleted\.\n'
+    calls:
+      - *read_first
+      - request: *delete_request
+        response:
+          status: 400
+          body:
+            json: {"error": "Registered model 'error_body_delete_text_model' could not
+                     be deleted."}
+  - name: plan_after_400_api_1_2_error_deletes_again
+    plan_only: true
+    config: *config_empty
+    plan: *plan_delete
+    state: *state_kept
+    calls:
+      - *read_first
+  - name: delete_answered_404_plain_text_code_counts_as_deleted
+    config: *config_empty
+    plan: *plan_delete
+    calls:
+      - *read_first
+      - request: *delete_request
+        response:
+          status: 404
+          body:
+            text: "NOT_FOUND: Registered model 'error_body_delete_text_model' not
+              found."
+  - name: plan_after_404_plain_text_code_is_empty
+    plan_only: true
+    config: *config_empty
+    plan: &plan_empty
+      expect: empty
+      changes: {}
+    calls: []
+  - name: create_again
+    config: *config
+    calls:
+      - *create
+      - &read_second
+        request: *read_request
+        response:
+          status: 200
+          body:
+            json: {"registered_model_databricks": {
+                     "name": "error_body_delete_text_model",
+                     "id": "9f8e7d6c5b4a39281706f5e4d3c2b1a2",
+                     "description": "Pins delete errors with a CODE: message or API 1.2
+                       body",
+                     "creation_timestamp": 1700000100000,
+                     "last_updated_timestamp": 1700000100000,
+                     "user_id": "tester@example.com",
+                     "permission_level": "CAN_MANAGE"}}
+      - *read_second
+  - name: delete_answered_404_api_1_2_error_counts_as_deleted
+    config: *config_empty
+    plan: *plan_delete
+    calls:
+      - *read_second
+      - request: *delete_request
+        response:
+          status: 404
+          body:
+            json: {"error": "RegisteredModel 'error_body_delete_text_model' does not
+                     exist."}
+  - name: plan_after_404_api_1_2_error_is_empty
+    plan_only: true
+    config: *config_empty
+    plan: *plan_empty
+    calls: []
+destroy:
+  calls: []

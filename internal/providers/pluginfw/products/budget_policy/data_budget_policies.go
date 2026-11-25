@@ -35,7 +35,8 @@ type BudgetPoliciesData struct {
 	// 100 budget policies will be returned. The maximum value is 1000; values
 	// above 1000 will be coerced to 1000.
 	PageSize types.Int64 `tfsdk:"page_size"`
-	// The sort specification.
+	// How to sort the returned policies. If unspecified, policies are sorted by
+	// name in ascending order.
 	SortSpec types.Object `tfsdk:"sort_spec"`
 }
 

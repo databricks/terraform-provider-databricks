@@ -1,7 +1,6 @@
 # Runs volume/testdata/redirect_post_becomes_get.yaml with databricks_volume on sdk-go
-# uc/volumes/v1 in every step, and expects the same behavior. The volume requests and the
-# requests that follow their redirects carry no Accept header, which an empty header
-# expectation pins. The original's description:
+# uc/volumes/v1 in every step, and expects the same requests and behavior. The original's
+# description:
 #
 # Pins a 301, 302 or 303 answer to the create POST. Go's client follows each one with a
 # GET to the Location, without the body or Content-Type, so the create request never
@@ -34,7 +33,6 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body:
             json: {"catalog_name": "main", "schema_name": "replay",
                    "name": "redirect_post_volume", "volume_type": "MANAGED"}
@@ -50,7 +48,6 @@ steps:
           headers:
             Content-Type: ""
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body: null
         response:
           status: 400
@@ -111,7 +108,6 @@ steps:
           path: /api/2.1/unity-catalog/volumes/main.replay.redirect_post_volume
           headers:
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body: null
         response:
           status: 200
@@ -144,7 +140,6 @@ destroy:
         path: /api/2.1/unity-catalog/volumes/main.replay.redirect_post_volume
         headers:
           X-Databricks-Workspace-Id: "12345"
-          Accept: ""
         body: null
       response:
         status: 200

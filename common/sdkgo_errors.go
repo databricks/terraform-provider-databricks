@@ -21,9 +21,9 @@ import (
 
 // classicError returns the error the classic client returns for the same failure. API
 // errors are parsed again from the response, so apierr.IsMissing, the retry rules and
-// the messages stay the same. req is the last request sent, if any.
+// the messages stay the same. attempt holds the last exchange, if any.
 func (b *sdkGoBridge) classicError(ctx context.Context, err error,
-	req *http.Request) error {
+	attempt *sdkGoAttempt) error {
 	// sdk-go's http.Client wraps the url.Error of the request sdkGoTransport sent, which
 	// is the one the classic client returns.
 	if outer, ok := errors.AsType[*url.Error](err); ok {
@@ -44,22 +44,31 @@ func (b *sdkGoBridge) classicError(ctx context.Context, err error,
 	}
 	apiErr, ok := errors.AsType[*sdkapierr.APIError](err)
 	if !ok || apiErr.HTTPStatusCode() < 0 {
+		// After a success response, sdk-go can only fail to decode its body.
 		var syntaxErr *json.SyntaxError
 		var typeErr *json.UnmarshalTypeError
-		if errors.As(err, &syntaxErr) || errors.As(err, &typeErr) {
-			return fmt.Errorf("failed to unmarshal response body: %w", err)
+		decodeErr := errors.As(err, &syntaxErr) || errors.As(err, &typeErr)
+		if attempt.gotSuccess() || decodeErr {
+			return attempt.classicDecodeError(err)
 		}
 		return err
 	}
-	if req == nil {
-		req = &http.Request{URL: &url.URL{}}
+	req := &http.Request{URL: &url.URL{}}
+	if attempt != nil && attempt.request != nil {
+		req = attempt.request
 	}
 	body := apiErr.HTTPBody()
+	code := apiErr.HTTPStatusCode()
 	resp := &http.Response{
-		StatusCode: apiErr.HTTPStatusCode(),
+		StatusCode: code,
+		Status:     fmt.Sprintf("%d %s", code, http.StatusText(code)),
 		Header:     apiErr.HTTPHeader(),
 		Body:       io.NopCloser(bytes.NewReader(body)),
 		Request:    req,
+	}
+	// The classic HTML error parser reads the error code from the status line.
+	if attempt != nil && attempt.response != nil && attempt.response.StatusCode == code {
+		resp.Status = attempt.response.Status
 	}
 	mapped := b.httpConfig.ErrorMapper(ctx, sdkcommon.ResponseWrapper{
 		Response:   resp,
@@ -144,7 +153,7 @@ func (b *sdkGoBridge) newRetrier(ctx context.Context,
 }
 
 func (r *classicRetrier) IsRetriable(err error) (time.Duration, bool) {
-	classic := r.bridge.classicError(r.ctx, err, r.attempt.request)
+	classic := r.bridge.classicError(r.ctx, err, r.attempt)
 	if !r.bridge.isRetriable(r.ctx, classic) {
 		logger.Debugf(r.ctx, "non-retriable error: %s", classic)
 		return 0, false

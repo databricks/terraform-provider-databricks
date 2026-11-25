@@ -22,29 +22,29 @@ var sdkGoRequests = map[string][]sdkGoRequest{
 	"databricks_volume": {{http.MethodGet, "/api/2.1/unity-catalog/volumes/"}},
 }
 
-// sentThroughSdkGo reports whether s sends req through sdk-go: its User-Agent names a
-// resource that s selects as sdk_go, and that resource sends such requests through it.
-func (s sdkImplementations) sentThroughSdkGo(req *http.Request) bool {
+// sdkGoResource returns the resource type that req's User-Agent names with a
+// resource/<name> segment, if s selects it as sdk_go. Data sources, whose User-Agent also
+// has data/yes, stay on the existing clients.
+func (s sdkImplementations) sdkGoResource(req *http.Request) (string, bool) {
 	segments := strings.Fields(req.UserAgent())
+	if slices.Contains(segments, "data/yes") {
+		return "", false
+	}
 	for name, implementation := range s {
 		resource := "resource/" + strings.TrimPrefix(name, "databricks_")
-		if implementation != sdkGoImplementation || !slices.Contains(segments, resource) {
-			continue
-		}
-		for _, r := range sdkGoRequests[name] {
-			if req.Method == r.method && strings.HasPrefix(req.URL.EscapedPath(), r.pathPrefix) {
-				return true
-			}
+		if implementation == sdkGoImplementation && slices.Contains(segments, resource) {
+			return name, true
 		}
 	}
-	return false
+	return "", false
 }
 
-// checkUserAgent requires a User-Agent that names a resource, with a resource/<name>
-// segment, to carry an sdk-go module segment, such as sdk-go-uc-volumes/0.8.0, exactly
-// when s sends req through sdk-go. sdk-go requests are otherwise the existing clients'
-// requests, so only this shows which one ran. Requests that name no resource, such as
-// the importer's read, aren't checked.
+// checkUserAgent checks the sdk-go module segment, such as sdk-go-uc-volumes/0.8.0, in a
+// User-Agent that names a resource with a resource/<name> segment. A read that s sends
+// through sdk-go must carry one, and only a resource that s selects as sdk_go may, for
+// example on the requests that follow a redirect. sdk-go requests are otherwise the
+// existing clients' requests, so only this shows which one ran. Requests that name no
+// resource, such as the importer's read, aren't checked.
 func (s sdkImplementations) checkUserAgent(req *http.Request) error {
 	userAgent := req.UserAgent()
 	segments := strings.Fields(userAgent)
@@ -56,16 +56,24 @@ func (s sdkImplementations) checkUserAgent(req *http.Request) error {
 	hasModule := slices.ContainsFunc(segments, func(segment string) bool {
 		return strings.HasPrefix(segment, "sdk-go-")
 	})
-	sdkGo := s.sentThroughSdkGo(req)
-	if sdkGo == hasModule {
-		return nil
+	name, sdkGo := s.sdkGoResource(req)
+	if hasModule && !sdkGo {
+		return fmt.Errorf("%s %s doesn't select sdk_go, but its User-Agent has an "+
+			"sdk-go module: %q", req.Method, req.URL.EscapedPath(), userAgent)
 	}
-	if sdkGo {
-		return fmt.Errorf("%s %s selects sdk_go, but its User-Agent has no sdk-go module: %q",
-			req.Method, req.URL.EscapedPath(), userAgent)
+	if !hasModule && sdkGo && sentThroughSdkGo(name, req) {
+		return fmt.Errorf("%s %s selects sdk_go, but its User-Agent has no sdk-go "+
+			"module: %q", req.Method, req.URL.EscapedPath(), userAgent)
 	}
-	return fmt.Errorf("%s %s doesn't select sdk_go, but its User-Agent has an sdk-go "+
-		"module: %q", req.Method, req.URL.EscapedPath(), userAgent)
+	return nil
+}
+
+// sentThroughSdkGo reports whether resource sends req through sdk-go.
+func sentThroughSdkGo(resource string, req *http.Request) bool {
+	return slices.ContainsFunc(sdkGoRequests[resource], func(r sdkGoRequest) bool {
+		return req.Method == r.method &&
+			strings.HasPrefix(req.URL.EscapedPath(), r.pathPrefix)
+	})
 }
 
 // userAgentCheck fails a step whose requests break checkUserAgent for the step's
@@ -85,7 +93,8 @@ func newUserAgentCheck(handler *httpfixture.Handler, d *testDefinition) *userAge
 		selections[stepLabel(i, s.Name)] = s.SdkImplementations
 	}
 	// Destroy uses the selection retained with its cleanup configuration.
-	if retained := d.cleanupConfigSteps(); len(retained) > 0 && retained[len(retained)-1] >= 0 {
+	retained := d.cleanupConfigSteps()
+	if len(retained) > 0 && retained[len(retained)-1] >= 0 {
 		cleanup := d.Steps[retained[len(retained)-1]]
 		selections[stepLabel(len(d.Steps), "destroy")] = cleanup.SdkImplementations
 	}

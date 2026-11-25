@@ -2,9 +2,15 @@ package common
 
 import (
 	"bytes"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
+
+	"github.com/databricks/databricks-sdk-go/httpclient"
+	"github.com/databricks/databricks-sdk-go/logger/httplog"
 )
 
 // classicRequest is how the classic client sends a call. sdkGoTransport sends every
@@ -19,6 +25,9 @@ type classicRequest struct {
 	header http.Header
 	// body, if set, turns the body sdk-go built into the body the classic client sends.
 	body func([]byte) ([]byte, error)
+	// decode, if set, decodes a success body into the classic response type, whose
+	// error the classic client returns when the body doesn't decode.
+	decode func([]byte) error
 }
 
 // classicVolumeRequest describes a classic Volumes call. Every one accepts JSON, which
@@ -83,4 +92,52 @@ func rewriteBody(r *http.Request, rewrite func([]byte) ([]byte, error)) error {
 	}
 	r.Body, _ = r.GetBody()
 	return nil
+}
+
+// gotSuccess reports whether the last attempt got a success response.
+func (a *sdkGoAttempt) gotSuccess() bool {
+	return a != nil && a.response != nil && a.response.StatusCode < http.StatusBadRequest
+}
+
+// classicDecodeError returns the error the classic client returns when the success body
+// of the last response doesn't decode: the body's own decode error, which reports
+// classic type names, or the HTML error for a body that starts with "<".
+func (a *sdkGoAttempt) classicDecodeError(err error) error {
+	if a == nil {
+		return fmt.Errorf("failed to unmarshal response body: %w", err)
+	}
+	if a.classic.decode != nil {
+		if classicErr := a.classic.decode(a.responseBody); classicErr != nil {
+			err = classicErr
+		}
+	}
+	var syntaxErr *json.SyntaxError
+	if errors.As(err, &syntaxErr) && strings.HasPrefix(string(a.responseBody), "<") {
+		return httpclient.ErrHTMLContent
+	}
+	return fmt.Errorf("failed to unmarshal response body: %w. %s", err,
+		classicUnexpectedResponse(a.response, a.requestBody, a.responseBody))
+}
+
+// classicUnexpectedResponse mirrors the unexported httpclient.makeUnexpectedResponse.
+func classicUnexpectedResponse(resp *http.Response, requestBody,
+	responseBody []byte) string {
+	var req *http.Request
+	if resp != nil {
+		req = resp.Request
+	}
+	log := httplog.RoundTripStringer{
+		Request:                  req,
+		Response:                 resp,
+		RequestBody:              requestBody,
+		ResponseBody:             responseBody,
+		DebugHeaders:             true,
+		DebugTruncateBytes:       10 * 1024,
+		DebugAuthorizationHeader: false,
+	}
+	return "This is likely a bug in the Databricks SDK for Go or the underlying REST " +
+		"API. " +
+		"Please report this issue with the following debugging information to the SDK " +
+		"issue tracker at https://github.com/databricks/databricks-sdk-go/issues. " +
+		"Request log:\n```\n" + log.String() + "\n```"
 }

@@ -62,6 +62,7 @@ func (t *sdkGoTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	if timeout == nil {
 		timeout = startAttemptTimeout(req.Context(), t.httpTimeout)
 	}
+	attempt.requestBody, attempt.response, attempt.responseBody = nil, nil, nil
 	// Like the classic client, the visitors already run under the attempt's timeout.
 	r := req.Clone(timeout.ctx)
 	if err := attempt.useClassicRequest(r); err != nil {
@@ -80,6 +81,8 @@ func (t *sdkGoTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	requestBody := debugRequestBody(r)
 	resp, responseBody, err := t.exchange(req.Context(), r, timeout)
 	attempt.request = r
+	attempt.requestBody, attempt.response, attempt.responseBody = requestBody, resp,
+		responseBody
 	if resp != nil {
 		attempt.request = resp.Request
 	}
@@ -94,6 +97,11 @@ func (t *sdkGoTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	t.log(r, resp, err, requestBody, responseBody)
 	if err != nil {
 		return nil, err
+	}
+	if resp.StatusCode < http.StatusBadRequest && len(responseBody) == 0 {
+		// The classic client reads an empty success body as an empty object.
+		resp.Body = io.NopCloser(strings.NewReader("{}"))
+		resp.ContentLength = 2
 	}
 	return resp, nil
 }

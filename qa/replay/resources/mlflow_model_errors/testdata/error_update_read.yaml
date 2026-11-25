@@ -1,8 +1,11 @@
 # Pins a failed read after a successful update PATCH. A GET answered 500 fails the apply
-# with its exact diagnostic, and neither call is repeated. The new description is
-# already in state, so once the GET succeeds the next plan is empty and no second PATCH
-# is sent. API responses are synthetic: inferred from the MLflow Model Registry API, not
-# recorded.
+# with its exact diagnostic, and neither call is repeated. The failed apply still saves
+# the new description: the harness runs the next step's first plan without a refresh,
+# so that plan is empty only if the saved state matches the configuration, before the
+# recovery GET is read. TestModelUpdateErrorsKeepPlannedDescriptionInState in
+# mlflow/resource_mlflow_model_errors_test.go pins the saved state directly. Once the
+# GET succeeds no second PATCH is sent. API responses are synthetic: inferred from the
+# MLflow Model Registry API, not recorded.
 version: 1
 enforce_call_order: true
 host_metadata:
@@ -89,7 +92,7 @@ steps:
             json: {"error_code": "INTERNAL_ERROR",
                    "message": "An internal error occurred while reading the registered
                      model."}
-  - name: plan_after_500_is_empty_with_new_description
+  - name: plan_after_500_is_empty_before_and_after_refresh
     plan_only: true
     config: *config_updated
     plan:
@@ -101,8 +104,6 @@ steps:
           attributes:
             - path: [id]
               equals: error_update_read_model
-            - path: [description]
-              equals: After the update
     calls:
       - &read_after
         request: *read_request

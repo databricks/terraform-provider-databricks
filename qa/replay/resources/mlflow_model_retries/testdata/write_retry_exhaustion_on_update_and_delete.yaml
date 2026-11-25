@@ -1,0 +1,147 @@
+# This journey pins the update PATCH and the DELETE each getting a retried status until
+# retry_timeout_seconds ends: a 503 on the PATCH and a 429 on the DELETE. One second is
+# shorter than the SDK's first backoff (1.05 to 1.75 seconds), so each is sent exactly
+# once. Apply fails with the response's message and the model stays in state: after the
+# PATCH the next plan still shows the description update, and after the DELETE planning
+# the model's configuration again shows no change. API responses are synthetic, inferred
+# from the MLflow Model Registry API, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: create
+    config: &config_first |
+      provider "databricks" {
+        retry_timeout_seconds = 1
+      }
+      resource "databricks_mlflow_model" "this" {
+        name        = "write-retry-model"
+        description = "first"
+      }
+    calls:
+      - request:
+          method: POST
+          path: /api/2.0/mlflow/registered-models/create
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"name": "write-retry-model", "description": "first"}
+        response:
+          status: 200
+          body:
+            json: {"registered_model": {"name": "write-retry-model",
+                                        "description": "first",
+                                        "creation_timestamp": 1700000000000,
+                                        "last_updated_timestamp": 1700000000000,
+                                        "user_id": "replay-admin@example.com"}}
+      - &read_first
+        request:
+          method: GET
+          path: /api/2.0/mlflow/databricks/registered-models/get
+          query:
+            name: ["write-retry-model"]
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"registered_model_databricks": {
+                     "name": "write-retry-model", "description": "first",
+                     "id": "0123456789abcdef0123456789abcdef",
+                     "creation_timestamp": 1700000000000,
+                     "last_updated_timestamp": 1700000000000,
+                     "user_id": "replay-admin@example.com",
+                     "permission_level": "CAN_MANAGE"}}
+      - *read_first
+  - name: update_patch_retries_until_the_retry_timeout_ends
+    config: &config_second |
+      provider "databricks" {
+        retry_timeout_seconds = 1
+      }
+      resource "databricks_mlflow_model" "this" {
+        name        = "write-retry-model"
+        description = "second"
+      }
+    expect_error: 'Error: cannot update mlflow model: The service is temporarily
+      unavailable\.\n'
+    calls:
+      - *read_first
+      - request:
+          method: PATCH
+          path: /api/2.0/mlflow/registered-models/update
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"name": "write-retry-model", "description": "second"}
+        response:
+          status: 503
+          body:
+            json: {"error_code": "TEMPORARILY_UNAVAILABLE",
+                   "message": "The service is temporarily unavailable."}
+  - name: plan_after_exhausted_update_shows_the_update
+    plan_only: true
+    config: *config_second
+    plan:
+      expect: non_empty
+      changes:
+        databricks_mlflow_model.this:
+          actions: [update]
+          before:
+            - path: [description]
+              equals: first
+          after:
+            - path: [description]
+              equals: second
+    state: &state_kept
+      resources:
+        databricks_mlflow_model.this:
+          attributes:
+            - path: [id]
+              equals: write-retry-model
+    calls:
+      - *read_first
+  - name: delete_retries_until_the_retry_timeout_ends
+    config: |
+      provider "databricks" {
+        retry_timeout_seconds = 1
+      }
+    expect_error: 'Error: cannot delete mlflow model: Too many requests\. Please wait a
+      moment and try again\.\n'
+    calls:
+      - *read_first
+      - request: &delete
+          method: DELETE
+          path: /api/2.0/mlflow/registered-models/delete
+          query:
+            name: ["write-retry-model"]
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 429
+          body:
+            json: {"error_code": "TOO_MANY_REQUESTS",
+                   "message": "Too many requests. Please wait a moment and try again."}
+  - name: plan_after_exhausted_delete_keeps_the_model
+    plan_only: true
+    config: *config_first
+    plan:
+      expect: empty
+      changes: {}
+    state: *state_kept
+    calls:
+      - *read_first
+destroy:
+  calls:
+    - *read_first
+    - request: *delete
+      response:
+        status: 200
+        body:
+          json: {}

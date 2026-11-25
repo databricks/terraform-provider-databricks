@@ -1,0 +1,125 @@
+# Pins how each error body format becomes a diagnostic, on the create POST with a 400
+# and a 500: a JSON body with error_code and message gives the message, an empty body
+# the HTTP status text, a plain-text body the body itself, and an HTML body the text of
+# its <pre> element without the trailing period. Each failed POST leaves nothing in
+# state, so the next step sends the POST again without a read and the last plan creates
+# the model. API responses are synthetic: inferred from the MLflow Model Registry API
+# and from proxy error pages, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: create_answered_400_with_json_body_fails_with_message
+    config: &config |
+      resource "databricks_mlflow_model" "this" {
+        name        = "error_body_formats_model"
+        description = "Pins error body formats"
+      }
+    expect_error: 'Error: cannot create mlflow model: Registered model
+      ''error_body_formats_model'' already exists\.\n'
+    calls:
+      - request: &create_request
+          method: POST
+          path: /api/2.0/mlflow/registered-models/create
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"name": "error_body_formats_model",
+                   "description": "Pins error body formats"}
+        response:
+          status: 400
+          body:
+            json: {"error_code": "RESOURCE_ALREADY_EXISTS",
+                   "message": "Registered model 'error_body_formats_model' already
+                     exists."}
+  - name: create_answered_500_with_json_body_fails_with_message
+    config: *config
+    expect_error: 'Error: cannot create mlflow model: An internal error occurred while
+      creating the registered model\.\n'
+    calls:
+      - request: *create_request
+        response:
+          status: 500
+          body:
+            json: {"error_code": "INTERNAL_ERROR",
+                   "message": "An internal error occurred while creating the registered
+                     model."}
+  - name: create_answered_400_with_empty_body_fails_with_status_text
+    config: *config
+    expect_error: 'Error: cannot create mlflow model: Bad Request\n'
+    calls:
+      - request: *create_request
+        response:
+          status: 400
+          body: null
+  - name: create_answered_500_with_empty_body_fails_with_status_text
+    config: *config
+    expect_error: 'Error: cannot create mlflow model: Internal Server Error\n'
+    calls:
+      - request: *create_request
+        response:
+          status: 500
+          body: null
+  - name: create_answered_400_with_plain_text_body_fails_with_body
+    config: *config
+    expect_error: 'Error: cannot create mlflow model: Unable to parse the request
+      body\n'
+    calls:
+      - request: *create_request
+        response:
+          status: 400
+          headers:
+            Content-Type: text/plain; charset=utf-8
+          body:
+            text: Unable to parse the request body
+  - name: create_answered_500_with_plain_text_body_fails_with_body
+    config: *config
+    expect_error: 'Error: cannot create mlflow model: upstream connect error or
+      disconnect/reset before headers\n'
+    calls:
+      - request: *create_request
+        response:
+          status: 500
+          headers:
+            Content-Type: text/plain; charset=utf-8
+          body:
+            text: upstream connect error or disconnect/reset before headers
+  - name: create_answered_400_with_html_body_fails_with_pre_text
+    config: *config
+    expect_error: 'Error: cannot create mlflow model: Unable to parse request\n'
+    calls:
+      - request: *create_request
+        response:
+          status: 400
+          headers:
+            Content-Type: text/html; charset=utf-8
+          body:
+            text: "<html><head><title>Error 400</title></head><body><h2>HTTP ERROR
+              400</h2><pre>Unable to parse request.</pre></body></html>"
+  - name: create_answered_500_with_html_body_fails_with_pre_text
+    config: *config
+    expect_error: 'Error: cannot create mlflow model: Request processing failed\n'
+    calls:
+      - request: *create_request
+        response:
+          status: 500
+          headers:
+            Content-Type: text/html; charset=utf-8
+          body:
+            text: "<html><head><title>Error 500</title></head><body><h2>HTTP ERROR
+              500</h2><pre>Request processing failed.</pre></body></html>"
+  - name: plan_after_failed_creates_plans_create
+    plan_only: true
+    config: *config
+    plan:
+      expect: non_empty
+      changes:
+        databricks_mlflow_model.this:
+          actions: [create]
+    calls: []
+destroy:
+  calls: []

@@ -6,9 +6,83 @@ subcategory: "Lakewatch"
 
 [API Documentation](https://docs.databricks.com/api/workspace/lakewatch)
 
+Manages a custom Lakewatch parser. Creating a parser also creates version 1. The parser's `spec` and `description` supply the initial version only; later versions have their own `databricks_lakewatch_parser_version` configurations.
+
+This resource can only be used with a workspace-level provider.
+
+### Version lifecycle
+
+The parser and each version are immutable. Changing the parser's configured creation fields requires replacing the parser, which gives it a new ID. To append a version while keeping the parser and its existing versions, add a `databricks_lakewatch_parser_version` configuration. Existing Lakewatch datasource references stay pinned to their chosen versions.
+
+Deleting the parser deletes all of its remaining versions, including versions created outside Terraform. Lakewatch rejects deletion while any datasource references one of those versions.
+
+### Importing an existing parser
+
+The API does not return the parser's initial `spec` or `description`. When importing, configure the parser's actual catalog, schema, and parser name, retain a valid `spec`, and add `lifecycle.ignore_changes = [spec, description]`. Terraform still requires `spec` in the configuration. It uses this value if it needs to create the parser again; ignoring changes does not recover the original version 1 content.
+
+If version 1 still exists, read its content with a `databricks_lakewatch_parser_version` data block. Importing the parser also works after version 1 has been deleted. The initial inputs do not represent the latest version or recreate a deleted version 1.
+
+### Deleting a parser after deleting a Lakewatch datasource
+
+Deleting a datasource can return success before Lakewatch finishes removing its parser references. A Terraform destroy can then stop with a reference-conflict error. Wait for Lakewatch to finish deleting the datasource, review the remaining plan, and rerun the destroy. The provider does not automatically retry this reference conflict. Other changes in the same apply or destroy may already have completed.
 
 
 ## Example Usage
+Create a parser and its initial version:
+
+```hcl
+resource "databricks_lakewatch_parser" "logs" {
+  catalog_name = "security_logs"
+  schema_name  = "default"
+  parser_name  = "application_logs"
+  description  = "Initial parser version"
+  spec         = <<-YAML
+    fields:
+      - name: source_ip
+        type: STRING
+        observables: [ip]
+    time:
+      coalesce:
+        - path: ts
+  YAML
+}
+
+output "parser_name" {
+  value = databricks_lakewatch_parser.logs.name
+}
+```
+
+### Import an existing parser
+
+Replace the example name and catalog fields with the existing parser's values. Use a valid creation spec even if version 1 has been deleted.
+
+```hcl
+resource "databricks_lakewatch_parser" "imported" {
+  catalog_name = "security_logs"
+  schema_name  = "default"
+  parser_name  = "existing_application_logs"
+  spec         = <<-YAML
+    fields:
+      - name: source_ip
+        type: STRING
+        observables: [ip]
+    time:
+      coalesce:
+        - path: ts
+  YAML
+
+  lifecycle {
+    ignore_changes = [spec, description]
+  }
+}
+```
+
+Import by the parser's canonical name, then inspect `terraform plan`:
+
+```sh
+terraform import databricks_lakewatch_parser.imported parsers/11111111-1111-4111-8111-111111111111
+terraform plan
+```
 
 
 ## Arguments

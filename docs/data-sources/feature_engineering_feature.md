@@ -148,6 +148,10 @@ The following attributes are exported:
   The expression must contain all required columns (e.g., "*, col_a + col_b AS col_c").
   If transformation_sql is not provided, all columns of the delta table are present in the DataSource dataframe
 
+### EntityBinding
+* `entity` (string) - Specifies the entity column of the upstream Feature
+* `input` (InputReference) - Specifies where the column's values come from
+
 ### EntityColumn
 * `name` (string) - The name of the entity column. For Kafka sources, use dot-prefixed path notation to reference
   fields within the key or value schema (e.g., "value.user_id", "key.partition_key"). For nested
@@ -186,6 +190,8 @@ The following attributes are exported:
 * `custom_udf` (CustomUdf) - Applies a registered Unity Catalog function row-wise to source columns
 * `extra_parameters` (list of FunctionExtraParameter, deprecated)
 * `function_type` (string, deprecated) - Possible values are: `APPROX_COUNT_DISTINCT`, `APPROX_PERCENTILE`, `AVG`, `COUNT`, `FIRST`, `FUNCTION_TYPE_UNSPECIFIED`, `LAST`, `MAX`, `MIN`, `STDDEV_POP`, `STDDEV_SAMP`, `SUM`, `VAR_POP`, `VAR_SAMP`
+* `lookup` (Lookup) - Looks up an upstream Feature using entity values from other Features or the request
+* `secondary_keys` (SecondaryKeys) - Selects the secondary key values an upstream Feature has stored for the request's entity
 
 ### FunctionExtraParameter
 * `key` (string) - The name of the parameter
@@ -205,6 +211,9 @@ The following attributes are exported:
 ### InputBinding
 * `column` (string) - Source column whose value is passed for this parameter at execution time
 * `parameter` (string) - Name of the UC function parameter
+
+### InputReference
+* `feature` (FeatureReference) - Specifies another Feature whose output supplies the value
 
 ### JobContext
 * `job_id` (integer) - The job ID where this API invoked
@@ -230,6 +239,11 @@ The following attributes are exported:
 ### LineageContext
 * `job_context` (JobContext) - Job context information including job ID and run ID
 * `notebook_id` (integer) - The notebook ID where this API was invoked
+
+### Lookup
+* `entities` (list of EntityBinding) - One binding per entity column of the upstream Feature. Every entity column must be
+  bound exactly once
+* `feature` (FeatureReference) - The upstream Feature to look up
 
 ### MaxFunction
 * `input` (string) - The input column from which the maximum is computed
@@ -277,6 +291,13 @@ The following attributes are exported:
 * `transformation_sql` (string) - A single SQL SELECT expression applied after filter_condition.
   Should contain all the columns needed (eg. "SELECT *, col_a + col_b AS col_c FROM x.y.z WHERE col_a > 0" would have `transformation_sql` "*, col_a + col_b AS col_c")
   If transformation_sql is not provided, all columns of the pipeline's output table are present in the DataSource dataframe
+
+### SecondaryKeys
+* `feature` (FeatureReference) - The upstream Feature whose stored keys are selected
+* `key` (string) - The entity column of the upstream Feature to return values for. It is not supplied
+  by the request
+* `max_keys` (integer) - Maximum number of keys to return per entity, in primary key order. Must not exceed the
+  workspace limit
 
 ### SlidingWindow
 * `delay` (string) - Non-negative analytic lag that evaluates the window this far in the past. Use this for timing

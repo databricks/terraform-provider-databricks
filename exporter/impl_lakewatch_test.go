@@ -220,7 +220,7 @@ func TestLakewatchExport(t *testing.T) {
 				Fidelity:    lakewatch.RuleFidelityFidelityHigh,
 				Severity:    "High",
 				Output:      lakewatch.RuleOutput{Summary: "Failed logins for {user}"},
-				Schedule:    lakewatch.RuleSchedule{AtLeastEvery: "1h"},
+				Schedule:    &lakewatch.RuleSchedule{AtLeastEvery: "1h"},
 				Batch: &lakewatch.RuleInputBatch{
 					WarehouseId: "wh-123",
 					Sql: &lakewatch.RuleInputBatchSql{Query: "SELECT * FROM sec.detections.logins l\n" +

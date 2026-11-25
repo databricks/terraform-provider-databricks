@@ -1,5 +1,8 @@
 # Databricks Terraform Provider
 
+This repository is a read-only mirror maintained from Databricks' internal
+monorepo. See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidance.
+
 ![Resources](docs/resources.png)
 
 [AWS](docs/guides/aws-workspace.md) tutorial

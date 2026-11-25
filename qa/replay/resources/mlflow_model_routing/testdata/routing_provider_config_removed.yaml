@@ -1,0 +1,249 @@
+# Pins removing the provider_config block on an account-level provider, with and
+# without a provider-level workspace_id to fall back to. Every plan refreshes through
+# the workspace in state. Without a fallback, CustomizeDiff calls SCIM /Me on the
+# account host, without a workspace header, and its failure fails the plan with the
+# error for a removed workspace_id. A provider-level workspace_id naming the same
+# workspace plans nothing. One naming another workspace plans a replacement: apply
+# sends the DELETE to the workspace in state and the POST to the provider-level one.
+# Fixtures are synthetic: API responses are inferred from the account, SCIM and MLflow
+# Model Registry API contracts, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: account
+  cloud: AWS
+  account_id: replay-account
+steps:
+  - name: create_through_provider_config_12345
+    config: |
+      provider "databricks" {
+        account_id = "replay-account"
+      }
+      resource "databricks_mlflow_model" "this" {
+        name = "routing_removed_model"
+        provider_config {
+          workspace_id = "12345"
+        }
+      }
+    calls:
+      - &lookup_12345
+        request:
+          method: GET
+          path: /api/2.0/accounts/replay-account/workspaces/12345
+          headers:
+            # An empty expected value matches only a request without the header.
+            X-Databricks-Workspace-Id: ""
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"account_id": "replay-account", "workspace_id": 12345,
+                   "workspace_name": "replay-workspace-12345",
+                   "deployment_name": "replay-workspace-12345",
+                   "workspace_status": "RUNNING"}
+      - request:
+          method: POST
+          path: /api/2.0/mlflow/registered-models/create
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: &create_body {"name": "routing_removed_model"}
+        response:
+          status: 200
+          body:
+            json: {"registered_model": {"name": "routing_removed_model",
+                                        "creation_timestamp": 1700000000008,
+                                        "last_updated_timestamp": 1700000000008,
+                                        "user_id": "replay-admin@example.com"}}
+      - &read_in_12345
+        request:
+          method: GET
+          path: /api/2.0/mlflow/databricks/registered-models/get
+          query:
+            name: [routing_removed_model]
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"registered_model_databricks": {
+                     "name": "routing_removed_model",
+                     "id": "00000000000000000000000000000908",
+                     "creation_timestamp": 1700000000008,
+                     "last_updated_timestamp": 1700000000008,
+                     "user_id": "replay-admin@example.com",
+                     "permission_level": "CAN_MANAGE"}}
+      # The post-apply refresh plan.
+      - *lookup_12345
+      - *read_in_12345
+  - name: removal_without_fallback_fails_plan_when_me_fails
+    config: |
+      provider "databricks" {
+        account_id = "replay-account"
+      }
+      resource "databricks_mlflow_model" "this" {
+        name = "routing_removed_model"
+      }
+    expect_error: 'Error: managing a workspace-level resource requires a workspace_id,
+      but the previously configured workspace_id was removed'
+    calls:
+      # The plan's refresh.
+      - *lookup_12345
+      - *read_in_12345
+      # CustomizeDiff looks for a fallback.
+      - request:
+          method: GET
+          path: /api/2.0/preview/scim/v2/Me
+          query:
+            excludedAttributes: [entitlements]
+          headers:
+            X-Databricks-Workspace-Id: ""
+          body: null
+        response:
+          status: 404
+          body:
+            json: {"error_code": "ENDPOINT_NOT_FOUND",
+                   "message": "No API found for 'GET /preview/scim/v2/Me'"}
+  - name: removal_with_fallback_to_same_workspace_plans_nothing
+    plan_only: true
+    config: |
+      provider "databricks" {
+        account_id   = "replay-account"
+        workspace_id = "12345"
+      }
+      resource "databricks_mlflow_model" "this" {
+        name = "routing_removed_model"
+      }
+    plan:
+      expect: empty
+      changes: {}
+    calls:
+      # The refresh plan.
+      - *lookup_12345
+      - *read_in_12345
+    state:
+      resources:
+        databricks_mlflow_model.this:
+          attributes:
+            - path: [provider_config, 0, workspace_id]
+              equals: "12345"
+  - name: removal_with_fallback_to_other_workspace_replaces_model
+    config: |
+      provider "databricks" {
+        account_id   = "replay-account"
+        workspace_id = "67890"
+      }
+      resource "databricks_mlflow_model" "this" {
+        name = "routing_removed_model"
+      }
+    plan:
+      expect: non_empty
+      changes:
+        databricks_mlflow_model.this:
+          actions: [delete, create]
+          before:
+            - path: [provider_config, 0, workspace_id]
+              equals: "12345"
+          # The replacement plan drops the ID CustomizeDiff set and leaves it for apply.
+          after:
+            - path: [provider_config, 0, workspace_id]
+              unknown: true
+    calls:
+      # The plan's refresh.
+      - *lookup_12345
+      - *read_in_12345
+      # The apply: delete from the workspace in state.
+      - *lookup_12345
+      - request:
+          method: DELETE
+          path: /api/2.0/mlflow/registered-models/delete
+          query:
+            name: [routing_removed_model]
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 200
+          body:
+            json: {}
+      # The apply: create in the provider-level workspace.
+      - &lookup_67890
+        request:
+          method: GET
+          path: /api/2.0/accounts/replay-account/workspaces/67890
+          headers:
+            X-Databricks-Workspace-Id: ""
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"account_id": "replay-account", "workspace_id": 67890,
+                   "workspace_name": "replay-workspace-67890",
+                   "deployment_name": "replay-workspace-67890",
+                   "workspace_status": "RUNNING"}
+      - request:
+          method: POST
+          path: /api/2.0/mlflow/registered-models/create
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "67890"
+          body:
+            json: *create_body
+        response:
+          status: 200
+          body:
+            json: {"registered_model": {"name": "routing_removed_model",
+                                        "creation_timestamp": 1700000000108,
+                                        "last_updated_timestamp": 1700000000108,
+                                        "user_id": "replay-admin@example.com"}}
+      - &read_in_67890
+        request:
+          method: GET
+          path: /api/2.0/mlflow/databricks/registered-models/get
+          query:
+            name: [routing_removed_model]
+          headers:
+            X-Databricks-Workspace-Id: "67890"
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"registered_model_databricks": {
+                     "name": "routing_removed_model",
+                     "id": "00000000000000000000000000001908",
+                     "creation_timestamp": 1700000000108,
+                     "last_updated_timestamp": 1700000000108,
+                     "user_id": "replay-admin@example.com",
+                     "permission_level": "CAN_MANAGE"}}
+      # The post-apply refresh plan.
+      - *lookup_67890
+      - *read_in_67890
+    state:
+      resources:
+        databricks_mlflow_model.this:
+          attributes:
+            - path: [registered_model_id]
+              equals: "00000000000000000000000000001908"
+            - path: [provider_config, 0, workspace_id]
+              equals: "67890"
+destroy:
+  calls:
+    # The destroy plan's refresh.
+    - *lookup_67890
+    - *read_in_67890
+    # The apply.
+    - *lookup_67890
+    - request:
+        method: DELETE
+        path: /api/2.0/mlflow/registered-models/delete
+        query:
+          name: [routing_removed_model]
+        headers:
+          X-Databricks-Workspace-Id: "67890"
+        body: null
+      response:
+        status: 200
+        body:
+          json: {}

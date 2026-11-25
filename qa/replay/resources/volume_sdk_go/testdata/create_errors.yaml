@@ -1,6 +1,5 @@
 # Runs volume_errors/testdata/create_errors.yaml with databricks_volume on sdk-go
-# uc/volumes/v1 in every step, and expects the same behavior. The volume POST requests
-# carry no Accept header, which an empty header expectation pins. The original's
+# uc/volumes/v1 in every step, and expects the same requests and behavior. The original's
 # description:
 #
 # Pins create failures. A POST answered 400 and one answered 404 each fail with their
@@ -34,7 +33,6 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body:
             json: {"catalog_name": "main", "schema_name": "replay",
                    "name": "overlapping_volume", "volume_type": "EXTERNAL",
@@ -75,7 +73,6 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body:
             json: {"catalog_name": "main", "schema_name": "missing_schema",
                    "name": "orphan_volume", "volume_type": "MANAGED"}

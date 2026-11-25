@@ -1,11 +1,9 @@
 # Switches databricks_volume between the existing client and sdk-go uc/volumes/v1. It
 # creates an EXTERNAL volume with comment and owner on the existing path, refreshes and
 # plans with sdk-go reads, then refreshes and plans on the existing path again, with no
-# plan changes and the same state throughout. The existing GETs send
-# Accept: application/json and the sdk-go GETs send no Accept header; both read the same
-# full response, including fields the resource doesn't keep. API responses are inferred
-# from the Unity Catalog API contract, not recorded. An empty header expectation matches
-# only requests without that header.
+# plan changes and the same state throughout. The sdk-go GETs are the existing path's
+# requests, and both read the same full response, including fields the resource doesn't
+# keep. API responses are inferred from the Unity Catalog API contract, not recorded.
 version: 1
 enforce_call_order: true
 host_metadata:
@@ -120,7 +118,7 @@ steps:
           method: GET
           path: /api/2.1/unity-catalog/volumes/main.replay.switch_volume
           headers:
-            Accept: ""
+            Accept: application/json
             X-Databricks-Workspace-Id: "12345"
           body: null
         response:

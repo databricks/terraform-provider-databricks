@@ -1,0 +1,154 @@
+# Pins replacement. Changing name plans a delete followed by a create: the DELETE carries
+# the old name and is sent before the POST with the new name. The id becomes the new name
+# and registered_model_id the id of the new model. API responses are synthetic, inferred
+# from the MLflow Model Registry API, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: create
+    config: &config_first |
+      resource "databricks_mlflow_model" "this" {
+        name        = "lifecycle-first-name"
+        description = "Replaced by name"
+      }
+    calls:
+      - request:
+          method: POST
+          path: /api/2.0/mlflow/registered-models/create
+          body:
+            json: {"name": "lifecycle-first-name", "description": "Replaced by name"}
+        response:
+          status: 200
+          body:
+            json: {"registered_model": {"name": "lifecycle-first-name",
+                                        "description": "Replaced by name",
+                                        "creation_timestamp": 1700000000601,
+                                        "last_updated_timestamp": 1700000000601,
+                                        "user_id": "replay-admin@example.com"}}
+      - &read_first
+        request:
+          method: GET
+          path: /api/2.0/mlflow/databricks/registered-models/get
+          query:
+            name: ["lifecycle-first-name"]
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"registered_model_databricks": {
+                     "name": "lifecycle-first-name",
+                     "id": "f60718293a4b5c6d7e8f010203040506",
+                     "description": "Replaced by name",
+                     "creation_timestamp": 1700000000601,
+                     "last_updated_timestamp": 1700000000601,
+                     "user_id": "replay-admin@example.com",
+                     "permission_level": "CAN_MANAGE"}}
+      - *read_first
+    state:
+      resources:
+        databricks_mlflow_model.this:
+          attributes:
+            - path: [id]
+              equals: lifecycle-first-name
+            - path: [registered_model_id]
+              equals: f60718293a4b5c6d7e8f010203040506
+  - name: changing_name_deletes_then_creates
+    config: &config_second |
+      resource "databricks_mlflow_model" "this" {
+        name        = "lifecycle-second-name"
+        description = "Replaced by name"
+      }
+    plan:
+      expect: non_empty
+      changes:
+        databricks_mlflow_model.this:
+          actions: [delete, create]
+          before:
+            - path: [name]
+              equals: lifecycle-first-name
+            - path: [id]
+              equals: lifecycle-first-name
+          after:
+            - path: [name]
+              equals: lifecycle-second-name
+            - path: [id]
+              unknown: true
+            - path: [registered_model_id]
+              unknown: true
+    calls:
+      - *read_first
+      - request:
+          method: DELETE
+          path: /api/2.0/mlflow/registered-models/delete
+          query:
+            name: ["lifecycle-first-name"]
+          body: null
+        response:
+          status: 200
+          body:
+            json: {}
+      - request:
+          method: POST
+          path: /api/2.0/mlflow/registered-models/create
+          body:
+            json: {"name": "lifecycle-second-name", "description": "Replaced by name"}
+        response:
+          status: 200
+          body:
+            json: {"registered_model": {"name": "lifecycle-second-name",
+                                        "description": "Replaced by name",
+                                        "creation_timestamp": 1700000000602,
+                                        "last_updated_timestamp": 1700000000602,
+                                        "user_id": "replay-admin@example.com"}}
+      - &read_second
+        request:
+          method: GET
+          path: /api/2.0/mlflow/databricks/registered-models/get
+          query:
+            name: ["lifecycle-second-name"]
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"registered_model_databricks": {
+                     "name": "lifecycle-second-name",
+                     "id": "0718293a4b5c6d7e8f01020304050607",
+                     "description": "Replaced by name",
+                     "creation_timestamp": 1700000000602,
+                     "last_updated_timestamp": 1700000000602,
+                     "user_id": "replay-admin@example.com",
+                     "permission_level": "CAN_MANAGE"}}
+      - *read_second
+    state:
+      resources:
+        databricks_mlflow_model.this:
+          attributes:
+            - path: [id]
+              equals: lifecycle-second-name
+            - path: [registered_model_id]
+              equals: 0718293a4b5c6d7e8f01020304050607
+  - name: plan_after_replacement_is_empty
+    plan_only: true
+    config: *config_second
+    plan:
+      expect: empty
+      changes: {}
+    calls:
+      - *read_second
+destroy:
+  calls:
+    - *read_second
+    - request:
+        method: DELETE
+        path: /api/2.0/mlflow/registered-models/delete
+        query:
+          name: ["lifecycle-second-name"]
+        body: null
+      response:
+        status: 200
+        body:
+          json: {}

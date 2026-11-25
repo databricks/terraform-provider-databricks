@@ -1,8 +1,5 @@
 # Runs volume_lifecycle/testdata/drift.yaml with databricks_volume on sdk-go uc/volumes/v1
-# in every step, and expects the same behavior. The volume POST, GET and PATCH requests
-# carry no Accept header, which an empty header expectation pins. Each PATCH body also
-# carries full_name_arg, the full name in its path, because sdk-go serializes the path
-# field into the body. The original's description:
+# in every step, and expects the same requests and behavior. The original's description:
 #
 # Pins drift. The remote comment and owner change outside Terraform; the plan shows the
 # update, and apply reverts the owner with one PATCH, then the comment with a PATCH
@@ -34,7 +31,6 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body:
             json: {"catalog_name": "main", "schema_name": "replay",
                    "name": "drift_volume", "volume_type": "MANAGED",
@@ -55,10 +51,8 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body:
-            json: {"full_name_arg": "main.replay.drift_volume",
-                   "comment": "managed by terraform", "owner": "data-engineers"}
+            json: {"comment": "managed by terraform", "owner": "data-engineers"}
         response:
           status: 200
           body:
@@ -76,7 +70,6 @@ steps:
           path: /api/2.1/unity-catalog/volumes/main.replay.drift_volume
           headers:
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body: null
         response:
           status: 200
@@ -138,10 +131,8 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body:
-            json: {"full_name_arg": "main.replay.drift_volume",
-                   "owner": "data-engineers"}
+            json: {"owner": "data-engineers"}
         response:
           status: 200
           body:
@@ -158,10 +149,8 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body:
-            json: {"full_name_arg": "main.replay.drift_volume",
-                   "comment": "managed by terraform"}
+            json: {"comment": "managed by terraform"}
         response:
           status: 200
           body:

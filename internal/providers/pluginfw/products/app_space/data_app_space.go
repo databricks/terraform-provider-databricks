@@ -104,7 +104,7 @@ type SpaceData struct {
 	// instead of doing regular obo token downscoping. Set only at space
 	// creation.
 	AssumeGroupId types.String `tfsdk:"assume_group_id"`
-	// The creation time of the app space. Formatted timestamp in ISO 6801.
+	// The creation time of the app space. Formatted timestamp in ISO 8601.
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
 	// The email of the user that created the app space.
 	Creator types.String `tfsdk:"creator"`
@@ -118,26 +118,31 @@ type SpaceData struct {
 	Id types.String `tfsdk:"id"`
 	// The name of the app space. The name must contain only lowercase
 	// alphanumeric characters and hyphens. It must be unique within the
-	// workspace.
+	// workspace. It can't start or end with a hyphen, and it can't be changed
+	// after the space is created.
 	Name types.String `tfsdk:"name"`
 	// Resources for the app space. Resources configured at the space level are
 	// available to all apps in the space.
 	Resources types.List `tfsdk:"resources"`
-	// The service principal client ID for the app space.
+	// OAuth client ID of the app space's service principal.
 	ServicePrincipalClientId types.String `tfsdk:"service_principal_client_id"`
-	// The service principal ID for the app space.
+	// Numeric ID of the app space's service principal.
 	ServicePrincipalId types.Int64 `tfsdk:"service_principal_id"`
-	// The service principal name for the app space.
+	// Display name of the app space's service principal.
 	ServicePrincipalName types.String `tfsdk:"service_principal_name"`
+	// The kind of app space. A default space is available to every workspace
+	// user and can't be updated or deleted.
+	SpaceType types.String `tfsdk:"space_type"`
 	// The status of the app space.
 	Status types.Object `tfsdk:"status"`
-	// The update time of the app space. Formatted timestamp in ISO 6801.
+	// The update time of the app space. Formatted timestamp in ISO 8601.
 	UpdateTime timetypes.RFC3339 `tfsdk:"update_time"`
 	// The email of the user that last updated the app space.
 	Updater types.String `tfsdk:"updater"`
 	// The usage policy ID for managing cost at the space level.
 	UsagePolicyId types.String `tfsdk:"usage_policy_id"`
-	// OAuth scopes for apps in the space.
+	// API scopes that apps in the space can request for user authorization. See
+	// https://docs.databricks.com/aws/en/dev-tools/databricks-apps/auth.
 	UserApiScopes      types.List   `tfsdk:"user_api_scopes"`
 	ProviderConfigData types.Object `tfsdk:"provider_config"`
 }
@@ -181,6 +186,7 @@ func (m SpaceData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"service_principal_client_id": m.ServicePrincipalClientId,
 			"service_principal_id":        m.ServicePrincipalId,
 			"service_principal_name":      m.ServicePrincipalName,
+			"space_type":                  m.SpaceType,
 			"status":                      m.Status,
 			"update_time":                 m.UpdateTime,
 			"updater":                     m.Updater,
@@ -213,6 +219,7 @@ func (m SpaceData) Type(ctx context.Context) attr.Type {
 			"service_principal_client_id": types.StringType,
 			"service_principal_id":        types.Int64Type,
 			"service_principal_name":      types.StringType,
+			"space_type":                  types.StringType,
 			"status":                      apps_tf.SpaceStatus{}.Type(ctx),
 			"update_time":                 timetypes.RFC3339{}.Type(ctx),
 			"updater":                     types.StringType,
@@ -239,6 +246,7 @@ func (m SpaceData) ApplySchemaCustomizations(attrs map[string]tfschema.Attribute
 	attrs["service_principal_client_id"] = attrs["service_principal_client_id"].SetComputed()
 	attrs["service_principal_id"] = attrs["service_principal_id"].SetComputed()
 	attrs["service_principal_name"] = attrs["service_principal_name"].SetComputed()
+	attrs["space_type"] = attrs["space_type"].SetComputed()
 	attrs["status"] = attrs["status"].SetComputed()
 	attrs["update_time"] = attrs["update_time"].SetComputed()
 	attrs["updater"] = attrs["updater"].SetComputed()

@@ -3,6 +3,7 @@
 ---
 
 - [Contributing to Databricks Terraform Provider](#contributing-to-databricks-terraform-provider)
+  - [This repository is a mirror](#this-repository-is-a-mirror)
   - [Issues for new contributors](#issues-for-new-contributors)
   - [Contribution Workflow](#contribution-workflow)
   - [Changelog](#changelog)
@@ -24,6 +25,22 @@
   - [Developing with Visual Studio Code Devcontainers](#developing-with-visual-studio-code-devcontainers)
 
 We happily welcome contributions to the Databricks Terraform Provider. We use GitHub Issues to track community reported issues and GitHub Pull Requests for accepting changes.
+
+## This repository is a mirror
+
+This repository is a read-only mirror. The provider's source of truth lives in
+Databricks' internal repository, and changes are published here as part of each
+release.
+
+- **Issues:** report bugs and feature requests in
+  [GitHub Issues](https://github.com/databricks/terraform-provider-databricks/issues).
+- **External contributors:** propose improvements in a pull request here.
+  Maintainers review these PRs publicly and re-apply approved changes in the
+  internal repository for a subsequent release, rather than merging them here.
+- **Databricks employees:** make provider changes in the internal repository.
+
+Only maintainer-approved synchronization PRs carrying the `sync` label are
+merged into this mirror.
 
 ## Issues for new contributors
 
@@ -59,7 +76,7 @@ Code contributions—bug fixes, new development, test improvement — all follow
     git commit -m "commit message here"
     ```
 
-1. Document your changes in the `NEXT_CHANGELOG.md` under the appropriate heading. See the [Changelog](#changelog) section for more details.
+1. Include a release note in your PR description if the change needs one. See [Changelog](#changelog) for the format.
 
 1. Push your changes to your GitHub repo.
 
@@ -69,7 +86,7 @@ Code contributions—bug fixes, new development, test improvement — all follow
 
 1. Open a Pull Request (PR). Go to the original project repo on GitHub. There will be a message about your recently pushed branch, asking if you would like to open a pull request. Follow the prompts, compare across repositories, and submit the PR. This will send an email to the committers. You may want to consider sending an email to the mailing list for more visibility. (For more details, see the [GitHub guide on PRs](https://help.github.com/articles/creating-a-pull-request-from-a-fork).)
 
-Maintainers and other contributors will review your PR. Please participate in the conversation, and try to make any requested changes. Once the PR is approved, the code will be merged.
+Maintainers and other contributors will review your PR. Please participate in the conversation, and try to make any requested changes. Maintainers apply accepted changes to the source repository and publish them to this repository with a release.
 
 Additional git and GitHub resources:
 
@@ -79,29 +96,35 @@ Additional git and GitHub resources:
 
 ## Changelog
 
-All PRs that introduce a new feature, fix a bug, improve documentation, or change the behavior of the exporter must include a description of the change in the `NEXT_CHANGELOG.md` file. This file is prepended to the `CHANGELOG.md` file when a new release is created, then cleared out for the next release. Add your changelog entry to the appropriate section of the `NEXT_CHANGELOG.md` file.
+For a new feature, bug fix, documentation improvement, or exporter change that
+needs a release note, include the note in your PR description. Describe the
+resulting behavior and any action users need to take when upgrading. For example:
 
-If the proposed change has no user-facing impact or does not require an additional changelog entry (e.g. correcting a typo in the documentation), do not add an entry to the `NEXT_CHANGELOG.md` file, and add the text `NO_CHANGELOG=true` to your PR description.
-
-The entries of the changelog must have the following format:
-
-```
- * <Summary of the change> ([#<PR number>](<PR link>)).
-
-   <Optional additional information>
+```markdown
+* Preserve the configured timeout when refreshing a cluster.
 ```
 
-For example:
+Include links to public documentation or examples when they help explain the
+change. Changes without a release note do not need a changelog exemption tag.
 
-```
- * Added support for new feature ([#123](https://github.com/databricks/terraform-provider-databricks/pull/123)).
-```
-
-Include additional information to provide context for the change, if necessary. For example, you may include links to the Databricks documentation website, the Terraform documentation website, examples, or other relevant resources.
-
-The `NEXT_CHANGELOG.md` file also determines the next version to be released. The version number in the `NEXT_CHANGELOG.md` is automatically set to the next minor version. If there are any new features or breaking changes, leave this as is. Otherwise, set the version to the next patch version. You can see the current version at the top of the `CHANGELOG.md` file.
+Maintainers record pending notes as `.nextchanges/` fragments in the source
+checkout. These fragments stay out of the public mirror. Release preparation
+consumes them, computes API changes, and updates `CHANGELOG.md` and the provider
+version together. Individual contribution PRs should leave those generated
+release files unchanged.
 
 ## Installing from source
+
+For revisions that include `databricks-sdk-go/`, keep that directory in the full
+Git checkout. The provider's `go.mod` selects this SDK source with a local
+`replace` directive, so it can build without a separate SDK release. Run the
+build commands below from the provider checkout.
+
+These bundled revisions support Terraform Registry installation and builds
+from a full checkout. Using provider packages as a dependency of another Go
+module is unsupported: Go ignores dependency-local `replace` directives and
+omits nested modules from module downloads. `go install ...@version` also
+rejects the local replacement; use the checkout build instead.
 
 On MacOS X, you can install GoLang through `brew install go`, on Debian-based Linux, you can install it by `sudo apt-get install golang -y`.
 

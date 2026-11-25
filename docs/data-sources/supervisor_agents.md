@@ -24,14 +24,18 @@ The following arguments are supported:
 
 ## Attributes
 This data source exports a single attribute, `supervisor_agents`. It is a list of resources, each with the following attributes:
-* `create_time` (string) - Creation timestamp
-* `creator` (string) - The creator of the Supervisor Agent
-* `description` (string) - Description of what this agent can do (user-facing)
-* `display_name` (string) - The display name of the Supervisor Agent, unique at workspace level
-* `endpoint_name` (string) - The name of the supervisor agent's serving endpoint
-* `experiment_id` (string) - The MLflow experiment ID
-* `id` (string, deprecated) - Deprecated: Use supervisor_agent_id instead
-* `instructions` (string) - Optional natural-language instructions for the supervisor agent
-* `name` (string) - The resource name of the SupervisorAgent.
+* `create_time` (string) - The time at which the Supervisor Agent was created, as an RFC 3339 timestamp
+* `creator` (string) - The email address of the user who created the Supervisor Agent
+* `description` (string) - A summary of what the agent does. It is shown to users of the agent
+* `display_name` (string) - The display name of the Supervisor Agent. It must be unique among the agents in the workspace.
+  Creating an agent with a display name that is already in use fails with ALREADY_EXISTS
+* `endpoint_name` (string) - The name of the Model Serving endpoint that serves the Supervisor Agent. Query this endpoint to
+  chat with the agent
+* `experiment_id` (string) - The ID of the MLflow experiment that is created together with the Supervisor Agent
+* `id` (string, deprecated) - Deprecated: Use supervisor_agent_id instead. This field is no longer populated
+* `instructions` (string) - Natural-language guidelines for how the supervisor should respond and how it should delegate
+  requests to its tools and subagents
+* `name` (string) - The resource name of the Supervisor Agent.
   Format: supervisor-agents/{supervisor_agent_id}
-* `supervisor_agent_id` (string) - The universally unique identifier (UUID) of the Supervisor Agent
+  The server assigns the name when the agent is created
+* `supervisor_agent_id` (string) - The universally unique identifier (UUID) of the Supervisor Agent. It is the last segment of `name`

@@ -1,18 +1,18 @@
 # The modular SDK twin of testdata_classic/decode_wrong_types.yaml. Here the modular
-# path differs in more than a diagnostic. The classic client retries a field that fails
-# to decode as a quoted string, so it takes a number sent for name or id as its digits.
-# The modular SDK decodes strictly inside the client method, where the resource can't
-# reach the body, so the same response fails the call:
+# path differs in the outcome of a step, not only in a diagnostic. The classic client
+# retries a field that fails to decode as a quoted string, so it takes a number sent
+# for name or id as its digits. The modular SDK decodes strictly inside the client
+# method, so the same response fails the call:
 #   - a numeric name in the create response fails the create, where the classic path
 #     takes 42 as the ID, reads that name and leaves the model tainted. Nothing reaches
 #     the state, so no GET for 42 follows and the next plan creates the model again;
 #   - a numeric name or id on the GET fails the refresh and leaves the state as it was,
 #     where the classic path puts the digits in the state.
-# tags sent as an object fails on both paths, with another message. The messages name
-# wire types of the SDK, which Go 1.26 and Go 1.27 report differently, so the patterns
-# take both spellings. Once the modular client takes such a number as the classic one
-# does, the classic journey passes on both paths: move it back to testdata and delete
-# this twin. API responses are synthetic: inferred from the MLflow Model Registry API,
+# The difference is accepted: the Model Registry API sends both fields as strings, and
+# the provider doesn't change a response before the SDK decodes it. tags sent as an
+# object fails on both paths, with another message. The messages name wire types of
+# the SDK, which Go 1.26 and Go 1.27 report differently, so the patterns take both
+# spellings. API responses are synthetic: inferred from the MLflow Model Registry API,
 # not recorded.
 version: 1
 enforce_call_order: true

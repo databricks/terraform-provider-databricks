@@ -8,9 +8,9 @@
 #     reports the decoding error alone, where the classic client wraps it with a
 #     request to report an SDK bug and a log of the request.
 # The requests are the same, apart from the two reads after the update that the
-# classic path makes once the empty body is decoded. Once the modular client takes an
-# empty body as the classic one does, update the first of these steps from the classic
-# journey.
+# classic path makes once the empty body is decoded. The difference in the outcome of
+# the first update is accepted: the API answers the PATCH with a body, and the provider
+# doesn't change a response before the SDK decodes it.
 #
 # Pins a PATCH and a DELETE answered 200 with a body the call doesn't expect. The PATCH
 # response is decoded and then dropped: answered with another model, the update

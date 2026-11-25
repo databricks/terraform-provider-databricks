@@ -153,6 +153,11 @@ func (b *sdkGoBridge) newRetrier(ctx context.Context,
 }
 
 func (r *classicRetrier) IsRetriable(err error) (time.Duration, bool) {
+	// sdk-go decodes a success body inside its retries, but the classic client decodes it
+	// after them, so it never retries a body that doesn't decode.
+	if r.attempt.gotSuccess() {
+		return 0, false
+	}
 	classic := r.bridge.classicError(r.ctx, err, r.attempt)
 	if !r.bridge.isRetriable(r.ctx, classic) {
 		logger.Debugf(r.ctx, "non-retriable error: %s", classic)

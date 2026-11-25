@@ -1,4 +1,5 @@
-// Package errors_test runs the sdk-go twins of the ../../volume_errors journeys, in their own package so it stays within the go test timeout.
+// Package errors_test runs the sdk-go twins of the ../../volume_errors journeys, in their
+// own package so it stays within the go test timeout.
 package errors_test
 
 import (

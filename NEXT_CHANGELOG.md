@@ -9,6 +9,7 @@
 ### New Features and Improvements
 
 ### Bug Fixes
+* Fixed `enable_file_events = false` having no effect on `databricks_external_location` when Databricks had enabled file events automatically ([#6200](https://github.com/databricks/terraform-provider-databricks/pull/6200)).
 
 ### Documentation
 

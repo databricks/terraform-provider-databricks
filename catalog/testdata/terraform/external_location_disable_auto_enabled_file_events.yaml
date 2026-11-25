@@ -1,0 +1,140 @@
+# Regression for https://github.com/databricks/terraform-provider-databricks/issues/5967
+# The server enables file events when enable_file_events is omitted. A later explicit
+# enable_file_events = false must be sent to the API instead of planning "no changes".
+version: 1
+host_metadata:
+  workspace_id: "12345"
+steps:
+  - name: create_without_enable_file_events
+    config: |
+      resource "databricks_external_location" "this" {
+        name            = "abc"
+        url             = "s3://foo/bar"
+        credential_name = "cred"
+      }
+    calls:
+      - request:
+          method: POST
+          path: /api/2.1/unity-catalog/external-locations
+          body:
+            json:
+              name: abc
+              url: s3://foo/bar
+              credential_name: cred
+        response:
+          status: 200
+          body:
+            json:
+              name: abc
+              url: s3://foo/bar
+              credential_name: cred
+              effective_enable_file_events: true
+      - request:
+          method: GET
+          path: /api/2.1/unity-catalog/external-locations/abc
+          body: null
+        response:
+          status: 200
+          body:
+            json:
+              name: abc
+              url: s3://foo/bar
+              credential_name: cred
+              effective_enable_file_events: true
+      - request:
+          method: GET
+          path: /api/2.1/unity-catalog/external-locations/abc
+          body: null
+        response:
+          status: 200
+          body:
+            json:
+              name: abc
+              url: s3://foo/bar
+              credential_name: cred
+              effective_enable_file_events: true
+  - name: disable_file_events
+    config: |
+      resource "databricks_external_location" "this" {
+        name               = "abc"
+        url                = "s3://foo/bar"
+        credential_name    = "cred"
+        enable_file_events = false
+      }
+    calls:
+      - request:
+          method: GET
+          path: /api/2.1/unity-catalog/external-locations/abc
+          body: null
+        response:
+          status: 200
+          body:
+            json:
+              name: abc
+              url: s3://foo/bar
+              credential_name: cred
+              effective_enable_file_events: true
+      - request:
+          method: PATCH
+          path: /api/2.1/unity-catalog/external-locations/abc
+          body:
+            json:
+              url: s3://foo/bar
+              credential_name: cred
+              enable_file_events: false
+        response:
+          status: 200
+          body:
+            json:
+              name: abc
+      - request:
+          method: GET
+          path: /api/2.1/unity-catalog/external-locations/abc
+          body: null
+        response:
+          status: 200
+          body:
+            json:
+              name: abc
+              url: s3://foo/bar
+              credential_name: cred
+              effective_enable_file_events: false
+      - request:
+          method: GET
+          path: /api/2.1/unity-catalog/external-locations/abc
+          body: null
+        response:
+          status: 200
+          body:
+            json:
+              name: abc
+              url: s3://foo/bar
+              credential_name: cred
+              effective_enable_file_events: false
+    state:
+      resources:
+        databricks_external_location.this:
+          attributes:
+            - path: [effective_enable_file_events]
+              equals: false
+destroy:
+  calls:
+    - request:
+        method: GET
+        path: /api/2.1/unity-catalog/external-locations/abc
+        body: null
+      response:
+        status: 200
+        body:
+          json:
+            name: abc
+            url: s3://foo/bar
+            credential_name: cred
+            effective_enable_file_events: false
+    - request:
+        method: DELETE
+        path: /api/2.1/unity-catalog/external-locations/abc
+        body: null
+      response:
+        status: 200
+        body: null

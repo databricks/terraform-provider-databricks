@@ -26,8 +26,7 @@ const classicDefaultDebugTruncateBytes = 96
 // sdkGoTransport sends each sdk-go attempt the way httpclient.ApiClient sends one: it
 // sends the classic request, runs the request visitors under the attempt's timeout,
 // follows redirects, reads the response, rejects successful responses the classic error
-// mapper rejects, writes the classic debug log, and hands sdk-go an empty successful
-// body as an empty JSON object.
+// mapper rejects, and writes the classic debug log.
 type sdkGoTransport struct {
 	// client follows redirects over the classic transport, as the classic client does.
 	client             *http.Client
@@ -63,6 +62,7 @@ func (t *sdkGoTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	if timeout == nil {
 		timeout = startAttemptTimeout(req.Context(), t.httpTimeout)
 	}
+	attempt.requestBody, attempt.response, attempt.responseBody = nil, nil, nil
 	// Like the classic client, the visitors already run under the attempt's timeout.
 	r := req.Clone(timeout.ctx)
 	if err := attempt.useClassicRequest(r); err != nil {
@@ -80,9 +80,11 @@ func (t *sdkGoTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	r.Header.Set("User-Agent", sdkGoUserAgent(r.Context(), req.Header.Get("User-Agent")))
 	requestBody := debugRequestBody(r)
 	resp, responseBody, err := t.exchange(req.Context(), r, timeout)
-	attempt.request, attempt.response = r, nil
+	attempt.request = r
+	attempt.requestBody, attempt.response, attempt.responseBody = requestBody, resp,
+		responseBody
 	if resp != nil {
-		attempt.request, attempt.response = resp.Request, resp
+		attempt.request = resp.Request
 	}
 	if err == nil && resp.StatusCode < http.StatusBadRequest {
 		// A Private Link redirect ends in a successful login page.
@@ -96,19 +98,12 @@ func (t *sdkGoTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	if err != nil {
 		return nil, err
 	}
-	return withDecodableBody(resp, responseBody), nil
-}
-
-// withDecodableBody hands sdk-go an empty successful body as an empty JSON object, which
-// it decodes as the response without fields that the classic client returns for an
-// empty body. Every uc/volumes/v1 response is a JSON object.
-func withDecodableBody(resp *http.Response, body []byte) *http.Response {
-	const emptyObject = "{}"
-	if resp.StatusCode < http.StatusBadRequest && len(body) == 0 {
-		resp.Body = io.NopCloser(strings.NewReader(emptyObject))
-		resp.ContentLength = int64(len(emptyObject))
+	if resp.StatusCode < http.StatusBadRequest && len(responseBody) == 0 {
+		// The classic client reads an empty success body as an empty object.
+		resp.Body = io.NopCloser(strings.NewReader("{}"))
+		resp.ContentLength = 2
 	}
-	return resp
+	return resp, nil
 }
 
 // exchange sends r, whose context ends with timeout, follows redirects and reads the

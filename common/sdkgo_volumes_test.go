@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"regexp"
 	"strings"
 	"testing"
 	"time"
@@ -103,9 +104,11 @@ func TestSdkGoVolumesClientMapsErrorsLikeClassicClient(t *testing.T) {
 		{"non-JSON error body", 500, "upstream connect error",
 			"upstream connect error", false},
 		{"empty error body", 404, "", "Not Found", true},
-		{"undecodable success body", 200, "not json",
-			"failed to unmarshal response body: " +
-				"invalid character 'o' in literal null (expecting 'u')", false},
+		{"HTML error body with pre", 404,
+			"<html><body><pre>Volume not found</pre></body></html>", "Volume not found",
+			true},
+		{"HTML error body without pre", 404, "<html><body>Volume not found</body></html>",
+			"<html><body>Volume not found</body></html>", false},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			r := readBothWays(t, context.Background, nil, respond(tc.status, tc.body))
@@ -270,18 +273,73 @@ func TestSdkGoAttemptRejectsAnotherRequestThanTheClassicOne(t *testing.T) {
 		" instead of the classic GET "+sdkGoTestVolumePath)
 }
 
-// Like the existing client, sdk-go reads an empty success body as a volume without
-// fields, also for a 304, which neither client follows.
-func TestSdkGoVolumesClientReadsEmptySuccessBodyLikeClassicClient(t *testing.T) {
-	for _, status := range []int{http.StatusOK, http.StatusNotModified} {
-		t.Run(http.StatusText(status), func(t *testing.T) {
-			r := readBothWays(t, context.Background, nil, respond(status, ""))
-			require.NoError(t, r.classicErr)
-			require.NoError(t, r.err)
-			assert.Equal(t, &catalog.VolumeInfo{}, r.classicVolume)
-			assert.Equal(t, &sdkvolumes.VolumeInfo{}, r.volume)
-			assert.EqualValues(t, 1, r.calls)
-			assert.Equal(t, r.classicCalls, r.calls)
+// requestLogHeaders matches the request log lines whose values differ between the two
+// clients: the User-Agent, by the sdk-go modules, and the random Traceparent.
+var requestLogHeaders = regexp.MustCompile(`(?m)^> \* (User-Agent|Traceparent): .*$`)
+
+// A success body is decoded as the classic client decodes it: an empty body is an empty
+// volume, a body starting with "<" fails with the HTML error, and another body that
+// doesn't decode fails with the classic type names and request log.
+func TestSdkGoVolumesClientDecodesSuccessBodiesLikeClassicClient(t *testing.T) {
+	for _, tc := range []struct{ name, body, message string }{
+		{"empty body", "", ""},
+		{"HTML", "<html><body>Sign in</body></html>",
+			"received HTML response instead of JSON"},
+		{"malformed JSON", `{"full_name": "main.replay.volume",`,
+			"failed to unmarshal response body: unexpected end of JSON input. This is " +
+				"likely a bug in the Databricks SDK for Go"},
+		{"unparsable timestamp", `{"full_name": "main.replay.volume", "created_at": "x"}`,
+			`failed to unmarshal response body: strconv.ParseInt: parsing "x": invalid ` +
+				"syntax. This is likely a bug"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			var v *sdkvolumes.VolumeInfo
+			var err, classicErr error
+			ctx := context.Background()
+			server, calls := serveSequence(t, respond(http.StatusOK, tc.body))
+			v, err = getVolume(ctx, t, newVolumesTestWorkspaceClient(t, server, nil),
+				sdkGoTestVolumeName)
+			classicServer, _ := serveSequence(t, respond(http.StatusOK, tc.body))
+			classic := newVolumesTestWorkspaceClient(t, classicServer, nil)
+			_, classicErr = classic.Volumes.ReadByName(ctx, sdkGoTestVolumeName)
+			assert.EqualValues(t, 1, calls.Load())
+			if tc.message == "" {
+				require.NoError(t, err)
+				require.NoError(t, classicErr)
+				assert.Equal(t, sdkvolumes.VolumeInfo{}, *v)
+				return
+			}
+			require.Error(t, err)
+			require.Error(t, classicErr)
+			assert.True(t, strings.HasPrefix(err.Error(), tc.message), err.Error())
+			normalize := func(err error) string {
+				return requestLogHeaders.ReplaceAllString(err.Error(), "> * $1: ...")
+			}
+			assert.Equal(t, normalize(classicErr), normalize(err))
 		})
 	}
+}
+
+// A 304, which neither client follows, is a success, so both clients read its empty body
+// as a volume without fields.
+func TestSdkGoVolumesClientReadsEmptyNotModifiedBodyLikeClassicClient(t *testing.T) {
+	r := readBothWays(t, context.Background, nil, respond(http.StatusNotModified, ""))
+	require.NoError(t, r.classicErr)
+	require.NoError(t, r.err)
+	assert.Equal(t, &catalog.VolumeInfo{}, r.classicVolume)
+	assert.Equal(t, &sdkvolumes.VolumeInfo{}, r.volume)
+	assert.EqualValues(t, 1, r.calls)
+	assert.Equal(t, r.classicCalls, r.calls)
+}
+
+// The classic client turns a JSON value of another type into a string field, such as 7
+// into "7", while sdk-go fails the read.
+func TestSdkGoVolumesClientRejectsStringFieldsOfAnotherType(t *testing.T) {
+	r := readBothWays(t, context.Background, nil,
+		respond(http.StatusOK, `{"full_name": 7}`))
+	require.Error(t, r.err)
+	assert.True(t, strings.HasPrefix(r.err.Error(), "failed to unmarshal response body: "+
+		"json: cannot unmarshal number into Go struct field"), r.err.Error())
+	assert.NoError(t, r.classicErr)
+	assert.Equal(t, r.classicCalls, r.calls)
 }

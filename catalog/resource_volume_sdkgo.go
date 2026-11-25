@@ -7,7 +7,6 @@ import (
 
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
-	"github.com/databricks/sdk-go/options/call"
 	sdkvolumes "github.com/databricks/sdk-go/uc/volumes/v1"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
@@ -22,13 +21,7 @@ func readVolumeWithSdkGo(ctx context.Context, w *databricks.WorkspaceClient,
 	if err != nil {
 		return err
 	}
-	fullName := d.Id()
-	get := func(ctx context.Context,
-		opts ...call.Option) (*sdkvolumes.VolumeInfo, error) {
-		req := sdkvolumes.GetVolumeRequest{FullNameArg: &fullName}
-		return vc.GetVolume(ctx, req, opts...)
-	}
-	v, err := common.CallSdkGoVolumes(ctx, vc, get)
+	v, err := vc.ReadByName(ctx, d.Id())
 	if err != nil {
 		return err
 	}
@@ -55,7 +48,7 @@ func volumeInfoFromSdkGo(v *sdkvolumes.VolumeInfo) VolumeInfo {
 	}
 }
 
-// sdkGoVolumeWriter sends the volume writes through sdk-go uc/volumes/v1 with the bodies
+// sdkGoVolumeWriter sends the volume writes through sdk-go uc/volumes/v1 with the requests
 // the existing client sends.
 type sdkGoVolumeWriter struct {
 	vc *common.SdkGoVolumes
@@ -72,12 +65,7 @@ func newSdkGoVolumeWriter(ctx context.Context,
 
 func (s sdkGoVolumeWriter) create(ctx context.Context,
 	r catalog.CreateVolumeRequestContent) (string, error) {
-	req := createVolumeRequestToSdkGo(r)
-	create := func(ctx context.Context,
-		opts ...call.Option) (*sdkvolumes.VolumeInfo, error) {
-		return s.vc.CreateVolume(ctx, req, opts...)
-	}
-	v, err := common.CallSdkGoVolumes(ctx, s.vc, create)
+	v, err := s.vc.Create(ctx, createVolumeRequestToSdkGo(r))
 	if err != nil {
 		return "", err
 	}
@@ -86,12 +74,7 @@ func (s sdkGoVolumeWriter) create(ctx context.Context,
 
 func (s sdkGoVolumeWriter) update(ctx context.Context,
 	r catalog.UpdateVolumeRequestContent) (string, error) {
-	req := updateVolumeRequestToSdkGo(r)
-	update := func(ctx context.Context,
-		opts ...call.Option) (*sdkvolumes.VolumeInfo, error) {
-		return s.vc.UpdateVolume(ctx, req, opts...)
-	}
-	v, err := common.CallSdkGoVolumes(ctx, s.vc, update)
+	v, err := s.vc.Update(ctx, updateVolumeRequestToSdkGo(r))
 	if err != nil {
 		return "", err
 	}
@@ -99,13 +82,7 @@ func (s sdkGoVolumeWriter) update(ctx context.Context,
 }
 
 func (s sdkGoVolumeWriter) delete(ctx context.Context, fullName string) error {
-	del := func(ctx context.Context,
-		opts ...call.Option) (*sdkvolumes.DeleteVolumeResponse, error) {
-		req := sdkvolumes.DeleteVolumeRequest{FullNameArg: &fullName}
-		return s.vc.DeleteVolume(ctx, req, opts...)
-	}
-	_, err := common.CallSdkGoVolumes(ctx, s.vc, del)
-	return err
+	return s.vc.DeleteByName(ctx, fullName)
 }
 
 // createVolumeRequestToSdkGo sends the fields the existing client sends. Unlike it,
@@ -122,8 +99,8 @@ func createVolumeRequestToSdkGo(
 	}
 }
 
-// updateVolumeRequestToSdkGo sends the fields the existing client sends, and the path
-// field full_name_arg too, because sdk-go serializes it into the body.
+// updateVolumeRequestToSdkGo sends the fields the existing client sends. The full name
+// goes to full_name_arg, which sdk-go needs for the path.
 func updateVolumeRequestToSdkGo(
 	r catalog.UpdateVolumeRequestContent) sdkvolumes.UpdateVolumeRequest {
 	return sdkvolumes.UpdateVolumeRequest{

@@ -18,8 +18,8 @@ import (
 func structToDataPtr[T any](v T) *T { return &v }
 
 // structToDataTestData returns resource data with the plan for config, or
-// without a plan when config is nil, as the provider has it on an import. A
-// resource is new when the provider reads it after a create or an import.
+// without a plan for a nil config, as on an import. A new resource is one that
+// the provider reads after a create or an import.
 func structToDataTestData(t *testing.T, s map[string]*schema.Schema, config map[string]any, isNew bool) *schema.ResourceData {
 	d := (&schema.Resource{Schema: s}).TestResourceData()
 	if config != nil {
@@ -49,9 +49,8 @@ func structToDataDecode[T any](t *testing.T, body string) *T {
 
 type structToDataTestEnum string
 
-// structToDataClassic and structToDataModular are twins like a struct of the
-// classic SDK and one of the modular SDK: the same fields, as values with json
-// tags in one and as pointers without tags in the other.
+// structToDataClassic and structToDataModular are twins like a classic SDK struct
+// and a modular one: the same fields, as tagged values and as untagged pointers.
 type structToDataClassicItem struct {
 	Key   string   `json:"key,omitempty"`
 	Count int64    `json:"count,omitempty"`
@@ -122,8 +121,7 @@ type structToDataModular struct {
 	Parts   []structToDataModularPart
 }
 
-// structToDataTwin is a struct of the classic SDK and its twin of the modular
-// SDK, with the schemas, configurations and responses to compare them on.
+// structToDataTwin is a classic SDK struct and its modular twin, with what to compare them on.
 type structToDataTwin struct {
 	// decode reads one response into the classic struct and the modular one.
 	decode    func(t *testing.T, body string) (classic, modular any)
@@ -132,8 +130,7 @@ type structToDataTwin struct {
 	responses map[string]string
 }
 
-// structToDataComputed returns the schema of classic with the named fields
-// computed, as the fields that only the API sets are in a resource.
+// structToDataComputed returns the schema of classic with the named fields computed.
 func structToDataComputed(classic any, names ...string) map[string]*schema.Schema {
 	return common.StructToSchema(classic, func(s map[string]*schema.Schema) map[string]*schema.Schema {
 		for _, name := range names {
@@ -143,8 +140,7 @@ func structToDataComputed(classic any, names ...string) map[string]*schema.Schem
 	})
 }
 
-// structToDataReadOnlySchema returns the schema of classic with every field
-// computed and not optional, as the fields of a data source are.
+// structToDataReadOnlySchema returns the schema of classic with every field computed and not optional.
 func structToDataReadOnlySchema(classic any) map[string]*schema.Schema {
 	return common.StructToSchema(classic, func(s map[string]*schema.Schema) map[string]*schema.Schema {
 		for _, fieldSchema := range s {
@@ -298,11 +294,15 @@ type structToDataTestItem struct {
 	Count *int64
 	Names []string
 	Oneof any
+	Mask  *types.FieldMask[structToDataTestItem]
 }
 
+// structToDataTestMask is a field mask that is not empty.
+var structToDataTestMask, _ = types.NewFieldMask[structToDataTestItem]("*")
+
 // structToDataTestMessage has a field of every shape that StructToData
-// supports, and two that it skips: hidden is unexported and Extra has no entry
-// in the schema.
+// supports, and those that it skips: hidden is unexported, Extra has no entry
+// in the schema, and Mask, MaskRef and NoMask are field masks.
 type structToDataTestMessage struct {
 	Text    *string
 	Number  *int64
@@ -332,17 +332,18 @@ type structToDataTestMessage struct {
 	Started types.Time
 	Wait    types.Duration
 	Times   []types.Time
+	Mask    types.FieldMask[structToDataTestItem]
+	MaskRef *types.FieldMask[structToDataTestItem]
+	NoMask  *types.FieldMask[structToDataTestItem]
 	hidden  *string
 	Extra   *string
 }
 
 // structToDataTestSchema returns a schema for structToDataTestMessage without
-// an entry for Extra. It applies kind to every field, to make it optional,
-// required or computed.
+// an entry for Extra, where kind makes every field optional, required or computed.
 func structToDataTestSchema(kind func(*schema.Schema)) map[string]*schema.Schema {
 	block := &schema.Resource{Schema: map[string]*schema.Schema{
-		"key":   {Type: schema.TypeString, Optional: true},
-		"count": {Type: schema.TypeInt, Optional: true},
+		"key": {Type: schema.TypeString, Optional: true}, "count": {Type: schema.TypeInt, Optional: true},
 		"names": {Type: schema.TypeList, Optional: true, Elem: &schema.Schema{Type: schema.TypeString}},
 	}}
 	list := func(elem schema.ValueType) *schema.Schema {
@@ -361,6 +362,7 @@ func structToDataTestSchema(kind func(*schema.Schema)) map[string]*schema.Schema
 		"items": {Type: schema.TypeList, Elem: block}, "refs": {Type: schema.TypeList, Elem: block},
 		"created": {Type: schema.TypeString}, "timeout": {Type: schema.TypeString}, "started": {Type: schema.TypeString},
 		"wait": {Type: schema.TypeString}, "times": list(schema.TypeString), "hidden": {Type: schema.TypeString},
+		"mask": {Type: schema.TypeString}, "mask_ref": {Type: schema.TypeString}, "no_mask": {Type: schema.TypeString},
 	}
 	for _, fieldSchema := range s {
 		kind(fieldSchema)
@@ -383,7 +385,7 @@ var structToDataFullMessage = structToDataTestMessage{
 	Refs:    []*structToDataTestItem{nil, {Count: structToDataPtr(int64(2))}, nil},
 	Created: &types.Time{Seconds: 1700000000, Nanos: 120000000}, Timeout: &types.Duration{Seconds: 3, Nanos: 500000000},
 	Started: types.Time{Seconds: 1}, Wait: types.Duration{Seconds: -90}, Times: []types.Time{{}, {Seconds: 60, Nanos: 1}},
-	hidden: structToDataPtr("h"), Extra: structToDataPtr("e"),
+	Mask: *structToDataTestMask, MaskRef: structToDataTestMask, hidden: structToDataPtr("h"), Extra: structToDataPtr("e"),
 }
 
 // The states are flatmaps, as terraform.InstanceState holds them.
@@ -430,13 +432,10 @@ func TestStructToData_State(t *testing.T) {
 		Items: []structToDataTestItem{}, Refs: []*structToDataTestItem{nil, nil},
 	}
 	defaults := map[string]*schema.Schema{
-		"text":          {Type: schema.TypeString, Optional: true},
-		"force_destroy": {Type: schema.TypeBool, Optional: true, Default: false},
-		"comment":       {Type: schema.TypeString, Optional: true, Default: "none"},
-		"retries":       {Type: schema.TypeInt, Optional: true, Default: 0},
-		"computed":      {Type: schema.TypeInt, Optional: true, Computed: true, Default: 0},
-		"required":      {Type: schema.TypeInt, Required: true},
-		"no_default":    {Type: schema.TypeInt, Optional: true},
+		"text": {Type: schema.TypeString, Optional: true}, "force_destroy": {Type: schema.TypeBool, Optional: true, Default: false},
+		"comment": {Type: schema.TypeString, Optional: true, Default: "none"}, "retries": {Type: schema.TypeInt, Optional: true, Default: 0},
+		"computed": {Type: schema.TypeInt, Optional: true, Computed: true, Default: 0}, "required": {Type: schema.TypeInt, Required: true},
+		"no_default": {Type: schema.TypeInt, Optional: true},
 	}
 	optional, readOnly := structToDataTestSchema(structToDataOptional), structToDataTestSchema(structToDataReadOnly)
 	for name, c := range map[string]struct {
@@ -452,10 +451,13 @@ func TestStructToData_State(t *testing.T) {
 		"pointers to zero values give the state of nil pointers": {schema: optional, result: zeroPointers, want: structToDataZeroState},
 		"a nil time or duration is empty like a nil string": {result: structToDataTestMessage{}, want: map[string]string{"timeout": ""},
 			schema: map[string]*schema.Schema{"created": {Type: schema.TypeString, Optional: true}, "timeout": {Type: schema.TypeString, Computed: true}}},
-		"required and empty": {schema: structToDataTestSchema(structToDataRequired), result: structToDataTestMessage{}, want: structToDataRequiredZeroState},
-		"computed and empty": {schema: readOnly, result: &zeroPointers, want: structToDataRequiredZeroState},
-		"existing resource without configuration takes only the bools": {schema: optional, existing: true,
-			result: structToDataFullMessage, want: map[string]string{"flag": "true", "sure": "true"}},
+		"field masks are skipped also when their schema is a block": {result: structToDataFullMessage, want: map[string]string{},
+			schema: map[string]*schema.Schema{"mask": optional["nested"], "mask_ref": readOnly["items"], "no_mask": readOnly["nested"]}},
+		"a nested field mask is skipped": {result: structToDataTestMessage{Nested: &structToDataTestItem{Mask: structToDataTestMask}}, want: map[string]string{"nested.#": "1"},
+			schema: map[string]*schema.Schema{"nested": {Type: schema.TypeList, Computed: true, Elem: &schema.Resource{Schema: map[string]*schema.Schema{"mask": readOnly["items"]}}}}},
+		"required and empty":                     {schema: structToDataTestSchema(structToDataRequired), result: structToDataTestMessage{}, want: structToDataRequiredZeroState},
+		"computed and empty":                     {schema: readOnly, result: &zeroPointers, want: structToDataRequiredZeroState},
+		"existing resource takes only the bools": {schema: optional, existing: true, result: structToDataFullMessage, want: map[string]string{"flag": "true", "sure": "true"}},
 		"existing resource takes what is configured": {schema: optional, existing: true,
 			config: map[string]any{"text": "old", "number": 1, "names": []any{"old"}, "labels": map[string]any{"old": "label"},
 				"nested": []any{map[string]any{"key": "old"}}, "flag": true},
@@ -501,8 +503,7 @@ func TestStructToData_State(t *testing.T) {
 	}
 }
 
-// structToDataTestUnsupported has a field of every kind of type that
-// StructToData doesn't support.
+// structToDataTestUnsupported has a field of every kind of unsupported type.
 type structToDataTestUnsupported struct {
 	Oneof    any
 	Stream   io.Reader
@@ -553,8 +554,7 @@ func TestStructToData_Errors(t *testing.T) {
 		"string": {result: "model", schema: text, want: "result is a string, want a struct or a pointer to one"},
 		"slice of structs": {result: []modelregistry.RegisteredModelTag{{}}, schema: text,
 			want: "result is a []modelregistry.RegisteredModelTag, want a struct or a pointer to one"},
-		"pointer to a pointer": {result: &tag, schema: text,
-			want: "result is a **modelregistry.RegisteredModelTag, want a struct or a pointer to one"},
+		"pointer to a pointer": {result: &tag, schema: text, want: "result is a **modelregistry.RegisteredModelTag, want a struct or a pointer to one"},
 		"message without a nested block": {result: structToDataTestMessage{},
 			schema: map[string]*schema.Schema{"nested": {Type: schema.TypeString, Optional: true}},
 			want:   "nested: a message needs a nested block, but the schema is a TypeString without one"},

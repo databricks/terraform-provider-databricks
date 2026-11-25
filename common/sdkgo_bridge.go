@@ -154,14 +154,20 @@ func (classicCredentials) Name() string {
 }
 
 func (c classicCredentials) AuthHeaders(ctx context.Context) ([]auth.Header, error) {
+	attempt, ok := ctx.Value(sdkGoAttemptKey{}).(*sdkGoAttempt)
+	// Like the classic client, authenticate the classic request before the classic
+	// visitors add the host, which fail on a host that doesn't parse.
+	method, target := http.MethodGet, "/"
+	if ok && attempt.classicURL != nil {
+		method, target = attempt.classic.method, attempt.classicURL.String()
+	}
 	timeout := startAttemptTimeout(ctx, c.httpTimeout)
-	req, err := http.NewRequestWithContext(timeout.ctx, http.MethodGet, c.cfg.Host, nil)
+	req, err := http.NewRequestWithContext(timeout.ctx, method, target, nil)
 	if err == nil {
 		if authErr := c.cfg.Authenticate(req); authErr != nil {
 			err = &visitorError{authErr}
 		}
 	}
-	attempt, ok := ctx.Value(sdkGoAttemptKey{}).(*sdkGoAttempt)
 	if err != nil || !ok {
 		timeout.end()
 		if err != nil {

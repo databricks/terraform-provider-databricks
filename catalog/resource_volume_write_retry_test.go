@@ -2,7 +2,6 @@ package catalog
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
 	"net"
@@ -60,29 +59,6 @@ type volumeRequest struct {
 	method string
 	uri    string
 	body   string
-}
-
-// sentBy returns requests as the client sdkGo selects sends them. sdk-go also sends a
-// PATCH's full_name_arg in its body, and no empty query.
-func sentBy(requests []volumeRequest, sdkGo bool) []volumeRequest {
-	if !sdkGo {
-		return requests
-	}
-	sent := make([]volumeRequest, len(requests))
-	for i, r := range requests {
-		r.uri = strings.TrimSuffix(r.uri, "?")
-		if r.method == http.MethodPatch {
-			var body map[string]any
-			if err := json.Unmarshal([]byte(r.body), &body); err != nil {
-				panic(err)
-			}
-			body["full_name_arg"] = strings.TrimPrefix(r.uri, volumesAPIPath+"/")
-			patched, _ := json.Marshal(body)
-			r.body = string(patched)
-		}
-		sent[i] = r
-	}
-	return sent
 }
 
 // volumeResponse is how the fake volume API answers one request.
@@ -373,8 +349,8 @@ func testVolumeWritesPastHTTPTimeoutAreNotRetried(t *testing.T, sdkGo bool) {
 			run:       destroyVolume,
 			requests:  []volumeRequest{deleteVolumeRequest},
 			diagnostic: func(u string) string {
-				uri := sentBy([]volumeRequest{deleteVolumeRequest}, sdkGo)[0].uri
-				return "cannot delete volume: " + timedOut("Delete", u+uri)
+				return "cannot delete volume: " +
+					timedOut("Delete", u+deleteVolumeRequest.uri)
 			},
 			id: retryVolumeID,
 		},
@@ -392,7 +368,7 @@ func testVolumeWritesPastHTTPTimeoutAreNotRetried(t *testing.T, sdkGo bool) {
 
 			d, diags := tt.run(context.Background(), t, c, sdkGo)
 
-			assertVolumeRequests(t, sentBy(tt.requests, sdkGo), api)
+			assertVolumeRequests(t, tt.requests, api)
 			assert.Equal(t, tt.diagnostic(server.URL), diagnosticSummary(t, diags))
 			assert.Equal(t, tt.id, d.Id())
 		})
@@ -433,7 +409,7 @@ func testVolumeFieldsPatchCancelledInBackoffRollsBackOnCancelledContext(t *testi
 		// After the 429, Update blocks only in the fields PATCH's backoff, so Wait
 		// returns there.
 		synctest.Wait()
-		patches := sentBy([]volumeRequest{updateOwnerPatch, updateFieldsPatch}, sdkGo)
+		patches := []volumeRequest{updateOwnerPatch, updateFieldsPatch}
 		assertVolumeRequests(t, patches, api)
 		cancel()
 		// Wait does not advance the fake clock, so Update must return without the

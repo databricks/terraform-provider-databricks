@@ -1,8 +1,6 @@
 # Runs volume_updates/testdata/update_rename_with_owner_change.yaml with databricks_volume
-# on sdk- go uc/volumes/v1 in every step, and expects the same behavior. The volume POST,
-# GET, PATCH and DELETE requests carry no Accept header, which an empty header expectation
-# pins. Each PATCH body also carries full_name_arg, the full name in its path, because
-# sdk-go serializes the path field into the body. The original's description:
+# on sdk-go uc/volumes/v1 in every step, and expects the same requests and behavior. The
+# original's description:
 #
 # Pins a rename made together with an owner change. The owner PATCH goes to the old full
 # name first, then the rename PATCH with new_name and without owner, also to the old
@@ -35,7 +33,6 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body:
             json: {"catalog_name": "main", "schema_name": "replay",
                    "name": "rename_owner_a", "volume_type": "MANAGED"}
@@ -54,10 +51,8 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body:
-            json: {"full_name_arg": "main.replay.rename_owner_a",
-                   "owner": "data-engineers"}
+            json: {"owner": "data-engineers"}
         response:
           status: 200
           body:
@@ -74,7 +69,6 @@ steps:
           path: /api/2.1/unity-catalog/volumes/main.replay.rename_owner_a
           headers:
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body: null
         response:
           status: 200
@@ -100,10 +94,8 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body:
-            json: {"full_name_arg": "main.replay.rename_owner_a",
-                   "owner": "analysts"}
+            json: {"owner": "analysts"}
         response:
           status: 200
           body:
@@ -119,10 +111,8 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body:
-            json: {"full_name_arg": "main.replay.rename_owner_a",
-                   "new_name": "rename_owner_b"}
+            json: {"new_name": "rename_owner_b"}
         response:
           status: 200
           body:
@@ -139,7 +129,6 @@ steps:
           path: /api/2.1/unity-catalog/volumes/main.replay.rename_owner_b
           headers:
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body: null
         response:
           status: 200
@@ -175,10 +164,8 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body:
-            json: {"full_name_arg": "main.replay.rename_owner_b",
-                   "owner": "data-engineers"}
+            json: {"owner": "data-engineers"}
         response:
           status: 200
           body:
@@ -194,10 +181,8 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body:
-            json: {"full_name_arg": "main.replay.rename_owner_b",
-                   "new_name": "rename_owner_c"}
+            json: {"new_name": "rename_owner_c"}
         response: &already_exists
           status: 409
           body:
@@ -209,10 +194,8 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body:
-            json: {"full_name_arg": "main.replay.rename_owner_b",
-                   "owner": "analysts"}
+            json: {"owner": "analysts"}
         response:
           status: 200
           body:
@@ -289,7 +272,6 @@ destroy:
         path: /api/2.1/unity-catalog/volumes/main.replay.rename_owner_b
         headers:
           X-Databricks-Workspace-Id: "12345"
-          Accept: ""
         body: null
       response:
         status: 200

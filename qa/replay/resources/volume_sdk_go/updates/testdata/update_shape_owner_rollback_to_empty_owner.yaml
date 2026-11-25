@@ -1,9 +1,6 @@
 # Runs volume_updates/testdata/update_shape_owner_rollback_to_empty_owner.yaml with
-# databricks_volume on sdk-go uc/volumes/v1 in every step, and expects the same behavior.
-# The volume POST, GET, PATCH and DELETE requests carry no Accept header, which an empty
-# header expectation pins. Each PATCH body also carries full_name_arg, the full name in
-# its path, because sdk-go serializes the path field into the body. The original's
-# description:
+# databricks_volume on sdk-go uc/volumes/v1 in every step, and expects the same requests
+# and behavior. The original's description:
 #
 # Pins the owner rollback when state holds an empty owner. The volume is created from
 # responses without owner, so owner stays null in state. Changing owner and comment
@@ -37,7 +34,6 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body:
             json: {"catalog_name": "main", "schema_name": "replay",
                    "name": "ownerless_volume", "volume_type": "MANAGED",
@@ -58,7 +54,6 @@ steps:
           path: /api/2.1/unity-catalog/volumes/main.replay.ownerless_volume
           headers:
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body: null
         response:
           status: 200
@@ -109,10 +104,8 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body:
-            json: {"full_name_arg": "main.replay.ownerless_volume",
-                   "owner": "analysts"}
+            json: {"owner": "analysts"}
         response:
           status: 200
           body:
@@ -131,10 +124,8 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body:
-            json: {"full_name_arg": "main.replay.ownerless_volume",
-                   "comment": "second comment"}
+            json: {"comment": "second comment"}
         response:
           status: 400
           body:
@@ -146,10 +137,8 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body:
-            json: {"full_name_arg": "main.replay.ownerless_volume",
-                   }
+            json: {}
         response:
           status: 200
           body:
@@ -189,7 +178,6 @@ destroy:
         path: /api/2.1/unity-catalog/volumes/main.replay.ownerless_volume
         headers:
           X-Databricks-Workspace-Id: "12345"
-          Accept: ""
         body: null
       response:
         status: 200

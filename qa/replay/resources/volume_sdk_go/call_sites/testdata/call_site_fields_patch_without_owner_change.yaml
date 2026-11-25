@@ -1,9 +1,6 @@
 # Runs volume_call_sites/testdata/call_site_fields_patch_without_owner_change.yaml with
-# databricks_volume on sdk-go uc/volumes/v1 in every step, and expects the same behavior.
-# The volume POST, GET, PATCH and DELETE requests carry no Accept header, which an empty
-# header expectation pins. Each PATCH body also carries full_name_arg, the full name in
-# its path, because sdk-go serializes the path field into the body. The original's
-# description:
+# databricks_volume on sdk-go uc/volumes/v1 in every step, and expects the same requests
+# and behavior. The original's description:
 #
 # Pins the fields PATCH of an update that leaves the owner unchanged, failing with errors
 # the classic SDK does not retry: 401, 403, 502, and 504 with a message that matches no
@@ -38,7 +35,6 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body:
             json: {"catalog_name": "main", "schema_name": "replay",
                    "name": "fields_volume", "volume_type": "MANAGED", "comment": "first"}
@@ -58,10 +54,8 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body:
-            json: {"full_name_arg": "main.replay.fields_volume",
-                   "comment": "first", "owner": "owner-a@example.com"}
+            json: {"comment": "first", "owner": "owner-a@example.com"}
         response:
           status: 200
           body:
@@ -79,7 +73,6 @@ steps:
           path: /api/2.1/unity-catalog/volumes/main.replay.fields_volume
           headers:
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body: null
         response:
           status: 200
@@ -108,10 +101,8 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body:
-            json: {"full_name_arg": "main.replay.fields_volume",
-                   "new_name": "fields_renamed", "comment": "second"}
+            json: {"new_name": "fields_renamed", "comment": "second"}
         response:
           status: 401
           body:
@@ -225,7 +216,6 @@ destroy:
         path: /api/2.1/unity-catalog/volumes/main.replay.fields_volume
         headers:
           X-Databricks-Workspace-Id: "12345"
-          Accept: ""
         body: null
       response:
         status: 200

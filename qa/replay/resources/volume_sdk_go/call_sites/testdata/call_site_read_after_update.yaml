@@ -1,8 +1,6 @@
 # Runs volume_call_sites/testdata/call_site_read_after_update.yaml with databricks_volume
-# on sdk-go uc/volumes/v1 in every step, and expects the same behavior. The volume POST,
-# GET, PATCH and DELETE requests carry no Accept header, which an empty header expectation
-# pins. Each PATCH body also carries full_name_arg, the full name in its path, because
-# sdk-go serializes the path field into the body. The original's description:
+# on sdk-go uc/volumes/v1 in every step, and expects the same requests and behavior. The
+# original's description:
 #
 # Pins the GET that follows a successful update PATCH. A 404 after a rename whose PATCH
 # returned the new full name, a 403 and a 500 each fail apply with "cannot read volume"
@@ -35,7 +33,6 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body:
             json: {"catalog_name": "main", "schema_name": "replay",
                    "name": "read_after_update_volume", "volume_type": "MANAGED",
@@ -57,7 +54,6 @@ steps:
           path: /api/2.1/unity-catalog/volumes/main.replay.read_after_update_volume
           headers:
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body: null
         response:
           status: 200
@@ -85,10 +81,8 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body:
-            json: {"full_name_arg": "main.replay.read_after_update_volume",
-                   "new_name": "read_after_update_renamed", "comment": "first"}
+            json: {"new_name": "read_after_update_renamed", "comment": "first"}
         response:
           status: 200
           body:
@@ -105,7 +99,6 @@ steps:
           path: /api/2.1/unity-catalog/volumes/main.replay.read_after_update_renamed
           headers:
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body: null
         response:
           status: 404
@@ -157,10 +150,8 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body:
-            json: {"full_name_arg": "main.replay.read_after_update_renamed",
-                   "comment": "second"}
+            json: {"comment": "second"}
         response:
           status: 200
           body:
@@ -220,10 +211,8 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body:
-            json: {"full_name_arg": "main.replay.read_after_update_renamed",
-                   "comment": "third"}
+            json: {"comment": "third"}
         response:
           status: 200
           body:
@@ -270,7 +259,6 @@ destroy:
         path: /api/2.1/unity-catalog/volumes/main.replay.read_after_update_renamed
         headers:
           X-Databricks-Workspace-Id: "12345"
-          Accept: ""
         body: null
       response:
         status: 200

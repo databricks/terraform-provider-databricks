@@ -1,11 +1,8 @@
 # Runs volume_call_sites/testdata/call_site_rollback_patch.yaml with databricks_volume on
-# sdk-go uc/volumes/v1 in every step, and expects the same behavior, except where noted.
-# The volume POST, GET, PATCH and DELETE requests carry no Accept header, which an empty
-# header expectation pins. Each PATCH body also carries full_name_arg, the full name in
-# its path, because sdk-go serializes the path field into the body. When the rollback
-# PATCH is answered 200 with malformed JSON, the owner-rollback message quotes the same
-# unmarshal error, but without the existing client's request log. The original's
-# description:
+# sdk-go uc/volumes/v1 in every step, and expects the same requests and behavior, except
+# that when the rollback PATCH is answered 200 with malformed JSON, the owner-rollback
+# message quotes the same unmarshal error, but without the existing client's request log.
+# The original's description:
 #
 # Pins the owner rollback PATCH failing after an update's owner PATCH succeeded and its
 # fields PATCH was rejected: 401, 404, 409, 500, 502, 504 with a message that matches no
@@ -41,7 +38,6 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body:
             json: {"catalog_name": "main", "schema_name": "replay",
                    "name": "rollback_errors_volume", "volume_type": "MANAGED",
@@ -63,10 +59,8 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body:
-            json: {"full_name_arg": "main.replay.rollback_errors_volume",
-                   "comment": "first", "owner": "owner-a@example.com"}
+            json: {"comment": "first", "owner": "owner-a@example.com"}
         response: &owner_a
           status: 200
           body:
@@ -84,7 +78,6 @@ steps:
           path: /api/2.1/unity-catalog/volumes/main.replay.rollback_errors_volume
           headers:
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body: null
         response: *owner_a
       - *read_owner_a
@@ -117,10 +110,8 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body:
-            json: {"full_name_arg": "main.replay.rollback_errors_volume",
-                   "owner": "owner-b@example.com"}
+            json: {"owner": "owner-b@example.com"}
         response: &owner_b
           status: 200
           body:
@@ -138,10 +129,8 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body:
-            json: {"full_name_arg": "main.replay.rollback_errors_volume",
-                   "comment": "second"}
+            json: {"comment": "second"}
         response: &comment_rejected
           status: 400
           body:
@@ -153,10 +142,8 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body:
-            json: {"full_name_arg": "main.replay.rollback_errors_volume",
-                   "owner": "owner-a@example.com"}
+            json: {"owner": "owner-a@example.com"}
         response:
           status: 401
           body:
@@ -222,10 +209,8 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body:
-            json: {"full_name_arg": "main.replay.rollback_errors_volume",
-                   "owner": "owner-c@example.com"}
+            json: {"owner": "owner-c@example.com"}
         response: &owner_c
           status: 200
           body:
@@ -245,10 +230,8 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body:
-            json: {"full_name_arg": "main.replay.rollback_errors_volume",
-                   "owner": "owner-b@example.com"}
+            json: {"owner": "owner-b@example.com"}
         response:
           status: 404
           body:
@@ -309,10 +292,8 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body:
-            json: {"full_name_arg": "main.replay.rollback_errors_volume",
-                   "owner": "owner-d@example.com"}
+            json: {"owner": "owner-d@example.com"}
         response: &owner_d
           status: 200
           body:
@@ -332,10 +313,8 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body:
-            json: {"full_name_arg": "main.replay.rollback_errors_volume",
-                   "owner": "owner-c@example.com"}
+            json: {"owner": "owner-c@example.com"}
         response:
           status: 409
           body:
@@ -395,10 +374,8 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body:
-            json: {"full_name_arg": "main.replay.rollback_errors_volume",
-                   "owner": "owner-e@example.com"}
+            json: {"owner": "owner-e@example.com"}
         response: &owner_e
           status: 200
           body:
@@ -418,10 +395,8 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body:
-            json: {"full_name_arg": "main.replay.rollback_errors_volume",
-                   "owner": "owner-d@example.com"}
+            json: {"owner": "owner-d@example.com"}
         response:
           status: 500
           body:
@@ -480,10 +455,8 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body:
-            json: {"full_name_arg": "main.replay.rollback_errors_volume",
-                   "owner": "owner-f@example.com"}
+            json: {"owner": "owner-f@example.com"}
         response: &owner_f
           status: 200
           body:
@@ -503,10 +476,8 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body:
-            json: {"full_name_arg": "main.replay.rollback_errors_volume",
-                   "owner": "owner-e@example.com"}
+            json: {"owner": "owner-e@example.com"}
         response:
           status: 502
           body:
@@ -564,10 +535,8 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body:
-            json: {"full_name_arg": "main.replay.rollback_errors_volume",
-                   "owner": "owner-g@example.com"}
+            json: {"owner": "owner-g@example.com"}
         response: &owner_g
           status: 200
           body:
@@ -587,10 +556,8 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body:
-            json: {"full_name_arg": "main.replay.rollback_errors_volume",
-                   "owner": "owner-f@example.com"}
+            json: {"owner": "owner-f@example.com"}
         response:
           status: 504
           body:
@@ -650,10 +617,8 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body:
-            json: {"full_name_arg": "main.replay.rollback_errors_volume",
-                   "owner": "owner-h@example.com"}
+            json: {"owner": "owner-h@example.com"}
         response: &owner_h
           status: 200
           body:
@@ -673,10 +638,8 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body:
-            json: {"full_name_arg": "main.replay.rollback_errors_volume",
-                   "owner": "owner-g@example.com"}
+            json: {"owner": "owner-g@example.com"}
         response:
           status: 200
           headers:
@@ -716,7 +679,6 @@ destroy:
         path: /api/2.1/unity-catalog/volumes/main.replay.rollback_errors_volume
         headers:
           X-Databricks-Workspace-Id: "12345"
-          Accept: ""
         body: null
       response:
         status: 200

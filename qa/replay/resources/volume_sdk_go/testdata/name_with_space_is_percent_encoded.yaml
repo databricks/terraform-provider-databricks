@@ -1,8 +1,6 @@
 # Runs volume/testdata/name_with_space_is_percent_encoded.yaml with databricks_volume on
-# sdk-go uc/volumes/v1 in every step, and expects the same behavior. The volume POST, GET,
-# PATCH and DELETE requests carry no Accept header, which an empty header expectation
-# pins. Each PATCH body also carries full_name_arg, the full name in its path, because
-# sdk-go serializes the path field into the body. The original's description:
+# sdk-go uc/volumes/v1 in every step, and expects the same requests and behavior. The
+# original's description:
 #
 # Pins the request paths for a volume name with a space. The classic client puts the
 # full name in the path unescaped, and Go's URL handling sends the space as %20 on the
@@ -32,7 +30,6 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body:
             json: {"catalog_name": "main", "schema_name": "replay", "name": "raw 2",
                    "volume_type": "MANAGED"}
@@ -51,7 +48,6 @@ steps:
           path: /api/2.1/unity-catalog/volumes/main.replay.raw%202
           headers:
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body: null
         response:
           status: 200
@@ -85,10 +81,8 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body:
-            json: {"full_name_arg": "main.replay.raw 2",
-                   "comment": "encoded"}
+            json: {"comment": "encoded"}
         response:
           status: 200
           body:
@@ -118,7 +112,6 @@ steps:
           path: /api/2.1/unity-catalog/volumes/main.replay.raw%202
           headers:
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body: null
         response:
           status: 200

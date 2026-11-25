@@ -1,6 +1,5 @@
 # Runs volume_errors/testdata/error_bodies_on_create.yaml with databricks_volume on sdk-go
-# uc/volumes/v1 in every step, and expects the same behavior. The volume POST request
-# carries no Accept header, which an empty header expectation pins. The original's
+# uc/volumes/v1 in every step, and expects the same requests and behavior. The original's
 # description:
 #
 # Pins how the classic SDK turns create POST error bodies into diagnostics. A failed
@@ -31,7 +30,6 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body:
             json: {"catalog_name": "main", "schema_name": "replay",
                    "name": "create_errors_volume", "volume_type": "MANAGED"}

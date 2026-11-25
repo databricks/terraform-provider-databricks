@@ -1,12 +1,12 @@
 # Runs volume_errors/testdata/response_decoding_errors.yaml with databricks_volume on
-# sdk-go uc/volumes/v1 in every step, and expects the same behavior, except where noted.
-# The volume POST, GET, PATCH and DELETE requests carry no Accept header, which an empty
-# header expectation pins. Each PATCH body also carries full_name_arg, the full name in
-# its path, because sdk-go serializes the path field into the body. Malformed JSON on the
-# POST, GET or PATCH fails with the same unmarshal error, but without the existing
-# client's request log, so those patterns end at the error and the step names say so. An
-# HTML body fails with sdk-go's JSON decode error, "invalid character '<' looking for
-# beginning of value", instead of the SDK's HTML error. An empty GET body fails the
+# sdk-go uc/volumes/v1 in every step, and expects the same requests and behavior, except
+# in how it decodes 200 responses. Malformed JSON on the POST, GET or PATCH fails with the
+# same unmarshal error, but without the existing client's request log, so those patterns
+# end at the error and the step names say so. An HTML body fails with sdk-go's JSON decode
+# error, "invalid character '<' looking for beginning of value", instead of the existing
+# client's "received HTML response instead of JSON", which points users to Private Link
+# troubleshooting. That is a known defect in new mode: #6247 is expected to restore the
+# HTML error, and that step should then expect it again. An empty GET body fails the
 # refresh with "unexpected end of JSON input" instead of blanking the state and planning a
 # replacement, so that step expects the error instead of a plan, and the later steps show
 # that the volume keeps its ID. A PATCH answered {} or without full_name has the same
@@ -50,7 +50,6 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body:
             json: {"catalog_name": "main", "schema_name": "replay",
                    "name": "decode_volume", "volume_type": "MANAGED",
@@ -84,7 +83,6 @@ steps:
           path: /api/2.1/unity-catalog/volumes/main.replay.decode_volume
           headers:
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body: null
         response:
           status: 200
@@ -151,10 +149,8 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body:
-            json: {"full_name_arg": "main.replay.decode_volume",
-                   "comment": "decoded"}
+            json: {"comment": "decoded"}
         response:
           status: 200
           headers:
@@ -179,7 +175,6 @@ steps:
           path: /api/2.1/unity-catalog/volumes/
           headers:
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body: null
         response: &empty_name_not_found
           status: 404
@@ -247,7 +242,6 @@ destroy:
         path: /api/2.1/unity-catalog/volumes/main.replay.decode_volume
         headers:
           X-Databricks-Workspace-Id: "12345"
-          Accept: ""
         body: null
       response:
         status: 200

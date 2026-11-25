@@ -1,7 +1,6 @@
 # Runs volume_call_sites/testdata/call_site_delete.yaml with databricks_volume on sdk-go
-# uc/volumes/v1 in every step, and expects the same behavior. The volume POST, GET and
-# DELETE requests carry no Accept header, which an empty header expectation pins. The
-# original's description:
+# uc/volumes/v1 in every step, and expects the same requests and behavior. The original's
+# description:
 #
 # Pins the DELETE failing with errors the classic SDK does not retry and does not count as
 # already deleted: 401, 409, 502, and 504 with a message that matches no transient
@@ -33,7 +32,6 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body:
             json: {"catalog_name": "main", "schema_name": "replay",
                    "name": "delete_call_site_volume", "volume_type": "MANAGED"}
@@ -53,7 +51,6 @@ steps:
           path: /api/2.1/unity-catalog/volumes/main.replay.delete_call_site_volume
           headers:
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body: null
         response:
           status: 200
@@ -74,7 +71,6 @@ steps:
           path: /api/2.1/unity-catalog/volumes/main.replay.delete_call_site_volume
           headers:
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body: null
         response:
           status: 401

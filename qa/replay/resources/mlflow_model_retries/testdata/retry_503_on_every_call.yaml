@@ -1,0 +1,134 @@
+# This journey pins that the classic SDK client retries a 503 once at each of the four
+# databricks_mlflow_model calls: the create POST, the read GET, the update PATCH and the
+# DELETE. Each 503 is followed by exactly one identical request that succeeds. The SDK
+# retries no error code on its own apart from the rate-limit codes, so only the status
+# triggers the retry. API responses are synthetic, inferred from the MLflow Model Registry
+# API, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: create_retries_post_and_read
+    config: |
+      resource "databricks_mlflow_model" "this" {
+        name        = "retry-model"
+        description = "first"
+      }
+    calls:
+      - request: &create
+          method: POST
+          path: /api/2.0/mlflow/registered-models/create
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"name": "retry-model", "description": "first"}
+        response: &retried_error
+          status: 503
+          body:
+            json: {"error_code": "TEMPORARILY_UNAVAILABLE",
+                   "message": "The service is temporarily unavailable."}
+      - request: *create
+        response:
+          status: 200
+          body:
+            json: {"registered_model": {"name": "retry-model", "description": "first",
+                                        "creation_timestamp": 1700000000000,
+                                        "last_updated_timestamp": 1700000000000,
+                                        "user_id": "replay-admin@example.com"}}
+      - request: &read
+          method: GET
+          path: /api/2.0/mlflow/databricks/registered-models/get
+          query:
+            name: ["retry-model"]
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response: *retried_error
+      - request: *read
+        response: &model_first
+          status: 200
+          body:
+            json: {"registered_model_databricks": {
+                     "name": "retry-model", "description": "first",
+                     "id": "0123456789abcdef0123456789abcdef",
+                     "creation_timestamp": 1700000000000,
+                     "last_updated_timestamp": 1700000000000,
+                     "user_id": "replay-admin@example.com",
+                     "permission_level": "CAN_MANAGE"}}
+      - request: *read
+        response: *model_first
+    state:
+      resources:
+        databricks_mlflow_model.this:
+          attributes:
+            - path: [id]
+              equals: retry-model
+            - path: [registered_model_id]
+              equals: 0123456789abcdef0123456789abcdef
+  - name: update_description_retries_patch
+    config: |
+      resource "databricks_mlflow_model" "this" {
+        name        = "retry-model"
+        description = "second"
+      }
+    calls:
+      - request: *read
+        response: *model_first
+      - request: &update
+          method: PATCH
+          path: /api/2.0/mlflow/registered-models/update
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"name": "retry-model", "description": "second"}
+        response: *retried_error
+      - request: *update
+        response:
+          status: 200
+          body:
+            json: {"registered_model": {"name": "retry-model", "description": "second",
+                                        "creation_timestamp": 1700000000000,
+                                        "last_updated_timestamp": 1700000001000,
+                                        "user_id": "replay-admin@example.com"}}
+      - request: *read
+        response: &model_second
+          status: 200
+          body:
+            json: {"registered_model_databricks": {
+                     "name": "retry-model", "description": "second",
+                     "id": "0123456789abcdef0123456789abcdef",
+                     "creation_timestamp": 1700000000000,
+                     "last_updated_timestamp": 1700000001000,
+                     "user_id": "replay-admin@example.com",
+                     "permission_level": "CAN_MANAGE"}}
+      - request: *read
+        response: *model_second
+    state:
+      resources:
+        databricks_mlflow_model.this:
+          attributes:
+            - path: [description]
+              equals: second
+destroy:
+  calls:
+    - request: *read
+      response: *model_second
+    - request: &delete
+        method: DELETE
+        path: /api/2.0/mlflow/registered-models/delete
+        query:
+          name: ["retry-model"]
+        headers:
+          X-Databricks-Workspace-Id: "12345"
+        body: null
+      response: *retried_error
+    - request: *delete
+      response:
+        status: 200
+        body:
+          json: {}

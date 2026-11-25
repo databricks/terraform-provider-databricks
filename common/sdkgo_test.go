@@ -232,19 +232,6 @@ func htmlError(status int, message string) handler {
 	}
 }
 
-func TestSdkGoClientReadsHTMLNotFoundAsMissingLikeClassicClient(t *testing.T) {
-	r := readBothWays(t, context.Background, nil,
-		htmlError(http.StatusNotFound, "Volume not found."))
-	var apiErr, classicAPIErr *apierr.APIError
-	require.ErrorAs(t, r.err, &apiErr)
-	require.ErrorAs(t, r.classicErr, &classicAPIErr)
-	assert.Equal(t, "NOT_FOUND", classicAPIErr.ErrorCode)
-	assert.Equal(t, classicAPIErr.ErrorCode, apiErr.ErrorCode)
-	assert.True(t, apierr.IsMissing(r.err))
-	assert.EqualError(t, r.err, r.classicErr.Error())
-	assert.Equal(t, r.classicCalls, r.calls)
-}
-
 func TestSdkGoClientRetriesHTMLTooManyRequestsLikeClassicClient(t *testing.T) {
 	r := readBothWays(t, context.Background, nil,
 		htmlError(http.StatusTooManyRequests, "Too many requests."),

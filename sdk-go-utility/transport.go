@@ -1,16 +1,21 @@
 package sdkgoutility
 
 import (
+	"bytes"
 	"context"
 	"crypto/tls"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net"
 	"net/http"
 	"runtime"
 	"strings"
 	"time"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/common"
 	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/databricks-sdk-go/httpclient"
 	"github.com/databricks/databricks-sdk-go/httpclient/traceparent"
@@ -47,6 +52,17 @@ const transportModularUserAgentPrefix = "sdk-go-"
 // the classic default, including cfg.InsecureSkipVerify. Every result of
 // Transport for such a config sends over the same transport, so a caller can
 // build a modular client for each call and still reuse connections.
+//
+// The transport returns the response as it is, with one exception. A workspace
+// that refuses a request from outside its private link redirects it to its
+// login page, /login.html?error=private-link-validation-error, which answers
+// with a 200. The classic client reports that page as an error for every
+// method. A modular client would fail to decode it, or succeed when the call
+// decodes no response, as a delete does. So when apierr.GetAPIError of the
+// classic SDK reports a response with a status below 400 as an error, the
+// transport returns in its place the status of that error, 403, and a JSON
+// body with its error code, PRIVATE_LINK_VALIDATION_ERROR, and its message,
+// which a modular client reads as an API error.
 //
 // Transport resolves cfg, as building a classic client does, and returns the
 // error of that resolution.
@@ -119,7 +135,11 @@ func (t *transportRoundTripper) RoundTrip(req *http.Request) (*http.Response, er
 	if req.Header.Get("Accept") == "" {
 		out.Header.Set("Accept", "application/json")
 	}
-	return t.base.RoundTrip(out)
+	resp, err := t.base.RoundTrip(out)
+	if err != nil || resp == nil {
+		return resp, err
+	}
+	return transportPrivateLinkResponse(out, resp), nil
 }
 
 // visit runs the visitors on req in order and stops at the first error. It
@@ -138,6 +158,45 @@ func (t *transportRoundTripper) visit(req *http.Request) (err error) {
 		}
 	}
 	return nil
+}
+
+// transportPrivateLinkResponse returns resp, the answer to sent, unless the
+// classic client reports it as an error although its status is below 400.
+// That is the login page of a workspace that refused a request from outside
+// its private link, which apierr.GetAPIError recognizes by the path and the
+// query of the request. In its place the function returns that error as an
+// API sends one: with its status, and its error code and message in a JSON
+// body. It closes the page unread.
+func transportPrivateLinkResponse(sent *http.Request, resp *http.Response) *http.Response {
+	// The classic parser reads the URL from the request of the response, which
+	// http.Transport sets and another base transport may leave out.
+	page := &http.Response{StatusCode: resp.StatusCode, Request: resp.Request}
+	if page.Request == nil {
+		page.Request = sent
+	}
+	// It reads a status from 400 as an error response, which stays as it is.
+	if page.StatusCode >= 400 || page.Request.URL == nil {
+		return resp
+	}
+	classicErr, ok := apierr.GetAPIError(sent.Context(), common.ResponseWrapper{Response: page}).(*apierr.APIError)
+	if !ok {
+		return resp
+	}
+	if resp.Body != nil {
+		resp.Body.Close()
+	}
+	body, _ := json.Marshal(map[string]string{"error_code": classicErr.ErrorCode, "message": classicErr.Message})
+	return &http.Response{
+		Status:        fmt.Sprintf("%d %s", classicErr.StatusCode, http.StatusText(classicErr.StatusCode)),
+		StatusCode:    classicErr.StatusCode,
+		Proto:         resp.Proto,
+		ProtoMajor:    resp.ProtoMajor,
+		ProtoMinor:    resp.ProtoMinor,
+		Header:        http.Header{"Content-Type": {"application/json"}},
+		Body:          io.NopCloser(bytes.NewReader(body)),
+		ContentLength: int64(len(body)),
+		Request:       resp.Request,
+	}
 }
 
 // transportUserAgent returns the classic User-Agent for ctx, followed by the

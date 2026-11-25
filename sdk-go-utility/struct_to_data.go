@@ -1,9 +1,11 @@
 package sdkgoutility
 
 import (
+	"encoding/json"
 	"fmt"
 	"reflect"
 
+	"github.com/databricks/sdk-go/core/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -17,23 +19,29 @@ import (
 //
 //   - the value of a scalar, or the one that a pointer to a scalar points to;
 //   - the string of an enum, which is a named string type;
+//   - the string of a types.Time or a types.Duration, or of a pointer to one:
+//     the text of its JSON without the quotes, as 2026-01-02T03:04:05Z and
+//     3.500s;
 //   - a list with one map for a nested message, and with one map per message
 //     for a slice of messages, where a nil message adds no map;
-//   - a list for a slice of scalars or enums;
+//   - a list for a slice of scalars, enums, times or durations;
 //   - the map of a map[string]string.
 //
 // A nil pointer to a scalar is read as the zero value of that scalar: a nil
 // *string as "", a nil *int64 as 0, a nil *float64 as 0 and a nil *bool as
 // false. That is what the classic struct holds for a field that the response
-// leaves out, so the rules below see the same value on both paths.
+// leaves out, so the rules below see the same value on both paths. A nil
+// *types.Time or *types.Duration is read as "", like a nil *string, because
+// the classic struct holds such a field as a string.
 //
 // The rules that decide whether a field is written are those of
 // common.StructToData:
 //
 //   - An optional field is skipped when it is empty: an empty string, a nil
-//     message, or a slice or map without entries. So a nil *string is skipped,
-//     while 0 and false aren't empty, and a nil *int64, *float64 or *bool is
-//     written as 0 or false like any other value.
+//     message, or a slice or map without entries. So a nil *string,
+//     *types.Time or *types.Duration is skipped, while 0 and false aren't
+//     empty, and a nil *int64, *float64 or *bool is written as 0 or false like
+//     any other value.
 //   - Unless d is a new resource, a field that the configuration doesn't set
 //     is skipped, except when its schema is computed or a bool.
 //   - A list of nested blocks is never written empty.
@@ -45,12 +53,18 @@ import (
 // StructToData returns an error that names what was wrong for a nil result,
 // for a result that isn't a struct or a pointer to one, for a field of a type
 // that it doesn't support, for a message whose schema isn't a nested block,
-// and when d.Set fails.
+// for a time or a duration outside the range that its JSON form allows, and
+// when d.Set fails.
 //
 // StructToData deliberately doesn't:
 //
 //   - use the difference between a nil pointer and a pointer to a zero value,
 //     because the classic path can't see it and the state would change;
+//   - keep the text of a time or a duration as the API sent it. The SDK
+//     parses it, and StructToData writes the form of the SDK: a time in UTC
+//     with a Z, and both with 0, 3, 6 or 9 fraction digits. The classic struct
+//     holds the text of the API, so the state differs where the API sends
+//     another form, as 2026-01-02T03:04:05.000Z or an offset;
 //   - read json or tf tags or aliases, or flatten an embedded struct. Classic
 //     SDK structs and the provider's own structs stay with
 //     common.StructToData;
@@ -168,17 +182,18 @@ func structToDataConvert(field reflect.Value, fieldSchema *schema.Schema) (struc
 	t := field.Type()
 	switch {
 	case structToDataIsScalar(structToDataIndirect(t)):
-		value := structToDataScalar(field)
-		return structToDataValue{value: value, empty: value == ""}, nil
-	case structToDataIndirect(t).Kind() == reflect.Struct:
+		value, err := structToDataScalar(field)
+		return structToDataValue{value: value, empty: value == ""}, err
+	case structToDataIsMessage(structToDataIndirect(t)):
 		return structToDataBlocks([]reflect.Value{field}, fieldSchema)
 	case t.Kind() == reflect.Slice && structToDataIsScalar(t.Elem()):
 		list := make([]any, field.Len())
-		for i := range list {
-			list[i] = structToDataScalar(field.Index(i))
+		var err error
+		for i := 0; i < len(list) && err == nil; i++ {
+			list[i], err = structToDataScalar(field.Index(i))
 		}
-		return structToDataValue{value: list, empty: len(list) == 0}, nil
-	case t.Kind() == reflect.Slice && structToDataIndirect(t.Elem()).Kind() == reflect.Struct:
+		return structToDataValue{value: list, empty: len(list) == 0}, err
+	case t.Kind() == reflect.Slice && structToDataIsMessage(structToDataIndirect(t.Elem())):
 		messages := make([]reflect.Value, field.Len())
 		for i := range messages {
 			messages[i] = field.Index(i)
@@ -200,39 +215,64 @@ func structToDataIndirect(t reflect.Type) reflect.Type {
 }
 
 // structToDataIsScalar reports whether t is a string, a bool, a signed integer
-// or a float, or a type named after one, as an enum. Unsigned integers are
-// left out, so that a slice of bytes, which holds raw JSON, isn't taken for a
-// list.
+// or a float, or a type named after one, as an enum, or a types.Time or a
+// types.Duration, which are strings in JSON. Unsigned integers are left out,
+// so that a slice of bytes, which holds raw JSON, isn't taken for a list.
 func structToDataIsScalar(t reflect.Type) bool {
 	switch t.Kind() {
 	case reflect.String, reflect.Bool, reflect.Float32, reflect.Float64,
 		reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 		return true
 	}
-	return false
+	return t == reflect.TypeFor[types.Time]() || t == reflect.TypeFor[types.Duration]()
+}
+
+// structToDataIsMessage reports whether t is a struct that is written as a
+// nested block, which is every struct but a time and a duration.
+func structToDataIsMessage(t reflect.Type) bool {
+	return t.Kind() == reflect.Struct && !structToDataIsScalar(t)
 }
 
 // structToDataScalar returns the scalar that v is or points to as a string,
 // bool, int64 or float64, whatever the name of its type. A nil pointer gives
 // the zero value, which is what the classic struct holds for a field that the
-// response leaves out.
-func structToDataScalar(v reflect.Value) any {
+// response leaves out. For a time and a duration that is the empty string,
+// because the classic struct holds them as strings.
+func structToDataScalar(v reflect.Value) (any, error) {
 	if v.Kind() == reflect.Pointer {
-		if v.IsNil() {
-			v = reflect.Zero(v.Type().Elem())
-		} else {
+		switch {
+		case !v.IsNil():
 			v = v.Elem()
+		case v.Type().Elem().Kind() == reflect.Struct:
+			return "", nil
+		default:
+			v = reflect.Zero(v.Type().Elem())
 		}
 	}
 	switch v.Kind() {
 	case reflect.String:
-		return v.String()
+		return v.String(), nil
 	case reflect.Bool:
-		return v.Bool()
+		return v.Bool(), nil
 	case reflect.Float32, reflect.Float64:
-		return v.Float()
+		return v.Float(), nil
+	case reflect.Struct:
+		return structToDataText(v.Interface().(json.Marshaler))
 	}
-	return v.Int()
+	return v.Int(), nil
+}
+
+// structToDataText returns the text of the JSON string that value, a time or
+// a duration, marshals to. It calls MarshalJSON itself, so that the error for
+// a value outside the range of the JSON form is the one of the SDK.
+func structToDataText(value json.Marshaler) (string, error) {
+	data, err := value.MarshalJSON()
+	if err != nil {
+		return "", err
+	}
+	var text string
+	err = json.Unmarshal(data, &text)
+	return text, err
 }
 
 // structToDataBlocks returns messages, structs or pointers to them, as the

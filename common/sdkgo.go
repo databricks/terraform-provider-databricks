@@ -165,11 +165,16 @@ func classicVolumePath(fullName string) string {
 	return "/api/2.1/unity-catalog/volumes/" + fullName
 }
 
+// sdkGoHost is the host that sdk-go builds URLs with. sdkGoTransport replaces each URL
+// with the classic one, whose host the classic visitors set, so a host that the classic
+// client can't parse fails there, with the classic error.
+const sdkGoHost = "https://sdk-go.invalid"
+
 // clientOptions returns the options that make an sdk-go client send requests to cfg's
 // host through the bridge.
 func (b *sdkGoBridge) clientOptions(cfg *config.Config) []client.Option {
 	return []client.Option{
-		client.WithHost(cfg.Host),
+		client.WithHost(sdkGoHost),
 		client.WithCredentials(classicCredentials{cfg, b.httpTimeout}),
 		client.WithHTTPClient(b.httpClient),
 		// retry_timeout_seconds and http_timeout_seconds bound calls instead.

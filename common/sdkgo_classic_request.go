@@ -114,20 +114,26 @@ func (a *sdkGoAttempt) gotSuccess() bool {
 	return a != nil && a.response != nil && a.response.StatusCode < http.StatusBadRequest
 }
 
-// useClassicResponseBody gives sdk-go the classic encoding of body, the success body of
-// resp. Like the classic client, a body that the classic type doesn't decode fails,
+// sdkGoResponse returns resp, whose body is body, as sdk-go must read it to read it as
+// the classic client does. The classic client reads every status below 400 as a
+// success, so such a response reaches sdk-go as 200 OK, with the classic encoding of
+// its body. Like the classic client, a body that the classic type doesn't decode fails,
 // which classicError reports with the classic error and never retries.
-func (a *sdkGoAttempt) useClassicResponseBody(resp *http.Response, body []byte) error {
-	if resp.StatusCode >= http.StatusBadRequest || a.classic.response == nil {
-		return nil
+func (a *sdkGoAttempt) sdkGoResponse(resp *http.Response,
+	body []byte) (*http.Response, error) {
+	if resp.StatusCode >= http.StatusBadRequest {
+		return resp, nil
 	}
 	body, err := a.classicResponseBody(body)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	resp.Body = io.NopCloser(bytes.NewReader(body))
-	resp.ContentLength = int64(len(body))
-	return nil
+	// The attempt keeps resp, whose status the classic request log shows.
+	success := *resp
+	success.StatusCode, success.Status = http.StatusOK, "200 OK"
+	success.Body = io.NopCloser(bytes.NewReader(body))
+	success.ContentLength = int64(len(body))
+	return &success, nil
 }
 
 // classicResponseBody decodes body, a success body, into the classic response type, as

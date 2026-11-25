@@ -3,11 +3,14 @@ package common
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 
-	"github.com/databricks/databricks-sdk-go/service/catalog"
+	"github.com/databricks/databricks-sdk-go/httpclient"
+	"github.com/databricks/databricks-sdk-go/logger/httplog"
 )
 
 // classicRequest is how the classic client sends a call. sdkGoTransport sends every
@@ -23,8 +26,7 @@ type classicRequest struct {
 	// body, if set, turns the body sdk-go built into the body the classic client sends.
 	body func([]byte) ([]byte, error)
 	// response, if set, returns the classic type that the classic client decodes a
-	// successful response into. It is unset if the classic client decodes none, as for a
-	// delete.
+	// success body into. It is unset if the classic client decodes none, as for a delete.
 	response func() any
 }
 
@@ -33,11 +35,6 @@ type classicRequest struct {
 func classicVolumeRequest(method, path, url string) classicRequest {
 	return classicRequest{method: method, path: path, url: url,
 		header: http.Header{"Accept": {"application/json"}}}
-}
-
-// classicVolumeInfo returns the classic type of a volume response.
-func classicVolumeInfo() any {
-	return &catalog.VolumeInfo{}
 }
 
 // classicVolumeBody turns the JSON object that sdk-go built into the classic body,
@@ -110,4 +107,84 @@ func rewriteBody(r *http.Request, rewrite func([]byte) ([]byte, error)) error {
 	}
 	r.Body, _ = r.GetBody()
 	return nil
+}
+
+// gotSuccess reports whether the last attempt got a success response.
+func (a *sdkGoAttempt) gotSuccess() bool {
+	return a != nil && a.response != nil && a.response.StatusCode < http.StatusBadRequest
+}
+
+// useClassicResponseBody gives sdk-go the classic encoding of body, the success body of
+// resp. Like the classic client, a body that the classic type doesn't decode fails,
+// which classicError reports with the classic error and never retries.
+func (a *sdkGoAttempt) useClassicResponseBody(resp *http.Response, body []byte) error {
+	if resp.StatusCode >= http.StatusBadRequest || a.classic.response == nil {
+		return nil
+	}
+	body, err := a.classicResponseBody(body)
+	if err != nil {
+		return err
+	}
+	resp.Body = io.NopCloser(bytes.NewReader(body))
+	resp.ContentLength = int64(len(body))
+	return nil
+}
+
+// classicResponseBody decodes body, a success body, into the classic response type, as
+// httpclient.WithResponseUnmarshal does, and returns that value's encoding. sdk-go then
+// reads the values the classic client reads, such as "7" for a string field that the
+// response sets to the number 7. Like the classic client, an empty body is an empty
+// response. It returns body unchanged for a call that decodes no response.
+func (a *sdkGoAttempt) classicResponseBody(body []byte) ([]byte, error) {
+	if a.classic.response == nil {
+		return body, nil
+	}
+	response := a.classic.response()
+	if len(body) > 0 {
+		if err := json.Unmarshal(body, &response); err != nil {
+			return nil, err
+		}
+	}
+	return json.Marshal(response)
+}
+
+// classicDecodeError returns the error the classic client returns when the success body
+// of the last response doesn't decode: the body's own decode error, which reports
+// classic type names, or the HTML error for a body that starts with "<".
+func (a *sdkGoAttempt) classicDecodeError(err error) error {
+	if a == nil {
+		return fmt.Errorf("failed to unmarshal response body: %w", err)
+	}
+	if _, classicErr := a.classicResponseBody(a.responseBody); classicErr != nil {
+		err = classicErr
+	}
+	var syntaxErr *json.SyntaxError
+	if errors.As(err, &syntaxErr) && strings.HasPrefix(string(a.responseBody), "<") {
+		return httpclient.ErrHTMLContent
+	}
+	return fmt.Errorf("failed to unmarshal response body: %w. %s", err,
+		classicUnexpectedResponse(a.response, a.requestBody, a.responseBody))
+}
+
+// classicUnexpectedResponse mirrors the unexported httpclient.makeUnexpectedResponse.
+func classicUnexpectedResponse(resp *http.Response, requestBody,
+	responseBody []byte) string {
+	var req *http.Request
+	if resp != nil {
+		req = resp.Request
+	}
+	log := httplog.RoundTripStringer{
+		Request:                  req,
+		Response:                 resp,
+		RequestBody:              requestBody,
+		ResponseBody:             responseBody,
+		DebugHeaders:             true,
+		DebugTruncateBytes:       10 * 1024,
+		DebugAuthorizationHeader: false,
+	}
+	return "This is likely a bug in the Databricks SDK for Go or the underlying REST " +
+		"API. " +
+		"Please report this issue with the following debugging information to the SDK " +
+		"issue tracker at https://github.com/databricks/databricks-sdk-go/issues. " +
+		"Request log:\n```\n" + log.String() + "\n```"
 }

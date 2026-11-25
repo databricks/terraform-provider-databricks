@@ -10,6 +10,7 @@ import (
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/databricks-sdk-go/httpclient"
+	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/sdk-go/core/ops"
 	"github.com/databricks/sdk-go/options/call"
 	"github.com/databricks/sdk-go/options/client"
@@ -104,10 +105,10 @@ func (vc *SdkGoVolumes) Create(ctx context.Context,
 	req sdkvolumes.CreateVolumeRequest) (*sdkvolumes.VolumeInfo, error) {
 	path := "/api/2.1/unity-catalog/volumes"
 	classic := classicVolumeRequest(http.MethodPost, path, path)
-	classic.response = classicVolumeInfo
 	classic.body = func(body []byte) ([]byte, error) {
 		return classicVolumeBody(body)
 	}
+	classic.response = classicVolumeInfo
 	create := func(ctx context.Context,
 		opts ...call.Option) (*sdkvolumes.VolumeInfo, error) {
 		return vc.client.CreateVolume(ctx, req, opts...)
@@ -126,10 +127,10 @@ func (vc *SdkGoVolumes) Update(ctx context.Context,
 	}
 	path := classicVolumePath(fullName)
 	classic := classicVolumeRequest(http.MethodPatch, path, path)
-	classic.response = classicVolumeInfo
 	classic.body = func(body []byte) ([]byte, error) {
 		return classicVolumeBody(body, "full_name_arg")
 	}
+	classic.response = classicVolumeInfo
 	update := func(ctx context.Context,
 		opts ...call.Option) (*sdkvolumes.VolumeInfo, error) {
 		return vc.client.UpdateVolume(ctx, req, opts...)
@@ -150,6 +151,12 @@ func (vc *SdkGoVolumes) DeleteByName(ctx context.Context, fullName string) error
 	}
 	_, err := callSdkGo(ctx, vc.bridge, classic, del)
 	return err
+}
+
+// classicVolumeInfo returns the classic type that the classic Volumes calls that return a
+// volume decode a success body into.
+func classicVolumeInfo() any {
+	return &catalog.VolumeInfo{}
 }
 
 // classicVolumePath is the path of a classic Volumes call for fullName, which the classic
@@ -207,19 +214,17 @@ func callSdkGo[T any](ctx context.Context, b *sdkGoBridge, classic classicReques
 type sdkGoAttemptKey struct{}
 
 // sdkGoAttempt carries state between the stages of one call: the classic request to
-// send, the last request sent and its response, which classic error parsing needs, and
-// the timeout of the attempt being sent.
+// send, the last exchange, which classic error parsing needs, and the timeout of the
+// attempt being sent.
 type sdkGoAttempt struct {
 	classic    classicRequest
 	classicURL *url.URL
 	request    *http.Request
-	response   *http.Response
-	timeout    *attemptTimeout
-}
-
-// succeeded reports whether the last attempt got a successful response.
-func (a *sdkGoAttempt) succeeded() bool {
-	return a != nil && a.response != nil && a.response.StatusCode < http.StatusBadRequest
+	// requestBody, response and responseBody are those of the last response, if any.
+	requestBody  []byte
+	response     *http.Response
+	responseBody []byte
+	timeout      *attemptTimeout
 }
 
 // keepTimeout stores the timeout started by authentication for the transport.

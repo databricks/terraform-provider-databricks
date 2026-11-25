@@ -1,0 +1,140 @@
+# Pins the plan when tags drift. When the GET returns another tag value, the plan
+# shows an update back to the configured tags. When the GET returns no tags, the
+# refresh keeps the old tags in state, so the plan is empty and the drift goes
+# unnoticed. The steps are plan-only: an apply sends a PATCH without tags and leaves
+# the diff, which TestModelUpdateTagsChangeLeavesDiff (mlflow) pins. API responses are
+# inferred from the MLflow Model Registry API, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: create_with_tags
+    config: &config |
+      resource "databricks_mlflow_model" "this" {
+        name = "replay-model"
+
+        tags {
+          key   = "team"
+          value = "ml"
+        }
+      }
+    calls:
+      - request:
+          method: POST
+          path: /api/2.0/mlflow/registered-models/create
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"name": "replay-model", "tags": [{"key": "team", "value": "ml"}]}
+        response:
+          status: 200
+          body:
+            json: {"registered_model": {"name": "replay-model",
+                                        "creation_timestamp": 1700000000000,
+                                        "last_updated_timestamp": 1700000000000,
+                                        "user_id": "replay-admin@example.com",
+                                        "tags": [{"key": "team", "value": "ml"}]}}
+      - &read_created
+        request: &read_request
+          method: GET
+          path: /api/2.0/mlflow/databricks/registered-models/get
+          query:
+            name: [replay-model]
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"registered_model_databricks": {
+                     "name": "replay-model",
+                     "creation_timestamp": 1700000000000,
+                     "last_updated_timestamp": 1700000000000,
+                     "user_id": "replay-admin@example.com",
+                     "tags": [{"key": "team", "value": "ml"}],
+                     "id": "0123456789abcdef0123456789abcdef",
+                     "permission_level": "CAN_MANAGE"}}
+      - *read_created
+  - name: remote_tag_value_change_plans_an_update
+    plan_only: true
+    config: *config
+    plan:
+      expect: non_empty
+      changes:
+        databricks_mlflow_model.this:
+          actions: [update]
+          before:
+            - path: [tags, 0, key]
+              equals: team
+            - path: [tags, 0, value]
+              equals: platform
+          after:
+            - path: [tags, 0, key]
+              equals: team
+            - path: [tags, 0, value]
+              equals: ml
+    calls:
+      - request: *read_request
+        response:
+          status: 200
+          body:
+            json: {"registered_model_databricks": {
+                     "name": "replay-model",
+                     "creation_timestamp": 1700000000000,
+                     "last_updated_timestamp": 1700000001000,
+                     "user_id": "replay-admin@example.com",
+                     "tags": [{"key": "team", "value": "platform"}],
+                     "id": "0123456789abcdef0123456789abcdef",
+                     "permission_level": "CAN_MANAGE"}}
+    state:
+      resources:
+        databricks_mlflow_model.this:
+          attributes:
+            - path: [tags, 0, value]
+              equals: platform
+  - name: remote_tags_removal_is_not_detected
+    plan_only: true
+    config: *config
+    plan:
+      expect: empty
+      changes: {}
+    calls:
+      - &read_without_tags
+        request: *read_request
+        response:
+          status: 200
+          body:
+            json: {"registered_model_databricks": {
+                     "name": "replay-model",
+                     "creation_timestamp": 1700000000000,
+                     "last_updated_timestamp": 1700000002000,
+                     "user_id": "replay-admin@example.com",
+                     "id": "0123456789abcdef0123456789abcdef",
+                     "permission_level": "CAN_MANAGE"}}
+    state:
+      resources:
+        databricks_mlflow_model.this:
+          attributes:
+            - path: [tags, 0, key]
+              equals: team
+            - path: [tags, 0, value]
+              equals: ml
+destroy:
+  calls:
+    - *read_without_tags
+    - request:
+        method: DELETE
+        path: /api/2.0/mlflow/registered-models/delete
+        query:
+          name: [replay-model]
+        headers:
+          X-Databricks-Workspace-Id: "12345"
+        body: null
+      response:
+        status: 200
+        body:
+          json: {}

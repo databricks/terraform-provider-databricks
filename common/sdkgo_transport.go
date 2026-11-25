@@ -3,7 +3,6 @@ package common
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -63,6 +62,7 @@ func (t *sdkGoTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	if timeout == nil {
 		timeout = startAttemptTimeout(req.Context(), t.httpTimeout)
 	}
+	attempt.requestBody, attempt.response, attempt.responseBody = nil, nil, nil
 	// Like the classic client, the visitors already run under the attempt's timeout.
 	r := req.Clone(timeout.ctx)
 	if err := attempt.useClassicRequest(r); err != nil {
@@ -80,9 +80,11 @@ func (t *sdkGoTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	r.Header.Set("User-Agent", sdkGoUserAgent(r.Context(), req.Header.Get("User-Agent")))
 	requestBody := debugRequestBody(r)
 	resp, responseBody, err := t.exchange(req.Context(), r, timeout)
-	attempt.request, attempt.response = r, nil
+	attempt.request = r
+	attempt.requestBody, attempt.response, attempt.responseBody = requestBody, resp,
+		responseBody
 	if resp != nil {
-		attempt.request, attempt.response = resp.Request, resp
+		attempt.request = resp.Request
 	}
 	if err == nil && resp.StatusCode < http.StatusBadRequest {
 		// A Private Link redirect ends in a successful login page.
@@ -93,64 +95,18 @@ func (t *sdkGoTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 		})
 	}
 	t.log(r, resp, err, requestBody, responseBody)
-	if err == nil {
-		err = attempt.decodeLikeClassicClient(resp, requestBody, responseBody)
-	}
 	if err != nil {
 		return nil, err
 	}
+	if err := attempt.useClassicResponseBody(resp, responseBody); err != nil {
+		return nil, err
+	}
+	if resp.StatusCode < http.StatusBadRequest && len(responseBody) == 0 {
+		// The classic client reads an empty success body as an empty object.
+		resp.Body = io.NopCloser(strings.NewReader("{}"))
+		resp.ContentLength = 2
+	}
 	return resp, nil
-}
-
-// decodeLikeClassicClient decodes a successful response into the classic type of the
-// call, as httpclient.WithResponseUnmarshal does, and gives sdk-go that value's encoding.
-// So sdk-go reads the values the classic client reads, such as "123" for a string field
-// that the response sets to the number 123.
-func (a *sdkGoAttempt) decodeLikeClassicClient(resp *http.Response,
-	requestBody, responseBody []byte) error {
-	if a.classic.response == nil || resp.StatusCode >= http.StatusBadRequest {
-		return nil
-	}
-	response := a.classic.response()
-	// Like the classic client, an empty body leaves the response empty.
-	if len(responseBody) > 0 {
-		if err := json.Unmarshal(responseBody, &response); err != nil {
-			return &responseDecodeError{
-				classicDecodeError(err, resp, requestBody, responseBody)}
-		}
-	}
-	body, err := json.Marshal(response)
-	if err != nil {
-		return &responseDecodeError{err}
-	}
-	resp.Body = io.NopCloser(bytes.NewReader(body))
-	return nil
-}
-
-// Mirrors the unexported httpclient.makeUnexpectedResponse.
-const classicDecodeErrorRequestLog = "This is likely a bug in the Databricks SDK for " +
-	"Go or the underlying REST API. Please report this issue with the following " +
-	"debugging information to the SDK issue tracker at " +
-	"https://github.com/databricks/databricks-sdk-go/issues. Request log:\n```\n%s\n```"
-
-// classicDecodeError returns the error of httpclient.WithResponseUnmarshal for err, the
-// failure to decode the successful response resp.
-func classicDecodeError(err error, resp *http.Response,
-	requestBody, responseBody []byte) error {
-	// The classic client asserts the error's type rather than unwrapping it.
-	if _, ok := err.(*json.SyntaxError); ok && bytes.HasPrefix(responseBody, []byte("<")) {
-		return httpclient.ErrHTMLContent
-	}
-	requestLog := httplog.RoundTripStringer{
-		Request:            resp.Request,
-		Response:           resp,
-		RequestBody:        requestBody,
-		ResponseBody:       responseBody,
-		DebugHeaders:       true,
-		DebugTruncateBytes: 10 * 1024,
-	}
-	return fmt.Errorf("failed to unmarshal response body: %w. "+
-		classicDecodeErrorRequestLog, err, requestLog.String())
 }
 
 // exchange sends r, whose context ends with timeout, follows redirects and reads the

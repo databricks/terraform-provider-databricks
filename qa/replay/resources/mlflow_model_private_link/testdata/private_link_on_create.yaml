@@ -1,0 +1,122 @@
+# Pins a create POST answered with the private link redirect. The client follows the 302
+# to the login page with a GET that drops the body and Content-Type, the page answers
+# 200, and the apply fails with the exact AWS PrivateLink message, without a retry.
+# Nothing is in state: the next plan creates the model without reading it, and the next
+# apply sends the POST again. The message names AWS because the fixture server's
+# 127.0.0.1 is no Databricks domain. API responses are synthetic: inferred from the
+# private link redirect and the MLflow Model Registry API, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: create_redirected_to_login_fails_with_private_link_error
+    config: &config |
+      resource "databricks_mlflow_model" "this" {
+        name        = "private_link_create_model"
+        description = "Pins the private link redirect on create"
+      }
+    expect_error: 'Error: cannot create mlflow model: The requested workspace has AWS
+      PrivateLink enabled and is not accessible from the current network\. Ensure that
+      AWS PrivateLink is properly configured and that your device has access to the AWS
+      VPC endpoint\. For more information, see
+      https://docs\.databricks\.com/en/security/network/classic/privatelink\.html\.\n'
+    calls:
+      - request: &create_request
+          method: POST
+          path: /api/2.0/mlflow/registered-models/create
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"name": "private_link_create_model",
+                   "description": "Pins the private link redirect on create"}
+        response:
+          status: 302
+          headers:
+            Location: /login.html?error=private-link-validation-error
+          body: null
+      - request:
+          method: GET
+          path: /login.html
+          query:
+            error: [private-link-validation-error]
+          headers:
+            Content-Type: ""
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 200
+          headers:
+            Content-Type: text/html; charset=utf-8
+          body:
+            text: <html><body>Sign in</body></html>
+  - name: plan_after_redirected_create_creates_again
+    plan_only: true
+    config: *config
+    plan: &plan_create
+      expect: non_empty
+      changes:
+        databricks_mlflow_model.this:
+          actions: [create]
+    calls: []
+  - name: create_after_redirect_sends_post_again
+    config: *config
+    plan: *plan_create
+    calls:
+      - request: *create_request
+        response:
+          status: 200
+          body:
+            json: {"registered_model": {
+                     "name": "private_link_create_model",
+                     "description": "Pins the private link redirect on create",
+                     "creation_timestamp": 1700000000000,
+                     "last_updated_timestamp": 1700000000000,
+                     "user_id": "tester@example.com"}}
+      - &read_created
+        request:
+          method: GET
+          path: /api/2.0/mlflow/databricks/registered-models/get
+          query:
+            name: [private_link_create_model]
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"registered_model_databricks": {
+                     "name": "private_link_create_model",
+                     "id": "0a1b2c3d4e5f60718293a4b5c6d7ea01",
+                     "description": "Pins the private link redirect on create",
+                     "creation_timestamp": 1700000000000,
+                     "last_updated_timestamp": 1700000000000,
+                     "user_id": "tester@example.com",
+                     "permission_level": "CAN_MANAGE"}}
+      - *read_created
+    state:
+      resources:
+        databricks_mlflow_model.this:
+          attributes:
+            - path: [id]
+              equals: private_link_create_model
+            - path: [registered_model_id]
+              equals: 0a1b2c3d4e5f60718293a4b5c6d7ea01
+destroy:
+  calls:
+    - *read_created
+    - request:
+        method: DELETE
+        path: /api/2.0/mlflow/registered-models/delete
+        query:
+          name: [private_link_create_model]
+        headers:
+          X-Databricks-Workspace-Id: "12345"
+        body: null
+      response:
+        status: 200
+        body:
+          json: {}

@@ -1,0 +1,135 @@
+# Pins how a refresh turns the id of the GET response into registered_model_id. Read
+# always sets it: a different id replaces the old one, and a response without id
+# stores the empty string. The attribute is computed, so the plan stays empty each
+# time. API responses are inferred from the MLflow Model Registry API, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: create
+    config: &config |
+      resource "databricks_mlflow_model" "this" {
+        name = "replay-model"
+      }
+    calls:
+      - request:
+          method: POST
+          path: /api/2.0/mlflow/registered-models/create
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"name": "replay-model"}
+        response:
+          status: 200
+          body:
+            json: {"registered_model": {"name": "replay-model",
+                                        "creation_timestamp": 1700000000000,
+                                        "last_updated_timestamp": 1700000000000,
+                                        "user_id": "replay-admin@example.com"}}
+      - &read_created
+        request: &read_request
+          method: GET
+          path: /api/2.0/mlflow/databricks/registered-models/get
+          query:
+            name: [replay-model]
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"registered_model_databricks": {
+                     "name": "replay-model",
+                     "creation_timestamp": 1700000000000,
+                     "last_updated_timestamp": 1700000000000,
+                     "user_id": "replay-admin@example.com",
+                     "id": "0123456789abcdef0123456789abcdef",
+                     "permission_level": "CAN_MANAGE"}}
+      - *read_created
+    state:
+      resources:
+        databricks_mlflow_model.this:
+          attributes:
+            - path: [registered_model_id]
+              equals: 0123456789abcdef0123456789abcdef
+  - name: different_id_replaces_registered_model_id
+    config: *config
+    plan:
+      expect: empty
+      changes: {}
+    calls:
+      # The plan's refresh and the post-apply refresh plan.
+      - &read_with_different_id
+        request: *read_request
+        response:
+          status: 200
+          body:
+            json: {"registered_model_databricks": {
+                     "name": "replay-model",
+                     "creation_timestamp": 1700000005000,
+                     "last_updated_timestamp": 1700000005000,
+                     "user_id": "replay-admin@example.com",
+                     "id": "fedcba9876543210fedcba9876543210",
+                     "permission_level": "CAN_MANAGE"}}
+      - *read_with_different_id
+    state:
+      resources:
+        databricks_mlflow_model.this:
+          attributes:
+            - path: [id]
+              equals: replay-model
+            - path: [registered_model_id]
+              equals: fedcba9876543210fedcba9876543210
+  - name: missing_id_empties_registered_model_id
+    config: *config
+    plan:
+      expect: empty
+      changes: {}
+    calls:
+      - &read_without_id
+        request: *read_request
+        response:
+          status: 200
+          body:
+            json: {"registered_model_databricks": {
+                     "name": "replay-model",
+                     "creation_timestamp": 1700000005000,
+                     "last_updated_timestamp": 1700000005000,
+                     "user_id": "replay-admin@example.com",
+                     "permission_level": "CAN_MANAGE"}}
+      - *read_without_id
+    state:
+      resources:
+        databricks_mlflow_model.this:
+          attributes:
+            - path: [id]
+              equals: replay-model
+            - path: [registered_model_id]
+              equals: ""
+  - name: plan_after_refresh_is_empty
+    plan_only: true
+    config: *config
+    plan:
+      expect: empty
+      changes: {}
+    calls:
+      - *read_without_id
+destroy:
+  calls:
+    - *read_without_id
+    - request:
+        method: DELETE
+        path: /api/2.0/mlflow/registered-models/delete
+        query:
+          name: [replay-model]
+        headers:
+          X-Databricks-Workspace-Id: "12345"
+        body: null
+      response:
+        status: 200
+        body:
+          json: {}

@@ -343,39 +343,71 @@ func TestTransport_HeadersHookSetsAHeaderOfTheCall(t *testing.T) {
 // and both requests have one traceparent. Transport sits inside http.Client,
 // so it runs the hook again on the redirected request and gives it a
 // traceparent of its own.
+//
+// A Content-Type of the hook shows what follows from the hook running again.
+// After a 301, 302 or 303, http.Client leaves the headers that describe a
+// body, such as Content-Type, out of the redirected request. With the classic
+// client that holds for the Content-Type of the hook as well. With Transport
+// the hook sets it again, so the target of a 302 receives it from the modular
+// client only. After a 307, which keeps the body, the target receives the
+// same Content-Type from both clients.
 func TestTransport_RedirectRunsTheHeadersHookAgain(t *testing.T) {
-	const hookHeader = "X-Transport-Test-Hook-Call"
-	for _, create := range []bool{false, true} {
-		server, target := transportTestNewServer(t, false), transportTestNewServer(t, false)
-		server.redirectTo = target.URL
-		var hookCalls atomic.Int32
-		cfg := transportTestConfig(server.URL)
-		cfg.Headers = func(r *http.Request) error {
-			r.Header.Set(hookHeader, strconv.Itoa(int(hookCalls.Add(1))))
-			return nil
-		}
-		transportTestBothClients(t, cfg, create)
-		first, redirected := server.received(), target.received()
-		require.Len(t, first, 2, "create: %v", create)
-		require.Len(t, redirected, 2, "create: %v", create)
-		assert.EqualValues(t, 3, hookCalls.Load(), "once for the classic call and twice for the modular one")
+	const hookHeader, hookContentType, callContentType = "X-Transport-Test-Hook-Call", "text/hook", "application/json"
+	testCases := []struct {
+		name   string
+		create bool
+		status int
+		// The Content-Type that the first server receives from both clients,
+		// and the one that the target of the redirect receives from each.
+		wantFirst, wantClassic, wantModular string
+	}{
+		{"GET over a 307", false, http.StatusTemporaryRedirect, hookContentType, hookContentType, hookContentType},
+		{"GET over a 302", false, http.StatusFound, hookContentType, "", hookContentType},
+		{"POST over a 307, which sets a Content-Type itself", true, http.StatusTemporaryRedirect, callContentType, callContentType, callContentType},
+		{"POST over a 302, which http.Client follows with a GET", true, http.StatusFound, callContentType, "", hookContentType},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			server, target := transportTestNewServer(t, false), transportTestNewServer(t, false)
+			server.redirectTo, server.redirectStatus = target.URL, tc.status
+			var hookCalls atomic.Int32
+			cfg := transportTestConfig(server.URL)
+			cfg.Headers = func(r *http.Request) error {
+				r.Header.Set(hookHeader, strconv.Itoa(int(hookCalls.Add(1))))
+				r.Header.Set("Content-Type", hookContentType)
+				return nil
+			}
+			transportTestBothClients(t, cfg, tc.create)
+			first, redirected := server.received(), target.received()
+			require.Len(t, first, 2)
+			require.Len(t, redirected, 2)
+			assert.EqualValues(t, 3, hookCalls.Load(), "once for the classic call and twice for the modular one")
 
-		// The classic client: the first call of the hook on both requests.
-		assert.Equal(t, "1", first[0].Header.Get(hookHeader))
-		assert.Equal(t, "1", redirected[0].Header.Get(hookHeader))
-		assert.Equal(t, first[0].Header.Get("Traceparent"), redirected[0].Header.Get("Traceparent"))
+			// The classic client: the first call of the hook on both requests.
+			assert.Equal(t, "1", first[0].Header.Get(hookHeader))
+			assert.Equal(t, "1", redirected[0].Header.Get(hookHeader))
+			assert.Equal(t, first[0].Header.Get("Traceparent"), redirected[0].Header.Get("Traceparent"))
 
-		// The modular client: a call of the hook and a traceparent for each.
-		assert.Equal(t, "2", first[1].Header.Get(hookHeader))
-		assert.Equal(t, "3", redirected[1].Header.Get(hookHeader))
-		assert.Regexp(t, transportTestTraceparent, first[1].Header.Get("Traceparent"))
-		assert.NotEqual(t, first[1].Header.Get("Traceparent"), redirected[1].Header.Get("Traceparent"))
+			// The modular client: a call of the hook and a traceparent for each.
+			assert.Equal(t, "2", first[1].Header.Get(hookHeader))
+			assert.Equal(t, "3", redirected[1].Header.Get(hookHeader))
+			assert.Regexp(t, transportTestTraceparent, first[1].Header.Get("Traceparent"))
+			assert.NotEqual(t, first[1].Header.Get("Traceparent"), redirected[1].Header.Get("Traceparent"))
 
-		// Apart from these, each server received the same request from both.
-		first[1].Header.Set(hookHeader, "1")
-		redirected[1].Header.Set(hookHeader, "1")
-		transportTestSameAsClassic(t, first[0], first[1])
-		transportTestSameAsClassic(t, redirected[0], redirected[1])
+			assert.Equal(t, tc.wantFirst, first[0].Header.Get("Content-Type"), "classic client, first request")
+			assert.Equal(t, tc.wantFirst, first[1].Header.Get("Content-Type"), "modular client, first request")
+			assert.Equal(t, tc.wantClassic, redirected[0].Header.Get("Content-Type"), "classic client, redirected request")
+			assert.Equal(t, tc.wantModular, redirected[1].Header.Get("Content-Type"), "modular client, redirected request")
+
+			// Apart from these, each server received the same request from both.
+			first[1].Header.Set(hookHeader, "1")
+			redirected[1].Header.Set(hookHeader, "1")
+			if tc.wantClassic == "" {
+				redirected[1].Header.Del("Content-Type")
+			}
+			transportTestSameAsClassic(t, first[0], first[1])
+			transportTestSameAsClassic(t, redirected[0], redirected[1])
+		})
 	}
 }
 

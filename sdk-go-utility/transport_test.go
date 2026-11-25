@@ -73,24 +73,24 @@ type transportTestRequest struct {
 }
 
 // transportTestServer records every request and answers it with status, or
-// redirects it to the same path of redirectTo.
+// redirects it to the same path of redirectTo with redirectStatus.
 type transportTestServer struct {
 	*httptest.Server
-	status     int
-	redirectTo string
-	mu         sync.Mutex
-	requests   []transportTestRequest
+	status, redirectStatus int
+	redirectTo             string
+	mu                     sync.Mutex
+	requests               []transportTestRequest
 }
 
 func transportTestNewServer(t *testing.T, useTLS bool) *transportTestServer {
-	s := &transportTestServer{status: http.StatusOK}
+	s := &transportTestServer{status: http.StatusOK, redirectStatus: http.StatusTemporaryRedirect}
 	s.Server = httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		body, _ := io.ReadAll(r.Body)
 		s.mu.Lock()
 		s.requests = append(s.requests, transportTestRequest{r.Method, r.URL.Path, r.URL.RawQuery, r.Host, string(body), r.RemoteAddr, r.Header.Clone()})
 		s.mu.Unlock()
 		if s.redirectTo != "" {
-			http.Redirect(w, r, s.redirectTo+r.URL.RequestURI(), http.StatusTemporaryRedirect)
+			http.Redirect(w, r, s.redirectTo+r.URL.RequestURI(), s.redirectStatus)
 			return
 		}
 		w.WriteHeader(s.status)

@@ -13,6 +13,7 @@ import (
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/config"
+	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/databricks-sdk-go/useragent"
 	"github.com/databricks/sdk-go/options/call"
 	sdkvolumes "github.com/databricks/sdk-go/uc/volumes/v1"
@@ -102,6 +103,7 @@ func TestSdkGoVolumesClientMapsErrorsLikeClassicClient(t *testing.T) {
 			"User does not have READ VOLUME on Volume.", false},
 		{"non-JSON error body", 500, "upstream connect error",
 			"upstream connect error", false},
+		{"empty error body", 404, "", "Not Found", true},
 		{"HTML error body with pre", 404,
 			"<html><body><pre>Volume not found</pre></body></html>", "Volume not found",
 			true},
@@ -316,6 +318,18 @@ func TestSdkGoVolumesClientDecodesSuccessBodiesLikeClassicClient(t *testing.T) {
 			assert.Equal(t, normalize(classicErr), normalize(err))
 		})
 	}
+}
+
+// A 304, which neither client follows, is a success, so both clients read its empty body
+// as a volume without fields.
+func TestSdkGoVolumesClientReadsEmptyNotModifiedBodyLikeClassicClient(t *testing.T) {
+	r := readBothWays(t, context.Background, nil, respond(http.StatusNotModified, ""))
+	require.NoError(t, r.classicErr)
+	require.NoError(t, r.err)
+	assert.Equal(t, &catalog.VolumeInfo{}, r.classicVolume)
+	assert.Equal(t, &sdkvolumes.VolumeInfo{}, r.volume)
+	assert.EqualValues(t, 1, r.calls)
+	assert.Equal(t, r.classicCalls, r.calls)
 }
 
 // The classic client turns a JSON value of another type into a string field, such as 7

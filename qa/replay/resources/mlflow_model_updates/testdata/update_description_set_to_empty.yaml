@@ -1,0 +1,124 @@
+# Pins setting description to the empty string. The plan shows the change, but Update
+# sends a PATCH with only name, because ml.UpdateModelRequest drops the empty
+# description, so the remote description stays. The read after the update does not
+# adopt it, so state holds "" and the next plan is empty while the API still returns
+# the old description. API responses are inferred from the MLflow Model Registry API,
+# not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: create_with_description
+    config: |
+      resource "databricks_mlflow_model" "this" {
+        name        = "replay-model"
+        description = "first description"
+      }
+    calls:
+      - request:
+          method: POST
+          path: /api/2.0/mlflow/registered-models/create
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"name": "replay-model", "description": "first description"}
+        response:
+          status: 200
+          body:
+            json: {"registered_model": {"name": "replay-model",
+                                        "creation_timestamp": 1700000000000,
+                                        "last_updated_timestamp": 1700000000000,
+                                        "user_id": "replay-admin@example.com",
+                                        "description": "first description"}}
+      # Every GET of the journey returns the description the model was created with.
+      - &read_with_description
+        request:
+          method: GET
+          path: /api/2.0/mlflow/databricks/registered-models/get
+          query:
+            name: [replay-model]
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"registered_model_databricks": {
+                     "name": "replay-model",
+                     "creation_timestamp": 1700000000000,
+                     "last_updated_timestamp": 1700000000000,
+                     "user_id": "replay-admin@example.com",
+                     "description": "first description",
+                     "id": "0123456789abcdef0123456789abcdef",
+                     "permission_level": "CAN_MANAGE"}}
+      - *read_with_description
+  - name: empty_description_sends_only_name
+    config: &config_with_empty_description |
+      resource "databricks_mlflow_model" "this" {
+        name        = "replay-model"
+        description = ""
+      }
+    plan:
+      expect: non_empty
+      changes:
+        databricks_mlflow_model.this:
+          actions: [update]
+          before:
+            - path: [description]
+              equals: first description
+          after:
+            - path: [description]
+              equals: ""
+    calls:
+      - *read_with_description
+      - request:
+          method: PATCH
+          path: /api/2.0/mlflow/registered-models/update
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"name": "replay-model"}
+        response:
+          status: 200
+          body:
+            json: {"registered_model": {"name": "replay-model",
+                                        "creation_timestamp": 1700000000000,
+                                        "last_updated_timestamp": 1700000000000,
+                                        "user_id": "replay-admin@example.com",
+                                        "description": "first description"}}
+      - *read_with_description
+      - *read_with_description
+    state:
+      resources:
+        databricks_mlflow_model.this:
+          attributes:
+            - path: [description]
+              equals: ""
+  - name: plan_after_emptying_description_is_empty
+    plan_only: true
+    config: *config_with_empty_description
+    plan:
+      expect: empty
+      changes: {}
+    calls:
+      - *read_with_description
+destroy:
+  calls:
+    - *read_with_description
+    - request:
+        method: DELETE
+        path: /api/2.0/mlflow/registered-models/delete
+        query:
+          name: [replay-model]
+        headers:
+          X-Databricks-Workspace-Id: "12345"
+        body: null
+      response:
+        status: 200
+        body:
+          json: {}

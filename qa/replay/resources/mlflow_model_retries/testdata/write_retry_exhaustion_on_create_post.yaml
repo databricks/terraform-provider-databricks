@@ -1,0 +1,128 @@
+# This journey pins a create whose POST, and then whose read GET after a successful
+# POST, gets a 503 until retry_timeout_seconds ends. One second is shorter than the
+# SDK's first backoff (1.05 to 1.75 seconds), so exactly one request is sent and the
+# timeout ends during the backoff. When the POST is exhausted, apply fails with the
+# 503's message, no ID is stored, and the next plan creates the model again. When the
+# GET after the POST is exhausted, apply fails with the same message, but the model
+# stays in state under its name and is tainted, so the next plan replaces it. API
+# responses are synthetic, inferred from the MLflow Model Registry API, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: create_post_retries_until_the_retry_timeout_ends
+    config: &config |
+      provider "databricks" {
+        retry_timeout_seconds = 1
+      }
+      resource "databricks_mlflow_model" "this" {
+        name        = "write-retry-model"
+        description = "first"
+      }
+    expect_error: 'Error: cannot create mlflow model: The service is temporarily
+      unavailable\.\n'
+    calls:
+      - request:
+          method: POST
+          path: /api/2.0/mlflow/registered-models/create
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"name": "write-retry-model", "description": "first"}
+        response:
+          status: 503
+          body:
+            json: {"error_code": "TEMPORARILY_UNAVAILABLE",
+                   "message": "The service is temporarily unavailable."}
+  # Nothing is in state, so the plan reads nothing and creates the model.
+  - name: plan_after_exhausted_create_creates_the_model
+    plan_only: true
+    config: *config
+    plan:
+      expect: non_empty
+      changes:
+        databricks_mlflow_model.this:
+          actions: [create]
+    calls: []
+  - name: create_read_after_post_retries_until_the_retry_timeout_ends
+    config: *config
+    expect_error: 'Error: cannot read mlflow model: The service is temporarily
+      unavailable\.\n'
+    calls:
+      - request:
+          method: POST
+          path: /api/2.0/mlflow/registered-models/create
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"name": "write-retry-model", "description": "first"}
+        response:
+          status: 200
+          body:
+            json: {"registered_model": {"name": "write-retry-model",
+                                        "description": "first",
+                                        "creation_timestamp": 1700000000000,
+                                        "last_updated_timestamp": 1700000000000,
+                                        "user_id": "replay-admin@example.com"}}
+      - request: &read
+          method: GET
+          path: /api/2.0/mlflow/databricks/registered-models/get
+          query:
+            name: ["write-retry-model"]
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 503
+          body:
+            json: {"error_code": "TEMPORARILY_UNAVAILABLE",
+                   "message": "The service is temporarily unavailable."}
+  # The POST set the ID before the read failed, so the model is in state and tainted.
+  # The plan reads it and replaces it.
+  - name: plan_after_exhausted_read_replaces_the_tainted_model
+    plan_only: true
+    config: *config
+    plan:
+      expect: non_empty
+      changes:
+        databricks_mlflow_model.this:
+          actions: [delete, create]
+    state:
+      resources:
+        databricks_mlflow_model.this:
+          attributes:
+            - path: [id]
+              equals: write-retry-model
+    calls:
+      - &read_created
+        request: *read
+        response:
+          status: 200
+          body:
+            json: {"registered_model_databricks": {
+                     "name": "write-retry-model", "description": "first",
+                     "id": "0123456789abcdef0123456789abcdef",
+                     "creation_timestamp": 1700000000000,
+                     "last_updated_timestamp": 1700000000000,
+                     "user_id": "replay-admin@example.com",
+                     "permission_level": "CAN_MANAGE"}}
+destroy:
+  calls:
+    - *read_created
+    - request:
+        method: DELETE
+        path: /api/2.0/mlflow/registered-models/delete
+        query:
+          name: ["write-retry-model"]
+        headers:
+          X-Databricks-Workspace-Id: "12345"
+        body: null
+      response:
+        status: 200
+        body:
+          json: {}

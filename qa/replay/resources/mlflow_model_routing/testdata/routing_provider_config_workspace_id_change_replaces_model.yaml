@@ -1,0 +1,206 @@
+# Pins a change of provider_config.workspace_id on an account-level provider. The
+# model belongs to a workspace, so the plan is a replacement, not an in-place update.
+# The plan refreshes through the old workspace. Apply looks up the old workspace and
+# sends it the DELETE, then looks up the new one, sends it the POST and reads the model
+# back from it. Fixtures are synthetic: API responses are inferred from the account and
+# MLflow Model Registry API contracts, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: account
+  cloud: AWS
+  account_id: replay-account
+steps:
+  - name: create_in_workspace_12345
+    config: |
+      provider "databricks" {
+        account_id = "replay-account"
+      }
+      resource "databricks_mlflow_model" "this" {
+        name = "routing_moving_model"
+        provider_config {
+          workspace_id = "12345"
+        }
+      }
+    calls:
+      - &lookup_12345
+        request:
+          method: GET
+          path: /api/2.0/accounts/replay-account/workspaces/12345
+          headers:
+            # An empty expected value matches only a request without the header.
+            X-Databricks-Workspace-Id: ""
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"account_id": "replay-account", "workspace_id": 12345,
+                   "workspace_name": "replay-workspace-12345",
+                   "deployment_name": "replay-workspace-12345",
+                   "workspace_status": "RUNNING"}
+      - request:
+          method: POST
+          path: /api/2.0/mlflow/registered-models/create
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: &create_body {"name": "routing_moving_model"}
+        response:
+          status: 200
+          body:
+            json: {"registered_model": {"name": "routing_moving_model",
+                                        "creation_timestamp": 1700000000007,
+                                        "last_updated_timestamp": 1700000000007,
+                                        "user_id": "replay-admin@example.com"}}
+      - &read_in_12345
+        request:
+          method: GET
+          path: /api/2.0/mlflow/databricks/registered-models/get
+          query:
+            name: [routing_moving_model]
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"registered_model_databricks": {
+                     "name": "routing_moving_model",
+                     "id": "00000000000000000000000000000907",
+                     "creation_timestamp": 1700000000007,
+                     "last_updated_timestamp": 1700000000007,
+                     "user_id": "replay-admin@example.com",
+                     "permission_level": "CAN_MANAGE"}}
+      # The post-apply refresh plan.
+      - *lookup_12345
+      - *read_in_12345
+    state:
+      resources:
+        databricks_mlflow_model.this:
+          attributes:
+            - path: [registered_model_id]
+              equals: "00000000000000000000000000000907"
+            - path: [provider_config, 0, workspace_id]
+              equals: "12345"
+  - name: workspace_id_change_deletes_in_old_workspace_and_creates_in_new
+    config: |
+      provider "databricks" {
+        account_id = "replay-account"
+      }
+      resource "databricks_mlflow_model" "this" {
+        name = "routing_moving_model"
+        provider_config {
+          workspace_id = "67890"
+        }
+      }
+    plan:
+      expect: non_empty
+      changes:
+        databricks_mlflow_model.this:
+          actions: [delete, create]
+          before:
+            - path: [provider_config, 0, workspace_id]
+              equals: "12345"
+          after:
+            - path: [provider_config, 0, workspace_id]
+              equals: "67890"
+    calls:
+      # The plan's refresh.
+      - *lookup_12345
+      - *read_in_12345
+      # The apply: delete from the old workspace.
+      - *lookup_12345
+      - request:
+          method: DELETE
+          path: /api/2.0/mlflow/registered-models/delete
+          query:
+            name: [routing_moving_model]
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 200
+          body:
+            json: {}
+      # The apply: create in the new workspace.
+      - &lookup_67890
+        request:
+          method: GET
+          path: /api/2.0/accounts/replay-account/workspaces/67890
+          headers:
+            X-Databricks-Workspace-Id: ""
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"account_id": "replay-account", "workspace_id": 67890,
+                   "workspace_name": "replay-workspace-67890",
+                   "deployment_name": "replay-workspace-67890",
+                   "workspace_status": "RUNNING"}
+      - request:
+          method: POST
+          path: /api/2.0/mlflow/registered-models/create
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "67890"
+          body:
+            json: *create_body
+        response:
+          status: 200
+          body:
+            json: {"registered_model": {"name": "routing_moving_model",
+                                        "creation_timestamp": 1700000000107,
+                                        "last_updated_timestamp": 1700000000107,
+                                        "user_id": "replay-admin@example.com"}}
+      - &read_in_67890
+        request:
+          method: GET
+          path: /api/2.0/mlflow/databricks/registered-models/get
+          query:
+            name: [routing_moving_model]
+          headers:
+            X-Databricks-Workspace-Id: "67890"
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"registered_model_databricks": {
+                     "name": "routing_moving_model",
+                     "id": "00000000000000000000000000001907",
+                     "creation_timestamp": 1700000000107,
+                     "last_updated_timestamp": 1700000000107,
+                     "user_id": "replay-admin@example.com",
+                     "permission_level": "CAN_MANAGE"}}
+      # The post-apply refresh plan.
+      - *lookup_67890
+      - *read_in_67890
+    state:
+      resources:
+        databricks_mlflow_model.this:
+          attributes:
+            - path: [id]
+              equals: routing_moving_model
+            - path: [registered_model_id]
+              equals: "00000000000000000000000000001907"
+            - path: [provider_config, 0, workspace_id]
+              equals: "67890"
+destroy:
+  calls:
+    # The destroy plan's refresh.
+    - *lookup_67890
+    - *read_in_67890
+    # The apply.
+    - *lookup_67890
+    - request:
+        method: DELETE
+        path: /api/2.0/mlflow/registered-models/delete
+        query:
+          name: [routing_moving_model]
+        headers:
+          X-Databricks-Workspace-Id: "67890"
+        body: null
+      response:
+        status: 200
+        body:
+          json: {}

@@ -1,0 +1,93 @@
+# Pins that Create ignores the owner PATCH's response: a 200 with no body succeeds, the ID
+# stays the POST's full_name, and the reads after create GET it. API responses are inferred
+# from the Unity Catalog API contract, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: owner_patch_answered_200_with_no_body_keeps_the_id
+    config: &config |
+      resource "databricks_volume" "this" {
+        name         = "empty_owner_patch_volume"
+        catalog_name = "main"
+        schema_name  = "replay"
+        volume_type  = "MANAGED"
+        owner        = "data-engineers"
+      }
+    calls:
+      - request:
+          method: POST
+          path: /api/2.1/unity-catalog/volumes
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "empty_owner_patch_volume", "volume_type": "MANAGED"}
+        response:
+          status: 200
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "empty_owner_patch_volume",
+                   "full_name": "main.replay.empty_owner_patch_volume",
+                   "volume_type": "MANAGED", "owner": "replay-admin@example.com",
+                   "storage_location": "s3://replay-metastore/volume-197"}
+      - request:
+          method: PATCH
+          path: /api/2.1/unity-catalog/volumes/main.replay.empty_owner_patch_volume
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"owner": "data-engineers"}
+        response:
+          status: 200
+          body: null
+      - &read_owned
+        request:
+          method: GET
+          path: /api/2.1/unity-catalog/volumes/main.replay.empty_owner_patch_volume
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "empty_owner_patch_volume",
+                   "full_name": "main.replay.empty_owner_patch_volume",
+                   "volume_type": "MANAGED", "owner": "data-engineers",
+                   "storage_location": "s3://replay-metastore/volume-197"}
+      - *read_owned
+    state:
+      resources:
+        databricks_volume.this:
+          attributes:
+            - path: [id]
+              equals: main.replay.empty_owner_patch_volume
+            - path: [volume_path]
+              equals: /Volumes/main/replay/empty_owner_patch_volume
+  - name: plan_after_create_is_empty
+    plan_only: true
+    config: *config
+    plan:
+      expect: empty
+      changes: {}
+    calls:
+      - *read_owned
+destroy:
+  calls:
+    - *read_owned
+    - request:
+        method: DELETE
+        path: /api/2.1/unity-catalog/volumes/main.replay.empty_owner_patch_volume
+        headers:
+          X-Databricks-Workspace-Id: "12345"
+        body: null
+      response:
+        status: 200
+        body:
+          json: {}

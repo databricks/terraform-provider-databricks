@@ -1,0 +1,235 @@
+# Pins a refresh GET answered 200 with an object missing exactly one of catalog_name,
+# schema_name, name, volume_type and full_name. The missing field is blanked in the
+# refreshed state, and the ID is kept. A missing catalog_name, schema_name or volume_type
+# plans a replacement, because they force a new volume. A missing name plans an in-place
+# rename back to the configured name. A missing full_name only changes volume_path to
+# /Volumes/, which is computed, so the next plan is empty. API responses are inferred from
+# the Unity Catalog API contract, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: create
+    config: &config |
+      resource "databricks_volume" "this" {
+        name         = "missing_field_volume"
+        catalog_name = "main"
+        schema_name  = "replay"
+        volume_type  = "MANAGED"
+        comment      = "first comment"
+      }
+    calls:
+      - request:
+          method: POST
+          path: /api/2.1/unity-catalog/volumes
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "missing_field_volume", "volume_type": "MANAGED",
+                   "comment": "first comment"}
+        response:
+          status: 200
+          body:
+            json: &created {"catalog_name": "main", "schema_name": "replay",
+                            "name": "missing_field_volume",
+                            "full_name": "main.replay.missing_field_volume",
+                            "volume_type": "MANAGED", "comment": "first comment",
+                            "owner": "replay-admin@example.com",
+                            "storage_location": "s3://replay-metastore/volume-197"}
+      - &read_created
+        request: &read_request
+          method: GET
+          path: /api/2.1/unity-catalog/volumes/main.replay.missing_field_volume
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 200
+          body:
+            json: *created
+      - *read_created
+  - name: refresh_without_catalog_name_plans_replacement
+    plan_only: true
+    config: *config
+    plan:
+      expect: non_empty
+      changes:
+        databricks_volume.this:
+          actions: [delete, create]
+          before:
+            - path: [catalog_name]
+              equals: ""
+          after:
+            - path: [catalog_name]
+              equals: main
+    state:
+      resources:
+        databricks_volume.this:
+          attributes:
+            - path: [id]
+              equals: main.replay.missing_field_volume
+            - path: [catalog_name]
+              equals: ""
+            - path: [schema_name]
+              equals: replay
+            - path: [volume_path]
+              equals: /Volumes/main/replay/missing_field_volume
+    calls:
+      - request: *read_request
+        response:
+          status: 200
+          body:
+            json: {"schema_name": "replay", "name": "missing_field_volume",
+                   "full_name": "main.replay.missing_field_volume",
+                   "volume_type": "MANAGED", "comment": "first comment",
+                   "owner": "replay-admin@example.com",
+                   "storage_location": "s3://replay-metastore/volume-197"}
+  - name: refresh_without_schema_name_plans_replacement
+    plan_only: true
+    config: *config
+    plan:
+      expect: non_empty
+      changes:
+        databricks_volume.this:
+          actions: [delete, create]
+          before:
+            - path: [schema_name]
+              equals: ""
+          after:
+            - path: [schema_name]
+              equals: replay
+    state:
+      resources:
+        databricks_volume.this:
+          attributes:
+            - path: [id]
+              equals: main.replay.missing_field_volume
+            - path: [catalog_name]
+              equals: main
+            - path: [schema_name]
+              equals: ""
+            - path: [volume_path]
+              equals: /Volumes/main/replay/missing_field_volume
+    calls:
+      - request: *read_request
+        response:
+          status: 200
+          body:
+            json: {"catalog_name": "main", "name": "missing_field_volume",
+                   "full_name": "main.replay.missing_field_volume",
+                   "volume_type": "MANAGED", "comment": "first comment",
+                   "owner": "replay-admin@example.com",
+                   "storage_location": "s3://replay-metastore/volume-197"}
+  - name: refresh_without_name_plans_an_in_place_rename
+    plan_only: true
+    config: *config
+    plan:
+      expect: non_empty
+      changes:
+        databricks_volume.this:
+          actions: [update]
+          before:
+            - path: [name]
+              equals: ""
+          after:
+            - path: [name]
+              equals: missing_field_volume
+            - path: [volume_path]
+              equals: /Volumes/main/replay/missing_field_volume
+    state:
+      resources:
+        databricks_volume.this:
+          attributes:
+            - path: [id]
+              equals: main.replay.missing_field_volume
+            - path: [name]
+              equals: ""
+            - path: [volume_path]
+              equals: /Volumes/main/replay/missing_field_volume
+    calls:
+      - request: *read_request
+        response:
+          status: 200
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "full_name": "main.replay.missing_field_volume",
+                   "volume_type": "MANAGED", "comment": "first comment",
+                   "owner": "replay-admin@example.com",
+                   "storage_location": "s3://replay-metastore/volume-197"}
+  - name: refresh_without_volume_type_plans_replacement
+    plan_only: true
+    config: *config
+    plan:
+      expect: non_empty
+      changes:
+        databricks_volume.this:
+          actions: [delete, create]
+          before:
+            - path: [volume_type]
+              equals: ""
+          after:
+            - path: [volume_type]
+              equals: MANAGED
+    state:
+      resources:
+        databricks_volume.this:
+          attributes:
+            - path: [id]
+              equals: main.replay.missing_field_volume
+            - path: [volume_type]
+              equals: ""
+            - path: [volume_path]
+              equals: /Volumes/main/replay/missing_field_volume
+    calls:
+      - request: *read_request
+        response:
+          status: 200
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "missing_field_volume",
+                   "full_name": "main.replay.missing_field_volume",
+                   "comment": "first comment", "owner": "replay-admin@example.com",
+                   "storage_location": "s3://replay-metastore/volume-197"}
+  - name: refresh_without_full_name_sets_volume_path_to_the_volumes_root
+    plan_only: true
+    config: *config
+    plan:
+      expect: empty
+      changes: {}
+    state:
+      resources:
+        databricks_volume.this:
+          attributes:
+            - path: [id]
+              equals: main.replay.missing_field_volume
+            - path: [name]
+              equals: missing_field_volume
+            - path: [volume_path]
+              equals: /Volumes/
+    calls:
+      - request: *read_request
+        response:
+          status: 200
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "missing_field_volume", "volume_type": "MANAGED",
+                   "comment": "first comment", "owner": "replay-admin@example.com",
+                   "storage_location": "s3://replay-metastore/volume-197"}
+destroy:
+  calls:
+    - *read_created
+    - request:
+        method: DELETE
+        path: /api/2.1/unity-catalog/volumes/main.replay.missing_field_volume
+        headers:
+          X-Databricks-Workspace-Id: "12345"
+        body: null
+      response:
+        status: 200
+        body:
+          json: {}

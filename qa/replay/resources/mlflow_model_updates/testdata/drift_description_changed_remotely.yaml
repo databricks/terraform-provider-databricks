@@ -1,0 +1,159 @@
+# Pins drift of description. When the GET returns another description, the plan shows
+# an update back to the configured one and apply sends it in the PATCH. When the GET
+# returns no description, the refresh keeps the old one in state, so the plan is empty
+# and the drift goes unnoticed. API responses are inferred from the MLflow Model
+# Registry API, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: create_with_description
+    config: &config |
+      resource "databricks_mlflow_model" "this" {
+        name        = "replay-model"
+        description = "first description"
+      }
+    calls:
+      - request:
+          method: POST
+          path: /api/2.0/mlflow/registered-models/create
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"name": "replay-model", "description": "first description"}
+        response:
+          status: 200
+          body:
+            json: {"registered_model": {"name": "replay-model",
+                                        "creation_timestamp": 1700000000000,
+                                        "last_updated_timestamp": 1700000000000,
+                                        "user_id": "replay-admin@example.com",
+                                        "description": "first description"}}
+      - &read_created
+        request: &read_request
+          method: GET
+          path: /api/2.0/mlflow/databricks/registered-models/get
+          query:
+            name: [replay-model]
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"registered_model_databricks": {
+                     "name": "replay-model",
+                     "creation_timestamp": 1700000000000,
+                     "last_updated_timestamp": 1700000000000,
+                     "user_id": "replay-admin@example.com",
+                     "description": "first description",
+                     "id": "0123456789abcdef0123456789abcdef",
+                     "permission_level": "CAN_MANAGE"}}
+      - *read_created
+  - name: remote_description_change_is_reverted
+    config: *config
+    plan:
+      expect: non_empty
+      changes:
+        databricks_mlflow_model.this:
+          actions: [update]
+          before:
+            - path: [description]
+              equals: changed outside terraform
+          after:
+            - path: [description]
+              equals: first description
+    calls:
+      # The plan's refresh sees the description that was set outside Terraform.
+      - request: *read_request
+        response:
+          status: 200
+          body:
+            json: {"registered_model_databricks": {
+                     "name": "replay-model",
+                     "creation_timestamp": 1700000000000,
+                     "last_updated_timestamp": 1700000001000,
+                     "user_id": "replay-admin@example.com",
+                     "description": "changed outside terraform",
+                     "id": "0123456789abcdef0123456789abcdef",
+                     "permission_level": "CAN_MANAGE"}}
+      - request:
+          method: PATCH
+          path: /api/2.0/mlflow/registered-models/update
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"name": "replay-model", "description": "first description"}
+        response:
+          status: 200
+          body:
+            json: {"registered_model": {"name": "replay-model",
+                                        "creation_timestamp": 1700000000000,
+                                        "last_updated_timestamp": 1700000002000,
+                                        "user_id": "replay-admin@example.com",
+                                        "description": "first description"}}
+      - &read_reverted
+        request: *read_request
+        response:
+          status: 200
+          body:
+            json: {"registered_model_databricks": {
+                     "name": "replay-model",
+                     "creation_timestamp": 1700000000000,
+                     "last_updated_timestamp": 1700000002000,
+                     "user_id": "replay-admin@example.com",
+                     "description": "first description",
+                     "id": "0123456789abcdef0123456789abcdef",
+                     "permission_level": "CAN_MANAGE"}}
+      - *read_reverted
+    state:
+      resources:
+        databricks_mlflow_model.this:
+          attributes:
+            - path: [description]
+              equals: first description
+  - name: remote_description_removal_is_not_detected
+    plan_only: true
+    config: *config
+    plan:
+      expect: empty
+      changes: {}
+    calls:
+      - &read_without_description
+        request: *read_request
+        response:
+          status: 200
+          body:
+            json: {"registered_model_databricks": {
+                     "name": "replay-model",
+                     "creation_timestamp": 1700000000000,
+                     "last_updated_timestamp": 1700000003000,
+                     "user_id": "replay-admin@example.com",
+                     "id": "0123456789abcdef0123456789abcdef",
+                     "permission_level": "CAN_MANAGE"}}
+    state:
+      resources:
+        databricks_mlflow_model.this:
+          attributes:
+            - path: [description]
+              equals: first description
+destroy:
+  calls:
+    - *read_without_description
+    - request:
+        method: DELETE
+        path: /api/2.0/mlflow/registered-models/delete
+        query:
+          name: [replay-model]
+        headers:
+          X-Databricks-Workspace-Id: "12345"
+        body: null
+      response:
+        status: 200
+        body:
+          json: {}

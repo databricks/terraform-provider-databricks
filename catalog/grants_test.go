@@ -320,3 +320,29 @@ func TestUcAccGrantsAiGatewayModelProviderServiceByName(t *testing.T) {
 		Template: grantsAiGatewayModelProviderServiceTemplate,
 	})
 }
+
+func grantsRevokeAllPrivilegesTemplate(privileges string) string {
+	return fmt.Sprintf(`
+	resource "databricks_catalog" "sandbox" {
+		name    = "sandbox{var.STICKY_RANDOM}"
+		comment = "this catalog is managed by terraform"
+	}
+
+	resource "databricks_grants" "catalog" {
+		catalog = databricks_catalog.sandbox.id
+		grant {
+			principal  = "account users"
+			privileges = [%s]
+		}
+	}`, privileges)
+}
+
+// Revoking ALL_PRIVILEGES also revokes the privileges it implies, so USE_CATALOG, which is
+// configured in both steps, has to be granted again by the update of the second step.
+func TestUcAccGrantsRevokeAllPrivileges(t *testing.T) {
+	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
+		Template: grantsRevokeAllPrivilegesTemplate(`"ALL_PRIVILEGES", "USE_CATALOG"`),
+	}, acceptance.Step{
+		Template: grantsRevokeAllPrivilegesTemplate(`"BROWSE", "SELECT", "USE_CATALOG", "USE_SCHEMA"`),
+	})
+}

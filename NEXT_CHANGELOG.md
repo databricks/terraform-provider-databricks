@@ -9,6 +9,7 @@
 ### New Features and Improvements
 
 ### Bug Fixes
+* Preserve configured privileges when revoking `ALL_PRIVILEGES` in `databricks_grants` and `databricks_grant` ([#6198](https://github.com/databricks/terraform-provider-databricks/pull/6198)).
 
 ### Documentation
 

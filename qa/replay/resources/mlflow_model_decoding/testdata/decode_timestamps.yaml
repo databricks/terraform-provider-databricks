@@ -1,0 +1,186 @@
+# Pins how creation_timestamp and last_updated_timestamp are decoded. The classic client
+# takes an integer JSON number or a quoted integer; the schema has neither field, so
+# the state doesn't change. A string that isn't an integer fails with the SDK's
+# strconv error on the POST and on the GET. A number in exponent form fails as well:
+# encoding/json rejects it for an int64, the SDK then retries the envelope as a quoted
+# string, and that retry's error replaces the first one, so the message names neither
+# the field nor the value, and the request log echoes the number as 1700000000000. That
+# message names an encoding/json type that Go 1.27 renamed, so its pattern takes both
+# spellings. Each pattern checks the message, the request line and the echoed body, and
+# skips the generated headers in between. API responses are synthetic: inferred from the
+# MLflow Model Registry API, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: create_answered_non_integer_string_timestamp_fails_with_request_log
+    config: &config |
+      resource "databricks_mlflow_model" "this" {
+        name        = "decode_model"
+        description = "first description"
+      }
+    expect_error: 'Error: cannot create mlflow model: failed to unmarshal response body:
+      strconv\.ParseInt: parsing "2023-11-14T22:13:20Z": invalid syntax\. This is likely
+      a bug in the Databricks SDK for Go or the underlying REST API\. Please report this
+      issue with the following debugging information to the SDK issue tracker at
+      https://github\.com/databricks/databricks-sdk-go/issues\. Request
+      log:\n```\nPOST /api/2\.0/mlflow/registered-models/create\n(?s:.*)<
+      \{\n<   "registered_model": \{\n<     "creation_timestamp":
+      "2023-11-14T22:13:20Z",\n<     "description": "first description",\n<     "last_updated_timestamp":
+      1700000000000,\n<     "name": "decode_model",\n<     "user_id":
+      "replay-admin@example\.com"\n<   \}\n< \}\n```\n'
+    calls:
+      - request: &create_request
+          method: POST
+          path: /api/2.0/mlflow/registered-models/create
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"name": "decode_model", "description": "first description"}
+        response:
+          status: 200
+          body:
+            json: {"registered_model": {
+                     "name": "decode_model",
+                     "description": "first description",
+                     "user_id": "replay-admin@example.com",
+                     "creation_timestamp": "2023-11-14T22:13:20Z",
+                     "last_updated_timestamp": 1700000000000}}
+  - name: create_answered_quoted_and_unquoted_integer_timestamps_succeeds
+    config: *config
+    plan:
+      changes:
+        databricks_mlflow_model.this:
+          actions: [create]
+    calls:
+      - request: *create_request
+        response:
+          status: 200
+          body:
+            json: {"registered_model": {
+                     "name": "decode_model",
+                     "description": "first description",
+                     "user_id": "replay-admin@example.com",
+                     "creation_timestamp": "1700000000000",
+                     "last_updated_timestamp": "1700000000000"}}
+      - &read_numbers
+        request: &read_request
+          method: GET
+          path: /api/2.0/mlflow/databricks/registered-models/get
+          query:
+            name: [decode_model]
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"registered_model_databricks": {
+                     "name": "decode_model",
+                     "id": "0123456789abcdef0123456789abcdef",
+                     "description": "first description",
+                     "user_id": "replay-admin@example.com",
+                     "creation_timestamp": 1700000000000,
+                     "last_updated_timestamp": 1700000000000,
+                     "permission_level": "CAN_MANAGE"}}
+      - &read_quoted_integers
+        request: *read_request
+        response:
+          status: 200
+          body:
+            json: {"registered_model_databricks": {
+                     "name": "decode_model",
+                     "id": "0123456789abcdef0123456789abcdef",
+                     "description": "first description",
+                     "user_id": "replay-admin@example.com",
+                     "creation_timestamp": "1700000000000",
+                     "last_updated_timestamp": "1700000000000",
+                     "permission_level": "CAN_MANAGE"}}
+    state: &state
+      resources:
+        databricks_mlflow_model.this:
+          attributes:
+            - path: [id]
+              equals: decode_model
+            - path: [name]
+              equals: decode_model
+            - path: [registered_model_id]
+              equals: 0123456789abcdef0123456789abcdef
+            - path: [description]
+              equals: first description
+  - name: refresh_answered_non_integer_string_timestamp_fails_with_request_log
+    config: *config
+    expect_error: 'Error: cannot read mlflow model: failed to unmarshal response body:
+      strconv\.ParseInt: parsing "2023-11-14T22:13:20Z": invalid syntax\. This is likely
+      a bug in the Databricks SDK for Go or the underlying REST API\. Please report this
+      issue with the following debugging information to the SDK issue tracker at
+      https://github\.com/databricks/databricks-sdk-go/issues\. Request
+      log:\n```\nGET
+      /api/2\.0/mlflow/databricks/registered-models/get\?name=decode_model\n(?s:.*)<
+      \{\n<   "registered_model_databricks": \{\n<     "creation_timestamp":
+      1700000000000,\n<     "description": "first description",\n<     "id":
+      "0123456789abcdef0123456789abcdef",\n<     "last_updated_timestamp":
+      "2023-11-14T22:13:20Z",\n<     "name": "decode_model"\n<   \}\n< \}\n```\n'
+    calls:
+      - request: *read_request
+        response:
+          status: 200
+          body:
+            json: {"registered_model_databricks": {
+                     "name": "decode_model",
+                     "id": "0123456789abcdef0123456789abcdef",
+                     "description": "first description",
+                     "creation_timestamp": 1700000000000,
+                     "last_updated_timestamp": "2023-11-14T22:13:20Z"}}
+  - name: refresh_answered_exponent_number_timestamp_fails_with_masked_error
+    config: *config
+    expect_error: 'Error: cannot read mlflow model: failed to unmarshal response body:
+      json: cannot unmarshal string into Go value of type
+      map\[string\](json\.RawMessage|jsontext\.Value)\. This is likely a bug in the
+      Databricks SDK for Go or the underlying REST API\. Please report this issue with
+      the following debugging information to the SDK issue tracker at
+      https://github\.com/databricks/databricks-sdk-go/issues\. Request
+      log:\n```\nGET
+      /api/2\.0/mlflow/databricks/registered-models/get\?name=decode_model\n(?s:.*)<
+      \{\n<   "registered_model_databricks": \{\n<     "creation_timestamp":
+      1700000000000,\n<     "description": "first description",\n<     "id":
+      "0123456789abcdef0123456789abcdef",\n<     "last_updated_timestamp":
+      1700000000000,\n<     "name": "decode_model"\n<   \}\n< \}\n```\n'
+    calls:
+      - request: *read_request
+        response:
+          status: 200
+          headers:
+            Content-Type: application/json
+          body:
+            text: '{"registered_model_databricks": {"name": "decode_model", "id":
+              "0123456789abcdef0123456789abcdef", "description": "first description",
+              "creation_timestamp": 1.7e12, "last_updated_timestamp": 1700000000000}}'
+  - name: plan_after_failed_refreshes_keeps_the_model_and_plans_nothing
+    plan_only: true
+    config: *config
+    plan:
+      expect: empty
+      changes: {}
+    state: *state
+    calls:
+      - *read_quoted_integers
+destroy:
+  calls:
+    - *read_numbers
+    - request:
+        method: DELETE
+        path: /api/2.0/mlflow/registered-models/delete
+        query:
+          name: [decode_model]
+        headers:
+          X-Databricks-Workspace-Id: "12345"
+        body: null
+      response:
+        status: 200
+        body:
+          json: {}

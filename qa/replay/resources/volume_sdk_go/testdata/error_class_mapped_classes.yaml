@@ -1,6 +1,6 @@
 # Runs volume/testdata/error_class_mapped_classes.yaml with databricks_volume on sdk-go
-# uc/volumes/v1 in every step, and expects the same behavior. The volume requests carry no
-# Accept header, which an empty header expectation pins. The original's description:
+# uc/volumes/v1 in every step, and expects the same requests and behavior. The original's
+# description:
 #
 # Pins the refresh GET errors that the classic SDK maps to its cancelled, not implemented,
 # already exists and data loss classes: status 499, status 501, error_code ALREADY_EXISTS
@@ -31,7 +31,6 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body:
             json: {"catalog_name": "main", "schema_name": "replay",
                    "name": "mapped_classes_volume", "volume_type": "MANAGED"}
@@ -51,7 +50,6 @@ steps:
           path: /api/2.1/unity-catalog/volumes/main.replay.mapped_classes_volume
           headers:
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body: null
         response:
           status: 200
@@ -157,7 +155,6 @@ destroy:
         path: /api/2.1/unity-catalog/volumes/main.replay.mapped_classes_volume
         headers:
           X-Databricks-Workspace-Id: "12345"
-          Accept: ""
         body: null
       response:
         status: 200

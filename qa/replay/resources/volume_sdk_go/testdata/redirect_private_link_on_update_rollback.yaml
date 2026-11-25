@@ -1,8 +1,6 @@
 # Runs volume/testdata/redirect_private_link_on_update_rollback.yaml with
-# databricks_volume on sdk-go uc/volumes/v1 in every step, and expects the same behavior.
-# The volume requests carry no Accept header, which an empty header expectation pins. Each
-# PATCH body also carries full_name_arg, the full name in its path, because sdk-go
-# serializes the path field into the body. The original's description:
+# databricks_volume on sdk-go uc/volumes/v1 in every step, and expects the same requests
+# and behavior. The original's description:
 #
 # Pins private-link login redirects on the two PATCHes that follow a successful owner
 # PATCH. When the comment PATCH is redirected, the owner rollback PATCH follows and
@@ -37,7 +35,6 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body:
             json: {"catalog_name": "main", "schema_name": "replay",
                    "name": "redirect_rollback_volume", "volume_type": "MANAGED",
@@ -59,10 +56,8 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body:
-            json: {"full_name_arg": "main.replay.redirect_rollback_volume",
-                   "comment": "first comment", "owner": "data-engineers"}
+            json: {"comment": "first comment", "owner": "data-engineers"}
         response:
           status: 200
           body:
@@ -80,7 +75,6 @@ steps:
           path: /api/2.1/unity-catalog/volumes/main.replay.redirect_rollback_volume
           headers:
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body: null
         response:
           status: 200
@@ -113,10 +107,8 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body:
-            json: {"full_name_arg": "main.replay.redirect_rollback_volume",
-                   "owner": "analysts"}
+            json: {"owner": "analysts"}
         response:
           status: 200
           body:
@@ -134,10 +126,8 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body:
-            json: {"full_name_arg": "main.replay.redirect_rollback_volume",
-                   "comment": "second comment"}
+            json: {"comment": "second comment"}
         response: &login_redirect
           status: 302
           headers:
@@ -165,10 +155,8 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body:
-            json: {"full_name_arg": "main.replay.redirect_rollback_volume",
-                   "owner": "data-engineers"}
+            json: {"owner": "data-engineers"}
         response:
           status: 200
           body:
@@ -259,7 +247,6 @@ destroy:
         path: /api/2.1/unity-catalog/volumes/main.replay.redirect_rollback_volume
         headers:
           X-Databricks-Workspace-Id: "12345"
-          Accept: ""
         body: null
       response:
         status: 200

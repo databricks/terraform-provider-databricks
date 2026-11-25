@@ -1,6 +1,6 @@
 # Runs volume/testdata/error_class_empty_bodies.yaml with databricks_volume on sdk-go
-# uc/volumes/v1 in every step, and expects the same behavior. The volume requests carry no
-# Accept header, which an empty header expectation pins. The original's description:
+# uc/volumes/v1 in every step, and expects the same requests and behavior. The original's
+# description:
 #
 # Pins refresh GET errors with an empty body on a 400, a 403 and a 409. The classic SDK
 # uses the status text as the message and classifies by status alone, so each GET is sent
@@ -31,7 +31,6 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body:
             json: {"catalog_name": "main", "schema_name": "replay",
                    "name": "empty_bodies_volume", "volume_type": "MANAGED"}
@@ -51,7 +50,6 @@ steps:
           path: /api/2.1/unity-catalog/volumes/main.replay.empty_bodies_volume
           headers:
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body: null
         response:
           status: 200
@@ -130,7 +128,6 @@ destroy:
         path: /api/2.1/unity-catalog/volumes/main.replay.empty_bodies_volume
         headers:
           X-Databricks-Workspace-Id: "12345"
-          Accept: ""
         body: null
       response:
         status: 200

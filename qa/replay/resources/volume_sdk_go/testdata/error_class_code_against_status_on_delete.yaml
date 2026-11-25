@@ -1,7 +1,6 @@
 # Runs volume/testdata/error_class_code_against_status_on_delete.yaml with
-# databricks_volume on sdk-go uc/volumes/v1 in every step, and expects the same behavior.
-# The volume requests carry no Accept header, which an empty header expectation pins. The
-# original's description:
+# databricks_volume on sdk-go uc/volumes/v1 in every step, and expects the same requests
+# and behavior. The original's description:
 #
 # Pins that the classic SDK classifies a DELETE error by its error_code before its status.
 # A 404 with INVALID_PARAMETER_VALUE fails the delete and keeps the volume. A 429 with
@@ -33,7 +32,6 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body:
             json: {"catalog_name": "main", "schema_name": "replay",
                    "name": "code_status_delete_volume", "volume_type": "MANAGED"}
@@ -53,7 +51,6 @@ steps:
           path: /api/2.1/unity-catalog/volumes/main.replay.code_status_delete_volume
           headers:
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body: null
         response:
           status: 200
@@ -73,7 +70,6 @@ steps:
           path: /api/2.1/unity-catalog/volumes/main.replay.code_status_delete_volume
           headers:
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body: null
         response:
           status: 404

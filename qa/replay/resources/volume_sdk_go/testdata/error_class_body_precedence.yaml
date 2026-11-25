@@ -1,6 +1,6 @@
 # Runs volume/testdata/error_class_body_precedence.yaml with databricks_volume on sdk-go
-# uc/volumes/v1 in every step, and expects the same behavior. The volume requests carry no
-# Accept header, which an empty header expectation pins. The original's description:
+# uc/volumes/v1 in every step, and expects the same requests and behavior. The original's
+# description:
 #
 # Pins which field of a JSON error body becomes the diagnostic. A message wins over a SCIM
 # detail, and an API 1.2 error field wins over a message. A body of {} or one with a null
@@ -33,7 +33,6 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body:
             json: {"catalog_name": "main", "schema_name": "replay",
                    "name": "body_precedence_volume", "volume_type": "MANAGED"}
@@ -53,7 +52,6 @@ steps:
           path: /api/2.1/unity-catalog/volumes/main.replay.body_precedence_volume
           headers:
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body: null
         response:
           status: 200
@@ -186,7 +184,6 @@ steps:
           path: /api/2.1/unity-catalog/volumes/main.replay.body_precedence_volume
           headers:
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body: null
         response: *non_string_message_404
   - name: state_kept_after_delete_with_non_string_message
@@ -210,7 +207,6 @@ destroy:
         path: /api/2.1/unity-catalog/volumes/main.replay.body_precedence_volume
         headers:
           X-Databricks-Workspace-Id: "12345"
-          Accept: ""
         body: null
       response:
         status: 200

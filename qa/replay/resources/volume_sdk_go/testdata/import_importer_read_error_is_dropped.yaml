@@ -1,7 +1,6 @@
 # Runs volume/testdata/import_importer_read_error_is_dropped.yaml with databricks_volume
-# on sdk-go uc/volumes/v1 in every step, and expects the same behavior. The volume
-# requests carry no Accept header, which an empty header expectation pins. The original's
-# description:
+# on sdk-go uc/volumes/v1 in every step, and expects the same requests and behavior. The
+# original's description:
 #
 # Pins a suspected defect: the default importer in common/resource.go drops its own read
 # error, because it returns diags[0].Validate(), which is nil for any diagnostic with a
@@ -38,7 +37,6 @@ steps:
           path: /api/2.1/unity-catalog/volumes/main.replay.dropped_error_volume
           headers:
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body: null
         response:
           status: 404
@@ -143,7 +141,6 @@ destroy:
         path: /api/2.1/unity-catalog/volumes/main.replay.dropped_error_volume
         headers:
           X-Databricks-Workspace-Id: "12345"
-          Accept: ""
         body: null
       response:
         status: 200

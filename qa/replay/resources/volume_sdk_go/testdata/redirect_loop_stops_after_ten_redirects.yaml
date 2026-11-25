@@ -1,10 +1,6 @@
 # Runs volume/testdata/redirect_loop_stops_after_ten_redirects.yaml with databricks_volume
-# on sdk-go uc/volumes/v1 in every step. The volume requests carry no Accept header, which
-# an empty header expectation pins. The modes differ in one place, pinned as it is today:
-# the redirect-limit error names the original request URL, not the last Location, because
-# sdk-go's HTTP client wraps the bridge's error in a url.Error of its own request. The ten
-# requests, the missing retry and the kept state match the original. The original's
-# description:
+# on sdk-go uc/volumes/v1 in every step, and expects the same requests and behavior. The
+# original's description:
 #
 # Pins a refresh caught in a redirect loop. The GET is redirected to /loop, which keeps
 # redirecting to itself. Go's client sends ten requests, then stops with its
@@ -35,7 +31,6 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body:
             json: {"catalog_name": "main", "schema_name": "replay",
                    "name": "redirect_loop_volume", "volume_type": "MANAGED"}
@@ -55,7 +50,6 @@ steps:
           path: /api/2.1/unity-catalog/volumes/main.replay.redirect_loop_volume
           headers:
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body: null
         response:
           status: 200
@@ -66,9 +60,7 @@ steps:
     sdk_implementations:
       databricks_volume: sdk_go
     config: *config
-    expect_error: 'Error: cannot read volume: Get
-      "http://[^"/]+/api/2\.1/unity-catalog/volumes/main\.replay\.redirect_loop_volume":
-      stopped after 10 redirects\n'
+    expect_error: 'Error: cannot read volume: Get "/loop": stopped after 10 redirects\n'
     calls:
       - request: *read_request
         response: &redirect_to_loop
@@ -116,7 +108,6 @@ destroy:
         path: /api/2.1/unity-catalog/volumes/main.replay.redirect_loop_volume
         headers:
           X-Databricks-Workspace-Id: "12345"
-          Accept: ""
         body: null
       response:
         status: 200

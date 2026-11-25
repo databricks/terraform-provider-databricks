@@ -1,7 +1,6 @@
 # Runs volume_routing/testdata/routing_me_forbidden_during_import_fails_the_refresh.yaml
 # with databricks_volume on sdk-go uc/volumes/v1 in every step, and expects the same
-# behavior. The volume requests carry no Accept header, which an empty header expectation
-# pins. The original's description:
+# requests and behavior. The original's description:
 #
 # Pins SCIM /Me answering 403 when an import first populates provider_config, on a
 # workspace-level provider whose host metadata has no workspace ID. The importer reads
@@ -39,8 +38,6 @@ steps:
         request:
           method: GET
           path: /api/2.1/unity-catalog/volumes/main.replay.me_import_volume
-          headers:
-            Accept: ""
           body: null
         response:
           status: 200

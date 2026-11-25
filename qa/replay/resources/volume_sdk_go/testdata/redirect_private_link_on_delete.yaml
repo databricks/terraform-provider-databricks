@@ -1,6 +1,6 @@
-# Runs volume/testdata/redirect_private_link_on_delete.yaml with databricks_volume on sdk-
-# go uc/volumes/v1 in every step, and expects the same behavior. The volume requests carry
-# no Accept header, which an empty header expectation pins. The original's description:
+# Runs volume/testdata/redirect_private_link_on_delete.yaml with databricks_volume on
+# sdk-go uc/volumes/v1 in every step, and expects the same requests and behavior. The
+# original's description:
 #
 # Pins a private-link login redirect on DELETE. The client follows the 302 with a GET,
 # and apply fails with the exact AWS PrivateLink message. The PrivateLink error is not a
@@ -31,7 +31,6 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body:
             json: {"catalog_name": "main", "schema_name": "replay",
                    "name": "redirect_delete_volume", "volume_type": "MANAGED"}
@@ -51,7 +50,6 @@ steps:
           path: /api/2.1/unity-catalog/volumes/main.replay.redirect_delete_volume
           headers:
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body: null
         response:
           status: 200
@@ -75,7 +73,6 @@ steps:
           path: /api/2.1/unity-catalog/volumes/main.replay.redirect_delete_volume
           headers:
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body: null
         response:
           status: 302

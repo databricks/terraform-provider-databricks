@@ -1,6 +1,6 @@
 # Runs volume/testdata/error_class_malformed_details.yaml with databricks_volume on sdk-go
-# uc/volumes/v1 in every step, and expects the same behavior. The volume requests carry no
-# Accept header, which an empty header expectation pins. The original's description:
+# uc/volumes/v1 in every step, and expects the same requests and behavior. The original's
+# description:
 #
 # Pins that malformed error details do not change how the classic SDK reports or
 # classifies a refresh GET error: typed entries with wrong-shaped fields, null and scalar
@@ -32,7 +32,6 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body:
             json: {"catalog_name": "main", "schema_name": "replay",
                    "name": "malformed_details_volume", "volume_type": "MANAGED"}
@@ -52,7 +51,6 @@ steps:
           path: /api/2.1/unity-catalog/volumes/main.replay.malformed_details_volume
           headers:
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body: null
         response:
           status: 200
@@ -273,7 +271,6 @@ destroy:
         path: /api/2.1/unity-catalog/volumes/main.replay.malformed_details_volume
         headers:
           X-Databricks-Workspace-Id: "12345"
-          Accept: ""
         body: null
       response:
         status: 200

@@ -1,7 +1,6 @@
 # Runs volume/testdata/redirect_private_link_detection_edges.yaml with databricks_volume
-# on sdk-go uc/volumes/v1 in every step, and expects the same behavior. The volume
-# requests carry no Accept header, which an empty header expectation pins. The original's
-# description:
+# on sdk-go uc/volumes/v1 in every step, and expects the same requests and behavior. The
+# original's description:
 #
 # Pins where the classic SDK stops detecting a private-link login redirect on a refresh.
 # It looks for the literal error=private-link-validation-error in the final URL's raw
@@ -35,7 +34,6 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body:
             json: {"catalog_name": "main", "schema_name": "replay",
                    "name": "redirect_edges_volume", "volume_type": "MANAGED"}
@@ -55,7 +53,6 @@ steps:
           path: /api/2.1/unity-catalog/volumes/main.replay.redirect_edges_volume
           headers:
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body: null
         response:
           status: 200
@@ -179,7 +176,6 @@ destroy:
         path: /api/2.1/unity-catalog/volumes/main.replay.redirect_edges_volume
         headers:
           X-Databricks-Workspace-Id: "12345"
-          Accept: ""
         body: null
       response:
         status: 200

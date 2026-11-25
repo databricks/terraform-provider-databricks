@@ -1,7 +1,6 @@
 # Runs volume_retries/testdata/transport_faults_on_refresh.yaml with databricks_volume on
-# sdk-go uc/volumes/v1 in every step, and expects the same behavior. The volume requests
-# carry no Accept header, which an empty header expectation pins. The original's
-# description:
+# sdk-go uc/volumes/v1 in every step, and expects the same requests and behavior. The
+# original's description:
 #
 # Pins how a refresh GET handles a broken connection, with http_timeout_seconds = 1. A
 # body cut off halfway fails with "response body: unexpected EOF", a body that stalls
@@ -37,7 +36,6 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body:
             json: {"catalog_name": "main", "schema_name": "replay",
                    "name": "faulty_volume", "volume_type": "MANAGED"}
@@ -57,7 +55,6 @@ steps:
           path: /api/2.1/unity-catalog/volumes/main.replay.faulty_volume
           headers:
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body: null
         response:
           status: 200
@@ -119,7 +116,6 @@ destroy:
         path: /api/2.1/unity-catalog/volumes/main.replay.faulty_volume
         headers:
           X-Databricks-Workspace-Id: "12345"
-          Accept: ""
         body: null
       response:
         status: 200

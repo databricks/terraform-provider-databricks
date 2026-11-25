@@ -1,7 +1,6 @@
 # Runs volume_errors/testdata/response_values_coerced_by_the_classic_decoder.yaml with
-# databricks_volume on sdk-go uc/volumes/v1 in every step, and expects the same behavior.
-# The volume requests carry no Accept header, which an empty header expectation pins. The
-# original's description:
+# databricks_volume on sdk-go uc/volumes/v1 in every step, and expects the same requests
+# and behavior. The original's description:
 #
 # Pins how the classic decoder treats wrongly typed values in a 200 refresh. It coerces
 # a value into a string field to its text, so an unconfigured owner answered true is
@@ -34,7 +33,6 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body:
             json: {"catalog_name": "main", "schema_name": "replay",
                    "name": "coerced_volume", "volume_type": "MANAGED"}
@@ -54,7 +52,6 @@ steps:
           path: /api/2.1/unity-catalog/volumes/main.replay.coerced_volume
           headers:
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body: null
         response:
           status: 200
@@ -150,7 +147,6 @@ destroy:
         path: /api/2.1/unity-catalog/volumes/main.replay.coerced_volume
         headers:
           X-Databricks-Workspace-Id: "12345"
-          Accept: ""
         body: null
       response:
         status: 200

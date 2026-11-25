@@ -1,19 +1,19 @@
 # Pins SCIM /Me answering with X-Databricks-Org-Id 0 when create first populates
 # provider_config, on a workspace-level provider whose host metadata has no workspace
-# ID and without a provider_config block. Apply succeeds and writes "0" to
-# provider_config.workspace_id, then the post-apply plan without refresh fails: its
-# CustomizeDiff gets 0 from /Me again and reports a removed workspace_id. While /Me
-# keeps returning 0, the refresh accepts the stored "0" and the plan fails the same
-# way. Once /Me returns the real ID, the refresh fails with a mismatch against the
-# stored "0" before the volume GET. Destroy only works while /Me returns 0. API
-# responses are inferred from the Unity Catalog and SCIM API contracts, not recorded.
+# ID and without a provider_config block. The volume is created and read, then apply
+# fails with the error for workspace ID 0 and Terraform keeps the volume in state as
+# tainted, without a provider_config.workspace_id. While /Me keeps returning 0, the
+# next plan's refresh reads the volume through the provider's workspace and fails the
+# same way. Once /Me returns the real ID, the refresh stores it and the plan replaces
+# the tainted volume. API responses are inferred from the Unity Catalog and SCIM API
+# contracts, not recorded.
 version: 1
 enforce_call_order: true
 host_metadata:
   host_type: workspace
   cloud: AWS
 steps:
-  - name: create_writes_workspace_id_0
+  - name: create_fails_when_me_returns_workspace_id_0
     config: &config |
       resource "databricks_volume" "this" {
         name         = "me_zero_volume"
@@ -21,9 +21,9 @@ steps:
         schema_name  = "replay"
         volume_type  = "MANAGED"
       }
-    expect_error: 'Error running post-apply non-refresh plan: exit status 1\s+Error:
-      managing a workspace-level resource requires a workspace_id, but the previously
-      configured workspace_id was removed'
+    expect_error: 'cannot populate provider_config for volume: failed to resolve
+      workspace_id: failed to get the workspace_id: SCIM /Me returned workspace ID 0 in
+      the X-Databricks-Org-Id header'
     calls:
       - request:
           method: POST
@@ -67,39 +67,47 @@ steps:
           body:
             json: &me_body {"id": "1001", "userName": "replay-admin@example.com",
                             "schemas": ["urn:ietf:params:scim:schemas:core:2.0:User"]}
-      # The post-apply plan without refresh.
-      - *me_zero
   - name: next_plan_while_me_returns_0
     config: *config
-    expect_error: 'Error running pre-apply plan: exit status 1\s+Error: managing a
-      workspace-level resource requires a workspace_id, but the previously configured
-      workspace_id was removed'
+    expect_error: 'Error running pre-apply plan: exit status 1\s+Error: cannot populate
+      provider_config for volume: failed to resolve workspace_id: failed to get the
+      workspace_id: SCIM /Me returned workspace ID 0 in the X-Databricks-Org-Id header'
     calls:
-      # The plan's refresh accepts the stored "0".
-      - *me_zero
+      # The refresh reads the volume without a workspace_id check, because state has
+      # none, then populates provider_config.
       - *read_volume
-      # CustomizeDiff looks for a fallback workspace ID.
       - *me_zero
   - name: next_plan_after_me_recovers
+    plan_only: true
     config: *config
-    expect_error: 'cannot read volume: failed to validate workspace_id: workspace_id
-      mismatch: provider is configured for workspace 12345 but got 0 in
-      provider_config\. please check the workspace_id provided in provider_config'
+    plan:
+      expect: non_empty
+      changes:
+        databricks_volume.this:
+          actions: [delete, create]
     calls:
-      - request: *me_request
+      - *read_volume
+      - &me
+        request: *me_request
         response:
           status: 200
           headers:
             X-Databricks-Org-Id: "12345"
           body:
             json: *me_body
+    state:
+      resources:
+        databricks_volume.this:
+          attributes:
+            - path: [provider_config, 0, workspace_id]
+              equals: "12345"
 destroy:
   calls:
     # The destroy plan's refresh.
-    - *me_zero
     - *read_volume
+    - *me
     # The apply.
-    - *me_zero
+    - *me
     - request:
         method: DELETE
         path: /api/2.1/unity-catalog/volumes/main.replay.me_zero_volume

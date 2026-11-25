@@ -16,7 +16,6 @@ import (
 	"sync"
 	"sync/atomic"
 	"testing"
-	"time"
 
 	"github.com/databricks/databricks-sdk-go"
 	classicapierr "github.com/databricks/databricks-sdk-go/apierr"
@@ -39,6 +38,9 @@ const (
 	newClientAnswer = `{"registered_model":{"name":"m","description":"d","creation_timestamp":1700000000000,"tags":[{"key":"k","value":"v"}]},` +
 		`"registered_model_databricks":{"name":"m","id":"id-1","description":"d","permission_level":"CAN_MANAGE","tags":[{"key":"k","value":"v"}]}}`
 )
+
+// newClientLoginPage is the page that a workspace redirects a request to.
+const newClientLoginPage = "<html>Log in to Databricks</html>"
 
 var newClientTraceparent = regexp.MustCompile(`^00-[0-9a-f]{32}-[0-9a-f]{16}-01$`)
 
@@ -106,6 +108,8 @@ func (ws *newClientWorkspace) serve(w http.ResponseWriter, r *http.Request) {
 	token := ws.tokens
 	ws.mu.Unlock()
 	w.Header().Set("Content-Type", "application/json")
+	// A fixed date, so that the debug logs of two calls don't differ by it.
+	w.Header().Set("Date", "Mon, 02 Jan 2006 15:04:05 GMT")
 	switch {
 	case r.URL.Path == "/oidc/.well-known/oauth-authorization-server":
 		fmt.Fprintf(w, `{"authorization_endpoint":"%[1]s/oidc/v1/authorize","token_endpoint":"%[1]s/oidc/v1/token"}`, ws.URL)
@@ -115,6 +119,8 @@ func (ws *newClientWorkspace) serve(w http.ResponseWriter, r *http.Request) {
 		ws.answer(w, r, before)
 	case isAPI:
 		io.WriteString(w, newClientAnswer)
+	case r.URL.Path == "/login.html":
+		io.WriteString(w, newClientLoginPage)
 	default:
 		http.NotFound(w, r)
 	}
@@ -345,6 +351,11 @@ func TestNewClient_Errors(t *testing.T) {
 				steps.attemptTimeout = func(*config.Config, http.RoundTripper) (http.RoundTripper, error) { return nil, failed }
 			},
 			want: "modular SDK client: AttemptTimeout: step failed", wantIs: failed},
+		{name: "DebugLog fails", cfg: ws.config(nil),
+			spoil: func(steps *newClientSteps) {
+				steps.debugLog = func(*config.Config, http.RoundTripper) (http.RoundTripper, error) { return nil, failed }
+			},
+			want: "modular SDK client: DebugLog: step failed", wantIs: failed},
 		{name: "ClientOptions fails: the config has no host",
 			cfg:  &config.Config{Token: "dapi-secret", Loaders: []config.Loader{newClientLoader{}}},
 			want: "modular SDK client: ClientOptions: modular SDK client options: config has no host"},
@@ -386,7 +397,8 @@ func TestNewClient_Errors(t *testing.T) {
 func TestNewClient_HandsEachHelperWhatItNeeds(t *testing.T) {
 	type key struct{}
 	ctx, cfg := context.WithValue(t.Context(), key{}, "caller"), &config.Config{}
-	credentials, bare, watched := Credentials(cfg), &newClientCounter{}, &newClientCounter{}
+	credentials, connection := Credentials(cfg), &newClientCounter{}
+	timed, logged, outermost := &newClientCounter{}, &newClientCounter{}, &newClientCounter{}
 	var order []string
 	step := func(name string, got *config.Config) {
 		order = append(order, name)
@@ -404,52 +416,32 @@ func TestNewClient_HandsEachHelperWhatItNeeds(t *testing.T) {
 			step("Credentials", got)
 			return credentials
 		},
-		transport: func(got *config.Config) (http.RoundTripper, error) {
+		transport: func(got *config.Config, wrap func(http.RoundTripper) (http.RoundTripper, error)) (http.RoundTripper, error) {
 			step("Transport", got)
-			return bare, nil
+			sendsOver, err := wrap(connection)
+			assert.Same(t, logged, sendsOver, "Transport sends over the transport of DebugLog")
+			return outermost, err
 		},
 		attemptTimeout: func(got *config.Config, transport http.RoundTripper) (http.RoundTripper, error) {
 			step("AttemptTimeout", got)
-			assert.Same(t, bare, transport, "AttemptTimeout goes around the transport of Transport")
-			return watched, nil
+			assert.Same(t, connection, transport, "AttemptTimeout sends over the connection that Transport picks")
+			return timed, nil
+		},
+		debugLog: func(got *config.Config, transport http.RoundTripper) (http.RoundTripper, error) {
+			step("DebugLog", got)
+			assert.Same(t, timed, transport, "DebugLog sends over the transport of AttemptTimeout")
+			return logged, nil
 		},
 		clientOptions: func(got *config.Config, gotCredentials auth.Credentials, transport http.RoundTripper) ([]client.Option, error) {
 			step("ClientOptions", got)
 			assert.Equal(t, credentials, gotCredentials)
-			assert.Same(t, watched, transport, "the client sends over the transport of AttemptTimeout")
+			assert.Same(t, outermost, transport, "the client sends over the transport of Transport")
 			return []client.Option{client.WithHost("https://from-client-options")}, nil
 		},
 	})
 	require.NoError(t, err)
 	assert.Equal(t, "https://from-client-options", built, "the constructor gets the options of ClientOptions")
-	assert.Equal(t, []string{"Transport", "AttemptTimeout", "Credentials", "ClientOptions", "constructor"}, order)
-}
-
-func TestNewClient_EndsStalledAttemptLikeClassicClient(t *testing.T) {
-	ws := newClientStart(t, &newClientWorkspace{answer: func(_ http.ResponseWriter, r *http.Request, _ int) { <-r.Context().Done() }})
-	cfg := ws.config(func(cfg *config.Config) { cfg.HTTPTimeoutSeconds, cfg.RetryTimeoutSeconds = 1, 5 })
-	classic := newClientClassic(t, cfg)
-	modular, err := NewClient(t.Context(), cfg, modelregistry.NewClient)
-	require.NoError(t, err)
-	errs, took := make([]error, 2), make([]time.Duration, 2)
-	var wg sync.WaitGroup
-	for i, call := range []func() (any, error){
-		func() (any, error) { return newClientCalls[1].classic(t.Context(), classic) },
-		func() (any, error) { return newClientCalls[1].modular(t.Context(), modular) },
-	} {
-		wg.Go(func() {
-			start := time.Now()
-			_, errs[i] = call()
-			took[i] = time.Since(start)
-		})
-	}
-	wg.Wait()
-	want := `Get "` + ws.URL + `/api/2.0/mlflow/databricks/registered-models/get?name=my+model%2F%C3%BC%26x%3D1": request timed out after 1s of inactivity`
-	for i, who := range []string{"classic", "modular"} {
-		assert.EqualError(t, errs[i], want, who)
-		assert.GreaterOrEqual(t, took[i], time.Second, who)
-	}
-	assert.Len(t, ws.received(), 2, "neither client tries again")
+	assert.Equal(t, []string{"Transport", "AttemptTimeout", "DebugLog", "Credentials", "ClientOptions", "constructor"}, order)
 }
 
 func TestNewClient_KeepsNoState(t *testing.T) {

@@ -68,7 +68,8 @@ anonymized.
 Use the wrapper name in your own suite.
 
 Recording makes real API calls and destroys the resources it manages. It
-is rejected in CI, with broad selection, or with Terraform debug logging enabled.
+is rejected in CI, with broad selection, or with Terraform debug logging enabled,
+and for journeys whose responses script a `delay`, `fault` or `status_line`.
 Ordinary replay remains hermetic regardless of ambient Databricks credentials.
 Recording an `initial_state` requires its setup template before loading a
 profile or making requests; see below.
@@ -177,8 +178,11 @@ checked. The testing framework also attempts cleanup after an interrupted test.
 
 Each exchange contains `request` and `response`. Requests specify `method`,
 `path`, optional `query` (values are lists of strings), optional `headers`,
-and `body`. Responses specify an explicit HTTP `status`, optional `headers`,
-and `body`. Use `body: null` for no HTTP body and `body: {json: null}` for JSON
+and `body`. Responses specify an explicit HTTP `status` (except `reset` and
+`close` faults), optional `headers`, and `body`. Optional `delay`, `fault` and
+`status_line` script slow responses, broken connections and literal status
+lines; see [slow and broken connections](AUTHORING.md#test-slow-and-broken-connections).
+Use `body: null` for no HTTP body and `body: {json: null}` for JSON
 null. Other JSON values go under `body.json`; IDs are literal, without substitution.
 Non-JSON payloads use `body.text`, `body.base64`, or request-only
 `body.multipart`; see the [payload reference](../httpfixture/README.md#files-and-non-json-bodies).
@@ -394,7 +398,7 @@ steps:
     # calls omitted
 ```
 
-Values are `classic` or `sdk_go`. Keys must name resource types that have an sdk-go implementation; other names and values fail before Terraform runs. Unlisted resource types use the existing clients. Replay ignores `USE_SDK_GO_RESOURCES`, so the process environment cannot change a transcript.
+Values are `classic` or `sdk_go`. Keys must name resource types that have an sdk-go implementation; other names and values fail before Terraform runs. Unlisted resource types use the existing clients. Replay ignores `USE_SDK_GO_RESOURCES`, so the process environment cannot change a transcript. Because sdk-go requests are otherwise the existing clients' requests, replay checks every request whose User-Agent names a resource with a `resource/<name>` segment: a request that the step's selection sends through sdk-go must carry an `sdk-go-<module>/` segment, and only a resource that the step selects as `sdk_go` may carry one, as the requests that follow an sdk-go call's redirect do. A mismatch fails the step with the method, path and User-Agent. Data sources, whose User-Agent also has `data/yes`, never use sdk-go, and requests that name no resource, such as the importer's read, aren't checked.
 
 Each step declares its own selection, and it combines with `provider_implementations`, initial checkpoints and local input files. Destroy uses the selection retained with its cleanup configuration, following the same rules as provider implementation selection. Native Go replays build the same providers with `ProviderFactoriesWithSdkGo`. The [volume sdk-go journeys](../replay/resources/volume_sdk_go/testdata) use this selection, including switches in both directions.
 

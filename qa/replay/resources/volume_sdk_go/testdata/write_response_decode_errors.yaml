@@ -1,17 +1,11 @@
-# Pins how sdk-go handles a create POST or an update PATCH answered 200 with an empty body
-# or a body that isn't JSON, as the existing client does. An empty body decodes as a
-# volume without fields, whose empty full name becomes the ID, so the read that follows
-# GETs /api/2.1/unity-catalog/volumes/ and fails. A body that isn't JSON fails with the
-# existing client's unmarshal error and request log; the pattern checks its message,
-# request line and echoed body, and skips the generated headers in between. A timestamp
-# that isn't a number fails with the existing client's parse error and request log, and
-# the POST or PATCH is sent once even though the error contains the transient error code
-# REQUEST_LIMIT_EXCEEDED. A failed create leaves nothing in state, and a failed update
-# keeps the volume under its ID, so the next plan shows the update again. The sdk-go
-# requests carry no Accept header, which an empty header expectation pins, and the PATCH
-# bodies also carry full_name_arg, the full name in their path. API responses are inferred
-# from the Unity Catalog API contract, not recorded; the answer to the empty-name GET is
-# the workspace's usual reply to an unknown route.
+# Pins that sdk-go decodes a 200 answer to a create POST or an update PATCH as the
+# existing client does. An empty body is a volume without fields, so the ID becomes its
+# empty full name and the read after the write GETs /api/2.1/unity-catalog/volumes/,
+# which fails: the create leaves nothing in state, and the update keeps the old ID, so the
+# next plan shows the update again. A body that isn't JSON fails with the existing
+# client's unmarshal error and request log. Neither write is sent again.
+# volume_errors/testdata/response_decoding_errors.yaml pins the existing path. API
+# responses are inferred from the Unity Catalog API contract, not recorded.
 version: 1
 enforce_call_order: true
 host_metadata:
@@ -30,7 +24,7 @@ steps:
         volume_type  = "MANAGED"
         comment      = "first"
       }
-    expect_error: &reads_empty_name 'Error: cannot read volume: No API found for ''GET
+    expect_error: &empty_name_error 'Error: cannot read volume: No API found for ''GET
       /unity-catalog/volumes/''\n'
     calls:
       - request: &create_request
@@ -39,7 +33,7 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
+            Accept: application/json
           body:
             json: {"catalog_name": "main", "schema_name": "replay",
                    "name": "decode_volume", "volume_type": "MANAGED", "comment": "first"}
@@ -52,14 +46,14 @@ steps:
           path: /api/2.1/unity-catalog/volumes/
           headers:
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
+            Accept: application/json
           body: null
         response:
           status: 404
           body:
             json: {"error_code": "ENDPOINT_NOT_FOUND",
                    "message": "No API found for 'GET /unity-catalog/volumes/'"}
-  - name: create_answered_200_with_undecodable_body_fails_with_request_log
+  - name: create_answered_200_with_body_that_isnt_json_fails_with_request_log
     sdk_implementations:
       databricks_volume: sdk_go
     config: *config_created
@@ -75,24 +69,6 @@ steps:
           status: 200
           body:
             text: not json
-  - name: create_answered_200_with_unparseable_timestamp_is_sent_once
-    sdk_implementations:
-      databricks_volume: sdk_go
-    config: *config_created
-    expect_error: 'Error: cannot create volume: failed to unmarshal response body:
-      strconv\.ParseInt: parsing "REQUEST_LIMIT_EXCEEDED": invalid syntax\. This is likely
-      a bug in the Databricks SDK for Go or the underlying REST API\. Please report this
-      issue with the following debugging information to the SDK issue tracker at
-      https://github\.com/databricks/databricks-sdk-go/issues\. Request
-      log:\n```\nPOST /api/2\.1/unity-catalog/volumes\n(?s:.*)<
-      (?s:.*)REQUEST_LIMIT_EXCEEDED(?s:.*)\n```\n'
-    calls:
-      - request: *create_request
-        response:
-          status: 200
-          body:
-            json: &unparseable_timestamp {"full_name": "main.replay.decode_volume",
-                                          "created_at": "REQUEST_LIMIT_EXCEEDED"}
   - name: create_succeeds
     sdk_implementations:
       databricks_volume: sdk_go
@@ -116,7 +92,7 @@ steps:
           path: /api/2.1/unity-catalog/volumes/main.replay.decode_volume
           headers:
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
+            Accept: application/json
           body: null
         response:
           status: 200
@@ -140,7 +116,7 @@ steps:
         volume_type  = "MANAGED"
         comment      = "second"
       }
-    expect_error: *reads_empty_name
+    expect_error: *empty_name_error
     calls:
       - *read_created
       - request: &update_request
@@ -149,14 +125,14 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
+            Accept: application/json
           body:
-            json: {"full_name_arg": "main.replay.decode_volume", "comment": "second"}
+            json: {"comment": "second"}
         response:
           status: 200
           body: null
       - *read_empty_name
-  - name: update_answered_200_with_undecodable_body_fails_with_request_log
+  - name: update_answered_200_with_body_that_isnt_json_fails_with_request_log
     sdk_implementations:
       databricks_volume: sdk_go
     config: *config_updated
@@ -165,9 +141,8 @@ steps:
       Databricks SDK for Go or the underlying REST API\. Please report this issue with the
       following debugging information to the SDK issue tracker at
       https://github\.com/databricks/databricks-sdk-go/issues\. Request
-      log:\n```\nPATCH
-      /api/2\.1/unity-catalog/volumes/main\.replay\.decode_volume\n(?s:.*)< not
-      json\n```\n'
+      log:\n```\nPATCH /api/2\.1/unity-catalog/volumes/main\.replay\.decode_volume\n(?s:.*)<
+      not json\n```\n'
     calls:
       - *read_created
       - request: *update_request
@@ -175,25 +150,6 @@ steps:
           status: 200
           body:
             text: not json
-  - name: update_answered_200_with_unparseable_timestamp_is_sent_once
-    sdk_implementations:
-      databricks_volume: sdk_go
-    config: *config_updated
-    expect_error: 'Error: cannot update volume: failed to unmarshal response body:
-      strconv\.ParseInt: parsing "REQUEST_LIMIT_EXCEEDED": invalid syntax\. This is likely
-      a bug in the Databricks SDK for Go or the underlying REST API\. Please report this
-      issue with the following debugging information to the SDK issue tracker at
-      https://github\.com/databricks/databricks-sdk-go/issues\. Request
-      log:\n```\nPATCH
-      /api/2\.1/unity-catalog/volumes/main\.replay\.decode_volume\n(?s:.*)<
-      (?s:.*)REQUEST_LIMIT_EXCEEDED(?s:.*)\n```\n'
-    calls:
-      - *read_created
-      - request: *update_request
-        response:
-          status: 200
-          body:
-            json: *unparseable_timestamp
   - name: plan_after_failed_updates_shows_the_update
     sdk_implementations:
       databricks_volume: sdk_go

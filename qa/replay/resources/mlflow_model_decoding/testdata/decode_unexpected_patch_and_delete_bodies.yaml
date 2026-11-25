@@ -1,14 +1,16 @@
-# Pins a PATCH and a DELETE answered 200 with JSON the call doesn't expect. The PATCH
+# Pins a PATCH and a DELETE answered 200 with a body the call doesn't expect. The PATCH
 # response is decoded and then dropped: answered with another model, the update
-# succeeds and the state comes from the read that follows. Its shape still matters: a
-# JSON array fails the update with the SDK's unmarshal error after the service accepted
-# the PATCH. The planned description is in the state all the same, so the next plan is
-# empty without a refresh. The message names an encoding/json type that Go 1.27
-# renamed, so its pattern takes both spellings; it checks the message, the request line
-# and the echoed body, which the request log prints as null for the empty array, and
-# skips the generated headers in between. The DELETE response is never decoded:
-# answered with another model or with an array, the model is gone from the state. API
-# responses are synthetic: inferred from the MLflow Model Registry API, not recorded.
+# succeeds and the state comes from the read that follows. Answered with an empty body,
+# which the classic client decodes as an empty response, it succeeds the same way and
+# the next plan is empty. Its shape still matters: a JSON array fails the update with
+# the SDK's unmarshal error after the service accepted the PATCH. The planned
+# description is in the state all the same, so the next plan is empty without a
+# refresh. The message names an encoding/json type that Go 1.27 renamed, so its pattern
+# takes both spellings; it checks the message, the request line and the echoed body,
+# which the request log prints as null for the empty array, and skips the generated
+# headers in between. The DELETE response is never decoded: answered with another model
+# or with an array, the model is gone from the state. API responses are synthetic:
+# inferred from the MLflow Model Registry API, not recorded.
 version: 1
 enforce_call_order: true
 host_metadata:
@@ -114,20 +116,16 @@ steps:
               equals: decode_model
             - path: [description]
               equals: second description
-  - name: update_answered_200_with_json_array_fails_with_request_log
+  - name: update_answered_200_with_empty_body_takes_the_state_from_the_read
     config: &config_third |
       resource "databricks_mlflow_model" "this" {
         name        = "decode_model"
         description = "third description"
       }
-    expect_error: 'Error: cannot update mlflow model: failed to unmarshal response body:
-      json: cannot unmarshal array into Go value of type
-      map\[string\](json\.RawMessage|jsontext\.Value)\. This is likely a bug in the
-      Databricks SDK for Go or the underlying REST API\. Please report this issue with
-      the following debugging information to the SDK issue tracker at
-      https://github\.com/databricks/databricks-sdk-go/issues\. Request
-      log:\n```\nPATCH /api/2\.0/mlflow/registered-models/update\n(?s:.*)<
-      null\n```\n'
+    plan:
+      changes:
+        databricks_mlflow_model.this:
+          actions: [update]
     calls:
       - *read_second
       - request:
@@ -140,23 +138,7 @@ steps:
             json: {"name": "decode_model", "description": "third description"}
         response:
           status: 200
-          body:
-            json: []
-  - name: plan_after_failed_update_has_the_planned_description_and_plans_nothing
-    plan_only: true
-    config: *config_third
-    plan:
-      expect: empty
-      changes: {}
-    state:
-      resources:
-        databricks_mlflow_model.this:
-          attributes:
-            - path: [id]
-              equals: decode_model
-            - path: [description]
-              equals: third description
-    calls:
+          body: null
       - &read_third
         request: *read_request
         response:
@@ -170,18 +152,94 @@ steps:
                      "creation_timestamp": 1700000000000,
                      "last_updated_timestamp": 1700000002000,
                      "permission_level": "CAN_MANAGE"}}
+      - *read_third
+    state: &state_third
+      resources:
+        databricks_mlflow_model.this:
+          attributes:
+            - path: [id]
+              equals: decode_model
+            - path: [name]
+              equals: decode_model
+            - path: [description]
+              equals: third description
+  - name: plan_after_empty_body_update_keeps_the_new_description_and_plans_nothing
+    plan_only: true
+    config: *config_third
+    plan:
+      expect: empty
+      changes: {}
+    state: *state_third
+    calls:
+      - *read_third
+  - name: update_answered_200_with_json_array_fails_with_request_log
+    config: &config_fourth |
+      resource "databricks_mlflow_model" "this" {
+        name        = "decode_model"
+        description = "fourth description"
+      }
+    expect_error: 'Error: cannot update mlflow model: failed to unmarshal response body:
+      json: cannot unmarshal array into Go value of type
+      map\[string\](json\.RawMessage|jsontext\.Value)\. This is likely a bug in the
+      Databricks SDK for Go or the underlying REST API\. Please report this issue with
+      the following debugging information to the SDK issue tracker at
+      https://github\.com/databricks/databricks-sdk-go/issues\. Request
+      log:\n```\nPATCH /api/2\.0/mlflow/registered-models/update\n(?s:.*)<
+      null\n```\n'
+    calls:
+      - *read_third
+      - request:
+          method: PATCH
+          path: /api/2.0/mlflow/registered-models/update
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"name": "decode_model", "description": "fourth description"}
+        response:
+          status: 200
+          body:
+            json: []
+  - name: plan_after_failed_update_has_the_planned_description_and_plans_nothing
+    plan_only: true
+    config: *config_fourth
+    plan:
+      expect: empty
+      changes: {}
+    state:
+      resources:
+        databricks_mlflow_model.this:
+          attributes:
+            - path: [id]
+              equals: decode_model
+            - path: [description]
+              equals: fourth description
+    calls:
+      - &read_fourth
+        request: *read_request
+        response:
+          status: 200
+          body:
+            json: {"registered_model_databricks": {
+                     "name": "decode_model",
+                     "id": "0123456789abcdef0123456789abcdef",
+                     "description": "fourth description",
+                     "user_id": "replay-admin@example.com",
+                     "creation_timestamp": 1700000000000,
+                     "last_updated_timestamp": 1700000003000,
+                     "permission_level": "CAN_MANAGE"}}
   - name: replace_with_delete_answered_200_with_another_model_removes_the_model
     config: |
       resource "databricks_mlflow_model" "this" {
         name        = "decode_model_replaced"
-        description = "third description"
+        description = "fourth description"
       }
     plan:
       changes:
         databricks_mlflow_model.this:
           actions: [delete, create]
     calls:
-      - *read_third
+      - *read_fourth
       - request:
           method: DELETE
           path: /api/2.0/mlflow/registered-models/delete
@@ -201,16 +259,16 @@ steps:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
           body:
-            json: {"name": "decode_model_replaced", "description": "third description"}
+            json: {"name": "decode_model_replaced", "description": "fourth description"}
         response:
           status: 200
           body:
             json: {"registered_model": {
                      "name": "decode_model_replaced",
-                     "description": "third description",
+                     "description": "fourth description",
                      "user_id": "replay-admin@example.com",
-                     "creation_timestamp": 1700000003000,
-                     "last_updated_timestamp": 1700000003000}}
+                     "creation_timestamp": 1700000004000,
+                     "last_updated_timestamp": 1700000004000}}
       - &read_replaced
         request:
           method: GET
@@ -226,10 +284,10 @@ steps:
             json: {"registered_model_databricks": {
                      "name": "decode_model_replaced",
                      "id": "fedcba9876543210fedcba9876543210",
-                     "description": "third description",
+                     "description": "fourth description",
                      "user_id": "replay-admin@example.com",
-                     "creation_timestamp": 1700000003000,
-                     "last_updated_timestamp": 1700000003000,
+                     "creation_timestamp": 1700000004000,
+                     "last_updated_timestamp": 1700000004000,
                      "permission_level": "CAN_MANAGE"}}
       - *read_replaced
     state:

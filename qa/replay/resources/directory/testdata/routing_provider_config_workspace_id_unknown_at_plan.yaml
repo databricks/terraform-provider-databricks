@@ -1,0 +1,190 @@
+# Pins provider_config.workspace_id taken from another resource, so it is unknown at
+# plan time, on an account-level provider without a provider-level workspace_id. On
+# create the planned workspace_id is unknown, and apply looks up and routes through the
+# resolved ID and stores it. A directory belongs to its workspace, so when its
+# workspace_id becomes unknown the plan replaces it without looking up a fallback, and
+# apply deletes it from the old workspace and creates it in the new one. API responses
+# are inferred from the account and workspace API contracts, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: account
+  cloud: AWS
+  account_id: replay-account
+steps:
+  - name: create_with_unknown_workspace_id
+    config: |
+      provider "databricks" {
+        account_id = "replay-account"
+      }
+      resource "terraform_data" "workspace" {
+        input = "12345"
+      }
+      resource "databricks_directory" "this" {
+        path = "/Shared/unknown_ws_dir"
+        provider_config {
+          workspace_id = terraform_data.workspace.output
+        }
+      }
+    plan:
+      expect: non_empty
+      changes:
+        databricks_directory.this:
+          actions: [create]
+          after:
+            - path: [provider_config, 0, workspace_id]
+              unknown: true
+    calls:
+      - &lookup_12345
+        request:
+          method: GET
+          path: /api/2.0/accounts/replay-account/workspaces/12345
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"account_id": "replay-account", "workspace_id": 12345,
+                   "workspace_name": "replay-workspace-12345",
+                   "deployment_name": "replay-workspace-12345",
+                   "workspace_status": "RUNNING"}
+      - request:
+          method: POST
+          path: /api/2.0/workspace/mkdirs
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"path": "/Shared/unknown_ws_dir"}
+        response:
+          status: 200
+          body:
+            json: {}
+      - &read_in_12345
+        request:
+          method: GET
+          path: /api/2.0/workspace/get-status
+          query:
+            path: ["/Shared/unknown_ws_dir"]
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"object_type": "DIRECTORY", "object_id": 101,
+                   "path": "/Shared/unknown_ws_dir"}
+      # The post-apply refresh plan.
+      - *lookup_12345
+      - *read_in_12345
+    state:
+      resources:
+        databricks_directory.this:
+          attributes:
+            - path: [provider_config, 0, workspace_id]
+              equals: "12345"
+  - name: change_to_unknown_workspace_id
+    config: |
+      provider "databricks" {
+        account_id = "replay-account"
+      }
+      resource "terraform_data" "workspace" {
+        input = "67890"
+      }
+      resource "databricks_directory" "this" {
+        path = "/Shared/unknown_ws_dir"
+        provider_config {
+          workspace_id = terraform_data.workspace.output
+        }
+      }
+    plan:
+      expect: non_empty
+      changes:
+        databricks_directory.this:
+          actions: [delete, create]
+          before:
+            - path: [provider_config, 0, workspace_id]
+              equals: "12345"
+          after:
+            - path: [provider_config, 0, workspace_id]
+              unknown: true
+    calls:
+      # The plan's refresh.
+      - *lookup_12345
+      - *read_in_12345
+      # The apply deletes the directory from the old workspace.
+      - *lookup_12345
+      - request:
+          method: POST
+          path: /api/2.0/workspace/delete
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"path": "/Shared/unknown_ws_dir"}
+        response:
+          status: 200
+          body:
+            json: {}
+      # It creates the directory in the new workspace.
+      - &lookup_67890
+        request:
+          method: GET
+          path: /api/2.0/accounts/replay-account/workspaces/67890
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"account_id": "replay-account", "workspace_id": 67890,
+                   "workspace_name": "replay-workspace-67890",
+                   "deployment_name": "replay-workspace-67890",
+                   "workspace_status": "RUNNING"}
+      - request:
+          method: POST
+          path: /api/2.0/workspace/mkdirs
+          headers:
+            X-Databricks-Workspace-Id: "67890"
+          body:
+            json: {"path": "/Shared/unknown_ws_dir"}
+        response:
+          status: 200
+          body:
+            json: {}
+      - &read_in_67890
+        request:
+          method: GET
+          path: /api/2.0/workspace/get-status
+          query:
+            path: ["/Shared/unknown_ws_dir"]
+          headers:
+            X-Databricks-Workspace-Id: "67890"
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"object_type": "DIRECTORY", "object_id": 202,
+                   "path": "/Shared/unknown_ws_dir"}
+      # The post-apply refresh plan.
+      - *lookup_67890
+      - *read_in_67890
+    state:
+      resources:
+        databricks_directory.this:
+          attributes:
+            - path: [object_id]
+              equals: 202
+            - path: [provider_config, 0, workspace_id]
+              equals: "67890"
+destroy:
+  calls:
+    - *lookup_67890
+    - *read_in_67890
+    - *lookup_67890
+    - request:
+        method: POST
+        path: /api/2.0/workspace/delete
+        headers:
+          X-Databricks-Workspace-Id: "67890"
+        body:
+          json: {"path": "/Shared/unknown_ws_dir"}
+      response:
+        status: 200
+        body:
+          json: {}

@@ -1,11 +1,11 @@
 # Pins provider_config.workspace_id taken from another resource, so it is unknown at
 # plan time, on an account-level provider without a provider-level workspace_id. On
 # create the planned workspace_id is unknown, and apply looks up and routes through the
-# resolved ID and stores it. When an existing volume's workspace_id becomes unknown,
-# CustomizeDiff treats the block as absent: it calls SCIM /Me on the account host to
-# find a fallback, and the plan fails, after the refresh through the old workspace,
-# with the error for a removed workspace_id. API responses are inferred from the
-# account, Unity Catalog and SCIM API contracts, not recorded.
+# resolved ID and stores it. When an existing volume's workspace_id becomes unknown, the
+# plan is an in-place update that leaves it unknown without looking up a fallback, and
+# apply looks up the new workspace, sends it the PATCH and the read, and stores its ID.
+# API responses are inferred from the account and Unity Catalog API contracts, not
+# recorded.
 version: 1
 enforce_call_order: true
 host_metadata:
@@ -107,34 +107,76 @@ steps:
           workspace_id = terraform_data.workspace.output
         }
       }
-    expect_error: 'Error: managing a workspace-level resource requires a workspace_id,
-      but the previously configured workspace_id was removed'
+    plan:
+      expect: non_empty
+      changes:
+        databricks_volume.this:
+          actions: [update]
+          before:
+            - path: [provider_config, 0, workspace_id]
+              equals: "12345"
+          after:
+            - path: [provider_config, 0, workspace_id]
+              unknown: true
     calls:
       # The plan's refresh.
       - *lookup_12345
       - *read_in_12345
-      # CustomizeDiff looks for a fallback workspace ID on the account host.
-      - request:
+      # The apply.
+      - &lookup_67890
+        request:
           method: GET
-          path: /api/2.0/preview/scim/v2/Me
-          query:
-            excludedAttributes: [entitlements]
+          path: /api/2.0/accounts/replay-account/workspaces/67890
           body: null
         response:
-          status: 404
+          status: 200
           body:
-            json: {"error_code": "ENDPOINT_NOT_FOUND",
-                   "message": "No API found for 'GET /preview/scim/v2/Me'"}
+            json: {"account_id": "replay-account", "workspace_id": 67890,
+                   "workspace_name": "replay-workspace-67890",
+                   "deployment_name": "replay-workspace-67890",
+                   "workspace_status": "RUNNING"}
+      - request:
+          method: PATCH
+          path: /api/2.1/unity-catalog/volumes/main.replay.unknown_ws_volume
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "67890"
+          body:
+            json: {}
+        response:
+          status: 200
+          body:
+            json: *volume
+      - &read_in_67890
+        request:
+          method: GET
+          path: /api/2.1/unity-catalog/volumes/main.replay.unknown_ws_volume
+          headers:
+            X-Databricks-Workspace-Id: "67890"
+          body: null
+        response:
+          status: 200
+          body:
+            json: *volume
+      # The post-apply refresh plan.
+      - *lookup_67890
+      - *read_in_67890
+    state:
+      resources:
+        databricks_volume.this:
+          attributes:
+            - path: [provider_config, 0, workspace_id]
+              equals: "67890"
 destroy:
   calls:
-    - *lookup_12345
-    - *read_in_12345
-    - *lookup_12345
+    - *lookup_67890
+    - *read_in_67890
+    - *lookup_67890
     - request:
         method: DELETE
         path: /api/2.1/unity-catalog/volumes/main.replay.unknown_ws_volume
         headers:
-          X-Databricks-Workspace-Id: "12345"
+          X-Databricks-Workspace-Id: "67890"
         body: null
       response:
         status: 200

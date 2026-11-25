@@ -1,0 +1,110 @@
+# Pins provider_config.workspace_id taken from another resource, so it is unknown at
+# plan time, on a workspace-level provider. Apply rejects any workspace but the host's,
+# so the directory can't move: when its workspace_id becomes unknown but still resolves
+# to the host's workspace, the plan is an in-place update, not a replacement, and apply
+# makes no directory call because the resolved value matches state. API responses are
+# inferred from the workspace API contract, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: create_with_unknown_workspace_id
+    config: |
+      resource "terraform_data" "workspace" {
+        input = "12345"
+      }
+      resource "databricks_directory" "this" {
+        path = "/Shared/unknown_ws_dir"
+        provider_config {
+          workspace_id = terraform_data.workspace.output
+        }
+      }
+    plan:
+      expect: non_empty
+      changes:
+        databricks_directory.this:
+          actions: [create]
+          after:
+            - path: [provider_config, 0, workspace_id]
+              unknown: true
+    calls:
+      - request:
+          method: POST
+          path: /api/2.0/workspace/mkdirs
+          body:
+            json: {"path": "/Shared/unknown_ws_dir"}
+        response:
+          status: 200
+          body:
+            json: {}
+      - &read
+        request:
+          method: GET
+          path: /api/2.0/workspace/get-status
+          query:
+            path: ["/Shared/unknown_ws_dir"]
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"object_type": "DIRECTORY", "object_id": 101,
+                   "path": "/Shared/unknown_ws_dir"}
+      # The post-apply refresh plan.
+      - *read
+    state:
+      resources:
+        databricks_directory.this:
+          attributes:
+            - path: [provider_config, 0, workspace_id]
+              equals: "12345"
+  - name: unknown_workspace_id_updates_in_place
+    config: |
+      resource "terraform_data" "workspace" {
+        input            = "12345"
+        triggers_replace = "rotated"
+      }
+      resource "databricks_directory" "this" {
+        path = "/Shared/unknown_ws_dir"
+        provider_config {
+          workspace_id = terraform_data.workspace.output
+        }
+      }
+    plan:
+      expect: non_empty
+      changes:
+        databricks_directory.this:
+          actions: [update]
+          before:
+            - path: [provider_config, 0, workspace_id]
+              equals: "12345"
+          after:
+            - path: [provider_config, 0, workspace_id]
+              unknown: true
+    calls:
+      # The plan's refresh.
+      - *read
+      # The post-apply refresh plan.
+      - *read
+    state:
+      resources:
+        databricks_directory.this:
+          attributes:
+            - path: [object_id]
+              equals: 101
+            - path: [provider_config, 0, workspace_id]
+              equals: "12345"
+destroy:
+  calls:
+    - *read
+    - request:
+        method: POST
+        path: /api/2.0/workspace/delete
+        body:
+          json: {"path": "/Shared/unknown_ws_dir"}
+      response:
+        status: 200
+        body:
+          json: {}

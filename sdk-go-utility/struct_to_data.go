@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
+	"strings"
 
 	"github.com/databricks/sdk-go/core/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -65,6 +66,9 @@ import (
 //     with a Z, and both with 0, 3, 6 or 9 fraction digits. The classic struct
 //     holds the text of the API, so the state differs where the API sends
 //     another form, as 2026-01-02T03:04:05.000Z or an offset;
+//   - write a field mask. A types.FieldMask says which fields a request
+//     updates and is no attribute of the resource. A field of that type, by
+//     value or by pointer, is skipped even when s has an entry of its name;
 //   - read json or tf tags or aliases, or flatten an embedded struct. Classic
 //     SDK structs and the provider's own structs stay with
 //     common.StructToData;
@@ -123,17 +127,18 @@ func structToDataMessage(result any) (reflect.Value, error) {
 }
 
 // structToDataEachField calls visit for every exported field of message whose
-// FieldName has an entry in s, and names the field in the error that visit
-// returns.
+// FieldName has an entry in s, except a field mask, and names the field in the
+// error that visit returns.
 func structToDataEachField(message reflect.Value, s map[string]*schema.Schema,
 	visit func(name string, field reflect.Value, fieldSchema *schema.Schema) error,
 ) error {
 	messageType := message.Type()
 	for i := range messageType.NumField() {
-		if !messageType.Field(i).IsExported() {
+		field := messageType.Field(i)
+		if !field.IsExported() || structToDataIsFieldMask(field.Type) {
 			continue
 		}
-		name := FieldName(messageType, messageType.Field(i))
+		name := FieldName(messageType, field)
 		fieldSchema, ok := s[name]
 		if !ok {
 			continue
@@ -143,6 +148,14 @@ func structToDataEachField(message reflect.Value, s map[string]*schema.Schema,
 		}
 	}
 	return nil
+}
+
+// structToDataIsFieldMask reports whether t is a types.FieldMask of any
+// message, or a pointer to one. The type is generic, so it is told by its
+// package and by its name up to the type argument.
+func structToDataIsFieldMask(t reflect.Type) bool {
+	t = structToDataIndirect(t)
+	return t.PkgPath() == reflect.TypeFor[types.Time]().PkgPath() && strings.HasPrefix(t.Name(), "FieldMask[")
 }
 
 // structToDataWriteDefaults sets every optional, non-computed field of s that

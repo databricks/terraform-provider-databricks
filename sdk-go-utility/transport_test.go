@@ -114,10 +114,10 @@ func (s *transportTestServer) received() []transportTestRequest {
 }
 
 // transportTestModularClient returns a modular client for cfg.Host that sends
-// its requests over Transport(cfg) and authenticates with cfg.
+// its requests over Transport(cfg, nil) and authenticates with cfg.
 func transportTestModularClient(t *testing.T, cfg *config.Config, opts ...client.Option) *modelregistry.Client {
 	t.Helper()
-	transport, err := Transport(cfg)
+	transport, err := Transport(cfg, nil)
 	require.NoError(t, err)
 	opts = append([]client.Option{
 		client.WithHost(cfg.Host),
@@ -162,7 +162,7 @@ func transportTestOverBase(t *testing.T, configure func(*config.Config)) (http.R
 	if configure != nil {
 		configure(cfg)
 	}
-	transport, err := Transport(cfg)
+	transport, err := Transport(cfg, nil)
 	require.NoError(t, err)
 	return transport, base
 }
@@ -464,17 +464,17 @@ func TestTransport_RequestOfTheCaller(t *testing.T) {
 
 // TestTransport_Config checks the errors of Transport and the base it picks.
 func TestTransport_Config(t *testing.T) {
-	_, err := Transport(nil)
+	_, err := Transport(nil, nil)
 	assert.EqualError(t, err, "cannot build a transport for a nil config")
 	unresolvable := transportTestConfig("https://classic.test")
 	unresolvable.Loaders = []config.Loader{transportTestLoader{errTransportTest}}
-	_, err = Transport(unresolvable)
+	_, err = Transport(unresolvable, nil)
 	assert.ErrorIs(t, err, errTransportTest)
 	assert.ErrorContains(t, err, "resolve: transport test error")
 	base := func(configure func(*config.Config)) http.RoundTripper {
 		cfg := transportTestConfig("https://classic.test")
 		configure(cfg)
-		transport, err := Transport(cfg)
+		transport, err := Transport(cfg, nil)
 		require.NoError(t, err)
 		return transport.(*transportRoundTripper).base
 	}
@@ -546,7 +546,7 @@ func TestTransport_ReturnsResponsesAsTheyAre(t *testing.T) {
 		server.status = status
 		cfg := transportTestConfig(server.URL)
 		cfg.AuthType = "pat"
-		transport, err := Transport(cfg)
+		transport, err := Transport(cfg, nil)
 		require.NoError(t, err)
 		resp, err := transport.RoundTrip(httptest.NewRequest(http.MethodGet, server.URL+"/api", nil))
 		require.NoError(t, err)

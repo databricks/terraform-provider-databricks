@@ -32,7 +32,8 @@ import (
 // with logger.Debugf of the classic SDK, which the provider sends to the
 // Terraform log. It is written when the classic client writes it:
 //
-//   - once the caller has read the response body to its end, with the body;
+//   - once the caller has read the response body to its end, with the body,
+//     or at once for a response without a body;
 //   - when reading the body fails, with that error and without the body;
 //   - when the attempt fails before a response arrives, with the error as
 //     http.Client reports it to the classic client;
@@ -50,9 +51,10 @@ import (
 //
 // When debug logging is off for the context of a request, as
 // logger.Get(ctx).Enabled(ctx, logger.LevelDebug) tells, DebugLog only calls
-// transport: it reads no body and keeps no copy. The caller always gets the
-// response and the error that transport returns, and its request is never
-// modified. The returned transport is safe for concurrent requests.
+// transport: it reads no body and keeps no copy. The caller always gets what
+// transport returns, the response with its status, headers and body bytes or
+// the error, and its request is never modified. The returned transport is
+// safe for concurrent requests.
 //
 // DebugLog leaves the place of this transport among the others of a client to
 // its caller. It logs the request as it receives it and the outcome that the
@@ -67,7 +69,9 @@ import (
 // A transport outside DebugLog that fails without calling it leaves no
 // message, as the classic client writes none for a request that its rate
 // limiter or a request visitor refuses. DebugLog also leaves retries to its
-// caller: it never sends a request twice.
+// caller: it never sends a request twice, and every request that reaches it
+// is an attempt with a message of its own, also each request of a redirect
+// that http.Client follows.
 //
 // DebugLog returns an error when cfg or transport is nil, or when cfg can't
 // be resolved.

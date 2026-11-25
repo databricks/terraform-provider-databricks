@@ -6,16 +6,11 @@ import (
 	"net/http"
 	"net/url"
 	"reflect"
-	"time"
 
 	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/sdk-go/auth"
 	"github.com/databricks/sdk-go/options/client"
 )
-
-// clientOptionsClassicRetryTimeout is how long the classic client keeps
-// retrying a call when Config.RetryTimeoutSeconds is zero.
-const clientOptionsClassicRetryTimeout = 5 * time.Minute
 
 // ClientOptions returns the options that point a modular SDK client, such as
 // the one modelregistry.NewClient builds, at the workspace of cfg, the config
@@ -28,14 +23,21 @@ const clientOptionsClassicRetryTimeout = 5 * time.Minute
 //   - reads neither a config file nor the environment, so DATABRICKS_HOST,
 //     DATABRICKS_TOKEN, DATABRICKS_CONFIG_PROFILE and ~/.databrickscfg change
 //     nothing;
-//   - bounds a call, retries included, by cfg.RetryTimeoutSeconds as the
-//     classic client does: 5 minutes when it is zero and no bound when it is
-//     negative, which is what the provider sets unless the user chooses one.
+//   - sets no timeout of its own, so a call ends when ctx ends or its
+//     retrier stops retrying, as a classic call does: the classic client
+//     looks at its retry timeout only between attempts, and runs each attempt
+//     and its wait for the rate limiter on the context of the caller. The
+//     retrier of Retrier stops after cfg.RetryTimeoutSeconds when it is
+//     positive, after 5 minutes when it is 0, or 20 minutes for a transport
+//     whose SkipRetryOnIO is true, for which the classic client clears its
+//     retry timeout, and never when it is negative, which the provider sets
+//     unless the user sets retry_timeout_seconds. Without a retrier a call is
+//     one attempt.
 //
 // ClientOptions returns an error when cfg, credentials or transport is nil,
 // including a nil pointer in the interface, or when cfg.Host is not the
 // scheme://host that EnsureResolved leaves there. It only reads cfg, and of
-// cfg only Host, WorkspaceID, AccountID and RetryTimeoutSeconds.
+// cfg only Host, WorkspaceID and AccountID.
 //
 // It leaves to the caller:
 //
@@ -49,8 +51,9 @@ const clientOptionsClassicRetryTimeout = 5 * time.Minute
 //   - credentials and transport. ClientOptions doesn't derive them from cfg
 //     and doesn't wrap them, so authentication, the User-Agent, TLS settings,
 //     request logging and cfg.HTTPTimeoutSeconds are theirs to bring;
-//   - what a single call needs: a retrier, without which a modular client
-//     doesn't retry, a rate limiter and a timeout of its own;
+//   - what a single call needs: a retrier, such as the one Retrier returns,
+//     without which a modular client doesn't retry, a rate limiter and, if
+//     one is wanted, a timeout of its own;
 //   - building the client, with further options such as a logger.
 func ClientOptions(cfg *config.Config, credentials auth.Credentials, transport http.RoundTripper) ([]client.Option, error) {
 	switch {
@@ -72,7 +75,9 @@ func ClientOptions(cfg *config.Config, credentials auth.Credentials, transport h
 		client.WithHTTPClient(&http.Client{Transport: transport}),
 		client.WithoutConfigFile(),
 		client.WithoutEnv(),
-		client.WithTimeout(clientOptionsCallTimeout(cfg.RetryTimeoutSeconds)),
+		// Zero turns off the 5 minutes that a modular client otherwise gives
+		// every call, which would cut an attempt in flight.
+		client.WithTimeout(0),
 	}, nil
 }
 
@@ -106,19 +111,4 @@ func clientOptionsCheckResolvedHost(host string) error {
 		return fmt.Errorf("modular SDK client options: config host %q is not of the form scheme://host, resolve the config first", host)
 	}
 	return nil
-}
-
-// clientOptionsCallTimeout turns Config.RetryTimeoutSeconds into the value for
-// client.WithTimeout. The two read zero differently: the classic client takes
-// it as unset and retries for 5 minutes, and client.WithTimeout takes it as no
-// timeout. The classic client sets no deadline for a negative value, while the
-// modular client would start every call with a deadline that has passed.
-func clientOptionsCallTimeout(retryTimeoutSeconds int) time.Duration {
-	switch {
-	case retryTimeoutSeconds == 0:
-		return clientOptionsClassicRetryTimeout
-	case retryTimeoutSeconds < 0:
-		return 0
-	}
-	return time.Duration(retryTimeoutSeconds) * time.Second
 }

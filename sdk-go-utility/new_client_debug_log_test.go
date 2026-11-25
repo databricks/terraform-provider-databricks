@@ -128,6 +128,15 @@ func (newClientNoAnswer) RoundTrip(r *http.Request) (*http.Response, error) {
 	return nil, r.Context().Err()
 }
 
+// newClientBounded returns a context that ends a call of t after 10 seconds.
+// The client of NewClient has no timeout of its own, and a test whose helpers
+// don't end a stalled attempt fails with it instead of waiting for the server.
+func newClientBounded(t *testing.T) context.Context {
+	ctx, cancel := context.WithTimeout(t.Context(), 10*time.Second)
+	t.Cleanup(cancel)
+	return ctx
+}
+
 func TestNewClient_EndsStalledAttemptLikeClassicClient(t *testing.T) {
 	for _, tc := range []struct {
 		name          string
@@ -141,11 +150,12 @@ func TestNewClient_EndsStalledAttemptLikeClassicClient(t *testing.T) {
 			t.Parallel()
 			ws := newClientStart(t, &newClientWorkspace{answer: func(_ http.ResponseWriter, r *http.Request, _ int) { <-r.Context().Done() }})
 			cfg := ws.config(func(cfg *config.Config) {
-				cfg.HTTPTimeoutSeconds, cfg.RetryTimeoutSeconds, cfg.HTTPTransport = 1, 5, tc.httpTransport
+				cfg.HTTPTimeoutSeconds, cfg.HTTPTransport = 1, tc.httpTransport
 			})
 			classic := newClientClassic(t, cfg)
 			modular, err := NewClient(t.Context(), cfg, modelregistry.NewClient)
 			require.NoError(t, err)
+			ctx := newClientBounded(t)
 			errs, took, logs := make([]error, 2), make([]time.Duration, 2), make([][]string, 2)
 			var wg sync.WaitGroup
 			for i, call := range []func(context.Context) (any, error){
@@ -154,7 +164,7 @@ func TestNewClient_EndsStalledAttemptLikeClassicClient(t *testing.T) {
 			} {
 				wg.Go(func() {
 					start := time.Now()
-					logs[i], errs[i] = newClientLogged(t.Context(), call)
+					logs[i], errs[i] = newClientLogged(ctx, call)
 					took[i] = time.Since(start)
 				})
 			}
@@ -253,16 +263,17 @@ func TestNewClient_TimesAttemptFromTheConnection(t *testing.T) {
 	t.Parallel()
 	ws := newClientStart(t, &newClientWorkspace{})
 	cfg := ws.config(func(cfg *config.Config) {
-		cfg.HTTPTimeoutSeconds, cfg.RetryTimeoutSeconds = 1, 5
+		cfg.HTTPTimeoutSeconds = 1
 		cfg.Headers = func(*http.Request) error { time.Sleep(1300 * time.Millisecond); return nil }
 	})
 	classic := newClientClassic(t, cfg)
 	modular, err := NewClient(t.Context(), cfg, modelregistry.NewClient)
 	require.NoError(t, err)
+	ctx := newClientBounded(t)
 	var classicErr, modularErr error
 	var wg sync.WaitGroup
-	wg.Go(func() { _, classicErr = newClientCalls[1].classic(t.Context(), classic) })
-	wg.Go(func() { _, modularErr = newClientCalls[1].modular(t.Context(), modular) })
+	wg.Go(func() { _, classicErr = newClientCalls[1].classic(ctx, classic) })
+	wg.Go(func() { _, modularErr = newClientCalls[1].modular(ctx, modular) })
 	wg.Wait()
 	assert.ErrorContains(t, classicErr, ": request timed out after 1s of inactivity")
 	assert.NoError(t, modularErr)

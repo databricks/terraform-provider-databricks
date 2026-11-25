@@ -60,7 +60,10 @@ import (
 //     config that has not, but that authentication writes cfg.Host, which
 //     NewClient reads, so the two must not run at the same time;
 //   - what a single call needs and no client option can set: a retrier,
-//     without which the client doesn't retry, and a rate limiter;
+//     without which the client doesn't retry, a rate limiter and, if one is
+//     wanted, a timeout. The client has none of its own, as ClientOptions
+//     sets none, so a call ends when its context ends or its retrier stops
+//     retrying, as a classic call does;
 //   - the error of a failed call, which is the one of the modular SDK and
 //     not the apierr.APIError of the classic client.
 func NewClient[C any](ctx context.Context, cfg *config.Config, construct func(context.Context, ...client.Option) (C, error)) (C, error) {

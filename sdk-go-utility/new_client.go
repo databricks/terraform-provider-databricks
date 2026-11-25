@@ -19,25 +19,23 @@ import (
 //	registry, err := sdkgoutility.NewClient(ctx, w.Config, modelregistry.NewClient)
 //
 // It puts the helpers of this package together: the client authenticates
-// with Credentials(cfg), sends its requests over Transport(cfg) inside
-// AttemptTimeout inside DebugLog, and is built from the ClientOptions of
-// these. So the client calls the workspace of cfg with the headers of the
-// classic client, ends a stalled attempt with the error of the classic
-// client, writes each attempt to the debug log as the classic client does,
-// and reads neither the environment nor a config file.
+// with Credentials(cfg) and sends its requests over Transport(cfg), which
+// sends over DebugLog, which sends over AttemptTimeout, which sends over the
+// connection. It is built from the ClientOptions of these. So the client
+// calls the workspace of cfg with the headers of the classic client, writes
+// each attempt to the debug log as it is sent, ends a stalled attempt with
+// the error of the classic client, which the log then shows, and reads
+// neither the environment nor a config file.
 //
-// DebugLog belongs inside Transport, which sets the headers, and Transport
-// takes no transport to send over. So DebugLog logs the request before
-// Transport has changed it and the outcome that Transport returns:
+// With debug_headers the log shows the Host that is sent, which the classic
+// client logs as empty. For a private link redirect it has a message for
+// each request, as DebugLog writes them, and the one for the login page has
+// no text, because Transport closes that page unread.
 //
-//   - with debug_headers the log shows the Host and the User-Agent of the
-//     modular client and neither Accept, Traceparent nor a header of the
-//     cfg.Headers hook, which is not what is sent. Every other line of a
-//     call that the workspace answers is the one of the classic client;
-//   - a request that a request visitor refuses is logged, where the classic
-//     client logs no attempt;
-//   - the private link login page is logged as the error response that
-//     Transport returns in its place.
+// The inactivity timeout of an attempt starts when Transport hands the
+// request on, after the request visitors of cfg have run. The classic client
+// starts it before them, so there a cfg.Headers hook that takes longer than
+// the timeout fails the attempt, and here it doesn't.
 //
 // NewClient returns the zero value of C and an error when cfg or construct
 // is nil, and when a step fails. The error names the step, which is the
@@ -71,11 +69,11 @@ func NewClient[C any](ctx context.Context, cfg *config.Config, construct func(co
 
 // newClientSteps are the helpers that NewClient puts together. They are
 // fields so that a test can make each of them fail: of the real helpers,
-// AttemptTimeout and DebugLog can't fail once Transport has resolved the
-// config.
+// AttemptTimeout and DebugLog can't fail here, because Transport has resolved
+// the config when it asks for the transport to send over.
 type newClientSteps struct {
 	credentials    func(*config.Config) auth.Credentials
-	transport      func(*config.Config) (http.RoundTripper, error)
+	transport      func(*config.Config, func(http.RoundTripper) (http.RoundTripper, error)) (http.RoundTripper, error)
 	attemptTimeout func(*config.Config, http.RoundTripper) (http.RoundTripper, error)
 	debugLog       func(*config.Config, http.RoundTripper) (http.RoundTripper, error)
 	clientOptions  func(*config.Config, auth.Credentials, http.RoundTripper) ([]client.Option, error)
@@ -84,17 +82,13 @@ type newClientSteps struct {
 // newClientHelpers are the steps of NewClient.
 var newClientHelpers = newClientSteps{
 	credentials:    Credentials,
-	transport:      func(cfg *config.Config) (http.RoundTripper, error) { return Transport(cfg, nil) },
+	transport:      Transport,
 	attemptTimeout: AttemptTimeout,
 	debugLog:       DebugLog,
 	clientOptions:  ClientOptions,
 }
 
-// newClientBuild is NewClient with the given steps. Their order is fixed by
-// what each needs: Transport resolves cfg, which the other helpers read,
-// AttemptTimeout goes around Transport, so that the wait for progress covers
-// the whole attempt, and DebugLog goes around AttemptTimeout, so that the log
-// shows the error that ended an attempt.
+// newClientBuild is NewClient with the given steps.
 func newClientBuild[C any](ctx context.Context, cfg *config.Config, construct func(context.Context, ...client.Option) (C, error), steps newClientSteps) (C, error) {
 	var zero C
 	switch {
@@ -103,17 +97,9 @@ func newClientBuild[C any](ctx context.Context, cfg *config.Config, construct fu
 	case construct == nil:
 		return zero, errors.New("modular SDK client: constructor is nil")
 	}
-	transport, err := steps.transport(cfg)
+	transport, err := newClientTransport(cfg, steps)
 	if err != nil {
-		return zero, fmt.Errorf("modular SDK client: Transport: %w", err)
-	}
-	transport, err = steps.attemptTimeout(cfg, transport)
-	if err != nil {
-		return zero, fmt.Errorf("modular SDK client: AttemptTimeout: %w", err)
-	}
-	transport, err = steps.debugLog(cfg, transport)
-	if err != nil {
-		return zero, fmt.Errorf("modular SDK client: DebugLog: %w", err)
+		return zero, err
 	}
 	options, err := steps.clientOptions(cfg, steps.credentials(cfg), transport)
 	if err != nil {
@@ -124,4 +110,36 @@ func newClientBuild[C any](ctx context.Context, cfg *config.Config, construct fu
 		return zero, fmt.Errorf("modular SDK client: constructor: %w", err)
 	}
 	return built, nil
+}
+
+// newClientTransport returns the transport of the client. Its order is fixed
+// by what each helper needs: Transport is outermost, because it sets the
+// headers and resolves cfg, which the other helpers read. It sends over
+// DebugLog, so that the log shows the request as it is sent, and DebugLog
+// sends over AttemptTimeout, so that the log shows the error that ended an
+// attempt. AttemptTimeout sends over the connection that Transport picks.
+func newClientTransport(cfg *config.Config, steps newClientSteps) (http.RoundTripper, error) {
+	// Transport reports an error of its wrap as its own. failed keeps the
+	// name of the step that failed in front.
+	var failed error
+	transport, err := steps.transport(cfg, func(connection http.RoundTripper) (http.RoundTripper, error) {
+		timed, err := steps.attemptTimeout(cfg, connection)
+		if err != nil {
+			failed = fmt.Errorf("modular SDK client: AttemptTimeout: %w", err)
+			return nil, failed
+		}
+		logged, err := steps.debugLog(cfg, timed)
+		if err != nil {
+			failed = fmt.Errorf("modular SDK client: DebugLog: %w", err)
+			return nil, failed
+		}
+		return logged, nil
+	})
+	switch {
+	case failed != nil:
+		return nil, failed
+	case err != nil:
+		return nil, fmt.Errorf("modular SDK client: Transport: %w", err)
+	}
+	return transport, nil
 }

@@ -19,8 +19,14 @@ import (
 )
 
 // run keeps the fixture server alive through the framework's deferred destroy,
-// then checks for requests or fixtures left over after cleanup.
+// then checks for requests or fixtures left over after cleanup. A journey that sets
+// a process-start variable runs in its own test process.
 func run(t *testing.T, definition *testDefinition) {
+	t.Helper()
+	if definition.processStartVariable() != "" && !inOwnProcess(t) {
+		runOwnProcess(t, definition.Environment)
+		return
+	}
 	runNative(t, definition, nil)
 }
 
@@ -34,18 +40,29 @@ func RunNative(t *testing.T, path string, configure func(*resource.TestCase, fun
 	if err != nil {
 		t.Fatalf("%s: %v", path, err)
 	}
+	if err := definition.validateNative(); err != nil {
+		t.Fatalf("%s: %v", path, err)
+	}
 	runNative(t, definition, configure)
 }
 
 func runNative(t *testing.T, definition *testDefinition, configure func(*resource.TestCase, func(*config.Config) error)) {
 	t.Helper()
-	handler, host := replayBoundary(t, definition)
-	runTerraform(t, definition, handler, fixtureConfig(host), configure)
+	if err := applyEnvironment(t, definition.Environment); err != nil {
+		t.Fatal(err)
+	}
+	handler, server := replayBoundary(t, definition)
+	hosts := definition.replayHosts(server)
+	customize := definition.Auth.withCredentials(hosts.fixtureConfig())
+	runTerraform(t, definition, handler, customize, configure)
 }
 
 func replayBoundary(t *testing.T, definition *testDefinition) (*httpfixture.Handler, string) {
 	t.Helper()
 	handler := httpfixture.NewHandler()
+	if err := definition.setHosts(handler); err != nil {
+		t.Fatal(err)
+	}
 	handler.SetEnforceCallOrder(definition.EnforceCallOrder)
 	if err := handler.SetReusableFixtures(definition.metadataCalls()); err != nil {
 		t.Fatal(err)
@@ -201,31 +218,57 @@ func (fixtureLoader) Configure(*config.Config) error { return nil }
 // fixtureConfig forces local PAT authentication while retaining routing fields,
 // such as account_id, explicitly set in HCL.
 func fixtureConfig(host string) func(*config.Config) error {
+	return replayHosts{server: host}.fixtureConfig()
+}
+
+func (h replayHosts) fixtureConfig() func(*config.Config) error {
 	return func(cfg *config.Config) error {
+		host, err := h.providerHost(cfg.Host)
+		if err != nil {
+			return err
+		}
 		cfg.Host, cfg.Token, cfg.AuthType = host, "fixture-token", "pat"
 		cfg.Credentials = config.PatCredentials{}
 		// An explicit loader prevents ambient credentials and profiles from filling
 		// configuration fields, including account/workspace routing identifiers.
 		cfg.Loaders = []config.Loader{fixtureLoader{}}
-		cfg.HTTPTransport = fixtureTransport{host: host, transport: httpfixture.NewClientTransport()}
+		cfg.HTTPTransport = fixtureTransport{host: h.server, named: h.named,
+			transport: httpfixture.NewClientTransport()}
 		return nil
 	}
 }
 
 type fixtureTransport struct {
 	host      string
+	named     []*url.URL
 	transport http.RoundTripper
 }
 
-// RoundTrip also rejects redirects outside the fixture server, preventing
-// fixture responses from causing accidental live API calls.
+// RoundTrip sends named hosts to the fixture server and rejects other hosts,
+// including redirects, preventing fixture responses from causing accidental
+// live API calls.
 func (f fixtureTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	expected, err := url.Parse(f.host)
 	if err != nil {
 		return nil, err
 	}
+	local := req
 	if req.URL.Scheme != expected.Scheme || req.URL.Host != expected.Host {
-		return nil, fmt.Errorf("hermetic replay rejected request outside fixture server: %s", req.URL)
+		if !isNamedHost(f.named, req.URL) {
+			return nil, fmt.Errorf("hermetic replay rejected request outside fixture server: %s", req.URL)
+		}
+		// The handler matches calls on the Host header. Go sends a nonempty Host in
+		// place of the URL's authority, so the clone keeps it.
+		local = req.Clone(req.Context())
+		local.URL.Scheme, local.URL.Host = expected.Scheme, expected.Host
+		if local.Host == "" {
+			local.Host = req.URL.Host
+		}
 	}
-	return f.transport.RoundTrip(req)
+	resp, err := f.transport.RoundTrip(local)
+	if resp != nil {
+		// The SDK takes a private-link redirect's cloud from the final request's host.
+		resp.Request = req
+	}
+	return resp, err
 }

@@ -6,9 +6,21 @@ subcategory: "Lakewatch"
 
 [API Documentation](https://docs.databricks.com/api/workspace/lakewatch)
 
+Lists the built-in Lakewatch parsers published by Databricks. Results contain parser metadata without specs. Use a singular built-in parser-version data source to retrieve content.
+
+This data source can only be used with a workspace-level provider.
 
 
 ## Example Usage
+List available built-in parsers:
+
+```hcl
+data "databricks_lakewatch_builtin_parsers" "all" {}
+
+output "builtin_parser_names" {
+  value = [for parser in data.databricks_lakewatch_builtin_parsers.all.builtin_parsers : parser.name]
+}
+```
 
 
 ## Arguments

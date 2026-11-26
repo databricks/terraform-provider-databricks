@@ -1,0 +1,95 @@
+name: build
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+  merge_group:
+    types: [checks_requested]
+  push:
+    # Always run on push to main. The build cache can only be reused
+    # if it was saved by a run from the repository's default branch.
+    # The run result will be identical to that from the merge queue
+    # because the commit is identical, yet we need to perform it to
+    # seed the build cache.
+    branches:
+      - main
+
+jobs:
+  tests:
+    runs-on:
+      group: databricks-protected-runner-group
+      labels: linux-ubuntu-latest
+
+    permissions:
+      id-token: write
+      contents: read
+
+    strategy:
+      fail-fast: false
+      matrix:
+        goVersion:
+          - "1.25"
+          - "1.26"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Setup build environment
+        uses: ./.github/actions/setup-build-environment
+        with:
+          go-version: ${{ matrix.goVersion }}
+
+      - name: Run tests
+        run: make test
+
+      - name: Publish test coverage
+        uses: codecov/codecov-action@b9fd7d16f6d7d1b5d2bec1a2887e65ceed900238 # v4.6.0
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+  lint:
+    runs-on:
+      group: databricks-protected-runner-group
+      labels: linux-ubuntu-latest
+
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Setup build environment
+        uses: ./.github/actions/setup-build-environment
+        with:
+          go-version: "1.26"
+
+      - name: Run linters
+        run: make lint
+
+  fmt:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Setup Go
+        uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+        with:
+          go-version: "1.26"
+
+          # No need to download cached dependencies when running gofmt.
+          cache: false
+
+      - name: Run gofmt
+        run: |
+          # -l: list files that were reformatted
+          # -w: write back formatted files to disk
+          gofmt -l -w ./
+
+      - name: Fail on differences
+        run: |
+          # Exit with status code 1 if there are differences (i.e. unformatted files)
+          git diff --exit-code

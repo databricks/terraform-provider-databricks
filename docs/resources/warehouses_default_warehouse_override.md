@@ -51,10 +51,10 @@ resource "databricks_warehouses_default_warehouse_override" "custom" {
 
 ## Arguments
 The following arguments are supported:
-* `default_warehouse_override_id` (string, required) - The ID component of the resource name (user ID)
+* `default_warehouse_override_id` (string, required) - The numeric ID of the user that the override applies to. It is the last component of `name`
 * `type` (string, required) - The type of override behavior. Possible values are: `CUSTOM`, `LAST_SELECTED`
-* `warehouse_id` (string, optional) - The specific warehouse ID when type is CUSTOM.
-  Not set for LAST_SELECTED type
+* `warehouse_id` (string, optional) - The ID of the SQL warehouse to preselect when `type` is `CUSTOM`. It is required for `CUSTOM`
+  and must be a valid warehouse ID. It is ignored for `LAST_SELECTED` and is not returned for that type
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 
 ### ProviderConfig
@@ -64,6 +64,7 @@ The following arguments are supported:
 In addition to the above arguments, the following attributes are exported:
 * `name` (string) - The resource name of the default warehouse override.
   Format: default-warehouse-overrides/{default_warehouse_override_id}
+  Responses always contain the numeric user ID, even when the request used `me`
 
 ## Import
 As of Terraform v1.5, resources can be imported through configuration.

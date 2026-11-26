@@ -22,8 +22,8 @@ import (
 	"github.com/databricks/terraform-provider-databricks/common"
 )
 
-// These tests pin the classic SDK client's HTTP timeout, cancellation and connection
-// reset behavior on databricks_volume writes, which replay fixtures cannot express: a
+// These tests pin the HTTP timeout, cancellation and connection reset behavior of
+// databricks_volume writes on both clients, which replay fixtures cannot express: a
 // fixture can neither delay a response nor reset a connection, and a journey cannot
 // cancel Terraform mid-call. The write_retry_ replay journeys pin transient-message
 // retries and retry exhaustion.
@@ -205,11 +205,11 @@ func volumeContext(ctx context.Context) context.Context {
 }
 
 // createVolumeWithOwner runs the provider's wrapped Create for a volume owned by
-// oldVolumeOwner.
+// oldVolumeOwner, through sdk-go if sdkGo is set.
 func createVolumeWithOwner(
-	ctx context.Context, t *testing.T, c *common.DatabricksClient,
+	ctx context.Context, t *testing.T, c *common.DatabricksClient, sdkGo bool,
 ) (*schema.ResourceData, diag.Diagnostics) {
-	r := ResourceVolume().ToResource()
+	r := volumeResource(sdkGo)
 	d := schema.TestResourceDataRaw(t, r.Schema, map[string]any{
 		"name":         "retry_volume",
 		"catalog_name": "main",
@@ -244,26 +244,31 @@ func ownerAndCommentUpdateData(t *testing.T, r *schema.Resource) *schema.Resourc
 	return d
 }
 
-// updateVolumeOwnerAndComment runs the provider's wrapped Update for that plan.
+// updateVolumeOwnerAndComment runs the provider's wrapped Update for that plan, through
+// sdk-go if sdkGo is set.
 func updateVolumeOwnerAndComment(
-	ctx context.Context, t *testing.T, c *common.DatabricksClient,
+	ctx context.Context, t *testing.T, c *common.DatabricksClient, sdkGo bool,
 ) (*schema.ResourceData, diag.Diagnostics) {
-	r := ResourceVolume().ToResource()
+	r := volumeResource(sdkGo)
 	d := ownerAndCommentUpdateData(t, r)
 	return d, r.UpdateContext(volumeContext(ctx), d, c)
 }
 
-// destroyVolume runs the provider's wrapped Delete.
+// destroyVolume runs the provider's wrapped Delete, through sdk-go if sdkGo is set.
 func destroyVolume(
-	ctx context.Context, _ *testing.T, c *common.DatabricksClient,
+	ctx context.Context, _ *testing.T, c *common.DatabricksClient, sdkGo bool,
 ) (*schema.ResourceData, diag.Diagnostics) {
-	r := ResourceVolume().ToResource()
+	r := volumeResource(sdkGo)
 	d := r.TestResourceData()
 	d.SetId(retryVolumeID)
 	return d, r.DeleteContext(volumeContext(ctx), d, c)
 }
 
 func TestVolumeWritesPastHTTPTimeoutAreNotRetried(t *testing.T) {
+	forEachVolumeClient(t, testVolumeWritesPastHTTPTimeoutAreNotRetried)
+}
+
+func testVolumeWritesPastHTTPTimeoutAreNotRetried(t *testing.T, sdkGo bool) {
 	held := volumeResponse{hold: true}
 	created := volumeResponse{status: http.StatusOK, body: retryVolumeJSON}
 	ownerChanged := volumeResponse{status: http.StatusOK, body: volumeWithNewOwnerJSON}
@@ -275,7 +280,7 @@ func TestVolumeWritesPastHTTPTimeoutAreNotRetried(t *testing.T) {
 	tests := []struct {
 		name      string
 		responses []volumeResponse
-		run       func(context.Context, *testing.T, *common.DatabricksClient) (
+		run       func(context.Context, *testing.T, *common.DatabricksClient, bool) (
 			*schema.ResourceData, diag.Diagnostics)
 		requests []volumeRequest
 		// diagnostic returns the expected diagnostic for the server's URL.
@@ -345,7 +350,7 @@ func TestVolumeWritesPastHTTPTimeoutAreNotRetried(t *testing.T) {
 			requests:  []volumeRequest{deleteVolumeRequest},
 			diagnostic: func(u string) string {
 				return "cannot delete volume: " +
-					timedOut("Delete", u+retryVolumePath+"?")
+					timedOut("Delete", u+deleteVolumeRequest.uri)
 			},
 			id: retryVolumeID,
 		},
@@ -361,7 +366,7 @@ func TestVolumeWritesPastHTTPTimeoutAreNotRetried(t *testing.T) {
 				HTTPTimeoutSeconds:  1,
 			})
 
-			d, diags := tt.run(context.Background(), t, c)
+			d, diags := tt.run(context.Background(), t, c, sdkGo)
 
 			assertVolumeRequests(t, tt.requests, api)
 			assert.Equal(t, tt.diagnostic(server.URL), diagnosticSummary(t, diags))
@@ -371,6 +376,12 @@ func TestVolumeWritesPastHTTPTimeoutAreNotRetried(t *testing.T) {
 }
 
 func TestVolumeFieldsPatchCancelledInBackoffRollsBackOnCancelledContext(t *testing.T) {
+	forEachVolumeClient(t,
+		testVolumeFieldsPatchCancelledInBackoffRollsBackOnCancelledContext)
+}
+
+func testVolumeFieldsPatchCancelledInBackoffRollsBackOnCancelledContext(t *testing.T,
+	sdkGo bool) {
 	synctest.Test(t, func(t *testing.T) {
 		// The fields PATCH retry and the rollback would both succeed if they were sent.
 		api := newScriptedVolumeAPI(t,
@@ -384,7 +395,7 @@ func TestVolumeFieldsPatchCancelledInBackoffRollsBackOnCancelledContext(t *testi
 			RetryTimeoutSeconds: retryUntilContextEnds,
 			HTTPTransport:       api,
 		})
-		r := ResourceVolume().ToResource()
+		r := volumeResource(sdkGo)
 		d := ownerAndCommentUpdateData(t, r)
 		ctx, cancel := context.WithCancel(t.Context())
 		defer cancel()
@@ -398,7 +409,8 @@ func TestVolumeFieldsPatchCancelledInBackoffRollsBackOnCancelledContext(t *testi
 		// After the 429, Update blocks only in the fields PATCH's backoff, so Wait
 		// returns there.
 		synctest.Wait()
-		assertVolumeRequests(t, []volumeRequest{updateOwnerPatch, updateFieldsPatch}, api)
+		patches := []volumeRequest{updateOwnerPatch, updateFieldsPatch}
+		assertVolumeRequests(t, patches, api)
 		cancel()
 		// Wait does not advance the fake clock, so Update must return without the
 		// backoff timer firing.
@@ -411,7 +423,7 @@ func TestVolumeFieldsPatchCancelledInBackoffRollsBackOnCancelledContext(t *testi
 
 		// The rollback fails in the SDK's rate limiter, so it never reaches the server
 		// and the owner change stays.
-		assertVolumeRequests(t, []volumeRequest{updateOwnerPatch, updateFieldsPatch}, api)
+		assertVolumeRequests(t, patches, api)
 		assert.Equal(t, ownerRollbackDiagnostic("Too many requests from fixture",
 			"failed in rate limiter: context canceled"), diagnosticSummary(t, diags))
 		assert.Equal(t, retryVolumeID, d.Id(), "the volume must stay in state")
@@ -419,6 +431,12 @@ func TestVolumeFieldsPatchCancelledInBackoffRollsBackOnCancelledContext(t *testi
 }
 
 func TestVolumeCreateRetriedAfterConnectionResetFailsWithAlreadyExists(t *testing.T) {
+	forEachVolumeClient(t,
+		testVolumeCreateRetriedAfterConnectionResetFailsWithAlreadyExists)
+}
+
+func testVolumeCreateRetriedAfterConnectionResetFailsWithAlreadyExists(t *testing.T,
+	sdkGo bool) {
 	// The first POST reaches the server, which creates the volume and then resets the
 	// connection before responding. The SDK retries the reset with the same body, and
 	// the server rejects the retry because the volume now exists.
@@ -433,7 +451,7 @@ func TestVolumeCreateRetriedAfterConnectionResetFailsWithAlreadyExists(t *testin
 		RetryTimeoutSeconds: retryUntilContextEnds,
 	})
 
-	d, diags := createVolumeWithOwner(context.Background(), t, c)
+	d, diags := createVolumeWithOwner(context.Background(), t, c, sdkGo)
 
 	assertVolumeRequests(t, []volumeRequest{createVolumePost, createVolumePost}, api)
 	assert.Equal(t,

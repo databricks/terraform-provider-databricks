@@ -1,0 +1,78 @@
+# Runs volume_routing/testdata/routing_me_forbidden_during_import_fails_the_refresh.yaml
+# with databricks_volume on sdk-go uc/volumes/v1 in every step, and expects the same
+# requests and behavior. The original's description:
+#
+# Pins SCIM /Me answering 403 when an import first populates provider_config, on a
+# workspace-level provider whose host metadata has no workspace ID. The importer reads
+# the volume, then fails to resolve the workspace ID through /Me, and drops that error
+# as it drops its own read errors. Terraform then refreshes the imported ID, whose read
+# succeeds and whose provider_config population fails the same way, with the "cannot
+# populate provider_config" prefix. Nothing is imported, so the next plan creates the
+# volume. API responses are inferred from the Unity Catalog and SCIM API contracts, not
+# recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+steps:
+  - name: import_fails_when_me_is_forbidden_after_the_read
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: &config |
+      resource "databricks_volume" "this" {
+        name         = "me_import_volume"
+        catalog_name = "main"
+        schema_name  = "replay"
+        volume_type  = "MANAGED"
+      }
+    import:
+      resource: databricks_volume.this
+      id: main.replay.me_import_volume
+      persist: true
+    expect_error: 'Error: cannot populate provider_config for volume: failed to resolve
+      workspace_id: failed to get the workspace_id: Caller cannot read /Me\n'
+    calls:
+      # The importer's GET and /Me, then the refresh's.
+      - &read_volume
+        request:
+          method: GET
+          path: /api/2.1/unity-catalog/volumes/main.replay.me_import_volume
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "me_import_volume",
+                   "full_name": "main.replay.me_import_volume",
+                   "volume_type": "MANAGED", "owner": "replay-admin@example.com",
+                   "storage_location": "s3://replay-metastore/volume-2312",
+                   "metastore_id": "11111111-1111-1111-1111-111111111111",
+                   "volume_id": "00000000-0000-4000-8000-000000002312"}
+      - &me_forbidden
+        request:
+          method: GET
+          path: /api/2.0/preview/scim/v2/Me
+          query:
+            excludedAttributes: [entitlements]
+          body: null
+        response:
+          status: 403
+          body:
+            json: {"error_code": "PERMISSION_DENIED",
+                   "message": "Caller cannot read /Me"}
+      - *read_volume
+      - *me_forbidden
+  - name: nothing_imported_so_plan_creates
+    sdk_implementations:
+      databricks_volume: sdk_go
+    plan_only: true
+    config: *config
+    plan:
+      expect: non_empty
+      changes:
+        databricks_volume.this:
+          actions: [create]
+    calls: []
+destroy:
+  calls: []

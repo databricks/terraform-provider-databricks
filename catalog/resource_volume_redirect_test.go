@@ -116,6 +116,11 @@ func (redirectLoader) Name() string { return "redirect test" }
 func (redirectLoader) Configure(*config.Config) error { return nil }
 
 func TestVolumeRefreshPrivateLinkRedirectNamesTheCloudOfTheHost(t *testing.T) {
+	forEachVolumeClient(t, testVolumeRefreshPrivateLinkRedirectNamesTheCloudOfTheHost)
+}
+
+func testVolumeRefreshPrivateLinkRedirectNamesTheCloudOfTheHost(t *testing.T,
+	sdkGo bool) {
 	tests := []struct {
 		name   string
 		domain string
@@ -158,7 +163,7 @@ func TestVolumeRefreshPrivateLinkRedirectNamesTheCloudOfTheHost(t *testing.T) {
 			c := newRedirectClient(t, tt.domain,
 				redirectCloudTransport{domain: tt.domain, target: target, log: log})
 
-			before, after, diags := refreshRedirectVolume(t, c)
+			before, after, diags := refreshRedirectVolume(t, c, sdkGo)
 
 			assert.Equal(t, diag.Diagnostics{{Severity: diag.Error,
 				Summary: tt.diagnostic}}, diags)
@@ -195,14 +200,15 @@ func newRedirectClient(
 	return c
 }
 
-// refreshRedirectVolume runs the provider's wrapped Read for a volume already in state
-// and returns its state attributes before and after the Read, with the diagnostics.
+// refreshRedirectVolume runs the provider's wrapped Read for a volume already in state,
+// through sdk-go if sdkGo is set, and returns its state attributes before and after the
+// Read, with the diagnostics.
 func refreshRedirectVolume(
-	t *testing.T, c *common.DatabricksClient,
+	t *testing.T, c *common.DatabricksClient, sdkGo bool,
 ) (before, after map[string]string, diags diag.Diagnostics) {
 	t.Helper()
 	ctx := context.WithValue(context.Background(), common.ResourceName, "volume")
-	r := ResourceVolume().ToResource()
+	r := volumeResource(sdkGo)
 	d := schema.TestResourceDataRaw(t, r.Schema, map[string]any{
 		"name":         "redirect_cloud_volume",
 		"catalog_name": "main",

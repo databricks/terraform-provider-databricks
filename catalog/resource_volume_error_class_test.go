@@ -11,9 +11,14 @@ import (
 
 // The SDK retries a 503 by its status until the retry timeout, then returns the last
 // error. Its RESOURCE_DOES_NOT_EXIST code counts as missing, so the refresh removes the
-// volume from state instead of failing. This runs in a synctest bubble because a replay
-// journey would race the real clock.
+// volume from state instead of failing, on both clients. This runs in a synctest bubble
+// because a replay journey would race the real clock.
 func TestVolumeRefresh503ResourceDoesNotExistUntilRetryTimeoutIsMissing(t *testing.T) {
+	forEachVolumeClient(t, testVolumeRefresh503ResourceDoesNotExistUntilRetryTimeoutIsMissing)
+}
+
+func testVolumeRefresh503ResourceDoesNotExistUntilRetryTimeoutIsMissing(t *testing.T,
+	sdkGo bool) {
 	synctest.Test(t, func(t *testing.T) {
 		api := &inMemoryVolumeAPI{respond: func(int32) (int, string) {
 			return http.StatusServiceUnavailable, `{"error_code": "RESOURCE_DOES_NOT_EXIST",
@@ -27,7 +32,7 @@ func TestVolumeRefresh503ResourceDoesNotExistUntilRetryTimeoutIsMissing(t *testi
 			HTTPTransport:       api,
 		})
 
-		d, diags := refreshVolume(t.Context(), c)
+		d, diags := refreshVolumeInBubble(t, c, sdkGo)
 
 		assert.Empty(t, diags)
 		assert.Equal(t, int32(2), api.attempts.Load())

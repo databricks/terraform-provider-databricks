@@ -1,0 +1,125 @@
+# Runs volume_errors/testdata/response_keys_matched_by_the_classic_decoder.yaml with
+# databricks_volume on sdk-go uc/volumes/v1 in every step, and expects the same requests
+# and behavior. The original's description:
+#
+# Pins how the classic decoder matches the keys of a 200 refresh to fields. It skips
+# fields that no SDK type knows, so a refresh with them keeps the same state, and it
+# matches keys case-insensitively, so a refresh with upper-case keys still reads every
+# field and adopts the unconfigured owner it sets. API responses are inferred from the
+# Unity Catalog API contract, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: create
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: &config |
+      resource "databricks_volume" "this" {
+        name         = "matched_keys_volume"
+        catalog_name = "main"
+        schema_name  = "replay"
+        volume_type  = "MANAGED"
+      }
+    calls:
+      - request:
+          method: POST
+          path: /api/2.1/unity-catalog/volumes
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "matched_keys_volume", "volume_type": "MANAGED"}
+        response:
+          status: 200
+          body:
+            json: &created {"catalog_name": "main", "schema_name": "replay",
+                            "name": "matched_keys_volume",
+                            "full_name": "main.replay.matched_keys_volume",
+                            "volume_type": "MANAGED", "owner": "replay-admin@example.com",
+                            "storage_location": "s3://replay-metastore/volume-232"}
+      - &read_created
+        request: &read_request
+          method: GET
+          path: /api/2.1/unity-catalog/volumes/main.replay.matched_keys_volume
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 200
+          body:
+            json: *created
+      - *read_created
+  - name: refresh_with_unknown_fields_keeps_the_same_state
+    sdk_implementations:
+      databricks_volume: sdk_go
+    plan_only: true
+    config: *config
+    plan:
+      expect: empty
+      changes: {}
+    calls:
+      - request: *read_request
+        response:
+          status: 200
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "matched_keys_volume",
+                   "full_name": "main.replay.matched_keys_volume",
+                   "volume_type": "MANAGED", "owner": "replay-admin@example.com",
+                   "storage_location": "s3://replay-metastore/volume-232",
+                   "lifecycle_state": "ACTIVE", "retention": {"days": 30},
+                   "labels": ["finance"]}
+    state:
+      resources:
+        databricks_volume.this:
+          attributes:
+            - path: [owner]
+              equals: replay-admin@example.com
+  - name: refresh_with_upper_case_keys_adopts_the_owner
+    sdk_implementations:
+      databricks_volume: sdk_go
+    plan_only: true
+    config: *config
+    plan:
+      expect: empty
+      changes: {}
+    calls:
+      - request: *read_request
+        response:
+          status: 200
+          body:
+            json: {"CATALOG_NAME": "main", "SCHEMA_NAME": "replay",
+                   "NAME": "matched_keys_volume",
+                   "FULL_NAME": "main.replay.matched_keys_volume",
+                   "VOLUME_TYPE": "MANAGED", "OWNER": "data-owners@example.com",
+                   "STORAGE_LOCATION": "s3://replay-metastore/volume-232"}
+    state:
+      resources:
+        databricks_volume.this:
+          attributes:
+            - path: [owner]
+              equals: data-owners@example.com
+            - path: [volume_path]
+              equals: /Volumes/main/replay/matched_keys_volume
+destroy:
+  calls:
+    - request: *read_request
+      response:
+        status: 200
+        body:
+          json: *created
+    - request:
+        method: DELETE
+        path: /api/2.1/unity-catalog/volumes/main.replay.matched_keys_volume
+        headers:
+          X-Databricks-Workspace-Id: "12345"
+        body: null
+      response:
+        status: 200
+        body:
+          json: {}

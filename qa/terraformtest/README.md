@@ -368,6 +368,40 @@ Provider selection also works with initial checkpoints and local input files.
 These settings are passed to provider constructors without changing process-wide
 rollout environment variables.
 
+## SDK implementation selection
+
+Each step can also select, by Terraform resource type, whether a resource uses the provider's existing clients or the modular `github.com/databricks/sdk-go` clients, as `USE_SDK_GO_RESOURCES` does in production:
+
+```yaml
+steps:
+  - name: create_on_existing_path
+    sdk_implementations:
+      databricks_volume: classic
+    config: |
+      resource "databricks_volume" "this" {
+        name         = "example"
+        catalog_name = "main"
+        schema_name  = "default"
+        volume_type  = "MANAGED"
+      }
+    # calls omitted
+  - name: refresh_with_sdk_go
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: |
+      resource "databricks_volume" "this" {
+        name         = "example"
+        catalog_name = "main"
+        schema_name  = "default"
+        volume_type  = "MANAGED"
+      }
+    # calls omitted
+```
+
+Values are `classic` or `sdk_go`. Keys must name resource types that have an sdk-go implementation; other names and values fail before Terraform runs. Unlisted resource types use the existing clients. Replay ignores `USE_SDK_GO_RESOURCES`, so the process environment cannot change a transcript. Because sdk-go requests are otherwise the existing clients' requests, replay checks every request whose User-Agent names a resource with a `resource/<name>` segment: a request that the step's selection sends through sdk-go must carry an `sdk-go-<module>/` segment, and only a resource that the step selects as `sdk_go` may carry one, as the requests that follow an sdk-go call's redirect do. A mismatch fails the step with the method, path and User-Agent. Data sources, whose User-Agent also has `data/yes`, never use sdk-go, and requests that name no resource, such as the importer's read, aren't checked.
+
+Each step declares its own selection, and it combines with `provider_implementations`, initial checkpoints and local input files. Destroy uses the selection retained with its cleanup configuration, following the same rules as provider implementation selection. Native Go replays build the same providers with `ProviderFactoriesWithSdkGo`. The [volume sdk-go journeys](../replay/resources/volume_sdk_go/testdata) use this selection, including switches in both directions.
+
 ## Expected errors
 
 An optional step-level `expect_error` is a nonempty Go regular expression

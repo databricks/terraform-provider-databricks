@@ -83,9 +83,11 @@ func TestVolumeRefreshRetriesTransientTransportErrors(t *testing.T) {
 func testVolumeRefreshRetriesTransientTransportErrors(t *testing.T, sdkGo bool) {
 	// The classic client retries a transport error whose message contains one of these.
 	for _, message := range []string{
+		"read tcp 10.0.0.1:443: read: connection reset by peer",
 		"net/http: TLS handshake timeout",
-		"read tcp 10.0.0.1:443: i/o timeout",
+		"dial tcp 10.0.0.1:443: connect: connection refused",
 		"Unexpected error from the connection",
+		"read tcp 10.0.0.1:443: i/o timeout",
 	} {
 		t.Run(message, func(t *testing.T) {
 			synctest.Test(t, func(t *testing.T) {
@@ -220,7 +222,8 @@ func (meTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 }
 
 // A plan that drops provider_config resolves the workspace ID through /Me. A panic below
-// the client there becomes a plan error, as it does in a refresh.
+// the client there becomes a plan error, as it does in a refresh. The plan's context
+// names no resource, so the error has no "cannot ... volume" prefix.
 func TestVolumePlanTurnsATransportPanicIntoAnError(t *testing.T) {
 	forEachVolumeClient(t, testVolumePlanTurnsATransportPanicIntoAnError)
 }
@@ -247,10 +250,10 @@ func testVolumePlanTurnsATransportPanicIntoAnError(t *testing.T, sdkGo bool) {
 		"volume_type":  "MANAGED",
 	})
 
-	_, err = volumeResource(sdkGo).SimpleDiff(volumeContext(context.Background()), state,
+	_, err = volumeResource(sdkGo).SimpleDiff(context.Background(), state,
 		withoutProviderConfig, c)
 
-	assert.EqualError(t, err, "cannot customize diff for volume: panic: transport exploded")
+	assert.EqualError(t, err, "panic: transport exploded")
 }
 
 // skip_verify selects a transport that accepts the server's self-signed certificate,

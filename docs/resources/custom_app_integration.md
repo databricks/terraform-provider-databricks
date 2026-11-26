@@ -30,7 +30,7 @@ The following arguments are available:
 * `name` - (Required) Name of the custom OAuth app. Change requires a new resource.
 * `confidential` - Indicates whether an OAuth client secret is required to authenticate this client. Default to `false`. Change requires a new resource.
 * `redirect_urls` - List of OAuth redirect urls.
-* `scopes` - OAuth scopes granted to the application. Supported scopes: `all-apis`, `sql`, `offline_access`, `openid`, `profile`, `email`.
+* `scopes` - OAuth scopes granted to the application. Supported scopes include `all-apis`, the OIDC scopes (`openid`, `profile`, `email`, `offline_access`), and fine-grained API scopes. See the [Databricks API scopes reference](https://docs.databricks.com/api/workspace/api/scopes) for the full, up-to-date list; [account-level scopes](https://docs.databricks.com/api/account/scopes) are listed separately. Values are passed through to the Databricks accounts API as-is; the provider does not restrict them to a fixed enum.
 
 ### token_access_policy Configuration Block (Optional)
 

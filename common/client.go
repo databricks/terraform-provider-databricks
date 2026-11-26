@@ -147,10 +147,28 @@ func (c *DatabricksClient) GetWorkspaceClientForUnifiedProvider(
 		workspaceID = c.Config.WorkspaceID
 	}
 	// The provider can be configured at account level or workspace level.
+	var w *databricks.WorkspaceClient
+	var err error
 	if c.HostTypeForTerraform() != config.WorkspaceHost {
-		return c.getWorkspaceClientForAccountUnifiedHost(ctx, workspaceID)
+		w, err = c.getWorkspaceClientForAccountUnifiedHost(ctx, workspaceID)
+	} else {
+		w, err = c.getWorkspaceClientForWorkspaceConfiguredProvider(ctx, workspaceID)
 	}
-	return c.getWorkspaceClientForWorkspaceConfiguredProvider(ctx, workspaceID)
+	if err != nil {
+		return nil, &workspaceClientError{err: err}
+	}
+	return w, nil
+}
+
+// workspaceClientError reports a failure to build a workspace client. It has no
+// Unwrap, so an API error from that step, such as SCIM /Me answering 404, doesn't
+// match apierr.IsMissing and isn't mistaken for a resource removed on the backend.
+type workspaceClientError struct {
+	err error
+}
+
+func (e *workspaceClientError) Error() string {
+	return e.err.Error()
 }
 
 // getWorkspaceClientForAccountUnifiedHost gets the workspace client for

@@ -1,8 +1,9 @@
 # Pins SCIM /Me answering 404 while a refresh builds the volume's workspace client, on
-# a workspace-level provider whose host metadata has no workspace ID. The refresh treats
-# the routing error as a missing volume: it drops the volume from the refreshed state
-# without a volume GET and plans to create it again. API responses are inferred from
-# the Unity Catalog and SCIM API contracts, not recorded.
+# a workspace-level provider whose host metadata has no workspace ID. That 404 is about
+# the caller, not the volume, so the plan fails before the volume GET and state keeps
+# the volume and its workspace ID, as with a 403 from /Me. A 404 from the volume GET
+# still removes the volume; refresh_missing_or_not.yaml pins that. API responses are
+# inferred from the Unity Catalog and SCIM API contracts, not recorded.
 version: 1
 enforce_call_order: true
 host_metadata:
@@ -65,25 +66,35 @@ steps:
       # The post-apply refresh plan.
       - *me
       - *read_volume
-  - name: refresh_drops_volume_when_me_is_not_found
-    plan_only: true
+  - name: refresh_fails_when_me_is_not_found
     config: *config
-    plan:
-      expect: non_empty
-      changes:
-        databricks_volume.this:
-          actions: [create]
-          after:
-            - path: [provider_config, 0, workspace_id]
-              equals: "12345"
+    expect_error: 'cannot read volume: failed to validate workspace_id: failed to get
+      the workspace_id: User not found'
     calls:
-      # The refresh plan.
       - request: *me_request
         response:
           status: 404
           body:
             json: {"error_code": "NOT_FOUND",
                    "message": "User not found"}
+  - name: state_keeps_volume_and_workspace_id
+    plan_only: true
+    config: *config
+    plan:
+      expect: empty
+      changes: {}
+    calls:
+      # The refresh plan.
+      - *me
+      - *read_volume
+    state:
+      resources:
+        databricks_volume.this:
+          attributes:
+            - path: [id]
+              equals: main.replay.me_not_found_volume
+            - path: [provider_config, 0, workspace_id]
+              equals: "12345"
 destroy:
   calls:
     - *me

@@ -229,7 +229,7 @@ func refreshAuthVolume(t *testing.T, s *authServer, cfg *config.Config) authRefr
 	t.Helper()
 	c, err := newAuthClient(t, s, cfg)
 	require.NoError(t, err)
-	state, diags := routingRefreshVolume(c, authVolumeState())
+	state, diags := routingRefreshVolume(c, false, authVolumeState())
 	assert.Equal(t, s.expected(), s.received())
 
 	r := ResourceVolume().ToResource()

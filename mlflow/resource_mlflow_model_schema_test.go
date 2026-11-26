@@ -42,6 +42,10 @@ func flattenMlflowModelSchema(prefix string, s map[string]*schema.Schema, flat m
 // name, description and tags, so replacing it, for example with another SDK's request
 // type, could otherwise change an attribute or its flags unnoticed.
 func TestResourceMlflowModelSchema(t *testing.T) {
+	mlflowModelOnBothPaths(t, testResourceMlflowModelSchema)
+}
+
+func testResourceMlflowModelSchema(t *testing.T) {
 	flat := map[string]mlflowModelAttribute{}
 	flattenMlflowModelSchema("", ResourceMlflowModel().ToResource().Schema, flat)
 

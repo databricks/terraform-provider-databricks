@@ -20,6 +20,10 @@ func m() ml.Model {
 }
 
 func TestModelCreateMVP(t *testing.T) {
+	mlflowModelOnBothPaths(t, testModelCreateMVP)
+}
+
+func testModelCreateMVP(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -55,6 +59,10 @@ func TestModelCreateMVP(t *testing.T) {
 }
 
 func TestModelCreateWithTags(t *testing.T) {
+	mlflowModelOnBothPaths(t, testModelCreateWithTags)
+}
+
+func testModelCreateWithTags(t *testing.T) {
 	model := m()
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -122,6 +130,10 @@ func TestModelCreateWithTags(t *testing.T) {
 }
 
 func TestModelCreatePostError(t *testing.T) {
+	mlflowModelOnBothPaths(t, testModelCreatePostError)
+}
+
+func testModelCreatePostError(t *testing.T) {
 	model := m()
 	_, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -160,6 +172,10 @@ func TestModelCreatePostError(t *testing.T) {
 }
 
 func TestModelRead(t *testing.T) {
+	mlflowModelOnBothPaths(t, testModelRead)
+}
+
+func testModelRead(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -182,6 +198,10 @@ func TestModelRead(t *testing.T) {
 }
 
 func TestModelReadGetError(t *testing.T) {
+	mlflowModelOnBothPaths(t, testModelReadGetError)
+}
+
+func testModelReadGetError(t *testing.T) {
 	_, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -204,6 +224,10 @@ func TestModelReadGetError(t *testing.T) {
 }
 
 func TestModelUpdate(t *testing.T) {
+	mlflowModelOnBothPaths(t, testModelUpdate)
+}
+
+func testModelUpdate(t *testing.T) {
 	pm := m()
 	pm.Description = "thedescription"
 	newDescription := "updatedddescription"
@@ -244,6 +268,10 @@ func TestModelUpdate(t *testing.T) {
 }
 
 func TestModelUpdatePatchError(t *testing.T) {
+	mlflowModelOnBothPaths(t, testModelUpdatePatchError)
+}
+
+func testModelUpdatePatchError(t *testing.T) {
 	gm := m()
 	gm.Description = "updateddescription"
 	_, err := qa.ResourceFixture{
@@ -275,6 +303,10 @@ func TestModelUpdatePatchError(t *testing.T) {
 	assert.Error(t, err)
 }
 func TestModelDelete(t *testing.T) {
+	mlflowModelOnBothPaths(t, testModelDelete)
+}
+
+func testModelDelete(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
@@ -297,6 +329,10 @@ func TestModelDelete(t *testing.T) {
 }
 
 func TestModelDeleteError(t *testing.T) {
+	mlflowModelOnBothPaths(t, testModelDeleteError)
+}
+
+func testModelDeleteError(t *testing.T) {
 	_, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{

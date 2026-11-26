@@ -27,6 +27,14 @@ github.com/cloudflare/circl v1.6.3 h1:9GPOhQGF9MCYUeXyMYlqTR6a5gTrgR/fBLXvUgtVcg
 github.com/cloudflare/circl v1.6.3/go.mod h1:2eXP6Qfat4O/Yhh8BznvKnJ+uzEoTQ6jVKJRn81BiS4=
 github.com/cyphar/filepath-securejoin v0.4.1 h1:JyxxyPEaktOD+GAnqIqTf9A8tHyAG22rowi7HkoSU1s=
 github.com/cyphar/filepath-securejoin v0.4.1/go.mod h1:Sdj7gXlvMcPZsbhwhQ33GguGLDGQL7h7bg04C/+u9jI=
+github.com/databricks/sdk-go/auth v0.2.0 h1:543fVMvJ6pVxBymfjGGkkmfiHDbUqX7y9lZseEcE4tQ=
+github.com/databricks/sdk-go/auth v0.2.0/go.mod h1:eNJdFzBAfu1y32a3wPcTnjaUkjhS9VfyCNblKFPIPEo=
+github.com/databricks/sdk-go/core v0.1.0 h1:ZolzW/KVIJy1xXQ0zTsu/QYsEB4vQAEApbbq4D3RGHc=
+github.com/databricks/sdk-go/core v0.1.0/go.mod h1:7Ckau34bOsaZhHJE6r7ORNa+/kO33jIs6DfrJL6UbsM=
+github.com/databricks/sdk-go/modelregistry v0.7.0 h1:vhSwY7/YYHLbKcD5hRLf7/HivjKdb3kV9OzdckhCQnQ=
+github.com/databricks/sdk-go/modelregistry v0.7.0/go.mod h1:i5NuGGW4ZmG8OavLVyzl35PmbdESLu4hB0ZslsSG+e8=
+github.com/databricks/sdk-go/options v0.3.0 h1:9Gr76jyel9t+cr1vK/7+WjusAVgcJbsfERjRPe11GBg=
+github.com/databricks/sdk-go/options v0.3.0/go.mod h1:ntPpJ7v48ryM431YlP3W6FjmdgMn1n/tVoPj8BocNXg=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc h1:U9qPSI2PIWSS1VwoXQT9A3Wy9MM3WgvqSxFWenqJduM=

@@ -26,7 +26,7 @@ func ResourceMlflowModel() common.Resource {
 			return s
 		})
 
-	return common.Resource{
+	return mlflowModelWithSdkGo(common.Resource{
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, c *common.DatabricksClient) error {
 			return common.NamespaceCustomizeDiff(ctx, d, c)
 		},
@@ -87,5 +87,5 @@ func ResourceMlflowModel() common.Resource {
 			return w.ModelRegistry.DeleteModel(ctx, req)
 		},
 		Schema: s,
-	}
+	})
 }

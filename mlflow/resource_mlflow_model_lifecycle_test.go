@@ -35,6 +35,10 @@ func (r countedResponse) MarshalJSON() ([]byte, error) {
 // form-encodes the name in the query of the GET and the DELETE, with the space as "+",
 // and the POST and PATCH bodies carry the name unchanged.
 func TestModelLifecycleNameWithReservedCharacters(t *testing.T) {
+	mlflowModelOnBothPaths(t, testModelLifecycleNameWithReservedCharacters)
+}
+
+func testModelLifecycleNameWithReservedCharacters(t *testing.T) {
 	const (
 		name      = "lifecycle a&b?c#d%e/f+gé"
 		query     = "?name=lifecycle+a%26b%3Fc%23d%25e%2Ff%2Bg%C3%A9"
@@ -148,6 +152,10 @@ func TestModelLifecycleNameWithReservedCharacters(t *testing.T) {
 // A replay journey cannot express this, because its harness requires an empty plan after
 // every apply.
 func TestModelLifecycleCreateResponseNameInAnotherLetterCase(t *testing.T) {
+	mlflowModelOnBothPaths(t, testModelLifecycleCreateResponseNameInAnotherLetterCase)
+}
+
+func testModelLifecycleCreateResponseNameInAnotherLetterCase(t *testing.T) {
 	const config = `name = "Lifecycle-Case"`
 
 	d, err := qa.ResourceFixture{

@@ -12,6 +12,10 @@ import (
 )
 
 func TestMlflowModelCornerCases(t *testing.T) {
+	mlflowModelOnBothPaths(t, testMlflowModelCornerCases)
+}
+
+func testMlflowModelCornerCases(t *testing.T) {
 	qa.ResourceCornerCases(t, ResourceMlflowModel())
 }
 
@@ -19,6 +23,10 @@ func TestMlflowModelCornerCases(t *testing.T) {
 // of error_code, message, error or detail, such as a body from a gateway or proxy in
 // front of the API. The API itself sends error_code and message.
 func TestMlflowModelErrorWithoutErrorFields(t *testing.T) {
+	mlflowModelOnBothPaths(t, testMlflowModelErrorWithoutErrorFields)
+}
+
+func testMlflowModelErrorWithoutErrorFields(t *testing.T) {
 	testCases := []struct {
 		name    string
 		fixture qa.ResourceFixture

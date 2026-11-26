@@ -1,0 +1,221 @@
+# The modular SDK twin of testdata_classic/decode_wrong_types.yaml. Here the modular
+# path differs in the outcome of a step, not only in a diagnostic. The classic client
+# retries a field that fails to decode as a quoted string, so it takes a number sent
+# for name or id as its digits. The modular SDK decodes strictly inside the client
+# method, so the same response fails the call:
+#   - a numeric name in the create response fails the create, where the classic path
+#     takes 42 as the ID, reads that name and leaves the model tainted. Nothing reaches
+#     the state, so no GET for 42 follows and the next plan creates the model again;
+#   - a numeric name or id on the GET fails the refresh and leaves the state as it was,
+#     where the classic path puts the digits in the state.
+# The difference is accepted: the Model Registry API sends both fields as strings, and
+# the provider doesn't change a response before the SDK decodes it. tags sent as an
+# object fails on both paths, with another message. The messages name wire types of
+# the SDK, which Go 1.26 and Go 1.27 report differently, so the patterns take both
+# spellings. API responses are synthetic: inferred from the MLflow Model Registry API,
+# not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: create_answered_numeric_name_fails_to_decode
+    config: &config |
+      resource "databricks_mlflow_model" "this" {
+        name        = "decode_model"
+        description = "first description"
+
+        tags {
+          key   = "team"
+          value = "replay"
+        }
+      }
+    expect_error: 'Error: cannot create mlflow model: json: cannot unmarshal number into Go
+      struct field
+      (createRegisteredModelResponseWire|registeredModelWire)\.registered_model\.name of
+      type string\n'
+    calls:
+      - request: &create_request
+          method: POST
+          path: /api/2.0/mlflow/registered-models/create
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"name": "decode_model", "description": "first description",
+                   "tags": [{"key": "team", "value": "replay"}]}
+        response:
+          status: 200
+          body:
+            json: {"registered_model": {
+                     "name": 42,
+                     "description": "first description",
+                     "tags": [{"key": "team", "value": "replay"}],
+                     "user_id": "replay-admin@example.com",
+                     "creation_timestamp": 1700000000000,
+                     "last_updated_timestamp": 1700000000000}}
+  - name: plan_after_numeric_name_has_no_model_in_state_and_plans_the_create_again
+    plan_only: true
+    config: *config
+    plan:
+      expect: non_empty
+      changes:
+        databricks_mlflow_model.this:
+          actions: [create]
+          after:
+            - path: [name]
+              equals: decode_model
+            - path: [id]
+              unknown: true
+    calls: []
+  - name: create_answered_tags_as_object_fails_to_decode
+    config: *config
+    expect_error: 'Error: cannot create mlflow model: json: cannot unmarshal object into Go
+      struct field
+      (createRegisteredModelResponseWire|registeredModelWire)\.registered_model\.tags of
+      type \[\]modelregistry\.registeredModelTagWire\n'
+    calls:
+      - request: *create_request
+        response:
+          status: 200
+          body:
+            json: {"registered_model": {
+                     "name": "decode_model",
+                     "description": "first description",
+                     "tags": {"team": "replay"}}}
+  - name: create_answered_with_tags_as_array_sends_the_post_again_and_succeeds
+    config: *config
+    plan:
+      changes:
+        databricks_mlflow_model.this:
+          actions: [create]
+    calls:
+      - request: *create_request
+        response:
+          status: 200
+          body:
+            json: {"registered_model": {
+                     "name": "decode_model",
+                     "description": "first description",
+                     "tags": [{"key": "team", "value": "replay"}],
+                     "user_id": "replay-admin@example.com",
+                     "creation_timestamp": 1700000000000,
+                     "last_updated_timestamp": 1700000000000}}
+      - &read
+        request: &read_request
+          method: GET
+          path: /api/2.0/mlflow/databricks/registered-models/get
+          query:
+            name: [decode_model]
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"registered_model_databricks": {
+                     "name": "decode_model",
+                     "id": "0123456789abcdef0123456789abcdef",
+                     "description": "first description",
+                     "tags": [{"key": "team", "value": "replay"}],
+                     "user_id": "replay-admin@example.com",
+                     "creation_timestamp": 1700000000000,
+                     "last_updated_timestamp": 1700000000000,
+                     "permission_level": "CAN_MANAGE"}}
+      - *read
+    state: &state
+      resources:
+        databricks_mlflow_model.this:
+          attributes:
+            - path: [id]
+              equals: decode_model
+            - path: [name]
+              equals: decode_model
+            - path: [registered_model_id]
+              equals: 0123456789abcdef0123456789abcdef
+            - path: [tags, 0, key]
+              equals: team
+            - path: [tags, 0, value]
+              equals: replay
+  - name: refresh_answered_tags_as_object_fails_to_decode
+    config: *config
+    expect_error: 'Error: cannot read mlflow model: json: cannot unmarshal object into Go
+      struct field
+      (getRegisteredModelDatabricksResponseWire|registeredModelDatabricksWire)\.registered_model_databricks\.tags
+      of type \[\]modelregistry\.registeredModelTagWire\n'
+    calls:
+      - request: *read_request
+        response:
+          status: 200
+          body:
+            json: {"registered_model_databricks": {
+                     "name": "decode_model",
+                     "id": "0123456789abcdef0123456789abcdef",
+                     "description": "first description",
+                     "tags": {"team": "replay"}}}
+  - name: refresh_answered_numeric_name_fails_to_decode
+    config: *config
+    expect_error: 'Error: cannot read mlflow model: json: cannot unmarshal number into Go
+      struct field
+      (getRegisteredModelDatabricksResponseWire|registeredModelDatabricksWire)\.registered_model_databricks\.name
+      of type string\n'
+    calls:
+      - request: *read_request
+        response:
+          status: 200
+          body:
+            json: {"registered_model_databricks": {
+                     "name": 42,
+                     "id": "0123456789abcdef0123456789abcdef",
+                     "description": "first description",
+                     "tags": [{"key": "team", "value": "replay"}],
+                     "user_id": "replay-admin@example.com",
+                     "creation_timestamp": 1700000000000,
+                     "last_updated_timestamp": 1700000000000,
+                     "permission_level": "CAN_MANAGE"}}
+  - name: refresh_answered_numeric_id_fails_to_decode
+    config: *config
+    expect_error: 'Error: cannot read mlflow model: json: cannot unmarshal number into Go
+      struct field
+      (getRegisteredModelDatabricksResponseWire|registeredModelDatabricksWire)\.registered_model_databricks\.id
+      of type string\n'
+    calls:
+      - request: *read_request
+        response:
+          status: 200
+          body:
+            json: {"registered_model_databricks": {
+                     "name": "decode_model",
+                     "id": 123456789,
+                     "description": "first description",
+                     "tags": [{"key": "team", "value": "replay"}],
+                     "user_id": "replay-admin@example.com",
+                     "creation_timestamp": 1700000000000,
+                     "last_updated_timestamp": 1700000000000,
+                     "permission_level": "CAN_MANAGE"}}
+  - name: plan_after_failed_refreshes_keeps_the_model_and_plans_nothing
+    plan_only: true
+    config: *config
+    plan:
+      expect: empty
+      changes: {}
+    state: *state
+    calls:
+      - *read
+destroy:
+  calls:
+    - *read
+    - request:
+        method: DELETE
+        path: /api/2.0/mlflow/registered-models/delete
+        query:
+          name: [decode_model]
+        headers:
+          X-Databricks-Workspace-Id: "12345"
+        body: null
+      response:
+        status: 200
+        body:
+          json: {}

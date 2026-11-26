@@ -14,6 +14,10 @@ import (
 // because its state checks run after a refresh that reads the description back. The
 // bodies are synthetic: inferred from the MLflow Model Registry API.
 func TestModelUpdateErrorsKeepPlannedDescriptionInState(t *testing.T) {
+	mlflowModelOnBothPaths(t, testModelUpdateErrorsKeepPlannedDescriptionInState)
+}
+
+func testModelUpdateErrorsKeepPlannedDescriptionInState(t *testing.T) {
 	patchRequest := json.RawMessage(`{"name": "failed_update_model",
 		"description": "After the update"}`)
 	for _, tc := range []struct {

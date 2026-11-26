@@ -89,6 +89,10 @@ func (u tagsUpdate) expectNextPlan(t *testing.T, state map[string]string,
 // and the unchanged description, without tags. The GET after it returns the old tag,
 // which state adopts, so the next plan shows the same change again.
 func TestModelUpdateTagsChangeLeavesDiff(t *testing.T) {
+	mlflowModelOnBothPaths(t, testModelUpdateTagsChangeLeavesDiff)
+}
+
+func testModelUpdateTagsChangeLeavesDiff(t *testing.T) {
 	update := tagsUpdate{
 		state: map[string]string{
 			"name":                           "pinned-model",
@@ -147,6 +151,10 @@ func TestModelUpdateTagsChangeLeavesDiff(t *testing.T) {
 // leaves a diff: state follows the configuration and the next plan is empty, while the
 // API still has no tags after the add and still has the tag after the removal.
 func TestModelUpdateTagsAddedOrRemoved(t *testing.T) {
+	mlflowModelOnBothPaths(t, testModelUpdateTagsAddedOrRemoved)
+}
+
+func testModelUpdateTagsAddedOrRemoved(t *testing.T) {
 	cases := []struct {
 		name   string
 		update tagsUpdate

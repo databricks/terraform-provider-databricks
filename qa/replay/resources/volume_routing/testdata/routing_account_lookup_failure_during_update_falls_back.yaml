@@ -1,0 +1,216 @@
+# Pins in-place changes of provider_config.workspace_id on an account-level provider
+# whose lookup of the new workspace answers 403, then 404. Neither failure reaches
+# Update's workspace client error: the provider falls back to a client for the new ID
+# and sends the PATCH, then the read, with that ID in the X-Databricks-Workspace-Id
+# header, and state stores the new ID. Every Terraform command that touches the volume
+# makes the failing lookup once. Replay serves every host from one server, so this
+# journey doesn't pin the host; TestVolumeAccountProviderWorkspaceHost in
+# catalog/resource_volume_workspace_host_test.go pins that the fallback client keeps the
+# account host, for the POST, GET and DELETE that share it with the PATCH. API
+# responses are inferred from the account and Unity Catalog API contracts, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: account
+  cloud: AWS
+  account_id: replay-account
+steps:
+  - name: create_in_workspace_12345
+    config: |
+      provider "databricks" {
+        account_id = "replay-account"
+      }
+      resource "databricks_volume" "this" {
+        name         = "lookup_update_volume"
+        catalog_name = "main"
+        schema_name  = "replay"
+        volume_type  = "MANAGED"
+        provider_config {
+          workspace_id = "12345"
+        }
+      }
+    calls:
+      - &lookup_12345
+        request:
+          method: GET
+          path: /api/2.0/accounts/replay-account/workspaces/12345
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"account_id": "replay-account", "workspace_id": 12345,
+                   "workspace_name": "replay-workspace-12345",
+                   "deployment_name": "replay-workspace-12345",
+                   "workspace_status": "RUNNING"}
+      - request:
+          method: POST
+          path: /api/2.1/unity-catalog/volumes
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "lookup_update_volume", "volume_type": "MANAGED"}
+        response:
+          status: 200
+          body:
+            json: &volume {"catalog_name": "main", "schema_name": "replay",
+                           "name": "lookup_update_volume",
+                           "full_name": "main.replay.lookup_update_volume",
+                           "volume_type": "MANAGED", "owner": "replay-admin@example.com",
+                           "storage_location": "s3://replay-metastore/volume-1740",
+                           "metastore_id": "11111111-1111-1111-1111-111111111111",
+                           "volume_id": "00000000-0000-4000-8000-000000001740"}
+      - &read_in_12345
+        request:
+          method: GET
+          path: /api/2.1/unity-catalog/volumes/main.replay.lookup_update_volume
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 200
+          body:
+            json: *volume
+      # The post-apply refresh plan.
+      - *lookup_12345
+      - *read_in_12345
+  - name: lookup_forbidden_falls_back_and_patches_workspace_67890
+    config: |
+      provider "databricks" {
+        account_id = "replay-account"
+      }
+      resource "databricks_volume" "this" {
+        name         = "lookup_update_volume"
+        catalog_name = "main"
+        schema_name  = "replay"
+        volume_type  = "MANAGED"
+        provider_config {
+          workspace_id = "67890"
+        }
+      }
+    calls:
+      # The plan's refresh.
+      - *lookup_12345
+      - *read_in_12345
+      # The apply.
+      - &lookup_67890_forbidden
+        request:
+          method: GET
+          path: /api/2.0/accounts/replay-account/workspaces/67890
+          body: null
+        response:
+          status: 403
+          body:
+            json: {"error_code": "PERMISSION_DENIED",
+                   "message": "Caller cannot read workspace 67890"}
+      - request:
+          method: PATCH
+          path: /api/2.1/unity-catalog/volumes/main.replay.lookup_update_volume
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "67890"
+          body:
+            json: {}
+        response:
+          status: 200
+          body:
+            json: *volume
+      - &read_in_67890
+        request:
+          method: GET
+          path: /api/2.1/unity-catalog/volumes/main.replay.lookup_update_volume
+          headers:
+            X-Databricks-Workspace-Id: "67890"
+          body: null
+        response:
+          status: 200
+          body:
+            json: *volume
+      # The post-apply refresh plan.
+      - *lookup_67890_forbidden
+      - *read_in_67890
+    state:
+      resources:
+        databricks_volume.this:
+          attributes:
+            - path: [provider_config, 0, workspace_id]
+              equals: "67890"
+  - name: lookup_not_found_falls_back_and_patches_workspace_13579
+    config: |
+      provider "databricks" {
+        account_id = "replay-account"
+      }
+      resource "databricks_volume" "this" {
+        name         = "lookup_update_volume"
+        catalog_name = "main"
+        schema_name  = "replay"
+        volume_type  = "MANAGED"
+        provider_config {
+          workspace_id = "13579"
+        }
+      }
+    calls:
+      # The plan's refresh.
+      - *lookup_67890_forbidden
+      - *read_in_67890
+      # The apply.
+      - &lookup_13579_not_found
+        request:
+          method: GET
+          path: /api/2.0/accounts/replay-account/workspaces/13579
+          body: null
+        response:
+          status: 404
+          body:
+            json: {"error_code": "RESOURCE_DOES_NOT_EXIST",
+                   "message": "Workspace 13579 does not exist."}
+      - request:
+          method: PATCH
+          path: /api/2.1/unity-catalog/volumes/main.replay.lookup_update_volume
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "13579"
+          body:
+            json: {}
+        response:
+          status: 200
+          body:
+            json: *volume
+      - &read_in_13579
+        request:
+          method: GET
+          path: /api/2.1/unity-catalog/volumes/main.replay.lookup_update_volume
+          headers:
+            X-Databricks-Workspace-Id: "13579"
+          body: null
+        response:
+          status: 200
+          body:
+            json: *volume
+      # The post-apply refresh plan.
+      - *lookup_13579_not_found
+      - *read_in_13579
+    state:
+      resources:
+        databricks_volume.this:
+          attributes:
+            - path: [id]
+              equals: main.replay.lookup_update_volume
+            - path: [provider_config, 0, workspace_id]
+              equals: "13579"
+destroy:
+  calls:
+    - *lookup_13579_not_found
+    - *read_in_13579
+    - *lookup_13579_not_found
+    - request:
+        method: DELETE
+        path: /api/2.1/unity-catalog/volumes/main.replay.lookup_update_volume
+        headers:
+          X-Databricks-Workspace-Id: "13579"
+        body: null
+      response:
+        status: 200
+        body:
+          json: {}

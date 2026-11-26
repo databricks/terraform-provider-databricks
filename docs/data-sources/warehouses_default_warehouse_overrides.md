@@ -47,9 +47,10 @@ The following arguments are supported:
 
 ## Attributes
 This data source exports a single attribute, `default_warehouse_overrides`. It is a list of resources, each with the following attributes:
-* `default_warehouse_override_id` (string) - The ID component of the resource name (user ID)
+* `default_warehouse_override_id` (string) - The numeric ID of the user that the override applies to. It is the last component of `name`
 * `name` (string) - The resource name of the default warehouse override.
   Format: default-warehouse-overrides/{default_warehouse_override_id}
+  Responses always contain the numeric user ID, even when the request used `me`
 * `type` (string) - The type of override behavior. Possible values are: `CUSTOM`, `LAST_SELECTED`
-* `warehouse_id` (string) - The specific warehouse ID when type is CUSTOM.
-  Not set for LAST_SELECTED type
+* `warehouse_id` (string) - The ID of the SQL warehouse to preselect when `type` is `CUSTOM`. It is required for `CUSTOM`
+  and must be a valid warehouse ID. It is ignored for `LAST_SELECTED` and is not returned for that type

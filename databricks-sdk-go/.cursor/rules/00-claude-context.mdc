@@ -1,0 +1,12 @@
+---
+description: Always load AGENTS.md context first
+alwaysApply: true
+globs:
+  - "**/*"
+---
+
+Always apply AGENTS.md context before taking actions.
+
+1. If `/AGENTS.md` exists, read and follow it for every task in this workspace.
+2. Read scoped rules from `.agent/rules/` when working on relevant files.
+3. Keep these instructions active even for small or routine requests.

@@ -49,6 +49,10 @@ The following attributes are exported:
   exact version. When omitted, the sandbox runs the default sandbox image. See
   [custom images](https://docs.databricks.com/en/compute/serverless/sandbox-custom-image)
 
+### NetworkSpec
+* `internet_access` (boolean) - Whether the sandbox can reach the public internet. Defaults to true. Control-plane,
+  PrivateLink, and workspace/UC/Delta-shared storage stay reachable either way
+
 ### SandboxMetadata
 * `custom_tags` (object) - Key-value tags associated with the sandbox. Supports up to 54 tags. Keys must be between
   1 and 512 characters, and values must not exceed 256 characters
@@ -56,6 +60,8 @@ The following attributes are exported:
 ### SandboxSpec
 * `compute` (ComputeSpec) - Compute settings requested for the sandbox, such as the inactivity timeout
 * `environment` (EnvironmentSpec) - Software environment for the sandbox, such as the container image it runs
+* `network` (NetworkSpec) - Network configuration requested for the sandbox
+* `storage` (StorageSpec) - Persistence configuration requested for the sandbox at creation time
 
 ### SandboxStatus
 * `state` (string) - Lifecycle state of the sandbox.
@@ -68,3 +74,10 @@ The following attributes are exported:
   - `SANDBOX_STATE_STOPPED`: The sandbox is stopped, by a stop request, inactivity auto-stop,
   or a failed provisioning. Its home directory is kept and it can be started again with
   StartSandbox. Possible values are: `SANDBOX_STATE_PENDING`, `SANDBOX_STATE_RUNNING`, `SANDBOX_STATE_STOPPED`, `SANDBOX_STATE_STOPPING`
+
+### StorageSpec
+* `persistence_enabled` (boolean) - Whether sandbox files persist across stop and start.
+  If omitted, the service selects a default for the workspace and sandbox creator.
+  This setting is fixed when the sandbox is created.
+  When false, no persistent volume is allocated, and StopSandbox and StartSandbox
+  are unavailable. Use CreateSandbox and DeleteSandbox for these sandboxes

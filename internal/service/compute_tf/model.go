@@ -8131,6 +8131,98 @@ func (m CreateClusterResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
+type CreateComputePolicyRequest struct {
+	// The compute policy to create.
+	ComputePolicy types.Object `tfsdk:"compute_policy"`
+}
+
+func (to *CreateComputePolicyRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateComputePolicyRequest) {
+	if !from.ComputePolicy.IsNull() && !from.ComputePolicy.IsUnknown() {
+		if toComputePolicy, ok := to.GetComputePolicy(ctx); ok {
+			if fromComputePolicy, ok := from.GetComputePolicy(ctx); ok {
+				// Recursively sync the fields of ComputePolicy
+				toComputePolicy.SyncFieldsDuringCreateOrUpdate(ctx, fromComputePolicy)
+				to.SetComputePolicy(ctx, toComputePolicy)
+			}
+		}
+	}
+}
+
+func (to *CreateComputePolicyRequest) SyncFieldsDuringRead(ctx context.Context, from CreateComputePolicyRequest) {
+	if !from.ComputePolicy.IsNull() && !from.ComputePolicy.IsUnknown() {
+		if toComputePolicy, ok := to.GetComputePolicy(ctx); ok {
+			if fromComputePolicy, ok := from.GetComputePolicy(ctx); ok {
+				toComputePolicy.SyncFieldsDuringRead(ctx, fromComputePolicy)
+				to.SetComputePolicy(ctx, toComputePolicy)
+			}
+		}
+	}
+}
+
+func (m CreateComputePolicyRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["compute_policy"] = attrs["compute_policy"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateComputePolicyRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m CreateComputePolicyRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"compute_policy": reflect.TypeOf(ComputePolicy{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CreateComputePolicyRequest
+// only implements ToObjectValue() and Type().
+func (m CreateComputePolicyRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"compute_policy": m.ComputePolicy,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m CreateComputePolicyRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"compute_policy": ComputePolicy{}.Type(ctx),
+		},
+	}
+}
+
+// GetComputePolicy returns the value of the ComputePolicy field in CreateComputePolicyRequest as
+// a ComputePolicy value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *CreateComputePolicyRequest) GetComputePolicy(ctx context.Context) (ComputePolicy, bool) {
+	var e ComputePolicy
+	if m.ComputePolicy.IsNull() || m.ComputePolicy.IsUnknown() {
+		return e, false
+	}
+	var v ComputePolicy
+	d := m.ComputePolicy.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetComputePolicy sets the value of the ComputePolicy field in CreateComputePolicyRequest.
+func (m *CreateComputePolicyRequest) SetComputePolicy(ctx context.Context, v ComputePolicy) {
+	vs := v.ToObjectValue(ctx)
+	m.ComputePolicy = vs
+}
+
 type CreateContext struct {
 	// ID of the cluster to create the execution context on. The cluster must be
 	// running.
@@ -8194,18 +8286,22 @@ type CreateInstancePool struct {
 	AzureAttributes types.Object `tfsdk:"azure_attributes"`
 	// Additional tags for pool resources. Databricks will tag all pool
 	// resources (e.g., AWS instances and EBS volumes) with these tags in
-	// addition to `default_tags`. Notes:
+	// addition to `default_tags`, and clusters backed by the pool inherit them.
+	// When editing a pool, omitting this field or passing an empty map keeps
+	// the existing tags, and a non-empty map replaces them. Notes:
 	//
 	// - Currently, Databricks allows at most 45 custom tags
 	CustomTags types.Map `tfsdk:"custom_tags"`
 	// Defines the specification of the disks that will be attached to all spark
-	// containers.
+	// containers. The disk specification cannot be changed after the pool is
+	// created.
 	DiskSpec types.Object `tfsdk:"disk_spec"`
-	// Autoscaling Local Storage: when enabled, this instances in this pool will
-	// dynamically acquire additional disk space when its Spark workers are
+	// Autoscaling Local Storage: when enabled, the instances in this pool will
+	// dynamically acquire additional disk space when their Spark workers are
 	// running low on disk space. In AWS, this feature requires specific AWS
-	// permissions to function correctly - refer to the User Guide for more
-	// details.
+	// permissions to function correctly; see
+	// https://docs.databricks.com/aws/en/compute/pools#autoscaling-local-storage
+	// for details. This setting cannot be changed after the pool is created.
 	EnableElasticDisk types.Bool `tfsdk:"enable_elastic_disk"`
 	// Attributes related to instance pools running on Google Cloud Platform. If
 	// not specified at pool creation, a set of default values will be used.
@@ -8223,27 +8319,35 @@ type CreateInstancePool struct {
 	InstancePoolName types.String `tfsdk:"instance_pool_name"`
 	// Maximum number of outstanding instances to keep in the pool, including
 	// both instances used by clusters and idle instances. Clusters that require
-	// further instance provisioning will fail during upsize requests.
+	// further instance provisioning will fail during upsize requests. If unset,
+	// the pool size is not capped.
 	MaxCapacity types.Int64 `tfsdk:"max_capacity"`
-	// Minimum number of idle instances to keep in the instance pool
+	// Minimum number of idle instances to keep in the instance pool. These
+	// instances do not terminate regardless of
+	// `idle_instance_autotermination_minutes`, and the pool provisions
+	// replacements when clusters consume them. Defaults to 0.
 	MinIdleInstances types.Int64 `tfsdk:"min_idle_instances"`
 	// Flexible node type configuration for the pool.
 	NodeTypeFlexibility types.Object `tfsdk:"node_type_flexibility"`
 	// This field encodes, through a single value, the resources available to
-	// each of the Spark nodes in this cluster. For example, the Spark nodes can
-	// be provisioned and optimized for memory or compute intensive workloads. A
-	// list of available node types can be retrieved by using the
-	// [clusters/listNodeTypes] API call. The node type cannot be changed after
-	// the pool is created.
+	// each of the Spark nodes in clusters that use this pool. For example, the
+	// Spark nodes can be provisioned and optimized for memory or compute
+	// intensive workloads. A list of available node types can be retrieved by
+	// using the [clusters/listNodeTypes] API call. The node type cannot be
+	// changed after the pool is created.
 	//
 	// [clusters/listNodeTypes]: https://docs.databricks.com/api/workspace/clusters/listnodetypes
 	NodeTypeId types.String `tfsdk:"node_type_id"`
-	// Custom Docker Image BYOC
+	// A list containing at most one custom Docker image to preload on the
+	// pool's idle instances. Clusters that use Databricks Container Services
+	// with the preloaded image start faster. The list cannot be changed after
+	// the pool is created.
 	PreloadedDockerImages types.List `tfsdk:"preloaded_docker_images"`
 	// A list containing at most one preloaded Spark image version for the pool.
 	// Pool-backed clusters started with the preloaded Spark version will start
 	// faster. A list of available Spark versions can be retrieved by using the
-	// [clusters/sparkVersions] API call.
+	// [clusters/sparkVersions] API call. The list cannot be changed after the
+	// pool is created.
 	//
 	// [clusters/sparkVersions]: https://docs.databricks.com/api/workspace/clusters/sparkversions
 	PreloadedSparkVersions types.List `tfsdk:"preloaded_spark_versions"`
@@ -9317,6 +9421,54 @@ func (m DeleteClusterResponse) ToObjectValue(ctx context.Context) basetypes.Obje
 func (m DeleteClusterResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{},
+	}
+}
+
+type DeleteComputePolicyRequest struct {
+	// The ID of the compute policy to delete.
+	ComputePolicyId types.String `tfsdk:"-"`
+}
+
+func (to *DeleteComputePolicyRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from DeleteComputePolicyRequest) {
+}
+
+func (to *DeleteComputePolicyRequest) SyncFieldsDuringRead(ctx context.Context, from DeleteComputePolicyRequest) {
+}
+
+func (m DeleteComputePolicyRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["compute_policy_id"] = attrs["compute_policy_id"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteComputePolicyRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m DeleteComputePolicyRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteComputePolicyRequest
+// only implements ToObjectValue() and Type().
+func (m DeleteComputePolicyRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"compute_policy_id": m.ComputePolicyId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m DeleteComputePolicyRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"compute_policy_id": types.StringType,
+		},
 	}
 }
 
@@ -11043,7 +11195,9 @@ func (m EditClusterResponse) Type(ctx context.Context) attr.Type {
 type EditInstancePool struct {
 	// Additional tags for pool resources. Databricks will tag all pool
 	// resources (e.g., AWS instances and EBS volumes) with these tags in
-	// addition to `default_tags`. Notes:
+	// addition to `default_tags`, and clusters backed by the pool inherit them.
+	// When editing a pool, omitting this field or passing an empty map keeps
+	// the existing tags, and a non-empty map replaces them. Notes:
 	//
 	// - Currently, Databricks allows at most 45 custom tags
 	CustomTags types.Map `tfsdk:"custom_tags"`
@@ -11055,23 +11209,27 @@ type EditInstancePool struct {
 	// value to 0 to instantly remove idle instances from the cache if min cache
 	// size could still hold.
 	IdleInstanceAutoterminationMinutes types.Int64 `tfsdk:"idle_instance_autotermination_minutes"`
-	// Instance pool ID
+	// Identifier of the instance pool to edit.
 	InstancePoolId types.String `tfsdk:"instance_pool_id"`
 	// Pool name requested by the user. Pool name must be unique. Length must be
 	// between 1 and 100 characters.
 	InstancePoolName types.String `tfsdk:"instance_pool_name"`
 	// Maximum number of outstanding instances to keep in the pool, including
 	// both instances used by clusters and idle instances. Clusters that require
-	// further instance provisioning will fail during upsize requests.
+	// further instance provisioning will fail during upsize requests. If unset,
+	// the pool size is not capped.
 	MaxCapacity types.Int64 `tfsdk:"max_capacity"`
-	// Minimum number of idle instances to keep in the instance pool
+	// Minimum number of idle instances to keep in the instance pool. These
+	// instances do not terminate regardless of
+	// `idle_instance_autotermination_minutes`, and the pool provisions
+	// replacements when clusters consume them. Defaults to 0.
 	MinIdleInstances types.Int64 `tfsdk:"min_idle_instances"`
 	// This field encodes, through a single value, the resources available to
-	// each of the Spark nodes in this cluster. For example, the Spark nodes can
-	// be provisioned and optimized for memory or compute intensive workloads. A
-	// list of available node types can be retrieved by using the
-	// [clusters/listNodeTypes] API call. The node type cannot be changed after
-	// the pool is created.
+	// each of the Spark nodes in clusters that use this pool. For example, the
+	// Spark nodes can be provisioned and optimized for memory or compute
+	// intensive workloads. A list of available node types can be retrieved by
+	// using the [clusters/listNodeTypes] API call. The node type cannot be
+	// changed after the pool is created.
 	//
 	// [clusters/listNodeTypes]: https://docs.databricks.com/api/workspace/clusters/listnodetypes
 	NodeTypeId types.String `tfsdk:"node_type_id"`
@@ -14133,6 +14291,54 @@ func (m GetClusterRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+type GetComputePolicyRequest struct {
+	// The ID of the compute policy to retrieve.
+	ComputePolicyId types.String `tfsdk:"-"`
+}
+
+func (to *GetComputePolicyRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from GetComputePolicyRequest) {
+}
+
+func (to *GetComputePolicyRequest) SyncFieldsDuringRead(ctx context.Context, from GetComputePolicyRequest) {
+}
+
+func (m GetComputePolicyRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["compute_policy_id"] = attrs["compute_policy_id"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetComputePolicyRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m GetComputePolicyRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetComputePolicyRequest
+// only implements ToObjectValue() and Type().
+func (m GetComputePolicyRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"compute_policy_id": m.ComputePolicyId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m GetComputePolicyRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"compute_policy_id": types.StringType,
+		},
+	}
+}
+
 type GetEvents struct {
 	// The ID of the cluster to retrieve events about.
 	ClusterId types.String `tfsdk:"cluster_id"`
@@ -14524,12 +14730,14 @@ type GetInstancePool struct {
 	AzureAttributes types.Object `tfsdk:"azure_attributes"`
 	// Additional tags for pool resources. Databricks will tag all pool
 	// resources (e.g., AWS instances and EBS volumes) with these tags in
-	// addition to `default_tags`. Notes:
+	// addition to `default_tags`, and clusters backed by the pool inherit them.
+	// When editing a pool, omitting this field or passing an empty map keeps
+	// the existing tags, and a non-empty map replaces them. Notes:
 	//
 	// - Currently, Databricks allows at most 45 custom tags
 	CustomTags types.Map `tfsdk:"custom_tags"`
-	// Tags that are added by Databricks regardless of any ``custom_tags``,
-	// including:
+	// Tags that Databricks adds to every pool resource in addition to any
+	// `custom_tags`:
 	//
 	// - Vendor: Databricks
 	//
@@ -14538,13 +14746,15 @@ type GetInstancePool struct {
 	// - DatabricksInstancePoolId: <id_of_pool>
 	DefaultTags types.Map `tfsdk:"default_tags"`
 	// Defines the specification of the disks that will be attached to all spark
-	// containers.
+	// containers. The disk specification cannot be changed after the pool is
+	// created.
 	DiskSpec types.Object `tfsdk:"disk_spec"`
-	// Autoscaling Local Storage: when enabled, this instances in this pool will
-	// dynamically acquire additional disk space when its Spark workers are
+	// Autoscaling Local Storage: when enabled, the instances in this pool will
+	// dynamically acquire additional disk space when their Spark workers are
 	// running low on disk space. In AWS, this feature requires specific AWS
-	// permissions to function correctly - refer to the User Guide for more
-	// details.
+	// permissions to function correctly; see
+	// https://docs.databricks.com/aws/en/compute/pools#autoscaling-local-storage
+	// for details. This setting cannot be changed after the pool is created.
 	EnableElasticDisk types.Bool `tfsdk:"enable_elastic_disk"`
 	// Attributes related to instance pools running on Google Cloud Platform. If
 	// not specified at pool creation, a set of default values will be used.
@@ -14564,27 +14774,35 @@ type GetInstancePool struct {
 	InstancePoolName types.String `tfsdk:"instance_pool_name"`
 	// Maximum number of outstanding instances to keep in the pool, including
 	// both instances used by clusters and idle instances. Clusters that require
-	// further instance provisioning will fail during upsize requests.
+	// further instance provisioning will fail during upsize requests. If unset,
+	// the pool size is not capped.
 	MaxCapacity types.Int64 `tfsdk:"max_capacity"`
-	// Minimum number of idle instances to keep in the instance pool
+	// Minimum number of idle instances to keep in the instance pool. These
+	// instances do not terminate regardless of
+	// `idle_instance_autotermination_minutes`, and the pool provisions
+	// replacements when clusters consume them. Defaults to 0.
 	MinIdleInstances types.Int64 `tfsdk:"min_idle_instances"`
 	// Flexible node type configuration for the pool.
 	NodeTypeFlexibility types.Object `tfsdk:"node_type_flexibility"`
 	// This field encodes, through a single value, the resources available to
-	// each of the Spark nodes in this cluster. For example, the Spark nodes can
-	// be provisioned and optimized for memory or compute intensive workloads. A
-	// list of available node types can be retrieved by using the
-	// [clusters/listNodeTypes] API call. The node type cannot be changed after
-	// the pool is created.
+	// each of the Spark nodes in clusters that use this pool. For example, the
+	// Spark nodes can be provisioned and optimized for memory or compute
+	// intensive workloads. A list of available node types can be retrieved by
+	// using the [clusters/listNodeTypes] API call. The node type cannot be
+	// changed after the pool is created.
 	//
 	// [clusters/listNodeTypes]: https://docs.databricks.com/api/workspace/clusters/listnodetypes
 	NodeTypeId types.String `tfsdk:"node_type_id"`
-	// Custom Docker Image BYOC
+	// A list containing at most one custom Docker image to preload on the
+	// pool's idle instances. Clusters that use Databricks Container Services
+	// with the preloaded image start faster. The list cannot be changed after
+	// the pool is created.
 	PreloadedDockerImages types.List `tfsdk:"preloaded_docker_images"`
 	// A list containing at most one preloaded Spark image version for the pool.
 	// Pool-backed clusters started with the preloaded Spark version will start
 	// faster. A list of available Spark versions can be retrieved by using the
-	// [clusters/sparkVersions] API call.
+	// [clusters/sparkVersions] API call. The list cannot be changed after the
+	// pool is created.
 	//
 	// [clusters/sparkVersions]: https://docs.databricks.com/api/workspace/clusters/sparkversions
 	PreloadedSparkVersions types.List `tfsdk:"preloaded_spark_versions"`
@@ -15627,7 +15845,7 @@ func (m *GetSparkVersionsResponse) SetVersions(ctx context.Context, v []SparkVer
 type GlobalInitScriptCreateRequest struct {
 	// Specifies whether the script is enabled. The script runs only if enabled.
 	Enabled types.Bool `tfsdk:"enabled"`
-	// The name of the script
+	// The name of the script. The name must be unique within the workspace.
 	Name types.String `tfsdk:"name"`
 	// The position of a global init script, where 0 represents the first script
 	// to run, 1 is the second script to run, in ascending order.
@@ -15641,7 +15859,8 @@ type GlobalInitScriptCreateRequest struct {
 	// value, your request succeeds, but the original script at that position
 	// and all later scripts have their positions incremented by 1.
 	Position types.Int64 `tfsdk:"position"`
-	// The Base64-encoded content of the script.
+	// The Base64-encoded content of the script. The decoded content must not be
+	// empty and cannot exceed 64 KB.
 	Script types.String `tfsdk:"script"`
 }
 
@@ -15697,6 +15916,8 @@ func (m GlobalInitScriptCreateRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// A global init script in the workspace. Only workspace admins can view and
+// manage global init scripts.
 type GlobalInitScriptDetails struct {
 	// Time when the script was created, represented as a Unix timestamp in
 	// milliseconds.
@@ -15705,7 +15926,7 @@ type GlobalInitScriptDetails struct {
 	CreatedBy types.String `tfsdk:"created_by"`
 	// Specifies whether the script is enabled. The script runs only if enabled.
 	Enabled types.Bool `tfsdk:"enabled"`
-	// The name of the script
+	// The name of the script. The name must be unique within the workspace.
 	Name types.String `tfsdk:"name"`
 	// The position of a script, where 0 represents the first script to run, 1
 	// is the second script to run, in ascending order.
@@ -15715,7 +15936,7 @@ type GlobalInitScriptDetails struct {
 	// Time when the script was updated, represented as a Unix timestamp in
 	// milliseconds.
 	UpdatedAt types.Int64 `tfsdk:"updated_at"`
-	// The username of the user who last updated the script
+	// The username of the user who last updated the script.
 	UpdatedBy types.String `tfsdk:"updated_by"`
 }
 
@@ -15783,6 +16004,8 @@ func (m GlobalInitScriptDetails) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// A global init script in the workspace. Only workspace admins can view and
+// manage global init scripts.
 type GlobalInitScriptDetailsWithContent struct {
 	// Time when the script was created, represented as a Unix timestamp in
 	// milliseconds.
@@ -15791,7 +16014,7 @@ type GlobalInitScriptDetailsWithContent struct {
 	CreatedBy types.String `tfsdk:"created_by"`
 	// Specifies whether the script is enabled. The script runs only if enabled.
 	Enabled types.Bool `tfsdk:"enabled"`
-	// The name of the script
+	// The name of the script. The name must be unique within the workspace.
 	Name types.String `tfsdk:"name"`
 	// The position of a script, where 0 represents the first script to run, 1
 	// is the second script to run, in ascending order.
@@ -15803,7 +16026,7 @@ type GlobalInitScriptDetailsWithContent struct {
 	// Time when the script was updated, represented as a Unix timestamp in
 	// milliseconds.
 	UpdatedAt types.Int64 `tfsdk:"updated_at"`
-	// The username of the user who last updated the script
+	// The username of the user who last updated the script.
 	UpdatedBy types.String `tfsdk:"updated_by"`
 }
 
@@ -15877,7 +16100,7 @@ func (m GlobalInitScriptDetailsWithContent) Type(ctx context.Context) attr.Type 
 type GlobalInitScriptUpdateRequest struct {
 	// Specifies whether the script is enabled. The script runs only if enabled.
 	Enabled types.Bool `tfsdk:"enabled"`
-	// The name of the script
+	// The name of the script. The name must be unique within the workspace.
 	Name types.String `tfsdk:"name"`
 	// The position of a script, where 0 represents the first script to run, 1
 	// is the second script to run, in ascending order. To move the script to
@@ -15892,7 +16115,8 @@ type GlobalInitScriptUpdateRequest struct {
 	// request succeeds, but the original script at that position and all later
 	// scripts have their positions incremented by 1.
 	Position types.Int64 `tfsdk:"position"`
-	// The Base64-encoded content of the script.
+	// The Base64-encoded content of the script. The decoded content must not be
+	// empty and cannot exceed 64 KB.
 	Script types.String `tfsdk:"script"`
 	// The ID of the global init script.
 	ScriptId types.String `tfsdk:"-"`
@@ -17309,12 +17533,14 @@ type InstancePoolAndStats struct {
 	AzureAttributes types.Object `tfsdk:"azure_attributes"`
 	// Additional tags for pool resources. Databricks will tag all pool
 	// resources (e.g., AWS instances and EBS volumes) with these tags in
-	// addition to `default_tags`. Notes:
+	// addition to `default_tags`, and clusters backed by the pool inherit them.
+	// When editing a pool, omitting this field or passing an empty map keeps
+	// the existing tags, and a non-empty map replaces them. Notes:
 	//
 	// - Currently, Databricks allows at most 45 custom tags
 	CustomTags types.Map `tfsdk:"custom_tags"`
-	// Tags that are added by Databricks regardless of any ``custom_tags``,
-	// including:
+	// Tags that Databricks adds to every pool resource in addition to any
+	// `custom_tags`:
 	//
 	// - Vendor: Databricks
 	//
@@ -17323,13 +17549,15 @@ type InstancePoolAndStats struct {
 	// - DatabricksInstancePoolId: <id_of_pool>
 	DefaultTags types.Map `tfsdk:"default_tags"`
 	// Defines the specification of the disks that will be attached to all spark
-	// containers.
+	// containers. The disk specification cannot be changed after the pool is
+	// created.
 	DiskSpec types.Object `tfsdk:"disk_spec"`
-	// Autoscaling Local Storage: when enabled, this instances in this pool will
-	// dynamically acquire additional disk space when its Spark workers are
+	// Autoscaling Local Storage: when enabled, the instances in this pool will
+	// dynamically acquire additional disk space when their Spark workers are
 	// running low on disk space. In AWS, this feature requires specific AWS
-	// permissions to function correctly - refer to the User Guide for more
-	// details.
+	// permissions to function correctly; see
+	// https://docs.databricks.com/aws/en/compute/pools#autoscaling-local-storage
+	// for details. This setting cannot be changed after the pool is created.
 	EnableElasticDisk types.Bool `tfsdk:"enable_elastic_disk"`
 	// Attributes related to instance pools running on Google Cloud Platform. If
 	// not specified at pool creation, a set of default values will be used.
@@ -17349,27 +17577,35 @@ type InstancePoolAndStats struct {
 	InstancePoolName types.String `tfsdk:"instance_pool_name"`
 	// Maximum number of outstanding instances to keep in the pool, including
 	// both instances used by clusters and idle instances. Clusters that require
-	// further instance provisioning will fail during upsize requests.
+	// further instance provisioning will fail during upsize requests. If unset,
+	// the pool size is not capped.
 	MaxCapacity types.Int64 `tfsdk:"max_capacity"`
-	// Minimum number of idle instances to keep in the instance pool
+	// Minimum number of idle instances to keep in the instance pool. These
+	// instances do not terminate regardless of
+	// `idle_instance_autotermination_minutes`, and the pool provisions
+	// replacements when clusters consume them. Defaults to 0.
 	MinIdleInstances types.Int64 `tfsdk:"min_idle_instances"`
 	// Flexible node type configuration for the pool.
 	NodeTypeFlexibility types.Object `tfsdk:"node_type_flexibility"`
 	// This field encodes, through a single value, the resources available to
-	// each of the Spark nodes in this cluster. For example, the Spark nodes can
-	// be provisioned and optimized for memory or compute intensive workloads. A
-	// list of available node types can be retrieved by using the
-	// [clusters/listNodeTypes] API call. The node type cannot be changed after
-	// the pool is created.
+	// each of the Spark nodes in clusters that use this pool. For example, the
+	// Spark nodes can be provisioned and optimized for memory or compute
+	// intensive workloads. A list of available node types can be retrieved by
+	// using the [clusters/listNodeTypes] API call. The node type cannot be
+	// changed after the pool is created.
 	//
 	// [clusters/listNodeTypes]: https://docs.databricks.com/api/workspace/clusters/listnodetypes
 	NodeTypeId types.String `tfsdk:"node_type_id"`
-	// Custom Docker Image BYOC
+	// A list containing at most one custom Docker image to preload on the
+	// pool's idle instances. Clusters that use Databricks Container Services
+	// with the preloaded image start faster. The list cannot be changed after
+	// the pool is created.
 	PreloadedDockerImages types.List `tfsdk:"preloaded_docker_images"`
 	// A list containing at most one preloaded Spark image version for the pool.
 	// Pool-backed clusters started with the preloaded Spark version will start
 	// faster. A list of available Spark versions can be retrieved by using the
-	// [clusters/sparkVersions] API call.
+	// [clusters/sparkVersions] API call. The list cannot be changed after the
+	// pool is created.
 	//
 	// [clusters/sparkVersions]: https://docs.databricks.com/api/workspace/clusters/sparkversions
 	PreloadedSparkVersions types.List `tfsdk:"preloaded_spark_versions"`
@@ -18023,7 +18259,7 @@ type InstancePoolAwsAttributes struct {
 	// availability zone must be in the same region as the Databricks
 	// deployment. For example, "us-west-2a" is not a valid zone id if the
 	// Databricks deployment resides in the "us-east-1" region. This is an
-	// optional field at cluster creation, and if not specified, a default zone
+	// optional field at pool creation, and if not specified, a default zone
 	// will be used. The list of available zones as well as the default value
 	// can be found by using the `List Zones` method.
 	//
@@ -18733,10 +18969,10 @@ func (m InstancePoolStats) Type(ctx context.Context) attr.Type {
 }
 
 type InstancePoolStatus struct {
-	// List of error messages for the failed pending instances. The
-	// pending_instance_errors follows FIFO with maximum length of the min_idle
-	// of the pool. The pending_instance_errors is emptied once the number of
-	// exiting available instances reaches the min_idle of the pool.
+	// List of errors for pending instances that failed to launch, most recent
+	// first. The list holds at most `min_idle_instances` entries, and never
+	// more than 20, and is emptied once the pool has at least
+	// `min_idle_instances` available instances and no pending ones.
 	PendingInstanceErrors types.List `tfsdk:"pending_instance_errors"`
 }
 
@@ -20670,6 +20906,8 @@ func (m *ListGlobalInitScriptsResponse) SetScripts(ctx context.Context, v []Glob
 }
 
 type ListInstancePools struct {
+	// Instance pools in the workspace, each with its usage statistics and
+	// status.
 	InstancePools types.List `tfsdk:"instance_pools"`
 }
 
@@ -21996,8 +22234,9 @@ type NodeType struct {
 	// Whether the node type is deprecated. Non-deprecated node types offer
 	// greater performance.
 	IsDeprecated types.Bool `tfsdk:"is_deprecated"`
-	// AWS specific, whether this instance supports encryption in transit, used
-	// for hipaa and pci workloads.
+	// Whether this node type supports encryption in transit, which matters for
+	// workloads that need it, such as hipaa and pci. Always true on GCP; on AWS
+	// and Azure it depends on the node type.
 	IsEncryptedInTransit types.Bool `tfsdk:"is_encrypted_in_transit"`
 	// Whether this is an Arm-based instance.
 	IsGraviton types.Bool `tfsdk:"is_graviton"`
@@ -22504,10 +22743,13 @@ func (m *PendingEnforcement) SetTargetSpec(ctx context.Context, v EnforcePolicyC
 	m.TargetSpec = vs
 }
 
-// Error message of a failed pending instances
+// Error for an instance that failed to launch while the pool was provisioning
+// it.
 type PendingInstanceError struct {
+	// Identifier of the pending instance that failed to launch.
 	InstanceId types.String `tfsdk:"instance_id"`
-
+	// Error message describing why the instance failed to launch. The message
+	// may be omitted, because not all pool status reads include it.
 	Message types.String `tfsdk:"message"`
 }
 
@@ -25681,6 +25923,118 @@ func (m UpdateClusterResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{},
 	}
+}
+
+type UpdateComputePolicyRequest struct {
+	// The compute policy to update. `compute_policy.compute_policy_id`
+	// identifies which policy to update; only the fields named in `update_mask`
+	// are applied.
+	ComputePolicy types.Object `tfsdk:"compute_policy"`
+	// The unique identifier of the compute policy (UUID). Server-assigned on
+	// create.
+	ComputePolicyId types.String `tfsdk:"-"`
+	// Fields to update, relative to `compute_policy`. Must contain at least one
+	// path; the supported paths are `display_name` and
+	// `allowed_compute_products`. Supplied product arms replace their
+	// constraints and omitted products remain unchanged. An empty arm clears
+	// that product's limits; an absent or empty products object is invalid.
+	// Removing a product requires its delete API. Nested masks and wildcards
+	// are unsupported. `display_name` cannot be cleared: if it is in the mask
+	// it must be non-empty.
+	UpdateMask types.String `tfsdk:"-"`
+}
+
+func (to *UpdateComputePolicyRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from UpdateComputePolicyRequest) {
+	if !from.ComputePolicy.IsNull() && !from.ComputePolicy.IsUnknown() {
+		if toComputePolicy, ok := to.GetComputePolicy(ctx); ok {
+			if fromComputePolicy, ok := from.GetComputePolicy(ctx); ok {
+				// Recursively sync the fields of ComputePolicy
+				toComputePolicy.SyncFieldsDuringCreateOrUpdate(ctx, fromComputePolicy)
+				to.SetComputePolicy(ctx, toComputePolicy)
+			}
+		}
+	}
+}
+
+func (to *UpdateComputePolicyRequest) SyncFieldsDuringRead(ctx context.Context, from UpdateComputePolicyRequest) {
+	if !from.ComputePolicy.IsNull() && !from.ComputePolicy.IsUnknown() {
+		if toComputePolicy, ok := to.GetComputePolicy(ctx); ok {
+			if fromComputePolicy, ok := from.GetComputePolicy(ctx); ok {
+				toComputePolicy.SyncFieldsDuringRead(ctx, fromComputePolicy)
+				to.SetComputePolicy(ctx, toComputePolicy)
+			}
+		}
+	}
+}
+
+func (m UpdateComputePolicyRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["compute_policy"] = attrs["compute_policy"].SetRequired()
+	attrs["compute_policy_id"] = attrs["compute_policy_id"].SetRequired()
+	attrs["update_mask"] = attrs["update_mask"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateComputePolicyRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m UpdateComputePolicyRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"compute_policy": reflect.TypeOf(ComputePolicy{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateComputePolicyRequest
+// only implements ToObjectValue() and Type().
+func (m UpdateComputePolicyRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"compute_policy":    m.ComputePolicy,
+			"compute_policy_id": m.ComputePolicyId,
+			"update_mask":       m.UpdateMask,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m UpdateComputePolicyRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"compute_policy":    ComputePolicy{}.Type(ctx),
+			"compute_policy_id": types.StringType,
+			"update_mask":       types.StringType,
+		},
+	}
+}
+
+// GetComputePolicy returns the value of the ComputePolicy field in UpdateComputePolicyRequest as
+// a ComputePolicy value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *UpdateComputePolicyRequest) GetComputePolicy(ctx context.Context) (ComputePolicy, bool) {
+	var e ComputePolicy
+	if m.ComputePolicy.IsNull() || m.ComputePolicy.IsUnknown() {
+		return e, false
+	}
+	var v ComputePolicy
+	d := m.ComputePolicy.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetComputePolicy sets the value of the ComputePolicy field in UpdateComputePolicyRequest.
+func (m *UpdateComputePolicyRequest) SetComputePolicy(ctx context.Context, v ComputePolicy) {
+	vs := v.ToObjectValue(ctx)
+	m.ComputePolicy = vs
 }
 
 type UpdateResponse struct {

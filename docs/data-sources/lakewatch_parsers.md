@@ -6,9 +6,24 @@ subcategory: "Lakewatch"
 
 [API Documentation](https://docs.databricks.com/api/workspace/lakewatch)
 
+Lists custom Lakewatch parsers in one Unity Catalog catalog. Use `schema_name` to narrow the results to one schema. The results contain parser metadata; use a singular parser-version data source to read a spec.
+
+This data source can only be used with a workspace-level provider.
 
 
 ## Example Usage
+List parsers in an existing catalog and schema:
+
+```hcl
+data "databricks_lakewatch_parsers" "logs" {
+  catalog_name = "security_logs"
+  schema_name  = "default"
+}
+
+output "parser_names" {
+  value = [for parser in data.databricks_lakewatch_parsers.logs.parsers : parser.name]
+}
+```
 
 
 ## Arguments

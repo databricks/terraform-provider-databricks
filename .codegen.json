@@ -1,8 +1,6 @@
 {
     "formatter": "make fmt",
     "mode": "tf_v1",
-    "api_changelog": true,
-    "changelog_config": ".codegen/changelog_config.yml",
     "version": {
         "common/version.go": "version = \"$VERSION\""
     },
@@ -13,5 +11,68 @@
         "post_generate": [
             "make lint"
         ]
+    },
+    "sync": {
+        "allow_from_packages": [
+            "**/*.go",
+            "**/*.go.tmpl",
+            "**/*.md",
+            "**/go.{mod,sum}",
+            "**/testdata/**",
+            "**/test-data/**",
+            "**/native_testdata/**",
+            "docs/**",
+            "examples/**",
+            "scripts/**",
+            "tools/**",
+            "qa/replay/**",
+            "exporter/node_type_mapping.json",
+            "exporter/generate_node_mappings.py",
+            ".github/**",
+            ".vscode/**",
+            ".devcontainer/**",
+            ".codegen.json",
+            ".package.json",
+            ".codegen/{_last_sha,_openapi_sha,changelog.json}",
+            ".goreleaser.yml",
+            ".dockerignore",
+            ".gitignore",
+            ".gitattributes",
+            ".wsignore",
+            ".terraform-registry",
+            ".env.template",
+            "CODEOWNERS",
+            "LICENSE",
+            "NOTICE",
+            "Makefile",
+            "staticcheck.conf",
+            "codecov.yml",
+            "test-config.yaml",
+            "godownloader-databricks-provider.sh"
+        ],
+        "skip_from_genkit": [
+            "tagging.py",
+            "tagging.py.lock",
+            ".github/workflows/tagging.yml",
+            ".github/workflows/next-changelog.yml"
+        ],
+        "skip_from_source": [
+            "BUILD",
+            "BUILD.bazel",
+            "OWNERS",
+            "CLAUDE.md",
+            "vendor",
+            ".nextchanges",
+            "releases.jsonl",
+            "NEXT_CHANGELOG.md",
+            "tagging.py",
+            "tagging.py.lock",
+            "tagging.yml",
+            "next-changelog.yml",
+            ".release_metadata.json"
+        ],
+        "rename_on_sync": {
+            "CLAUDE.public.md": "CLAUDE.md"
+        }
     }
 }

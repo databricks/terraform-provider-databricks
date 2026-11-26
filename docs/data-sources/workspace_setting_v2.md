@@ -41,6 +41,7 @@ The following attributes are exported:
 * `effective_integer_val` (IntegerMessage) - Effective setting value for integer type setting. This is the final effective value of setting. To set a value use integer_val
 * `effective_operational_email_custom_recipient` (OperationalEmailCustomRecipientMessage) - Effective setting value for operational_email_custom_recipient setting. This is the final effective value of setting. To set a value use operational_email_custom_recipient
 * `effective_personal_compute` (PersonalComputeMessage) - Effective setting value for personal_compute setting. This is the final effective value of setting. To set a value use personal_compute
+* `effective_repo_allowlist_permission` (ReposAllowListPermissionMessage) - Evaluated Git folder allowlist permission. To set a value, use repo_allowlist_permission
 * `effective_restrict_workspace_admins` (RestrictWorkspaceAdminsMessage) - Effective setting value for restrict_workspace_admins setting. This is the final effective value of setting. To set a value use restrict_workspace_admins
 * `effective_string_val` (StringMessage) - Effective setting value for string type setting. This is the final effective value of setting. To set a value use string_val
 * `effective_workspace_dashboard_theme` (DashboardTheme) - Effective setting value for the workspace_dashboard_theme setting. This is the final effective value of the setting. To set a value, use workspace_dashboard_theme
@@ -49,6 +50,7 @@ The following attributes are exported:
 * `name` (string) - Name of the setting. The settings metadata endpoint lists the names available at each scope
 * `operational_email_custom_recipient` (OperationalEmailCustomRecipientMessage) - Setting value for operational_email_custom_recipient setting. This is the setting value set by consumers, check effective_operational_email_custom_recipient for final setting value
 * `personal_compute` (PersonalComputeMessage) - Setting value for personal_compute setting. This is the setting value set by consumers, check effective_personal_compute for final setting value
+* `repo_allowlist_permission` (ReposAllowListPermissionMessage) - Saved Git folder allowlist permission. Check effective_repo_allowlist_permission for the evaluated value
 * `restrict_workspace_admins` (RestrictWorkspaceAdminsMessage) - Setting value for restrict_workspace_admins setting. This is the setting value set by consumers, check effective_restrict_workspace_admins for final setting value
 * `string_val` (StringMessage) - Setting value for string type setting. This is the setting value set by consumers, check effective_string_val for final setting value
 * `workspace_dashboard_theme` (DashboardTheme) - Setting value for the workspace_dashboard_theme setting. This is the setting value set by consumers. Check effective_workspace_dashboard_theme for the final setting value
@@ -212,6 +214,9 @@ The following attributes are exported:
 * `value` (string) - ON grants all users in all workspaces of the account access to the Personal Compute default
   policy. DELEGATE moves control to each workspace, where users or groups must be added to the
   policy's permissions before they can create compute with it. Possible values are: `DELEGATE`, `ON`
+
+### ReposAllowListPermissionMessage
+* `permission` (string) - Possible values are: `ALLOWLISTED_CLONE_COMMIT_PUSH`, `ALLOWLISTED_COMMIT_PUSH`, `ALL_REPOS`
 
 ### RestrictWorkspaceAdminsMessage
 * `disable_gov_tag_creation` (boolean) - When true, workspace admins cannot create governance tags.

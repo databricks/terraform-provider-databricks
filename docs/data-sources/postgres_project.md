@@ -134,6 +134,7 @@ The following attributes are exported:
 * `branch_logical_size_limit_bytes` (integer) - The logical size limit for a branch
 * `budget_policy_id` (string) - The budget policy that is applied to the project
 * `compute_last_active_time` (string) - The most recent time when any endpoint of this project was active
+* `compute_policy_id` (string) - The compute policy that is applied to the project
 * `custom_tags` (list of ProjectCustomTag) - The effective custom tags associated with the project
 * `default_branch` (string) - The full resource path of the default branch of the project
 * `default_endpoint_settings` (ProjectDefaultEndpointSettings) - The effective default endpoint settings

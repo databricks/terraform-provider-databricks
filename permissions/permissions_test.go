@@ -633,7 +633,7 @@ func TestAccPermissions_Authorization_Tokens(t *testing.T) {
 }
 
 func TestAccPermissions_SqlWarehouses(t *testing.T) {
-	acceptance.LoadDebugEnvIfRunsFromIDE(t, "workspace")
+	acceptance.LoadWorkspaceEnv(t)
 	sqlWarehouseTemplate := `
 		resource "databricks_sql_endpoint" "this" {
 			name = "{var.STICKY_RANDOM}"

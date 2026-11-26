@@ -1,0 +1,77 @@
+# A provider block can move the provider to another named host. The directory is
+# created on workspace 1002's host, then the provider moves to workspace 2002's host,
+# whose metadata seeds workspace ID 2002. The refresh fails on the workspace_id
+# mismatch before any call to the new host. Destroy uses the last successful
+# configuration, so it runs on the first host.
+version: 1
+provider_host: first
+hosts:
+  first:
+    url: https://replay-workspace-1002.cloud.databricks.com
+    metadata:
+      host_type: workspace
+      cloud: AWS
+      workspace_id: "1002"
+  second:
+    url: https://replay-workspace-2002.cloud.databricks.com
+    metadata:
+      host_type: workspace
+      cloud: AWS
+      workspace_id: "2002"
+steps:
+  - name: create
+    config: |
+      resource "databricks_directory" "this" {
+        path = "/Shared/replay-hosts"
+      }
+    calls:
+      - request:
+          method: POST
+          path: /api/2.0/workspace/mkdirs
+          body:
+            json:
+              path: /Shared/replay-hosts
+        response:
+          status: 200
+          body:
+            json: {}
+      - &read
+        request:
+          method: GET
+          path: /api/2.0/workspace/get-status
+          query:
+            path: [/Shared/replay-hosts]
+          body: null
+        response:
+          status: 200
+          body:
+            json:
+              path: /Shared/replay-hosts
+              object_type: DIRECTORY
+              object_id: 2002
+      - *read
+  - name: refresh_on_second_host_fails
+    config: |
+      provider "databricks" {
+        host = "https://replay-workspace-2002.cloud.databricks.com"
+      }
+
+      resource "databricks_directory" "this" {
+        path = "/Shared/replay-hosts"
+      }
+    expect_error: 'workspace_id mismatch: provider is configured for workspace 2002 but got
+      1002'
+    calls: []
+destroy:
+  calls:
+    - *read
+    - request:
+        method: POST
+        path: /api/2.0/workspace/delete
+        body:
+          json:
+            path: /Shared/replay-hosts
+      response:
+        status: 200
+        body:
+          json: {}

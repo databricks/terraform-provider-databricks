@@ -14,6 +14,15 @@ import (
 )
 
 func validateRecordingSetup(d *testDefinition) error {
+	// A profile has one host, and captured calls carry no host names.
+	if len(d.Hosts) != 0 {
+		return fmt.Errorf("recording does not support hosts; update the fixtures by hand")
+	}
+	// The profile supplies credentials, and the recorder reads the process environment.
+	if d.Auth != nil || d.Environment != nil {
+		return fmt.Errorf("recording does not support auth or environment; update the " +
+			"fixtures by hand")
+	}
 	hasTemplate := d.Recording != nil && strings.TrimSpace(d.Recording.InitialStateTemplate) != ""
 	if d.InitialState != nil && !hasTemplate {
 		return fmt.Errorf("recording initial_state requires recording.initial_state_template")

@@ -1,0 +1,47 @@
+# A named Azure host makes the SDK treat the workspace as Azure. The create is
+# redirected to the private-link login page, and the SDK names Azure Private Link in
+# the diagnostic because it takes the cloud from the final request's host. On the
+# unnamed local fixture server the same redirect names AWS PrivateLink.
+version: 1
+provider_host: workspace
+hosts:
+  workspace:
+    url: https://adb-1234567890123456.7.azuredatabricks.net
+    metadata:
+      host_type: workspace
+      workspace_id: "1234567890123456"
+steps:
+  - name: create_redirected_to_login
+    config: |
+      resource "databricks_group" "this" {
+        display_name = "Example group"
+      }
+    expect_error: 'The requested workspace has Azure Private Link enabled'
+    calls:
+      - request:
+          method: POST
+          path: /api/2.0/preview/scim/v2/Groups
+          body:
+            json:
+              displayName: Example group
+              schemas: [urn:ietf:params:scim:schemas:core:2.0:Group]
+              entitlements: [{}]
+        response:
+          status: 302
+          headers:
+            Location: /login.html?error=private-link-validation-error
+          body: null
+      - request:
+          method: GET
+          path: /login.html
+          query:
+            error: [private-link-validation-error]
+          body: null
+        response:
+          status: 200
+          headers:
+            Content-Type: text/html; charset=utf-8
+          body:
+            text: <html><body>Sign in</body></html>
+destroy:
+  calls: []

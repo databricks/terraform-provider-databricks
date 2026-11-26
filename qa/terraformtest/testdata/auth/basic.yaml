@@ -1,0 +1,63 @@
+# Basic auth sends the username and password on every request, with no token
+# request first. The header is base64 of replay-user:replay-password.
+version: 1
+host_metadata:
+  workspace_id: "12345"
+auth:
+  type: basic
+  username: replay-user
+  password: replay-password
+steps:
+  - name: create
+    config: |
+      resource "databricks_directory" "this" {
+        path = "/Shared/replay-auth"
+      }
+    calls:
+      - request:
+          method: POST
+          path: /api/2.0/workspace/mkdirs
+          headers:
+            Authorization: Basic cmVwbGF5LXVzZXI6cmVwbGF5LXBhc3N3b3Jk
+          body:
+            json:
+              path: /Shared/replay-auth
+        response:
+          status: 200
+          body:
+            json: {}
+      - &read
+        request:
+          method: GET
+          path: /api/2.0/workspace/get-status
+          query:
+            path: [/Shared/replay-auth]
+          headers:
+            Authorization: Basic cmVwbGF5LXVzZXI6cmVwbGF5LXBhc3N3b3Jk
+          matchers:
+            headers:
+              User-Agent: {pattern: '.* auth/basic( .*)?'}
+          body: null
+        response:
+          status: 200
+          body:
+            json:
+              path: /Shared/replay-auth
+              object_type: DIRECTORY
+              object_id: 2002
+      - *read
+destroy:
+  calls:
+    - *read
+    - request:
+        method: POST
+        path: /api/2.0/workspace/delete
+        headers:
+          Authorization: Basic cmVwbGF5LXVzZXI6cmVwbGF5LXBhc3N3b3Jk
+        body:
+          json:
+            path: /Shared/replay-auth
+      response:
+        status: 200
+        body:
+          json: {}

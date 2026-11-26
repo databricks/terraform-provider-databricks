@@ -170,7 +170,7 @@ func TestBodyYAMLValidation(t *testing.T) {
 			var body Body
 			err := yaml.Unmarshal([]byte(tc.body), &body)
 			if err == nil {
-				_, err = compileCalls([]Call{{Request: Request{Method: "POST", Path: "/upload", Body: &body}, Response: Response{Status: 200}}})
+				_, err = compileCalls([]Call{{Request: Request{Method: "POST", Path: "/upload", Body: &body}, Response: Response{Status: 200}}}, hostNames{})
 			}
 			require.ErrorContains(t, err, tc.message)
 		})
@@ -185,11 +185,11 @@ func TestBodyYAMLValidation(t *testing.T) {
 
 func TestRawBodyRejectsJSONMatchersAndMultipartResponse(t *testing.T) {
 	call := Call{Request: Request{Method: "POST", Path: "/file", Body: bodyText("x"), Matchers: Matchers{JSON: []JSONMatcher{{Path: []any{}, Type: AnyString}}}}, Response: Response{Status: 200}}
-	_, err := compileCalls([]Call{call})
+	_, err := compileCalls([]Call{call}, hostNames{})
 	require.Error(t, err)
 	call.Request.Matchers = Matchers{}
 	call.Response.Body = &Body{Multipart: []MultipartPart{{Name: "file", Body: bodyText("x")}}}
-	_, err = compileCalls([]Call{call})
+	_, err = compileCalls([]Call{call}, hostNames{})
 	require.ErrorContains(t, err, "multipart is supported only for request bodies")
 }
 

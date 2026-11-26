@@ -1,0 +1,107 @@
+# OAuth M2M discovers the workspace's token endpoint without credentials, then
+# exchanges the client ID and secret, sent as basic auth, for a bearer token. Each
+# Terraform operation configures a new provider, which fetches its own token, so
+# every pair of token calls precedes the requests of one operation. The endpoints
+# need absolute URLs, so the provider uses a named host instead of the local server.
+version: 1
+provider_host: workspace
+hosts:
+  workspace:
+    url: https://replay-workspace.cloud.databricks.com
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+auth:
+  type: oauth-m2m
+  client_id: replay-sp
+  client_secret: replay-secret
+steps:
+  - name: create
+    config: |
+      resource "databricks_directory" "this" {
+        path = "/Shared/replay-auth"
+      }
+    calls:
+      - &discovery
+        request:
+          method: GET
+          path: /oidc/.well-known/oauth-authorization-server
+          matchers:
+            headers:
+              Authorization: absent
+          body: null
+        response:
+          status: 200
+          body:
+            json:
+              authorization_endpoint: https://replay-workspace.cloud.databricks.com/oidc/v1/authorize
+              token_endpoint: https://replay-workspace.cloud.databricks.com/oidc/v1/token
+      - &token
+        request:
+          method: POST
+          path: /oidc/v1/token
+          headers:
+            Authorization: Basic cmVwbGF5LXNwOnJlcGxheS1zZWNyZXQ=
+            Content-Type: application/x-www-form-urlencoded
+          body:
+            text: grant_type=client_credentials&scope=all-apis
+        response:
+          status: 200
+          body:
+            json:
+              access_token: m2m-token
+              token_type: Bearer
+              expires_in: 3600
+      - request:
+          method: POST
+          path: /api/2.0/workspace/mkdirs
+          headers:
+            Authorization: Bearer m2m-token
+          body:
+            json:
+              path: /Shared/replay-auth
+        response:
+          status: 200
+          body:
+            json: {}
+      - &read
+        request:
+          method: GET
+          path: /api/2.0/workspace/get-status
+          query:
+            path: [/Shared/replay-auth]
+          headers:
+            Authorization: Bearer m2m-token
+          body: null
+        response:
+          status: 200
+          body:
+            json:
+              path: /Shared/replay-auth
+              object_type: DIRECTORY
+              object_id: 2002
+      # Terraform's post-apply plan.
+      - *discovery
+      - *token
+      - *read
+destroy:
+  calls:
+    # The refresh, then the destroy.
+    - *discovery
+    - *token
+    - *read
+    - *discovery
+    - *token
+    - request:
+        method: POST
+        path: /api/2.0/workspace/delete
+        headers:
+          Authorization: Bearer m2m-token
+        body:
+          json:
+            path: /Shared/replay-auth
+      response:
+        status: 200
+        body:
+          json: {}

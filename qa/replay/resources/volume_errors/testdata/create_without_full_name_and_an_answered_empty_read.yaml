@@ -1,0 +1,52 @@
+# Pins a create answered 200 without full_name, which sets the ID to the empty full name,
+# on a server that also answers the read of /api/2.1/unity-catalog/volumes/ with 200,
+# where a workspace answers 404 (response_decoding_errors pins that). The read succeeds,
+# provider_config is not populated for the empty ID, and Terraform fails the apply,
+# because the resource it created is absent. Nothing is left in state. API responses are
+# inferred from the Unity Catalog API contract, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: create_without_full_name_fails_the_apply
+    config: |
+      resource "databricks_volume" "this" {
+        name         = "nameless_volume"
+        catalog_name = "main"
+        schema_name  = "replay"
+        volume_type  = "MANAGED"
+      }
+    expect_error: 'Error: Provider produced inconsistent result after apply(?s:.*)Root
+      object was present, but now absent\.'
+    calls:
+      - request:
+          method: POST
+          path: /api/2.1/unity-catalog/volumes
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "nameless_volume", "volume_type": "MANAGED"}
+        response:
+          status: 200
+          body:
+            json: &without_full_name {"catalog_name": "main", "schema_name": "replay",
+                                      "name": "nameless_volume", "volume_type": "MANAGED",
+                                      "owner": "replay-admin@example.com",
+                                      "storage_location": "s3://replay-metastore/volume-236"}
+      - request:
+          method: GET
+          path: /api/2.1/unity-catalog/volumes/
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 200
+          body:
+            json: *without_full_name
+destroy:
+  calls: []

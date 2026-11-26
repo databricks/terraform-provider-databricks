@@ -1,0 +1,111 @@
+# Runs volume_errors/testdata/error_override_matches_the_redirected_request.yaml with
+# databricks_volume on sdk-go uc/volumes/v1 in every step, and expects the same requests
+# and behavior. The original's description:
+#
+# Pins that the classic SDK's error overrides match the request a response answers,
+# after redirects. A refresh redirected to /api/2.1/clusters/get and answered 400
+# INVALID_PARAMETER_VALUE "Cluster ... does not exist" matches the override that makes
+# it RESOURCE_DOES_NOT_EXIST, so the volume counts as missing and the plan creates it.
+# The same answer to the volume GET itself matches no override and fails the refresh.
+# API responses are handwritten for the classic SDK's error overrides, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: create
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: &config |
+      resource "databricks_volume" "this" {
+        name         = "override_volume"
+        catalog_name = "main"
+        schema_name  = "replay"
+        volume_type  = "MANAGED"
+      }
+    calls:
+      - request:
+          method: POST
+          path: /api/2.1/unity-catalog/volumes
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "override_volume", "volume_type": "MANAGED"}
+        response:
+          status: 200
+          body:
+            json: &created {"catalog_name": "main", "schema_name": "replay",
+                            "name": "override_volume",
+                            "full_name": "main.replay.override_volume",
+                            "volume_type": "MANAGED", "owner": "replay-admin@example.com",
+                            "storage_location": "s3://replay-metastore/volume-235"}
+      - &read_created
+        request: &read_request
+          method: GET
+          path: /api/2.1/unity-catalog/volumes/main.replay.override_volume
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 200
+          body:
+            json: *created
+      - *read_created
+  - name: refresh_redirected_to_a_missing_cluster_plans_create
+    sdk_implementations:
+      databricks_volume: sdk_go
+    plan_only: true
+    config: *config
+    plan:
+      expect: non_empty
+      changes:
+        databricks_volume.this:
+          actions: [create]
+    calls:
+      - request: *read_request
+        response:
+          status: 307
+          headers:
+            Location: /api/2.1/clusters/get?cluster_id=volume-cluster
+          body: null
+      - request:
+          method: GET
+          path: /api/2.1/clusters/get
+          query:
+            cluster_id: [volume-cluster]
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 400
+          body:
+            json: &missing_cluster {"error_code": "INVALID_PARAMETER_VALUE",
+                                    "message": "Cluster volume-cluster does not exist"}
+  - name: refresh_answered_the_same_without_redirect_fails
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: *config
+    expect_error: 'Error: cannot read volume: Cluster volume-cluster does not exist\n'
+    calls:
+      - request: *read_request
+        response:
+          status: 400
+          body:
+            json: *missing_cluster
+destroy:
+  calls:
+    - *read_created
+    - request:
+        method: DELETE
+        path: /api/2.1/unity-catalog/volumes/main.replay.override_volume
+        headers:
+          X-Databricks-Workspace-Id: "12345"
+        body: null
+      response:
+        status: 200
+        body:
+          json: {}

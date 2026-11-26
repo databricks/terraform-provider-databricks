@@ -553,7 +553,8 @@ type ClonePipelineRequest_SdkV2 struct {
 	// uses classic compute configured through the `clusters` field. When
 	// `true`, omit `clusters`; Photon is always enabled.
 	Serverless types.Bool `tfsdk:"serverless"`
-	// Serverless compute ID specified by the user for serverless pipelines.
+	// Serverless compute ID specified by the user for serverless pipelines. Use
+	// compute_policy_id instead. Only one of these fields may be set.
 	ServerlessComputeId types.String `tfsdk:"serverless_compute_id"`
 	// DBFS root directory for storing checkpoints and tables.
 	Storage types.String `tfsdk:"storage"`
@@ -2684,7 +2685,8 @@ type CreatePipeline_SdkV2 struct {
 	// uses classic compute configured through the `clusters` field. When
 	// `true`, omit `clusters`; Photon is always enabled.
 	Serverless types.Bool `tfsdk:"serverless"`
-	// Serverless compute ID specified by the user for serverless pipelines.
+	// Serverless compute ID specified by the user for serverless pipelines. Use
+	// compute_policy_id instead. Only one of these fields may be set.
 	ServerlessComputeId types.String `tfsdk:"serverless_compute_id"`
 	// DBFS root directory for storing checkpoints and tables.
 	Storage types.String `tfsdk:"storage"`
@@ -4111,7 +4113,8 @@ type EditPipeline_SdkV2 struct {
 	// uses classic compute configured through the `clusters` field. When
 	// `true`, omit `clusters`; Photon is always enabled.
 	Serverless types.Bool `tfsdk:"serverless"`
-	// Serverless compute ID specified by the user for serverless pipelines.
+	// Serverless compute ID specified by the user for serverless pipelines. Use
+	// compute_policy_id instead. Only one of these fields may be set.
 	ServerlessComputeId types.String `tfsdk:"serverless_compute_id"`
 	// DBFS root directory for storing checkpoints and tables.
 	Storage types.String `tfsdk:"storage"`
@@ -6018,7 +6021,8 @@ type GetPipelineResponse_SdkV2 struct {
 	EffectiveBudgetPolicyId types.String `tfsdk:"effective_budget_policy_id"`
 	// Publishing mode of the pipeline
 	EffectivePublishingMode types.String `tfsdk:"effective_publishing_mode"`
-	// Serverless compute ID resolved for the pipeline.
+	// Serverless compute ID resolved for the pipeline. For the equivalent
+	// compute policy ID, use effective_compute_policy_id.
 	EffectiveServerlessComputeId types.String `tfsdk:"effective_serverless_compute_id"`
 	// The health of a pipeline.
 	Health types.String `tfsdk:"health"`
@@ -13147,7 +13151,8 @@ type PipelineSpec_SdkV2 struct {
 	// uses classic compute configured through the `clusters` field. When
 	// `true`, omit `clusters`; Photon is always enabled.
 	Serverless types.Bool `tfsdk:"serverless"`
-	// Serverless compute ID specified by the user for serverless pipelines.
+	// Serverless compute ID specified by the user for serverless pipelines. Use
+	// compute_policy_id instead. Only one of these fields may be set.
 	ServerlessComputeId types.String `tfsdk:"serverless_compute_id"`
 	// DBFS root directory for storing checkpoints and tables.
 	Storage types.String `tfsdk:"storage"`
@@ -16160,7 +16165,7 @@ type SchemaSpec_SdkV2 struct {
 	DestinationCatalog types.String `tfsdk:"destination_catalog"`
 	// Required. Destination schema to store tables in. Tables with the same
 	// name as the source tables are created in this destination schema. The
-	// pipeline fails If a table with the same name already exists.
+	// pipeline fails if a table with the same name already exists.
 	DestinationSchema types.String `tfsdk:"destination_schema"`
 	// Fanout options for multi-table routing from streaming sources. When set,
 	// records are routed to destination tables based on a per-record routing
@@ -18925,10 +18930,11 @@ func (m *TikTokAdsOptionsTikTokAdsCustomReportOptions_SdkV2) SetMetrics(ctx cont
 	m.Metrics = types.ListValueMust(t, vs)
 }
 
-// Specifies how to transform binary data into structured data.
+// One step that transforms a column: either decodes data into structured data
+// (`format`) or reshapes an already-decoded column (`operation`).
 type Transformer_SdkV2 struct {
 	AvroOptions types.List `tfsdk:"avro_options"`
-	// Required: the wire format of the data.
+	// The format to decode the input column from.
 	Format types.String `tfsdk:"format"`
 	// Optional input column to transform. When set, the transformer reads from
 	// this column instead of the default source column.

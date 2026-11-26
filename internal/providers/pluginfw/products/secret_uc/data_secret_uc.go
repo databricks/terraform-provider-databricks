@@ -125,8 +125,9 @@ type SecretData struct {
 	MetastoreId types.String `tfsdk:"metastore_id"`
 	// The name of the secret, relative to its parent schema.
 	Name types.String `tfsdk:"name"`
-	// The owner of the secret. Defaults to the creating principal on creation.
-	// Can be updated to transfer ownership of the secret to another principal.
+	// The owner of the secret. It cannot be set when creating a secret and
+	// defaults to the creating principal. Set it in UpdateSecret to transfer
+	// ownership of the secret to another principal.
 	Owner types.String `tfsdk:"owner"`
 	// The name of the schema where the secret resides.
 	SchemaName types.String `tfsdk:"schema_name"`
@@ -134,11 +135,10 @@ type SecretData struct {
 	UpdateTime timetypes.RFC3339 `tfsdk:"update_time"`
 	// The principal that last updated the secret.
 	UpdatedBy types.String `tfsdk:"updated_by"`
-	// The secret value to store. This field is input-only and is not returned
-	// in responses — use the **effective_value** field (via GetSecret with
-	// **include_value** set to true) to read the secret value. The maximum size
-	// is 60 KiB (pre-encryption). Accepted content includes passwords, tokens,
-	// keys, and other sensitive credential data.
+	// The secret value to store, such as a password, token, or key. It is never
+	// returned in responses. To read it, call GetSecret with **include_value**
+	// set to true and use the **effective_value** field. The maximum size is 60
+	// KiB before encryption.
 	Value              types.String `tfsdk:"value"`
 	ProviderConfigData types.Object `tfsdk:"provider_config"`
 }

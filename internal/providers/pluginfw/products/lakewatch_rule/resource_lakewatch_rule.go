@@ -198,6 +198,10 @@ type Rule struct {
 	// the requester must still be authorized to delegate to it; an editor who
 	// is not must supply a run_as_principal they can delegate to (for example,
 	// their own identity), or clear it, either of which reassigns the rule. An
+	// update that only enables or disables the rule (changes `schedule.enabled`
+	// and nothing else) does not require delegate permission and keeps the
+	// current identity. Enabling the rule still requires the current identity
+	// to have the access the rule needs to run, or the request is rejected. An
 	// update whose mask includes `run_as_principal` but supplies no value
 	// clears it: the rule then runs as the requester, exactly as when it is
 	// omitted on create. Reads return the value as supplied; the identity the
@@ -208,7 +212,8 @@ type Rule struct {
 	// rejected. Supports Markdown; analysts and the investigation agent follow
 	// it when triaging this rule's alerts.
 	Runbook types.String `tfsdk:"runbook"`
-	// When the rule executes.
+	// When the rule executes. Required for scheduled rules. A streaming rule
+	// accepts only `enabled`, and an omitted schedule means enabled.
 	Schedule types.Object `tfsdk:"schedule"`
 	// Name of the Unity Catalog schema that contains the rule. Required. Cannot
 	// be changed after creation. Reads return the value as supplied; the
@@ -219,6 +224,9 @@ type Rule struct {
 	Severity types.String `tfsdk:"severity"`
 	// Read-only lifecycle status.
 	Status types.Object `tfsdk:"status"`
+	// Native streaming rule input: one source table filtered by one stateless
+	// row predicate. Permanent field number; must not be renumbered.
+	Streaming types.Object `tfsdk:"streaming"`
 	// If set, this rule's signals do not open new alerts until the given time.
 	SuppressUntilTime timetypes.RFC3339 `tfsdk:"suppress_until_time"`
 	// Time-range configuration for scheduled detections. If unset, the
@@ -253,6 +261,7 @@ func (m Rule) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type 
 		"references":            reflect.TypeOf(types.String{}),
 		"schedule":              reflect.TypeOf(lakewatch_tf.RuleSchedule{}),
 		"status":                reflect.TypeOf(lakewatch_tf.ResourceStatus{}),
+		"streaming":             reflect.TypeOf(lakewatch_tf.RuleInputStreaming{}),
 		"timerange":             reflect.TypeOf(lakewatch_tf.RuleTimeRange{}),
 		"updated_by":            reflect.TypeOf(lakewatch_tf.Principal{}),
 		"provider_config":       reflect.TypeOf(ProviderConfig{}),
@@ -300,6 +309,7 @@ func (m Rule) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"schema_name":                m.SchemaName,
 			"severity":                   m.Severity,
 			"status":                     m.Status,
+			"streaming":                  m.Streaming,
 			"suppress_until_time":        m.SuppressUntilTime,
 			"timerange":                  m.Timerange,
 			"update_time":                m.UpdateTime,
@@ -353,6 +363,7 @@ func (m Rule) Type(ctx context.Context) attr.Type {
 			"schema_name":         types.StringType,
 			"severity":            types.StringType,
 			"status":              lakewatch_tf.ResourceStatus{}.Type(ctx),
+			"streaming":           lakewatch_tf.RuleInputStreaming{}.Type(ctx),
 			"suppress_until_time": timetypes.RFC3339{}.Type(ctx),
 			"timerange":           lakewatch_tf.RuleTimeRange{}.Type(ctx),
 			"update_time":         timetypes.RFC3339{}.Type(ctx),
@@ -459,6 +470,15 @@ func (to *Rule) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Rule) {
 				// Recursively sync the fields of Status
 				toStatus.SyncFieldsDuringCreateOrUpdate(ctx, fromStatus)
 				to.SetStatus(ctx, toStatus)
+			}
+		}
+	}
+	if !from.Streaming.IsNull() && !from.Streaming.IsUnknown() {
+		if toStreaming, ok := to.GetStreaming(ctx); ok {
+			if fromStreaming, ok := from.GetStreaming(ctx); ok {
+				// Recursively sync the fields of Streaming
+				toStreaming.SyncFieldsDuringCreateOrUpdate(ctx, fromStreaming)
+				to.SetStreaming(ctx, toStreaming)
 			}
 		}
 	}
@@ -574,6 +594,14 @@ func (to *Rule) SyncFieldsDuringRead(ctx context.Context, from Rule) {
 			}
 		}
 	}
+	if !from.Streaming.IsNull() && !from.Streaming.IsUnknown() {
+		if toStreaming, ok := to.GetStreaming(ctx); ok {
+			if fromStreaming, ok := from.GetStreaming(ctx); ok {
+				toStreaming.SyncFieldsDuringRead(ctx, fromStreaming)
+				to.SetStreaming(ctx, toStreaming)
+			}
+		}
+	}
 	if !from.Timerange.IsNull() && !from.Timerange.IsUnknown() {
 		if toTimerange, ok := to.GetTimerange(ctx); ok {
 			if fromTimerange, ok := from.GetTimerange(ctx); ok {
@@ -625,11 +653,12 @@ func (m Rule) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuild
 	attrs["rule_name"] = attrs["rule_name"].SetRequired()
 	attrs["run_as_principal"] = attrs["run_as_principal"].SetOptional()
 	attrs["runbook"] = attrs["runbook"].SetOptional()
-	attrs["schedule"] = attrs["schedule"].SetRequired()
+	attrs["schedule"] = attrs["schedule"].SetOptional()
 	attrs["schema_name"] = attrs["schema_name"].SetRequired()
 	attrs["schema_name"] = attrs["schema_name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["severity"] = attrs["severity"].SetRequired()
 	attrs["status"] = attrs["status"].SetComputed()
+	attrs["streaming"] = attrs["streaming"].SetOptional()
 	attrs["suppress_until_time"] = attrs["suppress_until_time"].SetOptional()
 	attrs["timerange"] = attrs["timerange"].SetOptional()
 	attrs["update_time"] = attrs["update_time"].SetComputed()
@@ -897,6 +926,31 @@ func (m *Rule) SetStatus(ctx context.Context, v lakewatch_tf.ResourceStatus) {
 	m.Status = vs
 }
 
+// GetStreaming returns the value of the Streaming field in Rule as
+// a lakewatch_tf.RuleInputStreaming value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *Rule) GetStreaming(ctx context.Context) (lakewatch_tf.RuleInputStreaming, bool) {
+	var e lakewatch_tf.RuleInputStreaming
+	if m.Streaming.IsNull() || m.Streaming.IsUnknown() {
+		return e, false
+	}
+	var v lakewatch_tf.RuleInputStreaming
+	d := m.Streaming.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetStreaming sets the value of the Streaming field in Rule.
+func (m *Rule) SetStreaming(ctx context.Context, v lakewatch_tf.RuleInputStreaming) {
+	vs := v.ToObjectValue(ctx)
+	m.Streaming = vs
+}
+
 // GetTimerange returns the value of the Timerange field in Rule as
 // a lakewatch_tf.RuleTimeRange value.
 // If the field is unknown or null, the boolean return value is false.
@@ -1097,7 +1151,7 @@ func (r *RuleResource) update(ctx context.Context, plan Rule, diags *diag.Diagno
 	updateRequest := lakewatch.UpdateRuleRequest{
 		Rule:       rule,
 		Name:       plan.Name.ValueString(),
-		UpdateMask: *fieldmask.New(strings.Split("annotations,batch,category,deduplication,deduplication_time_window,description,fidelity,mitre,objective,output,references,rule_name,run_as_principal,runbook,schedule,severity,suppress_until_time,timerange", ",")),
+		UpdateMask: *fieldmask.New(strings.Split("annotations,batch,category,deduplication,deduplication_time_window,description,fidelity,mitre,objective,output,references,rule_name,run_as_principal,runbook,schedule,severity,streaming,suppress_until_time,timerange", ",")),
 	}
 
 	var namespace ProviderConfig

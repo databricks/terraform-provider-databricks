@@ -1,0 +1,60 @@
+# The status read sends no body, so it must send no Content-Type header. An empty
+# sample, Content-Type: "", would also accept a header with an empty value; absent
+# accepts only a missing header.
+version: 1
+host_metadata:
+  workspace_id: "12345"
+steps:
+  - name: create
+    config: |
+      resource "databricks_directory" "this" {
+        path = "/Shared/replay-matchers"
+      }
+    calls:
+      - request:
+          method: POST
+          path: /api/2.0/workspace/mkdirs
+          body:
+            json:
+              path: /Shared/replay-matchers
+        response:
+          status: 200
+          body:
+            json: {}
+      - request:
+          method: GET
+          path: /api/2.0/workspace/get-status
+          query:
+            path: [/Shared/replay-matchers]
+          matchers:
+            headers:
+              Content-Type: absent
+          body: null
+        response: &status
+          status: 200
+          body:
+            json:
+              path: /Shared/replay-matchers
+              object_type: DIRECTORY
+              object_id: 2002
+      - &read
+        request:
+          method: GET
+          path: /api/2.0/workspace/get-status
+          query:
+            path: [/Shared/replay-matchers]
+          body: null
+        response: *status
+destroy:
+  calls:
+    - *read
+    - request:
+        method: POST
+        path: /api/2.0/workspace/delete
+        body:
+          json:
+            path: /Shared/replay-matchers
+      response:
+        status: 200
+        body:
+          json: {}

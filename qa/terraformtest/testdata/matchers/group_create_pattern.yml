@@ -1,0 +1,79 @@
+# Patterns check the format of values that change between runs. Each must match the
+# whole value: traceparent carries a random trace and parent ID, and User-Agent names
+# the provider, SDK and resource versions of this build.
+version: 1
+host_metadata:
+  workspace_id: "12345"
+steps:
+  - name: create
+    config: |
+      resource "databricks_group" "this" {
+        display_name = "Example group"
+      }
+    calls:
+      - request:
+          method: POST
+          path: /api/2.0/preview/scim/v2/Groups
+          headers:
+            # Captured samples; the patterns replace exact comparison.
+            traceparent: 00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01
+            User-Agent: databricks-tf-provider/1.0.0 databricks-sdk-go/0.200.0 resource/group
+          matchers:
+            headers:
+              traceparent: {pattern: '00-[0-9a-f]{32}-[0-9a-f]{16}-01'}
+              User-Agent: {pattern: 'databricks-tf-provider/\S+ databricks-sdk-go/\S+ .*\bresource/group\b.*'}
+          body:
+            json:
+              displayName: Example group
+              schemas: [urn:ietf:params:scim:schemas:core:2.0:Group]
+              entitlements: [{}]
+        response:
+          status: 201
+          body:
+            json:
+              id: group-id
+      - request:
+          method: GET
+          path: /api/2.0/preview/scim/v2/Groups/group-id
+          query:
+            attributes: ["displayName,externalId,entitlements"]
+          body: null
+        response:
+          status: 200
+          body:
+            json:
+              id: group-id
+              displayName: Example group
+      - request:
+          method: GET
+          path: /api/2.0/preview/scim/v2/Groups/group-id
+          query:
+            attributes: ["displayName,externalId,entitlements"]
+          body: null
+        response:
+          status: 200
+          body:
+            json:
+              id: group-id
+              displayName: Example group
+destroy:
+  calls:
+    - request:
+        method: GET
+        path: /api/2.0/preview/scim/v2/Groups/group-id
+        query:
+          attributes: ["displayName,externalId,entitlements"]
+        body: null
+      response:
+        status: 200
+        body:
+          json:
+            id: group-id
+            displayName: Example group
+    - request:
+        method: DELETE
+        path: /api/2.0/preview/scim/v2/Groups/group-id
+        body: null
+      response:
+        status: 204
+        body: null

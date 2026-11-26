@@ -16,7 +16,7 @@ import (
 func replayCheckpoint(t *testing.T, d *testDefinition) []byte {
 	t.Helper()
 	configureTerraform(t)
-	handler, host := replayBoundary(t, d)
+	handler, host := replayBoundary(t, d, true)
 	native := terraformCase(t, d, handler, fixtureConfig(host), nil)
 	parent := t.TempDir()
 	native.WorkingDir = parent

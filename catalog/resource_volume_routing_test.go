@@ -2,6 +2,7 @@ package catalog
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"maps"
@@ -9,6 +10,7 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"sync"
+	"sync/atomic"
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go/config"
@@ -460,4 +462,62 @@ func testVolumeWorkspaceIDChangeToAnotherWorkspaceFailsUpdate(t *testing.T, sdkG
 		fmt.Sprintf(volumeCall, "POST "+workspaceHostVolumesPath),
 		fmt.Sprintf(volumeCall, "GET "+routingVolumePath),
 	}, recorder.snapshot())
+}
+
+// brokenAfterFirstLoader loads nothing for the provider's configuration and fails every
+// later load, as a profile does that becomes unreadable after the provider starts.
+type brokenAfterFirstLoader struct {
+	loads *atomic.Int32
+}
+
+func (brokenAfterFirstLoader) Name() string { return "profile broken after start" }
+
+func (l brokenAfterFirstLoader) Configure(*config.Config) error {
+	if l.loads.Add(1) > 1 {
+		return errors.New("profile replay is no longer readable")
+	}
+	return nil
+}
+
+// An account-level provider whose account lookup of the workspace is forbidden falls back
+// to a client for the workspace on the same host, which loads the provider's config
+// again. When that load fails, the volume call fails before any request to the
+// workspace.
+func TestVolumeAccountProviderFailsWhenTheWorkspaceClientCantBeBuilt(t *testing.T) {
+	forEachVolumeClient(t, testVolumeAccountProviderFailsWhenTheWorkspaceClientCantBeBuilt)
+}
+
+func testVolumeAccountProviderFailsWhenTheWorkspaceClientCantBeBuilt(t *testing.T,
+	sdkGo bool) {
+	_, accountURL := newRoutingServer(t, routingAccountJSON, map[string]routingResponse{
+		"GET " + workspaceHostLookupPath: {http.StatusForbidden, nil,
+			`{"error_code": "PERMISSION_DENIED", "message": "no account access"}`},
+	})
+	recorder := &routingRecorder{next: workspaceHostTransport{
+		workspaceHostAccountDomain: accountURL,
+	}}
+	c, err := providerclient.PrepareDatabricksClient(context.Background(), &config.Config{
+		Host:                "https://" + workspaceHostAccountDomain,
+		AccountID:           "replay-account",
+		Token:               "fixture-token",
+		AuthType:            "pat",
+		Credentials:         config.PatCredentials{},
+		Loaders:             []config.Loader{brokenAfterFirstLoader{&atomic.Int32{}}},
+		HTTPTransport:       recorder,
+		RetryTimeoutSeconds: 30,
+	}, nil)
+	require.NoError(t, err)
+
+	_, diags := routingApplyVolume(t, c, nil, routingVolume{
+		attributes:  routingVolumeAttributes(nil),
+		workspaceID: "12345",
+	}, sdkGo)
+
+	assert.Equal(t, []string{
+		workspaceHostAccountDomain + " GET " + workspaceHostLookupPath + " workspace_id=[]",
+	}, recorder.snapshot())
+	require.Len(t, diags, 1)
+	assert.Regexp(t, `^cannot create volume: failed to get workspace client with `+
+		`workspace_id 12345: resolve: profile replay is no longer readable\.`,
+		diags[0].Summary)
 }

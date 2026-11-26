@@ -2,6 +2,11 @@
 
 This file provides guidance to LLM-based agents when working with code in this repository.
 
+The public GitHub repository is a read-only mirror and does not accept pull
+requests. Provider changes are made in the provider's source checkout and
+published to the mirror with each release. Do not open pull requests against
+the mirror.
+
 ## Common Development Commands
 
 ### Building and Testing
@@ -149,12 +154,9 @@ Within each section, maintain alphabetical order.
 - Use Terraform Registry Doc Preview Tool for validation
 
 ### Changelog Requirements
-All user-facing changes must be documented in `NEXT_CHANGELOG.md` with format:
-```
-* <Summary of change> ([#<PR number>](<PR link>)).
-
-  <Optional additional information>
-```
+Release notes are recorded in the provider's source checkout; follow
+`.nextchanges/README.md` there. This public repository is a read-only mirror and
+does not accept pull requests.
 
 ### Migration Verification
 When migrating resources to Plugin Framework, always run `make diff-schema` to ensure no breaking changes to the Terraform schema.

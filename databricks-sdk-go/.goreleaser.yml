@@ -1,0 +1,22 @@
+version: 2
+
+before:
+  hooks:
+    - go mod download
+
+builds:
+  - skip: true
+
+# Snapshot configuration for non-release builds
+snapshot:
+  version_template: "{{ .Tag }}"
+
+# Changelog configuration (overridden by workflow with tag message)
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'
+
+release: {}

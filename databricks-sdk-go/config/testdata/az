@@ -1,0 +1,82 @@
+#!/bin/bash
+
+# If the arguments are "account show", return the account details.
+if [ "$1" == "account" ] && [ "$2" == "show" ]; then
+    /bin/echo "{
+    \"environmentName\": \"AzureCloud\",
+    \"id\": \"aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee\",
+    \"isDefault\": true,
+    \"name\": \"Pay-As-You-Go\",
+    \"state\": \"Enabled\",
+    \"tenantId\": \"aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee\",
+    \"user\": {
+        \"name\": \"${AZ_USER_NAME:-testuser@databricks.com}\",
+        \"type\": \"${AZ_USER_TYPE:-user}\"
+    }
+}"
+    exit 0
+fi
+
+if [ "yes" == "$FAIL" ]; then
+    >&2 /bin/echo "This is just a failing script."
+    exit 1
+fi
+
+if [ "logout" == "$FAIL" ]; then
+    >&2 /bin/echo "No subscription found. Run 'az account set' to select a subscription."
+    exit 1
+fi
+
+if [ "corrupt" == "$FAIL" ]; then
+    /bin/echo "{accessToken: ..corrupt"
+    exit
+fi
+
+for arg in "$@"; do
+    if [[ "$arg" == "$FAIL_IF" ]]; then
+        echo "Failed"
+        exit 1
+    fi
+done
+
+# Add character to file at $COUNT if it is defined.
+if [ -n "$COUNT" ]; then
+    echo -n x >> "$COUNT"
+fi
+
+# If FAIL_IF_TENANT_ID_SET is set & --tenant-id is passed, fail.
+if [ -n "$FAIL_IF_TENANT_ID_SET" ]; then
+    for arg in "$@"; do
+        if [[ "$arg" == "--tenant" ]]; then
+            echo 1>&2 "ERROR: Tenant shouldn't be specified for managed identity account"
+            exit 1
+        fi
+    done
+fi
+
+# If WARN is set, print it to stderr and still succeed, like az does for
+# deprecation notices.
+if [ -n "$WARN" ]; then
+    >&2 /bin/echo "$WARN"
+fi
+
+# Macos
+EXP="$(/bin/date -v+${EXPIRE:=10S} +'%F %T' 2>/dev/null)"
+if [ -z "${EXP}" ]; then
+  # Linux
+  EXPIRE=$(/bin/echo $EXPIRE | /bin/sed 's/S/seconds/')
+  EXPIRE=$(/bin/echo $EXPIRE | /bin/sed 's/M/minutes/')
+  EXP=$(/bin/date --date=+${EXPIRE:=10seconds} +'%F %T')
+fi
+
+if [ -z "${TF_AAD_TOKEN}" ]; then
+    TF_AAD_TOKEN="..."
+fi
+
+/bin/echo "{
+  \"accessToken\": \"${TF_AAD_TOKEN}\",
+  \"expiresOn\": \"${EXP}\",
+  \"subscription\": \"aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee\",
+  \"tenant\": \"aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee\",
+  \"tokenType\": \"Bearer\"
+}"

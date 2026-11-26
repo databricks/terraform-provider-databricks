@@ -30,12 +30,15 @@ The following arguments are available:
 * `name` - (Required) Name of the custom OAuth app. Change requires a new resource.
 * `confidential` - Indicates whether an OAuth client secret is required to authenticate this client. Default to `false`. Change requires a new resource.
 * `redirect_urls` - List of OAuth redirect urls.
-* `scopes` - OAuth scopes granted to the application. Supported scopes: `all-apis`, `sql`, `offline_access`, `openid`, `profile`, `email`.
+* `scopes` - OAuth scopes assigned to the application. Supported scopes include `all-apis`, `sql`, `offline_access`, `openid`, `profile`, `email`, as well as fine-grained user-to-machine (U2M) scopes such as `catalog.tables:read`, `files`, and `iam.current-user:read`.
+* `user_authorized_scopes` - (Optional) List of fine-grained U2M scopes that the client is authorized to request on behalf of a user. Must be a subset of `scopes`: a scope listed here but not present in `scopes` is not assigned to the client, and the OAuth authorization endpoint returns `access_denied` for it.
 
 ### token_access_policy Configuration Block (Optional)
 
 * `access_token_ttl_in_minutes` - access token time to live (TTL) in minutes.
-* `refresh_token_ttl_in_minutes` - refresh token TTL in minutes. The TTL of refresh token cannot be lower than TTL of access token.
+* `refresh_token_ttl_in_minutes` - refresh token TTL in minutes. The TTL of the refresh token cannot be lower than the TTL of the access token.
+* `absolute_session_lifetime_in_minutes` - absolute lifetime (in minutes) of the OAuth session, after which re-authentication is required regardless of refresh activity. Cannot be lower than `refresh_token_ttl_in_minutes`.
+* `enable_single_use_refresh_tokens` - (Boolean) whether refresh tokens are single-use (rotating): each refresh issues a new refresh token and invalidates the previous one.
 
 ## Attribute Reference
 

@@ -600,6 +600,98 @@ func (m GetCatalogConfigRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// Request to rescan a catalog that has Data Classification enabled.
+type RescanCatalogRequest_SdkV2 struct {
+	// Resource name of the catalog, in the format: catalogs/{catalog_name}.
+	Name types.String `tfsdk:"-"`
+}
+
+func (to *RescanCatalogRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from RescanCatalogRequest_SdkV2) {
+}
+
+func (to *RescanCatalogRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from RescanCatalogRequest_SdkV2) {
+}
+
+func (m RescanCatalogRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in RescanCatalogRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m RescanCatalogRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, RescanCatalogRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (m RescanCatalogRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name": m.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m RescanCatalogRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name": types.StringType,
+		},
+	}
+}
+
+// Response for RescanCatalog. Empty for now; a named message lets later
+// versions add fields.
+type RescanCatalogResponse_SdkV2 struct {
+}
+
+func (to *RescanCatalogResponse_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from RescanCatalogResponse_SdkV2) {
+}
+
+func (to *RescanCatalogResponse_SdkV2) SyncFieldsDuringRead(ctx context.Context, from RescanCatalogResponse_SdkV2) {
+}
+
+func (m RescanCatalogResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in RescanCatalogResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m RescanCatalogResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, RescanCatalogResponse_SdkV2
+// only implements ToObjectValue() and Type().
+func (m RescanCatalogResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m RescanCatalogResponse_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
+}
+
 type UpdateCatalogConfigRequest_SdkV2 struct {
 	// The configuration to apply to the catalog. The name field in
 	// catalog_config identifies which resource to update.

@@ -153,3 +153,12 @@ and status lines close the connection and frame the body by its
 `Transfer-Encoding` headers. They need a server that supports hijacking, such
 as `httptest.NewServer`; otherwise the client gets a 400 and `Verify` reports
 the failure. Faulted calls are consumed and ordered like any other call.
+
+## Authentication configuration tests
+
+`NewOfflineAuthTransport(t)` can be assigned to an SDK config's `HTTPTransport`
+when testing credential selection against example hosts. It returns 404 for
+external host-metadata and OAuth discovery requests, allows HTTP requests to
+local fixture servers, and fails the test on any other external request.
+This keeps the default authentication chain active without contacting real
+Databricks workspaces.

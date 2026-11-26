@@ -1,0 +1,11 @@
+{
+  "sections": [
+    "Important Changes",
+    "Breaking Changes",
+    "New Features and Improvements",
+    "Bug Fixes",
+    "Documentation",
+    "Exporter",
+    "Internal Changes"
+  ]
+}

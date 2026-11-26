@@ -5162,9 +5162,10 @@ func (m *UpdateDatabaseInstanceRequest_SdkV2) SetDatabaseInstance(ctx context.Co
 type UpdateSyncedDatabaseTableRequest_SdkV2 struct {
 	// Full three-part (catalog, schema, table) name of the table.
 	Name types.String `tfsdk:"-"`
-	// Note that updating a synced database table is not yet supported.
+	// The synced database table and requested spec values.
 	SyncedTable types.List `tfsdk:"synced_table"`
-	// The list of fields to update. Setting this field is not yet supported.
+	// The list of fields to update. Updatable paths include
+	// spec.accelerated_sync and *.
 	UpdateMask types.String `tfsdk:"-"`
 }
 

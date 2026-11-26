@@ -915,8 +915,9 @@ func (m *BuiltinParserVersion) SetTags(ctx context.Context, v []ParserTag) {
 // becomes its own row, with the element's `message` parsed as the event body.
 type CloudWatchLogsEnvelope struct {
 	// Whether to keep the envelope's `owner`, `logGroup`, and `logStream`
-	// values in the `data.lw_header` field of each unwrapped row. Must be set
-	// explicitly to `true` or `false`.
+	// values in the `data.lw_header` field of each unwrapped row whose message
+	// is a JSON object. A message that is any other JSON value is kept without
+	// the field. Must be set explicitly to `true` or `false`.
 	HeaderRetention types.Bool `tfsdk:"header_retention"`
 }
 
@@ -5883,6 +5884,10 @@ type Rule struct {
 	// the requester must still be authorized to delegate to it; an editor who
 	// is not must supply a run_as_principal they can delegate to (for example,
 	// their own identity), or clear it, either of which reassigns the rule. An
+	// update that only enables or disables the rule (changes `schedule.enabled`
+	// and nothing else) does not require delegate permission and keeps the
+	// current identity. Enabling the rule still requires the current identity
+	// to have the access the rule needs to run, or the request is rejected. An
 	// update whose mask includes `run_as_principal` but supplies no value
 	// clears it: the rule then runs as the requester, exactly as when it is
 	// omitted on create. Reads return the value as supplied; the identity the
@@ -5893,7 +5898,8 @@ type Rule struct {
 	// rejected. Supports Markdown; analysts and the investigation agent follow
 	// it when triaging this rule's alerts.
 	Runbook types.String `tfsdk:"runbook"`
-	// When the rule executes.
+	// When the rule executes. Required for scheduled rules. A streaming rule
+	// accepts only `enabled`, and an omitted schedule means enabled.
 	Schedule types.Object `tfsdk:"schedule"`
 	// Name of the Unity Catalog schema that contains the rule. Required. Cannot
 	// be changed after creation. Reads return the value as supplied; the
@@ -5904,6 +5910,9 @@ type Rule struct {
 	Severity types.String `tfsdk:"severity"`
 	// Read-only lifecycle status.
 	Status types.Object `tfsdk:"status"`
+	// Native streaming rule input: one source table filtered by one stateless
+	// row predicate. Permanent field number; must not be renumbered.
+	Streaming types.Object `tfsdk:"streaming"`
 	// If set, this rule's signals do not open new alerts until the given time.
 	SuppressUntilTime timetypes.RFC3339 `tfsdk:"suppress_until_time"`
 	// Time-range configuration for scheduled detections. If unset, the
@@ -6010,6 +6019,15 @@ func (to *Rule) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Rule) {
 				// Recursively sync the fields of Status
 				toStatus.SyncFieldsDuringCreateOrUpdate(ctx, fromStatus)
 				to.SetStatus(ctx, toStatus)
+			}
+		}
+	}
+	if !from.Streaming.IsNull() && !from.Streaming.IsUnknown() {
+		if toStreaming, ok := to.GetStreaming(ctx); ok {
+			if fromStreaming, ok := from.GetStreaming(ctx); ok {
+				// Recursively sync the fields of Streaming
+				toStreaming.SyncFieldsDuringCreateOrUpdate(ctx, fromStreaming)
+				to.SetStreaming(ctx, toStreaming)
 			}
 		}
 	}
@@ -6120,6 +6138,14 @@ func (to *Rule) SyncFieldsDuringRead(ctx context.Context, from Rule) {
 			}
 		}
 	}
+	if !from.Streaming.IsNull() && !from.Streaming.IsUnknown() {
+		if toStreaming, ok := to.GetStreaming(ctx); ok {
+			if fromStreaming, ok := from.GetStreaming(ctx); ok {
+				toStreaming.SyncFieldsDuringRead(ctx, fromStreaming)
+				to.SetStreaming(ctx, toStreaming)
+			}
+		}
+	}
 	if !from.Timerange.IsNull() && !from.Timerange.IsUnknown() {
 		if toTimerange, ok := to.GetTimerange(ctx); ok {
 			if fromTimerange, ok := from.GetTimerange(ctx); ok {
@@ -6169,11 +6195,12 @@ func (m Rule) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuild
 	attrs["rule_name"] = attrs["rule_name"].SetRequired()
 	attrs["run_as_principal"] = attrs["run_as_principal"].SetOptional()
 	attrs["runbook"] = attrs["runbook"].SetOptional()
-	attrs["schedule"] = attrs["schedule"].SetRequired()
+	attrs["schedule"] = attrs["schedule"].SetOptional()
 	attrs["schema_name"] = attrs["schema_name"].SetRequired()
 	attrs["schema_name"] = attrs["schema_name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["severity"] = attrs["severity"].SetRequired()
 	attrs["status"] = attrs["status"].SetComputed()
+	attrs["streaming"] = attrs["streaming"].SetOptional()
 	attrs["suppress_until_time"] = attrs["suppress_until_time"].SetOptional()
 	attrs["timerange"] = attrs["timerange"].SetOptional()
 	attrs["update_time"] = attrs["update_time"].SetComputed()
@@ -6202,6 +6229,7 @@ func (m Rule) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type 
 		"references":            reflect.TypeOf(types.String{}),
 		"schedule":              reflect.TypeOf(RuleSchedule{}),
 		"status":                reflect.TypeOf(ResourceStatus{}),
+		"streaming":             reflect.TypeOf(RuleInputStreaming{}),
 		"timerange":             reflect.TypeOf(RuleTimeRange{}),
 		"updated_by":            reflect.TypeOf(Principal{}),
 	}
@@ -6246,6 +6274,7 @@ func (m Rule) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"schema_name":                m.SchemaName,
 			"severity":                   m.Severity,
 			"status":                     m.Status,
+			"streaming":                  m.Streaming,
 			"suppress_until_time":        m.SuppressUntilTime,
 			"timerange":                  m.Timerange,
 			"update_time":                m.UpdateTime,
@@ -6296,6 +6325,7 @@ func (m Rule) Type(ctx context.Context) attr.Type {
 			"schema_name":         types.StringType,
 			"severity":            types.StringType,
 			"status":              ResourceStatus{}.Type(ctx),
+			"streaming":           RuleInputStreaming{}.Type(ctx),
 			"suppress_until_time": timetypes.RFC3339{}.Type(ctx),
 			"timerange":           RuleTimeRange{}.Type(ctx),
 			"update_time":         timetypes.RFC3339{}.Type(ctx),
@@ -6556,6 +6586,31 @@ func (m *Rule) GetStatus(ctx context.Context) (ResourceStatus, bool) {
 func (m *Rule) SetStatus(ctx context.Context, v ResourceStatus) {
 	vs := v.ToObjectValue(ctx)
 	m.Status = vs
+}
+
+// GetStreaming returns the value of the Streaming field in Rule as
+// a RuleInputStreaming value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *Rule) GetStreaming(ctx context.Context) (RuleInputStreaming, bool) {
+	var e RuleInputStreaming
+	if m.Streaming.IsNull() || m.Streaming.IsUnknown() {
+		return e, false
+	}
+	var v RuleInputStreaming
+	d := m.Streaming.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetStreaming sets the value of the Streaming field in Rule.
+func (m *Rule) SetStreaming(ctx context.Context, v RuleInputStreaming) {
+	vs := v.ToObjectValue(ctx)
+	m.Streaming = vs
 }
 
 // GetTimerange returns the value of the Timerange field in Rule as
@@ -7199,6 +7254,149 @@ func (m *RuleInputCustomNotebook) SetOptions(ctx context.Context, v map[string]t
 	m.Options = types.MapValueMust(t, vs)
 }
 
+// Native V2 streaming input for a detection rule: one Delta table and one
+// stateless row predicate. The complete source row is preserved as event
+// context.
+type RuleInputStreaming struct {
+	// Row predicate that selects matching rows.
+	Predicate types.Object `tfsdk:"predicate"`
+	// Source table whose rows are evaluated.
+	Source types.Object `tfsdk:"source"`
+}
+
+func (to *RuleInputStreaming) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from RuleInputStreaming) {
+	if !from.Predicate.IsNull() && !from.Predicate.IsUnknown() {
+		if toPredicate, ok := to.GetPredicate(ctx); ok {
+			if fromPredicate, ok := from.GetPredicate(ctx); ok {
+				// Recursively sync the fields of Predicate
+				toPredicate.SyncFieldsDuringCreateOrUpdate(ctx, fromPredicate)
+				to.SetPredicate(ctx, toPredicate)
+			}
+		}
+	}
+	if !from.Source.IsNull() && !from.Source.IsUnknown() {
+		if toSource, ok := to.GetSource(ctx); ok {
+			if fromSource, ok := from.GetSource(ctx); ok {
+				// Recursively sync the fields of Source
+				toSource.SyncFieldsDuringCreateOrUpdate(ctx, fromSource)
+				to.SetSource(ctx, toSource)
+			}
+		}
+	}
+}
+
+func (to *RuleInputStreaming) SyncFieldsDuringRead(ctx context.Context, from RuleInputStreaming) {
+	if !from.Predicate.IsNull() && !from.Predicate.IsUnknown() {
+		if toPredicate, ok := to.GetPredicate(ctx); ok {
+			if fromPredicate, ok := from.GetPredicate(ctx); ok {
+				toPredicate.SyncFieldsDuringRead(ctx, fromPredicate)
+				to.SetPredicate(ctx, toPredicate)
+			}
+		}
+	}
+	if !from.Source.IsNull() && !from.Source.IsUnknown() {
+		if toSource, ok := to.GetSource(ctx); ok {
+			if fromSource, ok := from.GetSource(ctx); ok {
+				toSource.SyncFieldsDuringRead(ctx, fromSource)
+				to.SetSource(ctx, toSource)
+			}
+		}
+	}
+}
+
+func (m RuleInputStreaming) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["predicate"] = attrs["predicate"].SetRequired()
+	attrs["source"] = attrs["source"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in RuleInputStreaming.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m RuleInputStreaming) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"predicate": reflect.TypeOf(StreamingPredicate{}),
+		"source":    reflect.TypeOf(StreamingSource{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, RuleInputStreaming
+// only implements ToObjectValue() and Type().
+func (m RuleInputStreaming) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"predicate": m.Predicate,
+			"source":    m.Source,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m RuleInputStreaming) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"predicate": StreamingPredicate{}.Type(ctx),
+			"source":    StreamingSource{}.Type(ctx),
+		},
+	}
+}
+
+// GetPredicate returns the value of the Predicate field in RuleInputStreaming as
+// a StreamingPredicate value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *RuleInputStreaming) GetPredicate(ctx context.Context) (StreamingPredicate, bool) {
+	var e StreamingPredicate
+	if m.Predicate.IsNull() || m.Predicate.IsUnknown() {
+		return e, false
+	}
+	var v StreamingPredicate
+	d := m.Predicate.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetPredicate sets the value of the Predicate field in RuleInputStreaming.
+func (m *RuleInputStreaming) SetPredicate(ctx context.Context, v StreamingPredicate) {
+	vs := v.ToObjectValue(ctx)
+	m.Predicate = vs
+}
+
+// GetSource returns the value of the Source field in RuleInputStreaming as
+// a StreamingSource value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *RuleInputStreaming) GetSource(ctx context.Context) (StreamingSource, bool) {
+	var e StreamingSource
+	if m.Source.IsNull() || m.Source.IsUnknown() {
+		return e, false
+	}
+	var v StreamingSource
+	d := m.Source.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSource sets the value of the Source field in RuleInputStreaming.
+func (m *RuleInputStreaming) SetSource(ctx context.Context, v StreamingSource) {
+	vs := v.ToObjectValue(ctx)
+	m.Source = vs
+}
+
 // MITRE ATT&CK mapping for a detection rule.
 type RuleMitreMapping struct {
 	// Human-readable MITRE sub-technique name.
@@ -7706,6 +7904,106 @@ func (m SlackExportConfig) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"bot_token_uc_secret": types.StringType,
 			"channel":             types.StringType,
+		},
+	}
+}
+
+// Stateless row predicate for a streaming detection rule.
+type StreamingPredicate struct {
+	// A SQL expression suitable for a WHERE clause, not a SELECT query.
+	// Evaluated per input row; only stateless, row-local expressions are
+	// accepted.
+	Expression types.String `tfsdk:"expression"`
+}
+
+func (to *StreamingPredicate) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from StreamingPredicate) {
+}
+
+func (to *StreamingPredicate) SyncFieldsDuringRead(ctx context.Context, from StreamingPredicate) {
+}
+
+func (m StreamingPredicate) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["expression"] = attrs["expression"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in StreamingPredicate.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m StreamingPredicate) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, StreamingPredicate
+// only implements ToObjectValue() and Type().
+func (m StreamingPredicate) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"expression": m.Expression,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m StreamingPredicate) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"expression": types.StringType,
+		},
+	}
+}
+
+// Source Delta table for a streaming detection rule.
+type StreamingSource struct {
+	// Fully-qualified Unity Catalog table in `catalog.schema.table` form.
+	Table types.String `tfsdk:"table"`
+}
+
+func (to *StreamingSource) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from StreamingSource) {
+}
+
+func (to *StreamingSource) SyncFieldsDuringRead(ctx context.Context, from StreamingSource) {
+}
+
+func (m StreamingSource) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["table"] = attrs["table"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in StreamingSource.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m StreamingSource) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, StreamingSource
+// only implements ToObjectValue() and Type().
+func (m StreamingSource) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"table": m.Table,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m StreamingSource) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"table": types.StringType,
 		},
 	}
 }

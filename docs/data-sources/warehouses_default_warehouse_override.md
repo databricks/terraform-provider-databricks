@@ -33,6 +33,7 @@ data "databricks_warehouses_default_warehouse_override" "user" {
 The following arguments are supported:
 * `name` (string, required) - The resource name of the default warehouse override.
   Format: default-warehouse-overrides/{default_warehouse_override_id}
+  Responses always contain the numeric user ID, even when the request used `me`
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 
 ### ProviderConfig
@@ -40,9 +41,10 @@ The following arguments are supported:
 
 ## Attributes
 The following attributes are exported:
-* `default_warehouse_override_id` (string) - The ID component of the resource name (user ID)
+* `default_warehouse_override_id` (string) - The numeric ID of the user that the override applies to. It is the last component of `name`
 * `name` (string) - The resource name of the default warehouse override.
   Format: default-warehouse-overrides/{default_warehouse_override_id}
+  Responses always contain the numeric user ID, even when the request used `me`
 * `type` (string) - The type of override behavior. Possible values are: `CUSTOM`, `LAST_SELECTED`
-* `warehouse_id` (string) - The specific warehouse ID when type is CUSTOM.
-  Not set for LAST_SELECTED type
+* `warehouse_id` (string) - The ID of the SQL warehouse to preselect when `type` is `CUSTOM`. It is required for `CUSTOM`
+  and must be a valid warehouse ID. It is ignored for `LAST_SELECTED` and is not returned for that type

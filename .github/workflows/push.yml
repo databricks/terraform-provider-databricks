@@ -152,6 +152,10 @@ jobs:
           SUITES_RESULT: ${{ needs.test-suites.result }}
         run: test "$SUITES_RESULT" = success
 
+  # Go formatting is not checked here: the published source is formatted where
+  # it is generated and maintained, with that toolchain's gofmt. Rechecking with
+  # the go.mod version fails when the two gofmt versions align code differently.
+  # The job keeps its name so existing references to the check stay valid.
   fmt:
     runs-on: ubuntu-latest
 
@@ -161,20 +165,6 @@ jobs:
 
       - name: Test CI package selection
         run: python3 -m unittest discover -s .github/scripts -p 'test_*.py'
-
-      - name: Setup Go
-        uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
-        with:
-          go-version-file: go.mod
-
-          # No need to download cached dependencies when running gofmt.
-          cache: false
-
-      - name: Run gofmt
-        run: |
-          # -l: list files that were reformatted
-          # -w: write back formatted files to disk
-          gofmt -l -w ./
 
       - name: Run whitespace validation
         run: make ws

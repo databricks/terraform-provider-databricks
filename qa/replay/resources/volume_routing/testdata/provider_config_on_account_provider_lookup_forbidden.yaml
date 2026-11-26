@@ -1,11 +1,10 @@
-# Pins an account-level provider whose workspace lookup answers 403. The provider
-# falls back to the account host and still sends each volume call with the
+# Pins an account-level provider whose workspace lookup answers 403. The provider falls
+# back to the account host and still sends each volume call with the
 # X-Databricks-Workspace-Id header of provider_config.workspace_id. Every Terraform
 # command that touches the volume makes the failing lookup once, as with a found
-# workspace. TestVolumeAccountProviderWorkspaceHost in
-# catalog/resource_volume_workspace_host_test.go pins that the fallback keeps the
-# account host. API responses are inferred from the account and Unity Catalog API
-# contracts, not recorded.
+# workspace. workspace_host_lookup_forbidden_keeps_the_account_host pins that the
+# fallback keeps the account host. API responses are inferred from the account and Unity
+# Catalog API contracts, not recorded.
 version: 1
 enforce_call_order: true
 host_metadata:

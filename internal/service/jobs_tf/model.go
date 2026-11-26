@@ -1842,7 +1842,8 @@ type BaseRun struct {
 	JobClusters types.List `tfsdk:"job_clusters"`
 	// The canonical identifier of the job that contains this run.
 	JobId types.Int64 `tfsdk:"job_id"`
-	// Job-level parameters used in the run
+	// Job-level parameters used in the run. Each entry carries the parameter's
+	// name, its default, and the value used in this run.
 	JobParameters types.List `tfsdk:"job_parameters"`
 	// ID of the job run that this run belongs to. For legacy and single-task
 	// job runs the field is populated with the job run ID. For task runs, the
@@ -1892,7 +1893,8 @@ type BaseRun struct {
 	StartTime types.Int64 `tfsdk:"start_time"`
 	// Deprecated. Please use the `status` field instead.
 	State types.Object `tfsdk:"state"`
-
+	// The current status of the run. Use this field instead of the deprecated
+	// `state` field.
 	Status types.Object `tfsdk:"status"`
 	// The list of tasks performed by the run. Each task has its own `run_id`
 	// which you can use to call `JobsGetOutput` to retrieve the run results. If
@@ -1902,7 +1904,8 @@ type BaseRun struct {
 	Tasks types.List `tfsdk:"tasks"`
 
 	Trigger types.String `tfsdk:"trigger"`
-
+	// Additional details about the trigger that fired the run. The fields that
+	// are populated depend on the value of `trigger`.
 	TriggerInfo types.Object `tfsdk:"trigger_info"`
 	// ID of the deployment version that produced the job when this run was
 	// created. Identifies a specific snapshot of the deployment in the
@@ -2795,7 +2798,7 @@ func (m CancelAllRuns) Type(ctx context.Context) attr.Type {
 }
 
 type CancelRun struct {
-	// This field is required.
+	// The canonical identifier of the run to cancel.
 	RunId types.Int64 `tfsdk:"run_id"`
 }
 
@@ -9762,6 +9765,8 @@ func (m JobCompletionTriggerConfigurationMonitoredJob) Type(ctx context.Context)
 // Contains the immutable set of upstream completions that triggered the run, in
 // configured jobs order
 type JobCompletionTriggerRunInfoDetails struct {
+	// The upstream job completions that fired the trigger, in the order in
+	// which the jobs are configured on the trigger.
 	CompletedJobs types.List `tfsdk:"completed_jobs"`
 }
 
@@ -10000,7 +10005,9 @@ type JobCompletionTriggerStateMonitoredJobState struct {
 	// may become stale while the trigger is paused or evaluation cannot access
 	// the upstream job.
 	IsDeleted types.Bool `tfsdk:"is_deleted"`
-	// The ID of the upstream job.
+	// The ID of the upstream job. For a job monitored by name, the ID of the
+	// job that the name last resolved to. Omitted until the name resolves to a
+	// job.
 	JobId types.String `tfsdk:"job_id"`
 	// The completion time of the latest matching upstream run observed by the
 	// trigger.
@@ -13505,8 +13512,8 @@ type ListRunsRequest struct {
 	// The job for which to list runs. If omitted, the Jobs service lists runs
 	// from all jobs.
 	JobId types.Int64 `tfsdk:"-"`
-	// The number of runs to return. This value must be greater than 0 and less
-	// than 25. The default value is 20. If a request specifies a limit of 0,
+	// The number of runs to return. This value must be greater than 0 and at
+	// most 25. The default value is 20. If a request specifies a limit of 0,
 	// the service instead uses the maximum limit.
 	Limit types.Int64 `tfsdk:"-"`
 	// The offset of the first run to return, relative to the most recent run.
@@ -15591,8 +15598,7 @@ type PythonOperatorTask struct {
 	// Fully qualified name of the main class or function. For example,
 	// `my_project.my_function` or `my_project.MyOperator`.
 	Main types.String `tfsdk:"main"`
-	// An ordered list of task parameters. TODO(JOBS-30885): Add limits for
-	// parameters.
+	// An ordered list of task parameters.
 	Parameters types.List `tfsdk:"parameters"`
 }
 
@@ -16085,16 +16091,20 @@ type RepairHistoryItem struct {
 	// `COST_OPTIMIZED`: Enables lower job costs by optimizing compute for your
 	// selected target duration time. Must provide a duration target.
 	EffectivePerformanceTarget types.String `tfsdk:"effective_performance_target"`
-	// The end time of the (repaired) run.
+	// The end time of this repair history item in epoch milliseconds
+	// (milliseconds since 1/1/1970 UTC).
 	EndTime types.Int64 `tfsdk:"end_time"`
 	// The ID of the repair. Only returned for the items that represent a repair
 	// in `repair_history`.
 	Id types.Int64 `tfsdk:"id"`
-	// The start time of the (repaired) run.
+	// The start time of this repair history item in epoch milliseconds
+	// (milliseconds since 1/1/1970 UTC).
 	StartTime types.Int64 `tfsdk:"start_time"`
 	// Deprecated. Please use the `status` field instead.
 	State types.Object `tfsdk:"state"`
-
+	// The status of the run at the end of this repair history item, or its
+	// current status for the latest item. Use this field instead of the
+	// deprecated `state` field.
 	Status types.Object `tfsdk:"status"`
 	// The run IDs of the task runs that ran as part of this repair history
 	// item.
@@ -16326,8 +16336,8 @@ type RepairRun struct {
 	//
 	// [job parameters]: https://docs.databricks.com/jobs/job-parameters.html#job-parameter-pushdown
 	JarParams types.List `tfsdk:"jar_params"`
-	// Job-level parameters used in the run. for example `"param":
-	// "overriding_val"`
+	// Job-level parameters used in the run, for example `"param":
+	// "overriding_val"`.
 	JobParameters types.Map `tfsdk:"job_parameters"`
 	// The ID of the latest repair. This parameter is not required when
 	// repairing a run for the first time, but must be provided on subsequent
@@ -17080,8 +17090,11 @@ func (m *ResetJob) SetNewSettings(ctx context.Context, v JobSettings) {
 }
 
 type ResolvedConditionTaskValues struct {
+	// The left operand of the condition with dynamic value references replaced
+	// by their concrete values.
 	Left types.String `tfsdk:"left"`
-
+	// The right operand of the condition with dynamic value references replaced
+	// by their concrete values.
 	Right types.String `tfsdk:"right"`
 }
 
@@ -17132,6 +17145,8 @@ func (m ResolvedConditionTaskValues) Type(ctx context.Context) attr.Type {
 }
 
 type ResolvedDbtTaskValues struct {
+	// The dbt commands with dynamic value references replaced by their concrete
+	// values.
 	Commands types.List `tfsdk:"commands"`
 }
 
@@ -17221,6 +17236,8 @@ func (m *ResolvedDbtTaskValues) SetCommands(ctx context.Context, v []types.Strin
 }
 
 type ResolvedNotebookTaskValues struct {
+	// The notebook parameters with dynamic value references replaced by their
+	// concrete values.
 	BaseParameters types.Map `tfsdk:"base_parameters"`
 }
 
@@ -17310,6 +17327,8 @@ func (m *ResolvedNotebookTaskValues) SetBaseParameters(ctx context.Context, v ma
 }
 
 type ResolvedParamPairValues struct {
+	// The query parameters with dynamic value references replaced by their
+	// concrete values.
 	Parameters types.Map `tfsdk:"parameters"`
 }
 
@@ -17490,8 +17509,11 @@ func (m *ResolvedPipelineTaskValues) SetParameters(ctx context.Context, v map[st
 }
 
 type ResolvedPythonWheelTaskValues struct {
+	// The named parameters with dynamic value references replaced by their
+	// concrete values.
 	NamedParameters types.Map `tfsdk:"named_parameters"`
-
+	// The positional parameters with dynamic value references replaced by their
+	// concrete values.
 	Parameters types.List `tfsdk:"parameters"`
 }
 
@@ -17625,6 +17647,8 @@ func (m *ResolvedPythonWheelTaskValues) SetParameters(ctx context.Context, v []t
 }
 
 type ResolvedRunJobTaskValues struct {
+	// The job-level parameters passed to the triggered job with dynamic value
+	// references replaced by their concrete values.
 	JobParameters types.Map `tfsdk:"job_parameters"`
 
 	Parameters types.Map `tfsdk:"parameters"`
@@ -17760,6 +17784,8 @@ func (m *ResolvedRunJobTaskValues) SetParameters(ctx context.Context, v map[stri
 }
 
 type ResolvedStringParamsValues struct {
+	// The parameters passed to the main class with dynamic value references
+	// replaced by their concrete values.
 	Parameters types.List `tfsdk:"parameters"`
 }
 
@@ -17856,27 +17882,27 @@ type ResolvedValues struct {
 	// `{{tasks.<key>.values.<name>}}` references substituted to concrete values
 	// before submission to the training service.
 	AiRuntimeTask types.Object `tfsdk:"ai_runtime_task"`
-
+	// Resolved operands of a condition task.
 	ConditionTask types.Object `tfsdk:"condition_task"`
-
+	// Resolved commands of a dbt task.
 	DbtTask types.Object `tfsdk:"dbt_task"`
-
+	// Resolved parameters of a notebook task.
 	NotebookTask types.Object `tfsdk:"notebook_task"`
-
+	// Resolved parameters of a pipeline task.
 	PipelineTask types.Object `tfsdk:"pipeline_task"`
-
+	// Resolved parameters of a Python wheel task.
 	PythonWheelTask types.Object `tfsdk:"python_wheel_task"`
-
+	// Resolved parameters of a Run Job task.
 	RunJobTask types.Object `tfsdk:"run_job_task"`
 
 	SimulationTask types.Object `tfsdk:"simulation_task"`
-
+	// Resolved parameters of a JAR task.
 	SparkJarTask types.Object `tfsdk:"spark_jar_task"`
-
+	// Resolved parameters of a Python script task.
 	SparkPythonTask types.Object `tfsdk:"spark_python_task"`
-
+	// Resolved parameters of a spark-submit task.
 	SparkSubmitTask types.Object `tfsdk:"spark_submit_task"`
-
+	// Resolved parameters of a SQL task.
 	SqlTask types.Object `tfsdk:"sql_task"`
 }
 
@@ -18753,7 +18779,8 @@ type Run struct {
 	JobClusters types.List `tfsdk:"job_clusters"`
 	// The canonical identifier of the job that contains this run.
 	JobId types.Int64 `tfsdk:"job_id"`
-	// Job-level parameters used in the run
+	// Job-level parameters used in the run. Each entry carries the parameter's
+	// name, its default, and the value used in this run.
 	JobParameters types.List `tfsdk:"job_parameters"`
 	// ID of the job run that this run belongs to. For legacy and single-task
 	// job runs the field is populated with the job run ID. For task runs, the
@@ -18805,7 +18832,8 @@ type Run struct {
 	StartTime types.Int64 `tfsdk:"start_time"`
 	// Deprecated. Please use the `status` field instead.
 	State types.Object `tfsdk:"state"`
-
+	// The current status of the run. Use this field instead of the deprecated
+	// `state` field.
 	Status types.Object `tfsdk:"status"`
 	// The list of tasks performed by the run. Each task has its own `run_id`
 	// which you can use to call `JobsGetOutput` to retrieve the run results. If
@@ -18815,7 +18843,8 @@ type Run struct {
 	Tasks types.List `tfsdk:"tasks"`
 
 	Trigger types.String `tfsdk:"trigger"`
-
+	// Additional details about the trigger that fired the run. The fields that
+	// are populated depend on the value of `trigger`.
 	TriggerInfo types.Object `tfsdk:"trigger_info"`
 	// ID of the deployment version that produced the job when this run was
 	// created. Identifies a specific snapshot of the deployment in the
@@ -22829,7 +22858,7 @@ type RunTask struct {
 	RunIf types.String `tfsdk:"run_if"`
 	// The task triggers another job when the `run_job_task` field is present.
 	RunJobTask types.Object `tfsdk:"run_job_task"`
-
+	// The URL to the detail page of the task run.
 	RunPageUrl types.String `tfsdk:"run_page_url"`
 	// The time in milliseconds it took to set up the cluster. For runs that run
 	// on new clusters this is the cluster creation time, for runs that run on
@@ -22858,7 +22887,8 @@ type RunTask struct {
 	StartTime types.Int64 `tfsdk:"start_time"`
 	// Deprecated. Please use the `status` field instead.
 	State types.Object `tfsdk:"state"`
-
+	// The current status of the task run. Use this field instead of the
+	// deprecated `state` field.
 	Status types.Object `tfsdk:"status"`
 	// A unique name for the task. This field is used to refer to this task from
 	// other tasks. This field is required and must be unique within its parent

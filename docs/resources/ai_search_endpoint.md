@@ -89,7 +89,7 @@ In addition to the above arguments, the following attributes are exported:
 * `index_initialization_percentage` (integer) - Percentage of index initialization completed, from 0 to 100. Set only during the
   `INITIALIZING_INDEX` phase; unset in other phases or when progress is not available
 * `phase` (string) - Current phase of the in-progress scaling change. Unset when no scaling change is in
-  progress or the phase is not available. Possible values are: `ADJUSTING_CAPACITY`, `ESTIMATING`, `INITIALIZING_INDEX`
+  progress or the phase is not available. Possible values are: `ADJUSTING_CAPACITY`, `ESTIMATING`, `FINALIZING`, `INITIALIZING_INDEX`
 * `state` (string) - The current state of the scaling change request. Possible values are: `SCALING_CHANGE_APPLIED`, `SCALING_CHANGE_IN_PROGRESS`, `SCALING_CHANGE_UNSPECIFIED`
 * `target_qps_change_allowed_after_time` (string) - Earliest time a new Target QPS change is accepted. Set only while a scaling change is in
   progress, the change lock is on, and the endpoint has a recorded last throughput change; may

@@ -6,9 +6,23 @@ subcategory: "Lakewatch"
 
 [API Documentation](https://docs.databricks.com/api/workspace/lakewatch)
 
+Reads a custom Lakewatch parser's identity and latest-version pointer. It does not return the initial spec or description. Read a specific version with the `databricks_lakewatch_parser_version` data source to retrieve its content.
+
+This data source can only be used with a workspace-level provider.
 
 
 ## Example Usage
+Look up a parser by its canonical name:
+
+```hcl
+data "databricks_lakewatch_parser" "logs" {
+  name = "parsers/11111111-1111-4111-8111-111111111111"
+}
+
+output "parser_id" {
+  value = data.databricks_lakewatch_parser.logs.parser_id
+}
+```
 
 
 ## Arguments

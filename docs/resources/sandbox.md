@@ -53,6 +53,10 @@ The following arguments are supported:
   exact version. When omitted, the sandbox runs the default sandbox image. See
   [custom images](https://docs.databricks.com/en/compute/serverless/sandbox-custom-image)
 
+### NetworkSpec
+* `internet_access` (boolean, optional) - Whether the sandbox can reach the public internet. Defaults to true. Control-plane,
+  PrivateLink, and workspace/UC/Delta-shared storage stay reachable either way
+
 ### SandboxMetadata
 * `custom_tags` (object, optional) - Key-value tags associated with the sandbox. Supports up to 54 tags. Keys must be between
   1 and 512 characters, and values must not exceed 256 characters
@@ -60,6 +64,15 @@ The following arguments are supported:
 ### SandboxSpec
 * `compute` (ComputeSpec, optional) - Compute settings requested for the sandbox, such as the inactivity timeout
 * `environment` (EnvironmentSpec, optional) - Software environment for the sandbox, such as the container image it runs
+* `network` (NetworkSpec, optional) - Network configuration requested for the sandbox
+* `storage` (StorageSpec, optional) - Persistence configuration requested for the sandbox at creation time
+
+### StorageSpec
+* `persistence_enabled` (boolean, optional) - Whether sandbox files persist across stop and start.
+  If omitted, the service selects a default for the workspace and sandbox creator.
+  This setting is fixed when the sandbox is created.
+  When false, no persistent volume is allocated, and StopSandbox and StartSandbox
+  are unavailable. Use CreateSandbox and DeleteSandbox for these sandboxes
 
 ## Attributes
 In addition to the above arguments, the following attributes are exported:

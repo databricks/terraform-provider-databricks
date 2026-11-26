@@ -21,7 +21,9 @@ The following arguments are supported:
   Paths must begin with `/` and must not contain empty, `.` or `..` segments
 * `content` (string, optional) - Optional free-form memory content
 * `description` (string, optional) - Human-readable description of the memory entry
-* `managed_memory_entry_id` (string, optional) - Optional caller-selected memory entry ID. The service generates an ID when omitted
+* `managed_memory_entry_id` (string, optional) - Caller-selected memory entry ID. It must contain 1-255 letters, digits, hyphens, or
+  underscores, and it becomes the last segment of the entry's `name`. The service generates a
+  UUID when it is omitted
 * `session_id` (string, optional, deprecated) - Deprecated: memory entries will be identified by `(actor_id, path)`, and the service will
   ignore this field on writes and omit it from responses. Until then, an omitted value means the
   entry applies across the actor's sessions

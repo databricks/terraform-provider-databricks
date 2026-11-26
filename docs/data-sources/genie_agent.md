@@ -29,10 +29,11 @@ The following arguments are supported:
 The following attributes are exported:
 * `create_time` (string) - Time when the Genie Agent was created
 * `definition` (GenieAgentDefinition) - The definition of the Genie Agent: its sample questions, data sources, instructions, and
-  benchmarks. Must set at least one field. Returned on get and on list with
-  `GENIE_AGENT_VIEW_FULL`. Create and update return a submitted definition unchanged; one the
-  service would store differently, or with a column config the workspace can't keep (unknown
-  column, or a display name while those are disabled), is rejected with INVALID_PARAMETER_VALUE
+  benchmarks. Create requires at least one table, volume, MCP connection, or sub-agent in
+  `data_sources`. Returned on get and on list with `GENIE_AGENT_VIEW_FULL`. Create and update
+  return a submitted definition unchanged; one the service would store differently, or with a
+  column config the workspace can't keep (unknown column, or a display name while those are
+  disabled), is rejected with INVALID_PARAMETER_VALUE
 * `description` (string) - Description of the Genie Agent.
   
   The maximum length is 4,096 characters. Requests with a longer value are rejected with
@@ -81,16 +82,11 @@ The following attributes are exported:
 ### GenieAgentConfig
 * `sample_questions` (list of GenieAgentSampleQuestion) - Sample questions shown to users of the Genie Agent, sorted by `id`
 
-### GenieAgentDataSources
-* `mcp_connections` (list of GenieAgentMcpConnection) - Unity Catalog MCP connections, sorted by `mcp_connection`
-* `tables` (list of GenieAgentTable) - Unity Catalog tables, views, and metric views, sorted by `identifier`
-* `volumes` (list of GenieAgentVolume) - Unity Catalog volumes, sorted by `path`
-
 ### GenieAgentDefinition
 * `benchmarks` (GenieAgentBenchmarks) - Benchmarks for evaluating the quality of the Genie Agent's answers
 * `config` (GenieAgentConfig) - General settings of the Genie Agent
-* `data_sources` (GenieAgentDataSources) - The data the Genie Agent can access
 * `instructions` (GenieAgentInstructions) - Instructions and SQL that guide how the Genie Agent answers questions
+* `resources` (GenieAgentResources) - The resources the Genie Agent can use: data, SQL functions, connections, and sub-agents
 
 ### GenieAgentExampleQuestionSql
 * `id` (string) - Identifier of the example: 32 lowercase hexadecimal characters, unique within the Genie Agent
@@ -102,9 +98,8 @@ The following attributes are exported:
 ### GenieAgentInstructions
 * `example_question_sqls` (list of GenieAgentExampleQuestionSql) - Example questions paired with the SQL that answers them
 * `join_specs` (list of GenieAgentJoinSpec) - Predefined joins between tables or metric views
-* `sql_functions` (list of GenieAgentSqlFunction) - Unity Catalog SQL functions the generated SQL may call
 * `sql_snippets` (GenieAgentSqlSnippets) - Reusable SQL filters, expressions, and measures
-* `text_instructions` (list of GenieAgentTextInstruction) - General text instructions. At most one text instruction is supported
+* `text_instruction` (GenieAgentTextInstruction) - The general text instruction
 
 ### GenieAgentJoinSource
 * `alias` (string) - The alias the join condition uses for this side
@@ -121,6 +116,12 @@ The following attributes are exported:
 
 ### GenieAgentMcpConnection
 * `mcp_connection` (string) - The name of the Unity Catalog connection, for example `system.ai.google_calendar`
+
+### GenieAgentResources
+* `mcp_connections` (list of GenieAgentMcpConnection) - Unity Catalog MCP connections, sorted by `mcp_connection`
+* `sql_functions` (list of GenieAgentSqlFunction) - Unity Catalog SQL functions the generated SQL may call, sorted by `id`, then `identifier`
+* `tables` (list of GenieAgentTable) - Unity Catalog tables, views, and metric views, sorted by `identifier`
+* `volumes` (list of GenieAgentVolume) - Unity Catalog volumes, sorted by `path`
 
 ### GenieAgentSampleQuestion
 * `id` (string) - Identifier of the sample question: 32 lowercase hexadecimal characters, unique within the

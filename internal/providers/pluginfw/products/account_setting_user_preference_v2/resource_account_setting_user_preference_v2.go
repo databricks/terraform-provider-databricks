@@ -41,16 +41,26 @@ type UserPreferenceResource struct {
 
 // UserPreference extends the main model with additional fields.
 type UserPreference struct {
+	// Holds the value that the user set for a boolean preference. Each
+	// preference uses either `boolean_val` or `string_val`, depending on its
+	// type. Responses omit the user-set value when the user has not set one.
 	BooleanVal types.Object `tfsdk:"boolean_val"`
-
+	// Holds the value that takes effect for a boolean preference. The server
+	// evaluates it from the user-set value and the preference's policy, so it
+	// can differ from `boolean_val`. When the user has not set a value, it
+	// reflects the preference's default.
 	EffectiveBooleanVal types.Object `tfsdk:"effective_boolean_val"`
-
+	// Holds the value that takes effect for a string preference, as evaluated
+	// by the server.
 	EffectiveStringVal types.Object `tfsdk:"effective_string_val"`
-	// Name of the setting.
+	// Identifies the user preference. The "List user preferences and their
+	// metadata" method returns the valid names.
 	Name types.String `tfsdk:"name"`
-
+	// Holds the value that the user set for a string preference.
 	StringVal types.Object `tfsdk:"string_val"`
-	// User ID of the user.
+	// Identifies the user that the preference belongs to. The value is the
+	// numeric account user ID that the Account Users API
+	// (https://docs.databricks.com/api/account/accountusersv2/list) returns.
 	UserId types.String `tfsdk:"user_id"`
 }
 

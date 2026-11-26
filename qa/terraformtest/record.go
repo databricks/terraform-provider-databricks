@@ -32,15 +32,20 @@ func recordingSelection(parent string, files []testFile, profile, filter string)
 		}
 	}
 	for _, file := range files {
-		parts := strings.Split(parent+"/"+file.name, "/")
-		for i := range parts {
-			parts[i] = "^" + regexp.QuoteMeta(parts[i]) + "$"
-		}
-		if filter == strings.Join(parts, "/") {
+		if filter == exactRunPattern(parent+"/"+file.name) {
 			return nil
 		}
 	}
 	return fmt.Errorf("recording requires -run with one exact anchored test path, e.g. '^%s$/^%s$'", parent, files[0].name)
+}
+
+// exactRunPattern is the go test -run pattern that selects only the named test.
+func exactRunPattern(name string) string {
+	parts := strings.Split(name, "/")
+	for i := range parts {
+		parts[i] = "^" + regexp.QuoteMeta(parts[i]) + "$"
+	}
+	return strings.Join(parts, "/")
 }
 
 type recordingHTTP struct{ capture *httpfixture.CaptureTransport }

@@ -1,0 +1,119 @@
+# Azure MSI asks the instance metadata service for the same two tokens as an Azure
+# client secret. The metadata service is a plain HTTP named host, so fixtures serve
+# it like any other host.
+version: 1
+provider_host: workspace
+hosts:
+  workspace:
+    url: https://adb-12345.6.azuredatabricks.net
+  imds:
+    url: http://169.254.169.254
+host_metadata:
+  host_type: workspace
+  cloud: Azure
+  workspace_id: "12345"
+auth:
+  type: azure-msi
+  azure_use_msi: true
+  azure_workspace_resource_id: /subscriptions/replay-subscription/resourceGroups/replay-group/providers/Microsoft.Databricks/workspaces/replay-workspace
+steps:
+  - name: create
+    config: |
+      resource "databricks_directory" "this" {
+        path = "/Shared/replay-auth"
+      }
+    calls:
+      - &databricks_token
+        request:
+          method: GET
+          host: imds
+          path: /metadata/identity/oauth2/token
+          query:
+            api-version: ["2018-02-01"]
+            resource: [2ff814a6-3304-4ab8-85cb-cd0e6f879c1d]
+          headers:
+            Metadata: "true"
+          body: null
+        response:
+          status: 200
+          body:
+            json:
+              access_token: msi-token
+              token_type: Bearer
+              expires_on: 4102444800
+      - &management_token
+        request:
+          method: GET
+          host: imds
+          path: /metadata/identity/oauth2/token
+          query:
+            api-version: ["2018-02-01"]
+            resource: ["https://management.core.windows.net/"]
+          headers:
+            Metadata: "true"
+          body: null
+        response:
+          status: 200
+          body:
+            json:
+              access_token: msi-management-token
+              token_type: Bearer
+              expires_on: 4102444800
+      - request:
+          method: POST
+          path: /api/2.0/workspace/mkdirs
+          headers:
+            Authorization: Bearer msi-token
+            X-Databricks-Azure-Sp-Management-Token: msi-management-token
+            X-Databricks-Azure-Workspace-Resource-Id: /subscriptions/replay-subscription/resourceGroups/replay-group/providers/Microsoft.Databricks/workspaces/replay-workspace
+          body:
+            json:
+              path: /Shared/replay-auth
+        response:
+          status: 200
+          body:
+            json: {}
+      - &read
+        request:
+          method: GET
+          path: /api/2.0/workspace/get-status
+          query:
+            path: [/Shared/replay-auth]
+          headers:
+            Authorization: Bearer msi-token
+            X-Databricks-Azure-Sp-Management-Token: msi-management-token
+            X-Databricks-Azure-Workspace-Resource-Id: /subscriptions/replay-subscription/resourceGroups/replay-group/providers/Microsoft.Databricks/workspaces/replay-workspace
+          body: null
+        response:
+          status: 200
+          body:
+            json:
+              path: /Shared/replay-auth
+              object_type: DIRECTORY
+              object_id: 2002
+      # Terraform's post-apply plan.
+      - *databricks_token
+      - *management_token
+      - *read
+destroy:
+  calls:
+    # The refresh, then the destroy.
+    - *databricks_token
+    - *management_token
+    - *read
+    - *databricks_token
+    - *management_token
+    - request:
+        method: POST
+        path: /api/2.0/workspace/delete
+        headers:
+          Authorization: Bearer msi-token
+          X-Databricks-Azure-Sp-Management-Token: msi-management-token
+          X-Databricks-Azure-Workspace-Resource-Id: /subscriptions/replay-subscription/resourceGroups/replay-group/providers/Microsoft.Databricks/workspaces/replay-workspace
+        body:
+          json:
+            path: /Shared/replay-auth
+      response:
+        status: 200
+        body:
+          json: {}

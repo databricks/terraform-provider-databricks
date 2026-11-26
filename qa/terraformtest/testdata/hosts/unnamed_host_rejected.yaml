@@ -1,0 +1,43 @@
+# A call to a host that the journey does not name fails before it leaves the test. The
+# account lookup answers without deployment_name, so the SDK builds the workspace host
+# https://.cloud.databricks.com, and replay rejects it as it would any live host. A
+# call to the wrong named host fails differently: it reaches the fixture server and
+# matches no call.
+version: 1
+provider_host: account
+hosts:
+  account:
+    url: https://accounts.cloud.databricks.com
+    metadata:
+      host_type: account
+      cloud: AWS
+      account_id: replay-account
+steps:
+  - name: create_fails_on_unnamed_host
+    config: |
+      provider "databricks" {
+        account_id = "replay-account"
+      }
+
+      resource "databricks_directory" "this" {
+        path = "/Shared/replay-hosts"
+        provider_config {
+          workspace_id = "1002"
+        }
+      }
+    expect_error: 'hermetic replay rejected request outside fixture server:
+      https://\.cloud\.databricks\.com/api/2\.0/workspace/mkdirs'
+    calls:
+      - request:
+          method: GET
+          path: /api/2.0/accounts/replay-account/workspaces/1002
+          body: null
+        response:
+          status: 200
+          body:
+            json:
+              account_id: replay-account
+              workspace_id: 1002
+              workspace_status: RUNNING
+destroy:
+  calls: []

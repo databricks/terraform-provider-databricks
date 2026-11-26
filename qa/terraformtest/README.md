@@ -98,7 +98,9 @@ generated diff for service-specific secrets before committing it.
 Same-host absolute response `Location` headers become relative URLs so redirects
 follow the local fixture server during replay. Escaped paths, queries and
 fragments are preserved. Cross-host redirects are outside the recorder's scope;
-the replay transport rejects destinations outside the fixture server.
+the replay transport rejects destinations outside the fixture server and the
+test's [named hosts](#named-hosts). Recording rejects tests with named hosts,
+[`auth`](#authentication) or [`environment`](#environment-variables).
 
 ### Secret redaction and replay
 
@@ -177,6 +179,7 @@ its HTTP exchanges belong under `destroy.calls`, and empty state is always
 checked. The testing framework also attempts cleanup after an interrupted test.
 
 Each exchange contains `request` and `response`. Requests specify `method`,
+optional `host` (see [named hosts](#named-hosts)),
 `path`, optional `query` (values are lists of strings), optional `headers`,
 and `body`. Responses specify an explicit HTTP `status` (except `reset` and
 `close` faults), optional `headers`, and `body`. Optional `delay`, `fault` and
@@ -218,11 +221,28 @@ remain literal, without capture/substitution. See the
 [HTTP matcher reference](../httpfixture/README.md#volatile-request-values) for
 root paths, sample overrides, validation, and overlapping signatures.
 
+Two more matchers tighten what a value may be. `absent` requires a header to be missing, so an empty value fails too; the header must not also have a sample in `headers`. A pattern requires a present string that a Go regular expression matches in full; write `{pattern: <regular expression>}` for a header or query parameter, and `pattern:` in place of `type:` for a JSON path:
+
+```yaml
+matchers:
+  headers:
+    Content-Type: absent
+    traceparent: {pattern: '00-[0-9a-f]{32}-[0-9a-f]{16}-01'}
+  query:
+    trace_id: {pattern: '[0-9a-f]{32}'}
+  json:
+    - path: [request_id]
+      pattern: '[0-9a-f-]{36}'
+```
+
+`absent` applies only to headers, because unlisted query parameters and JSON fields already fail to match. Invalid patterns, and a matcher with both `type` and `pattern`, fail when the test loads. [Check formats and absent headers](AUTHORING.md#check-formats-and-absent-headers) explains when to use them.
+
 Runnable examples demonstrate [JSON body](testdata/matchers/group_create_body.yml),
 [header](testdata/matchers/group_create_header.yml), and
 [query](testdata/matchers/group_create_query.yml) matchers separately. Each creates
 and destroys a group, with one request sample deliberately differing from the
 actual value to demonstrate that only the annotated field is relaxed.
+The [pattern example](testdata/matchers/group_create_pattern.yml) checks the `traceparent` and `User-Agent` formats, and the [absent example](testdata/matchers/directory_create_absent.yml) requires a read without `Content-Type`.
 
 Matching uses the complete request signature. Independent signatures are
 unordered; repeated identical signatures consume their responses FIFO.
@@ -238,8 +258,8 @@ without consuming it. Reusable host metadata may occur between any calls.
 Recorded call order can be preserved in the file without enabling enforcement.
 
 Optional `host_metadata` supplies a reusable JSON response for
-`GET /.well-known/databricks-config` throughout the test, keeping repeated
-client initialization out of the consumable resource exchanges.
+`GET /.well-known/databricks-config` on the provider host throughout the test,
+keeping repeated client initialization out of the consumable resource exchanges.
 
 State assertions are entirely optional. `state.resources` selects Terraform
 instance addresses to check, including data sources, modules, and indexed
@@ -286,6 +306,56 @@ values and response-to-state conversions, rather than snapshotting every field.
 Destroy always requires an empty resource inventory, including data sources in
 child modules. This is enforced by the engine; `destroy` accepts only `calls`,
 with no configurable final-state assertion.
+
+## Named hosts
+
+Optional test-level `hosts` names hosts besides the local fixture server, and optional `provider_host` picks the one the provider is configured with:
+
+```yaml
+provider_host: account
+hosts:
+  account:
+    url: https://accounts.cloud.databricks.com
+    metadata: {host_type: account, cloud: AWS, account_id: replay-account}
+  workspace:
+    url: https://replay-workspace-1002.cloud.databricks.com
+    metadata: {host_type: workspace, cloud: AWS, workspace_id: "1002"}
+```
+
+Each `url` is an `http` or `https` origin without a path, query or fragment, and no two hosts may share a host and port. Optional `metadata` answers `GET /.well-known/databricks-config` on that host, like `host_metadata`. `host_metadata` answers the provider host, so the host that `provider_host` names cannot also set `metadata`. Without `provider_host`, the provider uses the local server.
+
+The local server answers every named host. A request's `host` names the host it must reach, matched on the host the provider sent it to; a request without `host` matches only the provider host. Errors for unexpected and unused calls name the host. Requests to hosts that are not named fail in the transport, before reaching the server. A provider block may set `host` to a named host's URL, or to its host without `https://`, to move the provider there; any other HCL `host` fails, and without `hosts` the HCL `host` is ignored. The SDK takes the cloud from a named host's DNS zone, so Azure and GCP hosts keep their cloud in host metadata resolution and private-link errors.
+
+[Test calls to several hosts](AUTHORING.md#test-calls-to-several-hosts) has a complete journey. Examples in [testdata/hosts](testdata/hosts) show a call that must reach a workspace host, a call rejected on an unnamed host, a provider moved to another host, and an Azure private-link redirect.
+
+## Authentication
+
+Optional test-level `auth` chooses the provider's credentials in place of the fixture PAT, `fixture-token`:
+
+```yaml
+auth:
+  type: basic
+  username: replay-user
+  password: replay-password
+```
+
+`type` is required: `pat`, `basic`, `oauth-m2m`, `azure-client-secret` or `azure-msi`. The other keys are the SDK's credential attributes, named as in a provider block, such as `client_id`, `client_secret`, `azure_tenant_id` or `azure_use_msi`, with string values. The runner clears the credential attributes of every provider block, sets these and the auth type, and lets the SDK configure that type alone. Token requests are ordinary calls; token endpoints on other hosts, such as Azure AD, need [named hosts](#named-hosts). Unknown types and attributes, empty values and invalid booleans fail when the test loads, and recording rejects tests with `auth`.
+
+[Choose the credentials](AUTHORING.md#choose-the-credentials) explains token calls and the auth types fixtures cannot serve. Examples in [testdata/auth](testdata/auth) cover basic auth, OAuth M2M, a failing token endpoint, an Azure client secret and Azure MSI.
+
+## Environment variables
+
+Optional test-level `environment` maps variable names to values that the runner sets with `t.Setenv` for the journey:
+
+```yaml
+environment:
+  DATABRICKS_USER_AGENT_EXTRA: partner-a/1.2.3
+  GITHUB_ACTIONS: "true"
+```
+
+Before setting them, the runner clears the variables that change the User-Agent or the client's configuration: every `DATABRICKS_*` variable, the SDK's configuration variables, the coding-agent, agent meta-harness and CI variables the SDK detects, and `USE_SDK_V2_RESOURCES` and `USE_SDK_V2_DATA_SOURCES`. `environment: {}` only clears them; without `environment`, the journey keeps the process's variables. A journey that sets `DATABRICKS_USER_AGENT_EXTRA`, which the provider reads when its process starts, runs in a new test process; `RunNative` rejects it. Variables the runner sets and the SDK's configuration variables, such as `DATABRICKS_HOST`, fail when the test loads, and recording rejects tests with `environment`.
+
+[Set environment variables](AUTHORING.md#set-environment-variables) lists the cleared variables. Examples in [testdata/environment](testdata/environment) pin `DATABRICKS_USER_AGENT_EXTRA` and the CI, runtime and agent dimensions of the User-Agent.
 
 ## Schema validation
 

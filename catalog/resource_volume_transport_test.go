@@ -277,3 +277,52 @@ func testVolumeRefreshSkipVerifyAcceptsAnUntrustedCertificate(t *testing.T, sdkG
 	require.False(t, diags.HasError(), "%v", diags)
 	assert.Equal(t, refreshedVolumePath, d.Get("volume_path"))
 }
+
+// An update whose body takes longer than http_timeout_seconds to upload succeeds while
+// the upload keeps making progress, as a refresh does while its response arrives.
+func TestVolumeUpdateUploadProgressKeepsTheAttemptAlive(t *testing.T) {
+	forEachVolumeClient(t, testVolumeUpdateUploadProgressKeepsTheAttemptAlive)
+}
+
+func testVolumeUpdateUploadProgressKeepsTheAttemptAlive(t *testing.T, sdkGo bool) {
+	// Far more than the socket buffers hold, read at 1 MiB per 100 ms: about 3 s.
+	comment := strings.Repeat("x", 32<<20)
+	var uploaded atomic.Int64
+	server := httptest.NewServer(http.HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			if r.Method == http.MethodPatch {
+				chunk := make([]byte, 1<<20)
+				for {
+					n, err := io.ReadFull(r.Body, chunk)
+					uploaded.Add(int64(n))
+					if err != nil {
+						break
+					}
+					time.Sleep(100 * time.Millisecond)
+				}
+			}
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = w.Write([]byte(retryVolumeJSON))
+		}))
+	t.Cleanup(server.Close)
+	c := newVolumeClient(t, &config.Config{Host: server.URL, HTTPTimeoutSeconds: 1})
+	r := volumeResource(sdkGo)
+	state := &terraform.InstanceState{ID: retryVolumeID, Attributes: map[string]string{
+		"id":           retryVolumeID,
+		"name":         "retry_volume",
+		"catalog_name": "main",
+		"schema_name":  "replay",
+		"volume_type":  "MANAGED",
+		"comment":      "first",
+	}}
+	diff := &terraform.InstanceDiff{Attributes: map[string]*terraform.ResourceAttrDiff{
+		"comment": {Old: "first", New: comment},
+	}}
+	d, err := schema.InternalMap(r.Schema).Data(state, diff)
+	require.NoError(t, err)
+
+	diags := r.UpdateContext(volumeContext(context.Background()), d, c)
+
+	require.False(t, diags.HasError(), "%v", diags)
+	assert.Greater(t, uploaded.Load(), int64(len(comment)))
+}

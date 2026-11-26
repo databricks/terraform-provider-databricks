@@ -6,9 +6,23 @@ subcategory: "Lakewatch"
 
 [API Documentation](https://docs.databricks.com/api/workspace/lakewatch)
 
+Reads the identity and latest-version pointer of a built-in Lakewatch parser published by Databricks. Use `databricks_lakewatch_builtin_parser_version` to retrieve a version's YAML spec. Built-in parsers cannot be modified or deleted.
+
+This data source can only be used with a workspace-level provider.
 
 
 ## Example Usage
+Replace the example name with one returned by `databricks_lakewatch_builtin_parsers`:
+
+```hcl
+data "databricks_lakewatch_builtin_parser" "logs" {
+  name = "builtin-parsers/22222222-2222-4222-8222-222222222222"
+}
+
+output "parser_display_name" {
+  value = data.databricks_lakewatch_builtin_parser.logs.parser_name
+}
+```
 
 
 ## Arguments

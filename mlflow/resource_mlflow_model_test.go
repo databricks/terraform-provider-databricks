@@ -272,8 +272,6 @@ func TestModelUpdatePatchError(t *testing.T) {
 }
 
 func testModelUpdatePatchError(t *testing.T) {
-	pm := m()
-	pm.Description = "thedescription"
 	gm := m()
 	gm.Description = "updateddescription"
 	_, err := qa.ResourceFixture{

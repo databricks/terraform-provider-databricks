@@ -3,7 +3,7 @@ module github.com/databricks/terraform-provider-databricks
 go 1.26.10
 
 require (
-	github.com/databricks/databricks-sdk-go v0.202.0
+	github.com/databricks/databricks-sdk-go v0.92.0
 	github.com/databricks/sdk-go/auth v0.2.0
 	github.com/databricks/sdk-go/core v0.1.0
 	github.com/databricks/sdk-go/modelregistry v0.7.0
@@ -115,3 +115,5 @@ tool (
 	gotest.tools/gotestsum
 	honnef.co/go/tools/cmd/staticcheck
 )
+
+replace github.com/databricks/databricks-sdk-go => ./databricks-sdk-go

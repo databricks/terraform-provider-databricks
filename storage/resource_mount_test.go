@@ -1,6 +1,8 @@
 package storage
 
 import (
+	"encoding/base64"
+	"fmt"
 	"strings"
 	"testing"
 
@@ -15,6 +17,13 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+// Tenant inference reads claims without verifying signatures.
+func unsignedTenantToken(tenantID string) string {
+	header := base64.RawURLEncoding.EncodeToString([]byte(`{"alg":"none","typ":"JWT"}`))
+	claims := base64.RawURLEncoding.EncodeToString([]byte(fmt.Sprintf(`{"tid":%q}`, tenantID)))
+	return header + "." + claims + "."
+}
 
 // ============================== AWS S3 Tests ==============================
 
@@ -669,7 +678,7 @@ func TestResourceAdlsGen1MountGeneric_Create_NoTenantID_Error(t *testing.T) {
 func TestResourceAdlsGen1MountGeneric_Create_NoTenantID_Error_EmptyTenant(t *testing.T) {
 	_, err := qa.ResourceFixture{
 		Resource: ResourceMount(),
-		Token:    "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJPbmxpbmUgSldUIEJ1aWxkZXIiLCJpYXQiOjE2MzU3ODQxNTYsImV4cCI6MTY2NzMyMDE1NiwiYXVkIjoid3d3LmV4YW1wbGUuY29tIiwic3ViIjoianJvY2tldEBleGFtcGxlLmNvbSIsInRpZCI6IiAgIn0.faxuGAFghVxa1epYnovOxoQrzju7-z_EJj3oZtwIxdk",
+		Token:    unsignedTenantToken("  "),
 		Azure:    true,
 		State: map[string]any{
 			"resource_id": "/subscriptions/123/resourceGroups/some-rg/providers/Microsoft.DataLakeStore/accounts/gen1",
@@ -853,8 +862,7 @@ func TestResourceAdlsGen2MountGeneric_Create_NoTenantID_CLI(t *testing.T) {
 			}
 		},
 		Azure: true,
-		// sample JWT token for testing
-		Token: "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJPbmxpbmUgSldUIEJ1aWxkZXIiLCJpYXQiOjE2MzU2OTU4MzksImV4cCI6MTY2NzIzMTgzOSwiYXVkIjoid3d3LmV4YW1wbGUuY29tIiwic3ViIjoianJvY2tldEBleGFtcGxlLmNvbSIsInRpZCI6ImFiYyJ9._G1DrR4DspidISpsra8UnecV_FV4zMlJDtSNzaS0UxI",
+		Token: unsignedTenantToken("abc"),
 		State: map[string]any{
 			"cluster_id": "this_cluster",
 			"name":       "this_mount",
@@ -895,7 +903,7 @@ func TestResourceAdlsGen2MountGeneric_Create_NoTenantID_Error(t *testing.T) {
 func TestResourceAdlsGen2MountGeneric_Create_NoTenantID_Error_EmptyTenant(t *testing.T) {
 	_, err := qa.ResourceFixture{
 		Resource: ResourceMount(),
-		Token:    "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJPbmxpbmUgSldUIEJ1aWxkZXIiLCJpYXQiOjE2MzU3ODQxNTYsImV4cCI6MTY2NzMyMDE1NiwiYXVkIjoid3d3LmV4YW1wbGUuY29tIiwic3ViIjoianJvY2tldEBleGFtcGxlLmNvbSIsInRpZCI6IiAgIn0.faxuGAFghVxa1epYnovOxoQrzju7-z_EJj3oZtwIxdk",
+		Token:    unsignedTenantToken("  "),
 		Azure:    true,
 		State: map[string]any{
 			"name": "this_mount",

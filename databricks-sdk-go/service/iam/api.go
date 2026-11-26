@@ -1,0 +1,678 @@
+// Code generated from OpenAPI specs by Databricks SDK Generator. DO NOT EDIT.
+
+// These APIs allow you to manage Access Control, Account Access Control, Account Access Control Proxy, Account Groups V2, Account Service Principals V2, Account Users V2, Assume Group, Current User, Groups V2, Permission Migration, Permissions, Service Principals V2, Users V2, Workspace Assignment, etc.
+package iam
+
+import (
+	"context"
+
+	"github.com/databricks/databricks-sdk-go/client"
+	"github.com/databricks/databricks-sdk-go/listing"
+)
+
+type AccessControlInterface interface {
+
+	// Check access policy to a resource.
+	CheckPolicy(ctx context.Context, request CheckPolicyRequest) (*CheckPolicyResponse, error)
+}
+
+func NewAccessControl(client *client.DatabricksClient) *AccessControlAPI {
+	return &AccessControlAPI{
+		accessControlImpl: accessControlImpl{
+			client: client,
+		},
+	}
+}
+
+// Rule based Access Control for Databricks Resources.
+type AccessControlAPI struct {
+	accessControlImpl
+}
+
+type AccountAccessControlInterface interface {
+
+	// Gets all the roles that can be granted on an account level resource. A role
+	// is grantable if the rule set on the resource can contain an access rule of
+	// the role.
+	GetAssignableRolesForResource(ctx context.Context, request GetAssignableRolesForResourceRequest) (*GetAssignableRolesForResourceResponse, error)
+
+	// Get a rule set by its name. A rule set is always attached to a resource and
+	// contains a list of access rules on the said resource. Currently only a
+	// default rule set for each resource is supported.
+	GetRuleSet(ctx context.Context, request GetRuleSetRequest) (*RuleSetResponse, error)
+
+	// Replace the rules of a rule set. First, use get to read the current version
+	// of the rule set before modifying it. This pattern helps prevent conflicts
+	// between concurrent updates.
+	UpdateRuleSet(ctx context.Context, request UpdateRuleSetRequest) (*RuleSetResponse, error)
+}
+
+func NewAccountAccessControl(client *client.DatabricksClient) *AccountAccessControlAPI {
+	return &AccountAccessControlAPI{
+		accountAccessControlImpl: accountAccessControlImpl{
+			client: client,
+		},
+	}
+}
+
+// These APIs manage access rules on resources in an account. Currently, only
+// grant rules are supported. A grant rule specifies a role assigned to a set of
+// principals. A list of rules attached to a resource is called a rule set.
+type AccountAccessControlAPI struct {
+	accountAccessControlImpl
+}
+
+type AccountAccessControlProxyInterface interface {
+
+	// Gets all the roles that can be granted on an account level resource. A role
+	// is grantable if the rule set on the resource can contain an access rule of
+	// the role.
+	GetAssignableRolesForResource(ctx context.Context, request GetAssignableRolesForResourceRequest) (*GetAssignableRolesForResourceResponse, error)
+
+	// Get a rule set by its name. A rule set is always attached to a resource and
+	// contains a list of access rules on the said resource. Currently only a
+	// default rule set for each resource is supported.
+	GetRuleSet(ctx context.Context, request GetRuleSetRequest) (*RuleSetResponse, error)
+
+	// Replace the rules of a rule set. First, use get to read the current version
+	// of the rule set before modifying it. This pattern helps prevent conflicts
+	// between concurrent updates.
+	UpdateRuleSet(ctx context.Context, request UpdateRuleSetRequest) (*RuleSetResponse, error)
+}
+
+func NewAccountAccessControlProxy(client *client.DatabricksClient) *AccountAccessControlProxyAPI {
+	return &AccountAccessControlProxyAPI{
+		accountAccessControlProxyImpl: accountAccessControlProxyImpl{
+			client: client,
+		},
+	}
+}
+
+// These APIs manage access rules on resources in an account. Currently, only
+// grant rules are supported. A grant rule specifies a role assigned to a set of
+// principals. A list of rules attached to a resource is called a rule set. A
+// workspace must belong to an account for these APIs to work
+type AccountAccessControlProxyAPI struct {
+	accountAccessControlProxyImpl
+}
+
+type AccountGroupsV2Interface interface {
+
+	// Creates a group in the Databricks account with a unique name, using the
+	// supplied group details.
+	Create(ctx context.Context, request CreateAccountGroupRequest) (*AccountGroup, error)
+
+	// Deletes a group from the Databricks account.
+	Delete(ctx context.Context, request DeleteAccountGroupRequest) error
+
+	// Gets the information for a specific group in the Databricks account.
+	Get(ctx context.Context, request GetAccountGroupRequest) (*AccountGroup, error)
+
+	// Gets all details of the groups associated with the Databricks account. As of
+	// 08/22/2025, this endpoint will no longer return members. Instead, members
+	// should be retrieved by iterating through `Get group details`. Existing
+	// accounts that rely on this attribute will not be impacted and will continue
+	// receiving member data as before.
+	//
+	// This method is generated by Databricks SDK Code Generator.
+	List(ctx context.Context, request ListAccountGroupsRequest) listing.Iterator[AccountGroup]
+
+	// Gets all details of the groups associated with the Databricks account. As of
+	// 08/22/2025, this endpoint will no longer return members. Instead, members
+	// should be retrieved by iterating through `Get group details`. Existing
+	// accounts that rely on this attribute will not be impacted and will continue
+	// receiving member data as before.
+	//
+	// This method is generated by Databricks SDK Code Generator.
+	ListAll(ctx context.Context, request ListAccountGroupsRequest) ([]AccountGroup, error)
+
+	// Partially updates the details of a group.
+	Patch(ctx context.Context, request PatchAccountGroupRequest) error
+
+	// Updates the details of a group by replacing the entire group entity.
+	Update(ctx context.Context, request UpdateAccountGroupRequest) error
+}
+
+func NewAccountGroupsV2(client *client.DatabricksClient) *AccountGroupsV2API {
+	return &AccountGroupsV2API{
+		accountGroupsV2Impl: accountGroupsV2Impl{
+			client: client,
+		},
+	}
+}
+
+// Groups simplify identity management, making it easier to assign access to
+// Databricks account, data, and other securable objects.
+//
+// It is best practice to assign access to workspaces and access-control
+// policies in Unity Catalog to groups, instead of to users individually. All
+// Databricks account identities can be assigned as members of groups, and
+// members inherit permissions that are assigned to their group.
+type AccountGroupsV2API struct {
+	accountGroupsV2Impl
+}
+
+type AccountServicePrincipalsV2Interface interface {
+
+	// Creates a new service principal in the Databricks account.
+	Create(ctx context.Context, request CreateAccountServicePrincipalRequest) (*AccountServicePrincipal, error)
+
+	// Deletes a single service principal from the Databricks account.
+	Delete(ctx context.Context, request DeleteAccountServicePrincipalRequest) error
+
+	// Gets the details for a single service principal in the Databricks account.
+	Get(ctx context.Context, request GetAccountServicePrincipalRequest) (*AccountServicePrincipal, error)
+
+	// Gets the set of service principals associated with a Databricks account.
+	//
+	// This method is generated by Databricks SDK Code Generator.
+	List(ctx context.Context, request ListAccountServicePrincipalsRequest) listing.Iterator[AccountServicePrincipal]
+
+	// Gets the set of service principals associated with a Databricks account.
+	//
+	// This method is generated by Databricks SDK Code Generator.
+	ListAll(ctx context.Context, request ListAccountServicePrincipalsRequest) ([]AccountServicePrincipal, error)
+
+	// Partially updates the details of a single service principal in the Databricks
+	// account.
+	Patch(ctx context.Context, request PatchAccountServicePrincipalRequest) error
+
+	// Updates the details of a single service principal.
+	//
+	// This action replaces the existing service principal that has the given ID.
+	Update(ctx context.Context, request UpdateAccountServicePrincipalRequest) error
+}
+
+func NewAccountServicePrincipalsV2(client *client.DatabricksClient) *AccountServicePrincipalsV2API {
+	return &AccountServicePrincipalsV2API{
+		accountServicePrincipalsV2Impl: accountServicePrincipalsV2Impl{
+			client: client,
+		},
+	}
+}
+
+// Identities for use with jobs, automated tools, and systems such as scripts,
+// apps, and CI/CD platforms. Databricks recommends creating service principals
+// to run production jobs or modify production data. If all processes that act
+// on production data run with service principals, interactive users do not need
+// any write, delete, or modify privileges in production. This eliminates the
+// risk of a user overwriting production data by accident.
+type AccountServicePrincipalsV2API struct {
+	accountServicePrincipalsV2Impl
+}
+
+type AccountUsersV2Interface interface {
+
+	// Creates a new user in the Databricks account. This new user will also be
+	// added to the Databricks account.
+	Create(ctx context.Context, request CreateAccountUserRequest) (*AccountUser, error)
+
+	// Deletes a user. Deleting a user from a Databricks account also removes
+	// objects associated with the user.
+	Delete(ctx context.Context, request DeleteAccountUserRequest) error
+
+	// Gets information for a specific user in Databricks account.
+	Get(ctx context.Context, request GetAccountUserRequest) (*AccountUser, error)
+
+	// Gets details for all the users associated with a Databricks account.
+	//
+	// This method is generated by Databricks SDK Code Generator.
+	List(ctx context.Context, request ListAccountUsersRequest) listing.Iterator[AccountUser]
+
+	// Gets details for all the users associated with a Databricks account.
+	//
+	// This method is generated by Databricks SDK Code Generator.
+	ListAll(ctx context.Context, request ListAccountUsersRequest) ([]AccountUser, error)
+
+	// Partially updates a user resource by applying the supplied operations on
+	// specific user attributes. The `userName` and `emails` attributes cannot be
+	// updated through this API; any supplied changes to them are ignored (no-op).
+	Patch(ctx context.Context, request PatchAccountUserRequest) error
+
+	// Replaces a user's information with the data supplied in request. The
+	// `userName` and `emails` attributes cannot be updated through this API; any
+	// supplied changes to them are ignored (no-op).
+	Update(ctx context.Context, request UpdateAccountUserRequest) error
+}
+
+func NewAccountUsersV2(client *client.DatabricksClient) *AccountUsersV2API {
+	return &AccountUsersV2API{
+		accountUsersV2Impl: accountUsersV2Impl{
+			client: client,
+		},
+	}
+}
+
+// User identities recognized by Databricks and represented by email addresses.
+//
+// Databricks recommends using SCIM provisioning to sync users and groups
+// automatically from your identity provider to your Databricks account. SCIM
+// streamlines onboarding a new employee or team by using your identity provider
+// to create users and groups in Databricks account and give them the proper
+// level of access. When a user leaves your organization or no longer needs
+// access to Databricks account, admins can terminate the user in your identity
+// provider and that user’s account will also be removed from Databricks
+// account. This ensures a consistent offboarding process and prevents
+// unauthorized users from accessing sensitive data.
+type AccountUsersV2API struct {
+	accountUsersV2Impl
+}
+
+type AssumeGroupInterface interface {
+
+	// Adds a group to the workspace's restricted list. The workspace allows at most
+	// 100 restricted sharing groups. Requires workspace admin.
+	CreateRestrictedSharingGroup(ctx context.Context, request CreateRestrictedSharingGroupRequest) (*RestrictedSharingGroup, error)
+
+	// Removes a group from the workspace's restricted list. Requires workspace
+	// admin.
+	DeleteRestrictedSharingGroup(ctx context.Context, request DeleteRestrictedSharingGroupRequest) error
+
+	// Gets a restricted sharing group in the workspace. Use it to check whether a
+	// group is on the workspace's restricted list. Requires workspace admin.
+	GetRestrictedSharingGroup(ctx context.Context, request GetRestrictedSharingGroupRequest) (*RestrictedSharingGroup, error)
+
+	// Lists the restricted sharing groups in the workspace. Requires workspace
+	// admin.
+	//
+	// This method is generated by Databricks SDK Code Generator.
+	ListRestrictedSharingGroups(ctx context.Context, request ListRestrictedSharingGroupsRequest) listing.Iterator[RestrictedSharingGroup]
+
+	// Lists the restricted sharing groups in the workspace. Requires workspace
+	// admin.
+	//
+	// This method is generated by Databricks SDK Code Generator.
+	ListRestrictedSharingGroupsAll(ctx context.Context, request ListRestrictedSharingGroupsRequest) ([]RestrictedSharingGroup, error)
+}
+
+func NewAssumeGroup(client *client.DatabricksClient) *AssumeGroupAPI {
+	return &AssumeGroupAPI{
+		assumeGroupImpl: assumeGroupImpl{
+			client: client,
+		},
+	}
+}
+
+// Manage the workspace's restricted sharing groups.
+type AssumeGroupAPI struct {
+	assumeGroupImpl
+}
+
+type CurrentUserInterface interface {
+
+	// Get details about the current method caller's identity.
+	Me(ctx context.Context, request MeRequest) (*User, error)
+}
+
+func NewCurrentUser(client *client.DatabricksClient) *CurrentUserAPI {
+	return &CurrentUserAPI{
+		currentUserImpl: currentUserImpl{
+			client: client,
+		},
+	}
+}
+
+// This API allows retrieving information about currently authenticated user or
+// service principal.
+type CurrentUserAPI struct {
+	currentUserImpl
+}
+
+type GroupsV2Interface interface {
+
+	// Creates a group in the Databricks workspace with a unique name, using the
+	// supplied group details.
+	Create(ctx context.Context, request CreateGroupRequest) (*Group, error)
+
+	// Deletes a group from the Databricks workspace.
+	Delete(ctx context.Context, request DeleteGroupRequest) error
+
+	// Gets the information for a specific group in the Databricks workspace.
+	Get(ctx context.Context, request GetGroupRequest) (*Group, error)
+
+	// Gets all details of the groups associated with the Databricks workspace.
+	//
+	// This method is generated by Databricks SDK Code Generator.
+	List(ctx context.Context, request ListGroupsRequest) listing.Iterator[Group]
+
+	// Gets all details of the groups associated with the Databricks workspace.
+	//
+	// This method is generated by Databricks SDK Code Generator.
+	ListAll(ctx context.Context, request ListGroupsRequest) ([]Group, error)
+
+	// Partially updates the details of a group.
+	Patch(ctx context.Context, request PatchGroupRequest) error
+
+	// Updates the details of a group by replacing the entire group entity.
+	Update(ctx context.Context, request UpdateGroupRequest) error
+}
+
+func NewGroupsV2(client *client.DatabricksClient) *GroupsV2API {
+	return &GroupsV2API{
+		groupsV2Impl: groupsV2Impl{
+			client: client,
+		},
+	}
+}
+
+// Groups simplify identity management, making it easier to assign access to
+// Databricks workspace, data, and other securable objects.
+//
+// It is best practice to assign access to workspaces and access-control
+// policies in Unity Catalog to groups, instead of to users individually. All
+// Databricks workspace identities can be assigned as members of groups, and
+// members inherit permissions that are assigned to their group.
+type GroupsV2API struct {
+	groupsV2Impl
+}
+
+type PermissionMigrationInterface interface {
+
+	// Migrate Permissions.
+	MigratePermissions(ctx context.Context, request MigratePermissionsRequest) (*MigratePermissionsResponse, error)
+}
+
+func NewPermissionMigration(client *client.DatabricksClient) *PermissionMigrationAPI {
+	return &PermissionMigrationAPI{
+		permissionMigrationImpl: permissionMigrationImpl{
+			client: client,
+		},
+	}
+}
+
+// APIs for migrating acl permissions, used only by the ucx tool:
+// https://github.com/databrickslabs/ucx
+type PermissionMigrationAPI struct {
+	permissionMigrationImpl
+}
+
+type PermissionsInterface interface {
+
+	// Gets the permissions of an object. Objects can inherit permissions from their
+	// parent objects or root object.
+	Get(ctx context.Context, request GetPermissionRequest) (*ObjectPermissions, error)
+
+	// Gets the permissions of an object. Objects can inherit permissions from their
+	// parent objects or root object.
+	GetByRequestObjectTypeAndRequestObjectId(ctx context.Context, requestObjectType string, requestObjectId string) (*ObjectPermissions, error)
+
+	// Gets the permission levels that a user can have on an object.
+	GetPermissionLevels(ctx context.Context, request GetPermissionLevelsRequest) (*GetPermissionLevelsResponse, error)
+
+	// Gets the permission levels that a user can have on an object.
+	GetPermissionLevelsByRequestObjectTypeAndRequestObjectId(ctx context.Context, requestObjectType string, requestObjectId string) (*GetPermissionLevelsResponse, error)
+
+	// Sets permissions on an object, replacing all direct permissions with the ones
+	// in the request. Principals that are not in the request lose their direct
+	// permissions on the object, and all direct permissions are deleted if none are
+	// specified. Objects can inherit permissions from their parent objects or root
+	// object.
+	Set(ctx context.Context, request SetObjectPermissions) (*ObjectPermissions, error)
+
+	// Updates the permissions on an object by adding or changing the permissions of
+	// the principals in the request. Principals that are not in the request keep
+	// their existing permissions. Objects can inherit permissions from their parent
+	// objects or root object.
+	Update(ctx context.Context, request UpdateObjectPermissions) (*ObjectPermissions, error)
+}
+
+func NewPermissions(client *client.DatabricksClient) *PermissionsAPI {
+	return &PermissionsAPI{
+		permissionsImpl: permissionsImpl{
+			client: client,
+		},
+	}
+}
+
+// Permissions API are used to create read, write, edit, update and manage
+// access for various users on different objects and endpoints. * **[Apps
+// permissions](:service:apps)** — Manage which users can manage or use apps.
+// * **[Cluster permissions](:service:clusters)** — Manage which users can
+// manage, restart, or attach to clusters. * **[Cluster policy
+// permissions](:service:clusterpolicies)** — Manage which users can use
+// cluster policies. * **[Spark Declarative Pipelines
+// permissions](:service:pipelines)** — Manage which users can view, manage,
+// run, cancel, or own a Spark Declarative Pipeline. * **[Job
+// permissions](:service:jobs)** — Manage which users can view, manage,
+// trigger, cancel, or own a job. * **[MLflow experiment
+// permissions](:service:experiments)** — Manage which users can read, edit,
+// or manage MLflow experiments. * **[MLflow registered model
+// permissions](:service:modelregistry)** — Manage which users can read, edit,
+// or manage MLflow registered models. * **[Instance Pool
+// permissions](:service:instancepools)** — Manage which users can manage or
+// attach to pools. * **[Repo permissions](repos)** — Manage which users can
+// read, run, edit, or manage a repo. * **[Serving endpoint
+// permissions](:service:servingendpoints)** — Manage which users can view,
+// query, or manage a serving endpoint. * **[SQL warehouse
+// permissions](:service:warehouses)** — Manage which users can use or manage
+// SQL warehouses. * **[Token permissions](:service:tokenmanagement)** —
+// Manage which users can create or use tokens. * **[Workspace object
+// permissions](:service:workspace)** — Manage which users can read, run,
+// edit, or manage alerts, dbsql-dashboards, directories, files, notebooks and
+// queries. For the mapping of the required permissions for specific actions or
+// abilities and other important information, see [Access Control]. Note that to
+// manage access control on service principals, use **[Account Access Control
+// Proxy](:service:accountaccesscontrolproxy)**.
+//
+// [Access Control]: https://docs.databricks.com/security/auth-authz/access-control/index.html
+type PermissionsAPI struct {
+	permissionsImpl
+}
+
+// Gets the permissions of an object. Objects can inherit permissions from their
+// parent objects or root object.
+func (a *PermissionsAPI) GetByRequestObjectTypeAndRequestObjectId(ctx context.Context, requestObjectType string, requestObjectId string) (*ObjectPermissions, error) {
+	return a.permissionsImpl.Get(ctx, GetPermissionRequest{
+		RequestObjectType: requestObjectType,
+		RequestObjectId:   requestObjectId,
+	})
+}
+
+// Gets the permission levels that a user can have on an object.
+func (a *PermissionsAPI) GetPermissionLevelsByRequestObjectTypeAndRequestObjectId(ctx context.Context, requestObjectType string, requestObjectId string) (*GetPermissionLevelsResponse, error) {
+	return a.permissionsImpl.GetPermissionLevels(ctx, GetPermissionLevelsRequest{
+		RequestObjectType: requestObjectType,
+		RequestObjectId:   requestObjectId,
+	})
+}
+
+type ServicePrincipalsV2Interface interface {
+
+	// Creates a new service principal in the Databricks workspace.
+	Create(ctx context.Context, request CreateServicePrincipalRequest) (*ServicePrincipal, error)
+
+	// Delete a single service principal in the Databricks workspace.
+	Delete(ctx context.Context, request DeleteServicePrincipalRequest) error
+
+	// Gets the details for a single service principal define in the Databricks
+	// workspace.
+	Get(ctx context.Context, request GetServicePrincipalRequest) (*ServicePrincipal, error)
+
+	// Gets the set of service principals associated with a Databricks workspace.
+	//
+	// This method is generated by Databricks SDK Code Generator.
+	List(ctx context.Context, request ListServicePrincipalsRequest) listing.Iterator[ServicePrincipal]
+
+	// Gets the set of service principals associated with a Databricks workspace.
+	//
+	// This method is generated by Databricks SDK Code Generator.
+	ListAll(ctx context.Context, request ListServicePrincipalsRequest) ([]ServicePrincipal, error)
+
+	// Partially updates the details of a single service principal in the Databricks
+	// workspace.
+	Patch(ctx context.Context, request PatchServicePrincipalRequest) error
+
+	// Updates the details of a single service principal.
+	//
+	// This action replaces the existing service principal with the same name.
+	Update(ctx context.Context, request UpdateServicePrincipalRequest) error
+}
+
+func NewServicePrincipalsV2(client *client.DatabricksClient) *ServicePrincipalsV2API {
+	return &ServicePrincipalsV2API{
+		servicePrincipalsV2Impl: servicePrincipalsV2Impl{
+			client: client,
+		},
+	}
+}
+
+// Identities for use with jobs, automated tools, and systems such as scripts,
+// apps, and CI/CD platforms. Databricks recommends creating service principals
+// to run production jobs or modify production data. If all processes that act
+// on production data run with service principals, interactive users do not need
+// any write, delete, or modify privileges in production. This eliminates the
+// risk of a user overwriting production data by accident.
+type ServicePrincipalsV2API struct {
+	servicePrincipalsV2Impl
+}
+
+type UsersV2Interface interface {
+
+	// Creates a new user in the Databricks workspace. This new user will also be
+	// added to the Databricks account.
+	Create(ctx context.Context, request CreateUserRequest) (*User, error)
+
+	// Deletes a user. Deleting a user from a Databricks workspace also removes
+	// objects associated with the user.
+	Delete(ctx context.Context, request DeleteUserRequest) error
+
+	// Gets information for a specific user in Databricks workspace.
+	Get(ctx context.Context, request GetUserRequest) (*User, error)
+
+	// Gets the permission levels that a user can have on an object.
+	GetPermissionLevels(ctx context.Context, request GetPasswordPermissionLevelsRequest) (*GetPasswordPermissionLevelsResponse, error)
+
+	// Gets the permissions of all passwords. Passwords can inherit permissions from
+	// their root object.
+	GetPermissions(ctx context.Context, request GetPasswordPermissionsRequest) (*PasswordPermissions, error)
+
+	// Gets details for all the users associated with a Databricks workspace.
+	//
+	// This method is generated by Databricks SDK Code Generator.
+	List(ctx context.Context, request ListUsersRequest) listing.Iterator[User]
+
+	// Gets details for all the users associated with a Databricks workspace.
+	//
+	// This method is generated by Databricks SDK Code Generator.
+	ListAll(ctx context.Context, request ListUsersRequest) ([]User, error)
+
+	// Partially updates a user resource by applying the supplied operations on
+	// specific user attributes. The `userName` and `emails` attributes cannot be
+	// updated through this API; any supplied changes to them are ignored (no-op).
+	Patch(ctx context.Context, request PatchUserRequest) error
+
+	// Sets permissions on an object, replacing existing permissions if they exist.
+	// Deletes all direct permissions if none are specified. Objects can inherit
+	// permissions from their root object.
+	SetPermissions(ctx context.Context, request PasswordPermissionsRequest) (*PasswordPermissions, error)
+
+	// Replaces a user's information with the data supplied in request. The
+	// `userName` and `emails` attributes cannot be updated through this API; any
+	// supplied changes to them are ignored (no-op).
+	Update(ctx context.Context, request UpdateUserRequest) error
+
+	// Updates the permissions on all passwords. Passwords can inherit permissions
+	// from their root object.
+	UpdatePermissions(ctx context.Context, request PasswordPermissionsRequest) (*PasswordPermissions, error)
+}
+
+func NewUsersV2(client *client.DatabricksClient) *UsersV2API {
+	return &UsersV2API{
+		usersV2Impl: usersV2Impl{
+			client: client,
+		},
+	}
+}
+
+// User identities recognized by Databricks and represented by email addresses.
+//
+// Databricks recommends using SCIM provisioning to sync users and groups
+// automatically from your identity provider to your Databricks workspace. SCIM
+// streamlines onboarding a new employee or team by using your identity provider
+// to create users and groups in Databricks workspace and give them the proper
+// level of access. When a user leaves your organization or no longer needs
+// access to Databricks workspace, admins can terminate the user in your
+// identity provider and that user’s account will also be removed from
+// Databricks workspace. This ensures a consistent offboarding process and
+// prevents unauthorized users from accessing sensitive data.
+type UsersV2API struct {
+	usersV2Impl
+}
+
+type WorkspaceAssignmentInterface interface {
+
+	// Deletes the workspace permissions assignment in a given account and workspace
+	// for the specified principal.
+	Delete(ctx context.Context, request DeleteWorkspaceAssignmentRequest) error
+
+	// Deletes the workspace permissions assignment in a given account and workspace
+	// for the specified principal.
+	DeleteByWorkspaceIdAndPrincipalId(ctx context.Context, workspaceId int64, principalId int64) error
+
+	// Get an array of workspace permissions for the specified account and
+	// workspace.
+	Get(ctx context.Context, request GetWorkspaceAssignmentRequest) (*WorkspacePermissions, error)
+
+	// Get an array of workspace permissions for the specified account and
+	// workspace.
+	GetByWorkspaceId(ctx context.Context, workspaceId int64) (*WorkspacePermissions, error)
+
+	// Get the permission assignments for the specified Databricks account and
+	// Databricks workspace.
+	//
+	// This method is generated by Databricks SDK Code Generator.
+	List(ctx context.Context, request ListWorkspaceAssignmentRequest) listing.Iterator[PermissionAssignment]
+
+	// Get the permission assignments for the specified Databricks account and
+	// Databricks workspace.
+	//
+	// This method is generated by Databricks SDK Code Generator.
+	ListAll(ctx context.Context, request ListWorkspaceAssignmentRequest) ([]PermissionAssignment, error)
+
+	// Get the permission assignments for the specified Databricks account and
+	// Databricks workspace.
+	ListByWorkspaceId(ctx context.Context, workspaceId int64) (*PermissionAssignments, error)
+
+	// Creates or updates the workspace permissions assignment in a given account
+	// and workspace for the specified principal.
+	Update(ctx context.Context, request UpdateWorkspaceAssignments) (*PermissionAssignment, error)
+}
+
+func NewWorkspaceAssignment(client *client.DatabricksClient) *WorkspaceAssignmentAPI {
+	return &WorkspaceAssignmentAPI{
+		workspaceAssignmentImpl: workspaceAssignmentImpl{
+			client: client,
+		},
+	}
+}
+
+// The Workspace Permission Assignment API allows you to manage workspace
+// permissions for principals in your account.
+type WorkspaceAssignmentAPI struct {
+	workspaceAssignmentImpl
+}
+
+// Deletes the workspace permissions assignment in a given account and workspace
+// for the specified principal.
+func (a *WorkspaceAssignmentAPI) DeleteByWorkspaceIdAndPrincipalId(ctx context.Context, workspaceId int64, principalId int64) error {
+	return a.workspaceAssignmentImpl.Delete(ctx, DeleteWorkspaceAssignmentRequest{
+		WorkspaceId: workspaceId,
+		PrincipalId: principalId,
+	})
+}
+
+// Get an array of workspace permissions for the specified account and
+// workspace.
+func (a *WorkspaceAssignmentAPI) GetByWorkspaceId(ctx context.Context, workspaceId int64) (*WorkspacePermissions, error) {
+	return a.workspaceAssignmentImpl.Get(ctx, GetWorkspaceAssignmentRequest{
+		WorkspaceId: workspaceId,
+	})
+}
+
+// Get the permission assignments for the specified Databricks account and
+// Databricks workspace.
+func (a *WorkspaceAssignmentAPI) ListByWorkspaceId(ctx context.Context, workspaceId int64) (*PermissionAssignments, error) {
+	return a.workspaceAssignmentImpl.internalList(ctx, ListWorkspaceAssignmentRequest{
+		WorkspaceId: workspaceId,
+	})
+}

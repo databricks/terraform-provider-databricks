@@ -5,6 +5,10 @@ import sys
 import glob
 import subprocess
 
+# A bundled Go SDK is copied verbatim from its own repository, which follows
+# its own whitespace conventions.
+BUNDLED_SDK_PREFIX = "databricks-sdk-go/"
+
 
 def load_ignores():
     ignores = set()
@@ -68,7 +72,7 @@ def main():
         if not os.path.isfile(f):
             n_skipped += 1
             continue
-        if f in ignores:
+        if f in ignores or f.startswith(BUNDLED_SDK_PREFIX):
             n_skipped += 1
             continue
         with open(f, "rb") as file:

@@ -1,0 +1,279 @@
+# Runs volume_updates/testdata/update_rename_with_owner_change.yaml with databricks_volume
+# on sdk-go uc/volumes/v1 in every step, and expects the same requests and behavior. The
+# original's description:
+#
+# Pins a rename made together with an owner change. The owner PATCH goes to the old full
+# name first, then the rename PATCH with new_name and without owner, also to the old
+# name. When the rename PATCH fails, a PATCH to the old name restores the old owner and
+# apply fails with the rename's error. A failing rename without an owner change sends no
+# rollback PATCH. Both failures keep the old ID. API responses are inferred from the Unity
+# Catalog API contract, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: create_with_owner
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: |
+      resource "databricks_volume" "this" {
+        name         = "rename_owner_a"
+        catalog_name = "main"
+        schema_name  = "replay"
+        volume_type  = "MANAGED"
+        owner        = "data-engineers"
+      }
+    calls:
+      - request:
+          method: POST
+          path: /api/2.1/unity-catalog/volumes
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "rename_owner_a", "volume_type": "MANAGED"}
+        response:
+          status: 200
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "rename_owner_a", "full_name": "main.replay.rename_owner_a",
+                   "volume_type": "MANAGED", "owner": "replay-admin@example.com",
+                   "storage_location": "s3://replay-metastore/volume-201",
+                   "metastore_id": "11111111-1111-1111-1111-111111111111",
+                   "volume_id": "00000000-0000-4000-8000-000000000201"}
+      - request:
+          method: PATCH
+          path: /api/2.1/unity-catalog/volumes/main.replay.rename_owner_a
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"owner": "data-engineers"}
+        response:
+          status: 200
+          body:
+            json: &created {"catalog_name": "main", "schema_name": "replay",
+                            "name": "rename_owner_a",
+                            "full_name": "main.replay.rename_owner_a",
+                            "volume_type": "MANAGED", "owner": "data-engineers",
+                            "storage_location": "s3://replay-metastore/volume-201",
+                            "metastore_id": "11111111-1111-1111-1111-111111111111",
+                            "volume_id": "00000000-0000-4000-8000-000000000201"}
+      - &read_created
+        request:
+          method: GET
+          path: /api/2.1/unity-catalog/volumes/main.replay.rename_owner_a
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 200
+          body:
+            json: *created
+      - *read_created
+  - name: rename_and_owner_change_patch_owner_then_name_on_the_old_name
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: |
+      resource "databricks_volume" "this" {
+        name         = "rename_owner_b"
+        catalog_name = "main"
+        schema_name  = "replay"
+        volume_type  = "MANAGED"
+        owner        = "analysts"
+      }
+    calls:
+      - *read_created
+      - request:
+          method: PATCH
+          path: /api/2.1/unity-catalog/volumes/main.replay.rename_owner_a
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"owner": "analysts"}
+        response:
+          status: 200
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "rename_owner_a", "full_name": "main.replay.rename_owner_a",
+                   "volume_type": "MANAGED", "owner": "analysts",
+                   "storage_location": "s3://replay-metastore/volume-201",
+                   "metastore_id": "11111111-1111-1111-1111-111111111111",
+                   "volume_id": "00000000-0000-4000-8000-000000000201"}
+      - request:
+          method: PATCH
+          path: /api/2.1/unity-catalog/volumes/main.replay.rename_owner_a
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"new_name": "rename_owner_b"}
+        response:
+          status: 200
+          body:
+            json: &renamed {"catalog_name": "main", "schema_name": "replay",
+                            "name": "rename_owner_b",
+                            "full_name": "main.replay.rename_owner_b",
+                            "volume_type": "MANAGED", "owner": "analysts",
+                            "storage_location": "s3://replay-metastore/volume-201",
+                            "metastore_id": "11111111-1111-1111-1111-111111111111",
+                            "volume_id": "00000000-0000-4000-8000-000000000201"}
+      - &read_renamed
+        request:
+          method: GET
+          path: /api/2.1/unity-catalog/volumes/main.replay.rename_owner_b
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 200
+          body:
+            json: *renamed
+      - *read_renamed
+    state:
+      resources:
+        databricks_volume.this:
+          attributes:
+            - path: [id]
+              equals: main.replay.rename_owner_b
+            - path: [volume_path]
+              equals: /Volumes/main/replay/rename_owner_b
+  - name: failed_rename_rolls_back_owner_on_the_old_name
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: &config_rename_and_owner |
+      resource "databricks_volume" "this" {
+        name         = "rename_owner_c"
+        catalog_name = "main"
+        schema_name  = "replay"
+        volume_type  = "MANAGED"
+        owner        = "data-engineers"
+      }
+    expect_error: 'Error: cannot update volume: Volume ''main\.replay\.rename_owner_c''
+      already exists\.\n'
+    calls:
+      - *read_renamed
+      - request:
+          method: PATCH
+          path: /api/2.1/unity-catalog/volumes/main.replay.rename_owner_b
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"owner": "data-engineers"}
+        response:
+          status: 200
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "rename_owner_b", "full_name": "main.replay.rename_owner_b",
+                   "volume_type": "MANAGED", "owner": "data-engineers",
+                   "storage_location": "s3://replay-metastore/volume-201",
+                   "metastore_id": "11111111-1111-1111-1111-111111111111",
+                   "volume_id": "00000000-0000-4000-8000-000000000201"}
+      - request: &rename_to_c_request
+          method: PATCH
+          path: /api/2.1/unity-catalog/volumes/main.replay.rename_owner_b
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"new_name": "rename_owner_c"}
+        response: &already_exists
+          status: 409
+          body:
+            json: {"error_code": "RESOURCE_ALREADY_EXISTS",
+                   "message": "Volume 'main.replay.rename_owner_c' already exists."}
+      - request:
+          method: PATCH
+          path: /api/2.1/unity-catalog/volumes/main.replay.rename_owner_b
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"owner": "analysts"}
+        response:
+          status: 200
+          body:
+            json: *renamed
+  - name: plan_after_rollback_keeps_the_old_id_and_plans_both_changes
+    sdk_implementations:
+      databricks_volume: sdk_go
+    plan_only: true
+    config: *config_rename_and_owner
+    plan:
+      expect: non_empty
+      changes:
+        databricks_volume.this:
+          actions: [update]
+          before:
+            - path: [name]
+              equals: rename_owner_b
+            - path: [owner]
+              equals: analysts
+          after:
+            - path: [name]
+              equals: rename_owner_c
+            - path: [owner]
+              equals: data-engineers
+    state: &old_id
+      resources:
+        databricks_volume.this:
+          attributes:
+            - path: [id]
+              equals: main.replay.rename_owner_b
+    calls:
+      - *read_renamed
+  - name: failed_rename_without_owner_change_sends_no_rollback
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: &config_rename_only |
+      resource "databricks_volume" "this" {
+        name         = "rename_owner_c"
+        catalog_name = "main"
+        schema_name  = "replay"
+        volume_type  = "MANAGED"
+        owner        = "analysts"
+      }
+    expect_error: 'Error: cannot update volume: Volume ''main\.replay\.rename_owner_c''
+      already exists\.\n'
+    calls:
+      - *read_renamed
+      - request: *rename_to_c_request
+        response: *already_exists
+  - name: plan_after_failed_rename_keeps_the_old_id
+    sdk_implementations:
+      databricks_volume: sdk_go
+    plan_only: true
+    config: *config_rename_only
+    plan:
+      expect: non_empty
+      changes:
+        databricks_volume.this:
+          actions: [update]
+          before:
+            - path: [name]
+              equals: rename_owner_b
+          after:
+            - path: [name]
+              equals: rename_owner_c
+    state: *old_id
+    calls:
+      - *read_renamed
+destroy:
+  calls:
+    - *read_renamed
+    - request:
+        method: DELETE
+        path: /api/2.1/unity-catalog/volumes/main.replay.rename_owner_b
+        headers:
+          X-Databricks-Workspace-Id: "12345"
+        body: null
+      response:
+        status: 200
+        body:
+          json: {}

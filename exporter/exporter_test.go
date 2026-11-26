@@ -1709,6 +1709,7 @@ func TestImportingJobs_JobListMultiTask(t *testing.T) {
 }
 
 func TestImportingWithError(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
 	err := Run("-directory", "/bin/sh", "-services", "groups,users", "-skip-interactive")
 	assert.EqualError(t, err, "the path /bin/sh is not a directory")
 

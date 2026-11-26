@@ -97,15 +97,18 @@ func (r ProviderConfigData) Type(ctx context.Context) attr.Type {
 
 // DefaultWarehouseOverrideData extends the main model with additional fields.
 type DefaultWarehouseOverrideData struct {
-	// The ID component of the resource name (user ID).
+	// The numeric ID of the user that the override applies to. It is the last
+	// component of `name`.
 	DefaultWarehouseOverrideId types.String `tfsdk:"default_warehouse_override_id"`
 	// The resource name of the default warehouse override. Format:
-	// default-warehouse-overrides/{default_warehouse_override_id}
+	// default-warehouse-overrides/{default_warehouse_override_id} Responses
+	// always contain the numeric user ID, even when the request used `me`.
 	Name types.String `tfsdk:"name"`
 	// The type of override behavior.
 	Type_ types.String `tfsdk:"type"`
-	// The specific warehouse ID when type is CUSTOM. Not set for LAST_SELECTED
-	// type.
+	// The ID of the SQL warehouse to preselect when `type` is `CUSTOM`. It is
+	// required for `CUSTOM` and must be a valid warehouse ID. It is ignored for
+	// `LAST_SELECTED` and is not returned for that type.
 	WarehouseId        types.String `tfsdk:"warehouse_id"`
 	ProviderConfigData types.Object `tfsdk:"provider_config"`
 }

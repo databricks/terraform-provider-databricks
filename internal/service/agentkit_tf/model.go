@@ -348,8 +348,9 @@ func (m ClearSessionItemsResponse) Type(ctx context.Context) attr.Type {
 type CreateManagedMemoryEntryRequest struct {
 	// The memory entry to create.
 	ManagedMemoryEntry types.Object `tfsdk:"managed_memory_entry"`
-	// Optional caller-selected memory entry ID. The service generates an ID
-	// when omitted.
+	// Caller-selected memory entry ID. It must contain 1-255 letters, digits,
+	// hyphens, or underscores, and it becomes the last segment of the entry's
+	// `name`. The service generates a UUID when it is omitted.
 	ManagedMemoryEntryId types.String `tfsdk:"-"`
 	// Memory store that will contain the entry, in the form
 	// `memory-stores/{managed_memory_store_id}`.
@@ -1955,8 +1956,9 @@ type ListManagedMemoryEntriesRequest struct {
 	// Maximum number of entries to return. The service may return fewer entries
 	// than requested. Defaults to 10; must be between 1 and 100.
 	PageSize types.Int64 `tfsdk:"-"`
-	// Opaque pagination token from a previous ListManagedMemoryEntries
-	// response.
+	// Opaque pagination token, taken from the `next_page_token` of a previous
+	// response. The other request parameters must match the request that
+	// returned the token.
 	PageToken types.String `tfsdk:"-"`
 	// Memory store whose entries are listed, in the form
 	// `memory-stores/{managed_memory_store_id}`.
@@ -2036,7 +2038,8 @@ func (m ListManagedMemoryEntriesRequest) Type(ctx context.Context) attr.Type {
 
 // Response containing memory entries.
 type ListManagedMemoryEntriesResponse struct {
-	// Memory entries matching the request and selected response view.
+	// Memory entries matching the request and selected response view, ordered
+	// by creation time, oldest first.
 	ManagedMemoryEntries types.List `tfsdk:"managed_memory_entries"`
 	// Opaque pagination token. This field is omitted when there are no more
 	// results.
@@ -3258,7 +3261,9 @@ func (m *ListSessionsResponse) SetSessions(ctx context.Context, v []Session) {
 	m.Sessions = types.ListValueMust(t, vs)
 }
 
-// A workspace-scoped entry in a memory store.
+// A workspace-scoped entry in a memory store. Each entry belongs to one actor
+// and, optionally, one session, and its `path` is unique within that actor and
+// session.
 type ManagedMemoryEntry struct {
 	// Customer-provided identifier for the actor whose memory this entry
 	// represents.
@@ -4149,7 +4154,8 @@ type SearchManagedMemoryEntriesRequest struct {
 	// entries within the actor partition. The prefix must begin with `/` and
 	// must not contain empty, `.` or `..` segments.
 	PathPrefix types.String `tfsdk:"path_prefix"`
-	// Free-form search query.
+	// Free-form search query. Entries are ranked by how well their `content`
+	// and `description` match it.
 	Query types.String `tfsdk:"query"`
 	// Deprecated: the service will ignore this filter. Until then, when set,
 	// only entries with this exact `session_id` are searched, and

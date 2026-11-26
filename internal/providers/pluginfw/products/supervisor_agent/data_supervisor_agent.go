@@ -98,26 +98,35 @@ func (r ProviderConfigData) Type(ctx context.Context) attr.Type {
 
 // SupervisorAgentData extends the main model with additional fields.
 type SupervisorAgentData struct {
-	// Creation timestamp.
+	// The time at which the Supervisor Agent was created, as an RFC 3339
+	// timestamp.
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
-	// The creator of the Supervisor Agent.
+	// The email address of the user who created the Supervisor Agent.
 	Creator types.String `tfsdk:"creator"`
-	// Description of what this agent can do (user-facing).
+	// A summary of what the agent does. It is shown to users of the agent.
 	Description types.String `tfsdk:"description"`
-	// The display name of the Supervisor Agent, unique at workspace level.
+	// The display name of the Supervisor Agent. It must be unique among the
+	// agents in the workspace. Creating an agent with a display name that is
+	// already in use fails with ALREADY_EXISTS.
 	DisplayName types.String `tfsdk:"display_name"`
-	// The name of the supervisor agent's serving endpoint.
+	// The name of the Model Serving endpoint that serves the Supervisor Agent.
+	// Query this endpoint to chat with the agent.
 	EndpointName types.String `tfsdk:"endpoint_name"`
-	// The MLflow experiment ID.
+	// The ID of the MLflow experiment that is created together with the
+	// Supervisor Agent.
 	ExperimentId types.String `tfsdk:"experiment_id"`
-	// Deprecated: Use supervisor_agent_id instead.
+	// Deprecated: Use supervisor_agent_id instead. This field is no longer
+	// populated.
 	Id types.String `tfsdk:"id"`
-	// Optional natural-language instructions for the supervisor agent.
+	// Natural-language guidelines for how the supervisor should respond and how
+	// it should delegate requests to its tools and subagents.
 	Instructions types.String `tfsdk:"instructions"`
-	// The resource name of the SupervisorAgent. Format:
-	// supervisor-agents/{supervisor_agent_id}
+	// The resource name of the Supervisor Agent. Format:
+	// supervisor-agents/{supervisor_agent_id} The server assigns the name when
+	// the agent is created.
 	Name types.String `tfsdk:"name"`
-	// The universally unique identifier (UUID) of the Supervisor Agent.
+	// The universally unique identifier (UUID) of the Supervisor Agent. It is
+	// the last segment of `name`.
 	SupervisorAgentId  types.String `tfsdk:"supervisor_agent_id"`
 	ProviderConfigData types.Object `tfsdk:"provider_config"`
 }

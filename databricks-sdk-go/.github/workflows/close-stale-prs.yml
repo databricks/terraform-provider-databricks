@@ -1,0 +1,38 @@
+name: Close stale PRs
+
+on:
+  workflow_dispatch:
+    # No inputs are required for the manual dispatch.
+    
+  schedule:
+    - cron: '0 0 * * *'
+
+jobs:
+  stale:
+    runs-on:
+      group: databricks-deco-testing-runner-group
+    permissions:
+      pull-requests: write
+    steps:
+      - uses: actions/stale@b5d41d4e1d5dceea10e7104786b73624c18a190f # v10.2.0
+        with:
+          # Only target pull requests, not issues.
+          days-before-issue-stale: -1
+          days-before-issue-close: -1
+
+          # Mark PRs as stale after 30 days of inactivity.
+          days-before-stale: 30
+          stale-pr-label: stale
+          stale-pr-message: >
+            This pull request has been automatically marked as stale because it
+            has not had recent activity. It will be closed in 15 days if no
+            further activity occurs. If this PR is still relevant, please leave
+            a comment or push new changes to keep it open. Thank you for your
+            contributions.
+
+          # Close stale PRs after 15 additional days of inactivity.
+          days-before-close: 15
+          close-pr-message: >
+            This pull request has been automatically closed because it remained
+            stale for 15 days with no further activity. Feel free to reopen it
+            if you'd like to continue working on it.

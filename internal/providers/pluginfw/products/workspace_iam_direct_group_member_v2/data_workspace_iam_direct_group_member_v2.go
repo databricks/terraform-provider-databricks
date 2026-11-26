@@ -103,7 +103,9 @@ type DirectGroupMemberData struct {
 	ExternalId types.String `tfsdk:"external_id"`
 	// The Databricks ID of the group.
 	GroupId types.Int64 `tfsdk:"group_id"`
-	// Where the membership comes from.
+	// Where the membership comes from: added in Databricks (in the UI, through
+	// the API, or through SCIM provisioning), or synced from your IdP by
+	// automatic identity management.
 	MembershipSource types.String `tfsdk:"membership_source"`
 	// The resource name of the membership, in one of these formats: - Account
 	// APIs:

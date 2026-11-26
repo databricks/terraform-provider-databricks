@@ -1,0 +1,138 @@
+# Pins a refresh whose GET is answered 404. The model leaves the state without an
+# error, the plan shows a create, and apply sends the POST again. API responses are
+# inferred from the MLflow Model Registry API, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: create
+    config: &config |
+      resource "databricks_mlflow_model" "this" {
+        name        = "replay-model"
+        description = "first description"
+      }
+    calls:
+      - request:
+          method: POST
+          path: /api/2.0/mlflow/registered-models/create
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"name": "replay-model", "description": "first description"}
+        response:
+          status: 200
+          body:
+            json: {"registered_model": {"name": "replay-model",
+                                        "creation_timestamp": 1700000000000,
+                                        "last_updated_timestamp": 1700000000000,
+                                        "user_id": "replay-admin@example.com",
+                                        "description": "first description"}}
+      - &read_created
+        request: &read_request
+          method: GET
+          path: /api/2.0/mlflow/databricks/registered-models/get
+          query:
+            name: [replay-model]
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"registered_model_databricks": {
+                     "name": "replay-model",
+                     "creation_timestamp": 1700000000000,
+                     "last_updated_timestamp": 1700000000000,
+                     "user_id": "replay-admin@example.com",
+                     "description": "first description",
+                     "id": "0123456789abcdef0123456789abcdef",
+                     "permission_level": "CAN_MANAGE"}}
+      - *read_created
+  - name: missing_model_is_created_again
+    config: *config
+    plan:
+      expect: non_empty
+      changes:
+        databricks_mlflow_model.this:
+          actions: [create]
+          after:
+            - path: [name]
+              equals: replay-model
+            - path: [description]
+              equals: first description
+            - path: [registered_model_id]
+              unknown: true
+    calls:
+      # The plan's refresh finds that the model was deleted outside Terraform.
+      - request: *read_request
+        response:
+          status: 404
+          body:
+            json: {"error_code": "RESOURCE_DOES_NOT_EXIST",
+                   "message": "RegisteredModel 'replay-model' does not exist. It might have been deleted."}
+      # Apply sends the same POST as the first create.
+      - request:
+          method: POST
+          path: /api/2.0/mlflow/registered-models/create
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"name": "replay-model", "description": "first description"}
+        response:
+          status: 200
+          body:
+            json: {"registered_model": {"name": "replay-model",
+                                        "creation_timestamp": 1700000005000,
+                                        "last_updated_timestamp": 1700000005000,
+                                        "user_id": "replay-admin@example.com",
+                                        "description": "first description"}}
+      - &read_recreated
+        request: *read_request
+        response:
+          status: 200
+          body:
+            json: {"registered_model_databricks": {
+                     "name": "replay-model",
+                     "creation_timestamp": 1700000005000,
+                     "last_updated_timestamp": 1700000005000,
+                     "user_id": "replay-admin@example.com",
+                     "description": "first description",
+                     "id": "fedcba9876543210fedcba9876543210",
+                     "permission_level": "CAN_MANAGE"}}
+      - *read_recreated
+    state:
+      resources:
+        databricks_mlflow_model.this:
+          attributes:
+            - path: [id]
+              equals: replay-model
+            - path: [registered_model_id]
+              equals: fedcba9876543210fedcba9876543210
+  - name: plan_after_recreate_is_empty
+    plan_only: true
+    config: *config
+    plan:
+      expect: empty
+      changes: {}
+    calls:
+      - *read_recreated
+destroy:
+  calls:
+    - *read_recreated
+    - request:
+        method: DELETE
+        path: /api/2.0/mlflow/registered-models/delete
+        query:
+          name: [replay-model]
+        headers:
+          X-Databricks-Workspace-Id: "12345"
+        body: null
+      response:
+        status: 200
+        body:
+          json: {}

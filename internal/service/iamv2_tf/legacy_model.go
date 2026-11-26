@@ -2000,8 +2000,9 @@ func (m DeleteWorkspaceAssignmentRequest_SdkV2) Type(ctx context.Context) attr.T
 	}
 }
 
-// A user, service principal, or group that's a direct member of a group. To
-// address a membership, put its resource name in the URL: `GET
+// A user, service principal, or group in your Databricks account that's a
+// direct member of a group. To address a membership, put its resource name in
+// the URL: `GET
 // /api/2.0/identity/accounts/{account_id}/groups/{group_id}/direct-members/{principal_id}`
 // in account APIs, or `GET
 // /api/2.0/identity/groups/{group_id}/direct-members/{principal_id}` in
@@ -2013,7 +2014,9 @@ type DirectGroupMember_SdkV2 struct {
 	ExternalId types.String `tfsdk:"external_id"`
 	// The Databricks ID of the group.
 	GroupId types.Int64 `tfsdk:"group_id"`
-	// Where the membership comes from.
+	// Where the membership comes from: added in Databricks (in the UI, through
+	// the API, or through SCIM provisioning), or synced from your IdP by
+	// automatic identity management.
 	MembershipSource types.String `tfsdk:"membership_source"`
 	// The resource name of the membership, in one of these formats: - Account
 	// APIs:
@@ -6628,9 +6631,9 @@ func (m ServicePrincipal_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// A group that a principal belongs to, either directly or through another
-// group. To list a principal's parent groups, put the principal's resource name
-// in the URL: `GET
+// A group in your Databricks account that a principal belongs to, either
+// directly or through another group. To list a principal's parent groups, put
+// the principal's resource name in the URL: `GET
 // /api/2.0/identity/accounts/{account_id}/principals/{principal_id}/transitive-parent-groups`
 // in account APIs, or `GET
 // /api/2.0/identity/principals/{principal_id}/transitive-parent-groups` in

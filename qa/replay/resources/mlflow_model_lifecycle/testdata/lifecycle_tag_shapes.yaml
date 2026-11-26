@@ -1,0 +1,116 @@
+# Pins how the create POST carries unusual tags. A tag with only key and a tag whose
+# value is the empty string are both sent as the key alone, so the request cannot tell
+# them apart. Two tags with the same key are both sent, in config order, with no
+# validation. API responses are synthetic, inferred from the MLflow Model Registry API,
+# not recorded: the fixture answers with the tags as they were sent, and what the service
+# does with a duplicate key is not known here.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: create_sends_each_tag_shape
+    config: &config |
+      resource "databricks_mlflow_model" "this" {
+        name = "lifecycle-tag-shapes"
+        tags {
+          key = "only-key"
+        }
+        tags {
+          key   = "empty-value"
+          value = ""
+        }
+        tags {
+          key   = "twice"
+          value = "first"
+        }
+        tags {
+          key   = "twice"
+          value = "second"
+        }
+      }
+    calls:
+      - request:
+          method: POST
+          path: /api/2.0/mlflow/registered-models/create
+          body:
+            json: {"name": "lifecycle-tag-shapes",
+                   "tags": [{"key": "only-key"},
+                            {"key": "empty-value"},
+                            {"key": "twice", "value": "first"},
+                            {"key": "twice", "value": "second"}]}
+        response:
+          status: 200
+          body:
+            json: {"registered_model": {
+                     "name": "lifecycle-tag-shapes",
+                     "tags": [{"key": "only-key"},
+                              {"key": "empty-value"},
+                              {"key": "twice", "value": "first"},
+                              {"key": "twice", "value": "second"}],
+                     "creation_timestamp": 1700000000301,
+                     "last_updated_timestamp": 1700000000301,
+                     "user_id": "replay-admin@example.com"}}
+      - &read
+        request:
+          method: GET
+          path: /api/2.0/mlflow/databricks/registered-models/get
+          query:
+            name: ["lifecycle-tag-shapes"]
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"registered_model_databricks": {
+                     "name": "lifecycle-tag-shapes",
+                     "id": "c3d4e5f60718293a4b5c6d7e8f010203",
+                     "tags": [{"key": "only-key"},
+                              {"key": "empty-value"},
+                              {"key": "twice", "value": "first"},
+                              {"key": "twice", "value": "second"}],
+                     "creation_timestamp": 1700000000301,
+                     "last_updated_timestamp": 1700000000301,
+                     "user_id": "replay-admin@example.com",
+                     "permission_level": "CAN_MANAGE"}}
+      - *read
+    state:
+      resources:
+        databricks_mlflow_model.this:
+          attributes:
+            - path: [id]
+              equals: lifecycle-tag-shapes
+            - path: [tags, 0, key]
+              equals: only-key
+            - path: [tags, 0, value]
+              equals: ""
+            - path: [tags, 1, key]
+              equals: empty-value
+            - path: [tags, 1, value]
+              equals: ""
+            - path: [tags, 2, value]
+              equals: first
+            - path: [tags, 3, value]
+              equals: second
+  - name: plan_after_create_is_empty
+    plan_only: true
+    config: *config
+    plan:
+      expect: empty
+      changes: {}
+    calls:
+      - *read
+destroy:
+  calls:
+    - *read
+    - request:
+        method: DELETE
+        path: /api/2.0/mlflow/registered-models/delete
+        query:
+          name: ["lifecycle-tag-shapes"]
+        body: null
+      response:
+        status: 200
+        body:
+          json: {}

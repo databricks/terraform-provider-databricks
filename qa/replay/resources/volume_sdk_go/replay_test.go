@@ -9,7 +9,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/qa/terraformtest"
 )
 
-// TestVolumeSdkGo runs every volume journey with reads and writes through sdk-go
+// TestVolumeSdkGo runs volume journeys with reads and writes through sdk-go
 // uc/volumes/v1, selected by sdk_implementations, and journeys that switch between it
 // and the existing client.
 func TestVolumeSdkGo(t *testing.T) {

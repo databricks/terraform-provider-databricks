@@ -1,0 +1,83 @@
+# Runs volume_routing/testdata/routing_connection_id_on_unified_host.yaml with
+# databricks_volume on sdk-go uc/volumes/v1 in every step, and expects the same requests
+# and behavior. The original's description:
+#
+# Pins a connection ID in provider_config.workspace_id on a unified host. The provider
+# makes no account workspace lookup: every volume call carries the connection ID
+# literally in the X-Databricks-Workspace-Id header, and state keeps it. API responses
+# are inferred from the Unity Catalog API contract, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: unified
+  cloud: AWS
+  account_id: replay-account
+steps:
+  - name: create_routes_by_connection_id
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: |
+      provider "databricks" {
+        account_id = "replay-account"
+      }
+      resource "databricks_volume" "this" {
+        name         = "connection_volume"
+        catalog_name = "main"
+        schema_name  = "replay"
+        volume_type  = "MANAGED"
+        provider_config {
+          workspace_id = "cpdr-replay-connection-1"
+        }
+      }
+    calls:
+      - request:
+          method: POST
+          path: /api/2.1/unity-catalog/volumes
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: cpdr-replay-connection-1
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "connection_volume", "volume_type": "MANAGED"}
+        response:
+          status: 200
+          body:
+            json: &volume {"catalog_name": "main", "schema_name": "replay",
+                           "name": "connection_volume",
+                           "full_name": "main.replay.connection_volume",
+                           "volume_type": "MANAGED", "owner": "replay-admin@example.com",
+                           "storage_location": "s3://replay-metastore/volume-1911",
+                           "metastore_id": "11111111-1111-1111-1111-111111111111",
+                           "volume_id": "00000000-0000-4000-8000-000000001911"}
+      - &read_volume
+        request:
+          method: GET
+          path: /api/2.1/unity-catalog/volumes/main.replay.connection_volume
+          headers:
+            X-Databricks-Workspace-Id: cpdr-replay-connection-1
+          body: null
+        response:
+          status: 200
+          body:
+            json: *volume
+      # The post-apply refresh plan.
+      - *read_volume
+    state:
+      resources:
+        databricks_volume.this:
+          attributes:
+            - path: [provider_config, 0, workspace_id]
+              equals: cpdr-replay-connection-1
+destroy:
+  calls:
+    - *read_volume
+    - request:
+        method: DELETE
+        path: /api/2.1/unity-catalog/volumes/main.replay.connection_volume
+        headers:
+          X-Databricks-Workspace-Id: cpdr-replay-connection-1
+        body: null
+      response:
+        status: 200
+        body:
+          json: {}

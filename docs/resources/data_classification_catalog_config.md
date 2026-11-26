@@ -58,15 +58,18 @@ resource "databricks_data_classification_catalog_config" "auto_tagging" {
 
 ## Arguments
 The following arguments are supported:
-* `parent` (string, required) - Parent resource in the format: catalogs/{catalog_name}
-* `auto_tag_configs` (list of AutoTaggingConfig, optional) - List of auto-tagging configurations for this catalog.
-  Empty list means no auto-tagging is enabled
+* `parent` (string, required) - Name of the catalog to enable, in the format catalogs/{catalog_name}
+* `auto_tag_configs` (list of AutoTaggingConfig, optional) - Auto-tagging configurations that apply to this catalog. Each entry overrides the
+  metastore-level auto-tagging setting for its classification tag; tags without an entry
+  inherit the metastore-level setting
 * `excluded_schemas` (CatalogConfigSchemaNames, optional) - Schemas to exclude from the scan, each named relative to the parent catalog.
-  If specified, all schemas except the specified ones will be scanned.
+  If specified, all schemas except the specified ones will be scanned, including schemas
+  created later.
   Mutually exclusive with `included_schemas`: only one may be set per request.
   If neither `included_schemas` nor `excluded_schemas` is set, all schemas are scanned
 * `included_schemas` (CatalogConfigSchemaNames, optional) - Schemas to include in the scan, each named relative to the parent catalog.
-  If specified, only listed schemas will be scanned.
+  If specified, only listed schemas will be scanned. Schemas created later are not scanned
+  until you add them to the list.
   Mutually exclusive with `excluded_schemas`: only one may be set per request.
   If neither `included_schemas` nor `excluded_schemas` is set, all schemas are scanned
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
@@ -77,7 +80,9 @@ The following arguments are supported:
 ### AutoTaggingConfig
 * `auto_tagging_mode` (string, required) - Whether auto-tagging is enabled or disabled for this classification tag. Possible values are: `AUTO_TAGGING_DISABLED`, `AUTO_TAGGING_ENABLED`
 * `classification_tag` (string, required) - The Classification Tag. For built-in classes this is a system tag (e.g., "class.name",
-  "class.location"); for custom classes it is a user-defined governance tag key
+  "class.location"); for custom classes it is a user-defined governance tag key. The built-in
+  tags are listed at
+  https://docs.databricks.com/aws/en/data-governance/unity-catalog/data-classification-tags
 
 ### CatalogConfigSchemaNames
 * `names` (list of string, required) - Schema names, each relative to the parent catalog. Must not be empty

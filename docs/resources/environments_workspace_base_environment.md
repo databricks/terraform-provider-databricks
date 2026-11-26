@@ -63,8 +63,9 @@ resource "databricks_environments_workspace_base_environment" "gpu_env" {
 ## Arguments
 The following arguments are supported:
 * `display_name` (string, required) - Human-readable display name for the workspace base environment
-* `base_environment_type` (string, optional) - The type of base environment (CPU or GPU). Possible values are: `CPU`, `GPU`
-* `filepath` (string, optional) - The WSFS or UC Volumes path to the environment YAML file
+* `base_environment_type` (string, optional) - The type of base environment (CPU or GPU). The default is `CPU`. Possible values are: `CPU`, `GPU`
+* `filepath` (string, optional) - The workspace file or Unity Catalog volume path to the YAML file that defines the environment version and
+  dependencies. The file name must end in `.yaml` or `.yml`. Create and update requests must set this field
 * `workspace_base_environment_id` (string, optional) - The ID to use for the workspace base environment, which will become the final component of
   the resource name.
   This value should be 4-63 characters, and valid characters are /[a-z][0-9]-/
@@ -87,11 +88,15 @@ In addition to the above arguments, the following attributes are exported:
 * `creator_user_id` (string) - User ID of the creator
 * `is_default` (boolean) - Whether this is the default environment for the workspace
 * `last_updated_user_id` (string) - User ID of the last user who updated the environment
-* `message` (string) - Status message providing additional details about the environment status
+* `message` (string) - Status message providing additional details about the environment status.
+  When the status is `FAILED`, the message contains the build error
 * `name` (string) - The resource name of the workspace base environment.
   Format: workspace-base-environments/{workspace-base-environment}
-* `spec` (EnvironmentSpec) - The environment specification containing version and dependencies
-* `status` (string) - The status of the materialized workspace base environment. Possible values are: `CREATED`, `EXPIRED`, `FAILED`, `INVALID`, `PENDING`, `REFRESHING`
+  The server ignores this field on create and builds the name from `workspace_base_environment_id`, or from
+  `display_name` plus a random suffix when no ID is given
+* `spec` (EnvironmentSpec) - The environment specification containing version and dependencies, read from the YAML file at `filepath`
+* `status` (string) - The status of the materialized workspace base environment, which the server builds from the YAML file.
+  The status is `CREATED` once the build has succeeded. Possible values are: `CREATED`, `EXPIRED`, `FAILED`, `INVALID`, `PENDING`, `REFRESHING`
 * `update_time` (string) - Timestamp when the environment was last updated
 
 ## Import

@@ -1,5 +1,10 @@
 # Databricks Terraform Provider
 
+This repository is a read-only mirror of the provider's source, published from
+Databricks' internal monorepo with each release. It does not accept pull
+requests. Please report bugs and request features in
+[GitHub Issues](https://github.com/databricks/terraform-provider-databricks/issues).
+
 ![Resources](docs/resources.png)
 
 [AWS](docs/guides/aws-workspace.md) tutorial
@@ -8,7 +13,7 @@
 | [Authentication](docs/index.md)
 | [Troubleshooting Guide](docs/guides/troubleshooting.md)
 | [Changelog](CHANGELOG.md)
-| [Contributing and Development Guidelines](CONTRIBUTING.md)
+| [Development Guidelines](CONTRIBUTING.md)
 
 [![build](https://github.com/databricks/terraform-provider-databricks/workflows/build/badge.svg?branch=main)](https://github.com/databricks/terraform-provider-databricks/actions?query=workflow%3Abuild+branch%3Amain) [![codecov](https://codecov.io/gh/databricks/terraform-provider-databricks/branch/main/graph/badge.svg)](https://codecov.io/gh/databricks/terraform-provider-databricks) [![downloads](https://img.shields.io/github/downloads/databricks/terraform-provider-databricks/total.svg)](https://hanadigital.github.io/grev/?user=databricks&repo=terraform-provider-databricks)
 
@@ -24,7 +29,7 @@ terraform {
 }
 ```
 
-If you want to build it from sources, please refer to [contributing guidelines](CONTRIBUTING.md).
+If you want to build it from sources, see [Installing from source](CONTRIBUTING.md#installing-from-source).
 
 Then create a small sample file, named `main.tf` with approximately following contents. Replace `<your PAT token>` with newly created [PAT Token](https://docs.databricks.com/dev-tools/api/latest/authentication.html).
 

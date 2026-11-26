@@ -1,13 +1,11 @@
-# Contributing to Databricks Terraform Provider
+# Databricks Terraform Provider Development Guide
 
 ---
 
-- [Contributing to Databricks Terraform Provider](#contributing-to-databricks-terraform-provider)
-  - [Issues for new contributors](#issues-for-new-contributors)
-  - [Contribution Workflow](#contribution-workflow)
-  - [Changelog](#changelog)
+- [Databricks Terraform Provider Development Guide](#databricks-terraform-provider-development-guide)
+  - [This repository is a mirror](#this-repository-is-a-mirror)
   - [Installing from source](#installing-from-source)
-  - [Contributing documentation](#contributing-documentation)
+  - [Documentation](#documentation)
   - [Developing provider](#developing-provider)
   - [Developing Resources or Data Sources using Plugin Framework](#developing-resources-or-data-sources-using-plugin-framework)
     - [Package organization for Providers](#package-organization-for-providers)
@@ -23,85 +21,35 @@
   - [Linting](#linting)
   - [Developing with Visual Studio Code Devcontainers](#developing-with-visual-studio-code-devcontainers)
 
-We happily welcome contributions to the Databricks Terraform Provider. We use GitHub Issues to track community reported issues and GitHub Pull Requests for accepting changes.
+## This repository is a mirror
 
-## Issues for new contributors
+This repository is a read-only mirror. The provider's source of truth lives in
+Databricks' internal repository, and its changes are published here with each
+release. This repository does not accept pull requests: only maintainer
+release-sync PRs carrying the `sync` label are merged, and other pull requests
+will not be merged.
 
-New contributors should look for the following tags when searching for a first contribution to the Databricks code base. We strongly recommend that new contributors tackle "good first issue" projects first; this helps the contributor become familiar with the contribution workflow, and for the core devs to become acquainted with the contributor.
+- **Bugs and feature requests:** open a
+  [GitHub Issue](https://github.com/databricks/terraform-provider-databricks/issues).
+  Describe the problem and include a minimal configuration that reproduces it.
+  Maintainers triage issues and make any changes in the internal repository.
+- **Databricks employees:** make provider changes in the internal repository.
 
-[good first issue](https://github.com/databricks/terraform-provider-databricks/labels/good%20first%20issue)
-
-## Contribution Workflow
-
-Code contributions—bug fixes, new development, test improvement — all follow a GitHub-centered workflow. To participate in Databricks Terraform provider development, set up a GitHub account. Then:
-
-1. Fork the repo you plan to work on. Go to the project repo page and use the Fork button. This will create a copy of the repo, under your username. (For more details on how to fork a repository see [this guide](https://help.github.com/articles/fork-a-repo/).)
-
-1. Clone down the repo to your local system.
-
-    ```bash
-    git clone git@github.com:YOUR_USER_NAME/terraform-provider-databricks.git
-    ```
-
-1. Create a new branch to hold your work.
-
-    ```bash
-    git checkout -b new-branch-name
-    ```
-
-1. Work on your new code. Write and run unit tests and [YAML replay tests](#replay-testing) for provider behavior changes.
-
-1. Commit your changes.
-
-    ```bash
-    git add -A
-
-    git commit -m "commit message here"
-    ```
-
-1. Document your changes in the `NEXT_CHANGELOG.md` under the appropriate heading. See the [Changelog](#changelog) section for more details.
-
-1. Push your changes to your GitHub repo.
-
-    ```bash
-    git push origin branch-name
-    ```
-
-1. Open a Pull Request (PR). Go to the original project repo on GitHub. There will be a message about your recently pushed branch, asking if you would like to open a pull request. Follow the prompts, compare across repositories, and submit the PR. This will send an email to the committers. You may want to consider sending an email to the mailing list for more visibility. (For more details, see the [GitHub guide on PRs](https://help.github.com/articles/creating-a-pull-request-from-a-fork).)
-
-Maintainers and other contributors will review your PR. Please participate in the conversation, and try to make any requested changes. Once the PR is approved, the code will be merged.
-
-Additional git and GitHub resources:
-
-[Git documentation](https://git-scm.com/documentation)
-[Git development workflow](https://docs.scipy.org/doc/numpy/dev/development_workflow.html)
-[Resolving merge conflicts](https://help.github.com/articles/resolving-a-merge-conflict-using-the-command-line/)
-
-## Changelog
-
-All PRs that introduce a new feature, fix a bug, improve documentation, or change the behavior of the exporter must include a description of the change in the `NEXT_CHANGELOG.md` file. This file is prepended to the `CHANGELOG.md` file when a new release is created, then cleared out for the next release. Add your changelog entry to the appropriate section of the `NEXT_CHANGELOG.md` file.
-
-If the proposed change has no user-facing impact or does not require an additional changelog entry (e.g. correcting a typo in the documentation), do not add an entry to the `NEXT_CHANGELOG.md` file, and add the text `NO_CHANGELOG=true` to your PR description.
-
-The entries of the changelog must have the following format:
-
-```
- * <Summary of the change> ([#<PR number>](<PR link>)).
-
-   <Optional additional information>
-```
-
-For example:
-
-```
- * Added support for new feature ([#123](https://github.com/databricks/terraform-provider-databricks/pull/123)).
-```
-
-Include additional information to provide context for the change, if necessary. For example, you may include links to the Databricks documentation website, the Terraform documentation website, examples, or other relevant resources.
-
-The `NEXT_CHANGELOG.md` file also determines the next version to be released. The version number in the `NEXT_CHANGELOG.md` is automatically set to the next minor version. If there are any new features or breaking changes, leave this as is. Otherwise, set the version to the next patch version. You can see the current version at the top of the `CHANGELOG.md` file.
+The rest of this guide describes how the provider is built, organized and
+tested. Use it to build the provider from source or to understand its behavior.
 
 ## Installing from source
+
+For revisions that include `databricks-sdk-go/`, keep that directory in the full
+Git checkout. The provider's `go.mod` selects this SDK source with a local
+`replace` directive, so it can build without a separate SDK release. Run the
+build commands below from the provider checkout.
+
+These bundled revisions support Terraform Registry installation and builds
+from a full checkout. Using provider packages as a dependency of another Go
+module is unsupported: Go ignores dependency-local `replace` directives and
+omits nested modules from module downloads. `go install ...@version` also
+rejects the local replacement; use the checkout build instead.
 
 On MacOS X, you can install GoLang through `brew install go`, on Debian-based Linux, you can install it by `sudo apt-get install golang -y`.
 
@@ -113,7 +61,7 @@ make install
 
 Most likely, `terraform init -upgrade -verify-plugins=false -lock=false` would be a very great command to use.
 
-## Contributing documentation
+## Documentation
 
 Make sure you have [`terrafmt`](https://github.com/katbyte/terrafmt) installed to be able to run `make fmt-docs`
 
@@ -121,7 +69,7 @@ Make sure you have [`terrafmt`](https://github.com/katbyte/terrafmt) installed t
 go install github.com/katbyte/terrafmt@latest
 ```
 
-All documentation contributions should be as detailed as possible and follow the [required format](https://www.terraform.io/registry/providers/docs). The following additional checks must also be valid:
+All documentation should be as detailed as possible and follow the [required format](https://www.terraform.io/registry/providers/docs). The following additional checks must also be valid:
 
 - `make fmt-docs` to make sure code examples are consistent
 - Correct rendering with Terraform Registry Doc Preview Tool - <https://registry.terraform.io/tools/doc-preview>
@@ -405,12 +353,6 @@ func TestExampleResourceCreate(t *testing.T) {
 ```
 
 *Write replay tests.* Cover the Terraform lifecycle with HCL and HTTP fixtures, including updates and cleanup. See [Replay Testing](#replay-testing) and the [authoring guide](qa/terraformtest/AUTHORING.md).
-
-## Unit and Replay Testing on Forked Pull Requests
-
-Unit and replay tests run in CI on every PR. PRs opened from forks cannot authenticate to the internal Go module proxy, so CI resolves their Go modules offline from a dependency cache that the "Warm Go Cache" workflow pre-warms daily from the `main` branch.
-
-If your PR changes `go.mod` or `go.sum`, the `tests` check will fail until a maintainer re-warms the cache for your PR (Actions -> Warm Go Cache -> Run workflow -> pr_number). Once the warming run completes, re-run the failed check.
 
 ## Replay Testing
 

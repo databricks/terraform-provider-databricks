@@ -13,6 +13,3 @@ updates:
       interval: monthly
     cooldown:
       default-days: 7
-    # tagging.yml is generated and maintained externally.
-    exclude-paths:
-      - .github/workflows/tagging.yml

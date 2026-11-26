@@ -1495,6 +1495,7 @@ func TestShouldKeepAdminsOnAnythingExceptPasswordsAndAssignsOwnerForPipeline(t *
 }
 
 func TestPathPermissionsResourceIDFields(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
 	m := getResourcePermissions("notebook_path", "notebook")
 	w, err := databricks.NewWorkspaceClient(&databricks.Config{})
 	require.NoError(t, err)

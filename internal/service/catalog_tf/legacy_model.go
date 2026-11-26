@@ -47,6 +47,20 @@ type AccessRequestDestinations_SdkV2 struct {
 	Securable types.List `tfsdk:"securable"`
 	// The type of the securable, repeated from **securable** as a plain string.
 	SecurableType types.String `tfsdk:"securable_type"`
+	// The access request URLs shared by every workspace in the metastore. Only
+	// set when the securable is a metastore. These URLs are used when neither
+	// the requested securable nor its parents have an explicit destination or a
+	// default owner email destination, and they take precedence over metastore
+	// destinations.
+	//
+	// A **dynamic_url** and default owner email destinations cannot both be on:
+	// saving one turns the other off. Saving a **dynamic_url** while they are
+	// on requires a metastore admin.
+	//
+	// Setting this field removes the metastore destinations in this workspace.
+	// The first save also removes the metastore URL destinations of other
+	// workspaces. Once set, the configuration can be cleared but not removed.
+	UrlConfiguration types.List `tfsdk:"url_configuration"`
 }
 
 func (to *AccessRequestDestinations_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from AccessRequestDestinations_SdkV2) {
@@ -71,6 +85,15 @@ func (to *AccessRequestDestinations_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx co
 				// Recursively sync the fields of Securable
 				toSecurable.SyncFieldsDuringCreateOrUpdate(ctx, fromSecurable)
 				to.SetSecurable(ctx, toSecurable)
+			}
+		}
+	}
+	if !from.UrlConfiguration.IsNull() && !from.UrlConfiguration.IsUnknown() {
+		if toUrlConfiguration, ok := to.GetUrlConfiguration(ctx); ok {
+			if fromUrlConfiguration, ok := from.GetUrlConfiguration(ctx); ok {
+				// Recursively sync the fields of UrlConfiguration
+				toUrlConfiguration.SyncFieldsDuringCreateOrUpdate(ctx, fromUrlConfiguration)
+				to.SetUrlConfiguration(ctx, toUrlConfiguration)
 			}
 		}
 	}
@@ -99,6 +122,14 @@ func (to *AccessRequestDestinations_SdkV2) SyncFieldsDuringRead(ctx context.Cont
 			}
 		}
 	}
+	if !from.UrlConfiguration.IsNull() && !from.UrlConfiguration.IsUnknown() {
+		if toUrlConfiguration, ok := to.GetUrlConfiguration(ctx); ok {
+			if fromUrlConfiguration, ok := from.GetUrlConfiguration(ctx); ok {
+				toUrlConfiguration.SyncFieldsDuringRead(ctx, fromUrlConfiguration)
+				to.SetUrlConfiguration(ctx, toUrlConfiguration)
+			}
+		}
+	}
 }
 
 func (m AccessRequestDestinations_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -110,6 +141,8 @@ func (m AccessRequestDestinations_SdkV2) ApplySchemaCustomizations(attrs map[str
 	attrs["securable"] = attrs["securable"].SetRequired()
 	attrs["securable"] = attrs["securable"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["securable_type"] = attrs["securable_type"].SetComputed()
+	attrs["url_configuration"] = attrs["url_configuration"].SetOptional()
+	attrs["url_configuration"] = attrs["url_configuration"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
 	return attrs
 }
@@ -126,6 +159,7 @@ func (m AccessRequestDestinations_SdkV2) GetComplexFieldTypes(ctx context.Contex
 		"destination_source_securable": reflect.TypeOf(Securable_SdkV2{}),
 		"destinations":                 reflect.TypeOf(NotificationDestination_SdkV2{}),
 		"securable":                    reflect.TypeOf(Securable_SdkV2{}),
+		"url_configuration":            reflect.TypeOf(UrlConfiguration_SdkV2{}),
 	}
 }
 
@@ -142,6 +176,7 @@ func (m AccessRequestDestinations_SdkV2) ToObjectValue(ctx context.Context) base
 			"full_name":                    m.FullName,
 			"securable":                    m.Securable,
 			"securable_type":               m.SecurableType,
+			"url_configuration":            m.UrlConfiguration,
 		})
 }
 
@@ -161,6 +196,9 @@ func (m AccessRequestDestinations_SdkV2) Type(ctx context.Context) attr.Type {
 				ElemType: Securable_SdkV2{}.Type(ctx),
 			},
 			"securable_type": types.StringType,
+			"url_configuration": basetypes.ListType{
+				ElemType: UrlConfiguration_SdkV2{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -241,6 +279,32 @@ func (m *AccessRequestDestinations_SdkV2) SetSecurable(ctx context.Context, v Se
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["securable"]
 	m.Securable = types.ListValueMust(t, vs)
+}
+
+// GetUrlConfiguration returns the value of the UrlConfiguration field in AccessRequestDestinations_SdkV2 as
+// a UrlConfiguration_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *AccessRequestDestinations_SdkV2) GetUrlConfiguration(ctx context.Context) (UrlConfiguration_SdkV2, bool) {
+	var e UrlConfiguration_SdkV2
+	if m.UrlConfiguration.IsNull() || m.UrlConfiguration.IsUnknown() {
+		return e, false
+	}
+	var v []UrlConfiguration_SdkV2
+	d := m.UrlConfiguration.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetUrlConfiguration sets the value of the UrlConfiguration field in AccessRequestDestinations_SdkV2.
+func (m *AccessRequestDestinations_SdkV2) SetUrlConfiguration(ctx context.Context, v UrlConfiguration_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["url_configuration"]
+	m.UrlConfiguration = types.ListValueMust(t, vs)
 }
 
 // Properties of the new metastore.
@@ -3324,6 +3388,18 @@ func (to *CatalogInfo_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context,
 			}
 		}
 	}
+	if !from.Options.IsNull() && !from.Options.IsUnknown() && to.Options.IsNull() && len(from.Options.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for Options, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.Options = from.Options
+	}
+	if !from.Properties.IsNull() && !from.Properties.IsUnknown() && to.Properties.IsNull() && len(from.Properties.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for Properties, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.Properties = from.Properties
+	}
 	if !from.ProvisioningInfo.IsNull() && !from.ProvisioningInfo.IsUnknown() {
 		if toProvisioningInfo, ok := to.GetProvisioningInfo(ctx); ok {
 			if fromProvisioningInfo, ok := from.GetProvisioningInfo(ctx); ok {
@@ -3351,6 +3427,18 @@ func (to *CatalogInfo_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Cata
 				to.SetManagedEncryptionSettings(ctx, toManagedEncryptionSettings)
 			}
 		}
+	}
+	if !from.Options.IsNull() && !from.Options.IsUnknown() && to.Options.IsNull() && len(from.Options.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for Options, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.Options = from.Options
+	}
+	if !from.Properties.IsNull() && !from.Properties.IsUnknown() && to.Properties.IsNull() && len(from.Properties.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for Properties, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.Properties = from.Properties
 	}
 	if !from.ProvisioningInfo.IsNull() && !from.ProvisioningInfo.IsUnknown() {
 		if toProvisioningInfo, ok := to.GetProvisioningInfo(ctx); ok {
@@ -3683,7 +3771,11 @@ func (m CloudflareApiToken_SdkV2) Type(ctx context.Context) attr.Type {
 type ColumnInfo_SdkV2 struct {
 	// User-provided free-form text description.
 	Comment types.String `tfsdk:"comment"`
-
+	// The column mask function applied to this column, if any. A column mask is
+	// a SQL user-defined function that transforms the values a query returns
+	// for the column. See
+	// https://docs.databricks.com/aws/en/tables/row-and-column-filters for
+	// details.
 	Mask types.List `tfsdk:"mask"`
 	// Name of Column.
 	Name types.String `tfsdk:"name"`
@@ -3697,7 +3789,9 @@ type ColumnInfo_SdkV2 struct {
 	TypeIntervalType types.String `tfsdk:"type_interval_type"`
 	// Full data type specification, JSON-serialized.
 	TypeJson types.String `tfsdk:"type_json"`
-
+	// The name of the column's data type, for example STRING, DECIMAL or
+	// STRUCT. The complete type, including parameters such as the precision of
+	// a decimal or the element type of an array, is in type_text.
 	TypeName types.String `tfsdk:"type_name"`
 	// Digits of precision; required for DecimalTypes.
 	TypePrecision types.Int64 `tfsdk:"type_precision"`
@@ -4299,16 +4393,20 @@ type ConnectionInfo_SdkV2 struct {
 	Comment types.String `tfsdk:"comment"`
 	// Unique identifier of the Connection.
 	ConnectionId types.String `tfsdk:"connection_id"`
-	// The type of connection.
+	// The type of external data source or service that the connection reaches.
+	// The connection type determines which keys are required in options and
+	// cannot be changed after creation.
 	ConnectionType types.String `tfsdk:"connection_type"`
 	// Time at which this connection was created, in epoch milliseconds.
 	CreatedAt types.Int64 `tfsdk:"created_at"`
 	// Username of connection creator.
 	CreatedBy types.String `tfsdk:"created_by"`
-	// The type of credential.
+	// The type of credential that is used to authenticate to the external data
+	// source. The server derives it from the connection type and the keys
+	// present in options.
 	CredentialType types.String `tfsdk:"credential_type"`
-	// [Create,Update:OPT] Connection environment settings as
-	// EnvironmentSettings object.
+	// Environment settings for the connection, such as the Java libraries that
+	// it needs and the environment version.
 	EnvironmentSettings types.List `tfsdk:"environment_settings"`
 	// Full name of connection.
 	FullName types.String `tfsdk:"full_name"`
@@ -4318,25 +4416,28 @@ type ConnectionInfo_SdkV2 struct {
 	Name types.String `tfsdk:"name"`
 	// A map of key-value properties attached to the securable.
 	Options types.Map `tfsdk:"options"`
-	// Username of current owner of the connection.
+	// Username of the current owner of the connection. The creator becomes the
+	// owner at creation, and ownership can be transferred on update.
 	Owner types.String `tfsdk:"owner"`
 	// A map of key-value properties attached to the securable.
 	Properties types.Map `tfsdk:"properties"`
-
+	// Provisioning status of the connection.
 	ProvisioningInfo types.List `tfsdk:"provisioning_info"`
-	// If the connection is read only.
+	// Whether the connection is read only. All connections are currently read
+	// only, so a value set on create or update is ignored.
 	ReadOnly types.Bool `tfsdk:"read_only"`
 	// A map of option names to UC Secret references. Keys are connection option
 	// names (same as in OptionsKVPairs) and values are UC Secret fully
 	// qualified names.
 	Secrets types.Map `tfsdk:"secrets"`
-
+	// The type of Unity Catalog securable. This is always CONNECTION.
 	SecurableType types.String `tfsdk:"securable_type"`
 	// Time at which this connection was updated, in epoch milliseconds.
 	UpdatedAt types.Int64 `tfsdk:"updated_at"`
 	// Username of user who last modified connection.
 	UpdatedBy types.String `tfsdk:"updated_by"`
-	// URL of the remote data source, extracted from options.
+	// URL of the remote data source. The server derives it from the host, port
+	// and path options.
 	Url types.String `tfsdk:"url"`
 }
 
@@ -4350,6 +4451,18 @@ func (to *ConnectionInfo_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Conte
 			}
 		}
 	}
+	if !from.Options.IsNull() && !from.Options.IsUnknown() && to.Options.IsNull() && len(from.Options.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for Options, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.Options = from.Options
+	}
+	if !from.Properties.IsNull() && !from.Properties.IsUnknown() && to.Properties.IsNull() && len(from.Properties.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for Properties, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.Properties = from.Properties
+	}
 	if !from.ProvisioningInfo.IsNull() && !from.ProvisioningInfo.IsUnknown() {
 		if toProvisioningInfo, ok := to.GetProvisioningInfo(ctx); ok {
 			if fromProvisioningInfo, ok := from.GetProvisioningInfo(ctx); ok {
@@ -4358,6 +4471,12 @@ func (to *ConnectionInfo_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Conte
 				to.SetProvisioningInfo(ctx, toProvisioningInfo)
 			}
 		}
+	}
+	if !from.Secrets.IsNull() && !from.Secrets.IsUnknown() && to.Secrets.IsNull() && len(from.Secrets.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for Secrets, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.Secrets = from.Secrets
 	}
 }
 
@@ -4370,6 +4489,18 @@ func (to *ConnectionInfo_SdkV2) SyncFieldsDuringRead(ctx context.Context, from C
 			}
 		}
 	}
+	if !from.Options.IsNull() && !from.Options.IsUnknown() && to.Options.IsNull() && len(from.Options.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for Options, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.Options = from.Options
+	}
+	if !from.Properties.IsNull() && !from.Properties.IsUnknown() && to.Properties.IsNull() && len(from.Properties.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for Properties, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.Properties = from.Properties
+	}
 	if !from.ProvisioningInfo.IsNull() && !from.ProvisioningInfo.IsUnknown() {
 		if toProvisioningInfo, ok := to.GetProvisioningInfo(ctx); ok {
 			if fromProvisioningInfo, ok := from.GetProvisioningInfo(ctx); ok {
@@ -4377,6 +4508,12 @@ func (to *ConnectionInfo_SdkV2) SyncFieldsDuringRead(ctx context.Context, from C
 				to.SetProvisioningInfo(ctx, toProvisioningInfo)
 			}
 		}
+	}
+	if !from.Secrets.IsNull() && !from.Secrets.IsUnknown() && to.Secrets.IsNull() && len(from.Secrets.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for Secrets, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.Secrets = from.Secrets
 	}
 }
 
@@ -5524,6 +5661,18 @@ func (to *CreateCatalog_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Contex
 			}
 		}
 	}
+	if !from.Options.IsNull() && !from.Options.IsUnknown() && to.Options.IsNull() && len(from.Options.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for Options, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.Options = from.Options
+	}
+	if !from.Properties.IsNull() && !from.Properties.IsUnknown() && to.Properties.IsNull() && len(from.Properties.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for Properties, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.Properties = from.Properties
+	}
 }
 
 func (to *CreateCatalog_SdkV2) SyncFieldsDuringRead(ctx context.Context, from CreateCatalog_SdkV2) {
@@ -5534,6 +5683,18 @@ func (to *CreateCatalog_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Cr
 				to.SetManagedEncryptionSettings(ctx, toManagedEncryptionSettings)
 			}
 		}
+	}
+	if !from.Options.IsNull() && !from.Options.IsUnknown() && to.Options.IsNull() && len(from.Options.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for Options, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.Options = from.Options
+	}
+	if !from.Properties.IsNull() && !from.Properties.IsUnknown() && to.Properties.IsNull() && len(from.Properties.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for Properties, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.Properties = from.Properties
 	}
 }
 
@@ -5693,10 +5854,12 @@ func (m *CreateCatalog_SdkV2) SetProperties(ctx context.Context, v map[string]ty
 type CreateConnection_SdkV2 struct {
 	// User-provided free-form text description.
 	Comment types.String `tfsdk:"comment"`
-	// The type of connection.
+	// The type of external data source or service that the connection reaches.
+	// The connection type determines which keys are required in options and
+	// cannot be changed after creation.
 	ConnectionType types.String `tfsdk:"connection_type"`
-	// [Create,Update:OPT] Connection environment settings as
-	// EnvironmentSettings object.
+	// Environment settings for the connection, such as the Java libraries that
+	// it needs and the environment version.
 	EnvironmentSettings types.List `tfsdk:"environment_settings"`
 	// Name of the connection.
 	Name types.String `tfsdk:"name"`
@@ -5708,7 +5871,8 @@ type CreateConnection_SdkV2 struct {
 	Parent types.String `tfsdk:"parent"`
 	// A map of key-value properties attached to the securable.
 	Properties types.Map `tfsdk:"properties"`
-	// If the connection is read only.
+	// Whether the connection is read only. All connections are currently read
+	// only, so a value set on create or update is ignored.
 	ReadOnly types.Bool `tfsdk:"read_only"`
 	// A map of option names to UC Secret references. Keys are connection option
 	// names (same as in OptionsKVPairs) and values are UC Secret fully
@@ -5726,6 +5890,18 @@ func (to *CreateConnection_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Con
 			}
 		}
 	}
+	if !from.Properties.IsNull() && !from.Properties.IsUnknown() && to.Properties.IsNull() && len(from.Properties.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for Properties, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.Properties = from.Properties
+	}
+	if !from.Secrets.IsNull() && !from.Secrets.IsUnknown() && to.Secrets.IsNull() && len(from.Secrets.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for Secrets, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.Secrets = from.Secrets
+	}
 }
 
 func (to *CreateConnection_SdkV2) SyncFieldsDuringRead(ctx context.Context, from CreateConnection_SdkV2) {
@@ -5736,6 +5912,18 @@ func (to *CreateConnection_SdkV2) SyncFieldsDuringRead(ctx context.Context, from
 				to.SetEnvironmentSettings(ctx, toEnvironmentSettings)
 			}
 		}
+	}
+	if !from.Properties.IsNull() && !from.Properties.IsUnknown() && to.Properties.IsNull() && len(from.Properties.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for Properties, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.Properties = from.Properties
+	}
+	if !from.Secrets.IsNull() && !from.Secrets.IsUnknown() && to.Secrets.IsNull() && len(from.Secrets.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for Secrets, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.Secrets = from.Secrets
 	}
 }
 
@@ -6741,53 +6929,76 @@ func (m *CreateExternalMetadataRequest_SdkV2) SetExternalMetadata(ctx context.Co
 	m.ExternalMetadata = types.ListValueMust(t, vs)
 }
 
+// A user-defined function (UDF) registered in Unity Catalog. A function belongs
+// to a schema and is referenced as catalog_name.schema_name.function_name. Its
+// body is either a SQL expression or query, or source code in an external
+// language such as Python. See
+// https://docs.databricks.com/aws/en/udf/unity-catalog for an overview.
 type CreateFunction_SdkV2 struct {
 	// Name of parent Catalog.
 	CatalogName types.String `tfsdk:"catalog_name"`
 	// User-provided free-form text description.
 	Comment types.String `tfsdk:"comment"`
-	// Scalar function return data type.
+	// Data type of the value the function returns. A table function uses
+	// TABLE_TYPE and describes its result columns in return_params, except for
+	// a polymorphic Python UDTF, which omits them.
 	DataType types.String `tfsdk:"data_type"`
-	// External function language.
+	// Language of the function body for an EXTERNAL function. It is required
+	// when routine_body is EXTERNAL.
 	ExternalLanguage types.String `tfsdk:"external_language"`
-	// External function name.
+	// Name of the function in its external language. It is reserved for future
+	// use.
 	ExternalName types.String `tfsdk:"external_name"`
-	// Pretty printed function data type.
+	// Return data type of the function in SQL syntax, including any type
+	// parameters such as precision and scale.
 	FullDataType types.String `tfsdk:"full_data_type"`
-	// Function input parameters.
+	// Input parameters of the function. When it is set, parameters must contain
+	// at least one entry. A function that takes no arguments omits
+	// input_params, even though the Create request schema marks it as required.
 	InputParams types.List `tfsdk:"input_params"`
-	// Whether the function is deterministic.
+	// Whether the function returns the same result for the same arguments. It
+	// corresponds to the DETERMINISTIC characteristic of CREATE FUNCTION.
 	IsDeterministic types.Bool `tfsdk:"is_deterministic"`
-	// Function null call.
+	// Whether the function is a null-call function in the sense of the SQL
+	// standard, which returns NULL whenever any argument is NULL.
 	IsNullCall types.Bool `tfsdk:"is_null_call"`
 	// Name of function, relative to parent schema.
 	Name types.String `tfsdk:"name"`
-	// Function parameter style. **S** is the value for SQL.
+	// How arguments are passed to the function body. S means that each argument
+	// is passed as a single scalar value.
 	ParameterStyle types.String `tfsdk:"parameter_style"`
 	// JSON-serialized key-value pair map, encoded (escaped) as a string.
 	Properties types.String `tfsdk:"properties"`
-	// Table function return parameters.
+	// Result columns of a table function. Set it when data_type is TABLE_TYPE,
+	// except for a polymorphic Python UDTF (an EXTERNAL Python function with
+	// full_data_type "()"), which must not set it.
 	ReturnParams types.List `tfsdk:"return_params"`
-	// Function language. When **EXTERNAL** is used, the language of the routine
-	// function should be specified in the **external_language** field, and the
-	// **return_params** of the function cannot be used (as **TABLE** return
-	// type is not supported), and the **sql_data_access** field must be
-	// **NO_SQL**.
+	// Language of the function body. SQL means that routine_definition holds a
+	// SQL expression or query. EXTERNAL means that it holds source code in the
+	// language named by external_language, and sql_data_access must then be
+	// NO_SQL.
 	RoutineBody types.String `tfsdk:"routine_body"`
-	// Function body.
+	// Body of the function. For a SQL function it is the expression or query
+	// that computes the result; for an EXTERNAL function it is the source code
+	// of the function. It is omitted when the caller can only browse the
+	// function.
 	RoutineDefinition types.String `tfsdk:"routine_definition"`
 	// Function dependencies. For external UDFs, dependencies may contain only
 	// credential, secret, or volume objects.
 	RoutineDependencies types.List `tfsdk:"routine_dependencies"`
 	// Name of parent Schema relative to its parent Catalog.
 	SchemaName types.String `tfsdk:"schema_name"`
-	// Function security type.
+	// Whose privileges the function body runs with. DEFINER runs it with the
+	// privileges of the function owner.
 	SecurityType types.String `tfsdk:"security_type"`
-	// Specific name of the function; Reserved for future use.
+	// Specific name of the function. Set it to the same value as name.
 	SpecificName types.String `tfsdk:"specific_name"`
-	// Function SQL data access.
+	// How the function body interacts with SQL data. CONTAINS_SQL means that
+	// the body contains SQL but reads no table or view, READS_SQL_DATA means
+	// that it reads a table or view, and NO_SQL is required for EXTERNAL
+	// functions.
 	SqlDataAccess types.String `tfsdk:"sql_data_access"`
-	// List of schemes whose objects can be referenced without qualification.
+	// List of schemas whose objects can be referenced without qualification.
 	SqlPath types.String `tfsdk:"sql_path"`
 }
 
@@ -7136,7 +7347,9 @@ type CreateMcpServiceRequest_SdkV2 struct {
 	// The MCP service to create. Do not set `name`; the server derives it from
 	// `parent` and `mcp_service_id`. `source_connection` is required.
 	McpService types.List `tfsdk:"mcp_service"`
-	// Name for the MCP service, e.g. "my_mcp_service".
+	// Name of the MCP service within the parent schema. The name must not
+	// contain periods, spaces, forward slashes, percent signs, or control
+	// characters, and it is stored in lowercase.
 	McpServiceId types.String `tfsdk:"-"`
 	// Name of the parent schema. Format: `schemas/{catalog}.{schema}`. Each
 	// `{...}` component is capped at 255 characters individually.
@@ -7469,7 +7682,10 @@ type CreateModelProviderServiceRequest_SdkV2 struct {
 	// The model provider service to create. Do not set `name`; the server
 	// derives it from `parent` and `model_provider_service_id`.
 	ModelProviderService types.List `tfsdk:"model_provider_service"`
-	// Name for the model provider service, e.g. "openai_prod".
+	// Name of the model provider service within the parent schema. The name
+	// must not contain periods, spaces, forward slashes, percent signs, or
+	// control characters, must not end in `_DO_NOT_MODIFY`, and must not exceed
+	// 241 characters. It is stored in lowercase.
 	ModelProviderServiceId types.String `tfsdk:"-"`
 	// Name of the parent schema. Format: `schemas/{catalog}.{schema}`. Each
 	// `{...}` component is capped at 255 characters individually.
@@ -8624,6 +8840,12 @@ func (to *CreateRequestExternalLineage_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx
 			}
 		}
 	}
+	if !from.Properties.IsNull() && !from.Properties.IsUnknown() && to.Properties.IsNull() && len(from.Properties.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for Properties, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.Properties = from.Properties
+	}
 	if !from.Source.IsNull() && !from.Source.IsUnknown() {
 		if toSource, ok := to.GetSource(ctx); ok {
 			if fromSource, ok := from.GetSource(ctx); ok {
@@ -8662,6 +8884,12 @@ func (to *CreateRequestExternalLineage_SdkV2) SyncFieldsDuringRead(ctx context.C
 				to.SetColumns(ctx, toColumns)
 			}
 		}
+	}
+	if !from.Properties.IsNull() && !from.Properties.IsUnknown() && to.Properties.IsNull() && len(from.Properties.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for Properties, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.Properties = from.Properties
 	}
 	if !from.Source.IsNull() && !from.Source.IsUnknown() {
 		if toSource, ok := to.GetSource(ctx); ok {
@@ -8854,20 +9082,41 @@ type CreateSchema_SdkV2 struct {
 	CatalogName types.String `tfsdk:"catalog_name"`
 	// User-provided free-form text description.
 	Comment types.String `tfsdk:"comment"`
-	// Custom maximum retention period in hours for the schema.
+	// Dropped objects in the schema remain recoverable for this number of hours
+	// before they are permanently purged. The value must be 0 or within the
+	// range allowed for the metastore. Schemas that do not set their own value
+	// inherit the parent catalog's value.
 	CustomMaxRetentionHours types.Int64 `tfsdk:"custom_max_retention_hours"`
 	// Name of schema, relative to parent catalog.
 	Name types.String `tfsdk:"name"`
 	// A map of key-value properties attached to the securable.
 	Properties types.Map `tfsdk:"properties"`
-	// Storage root URL for managed tables within schema.
+	// Managed tables and volumes in the schema are stored under this storage
+	// root URL. The path must be inside an external location on which the
+	// caller has the CREATE MANAGED STORAGE privilege. If omitted, managed data
+	// is stored under the parent catalog's storage root, or under the
+	// metastore's root storage location when the catalog has none. Schemas in
+	// Delta Sharing catalogs cannot have a storage root, and schemas in a
+	// federated Hive metastore catalog must set one.
 	StorageRoot types.String `tfsdk:"storage_root"`
 }
 
 func (to *CreateSchema_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from CreateSchema_SdkV2) {
+	if !from.Properties.IsNull() && !from.Properties.IsUnknown() && to.Properties.IsNull() && len(from.Properties.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for Properties, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.Properties = from.Properties
+	}
 }
 
 func (to *CreateSchema_SdkV2) SyncFieldsDuringRead(ctx context.Context, from CreateSchema_SdkV2) {
+	if !from.Properties.IsNull() && !from.Properties.IsUnknown() && to.Properties.IsNull() && len(from.Properties.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for Properties, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.Properties = from.Properties
+	}
 }
 
 func (m CreateSchema_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -9057,9 +9306,10 @@ type CreateSkillRequest_SdkV2 struct {
 	// be omitted. Do not set `name`; the server derives it from `parent` and
 	// `skill_id`.
 	Skill types.List `tfsdk:"skill"`
-	// Name for the skill, e.g. "basic-math". The server normalizes this
-	// identifier to lowercase. It is independent of the bundle name read from
-	// SKILL.md.
+	// Name of the skill within the parent schema. The name must not contain
+	// periods, spaces, forward slashes, percent signs, or control characters,
+	// and it is stored in lowercase. It is independent of the bundle name read
+	// from SKILL.md.
 	SkillId types.String `tfsdk:"-"`
 }
 
@@ -9588,21 +9838,36 @@ func (m *CreateTableConstraint_SdkV2) SetConstraint(ctx context.Context, v Table
 }
 
 type CreateTableRequest_SdkV2 struct {
-	// Name of parent catalog.
+	// Name of parent catalog. Required for creation using catalog and schema
+	// names.
 	CatalogName types.String `tfsdk:"catalog_name"`
 	// The array of __ColumnInfo__ definitions of the table's columns.
 	Columns types.List `tfsdk:"columns"`
-
+	// The format of the data that backs the table, such as DELTA, PARQUET, CSV
+	// or JSON. Foreign tables report the external system that holds them, for
+	// example SNOWFLAKE_FORMAT or MYSQL_FORMAT.
 	DataSourceFormat types.String `tfsdk:"data_source_format"`
 	// Name of table, relative to parent schema.
 	Name types.String `tfsdk:"name"`
 	// A map of key-value properties attached to the securable.
 	Properties types.Map `tfsdk:"properties"`
-	// Name of parent schema relative to its parent catalog.
+	// Name of parent schema relative to its parent catalog. Required for
+	// creation using catalog and schema names.
 	SchemaName types.String `tfsdk:"schema_name"`
-	// Storage root URL for table (for **MANAGED**, **EXTERNAL** tables).
+	// The cloud storage URL under which the data files of the table are stored.
+	// For an EXTERNAL table, it must be set on creation to a path within an
+	// existing external location. For a MANAGED table, the server assigns a
+	// path under the managed storage location of the parent schema, catalog or
+	// metastore and returns it in this field. Views have no storage location.
 	StorageLocation types.String `tfsdk:"storage_location"`
-
+	// The type of the table. MANAGED tables store their data in storage that
+	// Unity Catalog manages, EXTERNAL tables store it in a registered external
+	// location, FOREIGN tables mirror objects of an external database through a
+	// connection, and the shallow clone types reference the data files of a
+	// base table. VIEW, MATERIALIZED_VIEW, STREAMING_TABLE and METRIC_VIEW are
+	// defined by a view definition. See
+	// https://docs.databricks.com/aws/en/tables/ for an overview of the table
+	// types.
 	TableType types.String `tfsdk:"table_type"`
 }
 
@@ -9626,6 +9891,12 @@ func (to *CreateTableRequest_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.C
 			}
 		}
 	}
+	if !from.Properties.IsNull() && !from.Properties.IsUnknown() && to.Properties.IsNull() && len(from.Properties.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for Properties, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.Properties = from.Properties
+	}
 }
 
 func (to *CreateTableRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, from CreateTableRequest_SdkV2) {
@@ -9646,6 +9917,12 @@ func (to *CreateTableRequest_SdkV2) SyncFieldsDuringRead(ctx context.Context, fr
 				to.SetColumns(ctx, toColumns)
 			}
 		}
+	}
+	if !from.Properties.IsNull() && !from.Properties.IsUnknown() && to.Properties.IsNull() && len(from.Properties.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for Properties, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.Properties = from.Properties
 	}
 }
 
@@ -11111,6 +11388,7 @@ func (m DeleteExternalLocationRequest_SdkV2) Type(ctx context.Context) attr.Type
 }
 
 type DeleteExternalMetadataRequest_SdkV2 struct {
+	// Name of the external metadata object to delete.
 	Name types.String `tfsdk:"-"`
 }
 
@@ -11158,10 +11436,10 @@ func (m DeleteExternalMetadataRequest_SdkV2) Type(ctx context.Context) attr.Type
 }
 
 type DeleteFunctionRequest_SdkV2 struct {
-	// Force deletion even if the function is notempty.
+	// Force deletion even if the function is not empty.
 	Force types.Bool `tfsdk:"-"`
 	// The fully-qualified name of the function (of the form
-	// __catalog_name__.__schema_name__.__function__name__) .
+	// __catalog_name__.__schema_name__.__function_name__).
 	Name types.String `tfsdk:"-"`
 }
 
@@ -11531,7 +11809,8 @@ func (m DeleteModelServiceRequest_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type DeleteModelVersionRequest_SdkV2 struct {
-	// The three-level (fully qualified) name of the model version
+	// The three-level (fully qualified) name of the parent registered model, in
+	// the form `catalog_name.schema_name.model_name`.
 	FullName types.String `tfsdk:"-"`
 	// The integer version number of the model version
 	Version types.Int64 `tfsdk:"-"`
@@ -12072,7 +12351,7 @@ func (m DeleteResponse_SdkV2) Type(ctx context.Context) attr.Type {
 type DeleteSchemaRequest_SdkV2 struct {
 	// Force deletion even if the schema is not empty.
 	Force types.Bool `tfsdk:"-"`
-	// Full name of the schema.
+	// Full name of the schema, in the form catalog_name.schema_name.
 	FullName types.String `tfsdk:"-"`
 }
 
@@ -12645,12 +12924,13 @@ func (m *DenyOptions_SdkV2) SetPrivileges(ctx context.Context, v []types.String)
 // __table__, __function__, __connection__, __credential__, __volume__, or
 // __secret__.
 type Dependency_SdkV2 struct {
+	// A dependency on a Unity Catalog connection.
 	Connection types.List `tfsdk:"connection"`
-
+	// A dependency on a Unity Catalog credential.
 	Credential types.List `tfsdk:"credential"`
-
+	// A dependency on a Unity Catalog function.
 	Function types.List `tfsdk:"function"`
-
+	// A dependency on a Unity Catalog table.
 	Table types.List `tfsdk:"table"`
 }
 
@@ -13014,7 +13294,7 @@ func (m *DependencyList_SdkV2) SetDependencies(ctx context.Context, v []Dependen
 type DisableRequest_SdkV2 struct {
 	// The metastore ID under which the system schema lives.
 	MetastoreId types.String `tfsdk:"-"`
-	// Full name of the system schema.
+	// Name of the system schema, without the catalog prefix.
 	SchemaName types.String `tfsdk:"-"`
 }
 
@@ -13473,11 +13753,13 @@ func (m *EffectivePrivilegeAssignment_SdkV2) SetPrivileges(ctx context.Context, 
 }
 
 type EnableRequest_SdkV2 struct {
-	// the catalog for which the system schema is to enabled in
+	// Name of the catalog in which to enable the system schema. The supported
+	// values are `system` and `samples`. If not set, the system schema is
+	// enabled in the `system` catalog.
 	CatalogName types.String `tfsdk:"catalog_name"`
 	// The metastore ID under which the system schema lives.
 	MetastoreId types.String `tfsdk:"-"`
-	// Full name of the system schema.
+	// Name of the system schema, without the catalog prefix.
 	SchemaName types.String `tfsdk:"-"`
 }
 
@@ -14950,6 +15232,12 @@ func (to *ExternalLineageRelationship_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx 
 			}
 		}
 	}
+	if !from.Properties.IsNull() && !from.Properties.IsUnknown() && to.Properties.IsNull() && len(from.Properties.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for Properties, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.Properties = from.Properties
+	}
 	if !from.Source.IsNull() && !from.Source.IsUnknown() {
 		if toSource, ok := to.GetSource(ctx); ok {
 			if fromSource, ok := from.GetSource(ctx); ok {
@@ -14988,6 +15276,12 @@ func (to *ExternalLineageRelationship_SdkV2) SyncFieldsDuringRead(ctx context.Co
 				to.SetColumns(ctx, toColumns)
 			}
 		}
+	}
+	if !from.Properties.IsNull() && !from.Properties.IsUnknown() && to.Properties.IsNull() && len(from.Properties.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for Properties, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.Properties = from.Properties
 	}
 	if !from.Source.IsNull() && !from.Source.IsUnknown() {
 		if toSource, ok := to.GetSource(ctx); ok {
@@ -15217,6 +15511,12 @@ func (to *ExternalLineageRelationshipInfo_SdkV2) SyncFieldsDuringCreateOrUpdate(
 			}
 		}
 	}
+	if !from.Properties.IsNull() && !from.Properties.IsUnknown() && to.Properties.IsNull() && len(from.Properties.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for Properties, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.Properties = from.Properties
+	}
 	if !from.Source.IsNull() && !from.Source.IsUnknown() {
 		if toSource, ok := to.GetSource(ctx); ok {
 			if fromSource, ok := from.GetSource(ctx); ok {
@@ -15255,6 +15555,12 @@ func (to *ExternalLineageRelationshipInfo_SdkV2) SyncFieldsDuringRead(ctx contex
 				to.SetColumns(ctx, toColumns)
 			}
 		}
+	}
+	if !from.Properties.IsNull() && !from.Properties.IsUnknown() && to.Properties.IsNull() && len(from.Properties.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for Properties, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.Properties = from.Properties
 	}
 	if !from.Source.IsNull() && !from.Source.IsUnknown() {
 		if toSource, ok := to.GetSource(ctx); ok {
@@ -15862,34 +16168,57 @@ func (m *ExternalLocationInfo_SdkV2) SetFileEventQueue(ctx context.Context, v Fi
 	m.FileEventQueue = types.ListValueMust(t, vs)
 }
 
+// Metadata about an object that lives outside of Databricks, such as a Kafka
+// topic, a Tableau dashboard, or a Salesforce table. An external metadata
+// object is a Unity Catalog securable that can be the source or the target of
+// external lineage relationships, so that data flows into and out of Databricks
+// appear in the Unity Catalog lineage graph. See [External lineage].
+//
+// [External lineage]: https://docs.databricks.com/aws/en/data-governance/unity-catalog/external-lineage
 type ExternalMetadata_SdkV2 struct {
-	// List of columns associated with the external metadata object.
+	// Names of the columns of the object, used for column-level mappings in
+	// external lineage relationships. Column names must be unique within the
+	// list, and the combined size of all column names is limited.
 	Columns types.List `tfsdk:"columns"`
 	// Time at which this external metadata object was created.
 	CreateTime types.String `tfsdk:"create_time"`
 	// Username of external metadata object creator.
 	CreatedBy types.String `tfsdk:"created_by"`
-	// User-provided free-form text description.
+	// User-provided free-form text description of the object. The description
+	// must not exceed 5000 characters.
 	Description types.String `tfsdk:"description"`
-	// Type of entity within the external system.
+	// Type of the object within the external system, such as a table, a report,
+	// or a dashboard. The value is free-form text of at most 255 characters.
 	EntityType types.String `tfsdk:"entity_type"`
-	// Unique identifier of the external metadata object.
+	// Unique identifier of the external metadata object. The ID is a UUID that
+	// the system assigns on creation.
 	Id types.String `tfsdk:"id"`
 	// Unique identifier of parent metastore.
 	MetastoreId types.String `tfsdk:"metastore_id"`
-	// Name of the external metadata object.
+	// Name of the external metadata object. The name is unique within the
+	// metastore, must follow the [Unity Catalog naming requirements], and is
+	// stored in lowercase. It cannot be changed after creation, and external
+	// lineage relationships refer to the object by this name.
+	//
+	// [Unity Catalog naming requirements]: https://docs.databricks.com/aws/en/data-governance/unity-catalog/requirements#naming-requirements
 	Name types.String `tfsdk:"name"`
-	// Owner of the external metadata object.
+	// Owner of the external metadata object. Defaults to the creator. To change
+	// the owner, send an update whose update mask includes `owner`.
 	Owner types.String `tfsdk:"owner"`
-	// A map of key-value properties attached to the external metadata object.
+	// Key-value properties attached to the object. Keys and values must be
+	// non-empty, and the combined length of all keys and values must not exceed
+	// 5000 characters.
 	Properties types.Map `tfsdk:"properties"`
-	// Type of external system.
+	// Type of the external system that holds the object. Use `OTHER` for a
+	// system that is not in the list.
 	SystemType types.String `tfsdk:"system_type"`
 	// Time at which this external metadata object was last modified.
 	UpdateTime types.String `tfsdk:"update_time"`
 	// Username of user who last modified external metadata object.
 	UpdatedBy types.String `tfsdk:"updated_by"`
-	// URL associated with the external metadata object.
+	// URL of the object in the external system. When set, lineage graph viewers
+	// can follow it to the external asset. The URL must not exceed 2048
+	// characters.
 	Url types.String `tfsdk:"url"`
 }
 
@@ -15900,6 +16229,12 @@ func (to *ExternalMetadata_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Con
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Columns = from.Columns
 	}
+	if !from.Properties.IsNull() && !from.Properties.IsUnknown() && to.Properties.IsNull() && len(from.Properties.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for Properties, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.Properties = from.Properties
+	}
 }
 
 func (to *ExternalMetadata_SdkV2) SyncFieldsDuringRead(ctx context.Context, from ExternalMetadata_SdkV2) {
@@ -15908,6 +16243,12 @@ func (to *ExternalMetadata_SdkV2) SyncFieldsDuringRead(ctx context.Context, from
 		// If a user specified a non-Null, empty list for Columns, and the deserialized field value is Null,
 		// set the resulting resource state to the empty list to match the planned value.
 		to.Columns = from.Columns
+	}
+	if !from.Properties.IsNull() && !from.Properties.IsUnknown() && to.Properties.IsNull() && len(from.Properties.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for Properties, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.Properties = from.Properties
 	}
 }
 
@@ -16894,6 +17235,11 @@ func (m FunctionDependency_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// A user-defined function (UDF) registered in Unity Catalog. A function belongs
+// to a schema and is referenced as catalog_name.schema_name.function_name. Its
+// body is either a SQL expression or query, or source code in an external
+// language such as Python. See
+// https://docs.databricks.com/aws/en/udf/unity-catalog for an overview.
 type FunctionInfo_SdkV2 struct {
 	// Indicates whether the principal is limited to retrieving metadata for the
 	// associated object through the BROWSE privilege when include_browse is
@@ -16907,24 +17253,33 @@ type FunctionInfo_SdkV2 struct {
 	CreatedAt types.Int64 `tfsdk:"created_at"`
 	// Username of function creator.
 	CreatedBy types.String `tfsdk:"created_by"`
-	// Scalar function return data type.
+	// Data type of the value the function returns. A table function uses
+	// TABLE_TYPE and describes its result columns in return_params, except for
+	// a polymorphic Python UDTF, which omits them.
 	DataType types.String `tfsdk:"data_type"`
-	// External function language.
+	// Language of the function body for an EXTERNAL function. It is required
+	// when routine_body is EXTERNAL.
 	ExternalLanguage types.String `tfsdk:"external_language"`
-	// External function name.
+	// Name of the function in its external language. It is reserved for future
+	// use.
 	ExternalName types.String `tfsdk:"external_name"`
-	// Pretty printed function data type.
+	// Return data type of the function in SQL syntax, including any type
+	// parameters such as precision and scale.
 	FullDataType types.String `tfsdk:"full_data_type"`
 	// Full name of Function, in form of
 	// **catalog_name**.**schema_name**.**function_name**
 	FullName types.String `tfsdk:"full_name"`
 	// Id of Function, relative to parent schema.
 	FunctionId types.String `tfsdk:"function_id"`
-	// Function input parameters.
+	// Input parameters of the function. When it is set, parameters must contain
+	// at least one entry. A function that takes no arguments omits
+	// input_params, even though the Create request schema marks it as required.
 	InputParams types.List `tfsdk:"input_params"`
-	// Whether the function is deterministic.
+	// Whether the function returns the same result for the same arguments. It
+	// corresponds to the DETERMINISTIC characteristic of CREATE FUNCTION.
 	IsDeterministic types.Bool `tfsdk:"is_deterministic"`
-	// Function null call.
+	// Whether the function is a null-call function in the sense of the SQL
+	// standard, which returns NULL whenever any argument is NULL.
 	IsNullCall types.Bool `tfsdk:"is_null_call"`
 	// Unique identifier of parent metastore.
 	MetastoreId types.String `tfsdk:"metastore_id"`
@@ -16932,32 +17287,41 @@ type FunctionInfo_SdkV2 struct {
 	Name types.String `tfsdk:"name"`
 	// Username of current owner of the function.
 	Owner types.String `tfsdk:"owner"`
-	// Function parameter style. **S** is the value for SQL.
+	// How arguments are passed to the function body. S means that each argument
+	// is passed as a single scalar value.
 	ParameterStyle types.String `tfsdk:"parameter_style"`
 	// JSON-serialized key-value pair map, encoded (escaped) as a string.
 	Properties types.String `tfsdk:"properties"`
-	// Table function return parameters.
+	// Result columns of a table function. Set it when data_type is TABLE_TYPE,
+	// except for a polymorphic Python UDTF (an EXTERNAL Python function with
+	// full_data_type "()"), which must not set it.
 	ReturnParams types.List `tfsdk:"return_params"`
-	// Function language. When **EXTERNAL** is used, the language of the routine
-	// function should be specified in the **external_language** field, and the
-	// **return_params** of the function cannot be used (as **TABLE** return
-	// type is not supported), and the **sql_data_access** field must be
-	// **NO_SQL**.
+	// Language of the function body. SQL means that routine_definition holds a
+	// SQL expression or query. EXTERNAL means that it holds source code in the
+	// language named by external_language, and sql_data_access must then be
+	// NO_SQL.
 	RoutineBody types.String `tfsdk:"routine_body"`
-	// Function body.
+	// Body of the function. For a SQL function it is the expression or query
+	// that computes the result; for an EXTERNAL function it is the source code
+	// of the function. It is omitted when the caller can only browse the
+	// function.
 	RoutineDefinition types.String `tfsdk:"routine_definition"`
 	// Function dependencies. For external UDFs, dependencies may contain only
 	// credential, secret, or volume objects.
 	RoutineDependencies types.List `tfsdk:"routine_dependencies"`
 	// Name of parent Schema relative to its parent Catalog.
 	SchemaName types.String `tfsdk:"schema_name"`
-	// Function security type.
+	// Whose privileges the function body runs with. DEFINER runs it with the
+	// privileges of the function owner.
 	SecurityType types.String `tfsdk:"security_type"`
-	// Specific name of the function; Reserved for future use.
+	// Specific name of the function. Set it to the same value as name.
 	SpecificName types.String `tfsdk:"specific_name"`
-	// Function SQL data access.
+	// How the function body interacts with SQL data. CONTAINS_SQL means that
+	// the body contains SQL but reads no table or view, READS_SQL_DATA means
+	// that it reads a table or view, and NO_SQL is required for EXTERNAL
+	// functions.
 	SqlDataAccess types.String `tfsdk:"sql_data_access"`
-	// List of schemes whose objects can be referenced without qualification.
+	// List of schemas whose objects can be referenced without qualification.
 	SqlPath types.String `tfsdk:"sql_path"`
 	// Time at which this function was last modified, in epoch milliseconds.
 	UpdatedAt types.Int64 `tfsdk:"updated_at"`
@@ -17242,17 +17606,23 @@ type FunctionParameterInfo_SdkV2 struct {
 	Comment types.String `tfsdk:"comment"`
 	// Name of Parameter.
 	Name types.String `tfsdk:"name"`
-	// Default value of the parameter.
+	// Default value of the parameter as a SQL expression, used when a call
+	// omits the argument.
 	ParameterDefault types.String `tfsdk:"parameter_default"`
-	// Function parameter mode.
+	// Direction of the parameter. Only IN parameters, which pass a value into
+	// the function, are supported.
 	ParameterMode types.String `tfsdk:"parameter_mode"`
-	// Function parameter type.
+	// Whether the entry is an input parameter (PARAM) or a result column of a
+	// table function (COLUMN).
 	ParameterType types.String `tfsdk:"parameter_type"`
-	// Ordinal position of column (starting at position 0).
+	// Zero-based position of the parameter in the parameter list. Positions
+	// must be unique and consecutive.
 	Position types.Int64 `tfsdk:"position"`
-	// Format of IntervalType.
+	// Unit range of the data type for INTERVAL parameters. It is unset for
+	// other types.
 	TypeIntervalType types.String `tfsdk:"type_interval_type"`
-	// Full data type spec, JSON-serialized.
+	// Data type of the parameter as the JSON representation of a Spark SQL
+	// struct field, with name, type, nullable and metadata keys.
 	TypeJson types.String `tfsdk:"type_json"`
 	// Name of type (INT, STRUCT, MAP, etc.)
 	TypeName types.String `tfsdk:"type_name"`
@@ -17260,7 +17630,8 @@ type FunctionParameterInfo_SdkV2 struct {
 	TypePrecision types.Int64 `tfsdk:"type_precision"`
 	// Digits to right of decimal; Required on Create for DecimalTypes.
 	TypeScale types.Int64 `tfsdk:"type_scale"`
-	// Full data type spec, SQL/catalogString text.
+	// Data type of the parameter in SQL syntax, including any type parameters
+	// such as precision and scale.
 	TypeText types.String `tfsdk:"type_text"`
 }
 
@@ -17341,6 +17712,7 @@ func (m FunctionParameterInfo_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type FunctionParameterInfos_SdkV2 struct {
+	// The parameters that make up the list, ordered by position.
 	Parameters types.List `tfsdk:"parameters"`
 }
 
@@ -17457,6 +17829,8 @@ func (m *FunctionParameterInfos_SdkV2) SetParameters(ctx context.Context, v []Fu
 // GCP temporary credentials for API authentication. Read more at
 // https://developers.google.com/identity/protocols/oauth2/service-account
 type GcpOauthToken_SdkV2 struct {
+	// The OAuth 2.0 access token to pass as a bearer token to Google Cloud
+	// APIs.
 	OauthToken types.String `tfsdk:"oauth_token"`
 }
 
@@ -17621,17 +17995,22 @@ func (m GenerateTemporaryPathCredentialRequest_SdkV2) Type(ctx context.Context) 
 }
 
 type GenerateTemporaryPathCredentialResponse_SdkV2 struct {
+	// Temporary AWS credentials that can be used to sign AWS API requests.
 	AwsTempCredentials types.List `tfsdk:"aws_temp_credentials"`
-
+	// A Microsoft Entra ID (formerly Azure Active Directory) token that is
+	// issued for the credential's identity.
 	AzureAad types.List `tfsdk:"azure_aad"`
-
+	// An Azure user delegation shared access signature (SAS) that grants access
+	// to the requested storage path.
 	AzureUserDelegationSas types.List `tfsdk:"azure_user_delegation_sas"`
 	// Server time when the credential will expire, in epoch milliseconds. The
 	// API client is advised to cache the credential given this expiration time.
 	ExpirationTime types.Int64 `tfsdk:"expiration_time"`
-
+	// A GCP OAuth 2.0 access token that is issued for the credential's service
+	// account.
 	GcpOauthToken types.List `tfsdk:"gcp_oauth_token"`
-
+	// Temporary Cloudflare R2 credentials that can be used with the R2
+	// S3-compatible API.
 	R2TempCredentials types.List `tfsdk:"r2_temp_credentials"`
 	// The URL of the storage path accessible by the temporary credential.
 	Url types.String `tfsdk:"url"`
@@ -17938,7 +18317,9 @@ func (m *GenerateTemporaryPathCredentialResponse_SdkV2) SetR2TempCredentials(ctx
 type GenerateTemporaryServiceCredentialAzureOptions_SdkV2 struct {
 	// The resources to which the temporary Azure credential should apply. These
 	// resources are the scopes that are passed to the token provider (see
-	// https://learn.microsoft.com/python/api/azure-core/azure.core.credentials.tokencredential?view=azure-python)
+	// https://learn.microsoft.com/python/api/azure-core/azure.core.credentials.tokencredential?view=azure-python).
+	// Exactly one resource is supported, and its URL must end with the
+	// `.default` scope.
 	Resources types.List `tfsdk:"resources"`
 }
 
@@ -18031,7 +18412,9 @@ func (m *GenerateTemporaryServiceCredentialAzureOptions_SdkV2) SetResources(ctx 
 type GenerateTemporaryServiceCredentialGcpOptions_SdkV2 struct {
 	// The scopes to which the temporary GCP credential should apply. These
 	// resources are the scopes that are passed to the token provider (see
-	// https://google-auth.readthedocs.io/en/latest/reference/google.auth.html#google.auth.credentials.Credentials)
+	// https://google-auth.readthedocs.io/en/latest/reference/google.auth.html#google.auth.credentials.Credentials).
+	// Each scope must be a Google OAuth 2.0 scope URL on the `googleapis.com`
+	// or `www.googleapis.com` host.
 	Scopes types.List `tfsdk:"scopes"`
 }
 
@@ -18121,11 +18504,14 @@ func (m *GenerateTemporaryServiceCredentialGcpOptions_SdkV2) SetScopes(ctx conte
 }
 
 type GenerateTemporaryServiceCredentialRequest_SdkV2 struct {
+	// Options for an Azure service credential. They are required when the
+	// service credential uses an Azure managed identity.
 	AzureOptions types.List `tfsdk:"azure_options"`
 	// The name of the service credential used to generate a temporary
 	// credential
 	CredentialName types.String `tfsdk:"credential_name"`
-
+	// Options for a GCP service credential. They are required when the service
+	// credential uses a Databricks-managed GCP service account.
 	GcpOptions types.List `tfsdk:"gcp_options"`
 }
 
@@ -18329,17 +18715,22 @@ func (m GenerateTemporaryTableCredentialRequest_SdkV2) Type(ctx context.Context)
 }
 
 type GenerateTemporaryTableCredentialResponse_SdkV2 struct {
+	// Temporary AWS credentials that can be used to sign AWS API requests.
 	AwsTempCredentials types.List `tfsdk:"aws_temp_credentials"`
-
+	// A Microsoft Entra ID (formerly Azure Active Directory) token that is
+	// issued for the credential's identity.
 	AzureAad types.List `tfsdk:"azure_aad"`
-
+	// An Azure user delegation shared access signature (SAS) that grants access
+	// to the requested storage path.
 	AzureUserDelegationSas types.List `tfsdk:"azure_user_delegation_sas"`
 	// Server time when the credential will expire, in epoch milliseconds. The
 	// API client is advised to cache the credential given this expiration time.
 	ExpirationTime types.Int64 `tfsdk:"expiration_time"`
-
+	// A GCP OAuth 2.0 access token that is issued for the credential's service
+	// account.
 	GcpOauthToken types.List `tfsdk:"gcp_oauth_token"`
-
+	// Temporary Cloudflare R2 credentials that can be used with the R2
+	// S3-compatible API.
 	R2TempCredentials types.List `tfsdk:"r2_temp_credentials"`
 	// The URL of the storage path accessible by the temporary credential.
 	Url types.String `tfsdk:"url"`
@@ -18699,17 +19090,22 @@ func (m GenerateTemporaryVolumeCredentialRequest_SdkV2) Type(ctx context.Context
 }
 
 type GenerateTemporaryVolumeCredentialResponse_SdkV2 struct {
+	// Temporary AWS credentials that can be used to sign AWS API requests.
 	AwsTempCredentials types.List `tfsdk:"aws_temp_credentials"`
-
+	// A Microsoft Entra ID (formerly Azure Active Directory) token that is
+	// issued for the credential's identity.
 	AzureAad types.List `tfsdk:"azure_aad"`
-
+	// An Azure user delegation shared access signature (SAS) that grants access
+	// to the requested storage path.
 	AzureUserDelegationSas types.List `tfsdk:"azure_user_delegation_sas"`
 	// Server time when the credential will expire, in epoch milliseconds. The
 	// API client is advised to cache the credential given this expiration time.
 	ExpirationTime types.Int64 `tfsdk:"expiration_time"`
-
+	// A GCP OAuth 2.0 access token that is issued for the credential's service
+	// account.
 	GcpOauthToken types.List `tfsdk:"gcp_oauth_token"`
-
+	// Temporary Cloudflare R2 credentials that can be used with the R2
+	// S3-compatible API.
 	R2TempCredentials types.List `tfsdk:"r2_temp_credentials"`
 	// The URL of the storage path accessible by the temporary credential.
 	Url types.String `tfsdk:"url"`
@@ -19451,7 +19847,7 @@ func (m GetCatalogRequest_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type GetCatalogWorkspaceBindingsResponse_SdkV2 struct {
-	// A list of workspace IDs
+	// The IDs of the workspaces that are bound to the catalog.
 	Workspaces types.List `tfsdk:"workspaces"`
 }
 
@@ -19829,6 +20225,7 @@ func (m GetExternalLocationRequest_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type GetExternalMetadataRequest_SdkV2 struct {
+	// Name of the external metadata object to get.
 	Name types.String `tfsdk:"-"`
 }
 
@@ -19880,7 +20277,7 @@ type GetFunctionRequest_SdkV2 struct {
 	// only access selective metadata for
 	IncludeBrowse types.Bool `tfsdk:"-"`
 	// The fully-qualified name of the function (of the form
-	// __catalog_name__.__schema_name__.__function__name__).
+	// __catalog_name__.__schema_name__.__function_name__).
 	Name types.String `tfsdk:"-"`
 }
 
@@ -19931,7 +20328,9 @@ func (m GetFunctionRequest_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type GetGrantRequest_SdkV2 struct {
-	// Full name of securable.
+	// Full name of the securable. Tables, views, volumes and functions use the
+	// three-level name `catalog.schema.object`; a metastore uses its metastore
+	// ID.
 	FullName types.String `tfsdk:"-"`
 	// Specifies the maximum number of privileges to return (page length). Every
 	// PrivilegeAssignment present in a single page response is guaranteed to
@@ -19951,7 +20350,8 @@ type GetGrantRequest_SdkV2 struct {
 	// If provided, only the permissions for the specified principal (user or
 	// group) are returned.
 	Principal types.String `tfsdk:"-"`
-	// Type of securable.
+	// Type of the securable, such as `catalog`, `schema`, `table` or `volume`.
+	// The value is case-insensitive.
 	SecurableType types.String `tfsdk:"-"`
 }
 
@@ -20400,7 +20800,8 @@ func (m GetModelServiceRequest_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type GetModelVersionRequest_SdkV2 struct {
-	// The three-level (fully qualified) name of the model version
+	// The three-level (fully qualified) name of the parent registered model, in
+	// the form `catalog_name.schema_name.model_name`.
 	FullName types.String `tfsdk:"-"`
 	// Whether to include aliases associated with the model version in the
 	// response
@@ -21010,10 +21411,11 @@ func (m GetRegisteredModelRequest_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type GetSchemaRequest_SdkV2 struct {
-	// Full name of the schema.
+	// Full name of the schema, in the form catalog_name.schema_name.
 	FullName types.String `tfsdk:"-"`
-	// Whether to include schemas in the response for which the principal can
-	// only access selective metadata for
+	// Whether to return the schema when the principal can only access selective
+	// metadata for it through the BROWSE privilege. The response then has
+	// browse_only set to true.
 	IncludeBrowse types.Bool `tfsdk:"-"`
 }
 
@@ -23402,7 +23804,8 @@ func (m *ListExternalLocationsResponse_SdkV2) SetExternalLocations(ctx context.C
 
 type ListExternalMetadataRequest_SdkV2 struct {
 	// Specifies the maximum number of external metadata objects to return in a
-	// single response. The value must be less than or equal to 1000.
+	// single response. The value must be less than or equal to 1000. Defaults
+	// to 1000 when omitted.
 	PageSize types.Int64 `tfsdk:"-"`
 	// Opaque pagination token to go to next page based on previous query.
 	PageToken types.String `tfsdk:"-"`
@@ -25552,8 +25955,9 @@ func (m *ListRegisteredModelsResponse_SdkV2) SetRegisteredModels(ctx context.Con
 type ListSchemasRequest_SdkV2 struct {
 	// Parent catalog for schemas of interest.
 	CatalogName types.String `tfsdk:"-"`
-	// Whether to include schemas in the response for which the principal can
-	// only access selective metadata for
+	// Whether to include schemas for which the principal can only access
+	// selective metadata through the BROWSE privilege. Such schemas are
+	// returned with browse_only set to true.
 	IncludeBrowse types.Bool `tfsdk:"-"`
 	// Maximum number of schemas to return. If not set, all the schemas are
 	// returned (not recommended). - when set to a value greater than 0, the
@@ -25751,8 +26155,8 @@ type ListSecretsRequest_SdkV2 struct {
 	// 1000. - If set to 0, the page length is set to 1000. - If set to a value
 	// less than 0, an invalid parameter error is returned.
 	PageSize types.Int64 `tfsdk:"-"`
-	// Opaque pagination token to go to the next page based on previous query.
-	// The maximum page length is determined by a server configured value.
+	// Opaque pagination token for the next page of results. Set it to the
+	// **next_page_token** value from the previous response.
 	PageToken types.String `tfsdk:"-"`
 	// The name of the schema under which to list secrets. Both **catalog_name**
 	// and **schema_name** must be specified together.
@@ -25941,10 +26345,9 @@ type ListSkillsRequest_SdkV2 struct {
 	// Opaque pagination token from a previous request.
 	PageToken types.String `tfsdk:"-"`
 	// Name of the parent schema. Format: `schemas/{catalog}.{schema}`. Each
-	// `{...}` component is capped at 255 characters individually.
-	//
-	// Required: skill listing is schema-scoped, so `parent` must be set; an
-	// unset or empty `parent` is rejected with INVALID_PARAMETER_VALUE.
+	// `{...}` component is capped at 255 characters individually. Required:
+	// skill listing is schema-scoped, so `parent` must be set; an unset or
+	// empty `parent` is rejected with INVALID_PARAMETER_VALUE.
 	Parent types.String `tfsdk:"-"`
 }
 
@@ -27179,25 +27582,29 @@ type McpService_SdkV2 struct {
 	Config types.List `tfsdk:"config"`
 	// Time the MCP service was created.
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
-	// Creator identity.
+	// Username or service principal application ID of the principal that
+	// created the MCP service.
 	CreatedBy types.String `tfsdk:"created_by"`
-	// Owner of the MCP service.
+	// Username, group name, or service principal application ID of the MCP
+	// service owner.
 	EffectiveOwner types.String `tfsdk:"effective_owner"`
 	// Optimistic concurrency token returned on every read. To make an Update or
 	// Delete conditional, pass the last-read value in that request's `etag`
 	// field. In REST responses, this value is a base64 string; URL-encode it
 	// when setting the `etag` query parameter.
 	Etag types.String `tfsdk:"etag"`
-	// Metastore hosting the MCP service.
+	// Unique identifier of the metastore that contains the MCP service.
 	MetastoreId types.String `tfsdk:"metastore_id"`
 	// Resource name of the MCP service. Format:
 	// `mcp-services/{catalog}.{schema}.{mcp_service}`. Each `{...}` component
-	// is capped at 255 characters individually. Server-derived on Create from
-	// `parent` + `mcp_service_id`; required and immutable on Update/Get/Delete.
+	// is capped at 255 characters individually. The server derives the name on
+	// Create from `parent` and `mcp_service_id`; it is required and immutable
+	// on Update, Get, and Delete.
 	Name types.String `tfsdk:"name"`
 	// Time the MCP service was last modified.
 	UpdateTime timetypes.RFC3339 `tfsdk:"update_time"`
-	// Identity of the last updater.
+	// Username or service principal application ID of the principal that last
+	// updated the MCP service.
 	UpdatedBy types.String `tfsdk:"updated_by"`
 }
 
@@ -27564,9 +27971,21 @@ type McpServiceConfigSourceConnection_SdkV2 struct {
 }
 
 func (to *McpServiceConfigSourceConnection_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from McpServiceConfigSourceConnection_SdkV2) {
+	if !from.Options.IsNull() && !from.Options.IsUnknown() && to.Options.IsNull() && len(from.Options.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for Options, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.Options = from.Options
+	}
 }
 
 func (to *McpServiceConfigSourceConnection_SdkV2) SyncFieldsDuringRead(ctx context.Context, from McpServiceConfigSourceConnection_SdkV2) {
+	if !from.Options.IsNull() && !from.Options.IsUnknown() && to.Options.IsNull() && len(from.Options.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for Options, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.Options = from.Options
+	}
 }
 
 func (m McpServiceConfigSourceConnection_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -27656,6 +28075,12 @@ type McpServiceUserMappedCredential_SdkV2 struct {
 }
 
 func (to *McpServiceUserMappedCredential_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from McpServiceUserMappedCredential_SdkV2) {
+	if !from.Options.IsNull() && !from.Options.IsUnknown() && to.Options.IsNull() && len(from.Options.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for Options, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.Options = from.Options
+	}
 	if !from.ProvisioningInfo.IsNull() && !from.ProvisioningInfo.IsUnknown() {
 		if toProvisioningInfo, ok := to.GetProvisioningInfo(ctx); ok {
 			if fromProvisioningInfo, ok := from.GetProvisioningInfo(ctx); ok {
@@ -27668,6 +28093,12 @@ func (to *McpServiceUserMappedCredential_SdkV2) SyncFieldsDuringCreateOrUpdate(c
 }
 
 func (to *McpServiceUserMappedCredential_SdkV2) SyncFieldsDuringRead(ctx context.Context, from McpServiceUserMappedCredential_SdkV2) {
+	if !from.Options.IsNull() && !from.Options.IsUnknown() && to.Options.IsNull() && len(from.Options.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for Options, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.Options = from.Options
+	}
 	if !from.ProvisioningInfo.IsNull() && !from.ProvisioningInfo.IsUnknown() {
 		if toProvisioningInfo, ok := to.GetProvisioningInfo(ctx); ok {
 			if fromProvisioningInfo, ok := from.GetProvisioningInfo(ctx); ok {
@@ -27787,9 +28218,21 @@ type McpServiceUserMappedCredentialLogin_SdkV2 struct {
 }
 
 func (to *McpServiceUserMappedCredentialLogin_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from McpServiceUserMappedCredentialLogin_SdkV2) {
+	if !from.Options.IsNull() && !from.Options.IsUnknown() && to.Options.IsNull() && len(from.Options.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for Options, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.Options = from.Options
+	}
 }
 
 func (to *McpServiceUserMappedCredentialLogin_SdkV2) SyncFieldsDuringRead(ctx context.Context, from McpServiceUserMappedCredentialLogin_SdkV2) {
+	if !from.Options.IsNull() && !from.Options.IsUnknown() && to.Options.IsNull() && len(from.Options.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for Options, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.Options = from.Options
+	}
 }
 
 func (m McpServiceUserMappedCredentialLogin_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -28079,26 +28522,28 @@ type ModelProviderService_SdkV2 struct {
 	Config types.List `tfsdk:"config"`
 	// Time the provider service was created.
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
-	// Creator identity.
+	// Username of the user who created the model provider service.
 	CreatedBy types.String `tfsdk:"created_by"`
-	// Owner of the model provider service.
+	// Username or group name of the model provider service owner.
 	EffectiveOwner types.String `tfsdk:"effective_owner"`
 	// Optimistic concurrency token returned on every read. To make an Update or
 	// Delete conditional, pass the last-read value in that request's `etag`
 	// field. In REST responses, this value is a base64 string; URL-encode it
 	// when setting the `etag` query parameter.
 	Etag types.String `tfsdk:"etag"`
-	// Metastore hosting the provider service.
+	// Unique identifier of the metastore that contains the model provider
+	// service.
 	MetastoreId types.String `tfsdk:"metastore_id"`
 	// Resource name of the provider service. Format:
 	// `model-provider-services/{catalog}.{schema}.{model_provider_service}`.
-	// Each `{...}` component is capped at 255 characters individually.
-	// Server-derived on Create from `parent` + `model_provider_service_id`;
-	// required and immutable on Update/Get/Delete.
+	// Each `{...}` component is capped at 255 characters individually. The
+	// server derives the name on Create from `parent` and
+	// `model_provider_service_id`; it is required and immutable on Update, Get,
+	// and Delete.
 	Name types.String `tfsdk:"name"`
 	// Time the provider service was last modified.
 	UpdateTime timetypes.RFC3339 `tfsdk:"update_time"`
-	// Identity of the last updater.
+	// Username of the user who last updated the model provider service.
 	UpdatedBy types.String `tfsdk:"updated_by"`
 }
 
@@ -28233,15 +28678,21 @@ type ModelProviderServiceConfig_SdkV2 struct {
 	// built-in model catalog and must leave this false and list their models in
 	// `targets`.
 	AllowAllTargets types.Bool `tfsdk:"allow_all_targets"`
-
+	// Configuration for Amazon Bedrock. Set this field when `provider_type` is
+	// `EXTERNAL_MODEL_PROVIDER_TYPE_AMAZON_BEDROCK`.
 	AmazonBedrock types.List `tfsdk:"amazon_bedrock"`
-
+	// Configuration for Anthropic. Set this field when `provider_type` is
+	// `EXTERNAL_MODEL_PROVIDER_TYPE_ANTHROPIC`.
 	Anthropic types.List `tfsdk:"anthropic"`
-
+	// Configuration for Azure OpenAI. Set this field when `provider_type` is
+	// `EXTERNAL_MODEL_PROVIDER_TYPE_AZURE_OPENAI`.
 	AzureOpenai types.List `tfsdk:"azure_openai"`
-
+	// Configuration for Amazon Bedrock Mantle, with the same fields as
+	// `amazon_bedrock`. Set this field when `provider_type` is
+	// `EXTERNAL_MODEL_PROVIDER_TYPE_BEDROCK_MANTLE`.
 	BedrockMantle types.List `tfsdk:"bedrock_mantle"`
-
+	// Configuration for a custom OpenAI-compatible provider. Set this field
+	// when `provider_type` is `EXTERNAL_MODEL_PROVIDER_TYPE_CUSTOM`.
 	Custom types.List `tfsdk:"custom"`
 	// Whether to forward incoming HTTP headers to the upstream provider.
 	// Defaults to false and is configured for the entire provider service, not
@@ -28260,15 +28711,18 @@ type ModelProviderServiceConfig_SdkV2 struct {
 	// Policies on opaque unmanaged requests, so unmanaged requests are rejected
 	// whenever Service Policies are attached to this securable.
 	ForwardUnmanagedPaths types.Bool `tfsdk:"forward_unmanaged_paths"`
-
+	// Configuration for Google Gemini Enterprise. Set this field when
+	// `provider_type` is `EXTERNAL_MODEL_PROVIDER_TYPE_GEMINI_ENTERPRISE`.
 	GeminiEnterprise types.List `tfsdk:"gemini_enterprise"`
 	// Payload logging configuration for requests sent directly to this provider
 	// service. Requests routed through a model service are captured by that
 	// model service's inference table instead.
 	InferenceTable types.List `tfsdk:"inference_table"`
-
+	// Configuration for Microsoft Foundry. Set this field when `provider_type`
+	// is `EXTERNAL_MODEL_PROVIDER_TYPE_MICROSOFT_FOUNDRY`.
 	MicrosoftFoundry types.List `tfsdk:"microsoft_foundry"`
-
+	// Configuration for OpenAI. Set this field when `provider_type` is
+	// `EXTERNAL_MODEL_PROVIDER_TYPE_OPENAI`.
 	Openai types.List `tfsdk:"openai"`
 	// Pricing configuration for this provider service. An explicitly empty
 	// configuration is retained on Create and Update and applies no adjustment.
@@ -29984,7 +30438,7 @@ type ModelProviderServiceConfigCustomProviderApiKeyHeaderAuth_SdkV2 struct {
 	// supplied via `api_key_value`.
 	ApiKeyName types.String `tfsdk:"api_key_name"`
 	// Secret value forwarded under the `api_key_name` header on outbound
-	// requests. Supplied as inline plaintext via `ProviderSecret.plaintext`.
+	// requests. Supply the value in `api_key_value.plaintext`.
 	ApiKeyValue types.List `tfsdk:"api_key_value"`
 }
 
@@ -31418,9 +31872,10 @@ func (m ModelProviderServiceConfigProviderPricingConfig_SdkV2) Type(ctx context.
 // encrypted. The `plaintext` field is `INPUT_ONLY` and never round-trips on
 // reads.
 type ModelProviderServiceConfigProviderSecret_SdkV2 struct {
-	// Inline plaintext credential. INPUT_ONLY: the value never round-trips on
-	// reads. Get and List responses omit `plaintext`; the enclosing secret
-	// object remains present to indicate that a secret is configured.
+	// Inline plaintext credential. The value is write-only and never
+	// round-trips on reads. Get and List responses omit `plaintext`; the
+	// enclosing secret object remains present to indicate that a secret is
+	// configured.
 	Plaintext types.String `tfsdk:"plaintext"`
 	// Reference to a customer-owned UC Secret that carries this secret value.
 	// The value is read at invoke time under the model provider service owner's
@@ -32818,6 +33273,10 @@ func (m *ModelServiceConfigRoutingConfig_SdkV2) SetFallback(ctx context.Context,
 	m.Fallback = types.ListValueMust(t, vs)
 }
 
+// A numbered version of a registered model in Unity Catalog. A model version is
+// identified by the full name of its parent registered model and its version
+// number, or by an alias that points to it. See
+// https://docs.databricks.com/aws/en/machine-learning/manage-model-lifecycle/.
 type ModelVersionInfo_SdkV2 struct {
 	// List of aliases associated with the model version
 	Aliases types.List `tfsdk:"aliases"`
@@ -32825,7 +33284,7 @@ type ModelVersionInfo_SdkV2 struct {
 	CatalogName types.String `tfsdk:"catalog_name"`
 	// The comment attached to the model version
 	Comment types.String `tfsdk:"comment"`
-
+	// Time at which the model version was created, in epoch milliseconds.
 	CreatedAt types.Int64 `tfsdk:"created_at"`
 	// The identifier of the user who created the model version
 	CreatedBy types.String `tfsdk:"created_by"`
@@ -32858,7 +33317,7 @@ type ModelVersionInfo_SdkV2 struct {
 	// The storage location on the cloud under which model version data files
 	// are stored
 	StorageLocation types.String `tfsdk:"storage_location"`
-
+	// Time at which the model version was last updated, in epoch milliseconds.
 	UpdatedAt types.Int64 `tfsdk:"updated_at"`
 	// The identifier of the user who updated the model version last time
 	UpdatedBy types.String `tfsdk:"updated_by"`
@@ -35527,8 +35986,7 @@ func (m *OptionSpec_SdkV2) SetAllowedValues(ctx context.Context, v []types.Strin
 type PermissionsChange_SdkV2 struct {
 	// The set of privileges to add.
 	Add types.List `tfsdk:"add"`
-	// The principal whose privileges we are changing. Only one of principal or
-	// principal_id should be specified, never both at the same time.
+	// The principal whose privileges we are changing.
 	Principal types.String `tfsdk:"principal"`
 	// The set of privileges to remove.
 	Remove types.List `tfsdk:"remove"`
@@ -36538,8 +36996,7 @@ func (m Principal_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type PrivilegeAssignment_SdkV2 struct {
-	// The principal (user email address or group name). For deleted principals,
-	// `principal` is empty while `principal_id` is populated.
+	// The principal (user email address or group name).
 	Principal types.String `tfsdk:"principal"`
 	// The privileges assigned to the principal.
 	Privileges types.List `tfsdk:"privileges"`
@@ -37586,6 +38043,11 @@ func (m RunRefreshRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// A schema (also called a database) is the second layer of Unity Catalog's
+// three-level namespace and groups the tables, views, volumes, models, and
+// functions under its parent catalog. Managed tables and volumes in the schema
+// are stored under the schema's storage root when it has one, and otherwise
+// under the storage of the parent catalog or the metastore.
 type SchemaInfo_SdkV2 struct {
 	// Indicates whether the principal is limited to retrieving metadata for the
 	// associated object through the BROWSE privilege when include_browse is
@@ -37593,7 +38055,7 @@ type SchemaInfo_SdkV2 struct {
 	BrowseOnly types.Bool `tfsdk:"browse_only"`
 	// Name of parent catalog.
 	CatalogName types.String `tfsdk:"catalog_name"`
-	// The type of the parent catalog.
+	// The type of the parent catalog, which the server copies from the catalog.
 	CatalogType types.String `tfsdk:"catalog_type"`
 	// User-provided free-form text description.
 	Comment types.String `tfsdk:"comment"`
@@ -37601,12 +38063,19 @@ type SchemaInfo_SdkV2 struct {
 	CreatedAt types.Int64 `tfsdk:"created_at"`
 	// Username of schema creator.
 	CreatedBy types.String `tfsdk:"created_by"`
-	// Custom maximum retention period in hours for the schema.
+	// Dropped objects in the schema remain recoverable for this number of hours
+	// before they are permanently purged. The value must be 0 or within the
+	// range allowed for the metastore. Schemas that do not set their own value
+	// inherit the parent catalog's value.
 	CustomMaxRetentionHours types.Int64 `tfsdk:"custom_max_retention_hours"`
-
+	// Indicates the predictive optimization setting that is in effect for the
+	// schema once inherited values are resolved.
 	EffectivePredictiveOptimizationFlag types.List `tfsdk:"effective_predictive_optimization_flag"`
-	// Whether predictive optimization should be enabled for this object and
-	// objects under it.
+	// Whether predictive optimization is enabled for this schema and the
+	// objects under it. Valid values are ENABLE, DISABLE, and INHERIT, where
+	// INHERIT applies the parent catalog's setting. New schemas start as
+	// INHERIT. It cannot be set when creating a schema; use the update method
+	// instead.
 	EnablePredictiveOptimization types.String `tfsdk:"enable_predictive_optimization"`
 	// Full name of schema, in form of __catalog_name__.__schema_name__.
 	FullName types.String `tfsdk:"full_name"`
@@ -37614,17 +38083,27 @@ type SchemaInfo_SdkV2 struct {
 	MetastoreId types.String `tfsdk:"metastore_id"`
 	// Name of schema, relative to parent catalog.
 	Name types.String `tfsdk:"name"`
-	// Username of current owner of schema.
+	// The user or group that owns the schema. The creator becomes the owner,
+	// and the owner can be changed only through the update method.
 	Owner types.String `tfsdk:"owner"`
 	// A map of key-value properties attached to the securable.
 	Properties types.Map `tfsdk:"properties"`
-	// The unique identifier of the schema.
+	// The unique identifier (UUID) that the server assigns to the schema when
+	// it is created.
 	SchemaId types.String `tfsdk:"schema_id"`
-	// Storage location for managed tables within schema.
+	// The server derives this full storage location URL for managed tables and
+	// volumes within the schema from storage_root and the schema ID. It is
+	// absent when the schema has no storage root of its own.
 	StorageLocation types.String `tfsdk:"storage_location"`
-	// Storage root URL for managed tables within schema.
+	// Managed tables and volumes in the schema are stored under this storage
+	// root URL. The path must be inside an external location on which the
+	// caller has the CREATE MANAGED STORAGE privilege. If omitted, managed data
+	// is stored under the parent catalog's storage root, or under the
+	// metastore's root storage location when the catalog has none. Schemas in
+	// Delta Sharing catalogs cannot have a storage root, and schemas in a
+	// federated Hive metastore catalog must set one.
 	StorageRoot types.String `tfsdk:"storage_root"`
-	// Time at which this schema was created, in epoch milliseconds.
+	// Time at which this schema was last modified, in epoch milliseconds.
 	UpdatedAt types.Int64 `tfsdk:"updated_at"`
 	// Username of user who last modified schema.
 	UpdatedBy types.String `tfsdk:"updated_by"`
@@ -37640,6 +38119,12 @@ func (to *SchemaInfo_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, 
 			}
 		}
 	}
+	if !from.Properties.IsNull() && !from.Properties.IsUnknown() && to.Properties.IsNull() && len(from.Properties.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for Properties, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.Properties = from.Properties
+	}
 }
 
 func (to *SchemaInfo_SdkV2) SyncFieldsDuringRead(ctx context.Context, from SchemaInfo_SdkV2) {
@@ -37650,6 +38135,12 @@ func (to *SchemaInfo_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Schem
 				to.SetEffectivePredictiveOptimizationFlag(ctx, toEffectivePredictiveOptimizationFlag)
 			}
 		}
+	}
+	if !from.Properties.IsNull() && !from.Properties.IsUnknown() && to.Properties.IsNull() && len(from.Properties.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for Properties, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.Properties = from.Properties
 	}
 }
 
@@ -37835,8 +38326,9 @@ type Secret_SdkV2 struct {
 	MetastoreId types.String `tfsdk:"metastore_id"`
 	// The name of the secret, relative to its parent schema.
 	Name types.String `tfsdk:"name"`
-	// The owner of the secret. Defaults to the creating principal on creation.
-	// Can be updated to transfer ownership of the secret to another principal.
+	// The owner of the secret. It cannot be set when creating a secret and
+	// defaults to the creating principal. Set it in UpdateSecret to transfer
+	// ownership of the secret to another principal.
 	Owner types.String `tfsdk:"owner"`
 	// The name of the schema where the secret resides.
 	SchemaName types.String `tfsdk:"schema_name"`
@@ -37844,11 +38336,10 @@ type Secret_SdkV2 struct {
 	UpdateTime timetypes.RFC3339 `tfsdk:"update_time"`
 	// The principal that last updated the secret.
 	UpdatedBy types.String `tfsdk:"updated_by"`
-	// The secret value to store. This field is input-only and is not returned
-	// in responses — use the **effective_value** field (via GetSecret with
-	// **include_value** set to true) to read the secret value. The maximum size
-	// is 60 KiB (pre-encryption). Accepted content includes passwords, tokens,
-	// keys, and other sensitive credential data.
+	// The secret value to store, such as a password, token, or key. It is never
+	// returned in responses. To read it, call GetSecret with **include_value**
+	// set to true and use the **effective_value** field. The maximum size is 60
+	// KiB before encryption.
 	Value types.String `tfsdk:"value"`
 }
 
@@ -38572,21 +39063,23 @@ type Skill_SdkV2 struct {
 	// differ from the final component of the Skill resource name. Unset until
 	// FinalizeSkill succeeds.
 	BundleName types.String `tfsdk:"bundle_name"`
-	// User-provided comment for the skill. Free-text, user-editable via
-	// UpdateSkill (listed in its `update_mask`). DISTINCT from `description`,
-	// which is the server-parsed, OUTPUT_ONLY SKILL.md frontmatter value:
-	// `comment` is the customer's own annotation and is preserved across bundle
-	// re-uploads. When `comment` is in the update mask, omitting it clears the
-	// field, while an explicitly empty string is retained.
+	// User-provided comment for the skill, which you can change with
+	// UpdateSkill. It is separate from `description`, which the server reads
+	// from the SKILL.md frontmatter, and it is preserved across bundle
+	// re-uploads and FinalizeSkill. When `comment` is in the update mask,
+	// omitting it clears the field, while an explicitly empty string is
+	// retained.
 	Comment types.String `tfsdk:"comment"`
 	// Time the skill was created.
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
-	// Creator identity.
+	// Username or service principal application ID of the principal that
+	// created the skill.
 	CreatedBy types.String `tfsdk:"created_by"`
 	// Description from the most recently successfully finalized SKILL.md. Unset
 	// until FinalizeSkill succeeds.
 	Description types.String `tfsdk:"description"`
-	// Owner of the skill.
+	// Username, group name, or service principal application ID of the skill
+	// owner.
 	EffectiveOwner types.String `tfsdk:"effective_owner"`
 	// Optimistic concurrency token returned on every read. To make an Update or
 	// Delete conditional, pass the last-read value in that request's `etag`
@@ -38596,17 +39089,18 @@ type Skill_SdkV2 struct {
 	// Time of the most recent successful FinalizeSkill. Unset until one
 	// succeeds.
 	FinalizeTime timetypes.RFC3339 `tfsdk:"finalize_time"`
-	// Metastore hosting the skill.
+	// Unique identifier of the metastore that contains the skill.
 	MetastoreId types.String `tfsdk:"metastore_id"`
 	// Resource name of the skill. Format: `skills/{catalog}.{schema}.{skill}`.
-	// Each `{...}` component is capped at 255 characters individually.
-	// Server-derived on Create from `parent` + `skill_id`; required and
-	// immutable on Update/Get/Delete.
+	// Each `{...}` component is capped at 255 characters individually. The
+	// server derives the name on Create from `parent` and `skill_id`; it is
+	// required and immutable on Update, Get, and Delete.
 	Name types.String `tfsdk:"name"`
 	// Time of the most recent Skill metadata mutation. Uploading bundle files
 	// alone does not change this value.
 	UpdateTime timetypes.RFC3339 `tfsdk:"update_time"`
-	// Identity of the last updater.
+	// Username or service principal application ID of the principal that last
+	// updated the skill.
 	UpdatedBy types.String `tfsdk:"updated_by"`
 }
 
@@ -39163,13 +39657,20 @@ func (m SummaryRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// A system schema of a metastore, with its current enablement state. System
+// schemas hold Databricks-provided system tables, such as audit logs and
+// billing usage. They live in the `system` catalog unless they are enabled in
+// another supported catalog. See
+// https://docs.databricks.com/aws/en/admin/system-tables/.
 type SystemSchemaInfo_SdkV2 struct {
-	// Name of the system schema.
+	// Name of the system schema, without the catalog prefix.
 	Schema types.String `tfsdk:"schema"`
-	// The current state of enablement for the system schema. An empty string
-	// means the system schema is available and ready for opt-in. Possible
-	// values: AVAILABLE | ENABLE_INITIALIZED | ENABLE_COMPLETED |
-	// DISABLE_INITIALIZED | UNAVAILABLE | MANAGED
+	// The current enablement state of the system schema. Possible values are
+	// `AVAILABLE` (the schema can be enabled), `ENABLE_INITIALIZED` (enablement
+	// is in progress), `ENABLE_COMPLETED` (the schema is enabled),
+	// `DISABLE_INITIALIZED` (disablement is in progress), `UNAVAILABLE` (the
+	// schema cannot be enabled at the moment) and `MANAGED` (Databricks enables
+	// the schema automatically).
 	State types.String `tfsdk:"state"`
 }
 
@@ -39519,14 +40020,20 @@ func (m TableExistsResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// A table resides in the third layer of Unity Catalog's three-level namespace
+// and holds rows of data organized in columns. Besides managed and external
+// tables, it covers views, materialized views, streaming tables, metric views,
+// foreign tables and shallow clones, which table_type distinguishes.
 type TableInfo_SdkV2 struct {
-	// The AWS access point to use when accesing s3 for this external location.
+	// The AWS access point to use when accessing S3 for the storage location of
+	// this table.
 	AccessPoint types.String `tfsdk:"access_point"`
 	// Indicates whether the principal is limited to retrieving metadata for the
 	// associated object through the BROWSE privilege when include_browse is
 	// enabled in the request.
 	BrowseOnly types.Bool `tfsdk:"browse_only"`
-	// Name of parent catalog.
+	// Name of parent catalog. Required for creation using catalog and schema
+	// names.
 	CatalogName types.String `tfsdk:"catalog_name"`
 	// The array of __ColumnInfo__ definitions of the table's columns.
 	Columns types.List `tfsdk:"columns"`
@@ -39538,16 +40045,23 @@ type TableInfo_SdkV2 struct {
 	CreatedBy types.String `tfsdk:"created_by"`
 	// Unique ID of the Data Access Configuration to use with the table data.
 	DataAccessConfigurationId types.String `tfsdk:"data_access_configuration_id"`
-
+	// The format of the data that backs the table, such as DELTA, PARQUET, CSV
+	// or JSON. Foreign tables report the external system that holds them, for
+	// example SNOWFLAKE_FORMAT or MYSQL_FORMAT.
 	DataSourceFormat types.String `tfsdk:"data_source_format"`
 	// Time at which this table was deleted, in epoch milliseconds. Field is
 	// omitted if table is not deleted.
 	DeletedAt types.Int64 `tfsdk:"deleted_at"`
 	// Information pertaining to current state of the delta table.
 	DeltaRuntimePropertiesKvpairs types.List `tfsdk:"delta_runtime_properties_kvpairs"`
-
+	// The predictive optimization setting that is in effect for the table once
+	// inherited values are resolved.
 	EffectivePredictiveOptimizationFlag types.List `tfsdk:"effective_predictive_optimization_flag"`
-
+	// Whether predictive optimization is enabled for this table. Valid values
+	// are ENABLE, DISABLE and INHERIT, where INHERIT applies the setting of the
+	// parent schema. It is ignored when creating a table. See
+	// https://docs.databricks.com/aws/en/optimizations/predictive-optimization
+	// for details.
 	EnablePredictiveOptimization types.String `tfsdk:"enable_predictive_optimization"`
 
 	EncryptionDetails types.List `tfsdk:"encryption_details"`
@@ -39558,16 +40072,21 @@ type TableInfo_SdkV2 struct {
 	MetastoreId types.String `tfsdk:"metastore_id"`
 	// Name of table, relative to parent schema.
 	Name types.String `tfsdk:"name"`
-	// Username of current owner of table.
+	// The user or group that owns the table. The principal that creates the
+	// table becomes its owner.
 	Owner types.String `tfsdk:"owner"`
 	// The pipeline ID of the table. Applicable for tables created by pipelines
 	// (Materialized View, Streaming Table, etc.).
 	PipelineId types.String `tfsdk:"pipeline_id"`
 	// A map of key-value properties attached to the securable.
 	Properties types.Map `tfsdk:"properties"`
-
+	// The row filter function applied to the table, if any. A row filter is a
+	// SQL user-defined function that decides which rows a query returns. See
+	// https://docs.databricks.com/aws/en/tables/row-and-column-filters for
+	// details.
 	RowFilter types.List `tfsdk:"row_filter"`
-	// Name of parent schema relative to its parent catalog.
+	// Name of parent schema relative to its parent catalog. Required for
+	// creation using catalog and schema names.
 	SchemaName types.String `tfsdk:"schema_name"`
 	// SecurableKindManifest of table, including capabilities the table has.
 	SecurableKindManifest types.List `tfsdk:"securable_kind_manifest"`
@@ -39576,14 +40095,25 @@ type TableInfo_SdkV2 struct {
 	// Name of the storage credential, when a storage credential is configured
 	// for use with this table.
 	StorageCredentialName types.String `tfsdk:"storage_credential_name"`
-	// Storage root URL for table (for **MANAGED**, **EXTERNAL** tables).
+	// The cloud storage URL under which the data files of the table are stored.
+	// For an EXTERNAL table, it must be set on creation to a path within an
+	// existing external location. For a MANAGED table, the server assigns a
+	// path under the managed storage location of the parent schema, catalog or
+	// metastore and returns it in this field. Views have no storage location.
 	StorageLocation types.String `tfsdk:"storage_location"`
 	// List of table constraints. Note: this field is not set in the output of
 	// the __listTables__ API.
 	TableConstraints types.List `tfsdk:"table_constraints"`
 	// The unique identifier of the table.
 	TableId types.String `tfsdk:"table_id"`
-
+	// The type of the table. MANAGED tables store their data in storage that
+	// Unity Catalog manages, EXTERNAL tables store it in a registered external
+	// location, FOREIGN tables mirror objects of an external database through a
+	// connection, and the shallow clone types reference the data files of a
+	// base table. VIEW, MATERIALIZED_VIEW, STREAMING_TABLE and METRIC_VIEW are
+	// defined by a view definition. See
+	// https://docs.databricks.com/aws/en/tables/ for an overview of the table
+	// types.
 	TableType types.String `tfsdk:"table_type"`
 	// Time at which this table was last modified, in epoch milliseconds.
 	UpdatedAt types.Int64 `tfsdk:"updated_at"`
@@ -39647,6 +40177,12 @@ func (to *TableInfo_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, f
 				to.SetEncryptionDetails(ctx, toEncryptionDetails)
 			}
 		}
+	}
+	if !from.Properties.IsNull() && !from.Properties.IsUnknown() && to.Properties.IsNull() && len(from.Properties.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for Properties, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.Properties = from.Properties
 	}
 	if !from.RowFilter.IsNull() && !from.RowFilter.IsUnknown() {
 		if toRowFilter, ok := to.GetRowFilter(ctx); ok {
@@ -39738,6 +40274,12 @@ func (to *TableInfo_SdkV2) SyncFieldsDuringRead(ctx context.Context, from TableI
 				to.SetEncryptionDetails(ctx, toEncryptionDetails)
 			}
 		}
+	}
+	if !from.Properties.IsNull() && !from.Properties.IsUnknown() && to.Properties.IsNull() && len(from.Properties.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for Properties, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.Properties = from.Properties
 	}
 	if !from.RowFilter.IsNull() && !from.RowFilter.IsUnknown() {
 		if toRowFilter, ok := to.GetRowFilter(ctx); ok {
@@ -40348,7 +40890,7 @@ type TableSummary_SdkV2 struct {
 	FullName types.String `tfsdk:"full_name"`
 	// SecurableKindManifest of table, including capabilities the table has.
 	SecurableKindManifest types.List `tfsdk:"securable_kind_manifest"`
-
+	// The type of the table, with the same meaning as table_type on TableInfo.
 	TableType types.String `tfsdk:"table_type"`
 }
 
@@ -40701,15 +41243,19 @@ func (m TagValueExtraction_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type TemporaryCredentials_SdkV2 struct {
+	// Temporary AWS credentials that can be used to sign AWS API requests.
 	AwsTempCredentials types.List `tfsdk:"aws_temp_credentials"`
-
+	// A Microsoft Entra ID (formerly Azure Active Directory) token that is
+	// issued for the credential's identity.
 	AzureAad types.List `tfsdk:"azure_aad"`
 	// Server time when the credential will expire, in epoch milliseconds. The
 	// API client is advised to cache the credential given this expiration time.
 	ExpirationTime types.Int64 `tfsdk:"expiration_time"`
-
+	// A GCP OAuth 2.0 access token that is issued for the credential's service
+	// account.
 	GcpOauthToken types.List `tfsdk:"gcp_oauth_token"`
-
+	// Temporary Cloudflare R2 credentials that can be used with the R2
+	// S3-compatible API.
 	R2TempCredentials types.List `tfsdk:"r2_temp_credentials"`
 }
 
@@ -41815,6 +42361,18 @@ func (to *UpdateCatalog_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Contex
 			}
 		}
 	}
+	if !from.Options.IsNull() && !from.Options.IsUnknown() && to.Options.IsNull() && len(from.Options.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for Options, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.Options = from.Options
+	}
+	if !from.Properties.IsNull() && !from.Properties.IsUnknown() && to.Properties.IsNull() && len(from.Properties.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for Properties, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.Properties = from.Properties
+	}
 }
 
 func (to *UpdateCatalog_SdkV2) SyncFieldsDuringRead(ctx context.Context, from UpdateCatalog_SdkV2) {
@@ -41825,6 +42383,18 @@ func (to *UpdateCatalog_SdkV2) SyncFieldsDuringRead(ctx context.Context, from Up
 				to.SetManagedEncryptionSettings(ctx, toManagedEncryptionSettings)
 			}
 		}
+	}
+	if !from.Options.IsNull() && !from.Options.IsUnknown() && to.Options.IsNull() && len(from.Options.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for Options, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.Options = from.Options
+	}
+	if !from.Properties.IsNull() && !from.Properties.IsUnknown() && to.Properties.IsNull() && len(from.Properties.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for Properties, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.Properties = from.Properties
 	}
 }
 
@@ -41982,7 +42552,7 @@ func (m *UpdateCatalog_SdkV2) SetProperties(ctx context.Context, v map[string]ty
 }
 
 type UpdateCatalogWorkspaceBindingsResponse_SdkV2 struct {
-	// A list of workspace IDs
+	// The IDs of the workspaces that are bound to the catalog.
 	Workspaces types.List `tfsdk:"workspaces"`
 }
 
@@ -42072,8 +42642,8 @@ func (m *UpdateCatalogWorkspaceBindingsResponse_SdkV2) SetWorkspaces(ctx context
 }
 
 type UpdateConnection_SdkV2 struct {
-	// [Create,Update:OPT] Connection environment settings as
-	// EnvironmentSettings object.
+	// Environment settings for the connection, such as the Java libraries that
+	// it needs and the environment version.
 	EnvironmentSettings types.List `tfsdk:"environment_settings"`
 	// Name of the connection.
 	Name types.String `tfsdk:"-"`
@@ -42081,7 +42651,8 @@ type UpdateConnection_SdkV2 struct {
 	NewName types.String `tfsdk:"new_name"`
 	// A map of key-value properties attached to the securable.
 	Options types.Map `tfsdk:"options"`
-	// Username of current owner of the connection.
+	// Username of the current owner of the connection. The creator becomes the
+	// owner at creation, and ownership can be transferred on update.
 	Owner types.String `tfsdk:"owner"`
 	// A map of option names to UC Secret references. Keys are connection option
 	// names (same as in OptionsKVPairs) and values are UC Secret fully
@@ -42099,6 +42670,12 @@ func (to *UpdateConnection_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Con
 			}
 		}
 	}
+	if !from.Secrets.IsNull() && !from.Secrets.IsUnknown() && to.Secrets.IsNull() && len(from.Secrets.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for Secrets, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.Secrets = from.Secrets
+	}
 }
 
 func (to *UpdateConnection_SdkV2) SyncFieldsDuringRead(ctx context.Context, from UpdateConnection_SdkV2) {
@@ -42109,6 +42686,12 @@ func (to *UpdateConnection_SdkV2) SyncFieldsDuringRead(ctx context.Context, from
 				to.SetEnvironmentSettings(ctx, toEnvironmentSettings)
 			}
 		}
+	}
+	if !from.Secrets.IsNull() && !from.Secrets.IsUnknown() && to.Secrets.IsNull() && len(from.Secrets.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for Secrets, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.Secrets = from.Secrets
 	}
 }
 
@@ -43065,19 +43648,16 @@ func (m *UpdateExternalLocation_SdkV2) SetFileEventQueue(ctx context.Context, v 
 
 type UpdateExternalMetadataRequest_SdkV2 struct {
 	ExternalMetadata types.List `tfsdk:"external_metadata"`
-	// Name of the external metadata object.
-	Name types.String `tfsdk:"-"`
-	// The field mask must be a single string, with multiple fields separated by
-	// commas (no spaces). The field path is relative to the resource object,
-	// using a dot (`.`) to navigate sub-fields (e.g., `author.given_name`).
-	// Specification of elements in sequence or map fields is not allowed, as
-	// only the entire collection field can be specified. Field names must
-	// exactly match the resource field names.
+	// Name of the external metadata object. The name is unique within the
+	// metastore, must follow the [Unity Catalog naming requirements], and is
+	// stored in lowercase. It cannot be changed after creation, and external
+	// lineage relationships refer to the object by this name.
 	//
-	// A field mask of `*` indicates full replacement. It’s recommended to
-	// always explicitly list the fields being updated and avoid using `*`
-	// wildcards, as it can lead to unintended results if the API changes in the
-	// future.
+	// [Unity Catalog naming requirements]: https://docs.databricks.com/aws/en/data-governance/unity-catalog/requirements#naming-requirements
+	Name types.String `tfsdk:"-"`
+	// Comma-separated list of the fields to update, for example
+	// `description,properties`. Only the listed fields change. The other fields
+	// keep their current values. The mask must not be empty.
 	UpdateMask types.String `tfsdk:"-"`
 }
 
@@ -43180,7 +43760,7 @@ func (m *UpdateExternalMetadataRequest_SdkV2) SetExternalMetadata(ctx context.Co
 
 type UpdateFunction_SdkV2 struct {
 	// The fully-qualified name of the function (of the form
-	// __catalog_name__.__schema_name__.__function__name__).
+	// __catalog_name__.__schema_name__.__function_name__).
 	Name types.String `tfsdk:"-"`
 	// Username of current owner of the function.
 	Owner types.String `tfsdk:"owner"`
@@ -43244,8 +43824,9 @@ type UpdateMcpServiceRequest_SdkV2 struct {
 	McpService types.List `tfsdk:"mcp_service"`
 	// Resource name of the MCP service. Format:
 	// `mcp-services/{catalog}.{schema}.{mcp_service}`. Each `{...}` component
-	// is capped at 255 characters individually. Server-derived on Create from
-	// `parent` + `mcp_service_id`; required and immutable on Update/Get/Delete.
+	// is capped at 255 characters individually. The server derives the name on
+	// Create from `parent` and `mcp_service_id`; it is required and immutable
+	// on Update, Get, and Delete.
 	Name types.String `tfsdk:"-"`
 	// Fields to update. Use `config` to replace the entire configuration. The
 	// replacement must include every required field; any optional field you
@@ -43520,14 +44101,16 @@ type UpdateModelProviderServiceRequest_SdkV2 struct {
 	ModelProviderService types.List `tfsdk:"model_provider_service"`
 	// Resource name of the provider service. Format:
 	// `model-provider-services/{catalog}.{schema}.{model_provider_service}`.
-	// Each `{...}` component is capped at 255 characters individually.
-	// Server-derived on Create from `parent` + `model_provider_service_id`;
-	// required and immutable on Update/Get/Delete.
+	// Each `{...}` component is capped at 255 characters individually. The
+	// server derives the name on Create from `parent` and
+	// `model_provider_service_id`; it is required and immutable on Update, Get,
+	// and Delete.
 	Name types.String `tfsdk:"-"`
-	// Fields to update. Use `config` to replace the entire configuration. The
-	// replacement must include every required field; any optional field you
-	// omit is cleared. To preserve sibling fields, use one or more granular
-	// paths: `comment`; `config.provider` to replace the active
+	// Fields to update. Use `config` to replace the configuration's supported
+	// fields. The replacement must include every required field. Omitted
+	// optional fields in the published schema are cleared, except for the
+	// authentication binding described below. To preserve sibling fields, use
+	// granular paths: `comment`; `config.provider` to replace the active
 	// provider-specific value (for example, `config.openai`; the mask path
 	// remains `config.provider`); `config.allow_all_targets`, `config.targets`,
 	// `config.forward_headers`, `config.forward_query_parameters`,
@@ -43660,13 +44243,13 @@ type UpdateModelServiceRequest_SdkV2 struct {
 	// the name on Create from `parent` and `model_service_id`; it is required
 	// and immutable on Update, Get, and Delete.
 	Name types.String `tfsdk:"-"`
-	// Fields to update. Use `config` to replace the entire configuration. The
-	// replacement must include every required field; any optional field you
-	// omit is cleared. To preserve sibling fields, use one or more granular
-	// paths: `comment`, `config.routing.destinations`,
-	// `config.routing.fallback.destinations`, `config.rate_limits`, or
-	// `config.inference_table`. Intermediate paths such as `config.routing` and
-	// `config.routing.fallback` are not supported.
+	// Fields to update. Use `config` to replace the configuration's supported
+	// fields. The replacement must include every required field. Omitted
+	// optional fields in the published schema are cleared. To preserve sibling
+	// fields, use one or more granular paths: `comment`,
+	// `config.routing.destinations`, `config.routing.fallback.destinations`,
+	// `config.rate_limits`, or `config.inference_table`. Intermediate paths
+	// such as `config.routing` and `config.routing.fallback` are not supported.
 	UpdateMask types.String `tfsdk:"-"`
 }
 
@@ -43778,11 +44361,12 @@ type UpdateModelVersionRequest_SdkV2 struct {
 	CatalogName types.String `tfsdk:"catalog_name"`
 	// The comment attached to the model version
 	Comment types.String `tfsdk:"comment"`
-
+	// Time at which the model version was created, in epoch milliseconds.
 	CreatedAt types.Int64 `tfsdk:"created_at"`
 	// The identifier of the user who created the model version
 	CreatedBy types.String `tfsdk:"created_by"`
-	// The three-level (fully qualified) name of the model version
+	// The three-level (fully qualified) name of the parent registered model, in
+	// the form `catalog_name.schema_name.model_name`.
 	FullName types.String `tfsdk:"-"`
 	// The unique identifier of the model version
 	Id types.String `tfsdk:"id"`
@@ -43813,7 +44397,7 @@ type UpdateModelVersionRequest_SdkV2 struct {
 	// The storage location on the cloud under which model version data files
 	// are stored
 	StorageLocation types.String `tfsdk:"storage_location"`
-
+	// Time at which the model version was last updated, in epoch milliseconds.
 	UpdatedAt types.Int64 `tfsdk:"updated_at"`
 	// The identifier of the user who updated the model version last time
 	UpdatedBy types.String `tfsdk:"updated_by"`
@@ -44544,12 +45128,16 @@ func (m *UpdateMonitor_SdkV2) SetTimeSeries(ctx context.Context, v MonitorTimeSe
 type UpdatePermissions_SdkV2 struct {
 	// Array of permissions change objects.
 	Changes types.List `tfsdk:"changes"`
-	// Full name of securable.
+	// Full name of the securable. Tables, views, volumes and functions use the
+	// three-level name `catalog.schema.object`; a metastore uses its metastore
+	// ID.
 	FullName types.String `tfsdk:"-"`
-	// Optional, default false. Specifies whether all the permissions should be
-	// returned in the response.
+	// Whether to omit the privilege assignments from the response. When false,
+	// the response lists all direct privilege assignments on the securable
+	// after the update.
 	OmitPermissionsInResponse types.Bool `tfsdk:"omit_permissions_in_response"`
-	// Type of securable.
+	// Type of the securable, such as `catalog`, `schema`, `table` or `volume`.
+	// The value is case-insensitive.
 	SecurableType types.String `tfsdk:"-"`
 }
 
@@ -45144,6 +45732,12 @@ func (to *UpdateRequestExternalLineage_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx
 			}
 		}
 	}
+	if !from.Properties.IsNull() && !from.Properties.IsUnknown() && to.Properties.IsNull() && len(from.Properties.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for Properties, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.Properties = from.Properties
+	}
 	if !from.Source.IsNull() && !from.Source.IsUnknown() {
 		if toSource, ok := to.GetSource(ctx); ok {
 			if fromSource, ok := from.GetSource(ctx); ok {
@@ -45182,6 +45776,12 @@ func (to *UpdateRequestExternalLineage_SdkV2) SyncFieldsDuringRead(ctx context.C
 				to.SetColumns(ctx, toColumns)
 			}
 		}
+	}
+	if !from.Properties.IsNull() && !from.Properties.IsUnknown() && to.Properties.IsNull() && len(from.Properties.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for Properties, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.Properties = from.Properties
 	}
 	if !from.Source.IsNull() && !from.Source.IsUnknown() {
 		if toSource, ok := to.GetSource(ctx); ok {
@@ -45413,25 +46013,44 @@ func (m UpdateResponse_SdkV2) Type(ctx context.Context) attr.Type {
 type UpdateSchema_SdkV2 struct {
 	// User-provided free-form text description.
 	Comment types.String `tfsdk:"comment"`
-	// Custom maximum retention period in hours for the schema.
+	// Dropped objects in the schema remain recoverable for this number of hours
+	// before they are permanently purged. The value must be 0 or within the
+	// range allowed for the metastore. Schemas that do not set their own value
+	// inherit the parent catalog's value.
 	CustomMaxRetentionHours types.Int64 `tfsdk:"custom_max_retention_hours"`
-	// Whether predictive optimization should be enabled for this object and
-	// objects under it.
+	// Whether predictive optimization is enabled for this schema and the
+	// objects under it. Valid values are ENABLE, DISABLE, and INHERIT, where
+	// INHERIT applies the parent catalog's setting. New schemas start as
+	// INHERIT. It cannot be set when creating a schema; use the update method
+	// instead.
 	EnablePredictiveOptimization types.String `tfsdk:"enable_predictive_optimization"`
-	// Full name of the schema.
+	// Full name of the schema, in the form catalog_name.schema_name.
 	FullName types.String `tfsdk:"-"`
 	// New name for the schema.
 	NewName types.String `tfsdk:"new_name"`
-	// Username of current owner of schema.
+	// The user or group that owns the schema. The creator becomes the owner,
+	// and the owner can be changed only through the update method.
 	Owner types.String `tfsdk:"owner"`
 	// A map of key-value properties attached to the securable.
 	Properties types.Map `tfsdk:"properties"`
 }
 
 func (to *UpdateSchema_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from UpdateSchema_SdkV2) {
+	if !from.Properties.IsNull() && !from.Properties.IsUnknown() && to.Properties.IsNull() && len(from.Properties.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for Properties, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.Properties = from.Properties
+	}
 }
 
 func (to *UpdateSchema_SdkV2) SyncFieldsDuringRead(ctx context.Context, from UpdateSchema_SdkV2) {
+	if !from.Properties.IsNull() && !from.Properties.IsUnknown() && to.Properties.IsNull() && len(from.Properties.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for Properties, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.Properties = from.Properties
+	}
 }
 
 func (m UpdateSchema_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -45639,16 +46258,16 @@ type UpdateSkillRequest_SdkV2 struct {
 	// returned by the API when setting the `etag` query parameter.
 	Etag types.String `tfsdk:"-"`
 	// Resource name of the skill. Format: `skills/{catalog}.{schema}.{skill}`.
-	// Each `{...}` component is capped at 255 characters individually.
-	// Server-derived on Create from `parent` + `skill_id`; required and
-	// immutable on Update/Get/Delete.
+	// Each `{...}` component is capped at 255 characters individually. The
+	// server derives the name on Create from `parent` and `skill_id`; it is
+	// required and immutable on Update, Get, and Delete.
 	Name types.String `tfsdk:"-"`
 	// The skill with the updated field values. `name` identifies the resource
 	// (`skills/{catalog}.{schema}.{skill}`); only fields listed in
 	// `update_mask` are applied.
 	Skill types.List `tfsdk:"skill"`
-	// Fields to update; validated against `skill`. REQUIRED, matching the
-	// sibling Update RPCs. `comment` is the only mutable field.
+	// Comma-separated list of `skill` fields to update. `comment` is the only
+	// field that can be updated.
 	UpdateMask types.String `tfsdk:"-"`
 }
 
@@ -46104,7 +46723,8 @@ func (m *UpdateStorageCredential_SdkV2) SetDatabricksGcpServiceAccount(ctx conte
 type UpdateTableRequest_SdkV2 struct {
 	// Full name of the table.
 	FullName types.String `tfsdk:"-"`
-	// Username of current owner of table.
+	// The user or group that owns the table. The principal that creates the
+	// table becomes its owner.
 	Owner types.String `tfsdk:"owner"`
 }
 
@@ -46219,11 +46839,11 @@ func (m UpdateVolumeRequestContent_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type UpdateWorkspaceBindings_SdkV2 struct {
-	// A list of workspace IDs.
+	// The IDs of the workspaces to bind to the catalog.
 	AssignWorkspaces types.List `tfsdk:"assign_workspaces"`
 	// The name of the catalog.
 	Name types.String `tfsdk:"-"`
-	// A list of workspace IDs.
+	// The IDs of the workspaces to unbind from the catalog.
 	UnassignWorkspaces types.List `tfsdk:"unassign_workspaces"`
 }
 
@@ -46673,6 +47293,88 @@ func (m *UpdateWorkspaceBindingsResponse_SdkV2) SetBindings(ctx context.Context,
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["bindings"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	m.Bindings = types.ListValueMust(t, vs)
+}
+
+// Access request URLs shared by every workspace in a metastore.
+type UrlConfiguration_SdkV2 struct {
+	// The URL template for access requests on catalogs and the securables
+	// inside them, such as schemas, tables, volumes, functions, and registered
+	// models. Placeholders are replaced with percent-encoded values from the
+	// requested securable: `{catalog}` with the catalog name (`main`),
+	// `{catalog.schema}` with the catalog and schema names (`main.sales`),
+	// `{catalog.schema.object}` with the full name (`main.sales.orders`),
+	// `{securable_type}` with the securable type (`TABLE`), and
+	// `{securable_id}` with the securable ID. Name placeholders leave out
+	// levels the securable does not have, so `{catalog.schema.object}` is
+	// `main.sales` for a schema. When the deepest name placeholder stops above
+	// the requested securable, such as `{catalog.schema}` for a table,
+	// `{securable_type}` and `{securable_id}` describe that parent. If the
+	// filled-in URL is longer than 4,096 characters, the **redirect_url** is
+	// used instead.
+	//
+	// Must start with `http://` or `https://`, contain only printable ASCII
+	// characters without spaces or backslashes, and be at most 2,048
+	// characters. Braces are only allowed around a placeholder.
+	DynamicUrl types.String `tfsdk:"dynamic_url"`
+	// The URL for access requests on the metastore and on securables outside
+	// catalogs, such as external locations, connections, and credentials. Also
+	// used for catalogs and the securables inside them when **dynamic_url** is
+	// not set or cannot produce a valid URL. Must start with `http://` or
+	// `https://`, contain only printable ASCII characters without spaces or
+	// backslashes, and be at most 2,048 characters.
+	RedirectUrl types.String `tfsdk:"redirect_url"`
+	// The version of the placeholder syntax used in **dynamic_url**. The only
+	// supported version is `1`.
+	SyntaxVersion types.Int64 `tfsdk:"syntax_version"`
+}
+
+func (to *UrlConfiguration_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from UrlConfiguration_SdkV2) {
+}
+
+func (to *UrlConfiguration_SdkV2) SyncFieldsDuringRead(ctx context.Context, from UrlConfiguration_SdkV2) {
+}
+
+func (m UrlConfiguration_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["dynamic_url"] = attrs["dynamic_url"].SetOptional()
+	attrs["redirect_url"] = attrs["redirect_url"].SetOptional()
+	attrs["syntax_version"] = attrs["syntax_version"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in UrlConfiguration.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m UrlConfiguration_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, UrlConfiguration_SdkV2
+// only implements ToObjectValue() and Type().
+func (m UrlConfiguration_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"dynamic_url":    m.DynamicUrl,
+			"redirect_url":   m.RedirectUrl,
+			"syntax_version": m.SyntaxVersion,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m UrlConfiguration_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"dynamic_url":    types.StringType,
+			"redirect_url":   types.StringType,
+			"syntax_version": types.Int64Type,
+		},
+	}
 }
 
 type ValidateCredentialRequest_SdkV2 struct {
@@ -47728,10 +48430,14 @@ func (m *VolumeInfo_SdkV2) SetEncryptionDetails(ctx context.Context, v Encryptio
 	m.EncryptionDetails = types.ListValueMust(t, vs)
 }
 
+// A binding between a workspace and a securable. When the isolation mode of the
+// securable is `ISOLATED`, only bound workspaces can access it.
 type WorkspaceBinding_SdkV2 struct {
-	// One of READ_WRITE/READ_ONLY. Default is READ_WRITE.
+	// One of READ_WRITE/READ_ONLY. Default is READ_WRITE. Only catalogs support
+	// `BINDING_TYPE_READ_ONLY`; other securable types accept only
+	// `BINDING_TYPE_READ_WRITE`.
 	BindingType types.String `tfsdk:"binding_type"`
-	// Required
+	// The ID of the workspace that the binding applies to.
 	WorkspaceId types.Int64 `tfsdk:"workspace_id"`
 }
 

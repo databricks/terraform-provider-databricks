@@ -91,7 +91,9 @@ This data source exports a single attribute, `datasources`. It is a list of reso
   supplied; the identity the datasource runs as is reported in `effective_run_as_principal`
 * `schedule` (Schedule) - Schedule on which the datasource's ingestion job runs. A datasource cannot be paused, so a
   request that sets `schedule.enabled` to `false` is rejected. Continuous schedules are not
-  supported for Unity Catalog connection datasources
+  supported for Unity Catalog connection datasources. For an existing-table datasource, runs
+  must be no further apart than the shorter of the source table's
+  `delta.deletedFileRetentionDuration` and `delta.logRetentionDuration`
 * `schema_name` (string) - Name of the Unity Catalog schema that contains the datasource. Required on create and
   cannot be changed afterward. Reads return the value as supplied; the schema's current name
   is reported in `effective_schema_name`
@@ -145,8 +147,9 @@ This data source exports a single attribute, `datasources`. It is a list of reso
 
 ### CloudWatchLogsEnvelope
 * `header_retention` (boolean) - Whether to keep the envelope's `owner`, `logGroup`, and `logStream` values in
-  the `data.lw_header` field of each unwrapped row. Must be set explicitly to
-  `true` or `false`
+  the `data.lw_header` field of each unwrapped row whose message is a JSON object.
+  A message that is any other JSON value is kept without the field. Must be set
+  explicitly to `true` or `false`
 
 ### DatasourceStatus
 * `ingestion_job` (ResourceStatus) - Status of the datasource's ingestion job

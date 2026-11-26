@@ -2,7 +2,7 @@
 subcategory: "AI Search"
 ---
 # databricks_ai_search_endpoint Data Source
-[![Public Preview](https://img.shields.io/badge/Release_Stage-Public_Preview-yellowgreen)](https://docs.databricks.com/aws/en/release-notes/release-types)
+[![GA](https://img.shields.io/badge/Release_Stage-GA-green)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
 [API Documentation](https://docs.databricks.com/api/workspace/aisearch)
 
@@ -23,10 +23,9 @@ data "databricks_ai_search_endpoint" "example" {
 
 ## Arguments
 The following arguments are supported:
-* `name` (string, required) - Name of the AI Search endpoint. Server-assigned full resource path
-  (`workspaces/{workspace}/endpoints/{endpoint}`) on output. On create, the
-  user-supplied short name is conveyed via `CreateEndpointRequest.endpoint_id`;
-  the server composes the full `name` and returns it on the response
+* `name` (string, required) - Full resource name of the endpoint, in the form
+  `workspaces/{workspace_id}/endpoints/{endpoint_id}`. On create, the server composes it
+  from `parent` and `endpoint_id` and ignores any value supplied in the request body
 * `provider_config` (ProviderConfig, optional) - Configure the provider for management through account provider.
 
 ### ProviderConfig
@@ -34,28 +33,34 @@ The following arguments are supported:
 
 ## Attributes
 The following attributes are exported:
-* `budget_policy_id` (string) - The user-selected budget policy id for the endpoint
+* `budget_policy_id` (string) - ID of the serverless budget policy to apply to the endpoint. The caller must have
+  permission to use the policy. Set either this field or `usage_policy_id`, not both.
+  Responses do not echo this field; they report the applied policy in
+  `effective_budget_policy_id`
 * `create_time` (string) - Time the endpoint was created
-* `creator` (string) - Creator of the endpoint
-* `custom_tags` (list of CustomTag) - The custom tags assigned to the endpoint
-* `effective_budget_policy_id` (string) - The budget policy id applied to the endpoint
-* `endpoint_status` (EndpointStatus) - Current status of the endpoint
+* `creator` (string) - User name of the principal that created the endpoint. For a user, it is the user's email
+  address; for any other principal, it is the principal's unique name
+* `custom_tags` (list of CustomTag) - Custom tags assigned to the endpoint. On update, the list replaces all of the endpoint's
+  existing tags
+* `effective_budget_policy_id` (string) - ID of the budget policy that is currently applied to the endpoint
+* `endpoint_status` (EndpointStatus) - Current lifecycle state of the endpoint, with an optional message that explains it
 * `endpoint_type` (string) - Type of endpoint. Required on create and immutable thereafter. Possible values are: `STANDARD`, `STORAGE_OPTIMIZED`
-* `id` (string) - Unique identifier of the endpoint
+* `id` (string) - System-generated UUID that uniquely identifies the endpoint
 * `index_count` (integer) - Number of indexes on the endpoint
-* `last_updated_user` (string) - User who last updated the endpoint
-* `name` (string) - Name of the AI Search endpoint. Server-assigned full resource path
-  (`workspaces/{workspace}/endpoints/{endpoint}`) on output. On create, the
-  user-supplied short name is conveyed via `CreateEndpointRequest.endpoint_id`;
-  the server composes the full `name` and returns it on the response
+* `last_updated_user` (string) - User name of the principal that last updated the endpoint, in the same format as `creator`
+* `name` (string) - Full resource name of the endpoint, in the form
+  `workspaces/{workspace_id}/endpoints/{endpoint_id}`. On create, the server composes it
+  from `parent` and `endpoint_id` and ignores any value supplied in the request body
 * `replica_count` (integer) - The client-supplied desired number of replicas for the endpoint, applied at
   create/update time. Mutually exclusive with `target_qps`
 * `scaling_info` (EndpointScalingInfo) - Scaling information for the endpoint
 * `target_qps` (integer) - Target QPS for the endpoint. Mutually exclusive with `replica_count`. Best-effort;
-  the system does not guarantee this QPS will be achieved
+  the system does not guarantee this QPS will be achieved. Responses report the requested
+  value in `scaling_info.requested_target_qps`
 * `throughput_info` (EndpointThroughputInfo) - Throughput information for the endpoint
 * `update_time` (string) - Time the endpoint was last updated
-* `usage_policy_id` (string) - The usage policy id applied to the endpoint
+* `usage_policy_id` (string) - ID of the usage policy to apply to the endpoint. The server treats it as the same setting
+  as `budget_policy_id`, so set only one of the two
 
 ### CustomTag
 * `key` (string) - Key field for an AI Search endpoint tag
@@ -70,7 +75,7 @@ The following attributes are exported:
 * `index_initialization_percentage` (integer) - Percentage of index initialization completed, from 0 to 100. Set only during the
   `INITIALIZING_INDEX` phase; unset in other phases or when progress is not available
 * `phase` (string) - Current phase of the in-progress scaling change. Unset when no scaling change is in
-  progress or the phase is not available. Possible values are: `ADJUSTING_CAPACITY`, `ESTIMATING`, `INITIALIZING_INDEX`
+  progress or the phase is not available. Possible values are: `ADJUSTING_CAPACITY`, `ESTIMATING`, `FINALIZING`, `INITIALIZING_INDEX`
 * `requested_target_qps` (integer) - The requested QPS target for the endpoint. Best-effort; the system does not
   guarantee this QPS will be achieved
 * `state` (string) - The current state of the scaling change request. Possible values are: `SCALING_CHANGE_APPLIED`, `SCALING_CHANGE_IN_PROGRESS`, `SCALING_CHANGE_UNSPECIFIED`

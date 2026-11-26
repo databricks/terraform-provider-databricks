@@ -1,0 +1,27 @@
+# Runs volume/testdata/validation.yaml with databricks_volume on sdk-go uc/volumes/v1 in
+# every step, and expects the same behavior. Its fixtures match the requests of both paths
+# unchanged. The original's description:
+#
+# Pins plan-time validation: a volume_type other than MANAGED or EXTERNAL fails before
+# any API call.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: unsupported_volume_type_fails_without_calls
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: |
+      resource "databricks_volume" "this" {
+        name         = "invalid_volume"
+        catalog_name = "main"
+        schema_name  = "replay"
+        volume_type  = "SHARED"
+      }
+    expect_error: 'expected volume_type to be one of \["MANAGED" "EXTERNAL"\], got SHARED'
+    calls: []
+destroy:
+  calls: []

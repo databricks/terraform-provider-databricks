@@ -1,0 +1,81 @@
+# Pins how the classic SDK turns SCIM-shaped (RFC 7644 section 3.12) create POST error
+# bodies into diagnostics. Without a message, the SDK uses the detail, or "SCIM API
+# Internal Error" when the detail is the string "null", prefixed with scimType when set.
+# None of these is retried, and a failed POST leaves nothing in state, so each step plans
+# the create again. API responses are inferred from the Unity Catalog API contract, not
+# recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: create_answered_scim_409_fails_with_scim_type_and_detail
+    config: &config |
+      resource "databricks_volume" "this" {
+        name         = "scim_create_volume"
+        catalog_name = "main"
+        schema_name  = "replay"
+        volume_type  = "MANAGED"
+      }
+    expect_error: 'Error: cannot create volume: uniqueness Volume
+      main\.replay\.scim_create_volume already exists\.\n'
+    calls:
+      - request: &create
+          method: POST
+          path: /api/2.1/unity-catalog/volumes
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "scim_create_volume", "volume_type": "MANAGED"}
+        response:
+          status: 409
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:api:messages:2.0:Error"],
+                   "scimType": "uniqueness",
+                   "detail": "Volume main.replay.scim_create_volume already exists.",
+                   "status": "409"}
+  - name: create_answered_scim_404_fails_with_detail
+    config: *config
+    expect_error: 'Error: cannot create volume: Schema main\.replay does not exist\.\n'
+    calls:
+      - request: *create
+        response:
+          status: 404
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:api:messages:2.0:Error"],
+                   "detail": "Schema main.replay does not exist.", "status": "404"}
+  - name: create_answered_scim_500_with_null_detail_fails_with_internal_error_text
+    config: *config
+    expect_error: 'Error: cannot create volume: SCIM API Internal Error\n'
+    calls:
+      - request: *create
+        response:
+          status: 500
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:api:messages:2.0:Error"],
+                   "detail": "null", "status": "500"}
+  - name: create_answered_scim_400_with_scim_type_and_null_detail
+    config: *config
+    expect_error: 'Error: cannot create volume: invalidSyntax SCIM API Internal Error\n'
+    calls:
+      - request: *create
+        response:
+          status: 400
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:api:messages:2.0:Error"],
+                   "scimType": "invalidSyntax", "detail": "null", "status": "400"}
+  - name: plan_after_failed_creates_plans_create
+    plan_only: true
+    config: *config
+    plan:
+      expect: non_empty
+      changes:
+        databricks_volume.this:
+          actions: [create]
+    calls: []
+destroy:
+  calls: []

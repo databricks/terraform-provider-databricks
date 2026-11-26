@@ -1,0 +1,71 @@
+# The create gets 503 twice. The SDK waits 1 s per attempt plus 50-750 ms of
+# jitter before each retry: 1.05-1.75 s before the first and 2.05-2.75 s before
+# the second, which succeeds. Each max_gap leaves 1.25 s for a slow machine.
+version: 1
+host_metadata:
+  workspace_id: "12345"
+steps:
+  - name: create_retries_503
+    config: |
+      resource "databricks_group" "this" {
+        display_name = "Example group"
+      }
+    calls:
+      # The first attempt and the first retry.
+      - request: &create
+          method: POST
+          path: /api/2.0/preview/scim/v2/Groups
+          body:
+            json:
+              displayName: Example group
+              schemas: [urn:ietf:params:scim:schemas:core:2.0:Group]
+              entitlements: [{}]
+        response:
+          status: 503
+          body:
+            json:
+              error_code: TEMPORARILY_UNAVAILABLE
+              message: Service unavailable from fixture
+        times: 2
+        min_gap: 1s
+        max_gap: 3s
+      # The second retry.
+      - request: *create
+        response:
+          status: 201
+          body:
+            json:
+              id: group-id
+        min_gap: 2s
+        max_gap: 4s
+      - request: &read
+          method: GET
+          path: /api/2.0/preview/scim/v2/Groups/group-id
+          query:
+            attributes: ["displayName,externalId,entitlements"]
+          body: null
+        response: &group
+          status: 200
+          body:
+            json:
+              id: group-id
+              displayName: Example group
+      - request: *read
+        response: *group
+    state:
+      resources:
+        databricks_group.this:
+          attributes:
+            - path: [id]
+              equals: group-id
+destroy:
+  calls:
+    - request: *read
+      response: *group
+    - request:
+        method: DELETE
+        path: /api/2.0/preview/scim/v2/Groups/group-id
+        body: null
+      response:
+        status: 204
+        body: null

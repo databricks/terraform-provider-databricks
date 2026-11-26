@@ -41,9 +41,6 @@ func getContentReader(data *schema.ResourceData) (*hashReadCloser, error) {
 			return nil, err
 		}
 		reader = io.NopCloser(bytes.NewReader(decodedString))
-		if err != nil {
-			return nil, err
-		}
 	}
 	hash := md5.New()
 	tee := io.TeeReader(reader, hash)

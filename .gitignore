@@ -302,7 +302,7 @@ pyvenv.cfg
 .aws.env
 .azure.env
 .venv
-env/
+/env/
 venv/
 ENV/
 env.bak/

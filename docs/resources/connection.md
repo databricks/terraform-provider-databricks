@@ -49,7 +49,7 @@ resource "databricks_connection" "bigquery" {
       "type" : "service_account",
       "project_id" : "PROJECT_ID",
       "private_key_id" : "KEY_ID",
-      "private_key" : "-----BEGIN PRIVATE KEY-----\nPRIVATE_KEY\n-----END PRIVATE KEY-----\n",
+      "private_key" : "PEM_ENCODED_PRIVATE_KEY",
       "client_email" : "SERVICE_ACCOUNT_EMAIL",
       "client_id" : "CLIENT_ID",
       "auth_uri" : "https://accounts.google.com/o/oauth2/auth",

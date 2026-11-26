@@ -41,6 +41,7 @@ The following arguments are supported:
 * `name` (string, optional) - Name of the setting. The settings metadata endpoint lists the names available at each scope
 * `operational_email_custom_recipient` (OperationalEmailCustomRecipientMessage, optional) - Setting value for operational_email_custom_recipient setting. This is the setting value set by consumers, check effective_operational_email_custom_recipient for final setting value
 * `personal_compute` (PersonalComputeMessage, optional) - Setting value for personal_compute setting. This is the setting value set by consumers, check effective_personal_compute for final setting value
+* `repo_allowlist_permission` (ReposAllowListPermissionMessage, optional) - Saved Git folder allowlist permission. Check effective_repo_allowlist_permission for the evaluated value
 * `restrict_workspace_admins` (RestrictWorkspaceAdminsMessage, optional) - Setting value for restrict_workspace_admins setting. This is the setting value set by consumers, check effective_restrict_workspace_admins for final setting value
 * `string_val` (StringMessage, optional) - Setting value for string type setting. This is the setting value set by consumers, check effective_string_val for final setting value
 * `workspace_dashboard_theme` (DashboardTheme, optional) - Setting value for the workspace_dashboard_theme setting. This is the setting value set by consumers. Check effective_workspace_dashboard_theme for the final setting value
@@ -209,6 +210,9 @@ The following arguments are supported:
   policy. DELEGATE moves control to each workspace, where users or groups must be added to the
   policy's permissions before they can create compute with it. Possible values are: `DELEGATE`, `ON`
 
+### ReposAllowListPermissionMessage
+* `permission` (string, required) - Possible values are: `ALLOWLISTED_CLONE_COMMIT_PUSH`, `ALLOWLISTED_COMMIT_PUSH`, `ALL_REPOS`
+
 ### RestrictWorkspaceAdminsMessage
 * `status` (string, required) - Controls what workspace admins can do with service principal tokens and job identities. With
   ALLOW_ALL, workspace admins can create personal access tokens on behalf of any service principal
@@ -236,6 +240,7 @@ In addition to the above arguments, the following attributes are exported:
 * `effective_collaboration_platform_connectivity` (CollaborationPlatformConnectivityMessage) - Effective setting value for collaboration_platform_connectivity setting. This is the final effective value of setting. To set a value use collaboration_platform_connectivity
 * `effective_integer_val` (IntegerMessage) - Effective setting value for integer type setting. This is the final effective value of setting. To set a value use integer_val
 * `effective_operational_email_custom_recipient` (OperationalEmailCustomRecipientMessage) - Effective setting value for operational_email_custom_recipient setting. This is the final effective value of setting. To set a value use operational_email_custom_recipient
+* `effective_repo_allowlist_permission` (ReposAllowListPermissionMessage) - Evaluated Git folder allowlist permission. To set a value, use repo_allowlist_permission
 * `effective_string_val` (StringMessage) - Effective setting value for string type setting. This is the final effective value of setting. To set a value use string_val
 * `effective_workspace_dashboard_theme` (DashboardTheme) - Effective setting value for the workspace_dashboard_theme setting. This is the final effective value of the setting. To set a value, use workspace_dashboard_theme
 

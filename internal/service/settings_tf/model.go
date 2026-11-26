@@ -2467,13 +2467,14 @@ func (m *CreateNotificationDestinationRequest) SetConfig(ctx context.Context, v 
 type CreateOboTokenRequest struct {
 	// Application ID of the service principal.
 	ApplicationId types.String `tfsdk:"application_id"`
-	// Whether to enable autoscoping for this token.
+	// Whether to enable autoscoping for this token. `disable_autoscoping`
+	// supersedes this field and is the one read when both are set.
 	AutoscopeEnabled types.Bool `tfsdk:"autoscope_enabled"`
 	// Comment that describes the purpose of the token.
 	Comment types.String `tfsdk:"comment"`
 	// The number of seconds before the token expires.
 	LifetimeSeconds types.Int64 `tfsdk:"lifetime_seconds"`
-
+	// Optional scopes of the token.
 	Scopes types.List `tfsdk:"scopes"`
 }
 
@@ -2576,6 +2577,7 @@ func (m *CreateOboTokenRequest) SetScopes(ctx context.Context, v []types.String)
 
 // An on-behalf token was successfully created for the service principal.
 type CreateOboTokenResponse struct {
+	// Metadata of the created token. Does not include the token value.
 	TokenInfo types.Object `tfsdk:"token_info"`
 	// Value of the token.
 	TokenValue types.String `tfsdk:"token_value"`
@@ -2992,6 +2994,8 @@ func (m *CreatePrivateEndpointRuleRequest) SetPrivateEndpointRule(ctx context.Co
 type CreateTokenRequest struct {
 	// Whether to enable autoscoping for this token. When true, the token will
 	// automatically collect inferred API path scopes as it is used.
+	// `disable_autoscoping` supersedes this field and is the one read when both
+	// are set.
 	AutoscopeEnabled types.Bool `tfsdk:"autoscope_enabled"`
 	// Optional description to attach to the token.
 	Comment types.String `tfsdk:"comment"`
@@ -16452,9 +16456,8 @@ func (m *NccAzureServiceEndpointRule) SetTargetServices(ctx context.Context, v [
 }
 
 type NccEgressConfig struct {
-	// The network connectivity rules that are applied by default without
-	// resource specific configurations. You can find the stable network
-	// information of your serverless compute resources here.
+	// Deprecated. This field is retained for compatibility with existing
+	// clients. Avoid using it in new integrations.
 	DefaultRules types.Object `tfsdk:"default_rules"`
 	// The network connectivity rules that configured for each destinations.
 	// These rules override default rules.
@@ -16737,10 +16740,11 @@ func (m *NccEgressDefaultRules) SetAzureServiceEndpointRule(ctx context.Context,
 // Target rule controls the egress rules that are dedicated to specific
 // resources.
 type NccEgressTargetRules struct {
-	// AWS private endpoint rule controls the AWS private endpoint based egress
-	// rules.
+	// Deprecated. This field is not supported anymore and kept purely for
+	// interface stability.
 	AwsPrivateEndpointRules types.List `tfsdk:"aws_private_endpoint_rules"`
-
+	// Deprecated. This field is not supported anymore and kept purely for
+	// interface stability.
 	AzurePrivateEndpointRules types.List `tfsdk:"azure_private_endpoint_rules"`
 }
 

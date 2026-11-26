@@ -16,6 +16,7 @@ import (
 
 	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -95,6 +96,8 @@ type authServer struct {
 	script   []authExchange
 	mu       sync.Mutex
 	requests []authRequest
+	// volumeUserAgents are the User-Agent headers of the volume requests.
+	volumeUserAgents []string
 }
 
 func (s *authServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -117,6 +120,9 @@ func (s *authServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	s.mu.Lock()
 	next := len(s.requests)
 	s.requests = append(s.requests, request)
+	if strings.HasPrefix(r.URL.Path, workspaceHostVolumesPath) {
+		s.volumeUserAgents = append(s.volumeUserAgents, r.Header.Get("User-Agent"))
+	}
 	s.mu.Unlock()
 	status := http.StatusNotFound
 	response := `{"error_code": "NOT_FOUND", "message": "no fixture"}`
@@ -139,6 +145,18 @@ func (s *authServer) received() []authRequest {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	return slices.Clone(s.requests)
+}
+
+// assertVolumeClient checks that every volume request came from sdk-go uc/volumes/v1 if
+// sdkGo is set, and from the existing client otherwise.
+func (s *authServer) assertVolumeClient(t *testing.T, sdkGo bool) {
+	t.Helper()
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	for _, userAgent := range s.volumeUserAgents {
+		assert.Equal(t, sdkGo, strings.Contains(userAgent, " sdk-go-uc-volumes/"),
+			userAgent)
+	}
 }
 
 // readableAssertion replaces the signed JWT of a Google token request with its claims,
@@ -224,15 +242,32 @@ type authRefresh struct {
 }
 
 // refreshAuthVolume refreshes the volume with a client for cfg, as terraform plan does,
-// checks that the requests match the script and plans the volume's configuration.
-func refreshAuthVolume(t *testing.T, s *authServer, cfg *config.Config) authRefresh {
+// through sdk-go uc/volumes/v1 if sdkGo is set. It checks that the requests match the
+// script and that the read and the volume requests used the selected client, and plans
+// the volume's configuration.
+func refreshAuthVolume(t *testing.T, s *authServer, cfg *config.Config,
+	sdkGo bool) authRefresh {
 	t.Helper()
 	c, err := newAuthClient(t, s, cfg)
 	require.NoError(t, err)
-	state, diags := routingRefreshVolume(c, authVolumeState())
-	assert.Equal(t, s.expected(), s.received())
-
 	r := ResourceVolume().ToResource()
+	// A failed token request can stop the refresh before any volume request, so the
+	// read itself records which client it selected.
+	read, readWithSdkGo := r.ReadContext, false
+	r.ReadContext = func(ctx context.Context, d *schema.ResourceData,
+		m any) diag.Diagnostics {
+		readWithSdkGo = common.UsesSdkGo(ctx)
+		return read(ctx, d, m)
+	}
+	if sdkGo {
+		common.EnableSdkGo(r)
+	}
+	ctx := context.WithValue(context.Background(), common.ResourceName, "volume")
+	state, diags := r.RefreshWithoutUpgrade(ctx, authVolumeState(), c)
+	assert.Equal(t, s.expected(), s.received())
+	assert.Equal(t, sdkGo, readWithSdkGo, "the read must use the selected client")
+	s.assertVolumeClient(t, sdkGo)
+
 	v := routingVolume{attributes: routingVolumeAttributes(map[string]string{
 		"name": "auth_volume"})}
 	planned := state
@@ -240,7 +275,6 @@ func refreshAuthVolume(t *testing.T, s *authServer, cfg *config.Config) authRefr
 		planned = &terraform.InstanceState{}
 	}
 	planned.RawConfig = v.rawConfig(t, r)
-	ctx := context.WithValue(context.Background(), common.ResourceName, "volume")
 	plan, err := r.Diff(ctx, planned, v.resourceConfig(), c)
 	require.NoError(t, err)
 	return authRefresh{client: c, state: state, diags: diags, plan: plan}
@@ -333,16 +367,24 @@ var authFailedDefaultChain = []authExchange{
 }
 
 func TestVolumeAuthBasicSendsBasicAuthorization(t *testing.T) {
+	testVolumeAuthBasicSendsBasicAuthorization(t, false)
+}
+
+func testVolumeAuthBasicSendsBasicAuthorization(t *testing.T, sdkGo bool) {
 	s := &authServer{metadata: authAWSMetadata(), script: []authExchange{
 		authVolumeRead(authAWSHost, map[string]string{
 			"Authorization": basicAuthorization("replay-user", "replay-password")}),
 	}}
 
 	refreshAuthVolume(t, s, &config.Config{Host: "https://" + authAWSHost,
-		Username: "replay-user", Password: "replay-password"}).assertSucceeded(t)
+		Username: "replay-user", Password: "replay-password"}, sdkGo).assertSucceeded(t)
 }
 
 func TestVolumeAuthM2MSendsBearerToken(t *testing.T) {
+	testVolumeAuthM2MSendsBearerToken(t, false)
+}
+
+func testVolumeAuthM2MSendsBearerToken(t *testing.T, sdkGo bool) {
 	// The default chain fetches the token in its dry run, and the GET reuses it.
 	s := &authServer{metadata: authAWSMetadata(), script: []authExchange{
 		authOIDCDiscovery,
@@ -350,10 +392,14 @@ func TestVolumeAuthM2MSendsBearerToken(t *testing.T) {
 		authBearerRead("m2m-token"),
 	}}
 
-	refreshAuthVolume(t, s, authM2MConfig("")).assertSucceeded(t)
+	refreshAuthVolume(t, s, authM2MConfig(""), sdkGo).assertSucceeded(t)
 }
 
 func TestVolumeAuthM2MTokenEndpointFailure(t *testing.T) {
+	testVolumeAuthM2MTokenEndpointFailure(t, false)
+}
+
+func testVolumeAuthM2MTokenEndpointFailure(t *testing.T, sdkGo bool) {
 	tests := []struct {
 		name     string
 		authType string
@@ -392,7 +438,7 @@ func TestVolumeAuthM2MTokenEndpointFailure(t *testing.T) {
 			isolateDefaultChain(t)
 			s := &authServer{metadata: authAWSMetadata(), script: tt.script}
 
-			a := refreshAuthVolume(t, s, authM2MConfig(tt.authType))
+			a := refreshAuthVolume(t, s, authM2MConfig(tt.authType), sdkGo)
 
 			a.assertFailed(t, tt.summary)
 		})
@@ -400,6 +446,10 @@ func TestVolumeAuthM2MTokenEndpointFailure(t *testing.T) {
 }
 
 func TestVolumeAuthM2MTokenEndpointNotFoundDropsVolume(t *testing.T) {
+	testVolumeAuthM2MTokenEndpointNotFoundDropsVolume(t, false)
+}
+
+func testVolumeAuthM2MTokenEndpointNotFoundDropsVolume(t *testing.T, sdkGo bool) {
 	// The SDK maps a token endpoint's 404 to apierr.ErrNotFound, so the provider treats
 	// the volume as deleted, and the next plan creates it.
 	s := &authServer{metadata: authAWSMetadata(), script: []authExchange{
@@ -407,7 +457,7 @@ func TestVolumeAuthM2MTokenEndpointNotFoundDropsVolume(t *testing.T) {
 		authM2MToken(http.StatusNotFound, `{"error": "not_found"}`),
 	}}
 
-	a := refreshAuthVolume(t, s, authM2MConfig("oauth-m2m"))
+	a := refreshAuthVolume(t, s, authM2MConfig("oauth-m2m"), sdkGo)
 
 	assert.False(t, a.diags.HasError(), "%v", a.diags)
 	assert.Nil(t, a.state)
@@ -418,6 +468,10 @@ func TestVolumeAuthM2MTokenEndpointNotFoundDropsVolume(t *testing.T) {
 }
 
 func TestVolumeAuthM2MAuthenticatesEachRetriedAttempt(t *testing.T) {
+	testVolumeAuthM2MAuthenticatesEachRetriedAttempt(t, false)
+}
+
+func testVolumeAuthM2MAuthenticatesEachRetriedAttempt(t *testing.T, sdkGo bool) {
 	// The first token expires during the 1.05 to 1.75 s backoff after the 429, so the
 	// retried GET fetches and sends a second token.
 	s := &authServer{metadata: authAWSMetadata(), script: []authExchange{
@@ -430,7 +484,7 @@ func TestVolumeAuthM2MAuthenticatesEachRetriedAttempt(t *testing.T) {
 		authBearerRead("m2m-token-2"),
 	}}
 
-	refreshAuthVolume(t, s, authM2MConfig("oauth-m2m")).assertSucceeded(t)
+	refreshAuthVolume(t, s, authM2MConfig("oauth-m2m"), sdkGo).assertSucceeded(t)
 }
 
 // authSeveralSourcesConfig sets a PAT, a username and password, and an OAuth client.
@@ -441,6 +495,10 @@ func authSeveralSourcesConfig(authType string) *config.Config {
 }
 
 func TestVolumeAuthExplicitAuthTypeSelectsOneSource(t *testing.T) {
+	testVolumeAuthExplicitAuthTypeSelectsOneSource(t, false)
+}
+
+func testVolumeAuthExplicitAuthTypeSelectsOneSource(t *testing.T, sdkGo bool) {
 	tests := []struct {
 		authType string
 		script   []authExchange
@@ -462,7 +520,7 @@ func TestVolumeAuthExplicitAuthTypeSelectsOneSource(t *testing.T) {
 		t.Run(tt.authType, func(t *testing.T) {
 			s := &authServer{metadata: authAWSMetadata(), script: tt.script}
 
-			a := refreshAuthVolume(t, s, authSeveralSourcesConfig(tt.authType))
+			a := refreshAuthVolume(t, s, authSeveralSourcesConfig(tt.authType), sdkGo)
 
 			a.assertSucceeded(t)
 			assert.Equal(t, tt.authType, a.client.Config.AuthType)
@@ -482,6 +540,10 @@ func TestVolumeAuthSeveralSourcesWithoutAuthTypeFailConfiguration(t *testing.T) 
 }
 
 func TestVolumeAuthDefaultChainFallsBackAfterFailedDryRun(t *testing.T) {
+	testVolumeAuthDefaultChainFallsBackAfterFailedDryRun(t, false)
+}
+
+func testVolumeAuthDefaultChainFallsBackAfterFailedDryRun(t *testing.T, sdkGo bool) {
 	// OAuth M2M fails its dry run, github-oidc finds no GitHub token, and env-oidc
 	// exchanges the OIDC token variable for a Databricks token with the same client ID.
 	isolateDefaultChain(t)
@@ -501,7 +563,7 @@ func TestVolumeAuthDefaultChainFallsBackAfterFailedDryRun(t *testing.T) {
 		authBearerRead("federated-token"),
 	}}
 
-	a := refreshAuthVolume(t, s, authM2MConfig(""))
+	a := refreshAuthVolume(t, s, authM2MConfig(""), sdkGo)
 
 	a.assertSucceeded(t)
 	assert.Equal(t, "env-oidc", a.client.Config.AuthType)

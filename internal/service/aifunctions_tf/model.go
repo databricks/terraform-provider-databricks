@@ -103,7 +103,8 @@ type AiClassifyRequest struct {
 	// The label set to classify as. Either a JSON array of label strings (e.g.
 	// ["spam", "not_spam"]), or a JSON object mapping each label to a
 	// description (e.g. {"spam": "unsolicited bulk message", "not_spam": "a
-	// legitimate message"}). Accepts 2 to 500 labels, each 1 to 100 characters.
+	// legitimate message"}). Accepts 2 to 5000 labels, each 1 to 100
+	// characters. When multilabel is true, a single label is also accepted.
 	Labels jsontypes.Normalized `tfsdk:"labels"`
 	// Function options. Omitted fields fall back to their documented defaults.
 	Options types.Object `tfsdk:"options"`
@@ -353,8 +354,8 @@ func (m AiClassifyResponseMetadata) Type(ctx context.Context) attr.Type {
 
 // ai_decide
 type AiDecideOptions struct {
-	// The function API version to invoke. Defaults to "1.0". Supported
-	// versions: ["1.0"].
+	// Set to `"2.0"`. If unset, the deprecated version 1.0 is used during the
+	// [migration period](/api/ai-functions/v1#aidecide).
 	Version types.String `tfsdk:"version"`
 }
 
@@ -404,35 +405,33 @@ func (m AiDecideOptions) Type(ctx context.Context) attr.Type {
 type AiDecideRequest struct {
 	// Function options. Omitted fields fall back to their documented defaults.
 	Options types.Object `tfsdk:"options"`
-	// A JSON object mapping question IDs to their definitions. Each ID must
-	// contain non-whitespace text; its answer is returned with the same ID in
+	// A JSON object mapping up to 256 question IDs to their definitions. Each
+	// ID must be nonblank; its answer is returned with the same ID in
 	// `response.answers`.
 	//
 	// Each definition is an object with the required fields `type` and
 	// `instructions`. The `criteria` field is optional for the type `noul` but
 	// is required for the types `choice` and `score`.
 	//
-	// The `instructions` field describes the judgment to make and can be a
-	// string, object, or array. Use an object or array to include supporting
-	// context alongside the instructions.
+	// In AI Decide v2, `instructions` and each criteria description must be
+	// nonblank strings. Each question may contain at most 20,000 characters
+	// across its ID, instructions, and criteria.
 	//
 	// The `type` can be one of:
 	//
 	// - `choice`: Selects one option from a defined set. Requires `criteria` to
-	// be an object mapping 1 to 255 nonempty option names to descriptions. The
-	// criteria description can be a string, object, array, or null when the
-	// name needs no additional detail. For example:
+	// be an object mapping 1 to 255 nonblank option names to nonblank string
+	// descriptions. For example:
 	//
 	// ```json { "team": { "type": "choice", "instructions": "Which team should
 	// handle this ticket?", "criteria": { "billing": "Payments, charges, and
-	// refunds", "technical_support": null } } } ```
+	// refunds", "technical_support": "Product errors and troubleshooting" } } }
+	// ```
 	//
 	// - `noul`: Estimates the probability that the answer to a true-or-false
 	// question is true. `criteria` can take the fields `true` or `false`, or
-	// both, with descriptions that are strings, objects, or arrays. Omit
-	// `criteria` to use the question alone. The instructions or at least one
-	// criteria description must contain non-whitespace text, a nonempty object,
-	// or a nonempty array. For example, both of the following are valid:
+	// both, with nonblank string descriptions. Omit `criteria` to use the
+	// question alone. For example, both of the following are valid:
 	//
 	// ```json { "escalate": { "type": "noul", "instructions": "Does this ticket
 	// need escalation?", "criteria": { "true": "Suspected fraud or an exception
@@ -445,19 +444,31 @@ type AiDecideRequest struct {
 	// need escalation?" } } ```
 	//
 	// - `score`: Rates the state on an ordered scale. Requires `criteria` to be
-	// an array of 2 to 10 level descriptions, ordered from low to high.
-	// Descriptions must contain non-whitespace text, a nonempty object, or a
-	// nonempty array. Array positions define levels starting at 0. For example:
+	// an array of 2 to 10 unique, nonblank string descriptions, ordered from
+	// low to high. Array positions define levels starting at 0. For example:
 	//
 	// ```json { "urgency": { "type": "score", "instructions": "How urgent is
 	// this ticket?", "criteria": [ "Routine: can wait a few days",
 	// "Time-sensitive: needs attention today", "Critical: needs immediate
 	// action" ] } } ```
 	Questions jsontypes.Normalized `tfsdk:"questions"`
-	// A string, JSON object, or array containing the content, related context,
-	// and examples needed to answer the provided questions. For example,
-	// provide a support message, a conversation, or records describing the
-	// current state of an application. All questions receive this same state.
+	// A nonempty array of typed content objects shared by all questions. Set
+	// `options.version` to `"2.0"` to use this format. Each content object
+	// accepts only `type` and the content field listed below; other fields are
+	// rejected. Text and JSON content plus questions must fit within 32 KiB as
+	// compact UTF-8 JSON, excluding image parts.
+	//
+	// | type | Content field | Value | | --- | --- | --- | | `text` | `text` |
+	// A nonblank string. | | `json` | `data` | A JSON object or array. | |
+	// `image` | `image_url` | An inline base64 PNG or JPEG data URL:
+	// `data:image/png;base64,<base64-encoded image bytes>` or
+	// `data:image/jpeg;base64,<base64-encoded image bytes>`. HTTP URLs and file
+	// paths are not supported. Each image must be at most 4 MiB after base64
+	// decoding, with a resolution up to 1,568 × 1,568 pixels (or an equivalent
+	// pixel count). A request supports up to five images. Images are only
+	// supported in [select regions]. |
+	//
+	// [select regions]: https://docs.databricks.com/aws/en/resources/feature-region-support#ai-function-availability
 	State jsontypes.Normalized `tfsdk:"state"`
 }
 
@@ -577,13 +588,17 @@ type AiDecideResponse struct {
 	// ```json { "answers": { "escalate": { "type": "noul", "probability": 0.8 }
 	// } } ```
 	//
-	// - `score`: score is the probability-weighted mean of the zero-based level
-	// indices. It can fall between levels, from 0 to the number of levels minus
-	// 1. `probabilities` maps each level index to its probability, and `legend`
-	// maps each index to its original description. Both maps use string keys
-	// such as "0", "1", and "2". `confidence` is a number from 0 to 1
-	// indicating how well the state supports the assessment. The
-	// `probabilities` values sum to 1. For example:
+	// - `score`: score is a numeric rating on the zero-based scale defined by
+	// `criteria`. It can fall between levels, from 0 to the number of levels
+	// minus 1. `probabilities` maps each level index to its probability, and
+	// `legend` maps each index to its original description. Both maps use
+	// string keys such as "0", "1", and "2". `confidence` is a number from 0 to
+	// 1 indicating how well the state supports the assessment. The
+	// `probabilities` values sum to 1. Depending on the model, `score` may be
+	// truncated and `probabilities` rounded to 2 decimal places while
+	// preserving a sum of 1, so the score can differ slightly from the
+	// probability-weighted mean computed from the returned probabilities. For
+	// example:
 	//
 	// ```json { "answers": { "urgency": { "type": "score", "score": 1.6,
 	// "probabilities": { "0": 0.1, "1": 0.2, "2": 0.7 }, "legend": { "0":
@@ -1060,9 +1075,11 @@ type AiExtractRequest struct {
 	Options types.Object `tfsdk:"options"`
 	// The extraction schema defining the fields to extract. Either a JSON array
 	// of field names, assumed to be strings (e.g. ["company", "valuation"]), or
-	// a JSON object mapping each field to its type/description/nullability
-	// (e.g. {"company": {"type": "string", "description": "the company
-	// name"}}). Accepts up to 256 fields, 12 levels of nesting, and 500 enum
+	// a JSON object mapping each field to its type/description (e.g.
+	// {"company": {"type": "string", "description": "the company name"}}). Enum
+	// fields list their values in "labels" (e.g. {"currency": {"type": "enum",
+	// "labels": ["USD", "EUR"]}}). Primitive and enum fields are nullable by
+	// default. Accepts up to 256 fields, 12 levels of nesting, and 500 enum
 	// values. Supported field types are string, integer, number, boolean, and
 	// enum.
 	Schema jsontypes.Normalized `tfsdk:"schema"`
@@ -1958,6 +1975,11 @@ func (m *AiParseDocumentResponseMetadata) SetFileMetadata(ctx context.Context, v
 // as a batch in a single call. It is in Beta: a workspace admin must turn on
 // the **AI Functions Asynchronous API** preview on the workspace Previews page
 // before you can call it.
+//
+// For examples, see
+// [`ai_parse_document`](/agents/agent-bricks/document-parsing#asynchronous-api),
+// [`ai_extract`](/agents/agent-bricks/info-extraction#asynchronous-api), and
+// [`ai_classify`](/agents/agent-bricks/classification#asynchronous-api).
 type Batch struct {
 	// Output only. The time when the batch was created.
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
@@ -1967,14 +1989,14 @@ type Batch struct {
 	// request, in the form `{"custom_id": ..., "body": ...}`. The file can hold
 	// up to 50,000 requests and be up to 200 MiB.
 	InputRef types.String `tfsdk:"input_ref"`
-	// Output only. Identifier. Resource name of the batch, returned by create.
-	// Format: `batch_<id>`.
+	// Output only. Unique identifier of the batch, returned by create. Format:
+	// `batch_<id>`.
 	Name types.String `tfsdk:"name"`
 	// Unity Catalog volume path to write the JSONL output file to. If the path
 	// is a directory, the file is `<path>/<name>_output.jsonl`. Each line is
 	// the result of one request, in the form `{"custom_id": ..., "response":
 	// ...}`, or `{"custom_id": ..., "error": {"type": ..., "message": ...}}`
-	// for a request that failed.
+	// for a request that failed or did not finish.
 	OutputRef types.String `tfsdk:"output_ref"`
 	// Parameters of the function other than its input, applied to every request
 	// in the batch, for example `schema` for `ai_extract`. Put function
@@ -1988,11 +2010,21 @@ type Batch struct {
 	// Output only. The number of requests in the batch, by result. Returned
 	// when you get a batch, not when you list batches.
 	RequestCounts types.Object `tfsdk:"request_counts"`
-	// Output only. The status of the batch.
+	// Output only. The status of the batch. A batch starts as `PENDING`, runs
+	// as `IN_PROGRESS`, is `FINALIZING` while the output file is written, and
+	// ends as `COMPLETED`. A running batch that is cancelled is `CANCELLING`,
+	// then `CANCELLED`. A `COMPLETED` batch can include requests that failed,
+	// and a `FAILED` batch has no `output_ref`.
 	Status types.String `tfsdk:"status"`
 }
 
 func (to *Batch) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Batch) {
+	if !from.Params.IsNull() && !from.Params.IsUnknown() && to.Params.IsNull() && len(from.Params.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for Params, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.Params = from.Params
+	}
 	if !from.RequestCounts.IsNull() && !from.RequestCounts.IsUnknown() {
 		if toRequestCounts, ok := to.GetRequestCounts(ctx); ok {
 			if fromRequestCounts, ok := from.GetRequestCounts(ctx); ok {
@@ -2005,6 +2037,12 @@ func (to *Batch) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from Batch)
 }
 
 func (to *Batch) SyncFieldsDuringRead(ctx context.Context, from Batch) {
+	if !from.Params.IsNull() && !from.Params.IsUnknown() && to.Params.IsNull() && len(from.Params.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for Params, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.Params = from.Params
+	}
 	if !from.RequestCounts.IsNull() && !from.RequestCounts.IsUnknown() {
 		if toRequestCounts, ok := to.GetRequestCounts(ctx); ok {
 			if fromRequestCounts, ok := from.GetRequestCounts(ctx); ok {
@@ -2193,7 +2231,7 @@ func (m BatchRequestCounts) Type(ctx context.Context) attr.Type {
 }
 
 type CancelBatchRequest struct {
-	// Resource name of the batch. Format: `batch_<id>`.
+	// Unique identifier of the batch. Format: `batch_<id>`.
 	Name types.String `tfsdk:"-"`
 }
 
@@ -2374,7 +2412,7 @@ func (m *CreateBatchRequest) SetBatch(ctx context.Context, v Batch) {
 }
 
 type GetBatchRequest struct {
-	// Resource name of the batch. Format: `batch_<id>`.
+	// Unique identifier of the batch. Format: `batch_<id>`.
 	Name types.String `tfsdk:"-"`
 }
 

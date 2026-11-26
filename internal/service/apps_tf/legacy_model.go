@@ -48,7 +48,9 @@ type App_SdkV2 struct {
 	// together with `compute_max_instances`.
 	ComputeMinInstances types.Int64 `tfsdk:"compute_min_instances"`
 	// Size of the compute instances the app runs on. Defaults to MEDIUM. Larger
-	// sizes provide more CPU and memory at a higher hourly cost. See
+	// sizes provide more CPU and memory at a higher hourly cost. Leave unset
+	// for an app in a space: apps in a space always run on space compute and
+	// reject any other size. See
 	// https://docs.databricks.com/aws/en/dev-tools/databricks-apps/compute-size.
 	ComputeSize types.String `tfsdk:"compute_size"`
 	// Status of the compute that runs the app.
@@ -1124,27 +1126,36 @@ func (m *AppAccessControlResponse_SdkV2) SetAllPermissions(ctx context.Context, 
 	m.AllPermissions = types.ListValueMust(t, vs)
 }
 
+// A deployment of an app's source code, taken from a workspace path or a Git
+// reference. When a deployment succeeds, it becomes the app's active
+// deployment. See
+// https://docs.databricks.com/aws/en/dev-tools/databricks-apps/deploy.
 type AppDeployment_SdkV2 struct {
 	// The command with which to run the app. This will override the command
 	// specified in the app.yaml file.
 	Command types.List `tfsdk:"command"`
-	// The creation time of the deployment. Formatted timestamp in ISO 6801.
+	// The creation time of the deployment. Formatted timestamp in ISO 8601.
 	CreateTime types.String `tfsdk:"create_time"`
-	// The email of the user creates the deployment.
+	// The email of the user that created the deployment.
 	Creator types.String `tfsdk:"creator"`
 	// The deployment artifacts for an app.
 	DeploymentArtifacts types.List `tfsdk:"deployment_artifacts"`
-	// The unique id of the deployment.
+	// The unique ID of the deployment. Databricks generates the ID when the
+	// deployment is created.
 	DeploymentId types.String `tfsdk:"deployment_id"`
 	// The environment variables to set in the app runtime environment. This
 	// will override the environment variables specified in the app.yaml file.
+	// Responses return only the variable names, not their values.
 	EnvVars types.List `tfsdk:"env_vars"`
-	// Git repository to use as the source for the app deployment.
+	// Git repository to use as the source for the app deployment. The
+	// repository itself is configured on the app, so set only the branch, tag
+	// or commit here, and optionally `source_code_path`.
 	GitSource types.List `tfsdk:"git_source"`
 	// Deploy-time health check for the app. Verifies the app is responding to
 	// HTTP requests before considering the deployment successful.
 	HealthCheck types.List `tfsdk:"health_check"`
-	// The mode of which the deployment will manage the source code.
+	// The mode in which the deployment manages the source code. The mode
+	// defaults to `SNAPSHOT`, which is the only supported mode.
 	Mode types.String `tfsdk:"mode"`
 	// Whether `scan_omitted_findings_count` is a lower bound rather than an
 	// exact count, because the scanner itself stopped counting.
@@ -1164,11 +1175,14 @@ type AppDeployment_SdkV2 struct {
 	// deployed app. The former refers to the original source code location of
 	// the app in the workspace during deployment creation, whereas the latter
 	// provides a system generated stable snapshotted source code path used by
-	// the deployment.
+	// the deployment. Set either `source_code_path` or `git_source`, not both.
+	// If neither is set, the deployment reuses the source of the app's active
+	// deployment.
 	SourceCodePath types.String `tfsdk:"source_code_path"`
-	// Status and status message of the deployment
+	// The current state of the deployment and a message that describes its
+	// progress or failure.
 	Status types.List `tfsdk:"status"`
-	// The update time of the deployment. Formatted timestamp in ISO 6801.
+	// The update time of the deployment. Formatted timestamp in ISO 8601.
 	UpdateTime types.String `tfsdk:"update_time"`
 }
 
@@ -1700,7 +1714,8 @@ func (m AppDeploymentScanFinding_SdkV2) Type(ctx context.Context) attr.Type {
 type AppDeploymentStatus_SdkV2 struct {
 	// Message corresponding with the deployment state.
 	Message types.String `tfsdk:"message"`
-	// State of the deployment.
+	// State of the deployment. A deployment starts in `IN_PROGRESS` and ends in
+	// `SUCCEEDED`, `FAILED` or `CANCELLED`.
 	State types.String `tfsdk:"state"`
 }
 
@@ -4140,7 +4155,10 @@ func (m AppResourceUcSecurable_SdkV2) Type(ctx context.Context) attr.Type {
 
 // The thumbnail for an app.
 type AppThumbnail_SdkV2 struct {
-	// The thumbnail image bytes.
+	// The thumbnail image file, such as a PNG or JPEG image. In JSON the bytes
+	// are base64-encoded. An update request must include a non-empty image. The
+	// service stores the image as a PNG of at most 320x180 pixels and crops an
+	// image that is not 16:9, so use a 16:9 image.
 	Thumbnail types.String `tfsdk:"thumbnail"`
 }
 
@@ -4682,7 +4700,10 @@ type AsyncUpdateAppRequest_SdkV2 struct {
 	AppName types.String `tfsdk:"-"`
 	// Comma-separated names of the `app` fields to update, such as
 	// `description` or `resources`. A field named in the mask but absent from
-	// `app` is cleared, except `compute_size`, which resets to `MEDIUM`.
+	// `app` is cleared, except `compute_size`, which resets to `MEDIUM`. Sent
+	// in the request body together with `app`. A `*` mask does not include
+	// `custom_domains`; name it to set or clear them. Apps in a space can only
+	// update `description` and `resources`.
 	//
 	// The field mask must be a single string, with multiple fields separated by
 	// commas (no spaces). The field path is relative to the resource object,
@@ -6673,10 +6694,11 @@ func (m *ListAppDeploymentScanFindingsResponse_SdkV2) SetAppDeploymentScanFindin
 type ListAppDeploymentsRequest_SdkV2 struct {
 	// The name of the app.
 	AppName types.String `tfsdk:"-"`
-	// Upper bound for items returned.
+	// Upper bound for items returned. The default is 100 and the maximum is
+	// 1000.
 	PageSize types.Int64 `tfsdk:"-"`
-	// Pagination token to go to the next page of apps. Requests first page if
-	// absent.
+	// Pagination token to go to the next page of deployments. Requests first
+	// page if absent.
 	PageToken types.String `tfsdk:"-"`
 }
 
@@ -6730,9 +6752,9 @@ func (m ListAppDeploymentsRequest_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type ListAppDeploymentsResponse_SdkV2 struct {
-	// Deployment history of the app.
+	// Deployment history of the app, most recent deployment first.
 	AppDeployments types.List `tfsdk:"app_deployments"`
-	// Pagination token to request the next page of apps.
+	// Pagination token to request the next page of deployments.
 	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
@@ -7500,13 +7522,17 @@ func (m *Operation_SdkV2) SetError(ctx context.Context, v DatabricksServiceExcep
 	m.Error = types.ListValueMust(t, vs)
 }
 
+// An app space groups Databricks apps and shares configuration across them.
+// Resources, user API scopes and the usage policy configured on a space apply
+// to every app in the space. See
+// https://docs.databricks.com/aws/en/dev-tools/databricks-apps/app-spaces.
 type Space_SdkV2 struct {
 	// The group whose permissions users assume via Role Authorization for apps
 	// in this space. When set, user tokens assume the role of this group
 	// instead of doing regular obo token downscoping. Set only at space
 	// creation.
 	AssumeGroupId types.String `tfsdk:"assume_group_id"`
-	// The creation time of the app space. Formatted timestamp in ISO 6801.
+	// The creation time of the app space. Formatted timestamp in ISO 8601.
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
 	// The email of the user that created the app space.
 	Creator types.String `tfsdk:"creator"`
@@ -7520,26 +7546,31 @@ type Space_SdkV2 struct {
 	Id types.String `tfsdk:"id"`
 	// The name of the app space. The name must contain only lowercase
 	// alphanumeric characters and hyphens. It must be unique within the
-	// workspace.
+	// workspace. It can't start or end with a hyphen, and it can't be changed
+	// after the space is created.
 	Name types.String `tfsdk:"name"`
 	// Resources for the app space. Resources configured at the space level are
 	// available to all apps in the space.
 	Resources types.List `tfsdk:"resources"`
-	// The service principal client ID for the app space.
+	// OAuth client ID of the app space's service principal.
 	ServicePrincipalClientId types.String `tfsdk:"service_principal_client_id"`
-	// The service principal ID for the app space.
+	// Numeric ID of the app space's service principal.
 	ServicePrincipalId types.Int64 `tfsdk:"service_principal_id"`
-	// The service principal name for the app space.
+	// Display name of the app space's service principal.
 	ServicePrincipalName types.String `tfsdk:"service_principal_name"`
+	// The kind of app space. A default space is available to every workspace
+	// user and can't be updated or deleted.
+	SpaceType types.String `tfsdk:"space_type"`
 	// The status of the app space.
 	Status types.List `tfsdk:"status"`
-	// The update time of the app space. Formatted timestamp in ISO 6801.
+	// The update time of the app space. Formatted timestamp in ISO 8601.
 	UpdateTime timetypes.RFC3339 `tfsdk:"update_time"`
 	// The email of the user that last updated the app space.
 	Updater types.String `tfsdk:"updater"`
 	// The usage policy ID for managing cost at the space level.
 	UsagePolicyId types.String `tfsdk:"usage_policy_id"`
-	// OAuth scopes for apps in the space.
+	// API scopes that apps in the space can request for user authorization. See
+	// https://docs.databricks.com/aws/en/dev-tools/databricks-apps/auth.
 	UserApiScopes types.List `tfsdk:"user_api_scopes"`
 }
 
@@ -7640,6 +7671,7 @@ func (m Space_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attribu
 	attrs["service_principal_client_id"] = attrs["service_principal_client_id"].SetComputed()
 	attrs["service_principal_id"] = attrs["service_principal_id"].SetComputed()
 	attrs["service_principal_name"] = attrs["service_principal_name"].SetComputed()
+	attrs["space_type"] = attrs["space_type"].SetComputed()
 	attrs["status"] = attrs["status"].SetComputed()
 	attrs["status"] = attrs["status"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["update_time"] = attrs["update_time"].SetComputed()
@@ -7685,6 +7717,7 @@ func (m Space_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"service_principal_client_id": m.ServicePrincipalClientId,
 			"service_principal_id":        m.ServicePrincipalId,
 			"service_principal_name":      m.ServicePrincipalName,
+			"space_type":                  m.SpaceType,
 			"status":                      m.Status,
 			"update_time":                 m.UpdateTime,
 			"updater":                     m.Updater,
@@ -7713,6 +7746,7 @@ func (m Space_SdkV2) Type(ctx context.Context) attr.Type {
 			"service_principal_client_id": types.StringType,
 			"service_principal_id":        types.Int64Type,
 			"service_principal_name":      types.StringType,
+			"space_type":                  types.StringType,
 			"status": basetypes.ListType{
 				ElemType: SpaceStatus_SdkV2{}.Type(ctx),
 			},
@@ -8831,21 +8865,14 @@ func (m *UpdateCustomTemplateRequest_SdkV2) SetTemplate(ctx context.Context, v C
 type UpdateSpaceRequest_SdkV2 struct {
 	// The name of the app space. The name must contain only lowercase
 	// alphanumeric characters and hyphens. It must be unique within the
-	// workspace.
+	// workspace. It can't start or end with a hyphen, and it can't be changed
+	// after the space is created.
 	Name types.String `tfsdk:"-"`
 
 	Space types.List `tfsdk:"space"`
-	// The field mask must be a single string, with multiple fields separated by
-	// commas (no spaces). The field path is relative to the resource object,
-	// using a dot (`.`) to navigate sub-fields (e.g., `author.given_name`).
-	// Specification of elements in sequence or map fields is not allowed, as
-	// only the entire collection field can be specified. Field names must
-	// exactly match the resource field names.
-	//
-	// A field mask of `*` indicates full replacement. It’s recommended to
-	// always explicitly list the fields being updated and avoid using `*`
-	// wildcards, as it can lead to unintended results if the API changes in the
-	// future.
+	// Comma-separated names of the `space` fields to update, such as
+	// `description` or `resources`. A field named in the mask but absent from
+	// `space` is cleared. Sent as a query parameter, not in the `space` body.
 	UpdateMask types.String `tfsdk:"-"`
 }
 

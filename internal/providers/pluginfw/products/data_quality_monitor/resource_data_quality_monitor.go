@@ -108,10 +108,12 @@ func (r ProviderConfig) Type(ctx context.Context) attr.Type {
 
 // Monitor extends the main model with additional fields.
 type Monitor struct {
-	// Anomaly Detection Configuration, applicable to `schema` object types.
+	// Anomaly detection settings. Required when `object_type` is `schema`. When
+	// reading a `table` monitor, this holds the settings of the parent schema's
+	// monitor if the schema has one.
 	AnomalyDetectionConfig types.Object `tfsdk:"anomaly_detection_config"`
-	// Data Profiling Configuration, applicable to `table` object types. Exactly
-	// one `Analysis Configuration` must be present.
+	// Data profiling settings. Required when `object_type` is `table`. Exactly
+	// one of `inference_log`, `time_series` or `snapshot` must be set.
 	DataProfilingConfig types.Object `tfsdk:"data_profiling_config"`
 	// The UUID of the request object. It is `schema_id` for `schema`, and
 	// `table_id` for `table`.

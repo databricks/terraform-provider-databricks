@@ -1,0 +1,75 @@
+# Pins importing a model whose GET answers 403 or 500. The default importer drops its
+# own read error, so Terraform refreshes the imported ID; that refresh runs inside the
+# CRUD wrappers and fails with the "cannot read mlflow model" prefix. Neither status is
+# retried, and each failure imports nothing, so the following plan creates the model.
+# API responses are inferred from the MLflow Model Registry API contract, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: import_answered_403_fails_on_the_refresh
+    config: &config |
+      resource "databricks_mlflow_model" "this" {
+        name = "unreadable-import-model"
+      }
+    import:
+      resource: databricks_mlflow_model.this
+      id: unreadable-import-model
+      persist: true
+    expect_error: 'Error: cannot read mlflow model: User does not have any permission
+      level assigned to the registered model\.\n'
+    calls:
+      # The importer's GET, then the refresh GET after import.
+      - &read_forbidden
+        request: &read_request
+          method: GET
+          path: /api/2.0/mlflow/databricks/registered-models/get
+          query:
+            name: [unreadable-import-model]
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 403
+          body:
+            json: {"error_code": "PERMISSION_DENIED",
+                   "message": "User does not have any permission level assigned to the
+                     registered model."}
+      - *read_forbidden
+  - name: nothing_imported_after_403_so_plan_creates
+    plan_only: true
+    config: *config
+    plan: &plans_create
+      expect: non_empty
+      changes:
+        databricks_mlflow_model.this:
+          actions: [create]
+    calls: []
+  - name: import_answered_500_fails_on_the_refresh
+    config: *config
+    import:
+      resource: databricks_mlflow_model.this
+      id: unreadable-import-model
+      persist: true
+    expect_error: 'Error: cannot read mlflow model: Internal error while reading
+      registered model ''unreadable-import-model''\.\n'
+    calls:
+      - &read_failing
+        request: *read_request
+        response:
+          status: 500
+          body:
+            json: {"error_code": "INTERNAL_ERROR",
+                   "message": "Internal error while reading registered model
+                     'unreadable-import-model'."}
+      - *read_failing
+  - name: nothing_imported_after_500_so_plan_creates
+    plan_only: true
+    config: *config
+    plan: *plans_create
+    calls: []
+destroy:
+  calls: []

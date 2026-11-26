@@ -1,0 +1,95 @@
+# Pins provider_config.workspace_id equal to the workspace of a workspace-level
+# provider: create, refresh, import and delete send every model call with that ID in
+# the X-Databricks-Workspace-Id header, with no SCIM /Me call because host metadata
+# supplies the provider's workspace ID. The import runs with the block in the
+# configuration and matches the created state. Fixtures are synthetic: API responses
+# are inferred from the MLflow Model Registry API contract, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: create_with_matching_workspace_id
+    config: &config |
+      resource "databricks_mlflow_model" "this" {
+        name = "routing_matching_ws_model"
+        provider_config {
+          workspace_id = "12345"
+        }
+      }
+    calls:
+      - request:
+          method: POST
+          path: /api/2.0/mlflow/registered-models/create
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"name": "routing_matching_ws_model"}
+        response:
+          status: 200
+          body:
+            json: {"registered_model": {"name": "routing_matching_ws_model",
+                                        "creation_timestamp": 1700000000003,
+                                        "last_updated_timestamp": 1700000000003,
+                                        "user_id": "replay-admin@example.com"}}
+      - &read_model
+        request:
+          method: GET
+          path: /api/2.0/mlflow/databricks/registered-models/get
+          query:
+            name: [routing_matching_ws_model]
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"registered_model_databricks": {
+                     "name": "routing_matching_ws_model",
+                     "id": "00000000000000000000000000000903",
+                     "creation_timestamp": 1700000000003,
+                     "last_updated_timestamp": 1700000000003,
+                     "user_id": "replay-admin@example.com",
+                     "permission_level": "CAN_MANAGE"}}
+      # The post-apply refresh plan.
+      - *read_model
+    state:
+      resources:
+        databricks_mlflow_model.this:
+          attributes:
+            - path: [provider_config, 0, workspace_id]
+              equals: "12345"
+  - name: refresh_with_matching_workspace_id_is_empty
+    plan_only: true
+    config: *config
+    plan:
+      expect: empty
+      changes: {}
+    calls:
+      - *read_model
+  - name: import_with_provider_config_matches_created_state
+    import:
+      resource: databricks_mlflow_model.this
+      persist: false
+      verify: true
+    calls:
+      - *read_model
+      - *read_model
+destroy:
+  calls:
+    - *read_model
+    - request:
+        method: DELETE
+        path: /api/2.0/mlflow/registered-models/delete
+        query:
+          name: [routing_matching_ws_model]
+        headers:
+          X-Databricks-Workspace-Id: "12345"
+        body: null
+      response:
+        status: 200
+        body:
+          json: {}

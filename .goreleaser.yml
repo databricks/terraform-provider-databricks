@@ -22,6 +22,9 @@ archives:
     - LICENSE*
     - CHANGELOG*
     - NOTICE*
+    # The Go SDK is bundled in databricks-sdk-go/; ship its attribution too.
+    - databricks-sdk-go/LICENSE
+    - databricks-sdk-go/NOTICE
 
 checksum:
   name_template: '{{ .ProjectName }}_{{ replace .Version "v" "" }}_SHA256SUMS'

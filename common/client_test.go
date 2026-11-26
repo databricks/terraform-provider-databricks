@@ -21,18 +21,15 @@ import (
 	"github.com/databricks/databricks-sdk-go/experimental/mocks"
 	"github.com/databricks/databricks-sdk-go/service/iam"
 	"github.com/databricks/databricks-sdk-go/service/provisioning"
+	"github.com/databricks/terraform-provider-databricks/qa/httpfixture"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
-func configureAndAuthenticate(dc *DatabricksClient) (*DatabricksClient, error) {
-	// Skip host-metadata resolution to avoid DNS/connection hangs on non-real hosts.
-	if dc.Config.HostMetadataResolver == nil {
-		dc.Config.HostMetadataResolver = func(ctx context.Context, host string) (*config.HostMetadata, error) {
-			return nil, nil
-		}
-	}
+func configureAndAuthenticate(t *testing.T, dc *DatabricksClient) (*DatabricksClient, error) {
+	t.Helper()
+	dc.Config.HTTPTransport = httpfixture.NewOfflineAuthTransport(t)
 	req, err := http.NewRequest("GET", dc.Config.Host, nil)
 	if err != nil {
 		return dc, err
@@ -41,7 +38,7 @@ func configureAndAuthenticate(dc *DatabricksClient) (*DatabricksClient, error) {
 }
 
 func failsToAuthenticateWith(t *testing.T, dc *DatabricksClient, message string) {
-	_, err := configureAndAuthenticate(dc)
+	_, err := configureAndAuthenticate(t, dc)
 	if dc.Config.AuthType != "" {
 		log.Printf("[INFO] Auth is: %s", dc.Config.AuthType)
 	}
@@ -72,7 +69,7 @@ func TestDatabricksClientConfigure_BasicAuth_NoHost(t *testing.T) {
 }
 
 func TestDatabricksClientConfigure_BasicAuth(t *testing.T) {
-	dc, err := configureAndAuthenticate(&DatabricksClient{
+	dc, err := configureAndAuthenticate(t, &DatabricksClient{
 		DatabricksClient: &client.DatabricksClient{
 			Config: &config.Config{
 				Host:     "https://localhost:443",
@@ -86,7 +83,7 @@ func TestDatabricksClientConfigure_BasicAuth(t *testing.T) {
 }
 
 func TestDatabricksClientConfigure_HostWithoutScheme(t *testing.T) {
-	dc, err := configureAndAuthenticate(&DatabricksClient{
+	dc, err := configureAndAuthenticate(t, &DatabricksClient{
 		DatabricksClient: &client.DatabricksClient{
 			Config: &config.Config{
 				Host:  "localhost:443",
@@ -111,7 +108,7 @@ func TestDatabricksClientConfigure_Token_NoHost(t *testing.T) {
 }
 
 func TestDatabricksClientConfigure_HostTokensTakePrecedence(t *testing.T) {
-	dc, err := configureAndAuthenticate(&DatabricksClient{
+	dc, err := configureAndAuthenticate(t, &DatabricksClient{
 		DatabricksClient: &client.DatabricksClient{
 			Config: &config.Config{
 				Host:       "foo",
@@ -139,7 +136,7 @@ func TestDatabricksClientConfigure_BasicAuthDoesNotTakePrecedence(t *testing.T) 
 }
 
 func TestDatabricksClientConfigure_ConfigRead(t *testing.T) {
-	dc, err := configureAndAuthenticate(&DatabricksClient{
+	dc, err := configureAndAuthenticate(t, &DatabricksClient{
 		DatabricksClient: &client.DatabricksClient{
 			Config: &config.Config{
 				ConfigFile: "testdata/.databrickscfg",
@@ -213,7 +210,7 @@ func TestDatabricksClient_FormatURL(t *testing.T) {
 }
 
 func TestDatabricksIsGcp(t *testing.T) {
-	dc, err := configureAndAuthenticate(&DatabricksClient{
+	dc, err := configureAndAuthenticate(t, &DatabricksClient{
 		DatabricksClient: &client.DatabricksClient{
 			Config: &config.Config{
 				Host:  "https://demo.gcp.databricks.com/",
@@ -239,7 +236,7 @@ func TestIsAzure_Error(t *testing.T) {
 }
 
 func TestClientForHost(t *testing.T) {
-	dc, err := configureAndAuthenticate(&DatabricksClient{
+	dc, err := configureAndAuthenticate(t, &DatabricksClient{
 		DatabricksClient: &client.DatabricksClient{
 			Config: &config.Config{
 				Host:     "https://accounts.cloud.databricks.com/",
@@ -261,9 +258,10 @@ func TestClientForHostAuthError(t *testing.T) {
 	c := &DatabricksClient{
 		DatabricksClient: &client.DatabricksClient{
 			Config: &config.Config{
-				Token:      "connfigured",
-				ConfigFile: "testdata/.databrickscfg",
-				Profile:    "notoken",
+				HTTPTransport: httpfixture.NewOfflineAuthTransport(t),
+				Token:         "connfigured",
+				ConfigFile:    "testdata/.databrickscfg",
+				Profile:       "notoken",
 			},
 		},
 	}
@@ -272,6 +270,7 @@ func TestClientForHostAuthError(t *testing.T) {
 }
 
 func TestDatabricksClientConfigure_NonsenseAuth(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
 	failsToAuthenticateWith(t, &DatabricksClient{
 		DatabricksClient: &client.DatabricksClient{
 			Config: &config.Config{
@@ -288,6 +287,7 @@ func TestGetJWTProperty_AzureCLI_SP(t *testing.T) {
 	aa := DatabricksClient{
 		DatabricksClient: &client.DatabricksClient{
 			Config: &config.Config{
+				HTTPTransport:     httpfixture.NewOfflineAuthTransport(t),
 				AzureClientID:     "a",
 				AzureClientSecret: "b",
 				AzureTenantID:     "c",
@@ -325,7 +325,8 @@ func TestGetJWTProperty_Authenticate_Fail(t *testing.T) {
 	client := &DatabricksClient{
 		DatabricksClient: &client.DatabricksClient{
 			Config: &config.Config{
-				Host: "https://adb-1232.azuredatabricks.net",
+				HTTPTransport: httpfixture.NewOfflineAuthTransport(t),
+				Host:          "https://adb-1232.azuredatabricks.net",
 			},
 		},
 	}
@@ -389,8 +390,9 @@ func TestWorkspaceClientForWorkspace_AccountAPIFails_FallsBackToDirect(t *testin
 func TestWorkspaceClientForWorkspace_WorkspaceExistsNotInCache(t *testing.T) {
 	mockAcc := mocks.NewMockAccountClient(t)
 	mockAcc.AccountClient.Config = &config.Config{
-		Host:  "https://accounts.cloud.databricks.com",
-		Token: "dapi123", // Instantiating WorkspaceClient attempts authentication, this allows Configure() to complete quickly.
+		HTTPTransport: httpfixture.NewOfflineAuthTransport(t),
+		Host:          "https://accounts.cloud.databricks.com",
+		Token:         "dapi123", // Instantiating WorkspaceClient attempts authentication, this allows Configure() to complete quickly.
 	}
 	mockWorkspacesAPI := mockAcc.GetMockWorkspacesAPI()
 
@@ -464,16 +466,18 @@ func TestWorkspaceClientForWorkspace_ConnectionIDSkipsAccountAPI(t *testing.T) {
 	// any expectations, so any call to it would fail testify-mock strict mode.
 	mockAcc := mocks.NewMockAccountClient(t)
 	mockAcc.AccountClient.Config = &config.Config{
-		Host:  "https://accounts.cloud.databricks.com",
-		Token: "dapi123",
+		HTTPTransport: httpfixture.NewOfflineAuthTransport(t),
+		Host:          "https://accounts.cloud.databricks.com",
+		Token:         "dapi123",
 	}
 
 	dc := &DatabricksClient{
 		DatabricksClient: &client.DatabricksClient{
 			Config: &config.Config{
-				Host:      "https://unified.cloud.databricks.com",
-				Token:     "dapi123",
-				AccountID: "test-account-id",
+				HTTPTransport: httpfixture.NewOfflineAuthTransport(t),
+				Host:          "https://unified.cloud.databricks.com",
+				Token:         "dapi123",
+				AccountID:     "test-account-id",
 			},
 		},
 	}

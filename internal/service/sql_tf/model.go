@@ -81,44 +81,57 @@ func (m AccessControl) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// A legacy Databricks SQL alert. An alert runs a saved query, compares a column
+// of the result against a threshold, and notifies its subscribers when the
+// condition is met. See
+// https://docs.databricks.com/aws/en/sql/user/alerts/legacy for details.
 type Alert struct {
-	// Trigger conditions of the alert.
+	// Condition that triggers the alert: a column of the query result, a
+	// comparison operator, and a threshold value. The value in the first row of
+	// the column is evaluated; aggregations are not supported through this API.
 	Condition types.Object `tfsdk:"condition"`
 	// The timestamp indicating when the alert was created.
 	CreateTime types.String `tfsdk:"create_time"`
-	// Custom body of alert notification, if it exists. See [here] for custom
-	// templating instructions.
-	//
-	// [here]: https://docs.databricks.com/sql/user/alerts/index.html
+	// Custom body of the alert notification. It can use the template variables
+	// and HTML described at
+	// https://docs.databricks.com/aws/en/sql/user/alerts/legacy. If omitted,
+	// the default notification body is used.
 	CustomBody types.String `tfsdk:"custom_body"`
-	// Custom subject of alert notification, if it exists. This can include
-	// email subject entries and Slack notification headers, for example. See
-	// [here] for custom templating instructions.
-	//
-	// [here]: https://docs.databricks.com/sql/user/alerts/index.html
+	// Custom subject of the alert notification, used as the email subject or
+	// the Slack message header. It can use the template variables described at
+	// https://docs.databricks.com/aws/en/sql/user/alerts/legacy. If omitted,
+	// the default subject is used.
 	CustomSubject types.String `tfsdk:"custom_subject"`
-	// The display name of the alert.
+	// Display name of the alert, shown in list views and notifications. It must
+	// not be empty.
 	DisplayName types.String `tfsdk:"display_name"`
 	// UUID identifying the alert.
 	Id types.String `tfsdk:"id"`
-	// The workspace state of the alert. Used for tracking trashed status.
+	// Lifecycle state of the alert: `ACTIVE`, or `TRASHED` after it has been
+	// moved to the trash.
 	LifecycleState types.String `tfsdk:"lifecycle_state"`
-	// Whether to notify alert subscribers when alert returns back to normal.
+	// Whether to notify subscribers when the alert state changes from
+	// `TRIGGERED` back to `OK`. Defaults to true.
 	NotifyOnOk types.Bool `tfsdk:"notify_on_ok"`
 	// The owner's username. This field is set to "Unavailable" if the user has
 	// been deleted.
 	OwnerUserName types.String `tfsdk:"owner_user_name"`
-	// The workspace path of the folder containing the alert.
+	// Workspace path of the folder containing the alert. Defaults to the
+	// creator's home folder when omitted on create. It cannot be changed after
+	// creation.
 	ParentPath types.String `tfsdk:"parent_path"`
-	// UUID of the query attached to the alert.
+	// UUID of the saved query whose result the alert evaluates. The caller must
+	// have permission to view the query.
 	QueryId types.String `tfsdk:"query_id"`
-	// Number of seconds an alert must wait after being triggered to rearm
-	// itself. After rearming, it can be triggered again. If 0 or not specified,
-	// the alert will not be triggered again.
+	// Number of seconds the alert waits after a notification before it can
+	// notify again while its state stays `TRIGGERED`. If 0 or not specified,
+	// the alert notifies once when its state changes to `TRIGGERED` and does
+	// not notify again until its state has changed.
 	SecondsToRetrigger types.Int64 `tfsdk:"seconds_to_retrigger"`
-	// Current state of the alert's trigger status. This field is set to UNKNOWN
-	// if the alert has not yet been evaluated or ran into an error during the
-	// last evaluation.
+	// Current state of the alert's trigger status: `TRIGGERED` if the condition
+	// was met on the last evaluation, `OK` if it was not, and `UNKNOWN` if the
+	// alert has not yet been evaluated or ran into an error during the last
+	// evaluation.
 	State types.String `tfsdk:"state"`
 	// Timestamp when the alert was last triggered, if the alert has been
 	// triggered before.
@@ -257,14 +270,20 @@ func (m *Alert) SetCondition(ctx context.Context, v AlertCondition) {
 }
 
 type AlertCondition struct {
-	// Alert state if result is empty.
+	// State the alert takes when the query returns no rows. Defaults to
+	// `UNKNOWN` when not set.
 	EmptyResultState types.String `tfsdk:"empty_result_state"`
-	// Operator used for comparison in alert evaluation.
+	// Comparison operator applied between the operand column value and the
+	// threshold. The alert is triggered when the comparison is true. `IS_NULL`
+	// triggers when the column value is null; a threshold must still be
+	// supplied but its value is ignored.
 	Op types.String `tfsdk:"op"`
-	// Name of the column from the query result to use for comparison in alert
-	// evaluation.
+	// Left-hand side of the comparison. Through this API it must be a `column`
+	// naming a column of the query result; the value in the first row of that
+	// column is compared against the threshold.
 	Operand types.Object `tfsdk:"operand"`
-	// Threshold value used for comparison in alert evaluation.
+	// Right-hand side of the comparison. Through this API it must be a fixed
+	// `value` whose type matches the operand column.
 	Threshold types.Object `tfsdk:"threshold"`
 }
 
@@ -408,6 +427,7 @@ func (m *AlertCondition) SetThreshold(ctx context.Context, v AlertConditionThres
 }
 
 type AlertConditionOperand struct {
+	// A column of the query result. Used for the `operand` of a condition.
 	Column types.Object `tfsdk:"column"`
 }
 
@@ -499,6 +519,7 @@ func (m *AlertConditionOperand) SetColumn(ctx context.Context, v AlertOperandCol
 }
 
 type AlertConditionThreshold struct {
+	// A fixed value. Used for the `threshold` of a condition.
 	Value types.Object `tfsdk:"value"`
 }
 
@@ -590,6 +611,7 @@ func (m *AlertConditionThreshold) SetValue(ctx context.Context, v AlertOperandVa
 }
 
 type AlertOperandColumn struct {
+	// Name of the column in the query result.
 	Name types.String `tfsdk:"name"`
 }
 
@@ -637,10 +659,11 @@ func (m AlertOperandColumn) Type(ctx context.Context) attr.Type {
 }
 
 type AlertOperandValue struct {
+	// Boolean threshold, for boolean columns.
 	BoolValue types.Bool `tfsdk:"bool_value"`
-
+	// Numeric threshold, for numeric columns.
 	DoubleValue types.Float64 `tfsdk:"double_value"`
-
+	// String threshold, for string or timestamp columns.
 	StringValue types.String `tfsdk:"string_value"`
 }
 
@@ -2271,8 +2294,12 @@ func (m CancelExecutionRequest) Type(ctx context.Context) attr.Type {
 // Configures the channel name and DBSQL version of the warehouse.
 // CHANNEL_NAME_CUSTOM should be chosen only when `dbsql_version` is specified.
 type Channel struct {
+	// Databricks SQL version to pin to. Set it if and only if name is
+	// CHANNEL_NAME_CUSTOM.
 	DbsqlVersion types.String `tfsdk:"dbsql_version"`
-
+	// Channel to follow. CHANNEL_NAME_CURRENT is the default, and
+	// CHANNEL_NAME_PREVIEW carries the upcoming Databricks SQL release for
+	// testing.
 	Name types.String `tfsdk:"name"`
 }
 
@@ -2665,6 +2692,8 @@ func (m *CreateAlert) SetOptions(ctx context.Context, v AlertOptions) {
 }
 
 type CreateAlertRequest struct {
+	// The alert to create. A display name, a `query_id`, and a `condition` are
+	// required.
 	Alert types.Object `tfsdk:"alert"`
 	// If true, automatically resolve alert display name conflicts. Otherwise,
 	// fail the request if the alert's display name conflicts with an existing
@@ -2762,31 +2791,42 @@ func (m *CreateAlertRequest) SetAlert(ctx context.Context, v CreateAlertRequestA
 	m.Alert = vs
 }
 
+// A legacy Databricks SQL alert. An alert runs a saved query, compares a column
+// of the result against a threshold, and notifies its subscribers when the
+// condition is met. See
+// https://docs.databricks.com/aws/en/sql/user/alerts/legacy for details.
 type CreateAlertRequestAlert struct {
-	// Trigger conditions of the alert.
+	// Condition that triggers the alert: a column of the query result, a
+	// comparison operator, and a threshold value. The value in the first row of
+	// the column is evaluated; aggregations are not supported through this API.
 	Condition types.Object `tfsdk:"condition"`
-	// Custom body of alert notification, if it exists. See [here] for custom
-	// templating instructions.
-	//
-	// [here]: https://docs.databricks.com/sql/user/alerts/index.html
+	// Custom body of the alert notification. It can use the template variables
+	// and HTML described at
+	// https://docs.databricks.com/aws/en/sql/user/alerts/legacy. If omitted,
+	// the default notification body is used.
 	CustomBody types.String `tfsdk:"custom_body"`
-	// Custom subject of alert notification, if it exists. This can include
-	// email subject entries and Slack notification headers, for example. See
-	// [here] for custom templating instructions.
-	//
-	// [here]: https://docs.databricks.com/sql/user/alerts/index.html
+	// Custom subject of the alert notification, used as the email subject or
+	// the Slack message header. It can use the template variables described at
+	// https://docs.databricks.com/aws/en/sql/user/alerts/legacy. If omitted,
+	// the default subject is used.
 	CustomSubject types.String `tfsdk:"custom_subject"`
-	// The display name of the alert.
+	// Display name of the alert, shown in list views and notifications. It must
+	// not be empty.
 	DisplayName types.String `tfsdk:"display_name"`
-	// Whether to notify alert subscribers when alert returns back to normal.
+	// Whether to notify subscribers when the alert state changes from
+	// `TRIGGERED` back to `OK`. Defaults to true.
 	NotifyOnOk types.Bool `tfsdk:"notify_on_ok"`
-	// The workspace path of the folder containing the alert.
+	// Workspace path of the folder containing the alert. Defaults to the
+	// creator's home folder when omitted on create. It cannot be changed after
+	// creation.
 	ParentPath types.String `tfsdk:"parent_path"`
-	// UUID of the query attached to the alert.
+	// UUID of the saved query whose result the alert evaluates. The caller must
+	// have permission to view the query.
 	QueryId types.String `tfsdk:"query_id"`
-	// Number of seconds an alert must wait after being triggered to rearm
-	// itself. After rearming, it can be triggered again. If 0 or not specified,
-	// the alert will not be triggered again.
+	// Number of seconds the alert waits after a notification before it can
+	// notify again while its state stays `TRIGGERED`. If 0 or not specified,
+	// the alert notifies once when its state changes to `TRIGGERED` and does
+	// not notify again until its state has changed.
 	SecondsToRetrigger types.Int64 `tfsdk:"seconds_to_retrigger"`
 }
 
@@ -3644,11 +3684,13 @@ type CreateWarehouseRequest struct {
 	// The amount of time in minutes that a SQL warehouse must be idle (i.e., no
 	// RUNNING queries) before it is automatically stopped.
 	//
-	// Supported values: - Must be == 0 or >= 10 mins - 0 indicates no autostop.
+	// Supported values: - Must be == 0 or >= 1 min for serverless warehouses. -
+	// Must be == 0 or >= 10 mins for classic and pro warehouses. - 0 indicates
+	// no autostop.
 	//
 	// Defaults to 120 mins
 	AutoStopMins types.Int64 `tfsdk:"auto_stop_mins"`
-	// Channel Details
+	// Channel that determines which Databricks SQL version the warehouse runs.
 	Channel types.Object `tfsdk:"channel"`
 	// Size of the clusters allocated for this warehouse. Increasing the size of
 	// a spark cluster allows you to run larger queries on it. If you want to
@@ -3657,9 +3699,10 @@ type CreateWarehouseRequest struct {
 	// Supported values: - 2X-Small - X-Small - Small - Medium - Large - X-Large
 	// - 2X-Large - 3X-Large - 4X-Large - 5X-Large
 	ClusterSize types.String `tfsdk:"cluster_size"`
-	// warehouse creator name
+	// Name of the user who created the warehouse. Set by the server and ignored
+	// in requests.
 	CreatorName types.String `tfsdk:"creator_name"`
-	// Compute version label for a REALTIME warehouse. This field is output
+	// Compute version label for a Real-Time warehouse. This field is output
 	// only.
 	CustomerVersionLabel types.String `tfsdk:"customer_version_label"`
 	// Configures whether the warehouse should use Photon optimized clusters.
@@ -3670,10 +3713,10 @@ type CreateWarehouseRequest struct {
 	EnableServerlessCompute types.Bool `tfsdk:"enable_serverless_compute"`
 	// Deprecated. Instance profile used to pass IAM role to the cluster
 	InstanceProfileArn types.String `tfsdk:"instance_profile_arn"`
-	// Maximum compute capacity of a real-time SQL warehouse, in DBU per hour.
-	// Must be at least the minimum DBU for the selected warehouse size and no
-	// greater than the configured DBU limit. Actual capacity may be below this
-	// ceiling.
+	// Maximum autoscaling capacity of a Real-Time SQL warehouse, in DBU per
+	// hour. Must be at least the minimum DBU for the selected warehouse size
+	// and no greater than the configured DBU limit. Actual capacity may be
+	// below this ceiling.
 	MaxDbu types.Int64 `tfsdk:"max_dbu"`
 	// Maximum number of clusters that the autoscaler will create to handle
 	// concurrent queries.
@@ -3692,9 +3735,9 @@ type CreateWarehouseRequest struct {
 	//
 	// Defaults to 1
 	MinNumClusters types.Int64 `tfsdk:"min_num_clusters"`
-	// Logical name for the cluster.
+	// Logical name for the warehouse.
 	//
-	// Supported values: - Must be unique within an org. - Must be less than 100
+	// Supported values: - Must be unique within an org. - Must be 1 to 100
 	// characters.
 	Name types.String `tfsdk:"name"`
 	// Cluster size multiplier for Reyden warehouses. Scales the effective
@@ -3706,18 +3749,24 @@ type CreateWarehouseRequest struct {
 	// to 1.0. - Values above the configured maximum are capped at that maximum.
 	// - When absent, the warehouse is treated as having a multiplier of 1.0.
 	ReydenClusterSizeMultiplier types.Float64 `tfsdk:"reyden_cluster_size_multiplier"`
-	// Configurations whether the endpoint should use spot instances.
+	// Configures whether the warehouse should use spot instances.
+	// COST_OPTIMIZED uses spot instances where the cloud provider supports
+	// them, and RELIABILITY_OPTIMIZED uses on-demand instances only.
 	SpotInstancePolicy types.String `tfsdk:"spot_instance_policy"`
-	// Warehouse statement timeout in seconds.
+	// Maximum time in seconds that a statement can run on this warehouse before
+	// it is cancelled. Set to 0 to remove the warehouse-level timeout. Changing
+	// the value of a running warehouse restarts it. See
+	// https://docs.databricks.com/aws/en/sql/language-manual/parameters/statement_timeout.
 	StatementTimeout types.Int64 `tfsdk:"statement_timeout"`
 	// A set of key-value pairs that will be tagged on all resources (e.g., AWS
 	// instances and EBS volumes) associated with this SQL warehouse.
 	//
 	// Supported values: - Number of tags < 45.
 	Tags types.Object `tfsdk:"tags"`
-	// Warehouse type: `PRO` or `CLASSIC`. If you want to use serverless
-	// compute, you must set to `PRO` and also set the field
-	// `enable_serverless_compute` to `true`.
+	// Warehouse type: `PRO`, `CLASSIC`, or `REALTIME`. For serverless compute,
+	// use `PRO` or `REALTIME` with `enable_serverless_compute=true`. `REALTIME`
+	// requires serverless compute and Photon; `enable_photon` defaults to
+	// `true`.
 	WarehouseType types.String `tfsdk:"warehouse_type"`
 }
 
@@ -4940,15 +4989,18 @@ func (m DateValue) Type(ctx context.Context) attr.Type {
 // selected for SQL operations. If no override exists for a user, the workspace
 // default warehouse will be used.
 type DefaultWarehouseOverride struct {
-	// The ID component of the resource name (user ID).
+	// The numeric ID of the user that the override applies to. It is the last
+	// component of `name`.
 	DefaultWarehouseOverrideId types.String `tfsdk:"default_warehouse_override_id"`
 	// The resource name of the default warehouse override. Format:
-	// default-warehouse-overrides/{default_warehouse_override_id}
+	// default-warehouse-overrides/{default_warehouse_override_id} Responses
+	// always contain the numeric user ID, even when the request used `me`.
 	Name types.String `tfsdk:"name"`
 	// The type of override behavior.
 	Type_ types.String `tfsdk:"type"`
-	// The specific warehouse ID when type is CUSTOM. Not set for LAST_SELECTED
-	// type.
+	// The ID of the SQL warehouse to preselect when `type` is `CUSTOM`. It is
+	// required for `CUSTOM` and must be a valid warehouse ID. It is ignored for
+	// `LAST_SELECTED` and is not returned for that type.
 	WarehouseId types.String `tfsdk:"warehouse_id"`
 }
 
@@ -5590,11 +5642,13 @@ type EditWarehouseRequest struct {
 	// The amount of time in minutes that a SQL warehouse must be idle (i.e., no
 	// RUNNING queries) before it is automatically stopped.
 	//
-	// Supported values: - Must be == 0 or >= 10 mins - 0 indicates no autostop.
+	// Supported values: - Must be == 0 or >= 1 min for serverless warehouses. -
+	// Must be == 0 or >= 10 mins for classic and pro warehouses. - 0 indicates
+	// no autostop.
 	//
 	// Defaults to 120 mins
 	AutoStopMins types.Int64 `tfsdk:"auto_stop_mins"`
-	// Channel Details
+	// Channel that determines which Databricks SQL version the warehouse runs.
 	Channel types.Object `tfsdk:"channel"`
 	// Size of the clusters allocated for this warehouse. Increasing the size of
 	// a spark cluster allows you to run larger queries on it. If you want to
@@ -5603,9 +5657,10 @@ type EditWarehouseRequest struct {
 	// Supported values: - 2X-Small - X-Small - Small - Medium - Large - X-Large
 	// - 2X-Large - 3X-Large - 4X-Large - 5X-Large
 	ClusterSize types.String `tfsdk:"cluster_size"`
-	// warehouse creator name
+	// Name of the user who created the warehouse. Set by the server and ignored
+	// in requests.
 	CreatorName types.String `tfsdk:"creator_name"`
-	// Compute version label for a REALTIME warehouse. This field is output
+	// Compute version label for a Real-Time warehouse. This field is output
 	// only.
 	CustomerVersionLabel types.String `tfsdk:"customer_version_label"`
 	// Configures whether the warehouse should use Photon optimized clusters.
@@ -5618,10 +5673,10 @@ type EditWarehouseRequest struct {
 	Id types.String `tfsdk:"-"`
 	// Deprecated. Instance profile used to pass IAM role to the cluster
 	InstanceProfileArn types.String `tfsdk:"instance_profile_arn"`
-	// Maximum compute capacity of a real-time SQL warehouse, in DBU per hour.
-	// Must be at least the minimum DBU for the selected warehouse size and no
-	// greater than the configured DBU limit. Actual capacity may be below this
-	// ceiling.
+	// Maximum autoscaling capacity of a Real-Time SQL warehouse, in DBU per
+	// hour. Must be at least the minimum DBU for the selected warehouse size
+	// and no greater than the configured DBU limit. Actual capacity may be
+	// below this ceiling.
 	MaxDbu types.Int64 `tfsdk:"max_dbu"`
 	// Maximum number of clusters that the autoscaler will create to handle
 	// concurrent queries.
@@ -5640,9 +5695,9 @@ type EditWarehouseRequest struct {
 	//
 	// Defaults to 1
 	MinNumClusters types.Int64 `tfsdk:"min_num_clusters"`
-	// Logical name for the cluster.
+	// Logical name for the warehouse.
 	//
-	// Supported values: - Must be unique within an org. - Must be less than 100
+	// Supported values: - Must be unique within an org. - Must be 1 to 100
 	// characters.
 	Name types.String `tfsdk:"name"`
 	// Cluster size multiplier for Reyden warehouses. Scales the effective
@@ -5654,18 +5709,24 @@ type EditWarehouseRequest struct {
 	// to 1.0. - Values above the configured maximum are capped at that maximum.
 	// - When absent, the warehouse is treated as having a multiplier of 1.0.
 	ReydenClusterSizeMultiplier types.Float64 `tfsdk:"reyden_cluster_size_multiplier"`
-	// Configurations whether the endpoint should use spot instances.
+	// Configures whether the warehouse should use spot instances.
+	// COST_OPTIMIZED uses spot instances where the cloud provider supports
+	// them, and RELIABILITY_OPTIMIZED uses on-demand instances only.
 	SpotInstancePolicy types.String `tfsdk:"spot_instance_policy"`
-	// Warehouse statement timeout in seconds.
+	// Maximum time in seconds that a statement can run on this warehouse before
+	// it is cancelled. Set to 0 to remove the warehouse-level timeout. Changing
+	// the value of a running warehouse restarts it. See
+	// https://docs.databricks.com/aws/en/sql/language-manual/parameters/statement_timeout.
 	StatementTimeout types.Int64 `tfsdk:"statement_timeout"`
 	// A set of key-value pairs that will be tagged on all resources (e.g., AWS
 	// instances and EBS volumes) associated with this SQL warehouse.
 	//
 	// Supported values: - Number of tags < 45.
 	Tags types.Object `tfsdk:"tags"`
-	// Warehouse type: `PRO` or `CLASSIC`. If you want to use serverless
-	// compute, you must set to `PRO` and also set the field
-	// `enable_serverless_compute` to `true`.
+	// Warehouse type: `PRO`, `CLASSIC`, or `REALTIME`. For serverless compute,
+	// use `PRO` or `REALTIME` with `enable_serverless_compute=true`. `REALTIME`
+	// requires serverless compute and Photon; `enable_photon` defaults to
+	// `true`.
 	WarehouseType types.String `tfsdk:"warehouse_type"`
 }
 
@@ -5935,8 +5996,9 @@ func (m Empty) Type(ctx context.Context) attr.Type {
 }
 
 type EndpointConfPair struct {
+	// Name of the configuration parameter.
 	Key types.String `tfsdk:"key"`
-
+	// Value of the configuration parameter.
 	Value types.String `tfsdk:"value"`
 }
 
@@ -6104,11 +6166,13 @@ type EndpointInfo struct {
 	// The amount of time in minutes that a SQL warehouse must be idle (i.e., no
 	// RUNNING queries) before it is automatically stopped.
 	//
-	// Supported values: - Must be == 0 or >= 10 mins - 0 indicates no autostop.
+	// Supported values: - Must be == 0 or >= 1 min for serverless warehouses. -
+	// Must be == 0 or >= 10 mins for classic and pro warehouses. - 0 indicates
+	// no autostop.
 	//
 	// Defaults to 120 mins
 	AutoStopMins types.Int64 `tfsdk:"auto_stop_mins"`
-	// Channel Details
+	// Channel that determines which Databricks SQL version the warehouse runs.
 	Channel types.Object `tfsdk:"channel"`
 	// Size of the clusters allocated for this warehouse. Increasing the size of
 	// a spark cluster allows you to run larger queries on it. If you want to
@@ -6117,9 +6181,10 @@ type EndpointInfo struct {
 	// Supported values: - 2X-Small - X-Small - Small - Medium - Large - X-Large
 	// - 2X-Large - 3X-Large - 4X-Large - 5X-Large
 	ClusterSize types.String `tfsdk:"cluster_size"`
-	// warehouse creator name
+	// Name of the user who created the warehouse. Set by the server and ignored
+	// in requests.
 	CreatorName types.String `tfsdk:"creator_name"`
-	// Compute version label for a REALTIME warehouse. This field is output
+	// Compute version label for a Real-Time warehouse. This field is output
 	// only.
 	CustomerVersionLabel types.String `tfsdk:"customer_version_label"`
 	// Configures whether the warehouse should use Photon optimized clusters.
@@ -6131,16 +6196,16 @@ type EndpointInfo struct {
 	// Optional health status. Assume the warehouse is healthy if this field is
 	// not set.
 	Health types.Object `tfsdk:"health"`
-	// unique identifier for warehouse
+	// Unique identifier of the warehouse.
 	Id types.String `tfsdk:"id"`
 	// Deprecated. Instance profile used to pass IAM role to the cluster
 	InstanceProfileArn types.String `tfsdk:"instance_profile_arn"`
-	// the jdbc connection string for this warehouse
+	// JDBC connection string for the warehouse.
 	JdbcUrl types.String `tfsdk:"jdbc_url"`
-	// Maximum compute capacity of a real-time SQL warehouse, in DBU per hour.
-	// Must be at least the minimum DBU for the selected warehouse size and no
-	// greater than the configured DBU limit. Actual capacity may be below this
-	// ceiling.
+	// Maximum autoscaling capacity of a Real-Time SQL warehouse, in DBU per
+	// hour. Must be at least the minimum DBU for the selected warehouse size
+	// and no greater than the configured DBU limit. Actual capacity may be
+	// below this ceiling.
 	MaxDbu types.Int64 `tfsdk:"max_dbu"`
 	// Maximum number of clusters that the autoscaler will create to handle
 	// concurrent queries.
@@ -6159,14 +6224,15 @@ type EndpointInfo struct {
 	//
 	// Defaults to 1
 	MinNumClusters types.Int64 `tfsdk:"min_num_clusters"`
-	// Logical name for the cluster.
+	// Logical name for the warehouse.
 	//
-	// Supported values: - Must be unique within an org. - Must be less than 100
+	// Supported values: - Must be unique within an org. - Must be 1 to 100
 	// characters.
 	Name types.String `tfsdk:"name"`
 	// Deprecated. current number of active sessions for the warehouse
 	NumActiveSessions types.Int64 `tfsdk:"num_active_sessions"`
-	// current number of clusters running for the service
+	// Number of clusters currently allocated to the warehouse, including
+	// clusters that are still starting.
 	NumClusters types.Int64 `tfsdk:"num_clusters"`
 	// ODBC parameters for the SQL warehouse
 	OdbcParams types.Object `tfsdk:"odbc_params"`
@@ -6179,20 +6245,26 @@ type EndpointInfo struct {
 	// to 1.0. - Values above the configured maximum are capped at that maximum.
 	// - When absent, the warehouse is treated as having a multiplier of 1.0.
 	ReydenClusterSizeMultiplier types.Float64 `tfsdk:"reyden_cluster_size_multiplier"`
-	// Configurations whether the endpoint should use spot instances.
+	// Configures whether the warehouse should use spot instances.
+	// COST_OPTIMIZED uses spot instances where the cloud provider supports
+	// them, and RELIABILITY_OPTIMIZED uses on-demand instances only.
 	SpotInstancePolicy types.String `tfsdk:"spot_instance_policy"`
-	// state of the endpoint
+	// Current state of the warehouse.
 	State types.String `tfsdk:"state"`
-	// Warehouse statement timeout in seconds.
+	// Maximum time in seconds that a statement can run on this warehouse before
+	// it is cancelled. Set to 0 to remove the warehouse-level timeout. Changing
+	// the value of a running warehouse restarts it. See
+	// https://docs.databricks.com/aws/en/sql/language-manual/parameters/statement_timeout.
 	StatementTimeout types.Int64 `tfsdk:"statement_timeout"`
 	// A set of key-value pairs that will be tagged on all resources (e.g., AWS
 	// instances and EBS volumes) associated with this SQL warehouse.
 	//
 	// Supported values: - Number of tags < 45.
 	Tags types.Object `tfsdk:"tags"`
-	// Warehouse type: `PRO` or `CLASSIC`. If you want to use serverless
-	// compute, you must set to `PRO` and also set the field
-	// `enable_serverless_compute` to `true`.
+	// Warehouse type: `PRO`, `CLASSIC`, or `REALTIME`. For serverless compute,
+	// use `PRO` or `REALTIME` with `enable_serverless_compute=true`. `REALTIME`
+	// requires serverless compute and Photon; `enable_photon` defaults to
+	// `true`.
 	WarehouseType types.String `tfsdk:"warehouse_type"`
 }
 
@@ -6483,8 +6555,11 @@ func (m *EndpointInfo) SetTags(ctx context.Context, v EndpointTags) {
 }
 
 type EndpointTagPair struct {
+	// Tag key. Keys must be unique within the warehouse and cannot use the keys
+	// that Databricks reserves for the tags it sets automatically.
 	Key types.String `tfsdk:"key"`
-
+	// Tag value. Keys and values must follow the tagging rules of the cloud
+	// provider.
 	Value types.String `tfsdk:"value"`
 }
 
@@ -6535,6 +6610,8 @@ func (m EndpointTagPair) Type(ctx context.Context) attr.Type {
 }
 
 type EndpointTags struct {
+	// User-defined tags, applied in addition to the tags Databricks sets
+	// automatically.
 	CustomTags types.List `tfsdk:"custom_tags"`
 }
 
@@ -6896,10 +6973,10 @@ type ExecuteStatementRequest struct {
 	//
 	// The parameters can be passed in the request body as follows:
 	//
-	// ` { ..., "statement": "SELECT * FROM my_table WHERE name = :my_name AND
+	// ``` { ..., "statement": "SELECT * FROM my_table WHERE name = :my_name AND
 	// date = :my_date", "parameters": [ { "name": "my_name", "value": "the
 	// name" }, { "name": "my_date", "value": "2020-01-01", "type": "DATE" } ] }
-	// `
+	// ```
 	//
 	// Currently, positional parameters denoted by a `?` marker are not
 	// supported by the Databricks SQL Statement Execution API.
@@ -7186,7 +7263,7 @@ type ExternalLink struct {
 	HttpHeaders types.Map `tfsdk:"http_headers"`
 	// When fetching, provides the `chunk_index` for the _next_ chunk. If
 	// absent, indicates there are no more chunks. The next chunk can be fetched
-	// with a :method:statementexecution/getstatementresultchunkn request.
+	// with a :method:statementexecution/getStatementResultChunkN request.
 	NextChunkIndex types.Int64 `tfsdk:"next_chunk_index"`
 	// When fetching, provides a link to fetch the _next_ chunk. If absent,
 	// indicates there are no more chunks. This link is an absolute `path` to be
@@ -7200,9 +7277,21 @@ type ExternalLink struct {
 }
 
 func (to *ExternalLink) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from ExternalLink) {
+	if !from.HttpHeaders.IsNull() && !from.HttpHeaders.IsUnknown() && to.HttpHeaders.IsNull() && len(from.HttpHeaders.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for HttpHeaders, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.HttpHeaders = from.HttpHeaders
+	}
 }
 
 func (to *ExternalLink) SyncFieldsDuringRead(ctx context.Context, from ExternalLink) {
+	if !from.HttpHeaders.IsNull() && !from.HttpHeaders.IsUnknown() && to.HttpHeaders.IsNull() && len(from.HttpHeaders.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for HttpHeaders, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.HttpHeaders = from.HttpHeaders
+	}
 }
 
 func (m ExternalLink) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -7303,7 +7392,8 @@ type ExternalQuerySource struct {
 	DashboardId types.String `tfsdk:"dashboard_id"`
 	// The canonical identifier for this Genie space
 	GenieSpaceId types.String `tfsdk:"genie_space_id"`
-
+	// Identifiers of the job, job run, and task run that executed this
+	// statement, when it ran as part of a job.
 	JobInfo types.Object `tfsdk:"job_info"`
 	// The canonical identifier for this legacy dashboard
 	LegacyDashboardId types.String `tfsdk:"legacy_dashboard_id"`
@@ -7478,6 +7568,7 @@ func (m ExternalQuerySourceJobInfo) Type(ctx context.Context) attr.Type {
 }
 
 type GetAlertRequest struct {
+	// UUID of the alert to fetch.
 	Id types.String `tfsdk:"-"`
 }
 
@@ -8081,6 +8172,7 @@ func (m GetStatementRequest) Type(ctx context.Context) attr.Type {
 }
 
 type GetStatementResultChunkNRequest struct {
+	// The zero-based index of the result chunk to fetch.
 	ChunkIndex types.Int64 `tfsdk:"-"`
 	// The statement ID is returned upon successfully submitting a SQL
 	// statement, and is a required reference for all subsequent calls.
@@ -8396,11 +8488,13 @@ type GetWarehouseResponse struct {
 	// The amount of time in minutes that a SQL warehouse must be idle (i.e., no
 	// RUNNING queries) before it is automatically stopped.
 	//
-	// Supported values: - Must be == 0 or >= 10 mins - 0 indicates no autostop.
+	// Supported values: - Must be == 0 or >= 1 min for serverless warehouses. -
+	// Must be == 0 or >= 10 mins for classic and pro warehouses. - 0 indicates
+	// no autostop.
 	//
 	// Defaults to 120 mins
 	AutoStopMins types.Int64 `tfsdk:"auto_stop_mins"`
-	// Channel Details
+	// Channel that determines which Databricks SQL version the warehouse runs.
 	Channel types.Object `tfsdk:"channel"`
 	// Size of the clusters allocated for this warehouse. Increasing the size of
 	// a spark cluster allows you to run larger queries on it. If you want to
@@ -8409,9 +8503,10 @@ type GetWarehouseResponse struct {
 	// Supported values: - 2X-Small - X-Small - Small - Medium - Large - X-Large
 	// - 2X-Large - 3X-Large - 4X-Large - 5X-Large
 	ClusterSize types.String `tfsdk:"cluster_size"`
-	// warehouse creator name
+	// Name of the user who created the warehouse. Set by the server and ignored
+	// in requests.
 	CreatorName types.String `tfsdk:"creator_name"`
-	// Compute version label for a REALTIME warehouse. This field is output
+	// Compute version label for a Real-Time warehouse. This field is output
 	// only.
 	CustomerVersionLabel types.String `tfsdk:"customer_version_label"`
 	// Configures whether the warehouse should use Photon optimized clusters.
@@ -8423,16 +8518,16 @@ type GetWarehouseResponse struct {
 	// Optional health status. Assume the warehouse is healthy if this field is
 	// not set.
 	Health types.Object `tfsdk:"health"`
-	// unique identifier for warehouse
+	// Unique identifier of the warehouse.
 	Id types.String `tfsdk:"id"`
 	// Deprecated. Instance profile used to pass IAM role to the cluster
 	InstanceProfileArn types.String `tfsdk:"instance_profile_arn"`
-	// the jdbc connection string for this warehouse
+	// JDBC connection string for the warehouse.
 	JdbcUrl types.String `tfsdk:"jdbc_url"`
-	// Maximum compute capacity of a real-time SQL warehouse, in DBU per hour.
-	// Must be at least the minimum DBU for the selected warehouse size and no
-	// greater than the configured DBU limit. Actual capacity may be below this
-	// ceiling.
+	// Maximum autoscaling capacity of a Real-Time SQL warehouse, in DBU per
+	// hour. Must be at least the minimum DBU for the selected warehouse size
+	// and no greater than the configured DBU limit. Actual capacity may be
+	// below this ceiling.
 	MaxDbu types.Int64 `tfsdk:"max_dbu"`
 	// Maximum number of clusters that the autoscaler will create to handle
 	// concurrent queries.
@@ -8451,14 +8546,15 @@ type GetWarehouseResponse struct {
 	//
 	// Defaults to 1
 	MinNumClusters types.Int64 `tfsdk:"min_num_clusters"`
-	// Logical name for the cluster.
+	// Logical name for the warehouse.
 	//
-	// Supported values: - Must be unique within an org. - Must be less than 100
+	// Supported values: - Must be unique within an org. - Must be 1 to 100
 	// characters.
 	Name types.String `tfsdk:"name"`
 	// Deprecated. current number of active sessions for the warehouse
 	NumActiveSessions types.Int64 `tfsdk:"num_active_sessions"`
-	// current number of clusters running for the service
+	// Number of clusters currently allocated to the warehouse, including
+	// clusters that are still starting.
 	NumClusters types.Int64 `tfsdk:"num_clusters"`
 	// ODBC parameters for the SQL warehouse
 	OdbcParams types.Object `tfsdk:"odbc_params"`
@@ -8471,20 +8567,26 @@ type GetWarehouseResponse struct {
 	// to 1.0. - Values above the configured maximum are capped at that maximum.
 	// - When absent, the warehouse is treated as having a multiplier of 1.0.
 	ReydenClusterSizeMultiplier types.Float64 `tfsdk:"reyden_cluster_size_multiplier"`
-	// Configurations whether the endpoint should use spot instances.
+	// Configures whether the warehouse should use spot instances.
+	// COST_OPTIMIZED uses spot instances where the cloud provider supports
+	// them, and RELIABILITY_OPTIMIZED uses on-demand instances only.
 	SpotInstancePolicy types.String `tfsdk:"spot_instance_policy"`
-	// state of the endpoint
+	// Current state of the warehouse.
 	State types.String `tfsdk:"state"`
-	// Warehouse statement timeout in seconds.
+	// Maximum time in seconds that a statement can run on this warehouse before
+	// it is cancelled. Set to 0 to remove the warehouse-level timeout. Changing
+	// the value of a running warehouse restarts it. See
+	// https://docs.databricks.com/aws/en/sql/language-manual/parameters/statement_timeout.
 	StatementTimeout types.Int64 `tfsdk:"statement_timeout"`
 	// A set of key-value pairs that will be tagged on all resources (e.g., AWS
 	// instances and EBS volumes) associated with this SQL warehouse.
 	//
 	// Supported values: - Number of tags < 45.
 	Tags types.Object `tfsdk:"tags"`
-	// Warehouse type: `PRO` or `CLASSIC`. If you want to use serverless
-	// compute, you must set to `PRO` and also set the field
-	// `enable_serverless_compute` to `true`.
+	// Warehouse type: `PRO`, `CLASSIC`, or `REALTIME`. For serverless compute,
+	// use `PRO` or `REALTIME` with `enable_serverless_compute=true`. `REALTIME`
+	// requires serverless compute and Photon; `enable_photon` defaults to
+	// `true`.
 	WarehouseType types.String `tfsdk:"warehouse_type"`
 }
 
@@ -8820,8 +8922,11 @@ type GetWorkspaceWarehouseConfigResponse struct {
 	Channel types.Object `tfsdk:"channel"`
 	// Deprecated: Use sql_configuration_parameters
 	ConfigParam types.Object `tfsdk:"config_param"`
-	// Spark confs for external hive metastore configuration JSON serialized
-	// size must be less than <= 512K
+	// Spark configuration applied to every warehouse in the workspace, for
+	// example to connect to an external Hive metastore or to configure access
+	// to cloud storage. Only allowlisted keys are accepted, and the
+	// JSON-serialized size must be at most 512 KB. See
+	// https://docs.databricks.com/aws/en/admin/sql/data-access-configuration.
 	DataAccessConfig types.List `tfsdk:"data_access_config"`
 	// Deprecated: only setting this to true is allowed.
 	EnableServerlessCompute types.Bool `tfsdk:"enable_serverless_compute"`
@@ -8829,13 +8934,12 @@ type GetWorkspaceWarehouseConfigResponse struct {
 	// of the type field in CreateWarehouse and EditWarehouse). Note: Some types
 	// cannot be disabled, they don't need to be specified in
 	// SetWorkspaceWarehouseConfig. Note: Disabling a type may cause existing
-	// warehouses to be converted to another type. Used by frontend to save
-	// specific type availability in the warehouse create and edit form UI.
+	// warehouses to be converted to another type.
 	EnabledWarehouseTypes types.List `tfsdk:"enabled_warehouse_types"`
 	// Deprecated: Use sql_configuration_parameters
 	GlobalParam types.Object `tfsdk:"global_param"`
-	// GCP only: Google Service Account used to pass to cluster to access Google
-	// Cloud Storage
+	// GCP only: Google service account that the warehouse clusters use to
+	// access Google Cloud Storage.
 	GoogleServiceAccount types.String `tfsdk:"google_service_account"`
 	// AWS Only: The instance profile used to pass an IAM role to the SQL
 	// warehouses. This configuration is also applied to the workspace's
@@ -8843,7 +8947,9 @@ type GetWorkspaceWarehouseConfigResponse struct {
 	InstanceProfileArn types.String `tfsdk:"instance_profile_arn"`
 	// Security policy for warehouses
 	SecurityPolicy types.String `tfsdk:"security_policy"`
-	// SQL configuration parameters
+	// SQL configuration parameters applied to every warehouse in the workspace.
+	// Only parameters that can be set at the workspace scope are accepted. See
+	// https://docs.databricks.com/aws/en/sql/language-manual/sql-ref-parameters.
 	SqlConfigurationParameters types.Object `tfsdk:"sql_configuration_parameters"`
 }
 
@@ -10010,8 +10116,10 @@ func (m *LegacyVisualization) SetQuery(ctx context.Context, v LegacyQuery) {
 }
 
 type ListAlertsRequest struct {
+	// Maximum number of alerts to return per page.
 	PageSize types.Int64 `tfsdk:"-"`
-
+	// Token from the `next_page_token` of a previous response. Omit it to fetch
+	// the first page.
 	PageToken types.String `tfsdk:"-"`
 }
 
@@ -10062,8 +10170,10 @@ func (m ListAlertsRequest) Type(ctx context.Context) attr.Type {
 }
 
 type ListAlertsResponse struct {
+	// Token to pass as `page_token` to fetch the next page. Omitted when there
+	// are no more pages.
 	NextPageToken types.String `tfsdk:"next_page_token"`
-
+	// Alerts on this page.
 	Results types.List `tfsdk:"results"`
 }
 
@@ -10180,42 +10290,53 @@ func (m *ListAlertsResponse) SetResults(ctx context.Context, v []ListAlertsRespo
 	m.Results = types.ListValueMust(t, vs)
 }
 
+// A legacy Databricks SQL alert. An alert runs a saved query, compares a column
+// of the result against a threshold, and notifies its subscribers when the
+// condition is met. See
+// https://docs.databricks.com/aws/en/sql/user/alerts/legacy for details.
 type ListAlertsResponseAlert struct {
-	// Trigger conditions of the alert.
+	// Condition that triggers the alert: a column of the query result, a
+	// comparison operator, and a threshold value. The value in the first row of
+	// the column is evaluated; aggregations are not supported through this API.
 	Condition types.Object `tfsdk:"condition"`
 	// The timestamp indicating when the alert was created.
 	CreateTime types.String `tfsdk:"create_time"`
-	// Custom body of alert notification, if it exists. See [here] for custom
-	// templating instructions.
-	//
-	// [here]: https://docs.databricks.com/sql/user/alerts/index.html
+	// Custom body of the alert notification. It can use the template variables
+	// and HTML described at
+	// https://docs.databricks.com/aws/en/sql/user/alerts/legacy. If omitted,
+	// the default notification body is used.
 	CustomBody types.String `tfsdk:"custom_body"`
-	// Custom subject of alert notification, if it exists. This can include
-	// email subject entries and Slack notification headers, for example. See
-	// [here] for custom templating instructions.
-	//
-	// [here]: https://docs.databricks.com/sql/user/alerts/index.html
+	// Custom subject of the alert notification, used as the email subject or
+	// the Slack message header. It can use the template variables described at
+	// https://docs.databricks.com/aws/en/sql/user/alerts/legacy. If omitted,
+	// the default subject is used.
 	CustomSubject types.String `tfsdk:"custom_subject"`
-	// The display name of the alert.
+	// Display name of the alert, shown in list views and notifications. It must
+	// not be empty.
 	DisplayName types.String `tfsdk:"display_name"`
 	// UUID identifying the alert.
 	Id types.String `tfsdk:"id"`
-	// The workspace state of the alert. Used for tracking trashed status.
+	// Lifecycle state of the alert: `ACTIVE`, or `TRASHED` after it has been
+	// moved to the trash.
 	LifecycleState types.String `tfsdk:"lifecycle_state"`
-	// Whether to notify alert subscribers when alert returns back to normal.
+	// Whether to notify subscribers when the alert state changes from
+	// `TRIGGERED` back to `OK`. Defaults to true.
 	NotifyOnOk types.Bool `tfsdk:"notify_on_ok"`
 	// The owner's username. This field is set to "Unavailable" if the user has
 	// been deleted.
 	OwnerUserName types.String `tfsdk:"owner_user_name"`
-	// UUID of the query attached to the alert.
+	// UUID of the saved query whose result the alert evaluates. The caller must
+	// have permission to view the query.
 	QueryId types.String `tfsdk:"query_id"`
-	// Number of seconds an alert must wait after being triggered to rearm
-	// itself. After rearming, it can be triggered again. If 0 or not specified,
-	// the alert will not be triggered again.
+	// Number of seconds the alert waits after a notification before it can
+	// notify again while its state stays `TRIGGERED`. If 0 or not specified,
+	// the alert notifies once when its state changes to `TRIGGERED` and does
+	// not notify again until its state has changed.
 	SecondsToRetrigger types.Int64 `tfsdk:"seconds_to_retrigger"`
-	// Current state of the alert's trigger status. This field is set to UNKNOWN
-	// if the alert has not yet been evaluated or ran into an error during the
-	// last evaluation.
+	// Current state of the alert's trigger status: `TRIGGERED` if the condition
+	// was met on the last evaluation, `OK` if it was not, and `UNKNOWN` if the
+	// alert has not yet been evaluated or ran into an error during the last
+	// evaluation.
 	State types.String `tfsdk:"state"`
 	// Timestamp when the alert was last triggered, if the alert has been
 	// triggered before.
@@ -11027,18 +11148,18 @@ func (m *ListQueriesResponse) SetRes(ctx context.Context, v []QueryInfo) {
 
 type ListQueryHistoryRequest struct {
 	// An optional filter object to limit query history results. Accepts
-	// parameters such as user IDs, endpoint IDs, and statuses to narrow the
+	// parameters such as user IDs, warehouse IDs, and statuses to narrow the
 	// returned data. In a URL, the parameters of this filter are specified with
 	// dot notation. For example: `filter_by.statement_ids`.
 	FilterBy types.Object `tfsdk:"-"`
 	// Whether to include the query metrics with each query. Only use this for a
 	// small subset of queries (max_results). Defaults to false.
 	IncludeMetrics types.Bool `tfsdk:"-"`
-	// Limit the number of results returned in one page. Must be less than 1000
-	// and the default is 100.
+	// Limit the number of results returned in one page. Must be no more than
+	// 1000; the default is 100.
 	MaxResults types.Int64 `tfsdk:"-"`
 	// A token that can be used to get the next page of results. The token can
-	// contains characters that need to be encoded before using it in a URL. For
+	// contain characters that need to be encoded before using it in a URL. For
 	// example, the character '+' needs to be replaced by %2B. This field is
 	// optional.
 	PageToken types.String `tfsdk:"-"`
@@ -12143,12 +12264,13 @@ func (m NumericValue) Type(ctx context.Context) attr.Type {
 }
 
 type OdbcParams struct {
+	// Hostname of the workspace to connect to.
 	Hostname types.String `tfsdk:"hostname"`
-
+	// HTTP path of the warehouse.
 	Path types.String `tfsdk:"path"`
-
+	// The connection port is always 443.
 	Port types.Int64 `tfsdk:"port"`
-
+	// The transport protocol is always https.
 	Protocol types.String `tfsdk:"protocol"`
 }
 
@@ -13134,7 +13256,8 @@ func (m *QueryFilter) SetWarehouseIds(ctx context.Context, v []types.String) {
 }
 
 type QueryInfo struct {
-	// The ID of the cached query if this result retrieved from cache
+	// The ID of the query whose cached result was returned, if this result was
+	// retrieved from the cache.
 	CacheQueryId types.String `tfsdk:"cache_query_id"`
 	// SQL Warehouse channel information at the time of query execution
 	ChannelUsed types.Object `tfsdk:"channel_used"`
@@ -13143,9 +13266,9 @@ type QueryInfo struct {
 	// provided by client applications. While values are expected to remain
 	// static over time, this cannot be guaranteed.
 	ClientApplication types.String `tfsdk:"client_application"`
-	// Total time of the statement execution. This value does not include the
-	// time taken to retrieve the results, which can result in a discrepancy
-	// between this value and the start-to-finish wall-clock time.
+	// Total time of the statement execution, in milliseconds. This value does
+	// not include the time taken to retrieve the results, which can result in a
+	// discrepancy between this value and the start-to-finish wall-clock time.
 	Duration types.Int64 `tfsdk:"duration"`
 	// Alias for `warehouse_id`.
 	EndpointId types.String `tfsdk:"endpoint_id"`
@@ -13156,27 +13279,34 @@ type QueryInfo struct {
 	// The email address or username of the user whose credentials were used to
 	// run the query.
 	ExecutedAsUserName types.String `tfsdk:"executed_as_user_name"`
-	// The time execution of the query ended.
+	// The time execution of the query ended, in milliseconds since the Unix
+	// epoch.
 	ExecutionEndTimeMs types.Int64 `tfsdk:"execution_end_time_ms"`
-	// Whether more updates for the query are expected.
+	// Whether the query has reached a final state, so no further updates to
+	// this record are expected.
 	IsFinal types.Bool `tfsdk:"is_final"`
 	// A key that can be used to look up query details.
 	LookupKey types.String `tfsdk:"lookup_key"`
-	// Metrics about query execution.
+	// Metrics about query execution. Only returned when `include_metrics` is
+	// true in the request.
 	Metrics types.Object `tfsdk:"metrics"`
 	// Whether plans exist for the execution, or the reason why they are missing
 	PlansState types.String `tfsdk:"plans_state"`
-	// The time the query ended.
+	// The time the query ended, in milliseconds since the Unix epoch.
 	QueryEndTimeMs types.Int64 `tfsdk:"query_end_time_ms"`
-	// The query ID.
+	// The UUID that uniquely identifies the query execution. It matches the
+	// statement ID shown in the Query History UI and the values accepted by the
+	// `statement_ids` filter.
 	QueryId types.String `tfsdk:"query_id"`
 	// A struct that contains key-value pairs representing Databricks entities
 	// that were involved in the execution of this statement, such as jobs,
 	// notebooks, or dashboards. This field only records Databricks entities.
 	QuerySource types.Object `tfsdk:"query_source"`
-	// The time the query started.
+	// The time the query started, in milliseconds since the Unix epoch.
 	QueryStartTimeMs types.Int64 `tfsdk:"query_start_time_ms"`
-	// A query execution can be optionally annotated with query tags
+	// Key-value tags attached to the query execution, for example with the `SET
+	// QUERY_TAGS` statement, for grouping and filtering. See
+	// https://docs.databricks.com/aws/en/sql/user/queries/query-tags.
 	QueryTags types.List `tfsdk:"query_tags"`
 	// The text of the query.
 	QueryText types.String `tfsdk:"query_text"`
@@ -13189,7 +13319,7 @@ type QueryInfo struct {
 	SparkUiUrl types.String `tfsdk:"spark_ui_url"`
 	// Type of statement for this query
 	StatementType types.String `tfsdk:"statement_type"`
-	// Query status with one the following values:
+	// Query status with one of the following values:
 	//
 	// - `QUEUED`: Query has been received and queued. - `RUNNING`: Query has
 	// started. - `CANCELED`: Query has been cancelled by the user. - `FAILED`:
@@ -13199,7 +13329,7 @@ type QueryInfo struct {
 	UserId types.Int64 `tfsdk:"user_id"`
 	// The email address or username of the user who ran the query.
 	UserName types.String `tfsdk:"user_name"`
-	// Warehouse ID.
+	// ID of the warehouse that ran the query.
 	WarehouseId types.String `tfsdk:"warehouse_id"`
 }
 
@@ -13661,8 +13791,8 @@ type QueryMetrics struct {
 	// shuffle, in bytes.
 	NetworkSentBytes types.Int64 `tfsdk:"network_sent_bytes"`
 	// Timestamp of when the query was enqueued waiting while the warehouse was
-	// at max load. This field is optional and will not appear if the query
-	// skipped the overloading queue.
+	// at max load, in milliseconds since the Unix epoch. This field is optional
+	// and will not appear if the query skipped the overloading queue.
 	OverloadingQueueStartTimestamp types.Int64 `tfsdk:"overloading_queue_start_timestamp"`
 	// Total execution time for all individual Photon query engine tasks in the
 	// query, in milliseconds.
@@ -13674,15 +13804,16 @@ type QueryMetrics struct {
 	// projected_remaining_task_total_time_ms / maximum concurrency
 	ProjectedRemainingWallclockTimeMs types.Int64 `tfsdk:"projected_remaining_wallclock_time_ms"`
 	// Timestamp of when the query was enqueued waiting for a cluster to be
-	// provisioned for the warehouse. This field is optional and will not appear
-	// if the query skipped the provisioning queue.
+	// provisioned for the warehouse, in milliseconds since the Unix epoch. This
+	// field is optional and will not appear if the query skipped the
+	// provisioning queue.
 	ProvisioningQueueStartTimestamp types.Int64 `tfsdk:"provisioning_queue_start_timestamp"`
 	// Total number of file bytes in all tables not read due to pruning
 	PrunedBytes types.Int64 `tfsdk:"pruned_bytes"`
 	// Total number of files from all tables not read due to pruning
 	PrunedFilesCount types.Int64 `tfsdk:"pruned_files_count"`
 	// Timestamp of when the underlying compute started compilation of the
-	// query.
+	// query, in milliseconds since the Unix epoch.
 	QueryCompilationStartTimestamp types.Int64 `tfsdk:"query_compilation_start_timestamp"`
 	// Total size of data read by the query, in bytes.
 	ReadBytes types.Int64 `tfsdk:"read_bytes"`
@@ -13709,8 +13840,8 @@ type QueryMetrics struct {
 	RowsProducedCount types.Int64 `tfsdk:"rows_produced_count"`
 	// Total number of rows read by the query.
 	RowsReadCount types.Int64 `tfsdk:"rows_read_count"`
-	// number of remaining tasks to complete, calculated by autoscaler
-	// StatementAnalysis.scala deprecated: use remaining_task_count instead
+	// Deprecated: use `remaining_task_count` instead. Number of remaining tasks
+	// to complete.
 	RunnableTasks types.Int64 `tfsdk:"runnable_tasks"`
 	// Size of data temporarily written to disk while executing the query, in
 	// bytes.
@@ -13724,11 +13855,11 @@ type QueryMetrics struct {
 	// Total execution time of the query from the client’s point of view, in
 	// milliseconds.
 	TotalTimeMs types.Int64 `tfsdk:"total_time_ms"`
-	// remaining work to be done across all stages in the query, calculated by
-	// autoscaler StatementAnalysis.scala, in milliseconds deprecated: using
-	// projected_remaining_task_total_time_ms instead
+	// Deprecated: use `projected_remaining_task_total_time_ms` instead.
+	// Remaining work to be done across all stages in the query, in
+	// milliseconds.
 	WorkToBeDone types.Int64 `tfsdk:"work_to_be_done"`
-	// Size pf persistent data written to cloud object storage in your cloud
+	// Size of persistent data written to cloud object storage in your cloud
 	// tenant, in bytes.
 	WriteRemoteBytes types.Int64 `tfsdk:"write_remote_bytes"`
 }
@@ -14519,8 +14650,9 @@ func (m *QueryPostContent) SetTags(ctx context.Context, v []types.String) {
 // users to attribute the executions by key and optional value to filter by.
 // QueryTag is the user-facing representation.
 type QueryTag struct {
+	// The key of the tag.
 	Key types.String `tfsdk:"key"`
-
+	// The value of the tag. Key-only tags have no value.
 	Value types.String `tfsdk:"value"`
 }
 
@@ -14573,7 +14705,7 @@ func (m QueryTag) Type(ctx context.Context) attr.Type {
 type RepeatedEndpointConfPairs struct {
 	// Deprecated: Use configuration_pairs
 	ConfigPair types.List `tfsdk:"config_pair"`
-
+	// Configuration parameters, each a key-value pair.
 	ConfigurationPairs types.List `tfsdk:"configuration_pairs"`
 }
 
@@ -14907,11 +15039,12 @@ type ResultData struct {
 	// non-null value is formatted as a string. Null values are encoded as JSON
 	// `null`.
 	DataArray types.List `tfsdk:"data_array"`
-
+	// Short-lived cloud-storage links to the result data, used with the
+	// `EXTERNAL_LINKS` disposition.
 	ExternalLinks types.List `tfsdk:"external_links"`
 	// When fetching, provides the `chunk_index` for the _next_ chunk. If
 	// absent, indicates there are no more chunks. The next chunk can be fetched
-	// with a :method:statementexecution/getstatementresultchunkn request.
+	// with a :method:statementexecution/getStatementResultChunkN request.
 	NextChunkIndex types.Int64 `tfsdk:"next_chunk_index"`
 	// When fetching, provides a link to fetch the _next_ chunk. If absent,
 	// indicates there are no more chunks. This link is an absolute `path` to be
@@ -15102,9 +15235,9 @@ func (m *ResultData) SetExternalLinks(ctx context.Context, v []ExternalLink) {
 type ResultManifest struct {
 	// Array of result set chunk metadata.
 	Chunks types.List `tfsdk:"chunks"`
-
+	// The format of the result data, as requested with `format`.
 	Format types.String `tfsdk:"format"`
-
+	// The schema of the result set: the ordered list of column descriptions.
 	Schema types.Object `tfsdk:"schema"`
 	// The total number of bytes in the result set. This field is not available
 	// when using `INLINE` disposition.
@@ -15291,8 +15424,9 @@ func (m *ResultManifest) SetSchema(ctx context.Context, v ResultSchema) {
 
 // The schema is an ordered list of column descriptions.
 type ResultSchema struct {
+	// The number of columns in the result set.
 	ColumnCount types.Int64 `tfsdk:"column_count"`
-
+	// The column descriptions, in result set order.
 	Columns types.List `tfsdk:"columns"`
 }
 
@@ -15410,6 +15544,7 @@ func (m *ResultSchema) SetColumns(ctx context.Context, v []ColumnInfo) {
 }
 
 type ServiceError struct {
+	// The error code that classifies the failure.
 	ErrorCode types.String `tfsdk:"error_code"`
 	// A brief summary of the error condition.
 	Message types.String `tfsdk:"message"`
@@ -15720,8 +15855,11 @@ type SetWorkspaceWarehouseConfigRequest struct {
 	Channel types.Object `tfsdk:"channel"`
 	// Deprecated: Use sql_configuration_parameters
 	ConfigParam types.Object `tfsdk:"config_param"`
-	// Spark confs for external hive metastore configuration JSON serialized
-	// size must be less than <= 512K
+	// Spark configuration applied to every warehouse in the workspace, for
+	// example to connect to an external Hive metastore or to configure access
+	// to cloud storage. Only allowlisted keys are accepted, and the
+	// JSON-serialized size must be at most 512 KB. See
+	// https://docs.databricks.com/aws/en/admin/sql/data-access-configuration.
 	DataAccessConfig types.List `tfsdk:"data_access_config"`
 	// Deprecated: only setting this to true is allowed.
 	EnableServerlessCompute types.Bool `tfsdk:"enable_serverless_compute"`
@@ -15729,13 +15867,12 @@ type SetWorkspaceWarehouseConfigRequest struct {
 	// of the type field in CreateWarehouse and EditWarehouse). Note: Some types
 	// cannot be disabled, they don't need to be specified in
 	// SetWorkspaceWarehouseConfig. Note: Disabling a type may cause existing
-	// warehouses to be converted to another type. Used by frontend to save
-	// specific type availability in the warehouse create and edit form UI.
+	// warehouses to be converted to another type.
 	EnabledWarehouseTypes types.List `tfsdk:"enabled_warehouse_types"`
 	// Deprecated: Use sql_configuration_parameters
 	GlobalParam types.Object `tfsdk:"global_param"`
-	// GCP only: Google Service Account used to pass to cluster to access Google
-	// Cloud Storage
+	// GCP only: Google service account that the warehouse clusters use to
+	// access Google Cloud Storage.
 	GoogleServiceAccount types.String `tfsdk:"google_service_account"`
 	// AWS Only: The instance profile used to pass an IAM role to the SQL
 	// warehouses. This configuration is also applied to the workspace's
@@ -15743,7 +15880,9 @@ type SetWorkspaceWarehouseConfigRequest struct {
 	InstanceProfileArn types.String `tfsdk:"instance_profile_arn"`
 	// Security policy for warehouses
 	SecurityPolicy types.String `tfsdk:"security_policy"`
-	// SQL configuration parameters
+	// SQL configuration parameters applied to every warehouse in the workspace.
+	// Only parameters that can be set at the workspace scope are accepted. See
+	// https://docs.databricks.com/aws/en/sql/language-manual/sql-ref-parameters.
 	SqlConfigurationParameters types.Object `tfsdk:"sql_configuration_parameters"`
 }
 
@@ -16323,13 +16462,22 @@ func (m StatementParameterListItem) Type(ctx context.Context) attr.Type {
 // Lakehouse//RT warehouses, with lower latency and higher concurrency, and
 // takes `warehouse_id` as a path parameter.
 type StatementResponse struct {
+	// The schema and metadata of the result set. Present when `status.state` is
+	// `SUCCEEDED`.
 	Manifest types.Object `tfsdk:"manifest"`
-
+	// Contains the result data of a single chunk when using `INLINE`
+	// disposition. When using `EXTERNAL_LINKS` disposition, the array
+	// `external_links` is used instead to provide short-lived cloud-storage
+	// URLs to the result data in cloud storage. Exactly one of these
+	// alternatives is used. Calls to `getResultData` return the link for the
+	// requested chunk; `executeStatement` and `getStatementResult` responses
+	// can contain links for multiple chunks.
 	Result types.Object `tfsdk:"result"`
 	// The statement ID is returned upon successfully submitting a SQL
 	// statement, and is a required reference for all subsequent calls.
 	StatementId types.String `tfsdk:"statement_id"`
-
+	// The execution state of the statement and, if it failed, the error
+	// details.
 	Status types.Object `tfsdk:"status"`
 }
 
@@ -16518,6 +16666,8 @@ func (m *StatementResponse) SetStatus(ctx context.Context, v StatementStatus) {
 // The status response includes execution state and if relevant, error
 // information.
 type StatementStatus struct {
+	// The error that caused the statement to fail. Only populated when `state`
+	// is `FAILED`.
 	Error types.Object `tfsdk:"error"`
 	// SQLSTATE error code returned when the statement execution fails. Only
 	// populated when the statement status is `FAILED`.
@@ -16763,6 +16913,8 @@ func (m Success) Type(ctx context.Context) attr.Type {
 }
 
 type TaskTimeOverRange struct {
+	// Each entry covers one consecutive time bucket of length `interval`,
+	// starting at `query_start_time_ms`.
 	Entries types.List `tfsdk:"entries"`
 	// interval length for all entries (difference in start time and end time of
 	// an entry range) the same for all entries start time of first interval is
@@ -16943,9 +17095,21 @@ type TerminationReason struct {
 }
 
 func (to *TerminationReason) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from TerminationReason) {
+	if !from.Parameters.IsNull() && !from.Parameters.IsUnknown() && to.Parameters.IsNull() && len(from.Parameters.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for Parameters, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.Parameters = from.Parameters
+	}
 }
 
 func (to *TerminationReason) SyncFieldsDuringRead(ctx context.Context, from TerminationReason) {
+	if !from.Parameters.IsNull() && !from.Parameters.IsUnknown() && to.Parameters.IsNull() && len(from.Parameters.Elements()) == 0 {
+		// The default representation of an empty map for TF autogenerated resources in the resource state is Null.
+		// If a user specified a non-Null, empty map for Parameters, and the deserialized field value is Null,
+		// set the resulting resource state to the empty map to match the planned value.
+		to.Parameters = from.Parameters
+	}
 }
 
 func (m TerminationReason) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -17071,9 +17235,9 @@ func (m TextValue) Type(ctx context.Context) attr.Type {
 }
 
 type TimeRange struct {
-	// The end time in milliseconds.
+	// End of the range, in milliseconds since the Unix epoch.
 	EndTimeMs types.Int64 `tfsdk:"end_time_ms"`
-	// The start time in milliseconds.
+	// Start of the range, in milliseconds since the Unix epoch.
 	StartTimeMs types.Int64 `tfsdk:"start_time_ms"`
 }
 
@@ -17274,6 +17438,7 @@ func (m *TransferOwnershipRequest) SetObjectId(ctx context.Context, v TransferOw
 }
 
 type TrashAlertRequest struct {
+	// UUID of the alert to move to the trash.
 	Id types.String `tfsdk:"-"`
 }
 
@@ -17423,13 +17588,19 @@ func (m TrashQueryRequest) Type(ctx context.Context) attr.Type {
 }
 
 type UpdateAlertRequest struct {
+	// Alert fields to update. Only the fields named in `update_mask` are
+	// changed.
 	Alert types.Object `tfsdk:"alert"`
 	// If true, automatically resolve alert display name conflicts. Otherwise,
 	// fail the request if the alert's display name conflicts with an existing
 	// alert's display name.
 	AutoResolveDisplayName types.Bool `tfsdk:"auto_resolve_display_name"`
-
+	// UUID of the alert to update.
 	Id types.String `tfsdk:"-"`
+	// Comma-separated list of the alert fields to update, such as
+	// `display_name` or `condition`. Fields not listed keep their current
+	// values.
+	//
 	// The field mask must be a single string, with multiple fields separated by
 	// commas (no spaces). The field path is relative to the resource object,
 	// using a dot (`.`) to navigate sub-fields (e.g., `author.given_name`).
@@ -17540,32 +17711,41 @@ func (m *UpdateAlertRequest) SetAlert(ctx context.Context, v UpdateAlertRequestA
 	m.Alert = vs
 }
 
+// A legacy Databricks SQL alert. An alert runs a saved query, compares a column
+// of the result against a threshold, and notifies its subscribers when the
+// condition is met. See
+// https://docs.databricks.com/aws/en/sql/user/alerts/legacy for details.
 type UpdateAlertRequestAlert struct {
-	// Trigger conditions of the alert.
+	// Condition that triggers the alert: a column of the query result, a
+	// comparison operator, and a threshold value. The value in the first row of
+	// the column is evaluated; aggregations are not supported through this API.
 	Condition types.Object `tfsdk:"condition"`
-	// Custom body of alert notification, if it exists. See [here] for custom
-	// templating instructions.
-	//
-	// [here]: https://docs.databricks.com/sql/user/alerts/index.html
+	// Custom body of the alert notification. It can use the template variables
+	// and HTML described at
+	// https://docs.databricks.com/aws/en/sql/user/alerts/legacy. If omitted,
+	// the default notification body is used.
 	CustomBody types.String `tfsdk:"custom_body"`
-	// Custom subject of alert notification, if it exists. This can include
-	// email subject entries and Slack notification headers, for example. See
-	// [here] for custom templating instructions.
-	//
-	// [here]: https://docs.databricks.com/sql/user/alerts/index.html
+	// Custom subject of the alert notification, used as the email subject or
+	// the Slack message header. It can use the template variables described at
+	// https://docs.databricks.com/aws/en/sql/user/alerts/legacy. If omitted,
+	// the default subject is used.
 	CustomSubject types.String `tfsdk:"custom_subject"`
-	// The display name of the alert.
+	// Display name of the alert, shown in list views and notifications. It must
+	// not be empty.
 	DisplayName types.String `tfsdk:"display_name"`
-	// Whether to notify alert subscribers when alert returns back to normal.
+	// Whether to notify subscribers when the alert state changes from
+	// `TRIGGERED` back to `OK`. Defaults to true.
 	NotifyOnOk types.Bool `tfsdk:"notify_on_ok"`
 	// The owner's username. This field is set to "Unavailable" if the user has
 	// been deleted.
 	OwnerUserName types.String `tfsdk:"owner_user_name"`
-	// UUID of the query attached to the alert.
+	// UUID of the saved query whose result the alert evaluates. The caller must
+	// have permission to view the query.
 	QueryId types.String `tfsdk:"query_id"`
-	// Number of seconds an alert must wait after being triggered to rearm
-	// itself. After rearming, it can be triggered again. If 0 or not specified,
-	// the alert will not be triggered again.
+	// Number of seconds the alert waits after a notification before it can
+	// notify again while its state stays `TRIGGERED`. If 0 or not specified,
+	// the alert notifies once when its state changes to `TRIGGERED` and does
+	// not notify again until its state has changed.
 	SecondsToRetrigger types.Int64 `tfsdk:"seconds_to_retrigger"`
 }
 
@@ -17783,8 +17963,9 @@ func (m *UpdateAlertV2Request) SetAlert(ctx context.Context, v AlertV2) {
 
 type UpdateDefaultWarehouseOverrideRequest struct {
 	// If set to true, and the override is not found, a new override will be
-	// created. In this situation, `update_mask` is ignored and all fields are
-	// applied. Defaults to false.
+	// created. Whenever `allow_missing` is true, `update_mask` is ignored and
+	// all fields are applied, whether or not the override already exists.
+	// Defaults to false.
 	AllowMissing types.Bool `tfsdk:"-"`
 	// Required. The default warehouse override to update. The name field must
 	// be set in the format:
@@ -17793,7 +17974,8 @@ type UpdateDefaultWarehouseOverrideRequest struct {
 	// string "me" for the current user.
 	DefaultWarehouseOverride types.Object `tfsdk:"default_warehouse_override"`
 	// The resource name of the default warehouse override. Format:
-	// default-warehouse-overrides/{default_warehouse_override_id}
+	// default-warehouse-overrides/{default_warehouse_override_id} Responses
+	// always contain the numeric user ID, even when the request used `me`.
 	Name types.String `tfsdk:"-"`
 	// Required. Field mask specifying which fields to update. Only the fields
 	// specified in the mask will be updated. Use "*" to update all fields. When
@@ -19316,7 +19498,7 @@ type WarehouseTypePair struct {
 	// If set to false the specific warehouse type will not be allowed as a
 	// value for warehouse_type in CreateWarehouse and EditWarehouse
 	Enabled types.Bool `tfsdk:"enabled"`
-
+	// Warehouse type that this entry enables or disables.
 	WarehouseType types.String `tfsdk:"warehouse_type"`
 }
 

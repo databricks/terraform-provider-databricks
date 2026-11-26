@@ -155,6 +155,9 @@ type SettingData struct {
 	// Effective setting value for personal_compute setting. This is the final
 	// effective value of setting. To set a value use personal_compute.
 	EffectivePersonalCompute types.Object `tfsdk:"effective_personal_compute"`
+	// Evaluated Git folder allowlist permission. To set a value, use
+	// repo_allowlist_permission.
+	EffectiveRepoAllowlistPermission types.Object `tfsdk:"effective_repo_allowlist_permission"`
 	// Effective setting value for restrict_workspace_admins setting. This is
 	// the final effective value of setting. To set a value use
 	// restrict_workspace_admins.
@@ -172,7 +175,8 @@ type SettingData struct {
 	// Setting value for integer type setting. This is the setting value set by
 	// consumers, check effective_integer_val for final setting value.
 	IntegerVal types.Object `tfsdk:"integer_val"`
-	// Name of the setting.
+	// Name of the setting. The settings metadata endpoint lists the names
+	// available at each scope.
 	Name types.String `tfsdk:"name"`
 	// Setting value for operational_email_custom_recipient setting. This is the
 	// setting value set by consumers, check
@@ -181,6 +185,9 @@ type SettingData struct {
 	// Setting value for personal_compute setting. This is the setting value set
 	// by consumers, check effective_personal_compute for final setting value.
 	PersonalCompute types.Object `tfsdk:"personal_compute"`
+	// Saved Git folder allowlist permission. Check
+	// effective_repo_allowlist_permission for the evaluated value.
+	RepoAllowlistPermission types.Object `tfsdk:"repo_allowlist_permission"`
 	// Setting value for restrict_workspace_admins setting. This is the setting
 	// value set by consumers, check effective_restrict_workspace_admins for
 	// final setting value.
@@ -222,6 +229,7 @@ func (m SettingData) GetComplexFieldTypes(ctx context.Context) map[string]reflec
 		"effective_integer_val":                               reflect.TypeOf(settingsv2_tf.IntegerMessage{}),
 		"effective_operational_email_custom_recipient":        reflect.TypeOf(settingsv2_tf.OperationalEmailCustomRecipientMessage{}),
 		"effective_personal_compute":                          reflect.TypeOf(settingsv2_tf.PersonalComputeMessage{}),
+		"effective_repo_allowlist_permission":                 reflect.TypeOf(settingsv2_tf.ReposAllowListPermissionMessage{}),
 		"effective_restrict_workspace_admins":                 reflect.TypeOf(settingsv2_tf.RestrictWorkspaceAdminsMessage{}),
 		"effective_string_val":                                reflect.TypeOf(settingsv2_tf.StringMessage{}),
 		"effective_workspace_dashboard_theme":                 reflect.TypeOf(settingsv2_tf.DashboardTheme{}),
@@ -229,6 +237,7 @@ func (m SettingData) GetComplexFieldTypes(ctx context.Context) map[string]reflec
 		"integer_val":                                         reflect.TypeOf(settingsv2_tf.IntegerMessage{}),
 		"operational_email_custom_recipient":                  reflect.TypeOf(settingsv2_tf.OperationalEmailCustomRecipientMessage{}),
 		"personal_compute":                                    reflect.TypeOf(settingsv2_tf.PersonalComputeMessage{}),
+		"repo_allowlist_permission":                           reflect.TypeOf(settingsv2_tf.ReposAllowListPermissionMessage{}),
 		"restrict_workspace_admins":                           reflect.TypeOf(settingsv2_tf.RestrictWorkspaceAdminsMessage{}),
 		"string_val":                                          reflect.TypeOf(settingsv2_tf.StringMessage{}),
 		"workspace_dashboard_theme":                           reflect.TypeOf(settingsv2_tf.DashboardTheme{}),
@@ -262,6 +271,7 @@ func (m SettingData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"effective_integer_val":                               m.EffectiveIntegerVal,
 			"effective_operational_email_custom_recipient":        m.EffectiveOperationalEmailCustomRecipient,
 			"effective_personal_compute":                          m.EffectivePersonalCompute,
+			"effective_repo_allowlist_permission":                 m.EffectiveRepoAllowlistPermission,
 			"effective_restrict_workspace_admins":                 m.EffectiveRestrictWorkspaceAdmins,
 			"effective_string_val":                                m.EffectiveStringVal,
 			"effective_workspace_dashboard_theme":                 m.EffectiveWorkspaceDashboardTheme,
@@ -270,6 +280,7 @@ func (m SettingData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"name":                                                m.Name,
 			"operational_email_custom_recipient":                  m.OperationalEmailCustomRecipient,
 			"personal_compute":                                    m.PersonalCompute,
+			"repo_allowlist_permission":                           m.RepoAllowlistPermission,
 			"restrict_workspace_admins":                           m.RestrictWorkspaceAdmins,
 			"string_val":                                          m.StringVal,
 			"workspace_dashboard_theme":                           m.WorkspaceDashboardTheme,
@@ -300,6 +311,7 @@ func (m SettingData) Type(ctx context.Context) attr.Type {
 			"effective_integer_val":                               settingsv2_tf.IntegerMessage{}.Type(ctx),
 			"effective_operational_email_custom_recipient":        settingsv2_tf.OperationalEmailCustomRecipientMessage{}.Type(ctx),
 			"effective_personal_compute":                          settingsv2_tf.PersonalComputeMessage{}.Type(ctx),
+			"effective_repo_allowlist_permission":                 settingsv2_tf.ReposAllowListPermissionMessage{}.Type(ctx),
 			"effective_restrict_workspace_admins":                 settingsv2_tf.RestrictWorkspaceAdminsMessage{}.Type(ctx),
 			"effective_string_val":                                settingsv2_tf.StringMessage{}.Type(ctx),
 			"effective_workspace_dashboard_theme":                 settingsv2_tf.DashboardTheme{}.Type(ctx),
@@ -308,6 +320,7 @@ func (m SettingData) Type(ctx context.Context) attr.Type {
 			"name":                                                types.StringType,
 			"operational_email_custom_recipient":                  settingsv2_tf.OperationalEmailCustomRecipientMessage{}.Type(ctx),
 			"personal_compute":                                    settingsv2_tf.PersonalComputeMessage{}.Type(ctx),
+			"repo_allowlist_permission":                           settingsv2_tf.ReposAllowListPermissionMessage{}.Type(ctx),
 			"restrict_workspace_admins":                           settingsv2_tf.RestrictWorkspaceAdminsMessage{}.Type(ctx),
 			"string_val":                                          settingsv2_tf.StringMessage{}.Type(ctx),
 			"workspace_dashboard_theme":                           settingsv2_tf.DashboardTheme{}.Type(ctx),
@@ -334,6 +347,7 @@ func (m SettingData) ApplySchemaCustomizations(attrs map[string]tfschema.Attribu
 	attrs["effective_integer_val"] = attrs["effective_integer_val"].SetComputed()
 	attrs["effective_operational_email_custom_recipient"] = attrs["effective_operational_email_custom_recipient"].SetComputed()
 	attrs["effective_personal_compute"] = attrs["effective_personal_compute"].SetComputed()
+	attrs["effective_repo_allowlist_permission"] = attrs["effective_repo_allowlist_permission"].SetComputed()
 	attrs["effective_restrict_workspace_admins"] = attrs["effective_restrict_workspace_admins"].SetComputed()
 	attrs["effective_string_val"] = attrs["effective_string_val"].SetComputed()
 	attrs["effective_workspace_dashboard_theme"] = attrs["effective_workspace_dashboard_theme"].SetComputed()
@@ -342,6 +356,7 @@ func (m SettingData) ApplySchemaCustomizations(attrs map[string]tfschema.Attribu
 	attrs["name"] = attrs["name"].SetRequired()
 	attrs["operational_email_custom_recipient"] = attrs["operational_email_custom_recipient"].SetComputed()
 	attrs["personal_compute"] = attrs["personal_compute"].SetComputed()
+	attrs["repo_allowlist_permission"] = attrs["repo_allowlist_permission"].SetComputed()
 	attrs["restrict_workspace_admins"] = attrs["restrict_workspace_admins"].SetComputed()
 	attrs["string_val"] = attrs["string_val"].SetComputed()
 	attrs["workspace_dashboard_theme"] = attrs["workspace_dashboard_theme"].SetComputed()

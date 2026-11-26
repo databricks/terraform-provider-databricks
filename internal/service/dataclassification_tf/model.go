@@ -29,7 +29,8 @@ type AutoTaggingConfig struct {
 	AutoTaggingMode types.String `tfsdk:"auto_tagging_mode"`
 	// The Classification Tag. For built-in classes this is a system tag (e.g.,
 	// "class.name", "class.location"); for custom classes it is a user-defined
-	// governance tag key.
+	// governance tag key. The built-in tags are listed at
+	// https://docs.databricks.com/aws/en/data-governance/unity-catalog/data-classification-tags.
 	ClassificationTag types.String `tfsdk:"classification_tag"`
 }
 
@@ -85,17 +86,20 @@ func (m AutoTaggingConfig) Type(ctx context.Context) attr.Type {
 // Classification, Delete disables it - It has no unique identifier of its own
 // and uses its parent catalog's identifier (catalog_name)
 type CatalogConfig struct {
-	// List of auto-tagging configurations for this catalog. Empty list means no
-	// auto-tagging is enabled.
+	// Auto-tagging configurations that apply to this catalog. Each entry
+	// overrides the metastore-level auto-tagging setting for its classification
+	// tag; tags without an entry inherit the metastore-level setting.
 	AutoTagConfigs types.List `tfsdk:"auto_tag_configs"`
 	// Schemas to exclude from the scan, each named relative to the parent
 	// catalog. If specified, all schemas except the specified ones will be
-	// scanned. Mutually exclusive with `included_schemas`: only one may be set
-	// per request. If neither `included_schemas` nor `excluded_schemas` is set,
-	// all schemas are scanned.
+	// scanned, including schemas created later. Mutually exclusive with
+	// `included_schemas`: only one may be set per request. If neither
+	// `included_schemas` nor `excluded_schemas` is set, all schemas are
+	// scanned.
 	ExcludedSchemas types.Object `tfsdk:"excluded_schemas"`
 	// Schemas to include in the scan, each named relative to the parent
-	// catalog. If specified, only listed schemas will be scanned. Mutually
+	// catalog. If specified, only listed schemas will be scanned. Schemas
+	// created later are not scanned until you add them to the list. Mutually
 	// exclusive with `excluded_schemas`: only one may be set per request. If
 	// neither `included_schemas` nor `excluded_schemas` is set, all schemas are
 	// scanned.
@@ -391,7 +395,7 @@ func (m *CatalogConfigSchemaNames) SetNames(ctx context.Context, v []types.Strin
 type CreateCatalogConfigRequest struct {
 	// The configuration to create.
 	CatalogConfig types.Object `tfsdk:"catalog_config"`
-	// Parent resource in the format: catalogs/{catalog_name}
+	// Name of the catalog to enable, in the format catalogs/{catalog_name}.
 	Parent types.String `tfsdk:"-"`
 }
 
@@ -486,7 +490,8 @@ func (m *CreateCatalogConfigRequest) SetCatalogConfig(ctx context.Context, v Cat
 }
 
 type DeleteCatalogConfigRequest struct {
-	// Resource name in the format: catalogs/{catalog_name}/config
+	// Resource name of the config, in the format
+	// catalogs/{catalog_name}/config.
 	Name types.String `tfsdk:"-"`
 }
 
@@ -534,7 +539,8 @@ func (m DeleteCatalogConfigRequest) Type(ctx context.Context) attr.Type {
 }
 
 type GetCatalogConfigRequest struct {
-	// Resource name in the format: catalogs/{catalog_name}/config
+	// Resource name of the config, in the format
+	// catalogs/{catalog_name}/config.
 	Name types.String `tfsdk:"-"`
 }
 
@@ -581,13 +587,106 @@ func (m GetCatalogConfigRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// Request to rescan a catalog that has Data Classification enabled.
+type RescanCatalogRequest struct {
+	// Resource name of the catalog, in the format: catalogs/{catalog_name}.
+	Name types.String `tfsdk:"-"`
+}
+
+func (to *RescanCatalogRequest) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from RescanCatalogRequest) {
+}
+
+func (to *RescanCatalogRequest) SyncFieldsDuringRead(ctx context.Context, from RescanCatalogRequest) {
+}
+
+func (m RescanCatalogRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in RescanCatalogRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m RescanCatalogRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, RescanCatalogRequest
+// only implements ToObjectValue() and Type().
+func (m RescanCatalogRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name": m.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m RescanCatalogRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name": types.StringType,
+		},
+	}
+}
+
+// Response for RescanCatalog. Empty for now; a named message lets later
+// versions add fields.
+type RescanCatalogResponse struct {
+}
+
+func (to *RescanCatalogResponse) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from RescanCatalogResponse) {
+}
+
+func (to *RescanCatalogResponse) SyncFieldsDuringRead(ctx context.Context, from RescanCatalogResponse) {
+}
+
+func (m RescanCatalogResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in RescanCatalogResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m RescanCatalogResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, RescanCatalogResponse
+// only implements ToObjectValue() and Type().
+func (m RescanCatalogResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m RescanCatalogResponse) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
+}
+
 type UpdateCatalogConfigRequest struct {
 	// The configuration to apply to the catalog. The name field in
 	// catalog_config identifies which resource to update.
 	CatalogConfig types.Object `tfsdk:"catalog_config"`
 	// Resource name in the format: catalogs/{catalog_name}/config.
 	Name types.String `tfsdk:"-"`
-	// Field mask specifying which fields to update.
+	// Comma-separated list of the fields of catalog_config to update, for
+	// example `included_schemas` or `auto_tag_configs`.
 	UpdateMask types.String `tfsdk:"-"`
 }
 

@@ -17,8 +17,6 @@ import (
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 
-	// .tmpl
-
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -353,6 +351,10 @@ func (m *AccountNetworkPolicy_SdkV2) SetIngressDryRun(ctx context.Context, v Cus
 }
 
 type AibiDashboardEmbeddingAccessPolicy_SdkV2 struct {
+	// Where AI/BI dashboards can be embedded: in any domain
+	// (ALLOW_ALL_DOMAINS), only in the approved domains configured for the
+	// workspace (ALLOW_APPROVED_DOMAINS), or nowhere (DENY_ALL_DOMAINS).
+	// Defaults to ALLOW_APPROVED_DOMAINS.
 	AccessPolicyType types.String `tfsdk:"access_policy_type"`
 }
 
@@ -515,6 +517,9 @@ func (m *AibiDashboardEmbeddingAccessPolicySetting_SdkV2) SetAibiDashboardEmbedd
 }
 
 type AibiDashboardEmbeddingApprovedDomains_SdkV2 struct {
+	// Domains allowed to host embedded AI/BI dashboards. A leading wildcard
+	// allows every subdomain of a domain. The list applies, and can only be
+	// changed, while the embedding access policy is ALLOW_APPROVED_DOMAINS.
 	ApprovedDomains types.List `tfsdk:"approved_domains"`
 }
 
@@ -881,14 +886,25 @@ func (m BooleanMessage_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type ClusterAutoRestartMessage_SdkV2 struct {
+	// Whether the workspace can change the enabled state. Databricks computes
+	// this value: it is false when the compliance security profile forces the
+	// feature on or when the workspace lacks the Enhanced Security and
+	// Compliance entitlement. A value sent in an update request has no effect.
 	CanToggle types.Bool `tfsdk:"can_toggle"`
-
+	// Whether automatic cluster update is enabled for the workspace. The
+	// effective value is always true while the compliance security profile is
+	// enabled on the workspace.
 	Enabled types.Bool `tfsdk:"enabled"`
-
+	// Why the feature is forced on or unavailable. Databricks sets these
+	// details for information only; they do not determine whether the feature
+	// is enabled.
 	EnablementDetails types.List `tfsdk:"enablement_details"`
-
+	// When the maintenance window runs. When unset, it defaults to the first
+	// Sunday of every month at 01:00 UTC.
 	MaintenanceWindow types.List `tfsdk:"maintenance_window"`
-
+	// Whether compute resources restart during every maintenance window even
+	// when no update is available. When false, they restart only when an update
+	// is available.
 	RestartEvenIfNoUpdatesAvailable types.Bool `tfsdk:"restart_even_if_no_updates_available"`
 }
 
@@ -1051,8 +1067,8 @@ func (m *ClusterAutoRestartMessage_SdkV2) SetMaintenanceWindow(ctx context.Conte
 type ClusterAutoRestartMessageEnablementDetails_SdkV2 struct {
 	// The feature is force enabled if compliance mode is active
 	ForcedForComplianceMode types.Bool `tfsdk:"forced_for_compliance_mode"`
-	// The feature is unavailable if the corresponding entitlement disabled (see
-	// getShieldEntitlementEnable)
+	// The feature is unavailable because the workspace does not have the
+	// Enhanced Security and Compliance entitlement.
 	UnavailableForDisabledEntitlement types.Bool `tfsdk:"unavailable_for_disabled_entitlement"`
 	// The feature is unavailable if the customer doesn't have enterprise tier
 	UnavailableForNonEnterpriseTier types.Bool `tfsdk:"unavailable_for_non_enterprise_tier"`
@@ -1108,6 +1124,8 @@ func (m ClusterAutoRestartMessageEnablementDetails_SdkV2) Type(ctx context.Conte
 }
 
 type ClusterAutoRestartMessageMaintenanceWindow_SdkV2 struct {
+	// Schedule anchored to a day of the week, either every week or on given
+	// weeks of the month.
 	WeekDayBasedSchedule types.List `tfsdk:"week_day_based_schedule"`
 }
 
@@ -1203,10 +1221,12 @@ func (m *ClusterAutoRestartMessageMaintenanceWindow_SdkV2) SetWeekDayBasedSchedu
 }
 
 type ClusterAutoRestartMessageMaintenanceWindowWeekDayBasedSchedule_SdkV2 struct {
+	// Day of the week on which the maintenance window starts.
 	DayOfWeek types.String `tfsdk:"day_of_week"`
-
+	// How often the maintenance window occurs: every week, or only on the
+	// listed occurrences of the day of the week within each month.
 	Frequency types.String `tfsdk:"frequency"`
-
+	// Time of day, in UTC, at which the maintenance window starts.
 	WindowStartTime types.List `tfsdk:"window_start_time"`
 }
 
@@ -1308,8 +1328,9 @@ func (m *ClusterAutoRestartMessageMaintenanceWindowWeekDayBasedSchedule_SdkV2) S
 }
 
 type ClusterAutoRestartMessageMaintenanceWindowWindowStartTime_SdkV2 struct {
+	// Hour of the day on a 24-hour clock.
 	Hours types.Int64 `tfsdk:"hours"`
-
+	// Minute of the hour.
 	Minutes types.Int64 `tfsdk:"minutes"`
 }
 
@@ -2539,13 +2560,14 @@ func (m *CreateNotificationDestinationRequest_SdkV2) SetConfig(ctx context.Conte
 type CreateOboTokenRequest_SdkV2 struct {
 	// Application ID of the service principal.
 	ApplicationId types.String `tfsdk:"application_id"`
-	// Whether to enable autoscoping for this token.
+	// Whether to enable autoscoping for this token. `disable_autoscoping`
+	// supersedes this field and is the one read when both are set.
 	AutoscopeEnabled types.Bool `tfsdk:"autoscope_enabled"`
 	// Comment that describes the purpose of the token.
 	Comment types.String `tfsdk:"comment"`
 	// The number of seconds before the token expires.
 	LifetimeSeconds types.Int64 `tfsdk:"lifetime_seconds"`
-
+	// Optional scopes of the token.
 	Scopes types.List `tfsdk:"scopes"`
 }
 
@@ -2648,6 +2670,7 @@ func (m *CreateOboTokenRequest_SdkV2) SetScopes(ctx context.Context, v []types.S
 
 // An on-behalf token was successfully created for the service principal.
 type CreateOboTokenResponse_SdkV2 struct {
+	// Metadata of the created token. Does not include the token value.
 	TokenInfo types.List `tfsdk:"token_info"`
 	// Value of the token.
 	TokenValue types.String `tfsdk:"token_value"`
@@ -3076,6 +3099,8 @@ func (m *CreatePrivateEndpointRuleRequest_SdkV2) SetPrivateEndpointRule(ctx cont
 type CreateTokenRequest_SdkV2 struct {
 	// Whether to enable autoscoping for this token. When true, the token will
 	// automatically collect inferred API path scopes as it is used.
+	// `disable_autoscoping` supersedes this field and is the one read when both
+	// are set.
 	AutoscopeEnabled types.Bool `tfsdk:"autoscope_enabled"`
 	// Optional description to attach to the token.
 	Comment types.String `tfsdk:"comment"`
@@ -5051,10 +5076,7 @@ func (m *CustomerFacingIngressNetworkPolicyPrivateAccess_SdkV2) SetDenyRules(ctx
 // — including request origin, destination, and authentication.
 type CustomerFacingIngressNetworkPolicyPrivateIngressRule_SdkV2 struct {
 	// The authenticated identity the request must match. When unset, the rule
-	// matches all users and service principals. On the account-level network
-	// policy, scoping to specific identities is not currently supported, so
-	// this field must be unset (the rule matches all users and service
-	// principals).
+	// matches all users and service principals.
 	Authentication types.List `tfsdk:"authentication"`
 	// The destination the request must match — the resource being accessed,
 	// for example the workspace UI, workspace APIs, or account-level APIs. See
@@ -16727,9 +16749,8 @@ func (m *NccAzureServiceEndpointRule_SdkV2) SetTargetServices(ctx context.Contex
 }
 
 type NccEgressConfig_SdkV2 struct {
-	// The network connectivity rules that are applied by default without
-	// resource specific configurations. You can find the stable network
-	// information of your serverless compute resources here.
+	// Deprecated. This field is retained for compatibility with existing
+	// clients. Avoid using it in new integrations.
 	DefaultRules types.List `tfsdk:"default_rules"`
 	// The network connectivity rules that configured for each destinations.
 	// These rules override default rules.
@@ -17028,10 +17049,11 @@ func (m *NccEgressDefaultRules_SdkV2) SetAzureServiceEndpointRule(ctx context.Co
 // Target rule controls the egress rules that are dedicated to specific
 // resources.
 type NccEgressTargetRules_SdkV2 struct {
-	// AWS private endpoint rule controls the AWS private endpoint based egress
-	// rules.
+	// Deprecated. This field is not supported anymore and kept purely for
+	// interface stability.
 	AwsPrivateEndpointRules types.List `tfsdk:"aws_private_endpoint_rules"`
-
+	// Deprecated. This field is not supported anymore and kept purely for
+	// interface stability.
 	AzurePrivateEndpointRules types.List `tfsdk:"azure_private_endpoint_rules"`
 }
 
@@ -18465,7 +18487,15 @@ type RestrictWorkspaceAdminsMessage_SdkV2 struct {
 	// When true, workspace admins cannot create governance tags. ALLOW_ALL
 	// status does not override this; they are independent.
 	DisableGovTagCreation types.Bool `tfsdk:"disable_gov_tag_creation"`
-
+	// Controls what workspace admins can do with service principal tokens and
+	// job identities. With ALLOW_ALL, workspace admins can create personal
+	// access tokens on behalf of any service principal in the workspace, change
+	// a job owner to any workspace user, and set a job's run_as identity to any
+	// workspace user or to a service principal they have the Service Principal
+	// User role on. With RESTRICT_TOKENS_AND_JOB_RUN_AS, they can only create
+	// tokens for service principals they have the Service Principal User role
+	// on, change a job owner to themselves, and set run_as to themselves or to
+	// a service principal they have that role on.
 	Status types.String `tfsdk:"status"`
 }
 

@@ -1,0 +1,53 @@
+# Pins validation of name: omitting it fails at plan time before any API call, but
+# name = "" passes plan-time validation, so create sends a POST with an empty name and
+# surfaces the API's rejection. Nothing is saved to state, so the next plan creates the
+# model. API responses are inferred from the MLflow Model Registry API contract, not
+# recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: missing_name_fails_without_calls
+    config: |
+      resource "databricks_mlflow_model" "this" {
+        description = "model without a name"
+      }
+    expect_error: 'Error: Missing required argument(?s:.*)The argument "name" is required, but no definition was found\.'
+    calls: []
+  - name: empty_name_is_sent_and_rejected_by_the_api
+    config: &config_empty_name |
+      resource "databricks_mlflow_model" "this" {
+        name = ""
+      }
+    expect_error: 'Error: cannot create mlflow model: Registered model name cannot be empty\.\n'
+    calls:
+      - request:
+          method: POST
+          path: /api/2.0/mlflow/registered-models/create
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"name": ""}
+        response:
+          status: 400
+          body:
+            json: {"error_code": "INVALID_PARAMETER_VALUE",
+                   "message": "Registered model name cannot be empty."}
+  - name: nothing_created_so_plan_creates
+    plan_only: true
+    config: *config_empty_name
+    plan:
+      expect: non_empty
+      changes:
+        databricks_mlflow_model.this:
+          actions: [create]
+          after:
+            - path: [name]
+              equals: ""
+    calls: []
+destroy:
+  calls: []

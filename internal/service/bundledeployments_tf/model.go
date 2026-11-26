@@ -1782,13 +1782,13 @@ type Operation struct {
 	// (the AIP-154 concurrency token for this resource, realized as a sequence
 	// number rather than an opaque etag). The server assigns 0 when the
 	// operation is created and increments it on every successful
-	// UpdateOperation, so a never-updated operation is at 0 and the first
-	// successful update makes it 1. It is OPTIONAL rather than OUTPUT_ONLY
-	// because it is dual-purpose: GetOperation returns the current value, and
-	// UpdateOperation reads the caller-supplied value as a precondition. The
-	// caller must echo the value it last observed; if it no longer matches the
-	// server's value, the update is rejected with ABORTED so the caller can
-	// re-read and retry.
+	// UpdateOperation or BatchUpdateOperations. The first successful update
+	// changes it from 0 to 1. It is OPTIONAL rather than OUTPUT_ONLY because it
+	// is dual-purpose: reads return the current value, and updates require the
+	// caller-supplied value as a precondition, including 0 for the first
+	// update. The caller must echo the value it last observed; if it no longer
+	// matches the server's value, the update is rejected with ABORTED so the
+	// caller can re-read and retry.
 	SequenceId types.Int64 `tfsdk:"sequence_id"`
 	// Serialized local config state after the operation. Its presence records
 	// whether the resource is still tracked by the deployment. Explicitly
@@ -1821,7 +1821,7 @@ type Operation struct {
 	Status types.String `tfsdk:"status"`
 	// When the operation was last updated. Set to `create_time` when the
 	// operation is created and to the server timestamp on each successful
-	// UpdateOperation.
+	// UpdateOperation or BatchUpdateOperations.
 	UpdateTime timetypes.RFC3339 `tfsdk:"update_time"`
 }
 

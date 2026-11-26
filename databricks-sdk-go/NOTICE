@@ -1,0 +1,145 @@
+Copyright (2022) Databricks, Inc.
+
+This Software includes software developed at Databricks (https://www.databricks.com/) and its use is subject to the included LICENSE file.
+
+This Software contains code from the following open source projects, licensed under the Apache 2.0 license:
+
+googleapis/google-cloud-go - https://github.com/googleapis/google-cloud-go
+Copyright 2023 Google LLC
+License - https://github.com/googleapis/google-cloud-go/blob/main/LICENSE
+
+go-logr/logr - https://github.com/go-logr/logr
+Copyright 2023 The logr Authors
+License - https://github.com/go-logr/logr/blob/main/LICENSE
+
+go-logr/stdr - https://github.com/go-logr/stdr
+Copyright 2019 The logr Authors
+License - https://github.com/go-logr/stdr/blob/main/LICENSE
+
+golang/groupcache - https://github.com/golang/groupcache
+Copyright 2013 Google Inc.
+License - https://github.com/golang/groupcache/blob/main/LICENSE
+
+google/s2a-go - https://github.com/google/s2a-go
+Copyright 2021 Google LLC
+License - https://github.com/google/s2a-go/blob/main/LICENSE
+
+googleapis/enterprise-certificate-proxy - https://github.com/googleapis/enterprise-certificate-proxy
+Copyright 2022 Google LLC
+License - https://github.com/googleapis/enterprise-certificate-proxy/blob/main/LICENSE
+
+census-instrumentation/opencensus-go - https://github.com/census-instrumentation/opencensus-go
+Copyright 2017 OpenCensus Authors
+License - https://github.com/census-instrumentation/opencensus-go/blob/main/LICENSE
+
+open-telemetry/opentelemetry-go - https://github.com/open-telemetry/opentelemetry-go
+Copyright The OpenTelemetry Authors
+License - https://github.com/open-telemetry/opentelemetry-go/blob/main/LICENSE
+
+open-telemetry/opentelemetry-go-contrib - https://github.com/open-telemetry/opentelemetry-go-contrib
+Copyright The OpenTelemetry Authors
+License - https://github.com/open-telemetry/opentelemetry-go-contrib/blob/main/LICENSE
+
+googleapis/go-genproto - https://github.com/googleapis/go-genproto
+Copyright 2025 Google LLC
+License - https://github.com/googleapis/go-genproto/blob/main/LICENSE
+
+grpc/grpc-go - https://github.com/grpc/grpc-go
+Copyright 2014 gRPC authors
+License - https://github.com/grpc/grpc-go/blob/main/LICENSE
+
+go-ini/ini - https://github.com/go-ini/ini
+Copyright 2014 Unknwon
+License - https://github.com/go-ini/ini/blob/main/LICENSE
+
+This Software contains code from the following open source projects, licensed under the BSD (3-clause) license:
+
+golang/protobuf - https://github.com/golang/protobuf
+Copyright 2010 The Go Authors
+License - https://github.com/golang/protobuf/blob/main/LICENSE
+
+google/go-querystring - https://github.com/google/go-querystring
+Copyright (c) 2013 Google. All rights reserved.
+License - https://github.com/google/go-querystring/blob/main/LICENSE
+
+google/uuid - https://github.com/google/uuid
+Copyright (c) 2009,2014 Google Inc. All rights reserved.
+License - https://github.com/google/uuid/blob/main/LICENSE
+
+pmezard/go-difflib - https://github.com/pmezard/go-difflib
+Copyright (c) 2013, Patrick Mezard
+License - https://github.com/pmezard/go-difflib/blob/main/LICENSE
+
+golang/crypto - https://github.com/golang/crypto
+Copyright 2009 The Go Authors
+License - https://github.com/golang/crypto/blob/main/LICENSE
+
+golang/exp - https://github.com/golang/exp
+Copyright (c) 2009 The Go Authors. All rights reserved.
+License - https://github.com/golang/exp/blob/main/LICENSE
+
+golang/mod - https://github.com/golang/mod
+Copyright 2009 The Go Authors
+License - https://github.com/golang/mod/blob/main/LICENSE
+
+golang/net - https://github.com/golang/net
+Copyright 2009 The Go Authors
+License - https://github.com/golang/net/blob/main/LICENSE
+
+golang/oauth2 - https://github.com/golang/oauth2
+Copyright 2009 The Go Authors
+License - https://github.com/golang/oauth2/blob/main/LICENSE
+
+golang/sys - https://github.com/golang/sys
+Copyright 2009 The Go Authors
+License - https://github.com/golang/sys/blob/main/LICENSE
+
+golang/text - https://github.com/golang/text
+Copyright 2009 The Go Authors
+License - https://github.com/golang/text/blob/main/LICENSE
+
+golang/time - https://github.com/golang/time
+Copyright (c) 2009 The Go Authors. All rights reserved.
+License - https://github.com/golang/time/blob/main/LICENSE
+
+googleapis/google-api-go-client - https://github.com/googleapis/google-api-go-client
+Copyright (c) 2011 Google Inc. All rights reserved.
+License - https://github.com/googleapis/google-api-go-client/blob/main/LICENSE
+
+protocolbuffers/protobuf-go - https://github.com/protocolbuffers/protobuf-go
+Copyright (c) 2018 The Go Authors. All rights reserved.
+License - https://github.com/protocolbuffers/protobuf-go/blob/main/LICENSE
+
+This Software contains code from the following open source projects, licensed under the BSD (2-clause) license:
+
+pkg/browser - https://github.com/pkg/browser
+Copyright (c) 2014, Dave Cheney <dave@cheney.net>
+License - https://github.com/pkg/browser/blob/main/LICENSE
+
+This Software contains code from the following open source projects, licensed under the MIT license:
+
+cespare/xxhash - https://github.com/cespare/xxhash
+Copyright (c) 2016 Caleb Spare
+License - https://github.com/cespare/xxhash/blob/main/LICENSE
+
+felixge/httpsnoop - https://github.com/felixge/httpsnoop
+Copyright (c) 2016 Felix Geisendorfer (felix@debuggable.com)
+License - https://github.com/felixge/httpsnoop/blob/main/LICENSE
+
+stretchr/objx - https://github.com/stretchr/objx
+Copyright (c) 2014 Stretchr, Inc.
+License - https://github.com/stretchr/objx/blob/main/LICENSE
+
+stretchr/testify - https://github.com/stretchr/testify
+Copyright (c) 2012-2020 Mat Ryer, Tyler Bunnell and contributors.
+License - https://github.com/stretchr/testify/blob/main/LICENSE
+
+go-yaml/yaml - https://github.com/go-yaml/yaml
+Copyright (c) 2006-2011 Kirill Simonov
+License - https://github.com/go-yaml/yaml/blob/main/LICENSE
+
+This Software contains code from the following open source projects, licensed under the ISC license:
+
+davecgh/go-spew - https://github.com/davecgh/go-spew
+Copyright (c) 2012-2016 Dave Collins <dave@davec.name>
+License - https://github.com/davecgh/go-spew/blob/main/LICENSE

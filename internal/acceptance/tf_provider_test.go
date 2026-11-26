@@ -25,6 +25,7 @@ func NoOpResource() *schema.Resource {
 // This test ensures that, within a single Terraform module, a workspace can be created and that
 // the Databricks provider can be configured to use that workspace.
 func TestAccProviderPlanShouldSucceedWithIncompleteConfiguration(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
 	resource.Test(t, resource.TestCase{
 		IsUnitTest: true,
 		ProviderFactories: map[string]func() (*schema.Provider, error){

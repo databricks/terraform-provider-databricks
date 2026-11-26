@@ -47,6 +47,20 @@ type AccessRequestDestinations_SdkV2 struct {
 	Securable types.List `tfsdk:"securable"`
 	// The type of the securable, repeated from **securable** as a plain string.
 	SecurableType types.String `tfsdk:"securable_type"`
+	// The access request URLs shared by every workspace in the metastore. Only
+	// set when the securable is a metastore. These URLs are used when neither
+	// the requested securable nor its parents have an explicit destination or a
+	// default owner email destination, and they take precedence over metastore
+	// destinations.
+	//
+	// A **dynamic_url** and default owner email destinations cannot both be on:
+	// saving one turns the other off. Saving a **dynamic_url** while they are
+	// on requires a metastore admin.
+	//
+	// Setting this field removes the metastore destinations in this workspace.
+	// The first save also removes the metastore URL destinations of other
+	// workspaces. Once set, the configuration can be cleared but not removed.
+	UrlConfiguration types.List `tfsdk:"url_configuration"`
 }
 
 func (to *AccessRequestDestinations_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from AccessRequestDestinations_SdkV2) {
@@ -71,6 +85,15 @@ func (to *AccessRequestDestinations_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx co
 				// Recursively sync the fields of Securable
 				toSecurable.SyncFieldsDuringCreateOrUpdate(ctx, fromSecurable)
 				to.SetSecurable(ctx, toSecurable)
+			}
+		}
+	}
+	if !from.UrlConfiguration.IsNull() && !from.UrlConfiguration.IsUnknown() {
+		if toUrlConfiguration, ok := to.GetUrlConfiguration(ctx); ok {
+			if fromUrlConfiguration, ok := from.GetUrlConfiguration(ctx); ok {
+				// Recursively sync the fields of UrlConfiguration
+				toUrlConfiguration.SyncFieldsDuringCreateOrUpdate(ctx, fromUrlConfiguration)
+				to.SetUrlConfiguration(ctx, toUrlConfiguration)
 			}
 		}
 	}
@@ -99,6 +122,14 @@ func (to *AccessRequestDestinations_SdkV2) SyncFieldsDuringRead(ctx context.Cont
 			}
 		}
 	}
+	if !from.UrlConfiguration.IsNull() && !from.UrlConfiguration.IsUnknown() {
+		if toUrlConfiguration, ok := to.GetUrlConfiguration(ctx); ok {
+			if fromUrlConfiguration, ok := from.GetUrlConfiguration(ctx); ok {
+				toUrlConfiguration.SyncFieldsDuringRead(ctx, fromUrlConfiguration)
+				to.SetUrlConfiguration(ctx, toUrlConfiguration)
+			}
+		}
+	}
 }
 
 func (m AccessRequestDestinations_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -110,6 +141,8 @@ func (m AccessRequestDestinations_SdkV2) ApplySchemaCustomizations(attrs map[str
 	attrs["securable"] = attrs["securable"].SetRequired()
 	attrs["securable"] = attrs["securable"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["securable_type"] = attrs["securable_type"].SetComputed()
+	attrs["url_configuration"] = attrs["url_configuration"].SetOptional()
+	attrs["url_configuration"] = attrs["url_configuration"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
 	return attrs
 }
@@ -126,6 +159,7 @@ func (m AccessRequestDestinations_SdkV2) GetComplexFieldTypes(ctx context.Contex
 		"destination_source_securable": reflect.TypeOf(Securable_SdkV2{}),
 		"destinations":                 reflect.TypeOf(NotificationDestination_SdkV2{}),
 		"securable":                    reflect.TypeOf(Securable_SdkV2{}),
+		"url_configuration":            reflect.TypeOf(UrlConfiguration_SdkV2{}),
 	}
 }
 
@@ -142,6 +176,7 @@ func (m AccessRequestDestinations_SdkV2) ToObjectValue(ctx context.Context) base
 			"full_name":                    m.FullName,
 			"securable":                    m.Securable,
 			"securable_type":               m.SecurableType,
+			"url_configuration":            m.UrlConfiguration,
 		})
 }
 
@@ -161,6 +196,9 @@ func (m AccessRequestDestinations_SdkV2) Type(ctx context.Context) attr.Type {
 				ElemType: Securable_SdkV2{}.Type(ctx),
 			},
 			"securable_type": types.StringType,
+			"url_configuration": basetypes.ListType{
+				ElemType: UrlConfiguration_SdkV2{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -241,6 +279,32 @@ func (m *AccessRequestDestinations_SdkV2) SetSecurable(ctx context.Context, v Se
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["securable"]
 	m.Securable = types.ListValueMust(t, vs)
+}
+
+// GetUrlConfiguration returns the value of the UrlConfiguration field in AccessRequestDestinations_SdkV2 as
+// a UrlConfiguration_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (m *AccessRequestDestinations_SdkV2) GetUrlConfiguration(ctx context.Context) (UrlConfiguration_SdkV2, bool) {
+	var e UrlConfiguration_SdkV2
+	if m.UrlConfiguration.IsNull() || m.UrlConfiguration.IsUnknown() {
+		return e, false
+	}
+	var v []UrlConfiguration_SdkV2
+	d := m.UrlConfiguration.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetUrlConfiguration sets the value of the UrlConfiguration field in AccessRequestDestinations_SdkV2.
+func (m *AccessRequestDestinations_SdkV2) SetUrlConfiguration(ctx context.Context, v UrlConfiguration_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["url_configuration"]
+	m.UrlConfiguration = types.ListValueMust(t, vs)
 }
 
 // Properties of the new metastore.
@@ -9242,9 +9306,10 @@ type CreateSkillRequest_SdkV2 struct {
 	// be omitted. Do not set `name`; the server derives it from `parent` and
 	// `skill_id`.
 	Skill types.List `tfsdk:"skill"`
-	// Name for the skill, e.g. "basic-math". The server normalizes this
-	// identifier to lowercase. It is independent of the bundle name read from
-	// SKILL.md.
+	// Name of the skill within the parent schema. The name must not contain
+	// periods, spaces, forward slashes, percent signs, or control characters,
+	// and it is stored in lowercase. It is independent of the bundle name read
+	// from SKILL.md.
 	SkillId types.String `tfsdk:"-"`
 }
 
@@ -9773,7 +9838,8 @@ func (m *CreateTableConstraint_SdkV2) SetConstraint(ctx context.Context, v Table
 }
 
 type CreateTableRequest_SdkV2 struct {
-	// Name of parent catalog.
+	// Name of parent catalog. Required for creation using catalog and schema
+	// names.
 	CatalogName types.String `tfsdk:"catalog_name"`
 	// The array of __ColumnInfo__ definitions of the table's columns.
 	Columns types.List `tfsdk:"columns"`
@@ -9785,7 +9851,8 @@ type CreateTableRequest_SdkV2 struct {
 	Name types.String `tfsdk:"name"`
 	// A map of key-value properties attached to the securable.
 	Properties types.Map `tfsdk:"properties"`
-	// Name of parent schema relative to its parent catalog.
+	// Name of parent schema relative to its parent catalog. Required for
+	// creation using catalog and schema names.
 	SchemaName types.String `tfsdk:"schema_name"`
 	// The cloud storage URL under which the data files of the table are stored.
 	// For an EXTERNAL table, it must be set on creation to a path within an
@@ -11742,7 +11809,8 @@ func (m DeleteModelServiceRequest_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type DeleteModelVersionRequest_SdkV2 struct {
-	// The three-level (fully qualified) name of the model version
+	// The three-level (fully qualified) name of the parent registered model, in
+	// the form `catalog_name.schema_name.model_name`.
 	FullName types.String `tfsdk:"-"`
 	// The integer version number of the model version
 	Version types.Int64 `tfsdk:"-"`
@@ -12856,12 +12924,13 @@ func (m *DenyOptions_SdkV2) SetPrivileges(ctx context.Context, v []types.String)
 // __table__, __function__, __connection__, __credential__, __volume__, or
 // __secret__.
 type Dependency_SdkV2 struct {
+	// A dependency on a Unity Catalog connection.
 	Connection types.List `tfsdk:"connection"`
-
+	// A dependency on a Unity Catalog credential.
 	Credential types.List `tfsdk:"credential"`
-
+	// A dependency on a Unity Catalog function.
 	Function types.List `tfsdk:"function"`
-
+	// A dependency on a Unity Catalog table.
 	Table types.List `tfsdk:"table"`
 }
 
@@ -19778,7 +19847,7 @@ func (m GetCatalogRequest_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type GetCatalogWorkspaceBindingsResponse_SdkV2 struct {
-	// A list of workspace IDs
+	// The IDs of the workspaces that are bound to the catalog.
 	Workspaces types.List `tfsdk:"workspaces"`
 }
 
@@ -20259,7 +20328,9 @@ func (m GetFunctionRequest_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type GetGrantRequest_SdkV2 struct {
-	// Full name of securable.
+	// Full name of the securable. Tables, views, volumes and functions use the
+	// three-level name `catalog.schema.object`; a metastore uses its metastore
+	// ID.
 	FullName types.String `tfsdk:"-"`
 	// Specifies the maximum number of privileges to return (page length). Every
 	// PrivilegeAssignment present in a single page response is guaranteed to
@@ -20279,7 +20350,8 @@ type GetGrantRequest_SdkV2 struct {
 	// If provided, only the permissions for the specified principal (user or
 	// group) are returned.
 	Principal types.String `tfsdk:"-"`
-	// Type of securable.
+	// Type of the securable, such as `catalog`, `schema`, `table` or `volume`.
+	// The value is case-insensitive.
 	SecurableType types.String `tfsdk:"-"`
 }
 
@@ -20728,7 +20800,8 @@ func (m GetModelServiceRequest_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type GetModelVersionRequest_SdkV2 struct {
-	// The three-level (fully qualified) name of the model version
+	// The three-level (fully qualified) name of the parent registered model, in
+	// the form `catalog_name.schema_name.model_name`.
 	FullName types.String `tfsdk:"-"`
 	// Whether to include aliases associated with the model version in the
 	// response
@@ -26082,8 +26155,8 @@ type ListSecretsRequest_SdkV2 struct {
 	// 1000. - If set to 0, the page length is set to 1000. - If set to a value
 	// less than 0, an invalid parameter error is returned.
 	PageSize types.Int64 `tfsdk:"-"`
-	// Opaque pagination token to go to the next page based on previous query.
-	// The maximum page length is determined by a server configured value.
+	// Opaque pagination token for the next page of results. Set it to the
+	// **next_page_token** value from the previous response.
 	PageToken types.String `tfsdk:"-"`
 	// The name of the schema under which to list secrets. Both **catalog_name**
 	// and **schema_name** must be specified together.
@@ -26272,10 +26345,9 @@ type ListSkillsRequest_SdkV2 struct {
 	// Opaque pagination token from a previous request.
 	PageToken types.String `tfsdk:"-"`
 	// Name of the parent schema. Format: `schemas/{catalog}.{schema}`. Each
-	// `{...}` component is capped at 255 characters individually.
-	//
-	// Required: skill listing is schema-scoped, so `parent` must be set; an
-	// unset or empty `parent` is rejected with INVALID_PARAMETER_VALUE.
+	// `{...}` component is capped at 255 characters individually. Required:
+	// skill listing is schema-scoped, so `parent` must be set; an unset or
+	// empty `parent` is rejected with INVALID_PARAMETER_VALUE.
 	Parent types.String `tfsdk:"-"`
 }
 
@@ -33201,6 +33273,10 @@ func (m *ModelServiceConfigRoutingConfig_SdkV2) SetFallback(ctx context.Context,
 	m.Fallback = types.ListValueMust(t, vs)
 }
 
+// A numbered version of a registered model in Unity Catalog. A model version is
+// identified by the full name of its parent registered model and its version
+// number, or by an alias that points to it. See
+// https://docs.databricks.com/aws/en/machine-learning/manage-model-lifecycle/.
 type ModelVersionInfo_SdkV2 struct {
 	// List of aliases associated with the model version
 	Aliases types.List `tfsdk:"aliases"`
@@ -33208,7 +33284,7 @@ type ModelVersionInfo_SdkV2 struct {
 	CatalogName types.String `tfsdk:"catalog_name"`
 	// The comment attached to the model version
 	Comment types.String `tfsdk:"comment"`
-
+	// Time at which the model version was created, in epoch milliseconds.
 	CreatedAt types.Int64 `tfsdk:"created_at"`
 	// The identifier of the user who created the model version
 	CreatedBy types.String `tfsdk:"created_by"`
@@ -33241,7 +33317,7 @@ type ModelVersionInfo_SdkV2 struct {
 	// The storage location on the cloud under which model version data files
 	// are stored
 	StorageLocation types.String `tfsdk:"storage_location"`
-
+	// Time at which the model version was last updated, in epoch milliseconds.
 	UpdatedAt types.Int64 `tfsdk:"updated_at"`
 	// The identifier of the user who updated the model version last time
 	UpdatedBy types.String `tfsdk:"updated_by"`
@@ -35910,8 +35986,7 @@ func (m *OptionSpec_SdkV2) SetAllowedValues(ctx context.Context, v []types.Strin
 type PermissionsChange_SdkV2 struct {
 	// The set of privileges to add.
 	Add types.List `tfsdk:"add"`
-	// The principal whose privileges we are changing. Only one of principal or
-	// principal_id should be specified, never both at the same time.
+	// The principal whose privileges we are changing.
 	Principal types.String `tfsdk:"principal"`
 	// The set of privileges to remove.
 	Remove types.List `tfsdk:"remove"`
@@ -36921,8 +36996,7 @@ func (m Principal_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type PrivilegeAssignment_SdkV2 struct {
-	// The principal (user email address or group name). For deleted principals,
-	// `principal` is empty while `principal_id` is populated.
+	// The principal (user email address or group name).
 	Principal types.String `tfsdk:"principal"`
 	// The privileges assigned to the principal.
 	Privileges types.List `tfsdk:"privileges"`
@@ -38252,8 +38326,9 @@ type Secret_SdkV2 struct {
 	MetastoreId types.String `tfsdk:"metastore_id"`
 	// The name of the secret, relative to its parent schema.
 	Name types.String `tfsdk:"name"`
-	// The owner of the secret. Defaults to the creating principal on creation.
-	// Can be updated to transfer ownership of the secret to another principal.
+	// The owner of the secret. It cannot be set when creating a secret and
+	// defaults to the creating principal. Set it in UpdateSecret to transfer
+	// ownership of the secret to another principal.
 	Owner types.String `tfsdk:"owner"`
 	// The name of the schema where the secret resides.
 	SchemaName types.String `tfsdk:"schema_name"`
@@ -38261,11 +38336,10 @@ type Secret_SdkV2 struct {
 	UpdateTime timetypes.RFC3339 `tfsdk:"update_time"`
 	// The principal that last updated the secret.
 	UpdatedBy types.String `tfsdk:"updated_by"`
-	// The secret value to store. This field is input-only and is not returned
-	// in responses — use the **effective_value** field (via GetSecret with
-	// **include_value** set to true) to read the secret value. The maximum size
-	// is 60 KiB (pre-encryption). Accepted content includes passwords, tokens,
-	// keys, and other sensitive credential data.
+	// The secret value to store, such as a password, token, or key. It is never
+	// returned in responses. To read it, call GetSecret with **include_value**
+	// set to true and use the **effective_value** field. The maximum size is 60
+	// KiB before encryption.
 	Value types.String `tfsdk:"value"`
 }
 
@@ -38989,21 +39063,23 @@ type Skill_SdkV2 struct {
 	// differ from the final component of the Skill resource name. Unset until
 	// FinalizeSkill succeeds.
 	BundleName types.String `tfsdk:"bundle_name"`
-	// User-provided comment for the skill. Free-text, user-editable via
-	// UpdateSkill (listed in its `update_mask`). DISTINCT from `description`,
-	// which is the server-parsed, OUTPUT_ONLY SKILL.md frontmatter value:
-	// `comment` is the customer's own annotation and is preserved across bundle
-	// re-uploads. When `comment` is in the update mask, omitting it clears the
-	// field, while an explicitly empty string is retained.
+	// User-provided comment for the skill, which you can change with
+	// UpdateSkill. It is separate from `description`, which the server reads
+	// from the SKILL.md frontmatter, and it is preserved across bundle
+	// re-uploads and FinalizeSkill. When `comment` is in the update mask,
+	// omitting it clears the field, while an explicitly empty string is
+	// retained.
 	Comment types.String `tfsdk:"comment"`
 	// Time the skill was created.
 	CreateTime timetypes.RFC3339 `tfsdk:"create_time"`
-	// Creator identity.
+	// Username or service principal application ID of the principal that
+	// created the skill.
 	CreatedBy types.String `tfsdk:"created_by"`
 	// Description from the most recently successfully finalized SKILL.md. Unset
 	// until FinalizeSkill succeeds.
 	Description types.String `tfsdk:"description"`
-	// Owner of the skill.
+	// Username, group name, or service principal application ID of the skill
+	// owner.
 	EffectiveOwner types.String `tfsdk:"effective_owner"`
 	// Optimistic concurrency token returned on every read. To make an Update or
 	// Delete conditional, pass the last-read value in that request's `etag`
@@ -39013,17 +39089,18 @@ type Skill_SdkV2 struct {
 	// Time of the most recent successful FinalizeSkill. Unset until one
 	// succeeds.
 	FinalizeTime timetypes.RFC3339 `tfsdk:"finalize_time"`
-	// Metastore hosting the skill.
+	// Unique identifier of the metastore that contains the skill.
 	MetastoreId types.String `tfsdk:"metastore_id"`
 	// Resource name of the skill. Format: `skills/{catalog}.{schema}.{skill}`.
-	// Each `{...}` component is capped at 255 characters individually.
-	// Server-derived on Create from `parent` + `skill_id`; required and
-	// immutable on Update/Get/Delete.
+	// Each `{...}` component is capped at 255 characters individually. The
+	// server derives the name on Create from `parent` and `skill_id`; it is
+	// required and immutable on Update, Get, and Delete.
 	Name types.String `tfsdk:"name"`
 	// Time of the most recent Skill metadata mutation. Uploading bundle files
 	// alone does not change this value.
 	UpdateTime timetypes.RFC3339 `tfsdk:"update_time"`
-	// Identity of the last updater.
+	// Username or service principal application ID of the principal that last
+	// updated the skill.
 	UpdatedBy types.String `tfsdk:"updated_by"`
 }
 
@@ -39955,7 +40032,8 @@ type TableInfo_SdkV2 struct {
 	// associated object through the BROWSE privilege when include_browse is
 	// enabled in the request.
 	BrowseOnly types.Bool `tfsdk:"browse_only"`
-	// Name of parent catalog.
+	// Name of parent catalog. Required for creation using catalog and schema
+	// names.
 	CatalogName types.String `tfsdk:"catalog_name"`
 	// The array of __ColumnInfo__ definitions of the table's columns.
 	Columns types.List `tfsdk:"columns"`
@@ -40007,7 +40085,8 @@ type TableInfo_SdkV2 struct {
 	// https://docs.databricks.com/aws/en/tables/row-and-column-filters for
 	// details.
 	RowFilter types.List `tfsdk:"row_filter"`
-	// Name of parent schema relative to its parent catalog.
+	// Name of parent schema relative to its parent catalog. Required for
+	// creation using catalog and schema names.
 	SchemaName types.String `tfsdk:"schema_name"`
 	// SecurableKindManifest of table, including capabilities the table has.
 	SecurableKindManifest types.List `tfsdk:"securable_kind_manifest"`
@@ -42473,7 +42552,7 @@ func (m *UpdateCatalog_SdkV2) SetProperties(ctx context.Context, v map[string]ty
 }
 
 type UpdateCatalogWorkspaceBindingsResponse_SdkV2 struct {
-	// A list of workspace IDs
+	// The IDs of the workspaces that are bound to the catalog.
 	Workspaces types.List `tfsdk:"workspaces"`
 }
 
@@ -44027,10 +44106,11 @@ type UpdateModelProviderServiceRequest_SdkV2 struct {
 	// `model_provider_service_id`; it is required and immutable on Update, Get,
 	// and Delete.
 	Name types.String `tfsdk:"-"`
-	// Fields to update. Use `config` to replace the entire configuration. The
-	// replacement must include every required field; any optional field you
-	// omit is cleared. To preserve sibling fields, use one or more granular
-	// paths: `comment`; `config.provider` to replace the active
+	// Fields to update. Use `config` to replace the configuration's supported
+	// fields. The replacement must include every required field. Omitted
+	// optional fields in the published schema are cleared, except for the
+	// authentication binding described below. To preserve sibling fields, use
+	// granular paths: `comment`; `config.provider` to replace the active
 	// provider-specific value (for example, `config.openai`; the mask path
 	// remains `config.provider`); `config.allow_all_targets`, `config.targets`,
 	// `config.forward_headers`, `config.forward_query_parameters`,
@@ -44163,13 +44243,13 @@ type UpdateModelServiceRequest_SdkV2 struct {
 	// the name on Create from `parent` and `model_service_id`; it is required
 	// and immutable on Update, Get, and Delete.
 	Name types.String `tfsdk:"-"`
-	// Fields to update. Use `config` to replace the entire configuration. The
-	// replacement must include every required field; any optional field you
-	// omit is cleared. To preserve sibling fields, use one or more granular
-	// paths: `comment`, `config.routing.destinations`,
-	// `config.routing.fallback.destinations`, `config.rate_limits`, or
-	// `config.inference_table`. Intermediate paths such as `config.routing` and
-	// `config.routing.fallback` are not supported.
+	// Fields to update. Use `config` to replace the configuration's supported
+	// fields. The replacement must include every required field. Omitted
+	// optional fields in the published schema are cleared. To preserve sibling
+	// fields, use one or more granular paths: `comment`,
+	// `config.routing.destinations`, `config.routing.fallback.destinations`,
+	// `config.rate_limits`, or `config.inference_table`. Intermediate paths
+	// such as `config.routing` and `config.routing.fallback` are not supported.
 	UpdateMask types.String `tfsdk:"-"`
 }
 
@@ -44281,11 +44361,12 @@ type UpdateModelVersionRequest_SdkV2 struct {
 	CatalogName types.String `tfsdk:"catalog_name"`
 	// The comment attached to the model version
 	Comment types.String `tfsdk:"comment"`
-
+	// Time at which the model version was created, in epoch milliseconds.
 	CreatedAt types.Int64 `tfsdk:"created_at"`
 	// The identifier of the user who created the model version
 	CreatedBy types.String `tfsdk:"created_by"`
-	// The three-level (fully qualified) name of the model version
+	// The three-level (fully qualified) name of the parent registered model, in
+	// the form `catalog_name.schema_name.model_name`.
 	FullName types.String `tfsdk:"-"`
 	// The unique identifier of the model version
 	Id types.String `tfsdk:"id"`
@@ -44316,7 +44397,7 @@ type UpdateModelVersionRequest_SdkV2 struct {
 	// The storage location on the cloud under which model version data files
 	// are stored
 	StorageLocation types.String `tfsdk:"storage_location"`
-
+	// Time at which the model version was last updated, in epoch milliseconds.
 	UpdatedAt types.Int64 `tfsdk:"updated_at"`
 	// The identifier of the user who updated the model version last time
 	UpdatedBy types.String `tfsdk:"updated_by"`
@@ -45047,12 +45128,16 @@ func (m *UpdateMonitor_SdkV2) SetTimeSeries(ctx context.Context, v MonitorTimeSe
 type UpdatePermissions_SdkV2 struct {
 	// Array of permissions change objects.
 	Changes types.List `tfsdk:"changes"`
-	// Full name of securable.
+	// Full name of the securable. Tables, views, volumes and functions use the
+	// three-level name `catalog.schema.object`; a metastore uses its metastore
+	// ID.
 	FullName types.String `tfsdk:"-"`
-	// Optional, default false. Specifies whether all the permissions should be
-	// returned in the response.
+	// Whether to omit the privilege assignments from the response. When false,
+	// the response lists all direct privilege assignments on the securable
+	// after the update.
 	OmitPermissionsInResponse types.Bool `tfsdk:"omit_permissions_in_response"`
-	// Type of securable.
+	// Type of the securable, such as `catalog`, `schema`, `table` or `volume`.
+	// The value is case-insensitive.
 	SecurableType types.String `tfsdk:"-"`
 }
 
@@ -46173,16 +46258,16 @@ type UpdateSkillRequest_SdkV2 struct {
 	// returned by the API when setting the `etag` query parameter.
 	Etag types.String `tfsdk:"-"`
 	// Resource name of the skill. Format: `skills/{catalog}.{schema}.{skill}`.
-	// Each `{...}` component is capped at 255 characters individually.
-	// Server-derived on Create from `parent` + `skill_id`; required and
-	// immutable on Update/Get/Delete.
+	// Each `{...}` component is capped at 255 characters individually. The
+	// server derives the name on Create from `parent` and `skill_id`; it is
+	// required and immutable on Update, Get, and Delete.
 	Name types.String `tfsdk:"-"`
 	// The skill with the updated field values. `name` identifies the resource
 	// (`skills/{catalog}.{schema}.{skill}`); only fields listed in
 	// `update_mask` are applied.
 	Skill types.List `tfsdk:"skill"`
-	// Fields to update; validated against `skill`. REQUIRED, matching the
-	// sibling Update RPCs. `comment` is the only mutable field.
+	// Comma-separated list of `skill` fields to update. `comment` is the only
+	// field that can be updated.
 	UpdateMask types.String `tfsdk:"-"`
 }
 
@@ -46754,11 +46839,11 @@ func (m UpdateVolumeRequestContent_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type UpdateWorkspaceBindings_SdkV2 struct {
-	// A list of workspace IDs.
+	// The IDs of the workspaces to bind to the catalog.
 	AssignWorkspaces types.List `tfsdk:"assign_workspaces"`
 	// The name of the catalog.
 	Name types.String `tfsdk:"-"`
-	// A list of workspace IDs.
+	// The IDs of the workspaces to unbind from the catalog.
 	UnassignWorkspaces types.List `tfsdk:"unassign_workspaces"`
 }
 
@@ -47208,6 +47293,88 @@ func (m *UpdateWorkspaceBindingsResponse_SdkV2) SetBindings(ctx context.Context,
 	t := m.Type(ctx).(basetypes.ObjectType).AttrTypes["bindings"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	m.Bindings = types.ListValueMust(t, vs)
+}
+
+// Access request URLs shared by every workspace in a metastore.
+type UrlConfiguration_SdkV2 struct {
+	// The URL template for access requests on catalogs and the securables
+	// inside them, such as schemas, tables, volumes, functions, and registered
+	// models. Placeholders are replaced with percent-encoded values from the
+	// requested securable: `{catalog}` with the catalog name (`main`),
+	// `{catalog.schema}` with the catalog and schema names (`main.sales`),
+	// `{catalog.schema.object}` with the full name (`main.sales.orders`),
+	// `{securable_type}` with the securable type (`TABLE`), and
+	// `{securable_id}` with the securable ID. Name placeholders leave out
+	// levels the securable does not have, so `{catalog.schema.object}` is
+	// `main.sales` for a schema. When the deepest name placeholder stops above
+	// the requested securable, such as `{catalog.schema}` for a table,
+	// `{securable_type}` and `{securable_id}` describe that parent. If the
+	// filled-in URL is longer than 4,096 characters, the **redirect_url** is
+	// used instead.
+	//
+	// Must start with `http://` or `https://`, contain only printable ASCII
+	// characters without spaces or backslashes, and be at most 2,048
+	// characters. Braces are only allowed around a placeholder.
+	DynamicUrl types.String `tfsdk:"dynamic_url"`
+	// The URL for access requests on the metastore and on securables outside
+	// catalogs, such as external locations, connections, and credentials. Also
+	// used for catalogs and the securables inside them when **dynamic_url** is
+	// not set or cannot produce a valid URL. Must start with `http://` or
+	// `https://`, contain only printable ASCII characters without spaces or
+	// backslashes, and be at most 2,048 characters.
+	RedirectUrl types.String `tfsdk:"redirect_url"`
+	// The version of the placeholder syntax used in **dynamic_url**. The only
+	// supported version is `1`.
+	SyntaxVersion types.Int64 `tfsdk:"syntax_version"`
+}
+
+func (to *UrlConfiguration_SdkV2) SyncFieldsDuringCreateOrUpdate(ctx context.Context, from UrlConfiguration_SdkV2) {
+}
+
+func (to *UrlConfiguration_SdkV2) SyncFieldsDuringRead(ctx context.Context, from UrlConfiguration_SdkV2) {
+}
+
+func (m UrlConfiguration_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["dynamic_url"] = attrs["dynamic_url"].SetOptional()
+	attrs["redirect_url"] = attrs["redirect_url"].SetOptional()
+	attrs["syntax_version"] = attrs["syntax_version"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in UrlConfiguration.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (m UrlConfiguration_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, UrlConfiguration_SdkV2
+// only implements ToObjectValue() and Type().
+func (m UrlConfiguration_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		m.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"dynamic_url":    m.DynamicUrl,
+			"redirect_url":   m.RedirectUrl,
+			"syntax_version": m.SyntaxVersion,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (m UrlConfiguration_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"dynamic_url":    types.StringType,
+			"redirect_url":   types.StringType,
+			"syntax_version": types.Int64Type,
+		},
+	}
 }
 
 type ValidateCredentialRequest_SdkV2 struct {
@@ -48263,10 +48430,14 @@ func (m *VolumeInfo_SdkV2) SetEncryptionDetails(ctx context.Context, v Encryptio
 	m.EncryptionDetails = types.ListValueMust(t, vs)
 }
 
+// A binding between a workspace and a securable. When the isolation mode of the
+// securable is `ISOLATED`, only bound workspaces can access it.
 type WorkspaceBinding_SdkV2 struct {
-	// One of READ_WRITE/READ_ONLY. Default is READ_WRITE.
+	// One of READ_WRITE/READ_ONLY. Default is READ_WRITE. Only catalogs support
+	// `BINDING_TYPE_READ_ONLY`; other securable types accept only
+	// `BINDING_TYPE_READ_WRITE`.
 	BindingType types.String `tfsdk:"binding_type"`
-	// Required
+	// The ID of the workspace that the binding applies to.
 	WorkspaceId types.Int64 `tfsdk:"workspace_id"`
 }
 

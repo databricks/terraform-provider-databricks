@@ -1,0 +1,81 @@
+// Code generated from OpenAPI specs by Databricks SDK Generator. DO NOT EDIT.
+
+package tags
+
+import (
+	"context"
+)
+
+// The Tag Policy API allows you to manage policies for governed tags in
+// Databricks. For Terraform usage, see the [Tag Policy Terraform
+// documentation]. Permissions for tag policies can be managed using the
+// [Account Access Control Proxy API].
+//
+// Deprecated: Do not use this interface, it will be removed in a future version of the SDK.
+//
+// [Account Access Control Proxy API]: https://docs.databricks.com/api/workspace/accountaccesscontrolproxy
+// [Tag Policy Terraform documentation]: https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/tag_policy
+type TagPoliciesService interface {
+
+	// Creates a new tag policy, making the associated tag key governed. For
+	// Terraform usage, see the [Tag Policy Terraform documentation]. To manage
+	// permissions for tag policies, use the [Account Access Control Proxy API].
+	//
+	// [Account Access Control Proxy API]: https://docs.databricks.com/api/workspace/accountaccesscontrolproxy
+	// [Tag Policy Terraform documentation]: https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/tag_policy
+	CreateTagPolicy(ctx context.Context, request CreateTagPolicyRequest) (*TagPolicy, error)
+
+	// Deletes a tag policy by its associated governed tag's key, leaving that
+	// tag key ungoverned. For Terraform usage, see the [Tag Policy Terraform
+	// documentation].
+	//
+	// [Tag Policy Terraform documentation]: https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/tag_policy
+	DeleteTagPolicy(ctx context.Context, request DeleteTagPolicyRequest) error
+
+	// Gets a single tag policy by its associated governed tag's key. For
+	// Terraform usage, see the [Tag Policy Terraform documentation]. To list
+	// granted permissions for tag policies, use the [Account Access Control
+	// Proxy API].
+	//
+	// [Account Access Control Proxy API]: https://docs.databricks.com/api/workspace/accountaccesscontrolproxy
+	// [Tag Policy Terraform documentation]: https://registry.terraform.io/providers/databricks/databricks/latest/docs/data-sources/tag_policy
+	GetTagPolicy(ctx context.Context, request GetTagPolicyRequest) (*TagPolicy, error)
+
+	// Lists the tag policies for all governed tags in the account. For
+	// Terraform usage, see the [Tag Policy Terraform documentation]. To list
+	// granted permissions for tag policies, use the [Account Access Control
+	// Proxy API].
+	//
+	// [Account Access Control Proxy API]: https://docs.databricks.com/api/workspace/accountaccesscontrolproxy
+	// [Tag Policy Terraform documentation]: https://registry.terraform.io/providers/databricks/databricks/latest/docs/data-sources/tag_policies
+	ListTagPolicies(ctx context.Context, request ListTagPoliciesRequest) (*ListTagPoliciesResponse, error)
+
+	// Updates an existing tag policy for a single governed tag. For Terraform
+	// usage, see the [Tag Policy Terraform documentation]. To manage
+	// permissions for tag policies, use the [Account Access Control Proxy API].
+	//
+	// [Account Access Control Proxy API]: https://docs.databricks.com/api/workspace/accountaccesscontrolproxy
+	// [Tag Policy Terraform documentation]: https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/tag_policy
+	UpdateTagPolicy(ctx context.Context, request UpdateTagPolicyRequest) (*TagPolicy, error)
+}
+
+// Manage tag assignments on workspace-scoped objects.
+//
+// Deprecated: Do not use this interface, it will be removed in a future version of the SDK.
+type WorkspaceEntityTagAssignmentsService interface {
+
+	// Create a tag assignment
+	CreateTagAssignment(ctx context.Context, request CreateTagAssignmentRequest) (*TagAssignment, error)
+
+	// Delete a tag assignment
+	DeleteTagAssignment(ctx context.Context, request DeleteTagAssignmentRequest) error
+
+	// Get a tag assignment
+	GetTagAssignment(ctx context.Context, request GetTagAssignmentRequest) (*TagAssignment, error)
+
+	// List the tag assignments for an entity
+	ListTagAssignments(ctx context.Context, request ListTagAssignmentsRequest) (*ListTagAssignmentsResponse, error)
+
+	// Update a tag assignment
+	UpdateTagAssignment(ctx context.Context, request UpdateTagAssignmentRequest) (*TagAssignment, error)
+}

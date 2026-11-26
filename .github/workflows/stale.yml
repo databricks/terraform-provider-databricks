@@ -35,8 +35,8 @@ jobs:
           ascending: true
           debug-only: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run }}
           stale-pr-message: |
-            Marking this pull request as stale because it has been open for 180 days with no activity. This helps our maintainers find and focus on the active pull requests. If this pull request receives no comments or updates in the next 30 days it will automatically be closed. Maintainers can also remove the stale label.
+            Marking this pull request as stale because it has been open for 180 days with no activity. If this pull request receives no comments or updates in the next 30 days it will automatically be closed. Maintainers can also remove the stale label.
 
-            If this pull request was automatically closed and you feel this pull request should be reopened, we encourage creating a new pull request linking back to this one for added context. Thank you!
+            This repository is a read-only mirror and does not accept pull requests. To report a bug or request a feature, please open an issue instead. Thank you!
           close-pr-message: |
-            Closing this pull request due to inactivity. If you feel this pull request should be reopened, we encourage creating a new pull request linking back to this one for added context. Thank you!
+            Closing this pull request due to inactivity. This repository is a read-only mirror and does not accept pull requests. To report a bug or request a feature, please open an issue instead. Thank you!

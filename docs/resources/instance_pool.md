@@ -11,7 +11,7 @@ This resource allows you to manage [instance pools](https://docs.databricks.com/
 
 -> It is important to know that different cloud service providers have different `node_type_id`, `disk_specs` and potentially other configurations.
 
--> "auto" `zone_id` is only supported for fleet node types.
+Set `zone_id = "auto"` in `aws_attributes` or `gcp_attributes` to let Databricks select an availability zone for each cluster at launch and retry another zone when capacity is unavailable. All nodes in a cluster use the same zone; different clusters can use different zones. This requires Auto-AZ support to be enabled for the workspace.
 
 ## Example Usage
 
@@ -40,6 +40,10 @@ resource "databricks_instance_pool" "smallest_nodes" {
 }
 ```
 
+## Updating a pool
+
+You can update AWS and GCP `zone_id`, AWS and Azure `availability` and spot bid price, and GCP `gcp_availability` without replacing the pool when the workspace supports these API changes. New clusters use the updated settings; existing clusters retain the settings they launched with. Changing the node type, AWS instance profile, or GCP local SSD count still replaces the pool.
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -62,7 +66,7 @@ The following options are [available](https://docs.databricks.com/dev-tools/api/
 
 * `zone_id` - (Optional) (String) Identifier for the availability zone/datacenter in which the instance pool resides. This string is of the form like `"us-west-2a"`. The provided availability zone must be in the same region as the Databricks deployment. For example, `"us-west-2a"` is not a valid zone ID if the Databricks deployment resides in the `"us-east-1"` region. If not specified, a default zone is used. You can find the list of available zones as well as the default value by using the [List Zones API](https://docs.databricks.com/dev-tools/api/latest/clusters.html#clusterclusterservicelistavailablezones).
 * `spot_bid_price_percent` - (Optional) (Integer) The max price for AWS spot instances, as a percentage of the corresponding instance type's on-demand price. For example, if this field is set to 50, and the instance pool needs a new i3.xlarge spot instance, then the max price is half of the price of on-demand i3.xlarge instances. Similarly, if this field is set to 200, the max price is twice the price of on-demand i3.xlarge instances. If not specified, the *default value is 100*. When spot instances are requested for this instance pool, only spot instances whose max price percentage matches this field are considered. *For safety, this field cannot be greater than 10000.*
-* `availability` - (Optional) (String) Availability type used for all instances in the pool. Only `ON_DEMAND` and `SPOT` are supported.
+* `availability` - (Optional) (String) Availability type used for all instances in the pool. Valid values are `ON_DEMAND`, `SPOT`, and `SPOT_WITH_FALLBACK`. With `SPOT_WITH_FALLBACK`, the pool acquires spot instances first and falls back to on-demand instances when spot capacity is unavailable.
 * `instance_profile_arn` - (Optional) Nodes belonging to the pool will only be placed on AWS instances with this instance profile. Please see [databricks_instance_profile](instance_profile.md) resource documentation for extended examples on adding a valid instance profile using Terraform.
 
 ### azure_attributes Configuration Block
@@ -71,8 +75,8 @@ The following options are [available](https://docs.databricks.com/dev-tools/api/
 
 The following options are [available](https://docs.microsoft.com/en-us/azure/databricks/dev-tools/api/latest/clusters#--azureattributes):
 
-* `availability` - (Optional) Availability type used for all nodes. Valid values are `SPOT_AZURE` and `ON_DEMAND_AZURE`.
-* `spot_bid_max_price` - (Optional) The max bid price used for Azure spot instances. You can set this to greater than or equal to the current spot price. You can also set this to `-1`, which specifies that the instance cannot be evicted on the basis of price. The price for the instance will be the current price for spot instances or the price for a standard instance.
+* `availability` - (Optional) Availability type used for all nodes. Valid values are `SPOT_AZURE`, `ON_DEMAND_AZURE`, and `SPOT_WITH_FALLBACK_AZURE`. With `SPOT_WITH_FALLBACK_AZURE`, the pool acquires spot instances first and falls back to on-demand instances when spot capacity is unavailable.
+* `spot_bid_max_price` - (Optional) The max bid price used for Azure spot instances. You can set this to greater than or equal to the current spot price. You can also set this to `-1`, which specifies that the instance cannot be evicted on the basis of price. The price for the instance will be the current price for spot instances or the price for a standard instance. Defaults to `-1`. An explicit `0` is sent to the API, including on updates.
 
 ### gcp_attributes Configuration Block
 

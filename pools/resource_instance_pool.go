@@ -2,36 +2,35 @@ package pools
 
 import (
 	"context"
-	"strings"
-
-	"github.com/databricks/terraform-provider-databricks/clusters"
-	"github.com/databricks/terraform-provider-databricks/common"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+
+	"github.com/databricks/terraform-provider-databricks/clusters"
+	"github.com/databricks/terraform-provider-databricks/common"
 )
 
 // InstancePoolAwsAttributes contains aws attributes for AWS Databricks deployments for instance pools
 type InstancePoolAwsAttributes struct {
-	Availability        clusters.Availability `json:"availability,omitempty" tf:"force_new"`
-	ZoneID              string                `json:"zone_id,omitempty" tf:"computed,force_new"`
+	Availability        clusters.Availability `json:"availability,omitempty"`
+	ZoneID              string                `json:"zone_id,omitempty" tf:"computed"`
 	InstanceProfileArn  string                `json:"instance_profile_arn,omitempty" tf:"force_new"`
-	SpotBidPricePercent int32                 `json:"spot_bid_price_percent,omitempty" tf:"force_new"`
+	SpotBidPricePercent int32                 `json:"spot_bid_price_percent,omitempty"`
 }
 
 // InstancePoolAzureAttributes contains aws attributes for Azure Databricks deployments for instance pools
 // https://docs.microsoft.com/en-us/azure/databricks/dev-tools/api/latest/instance-pools#clusterinstancepoolazureattributes
 type InstancePoolAzureAttributes struct {
-	Availability    clusters.Availability `json:"availability,omitempty" tf:"force_new"`
-	SpotBidMaxPrice float64               `json:"spot_bid_max_price,omitempty" tf:"force_new"`
+	Availability    clusters.Availability `json:"availability,omitempty"`
+	SpotBidMaxPrice float64               `json:"spot_bid_max_price" tf:"optional"`
 }
 
 // InstancePoolGcpAttributes contains aws attributes for GCP Databricks deployments for instance pools
 // https://docs.gcp.databricks.com/dev-tools/api/latest/instance-pools.html#instancepoolgcpattributes
 type InstancePoolGcpAttributes struct {
-	Availability  clusters.Availability `json:"gcp_availability,omitempty" tf:"force_new"`
+	Availability  clusters.Availability `json:"gcp_availability,omitempty"`
 	LocalSsdCount int32                 `json:"local_ssd_count,omitempty" tf:"computed,force_new"`
-	ZoneID        string                `json:"zone_id,omitempty" tf:"computed,force_new"`
+	ZoneID        string                `json:"zone_id,omitempty" tf:"computed"`
 }
 
 // InstancePoolDiskType contains disk type information for each of the different cloud service providers
@@ -83,10 +82,10 @@ type InstancePool struct {
 	MinIdleInstances                   int32                           `json:"min_idle_instances,omitempty"`
 	MaxCapacity                        int32                           `json:"max_capacity,omitempty" tf:"suppress_diff"`
 	IdleInstanceAutoTerminationMinutes int32                           `json:"idle_instance_autotermination_minutes"`
-	AwsAttributes                      *InstancePoolAwsAttributes      `json:"aws_attributes,omitempty" tf:"force_new,suppress_diff"`
+	AwsAttributes                      *InstancePoolAwsAttributes      `json:"aws_attributes,omitempty" tf:"suppress_diff"`
 	AwsInstancePoolFleetAttributes     *AwsInstancePoolFleetAttributes `json:"instance_pool_fleet_attributes,omitempty" tf:"force_new,suppress_diff,conflicts:node_type_id"`
-	AzureAttributes                    *InstancePoolAzureAttributes    `json:"azure_attributes,omitempty" tf:"force_new,suppress_diff"`
-	GcpAttributes                      *InstancePoolGcpAttributes      `json:"gcp_attributes,omitempty" tf:"force_new,suppress_diff"`
+	AzureAttributes                    *InstancePoolAzureAttributes    `json:"azure_attributes,omitempty" tf:"suppress_diff"`
+	GcpAttributes                      *InstancePoolGcpAttributes      `json:"gcp_attributes,omitempty" tf:"suppress_diff"`
 	NodeTypeID                         string                          `json:"node_type_id,omitempty" tf:"suppress_diff,force_new,conflicts:instance_pool_fleet_attributes"`
 	CustomTags                         map[string]string               `json:"custom_tags" tf:"optional"`
 	EnableElasticDisk                  bool                            `json:"enable_elastic_disk" tf:"optional,force_new,suppress_diff"`
@@ -188,13 +187,11 @@ func ResourceInstancePool() common.Resource {
 			v.ValidateFunc = validation.StringInSlice([]string{
 				clusters.AwsAvailabilityOnDemand,
 				clusters.AwsAvailabilitySpot,
+				clusters.AwsAvailabilitySpotWithFallback,
 			}, false)
 		}
 		if v, err := common.SchemaPath(s, "aws_attributes", "spot_bid_price_percent"); err == nil {
 			v.Default = 100
-		}
-		common.MustSchemaPath(s, "aws_attributes", "zone_id").DiffSuppressFunc = func(k, oldValue, newValue string, d *schema.ResourceData) bool {
-			return oldValue != "" && strings.ToLower(newValue) == "auto"
 		}
 
 		if v, err := common.SchemaPath(s, "azure_attributes", "availability"); err == nil {
@@ -202,12 +199,11 @@ func ResourceInstancePool() common.Resource {
 			v.ValidateFunc = validation.StringInSlice([]string{
 				clusters.AzureAvailabilitySpot,
 				clusters.AzureAvailabilityOnDemand,
+				clusters.AzureAvailabilitySpotWithFallback,
 			}, false)
 		}
 		if v, err := common.SchemaPath(s, "azure_attributes", "spot_bid_max_price"); err == nil {
-			v.DiffSuppressFunc = func(k, oldValue, newValue string, d *schema.ResourceData) bool {
-				return oldValue != "0" && newValue == "0"
-			}
+			v.Default = -1.0
 		}
 		if v, err := common.SchemaPath(s, "gcp_attributes", "gcp_availability"); err == nil {
 			v.Default = clusters.GcpAvailabilityOnDemand

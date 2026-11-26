@@ -1,0 +1,130 @@
+# Runs volume/testdata/update_owner_only_sends_only_the_owner_patch.yaml with
+# databricks_volume on sdk-go uc/volumes/v1 in every step, and expects the same requests
+# and behavior. The original's description:
+#
+# Pins an update that changes only the owner, to another non-empty owner. It sends the
+# owner PATCH alone and no fields PATCH, then reads the volume, and the next plan is
+# empty. API responses are inferred from the Unity Catalog API contract, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: create_with_owner
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: |
+      resource "databricks_volume" "this" {
+        name         = "owner_only_volume"
+        catalog_name = "main"
+        schema_name  = "replay"
+        volume_type  = "MANAGED"
+        owner        = "data-engineers"
+      }
+    calls:
+      - request:
+          method: POST
+          path: /api/2.1/unity-catalog/volumes
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "owner_only_volume", "volume_type": "MANAGED"}
+        response:
+          status: 200
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "owner_only_volume",
+                   "full_name": "main.replay.owner_only_volume",
+                   "volume_type": "MANAGED", "owner": "replay-admin@example.com",
+                   "storage_location": "s3://replay-metastore/volume-237"}
+      - request:
+          method: PATCH
+          path: /api/2.1/unity-catalog/volumes/main.replay.owner_only_volume
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"owner": "data-engineers"}
+        response:
+          status: 200
+          body:
+            json: &engineers {"catalog_name": "main", "schema_name": "replay",
+                              "name": "owner_only_volume",
+                              "full_name": "main.replay.owner_only_volume",
+                              "volume_type": "MANAGED", "owner": "data-engineers",
+                              "storage_location": "s3://replay-metastore/volume-237"}
+      - &read_engineers
+        request: &read_request
+          method: GET
+          path: /api/2.1/unity-catalog/volumes/main.replay.owner_only_volume
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 200
+          body:
+            json: *engineers
+      - *read_engineers
+  - name: owner_only_change_sends_only_the_owner_patch
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: &config_analysts |
+      resource "databricks_volume" "this" {
+        name         = "owner_only_volume"
+        catalog_name = "main"
+        schema_name  = "replay"
+        volume_type  = "MANAGED"
+        owner        = "analysts"
+      }
+    calls:
+      - *read_engineers
+      - request:
+          method: PATCH
+          path: /api/2.1/unity-catalog/volumes/main.replay.owner_only_volume
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"owner": "analysts"}
+        response:
+          status: 200
+          body:
+            json: &analysts {"catalog_name": "main", "schema_name": "replay",
+                             "name": "owner_only_volume",
+                             "full_name": "main.replay.owner_only_volume",
+                             "volume_type": "MANAGED", "owner": "analysts",
+                             "storage_location": "s3://replay-metastore/volume-237"}
+      - &read_analysts
+        request: *read_request
+        response:
+          status: 200
+          body:
+            json: *analysts
+      - *read_analysts
+  - name: plan_after_owner_change_is_empty
+    sdk_implementations:
+      databricks_volume: sdk_go
+    plan_only: true
+    config: *config_analysts
+    plan:
+      expect: empty
+      changes: {}
+    calls:
+      - *read_analysts
+destroy:
+  calls:
+    - *read_analysts
+    - request:
+        method: DELETE
+        path: /api/2.1/unity-catalog/volumes/main.replay.owner_only_volume
+        headers:
+          X-Databricks-Workspace-Id: "12345"
+        body: null
+      response:
+        status: 200
+        body:
+          json: {}

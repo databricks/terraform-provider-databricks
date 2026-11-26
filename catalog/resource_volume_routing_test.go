@@ -420,8 +420,9 @@ func testVolumeWithoutWorkspaceIDSendsNoWorkspaceHeader(t *testing.T, sdkGo bool
 // TestVolumeWorkspaceIDChangeToAnotherWorkspaceFailsUpdate pins a change of
 // provider_config.workspace_id to a workspace other than that of a workspace-level
 // provider. The plan accepts it, and Update fails on the mismatch before any PATCH. The
-// failed update still records the new workspace ID in state, so the next refresh fails
-// on the same mismatch. A replay journey can't pin this, as its destroy would fail too.
+// failed update still records the new workspace ID in state, so the next refresh and a
+// destroy fail on the same mismatch, before any request. A replay journey can't pin
+// this, as its destroy would fail too.
 func TestVolumeWorkspaceIDChangeToAnotherWorkspaceFailsUpdate(t *testing.T) {
 	forEachVolumeClient(t, testVolumeWorkspaceIDChangeToAnotherWorkspaceFailsUpdate)
 }
@@ -457,6 +458,9 @@ func testVolumeWorkspaceIDChangeToAnotherWorkspaceFailsUpdate(t *testing.T, sdkG
 	_, diags = routingRefreshVolume(newClient(), state, sdkGo)
 	require.Len(t, diags, 1)
 	assert.Equal(t, "cannot read volume: "+mismatch, diags[0].Summary)
+	diags = routingDestroyVolume(newClient(), state, sdkGo)
+	require.Len(t, diags, 1)
+	assert.Equal(t, "cannot delete volume: "+mismatch, diags[0].Summary)
 	volumeCall := workspaceHostWorkspaceDomain + ` %s workspace_id=["12345"]`
 	assert.Equal(t, []string{
 		fmt.Sprintf(volumeCall, "POST "+workspaceHostVolumesPath),

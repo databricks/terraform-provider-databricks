@@ -1,0 +1,158 @@
+# Runs volume_lifecycle/testdata/response_extra_fields_keep_the_same_state.yaml with
+# databricks_volume on sdk-go uc/volumes/v1 in every step, and expects the same requests
+# and behavior. The original's description:
+#
+# Pins that response fields the resource doesn't map (encryption_details, browse_only,
+# access_point, created_at, created_by, updated_at, updated_by, volume_id and
+# metastore_id) change nothing. The volume is created from responses without them, and
+# a refresh, a PATCH and reads with them give the same state and no plan changes. API
+# responses are inferred from the Unity Catalog API contract, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: create_from_responses_without_extra_fields
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: &config |
+      resource "databricks_volume" "this" {
+        name         = "extra_fields_volume"
+        catalog_name = "main"
+        schema_name  = "replay"
+        volume_type  = "MANAGED"
+      }
+    calls:
+      - request:
+          method: POST
+          path: /api/2.1/unity-catalog/volumes
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "extra_fields_volume", "volume_type": "MANAGED"}
+        response:
+          status: 200
+          body:
+            json: &minimal {"catalog_name": "main", "schema_name": "replay",
+                            "name": "extra_fields_volume",
+                            "full_name": "main.replay.extra_fields_volume",
+                            "volume_type": "MANAGED", "owner": "replay-admin@example.com",
+                            "storage_location": "s3://replay-metastore/volume-191"}
+      - &read_minimal
+        request: &read_request
+          method: GET
+          path: /api/2.1/unity-catalog/volumes/main.replay.extra_fields_volume
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 200
+          body:
+            json: *minimal
+      - *read_minimal
+    state: &same_state
+      resources:
+        databricks_volume.this:
+          attributes:
+            - path: [id]
+              equals: main.replay.extra_fields_volume
+            - path: [owner]
+              equals: replay-admin@example.com
+            - path: [storage_location]
+              equals: s3://replay-metastore/volume-191
+            - path: [volume_path]
+              equals: /Volumes/main/replay/extra_fields_volume
+  - name: refresh_with_extra_fields_keeps_the_same_state
+    sdk_implementations:
+      databricks_volume: sdk_go
+    plan_only: true
+    config: *config
+    plan:
+      expect: empty
+      changes: {}
+    state: *same_state
+    calls:
+      - &read_extra
+        request: *read_request
+        response:
+          status: 200
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "extra_fields_volume",
+                   "full_name": "main.replay.extra_fields_volume",
+                   "volume_type": "MANAGED", "owner": "replay-admin@example.com",
+                   "storage_location": "s3://replay-metastore/volume-191",
+                   "encryption_details": {"sse_encryption_details": {
+                     "algorithm": "AWS_SSE_KMS",
+                     "aws_kms_key_arn": "arn:aws:kms:us-west-2:111122223333:key/replay"}},
+                   "browse_only": true,
+                   "access_point": "arn:aws:s3:us-west-2:111122223333:accesspoint/replay",
+                   "created_at": 1767225600000, "created_by": "replay-admin@example.com",
+                   "updated_at": 1767225600000, "updated_by": "replay-admin@example.com",
+                   "metastore_id": "11111111-1111-1111-1111-111111111111",
+                   "volume_id": "00000000-0000-4000-8000-000000000191"}
+  - name: update_with_extra_fields_in_responses_keeps_the_same_state
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: |
+      resource "databricks_volume" "this" {
+        name         = "extra_fields_volume"
+        catalog_name = "main"
+        schema_name  = "replay"
+        volume_type  = "MANAGED"
+        comment      = "extra fields"
+      }
+    calls:
+      - *read_extra
+      - request:
+          method: PATCH
+          path: /api/2.1/unity-catalog/volumes/main.replay.extra_fields_volume
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"comment": "extra fields"}
+        response:
+          status: 200
+          body:
+            json: &commented_extra
+              {"catalog_name": "main", "schema_name": "replay",
+               "name": "extra_fields_volume",
+               "full_name": "main.replay.extra_fields_volume",
+               "volume_type": "MANAGED", "comment": "extra fields",
+               "owner": "replay-admin@example.com",
+               "storage_location": "s3://replay-metastore/volume-191",
+               "encryption_details": {"sse_encryption_details": {
+                 "algorithm": "AWS_SSE_KMS",
+                 "aws_kms_key_arn": "arn:aws:kms:us-west-2:111122223333:key/replay"}},
+               "browse_only": true,
+               "access_point": "arn:aws:s3:us-west-2:111122223333:accesspoint/replay",
+               "created_at": 1767225600000, "created_by": "replay-admin@example.com",
+               "updated_at": 1767312000000, "updated_by": "replay-admin@example.com",
+               "metastore_id": "11111111-1111-1111-1111-111111111111",
+               "volume_id": "00000000-0000-4000-8000-000000000191"}
+      - &read_commented_extra
+        request: *read_request
+        response:
+          status: 200
+          body:
+            json: *commented_extra
+      - *read_commented_extra
+    state: *same_state
+destroy:
+  calls:
+    - *read_commented_extra
+    - request:
+        method: DELETE
+        path: /api/2.1/unity-catalog/volumes/main.replay.extra_fields_volume
+        headers:
+          X-Databricks-Workspace-Id: "12345"
+        body: null
+      response:
+        status: 200
+        body:
+          json: {}

@@ -1,0 +1,39 @@
+# Runs volume_schema/testdata/schema_volume_type_is_case_sensitive.yaml with
+# databricks_volume on sdk-go uc/volumes/v1 in every step, and expects the same requests
+# and behavior. The original's description:
+#
+# Pins plan-time validation of volume_type: the validator is case-sensitive, so a
+# lower-case "managed" fails, and an empty string fails too, each before any API call.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: lower_case_volume_type_fails_without_calls
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: |
+      resource "databricks_volume" "this" {
+        name         = "typed_volume"
+        catalog_name = "main"
+        schema_name  = "replay"
+        volume_type  = "managed"
+      }
+    expect_error: 'Error: expected volume_type to be one of \["MANAGED" "EXTERNAL"\], got managed\n'
+    calls: []
+  - name: empty_volume_type_fails_without_calls
+    sdk_implementations:
+      databricks_volume: sdk_go
+    config: |
+      resource "databricks_volume" "this" {
+        name         = "typed_volume"
+        catalog_name = "main"
+        schema_name  = "replay"
+        volume_type  = ""
+      }
+    expect_error: 'Error: expected volume_type to be one of \["MANAGED" "EXTERNAL"\], got \n'
+    calls: []
+destroy:
+  calls: []

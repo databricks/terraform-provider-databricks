@@ -1,8 +1,9 @@
-# This journey pins a DELETE that gets a 503 until retry_timeout_seconds ends. One second
-# is shorter than the SDK's first backoff (1.05 to 1.75 seconds), so exactly one DELETE
-# is sent. Apply fails with the 503's message and the volume stays in state, so planning
-# the volume's configuration again shows no change. API responses are inferred from the
-# Unity Catalog API contract, not recorded.
+# This journey pins a DELETE that gets a 503 until retry_timeout_seconds ends. Three
+# seconds fit the retry after the SDK's first backoff (1.05 to 1.75 seconds) but end
+# during its second (2.05 to 2.75 seconds), so exactly two DELETEs are sent. Apply fails
+# with the last 503's message and the volume stays in state, so planning the volume's
+# configuration again shows no change. API responses are inferred from the Unity Catalog
+# API contract, not recorded.
 version: 1
 enforce_call_order: true
 host_metadata:
@@ -13,7 +14,7 @@ steps:
   - name: create
     config: &config |
       provider "databricks" {
-        retry_timeout_seconds = 1
+        retry_timeout_seconds = 3
       }
       resource "databricks_volume" "this" {
         name         = "write_retry_volume"
@@ -57,7 +58,7 @@ steps:
   - name: delete_retries_until_the_retry_timeout_ends
     config: |
       provider "databricks" {
-        retry_timeout_seconds = 1
+        retry_timeout_seconds = 3
       }
     expect_error: 'Error: cannot delete volume: The service is temporarily
       unavailable\.\n'
@@ -74,6 +75,9 @@ steps:
           body:
             json: {"error_code": "TEMPORARILY_UNAVAILABLE",
                    "message": "The service is temporarily unavailable."}
+        times: 2
+        min_gap: 1s
+        max_gap: 3s
   - name: plan_after_exhausted_delete_keeps_the_volume
     plan_only: true
     config: *config

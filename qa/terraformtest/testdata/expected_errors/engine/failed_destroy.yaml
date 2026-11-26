@@ -1,0 +1,64 @@
+# Engine regression: a destroy expected to fail must match its error, check the state it
+# leaves, and then forget those resources without any request, so cleanup ends with
+# empty state.
+version: 1
+enforce_call_order: true
+host_metadata:
+  workspace_id: "12345"
+steps:
+  - name: create
+    config: |
+      resource "databricks_group" "this" {
+        display_name = "Example group"
+      }
+    calls:
+      - request:
+          method: POST
+          path: /api/2.0/preview/scim/v2/Groups
+          body:
+            json:
+              displayName: Example group
+              schemas: [urn:ietf:params:scim:schemas:core:2.0:Group]
+              entitlements: [{}]
+        response:
+          status: 201
+          body:
+            json:
+              id: group-id
+              displayName: Example group
+      - &read
+        request: &read_request
+          method: GET
+          path: /api/2.0/preview/scim/v2/Groups/group-id
+          query:
+            attributes: ["displayName,externalId,entitlements"]
+          body: null
+        response:
+          status: 200
+          body:
+            json:
+              id: group-id
+              displayName: Example group
+      - *read
+destroy:
+  expect_error: 'Error: cannot delete group: Group group-id cannot be deleted\.'
+  state:
+    resources:
+      databricks_group.this:
+        attributes:
+          - path: [id]
+            equals: group-id
+          - path: [display_name]
+            equals: Example group
+  calls:
+    - *read
+    - request:
+        method: DELETE
+        path: /api/2.0/preview/scim/v2/Groups/group-id
+        body: null
+      response:
+        status: 403
+        body:
+          json:
+            error_code: PERMISSION_DENIED
+            message: Group group-id cannot be deleted.

@@ -1,0 +1,61 @@
+# Pins the import errors for volume full names whose "%" doesn't start a complete escape:
+# one ending in "%" and one ending in "%2". The classic client formats the full name into
+# the path unescaped, so building the GET fails with the URL-parse error and nothing is
+# sent. The error names the incomplete escape, "%" or "%2". The importer drops its own
+# read error, so the error shown comes from Terraform's refresh of the imported ID.
+# Nothing is imported, and the next plan creates the volume.
+# name_with_percent_fails_to_build_the_url pins a "%" followed by two characters that
+# aren't hex digits.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: import_ending_in_percent_fails_before_the_get
+    config: |
+      resource "databricks_volume" "this" {
+        name         = "raw%"
+        catalog_name = "main"
+        schema_name  = "replay"
+        volume_type  = "MANAGED"
+      }
+    import:
+      resource: databricks_volume.this
+      id: main.replay.raw%
+      persist: true
+    expect_error: 'Error: cannot read volume: failed creating new request: parse
+      "/api/2\.1/unity-catalog/volumes/main\.replay\.raw%\?": invalid URL escape "%"\n'
+    calls: []
+  - name: import_ending_in_a_truncated_escape_fails_before_the_get
+    config: &config_truncated |
+      resource "databricks_volume" "this" {
+        name         = "raw%2"
+        catalog_name = "main"
+        schema_name  = "replay"
+        volume_type  = "MANAGED"
+      }
+    import:
+      resource: databricks_volume.this
+      id: main.replay.raw%2
+      persist: true
+    expect_error: 'Error: cannot read volume: failed creating new request: parse
+      "/api/2\.1/unity-catalog/volumes/main\.replay\.raw%2\?": invalid URL escape "%2"\n'
+    calls: []
+  - name: plan_after_failed_imports_creates_the_volume
+    plan_only: true
+    config: *config_truncated
+    plan:
+      expect: non_empty
+      changes:
+        databricks_volume.this:
+          actions: [create]
+          after:
+            - path: [name]
+              equals: raw%2
+            - path: [id]
+              unknown: true
+    calls: []
+destroy:
+  calls: []

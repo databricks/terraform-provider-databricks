@@ -125,5 +125,8 @@ func configureProviderImplementations(d *testDefinition, tc *resource.TestCase, 
 	if index := retained[len(retained)-1]; index >= 0 {
 		cleanup = d.Steps[index].ProviderImplementations
 	}
-	tc.Steps[len(d.Steps)].ProtoV6ProviderFactories = providerFactories(customize, cleanup)
+	// The destroy and the step that forgets what a failed destroy leaves share these.
+	for i := len(d.Steps); i < len(tc.Steps); i++ {
+		tc.Steps[i].ProtoV6ProviderFactories = providerFactories(customize, cleanup)
+	}
 }

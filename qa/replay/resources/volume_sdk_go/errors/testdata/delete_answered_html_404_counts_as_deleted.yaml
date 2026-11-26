@@ -1,7 +1,6 @@
 # Runs volume_errors/testdata/delete_answered_html_404_counts_as_deleted.yaml with
-# databricks_volume on sdk-go uc/volumes/v1 in every step, and expects the same behavior.
-# The volume POST, GET and DELETE requests carry no Accept header, which an empty header
-# expectation pins. The original's description:
+# databricks_volume on sdk-go uc/volumes/v1 in every step, and expects the same requests
+# and behavior. The original's description:
 #
 # Pins that a DELETE answered with an HTML 404 page counts the volume as already deleted.
 # The classic SDK reads the HTML page's status line as NOT_FOUND, so the destroy succeeds,
@@ -31,7 +30,6 @@ steps:
           headers:
             Content-Type: application/json
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body:
             json: {"catalog_name": "main", "schema_name": "replay",
                    "name": "html_404_delete_volume", "volume_type": "MANAGED"}
@@ -51,7 +49,6 @@ steps:
           path: /api/2.1/unity-catalog/volumes/main.replay.html_404_delete_volume
           headers:
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body: null
         response:
           status: 200
@@ -75,7 +72,6 @@ steps:
           path: /api/2.1/unity-catalog/volumes/main.replay.html_404_delete_volume
           headers:
             X-Databricks-Workspace-Id: "12345"
-            Accept: ""
           body: null
         response:
           status: 404

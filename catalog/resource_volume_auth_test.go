@@ -25,12 +25,11 @@ import (
 )
 
 // These tests pin the credential headers and token requests of databricks_volume
-// refreshes for credential types other than the PAT that request_headers.yaml pins.
-// YAML replay can't express them: its client customizer forces PAT authentication,
-// and its transport rejects the Azure AD, Azure instance metadata and Google token
-// hosts. Here one httptest server answers every host, through a transport that keeps
-// each request's original host, and the provider's PrepareDatabricksClient builds the
-// client with the SDK's default credential strategies.
+// refreshes when the SDK picks the credentials through its default chain, without an
+// auth type. A replay journey's auth always sets the type. Here one httptest server
+// answers every host, through a transport that keeps each request's original host, and
+// the provider's PrepareDatabricksClient builds the client with the SDK's default
+// credential strategies. The auth_ replay journeys pin explicit auth types.
 
 const (
 	authVolumeID   = "main.replay.auth_volume"
@@ -41,22 +40,13 @@ const (
 		"storage_location": "s3://replay-metastore/volume-199",
 		"metastore_id": "11111111-1111-1111-1111-111111111111",
 		"volume_id": "00000000-0000-4000-8000-000000000199"}`
-	authAWSHost    = workspaceHostWorkspaceDomain
-	authAzureHost  = "adb-12345.6.azuredatabricks.net"
-	authGCPHost    = "12345.6.gcp.databricks.com"
-	authAADToken   = "login.microsoftonline.com/replay-tenant/oauth2/token"
-	authMSIToken   = "169.254.169.254/metadata/identity/oauth2/token"
-	authGoogleURL  = "oauth2.googleapis.com/token"
-	authAzureAppID = "2ff814a6-3304-4ab8-85cb-cd0e6f879c1d"
-	authAzureMgmt  = "https://management.core.windows.net/"
-	authAzureWSID  = "/subscriptions/replay-subscription/resourceGroups/replay-group" +
-		"/providers/Microsoft.Databricks/workspaces/replay-workspace"
+	authAWSHost           = workspaceHostWorkspaceDomain
+	authGCPHost           = "12345.6.gcp.databricks.com"
+	authGoogleURL         = "oauth2.googleapis.com/token"
 	authGCPAccount        = "replay-sa@replay-project.iam.gserviceaccount.com"
 	authOIDCDiscoveryPath = "/oidc/.well-known/oauth-authorization-server"
 	authM2MRejected       = `{"error": "invalid_client",` +
 		` "error_description": "Bad secret"}`
-	authAADRejected = `{"error": "invalid_client", "error_description": ` +
-		`"AADSTS7000215: Invalid client secret provided. Trace ID: 1"}`
 	authGoogleRejected = `{"error": "invalid_grant", "error_description": "Bad JWT"}`
 )
 
@@ -332,6 +322,7 @@ var authFailedDefaultChain = []authExchange{
 	authOIDCDiscovery,
 }
 
+// Replay sets an auth type, so the default chain's choice of basic auth stays in Go.
 func TestVolumeAuthBasicSendsBasicAuthorization(t *testing.T) {
 	s := &authServer{metadata: authAWSMetadata(), script: []authExchange{
 		authVolumeRead(authAWSHost, map[string]string{
@@ -342,6 +333,7 @@ func TestVolumeAuthBasicSendsBasicAuthorization(t *testing.T) {
 		Username: "replay-user", Password: "replay-password"}).assertSucceeded(t)
 }
 
+// Replay sets an auth type, so the default chain's choice of OAuth M2M stays in Go.
 func TestVolumeAuthM2MSendsBearerToken(t *testing.T) {
 	// The default chain fetches the token in its dry run, and the GET reuses it.
 	s := &authServer{metadata: authAWSMetadata(), script: []authExchange{
@@ -353,84 +345,23 @@ func TestVolumeAuthM2MSendsBearerToken(t *testing.T) {
 	refreshAuthVolume(t, s, authM2MConfig("")).assertSucceeded(t)
 }
 
-func TestVolumeAuthM2MTokenEndpointFailure(t *testing.T) {
-	tests := []struct {
-		name     string
-		authType string
-		script   []authExchange
-		summary  string
-	}{
-		{
-			// Without a dry run, the token fails in the GET's request visitor, which
-			// doesn't retry.
-			name:     "explicit_auth_type",
-			authType: "oauth-m2m",
-			script: []authExchange{
-				authOIDCDiscovery,
-				authM2MToken(http.StatusUnauthorized, authM2MRejected),
-			},
-			summary: `cannot read volume: failed during request visitor: error ` +
-				`getting token: Post "https://` + authAWSHost + `/oidc/v1/token": ` +
-				authM2MRejected,
-		},
-		{
-			// A failed chain isn't kept, so it runs twice: when the provider builds the
-			// workspace client, whose serving data plane asks for a token source, and in
-			// the GET's request visitor.
-			name:   "default_chain",
-			script: slices.Concat(authFailedDefaultChain, authFailedDefaultChain),
-			summary: "cannot read volume: failed during request visitor: default auth: " +
-				"cannot configure default credentials, please check https://docs." +
-				"databricks.com/en/dev-tools/auth.html#databricks-client-unified-" +
-				"authentication to configure credentials for your preferred " +
-				"authentication method. Config: host=https://" + authAWSHost +
-				", workspace_id=12345, client_id=replay-sp, client_secret=***",
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			isolateDefaultChain(t)
-			s := &authServer{metadata: authAWSMetadata(), script: tt.script}
+// Replay sets an auth type, so a failure of the default chain stays in Go.
+func TestVolumeAuthDefaultChainM2MTokenEndpointFailure(t *testing.T) {
+	// A failed chain isn't kept, so it runs twice: when the provider builds the
+	// workspace client, whose serving data plane asks for a token source, and in the
+	// GET's request visitor.
+	isolateDefaultChain(t)
+	s := &authServer{metadata: authAWSMetadata(),
+		script: slices.Concat(authFailedDefaultChain, authFailedDefaultChain)}
 
-			a := refreshAuthVolume(t, s, authM2MConfig(tt.authType))
+	a := refreshAuthVolume(t, s, authM2MConfig(""))
 
-			a.assertFailed(t, tt.summary)
-		})
-	}
-}
-
-func TestVolumeAuthM2MTokenEndpointNotFoundDropsVolume(t *testing.T) {
-	// The SDK maps a token endpoint's 404 to apierr.ErrNotFound, so the provider treats
-	// the volume as deleted, and the next plan creates it.
-	s := &authServer{metadata: authAWSMetadata(), script: []authExchange{
-		authOIDCDiscovery,
-		authM2MToken(http.StatusNotFound, `{"error": "not_found"}`),
-	}}
-
-	a := refreshAuthVolume(t, s, authM2MConfig("oauth-m2m"))
-
-	assert.False(t, a.diags.HasError(), "%v", a.diags)
-	assert.Nil(t, a.state)
-	require.NotNil(t, a.plan)
-	assert.Equal(t, &terraform.ResourceAttrDiff{New: "auth_volume"},
-		a.plan.Attributes["name"])
-	assert.True(t, a.plan.Attributes["volume_path"].NewComputed)
-}
-
-func TestVolumeAuthM2MAuthenticatesEachRetriedAttempt(t *testing.T) {
-	// The first token expires during the 1.05 to 1.75 s backoff after the 429, so the
-	// retried GET fetches and sends a second token.
-	s := &authServer{metadata: authAWSMetadata(), script: []authExchange{
-		authOIDCDiscovery,
-		authM2MToken(http.StatusOK, authBearerToken("m2m-token-1", 1)),
-		{authRequest{method: "GET", url: authAWSHost + authVolumePath,
-			headers: map[string]string{"Authorization": "Bearer m2m-token-1"}},
-			http.StatusTooManyRequests, tooManyRequestsJSON},
-		authM2MToken(http.StatusOK, authBearerToken("m2m-token-2", 3600)),
-		authBearerRead("m2m-token-2"),
-	}}
-
-	refreshAuthVolume(t, s, authM2MConfig("oauth-m2m")).assertSucceeded(t)
+	a.assertFailed(t, "cannot read volume: failed during request visitor: default auth: "+
+		"cannot configure default credentials, please check https://docs."+
+		"databricks.com/en/dev-tools/auth.html#databricks-client-unified-"+
+		"authentication to configure credentials for your preferred "+
+		"authentication method. Config: host=https://"+authAWSHost+
+		", workspace_id=12345, client_id=replay-sp, client_secret=***")
 }
 
 // authSeveralSourcesConfig sets a PAT, a username and password, and an OAuth client.
@@ -440,36 +371,7 @@ func authSeveralSourcesConfig(authType string) *config.Config {
 		ClientID: "replay-sp", ClientSecret: "replay-secret"}
 }
 
-func TestVolumeAuthExplicitAuthTypeSelectsOneSource(t *testing.T) {
-	tests := []struct {
-		authType string
-		script   []authExchange
-	}{
-		{"pat", []authExchange{
-			authBearerRead("replay-pat"),
-		}},
-		{"basic", []authExchange{
-			authVolumeRead(authAWSHost, map[string]string{
-				"Authorization": basicAuthorization("replay-user", "replay-password")}),
-		}},
-		{"oauth-m2m", []authExchange{
-			authOIDCDiscovery,
-			authM2MToken(http.StatusOK, authBearerToken("m2m-token", 3600)),
-			authBearerRead("m2m-token"),
-		}},
-	}
-	for _, tt := range tests {
-		t.Run(tt.authType, func(t *testing.T) {
-			s := &authServer{metadata: authAWSMetadata(), script: tt.script}
-
-			a := refreshAuthVolume(t, s, authSeveralSourcesConfig(tt.authType))
-
-			a.assertSucceeded(t)
-			assert.Equal(t, tt.authType, a.client.Config.AuthType)
-		})
-	}
-}
-
+// Replay sets an auth type, so rejecting several sources without one stays in Go.
 func TestVolumeAuthSeveralSourcesWithoutAuthTypeFailConfiguration(t *testing.T) {
 	s := &authServer{metadata: authAWSMetadata()}
 
@@ -481,6 +383,7 @@ func TestVolumeAuthSeveralSourcesWithoutAuthTypeFailConfiguration(t *testing.T) 
 	assert.Empty(t, s.received())
 }
 
+// Replay sets an auth type and rejects DATABRICKS_OIDC_TOKEN, so this stays in Go.
 func TestVolumeAuthDefaultChainFallsBackAfterFailedDryRun(t *testing.T) {
 	// OAuth M2M fails its dry run, github-oidc finds no GitHub token, and env-oidc
 	// exchanges the OIDC token variable for a Databricks token with the same client ID.

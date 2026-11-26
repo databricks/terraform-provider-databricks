@@ -6,10 +6,7 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"encoding/pem"
-	"fmt"
 	"net/http"
-	"net/url"
-	"slices"
 	"sync"
 	"testing"
 
@@ -18,9 +15,12 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// These tests pin the Azure and Google credential headers and token requests of
+// These tests pin the Google credential headers and token requests of
 // databricks_volume refreshes, with the server and helpers of
-// resource_volume_auth_test.go.
+// resource_volume_auth_test.go. Replay cannot serve Google auth: google-credentials
+// signs its token request with a private key that a journey would have to commit, and
+// google-id calls Google's IAM API with a client outside the provider's transport. The
+// auth_azure_ replay journeys pin the Azure credential types.
 
 // authGoogleKey is a service account key generated once, so that no key is checked in.
 var authGoogleKey = sync.OnceValue(func() string {
@@ -82,125 +82,24 @@ var authGoogleSuccess = []authExchange{
 	}),
 }
 
-// authAADClientCredentials is the client_credentials request of Azure service
-// principal replay-azure-sp for resource, with its secret in the Authorization header.
-func authAADClientCredentials(resource string, status int, response string) authExchange {
-	return authExchange{authRequest{method: "POST", url: authAADToken,
-		body: "grant_type=client_credentials&resource=" + url.QueryEscape(resource),
-		headers: map[string]string{"Authorization": basicAuthorization(
-			"replay-azure-sp", "replay-azure-secret")}}, status, response}
-}
-
-// authAADRejectedTwice is the rejection of the client_credentials request for
-// resource, and of the retry that oauth2 sends with the secret in the body instead.
-func authAADRejectedTwice(resource string) []authExchange {
-	return []authExchange{
-		authAADClientCredentials(resource, http.StatusUnauthorized, authAADRejected),
-		{authRequest{method: "POST", url: authAADToken,
-			body: "client_id=replay-azure-sp&client_secret=replay-azure-secret" +
-				"&grant_type=client_credentials&resource=" + url.QueryEscape(resource),
-			headers: map[string]string{}},
-			http.StatusUnauthorized, authAADRejected},
-	}
-}
-
-// authMSIRequest is the Azure instance metadata token request for resource.
-func authMSIRequest(resource, token string) authExchange {
-	return authExchange{authRequest{method: "GET", url: authMSIToken +
-		"?api-version=2018-02-01&resource=" + url.QueryEscape(resource),
-		headers: map[string]string{"Metadata": "true"}}, http.StatusOK,
-		fmt.Sprintf(`{"token_type": "Bearer", "access_token": %q,
-			"expires_on": 4102444800}`, token)}
-}
-
-func authAzureClientSecretConfig(*testing.T) *config.Config {
-	return &config.Config{Host: "https://" + authAzureHost,
-		AuthType: "azure-client-secret", AzureResourceID: authAzureWSID,
-		AzureTenantID: "replay-tenant",
-		AzureClientID: "replay-azure-sp", AzureClientSecret: "replay-azure-secret"}
-}
-
-func authGoogleCredentialsConfig(t *testing.T) *config.Config {
-	return authGoogleConfig(t, "google-credentials")
-}
-
-func TestVolumeAuthCloudCredentials(t *testing.T) {
+// Replay cannot serve google-credentials auth, so its token requests stay in Go.
+func TestVolumeAuthGoogleCredentials(t *testing.T) {
 	tests := []struct {
-		name     string
-		metadata string
-		config   func(t *testing.T) *config.Config
-		script   []authExchange
+		name   string
+		script []authExchange
 		// summary is the refresh error, or empty if the refresh succeeds.
 		summary string
 	}{
 		{
-			name:     "azure_client_secret",
-			metadata: authCloudMetadata("Azure"),
-			config:   authAzureClientSecretConfig,
-			script: []authExchange{
-				authAADClientCredentials(authAzureAppID, http.StatusOK,
-					authBearerToken("aad-token", 3600)),
-				authAADClientCredentials(authAzureMgmt, http.StatusOK,
-					authBearerToken("management-token", 3600)),
-				authVolumeRead(authAzureHost, map[string]string{
-					"Authorization":                            "Bearer aad-token",
-					"X-Databricks-Azure-Sp-Management-Token":   "management-token",
-					"X-Databricks-Azure-Workspace-Resource-Id": authAzureWSID,
-				}),
-			},
-		},
-		{
-			name:     "azure_msi",
-			metadata: authCloudMetadata("Azure"),
-			config: func(*testing.T) *config.Config {
-				return &config.Config{Host: "https://" + authAzureHost,
-					AuthType: "azure-msi", AzureResourceID: authAzureWSID,
-					AzureUseMSI: true}
-			},
-			script: []authExchange{
-				authMSIRequest(authAzureAppID, "msi-token"),
-				authMSIRequest(authAzureMgmt, "msi-management-token"),
-				authVolumeRead(authAzureHost, map[string]string{
-					"Authorization":                            "Bearer msi-token",
-					"X-Databricks-Azure-Sp-Management-Token":   "msi-management-token",
-					"X-Databricks-Azure-Workspace-Resource-Id": authAzureWSID,
-				}),
-			},
-		},
-		{
-			name:     "google_credentials",
-			metadata: authCloudMetadata("GCP"),
-			config:   authGoogleCredentialsConfig,
-			script:   authGoogleSuccess,
-		},
-		{
-			name:     "azure_primary_token_fails",
-			metadata: authCloudMetadata("Azure"),
-			config:   authAzureClientSecretConfig,
-			script:   authAADRejectedTwice(authAzureAppID),
-			summary: "cannot read volume: failed during request visitor: inner token: " +
-				`Post "https://` + authAADToken + `": ` +
-				"AADSTS7000215: Invalid client secret provided",
-		},
-		{
-			name:     "azure_required_secondary_token_fails",
-			metadata: authCloudMetadata("Azure"),
-			config:   authAzureClientSecretConfig,
-			script: slices.Concat([]authExchange{authAADClientCredentials(authAzureAppID,
-				http.StatusOK, authBearerToken("aad-token", 3600))},
-				authAADRejectedTwice(authAzureMgmt)),
-			summary: "cannot read volume: failed during request visitor: cloud token: " +
-				`Post "https://` + authAADToken + `": ` +
-				"AADSTS7000215: Invalid client secret provided",
+			name:   "both_tokens",
+			script: authGoogleSuccess,
 		},
 		{
 			// The Google client fetches the ID token when the strategy is configured, so
 			// the error is the chain's, not the visitor's inner token error. A failed
 			// configuration isn't kept, so the GET's request visitor configures it again
 			// after the workspace client did.
-			name:     "google_primary_token_fails",
-			metadata: authCloudMetadata("GCP"),
-			config:   authGoogleCredentialsConfig,
+			name: "primary_token_fails",
 			script: []authExchange{
 				authGoogleIDToken(http.StatusBadRequest, authGoogleRejected),
 				authGoogleIDToken(http.StatusBadRequest, authGoogleRejected),
@@ -212,9 +111,7 @@ func TestVolumeAuthCloudCredentials(t *testing.T) {
 				", workspace_id=12345, google_credentials=***",
 		},
 		{
-			name:     "google_optional_secondary_token_fails",
-			metadata: authCloudMetadata("GCP"),
-			config:   authGoogleCredentialsConfig,
+			name: "optional_secondary_token_fails",
 			script: []authExchange{
 				authGoogleIDToken(http.StatusOK, `{"id_token": "`+authIDToken+`"}`),
 				authGoogleAccessToken(http.StatusBadRequest, authGoogleRejected),
@@ -225,9 +122,9 @@ func TestVolumeAuthCloudCredentials(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := &authServer{metadata: tt.metadata, script: tt.script}
+			s := &authServer{metadata: authCloudMetadata("GCP"), script: tt.script}
 
-			a := refreshAuthVolume(t, s, tt.config(t))
+			a := refreshAuthVolume(t, s, authGoogleConfig(t, "google-credentials"))
 
 			if tt.summary == "" {
 				a.assertSucceeded(t)
@@ -238,6 +135,7 @@ func TestVolumeAuthCloudCredentials(t *testing.T) {
 	}
 }
 
+// Replay cannot serve Google auth, so the deprecated Google auth types stay in Go.
 func TestVolumeAuthDeprecatedGoogleAuthTypes(t *testing.T) {
 	t.Run("google-creds", func(t *testing.T) {
 		s := &authServer{metadata: authCloudMetadata("GCP"), script: authGoogleSuccess}

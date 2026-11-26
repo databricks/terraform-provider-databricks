@@ -1,0 +1,61 @@
+# The provider reads DATABRICKS_USER_AGENT_EXTRA once, when its process starts, and
+# adds each product to the User-Agent after the SDK's own. The runner therefore
+# runs this journey in a new test process that starts with the variable. Every
+# other variable that changes the User-Agent is cleared, so the pattern can pin
+# the whole User-Agent, with no agent, CI or runtime dimension at the end.
+version: 1
+host_metadata:
+  workspace_id: "12345"
+environment:
+  DATABRICKS_USER_AGENT_EXTRA: partner-a/1.2.3 team_b/0.0.1
+steps:
+  - name: create
+    config: |
+      resource "databricks_directory" "this" {
+        path = "/Shared/replay-environment"
+      }
+    calls:
+      - request:
+          method: POST
+          path: /api/2.0/workspace/mkdirs
+          matchers: &user_agent
+            headers:
+              User-Agent:
+                pattern: 'databricks-tf-provider/\S+ databricks-sdk-go/\S+ go/\S+ os/\S+ partner-a/1\.2\.3 team_b/0\.0\.1 terraform/\S+ sdk/sdkv2 resource/directory auth/pat'
+          body:
+            json:
+              path: /Shared/replay-environment
+        response:
+          status: 200
+          body:
+            json: {}
+      - &read
+        request:
+          method: GET
+          path: /api/2.0/workspace/get-status
+          query:
+            path: [/Shared/replay-environment]
+          matchers: *user_agent
+          body: null
+        response:
+          status: 200
+          body:
+            json:
+              path: /Shared/replay-environment
+              object_type: DIRECTORY
+              object_id: 2002
+      - *read
+destroy:
+  calls:
+    - *read
+    - request:
+        method: POST
+        path: /api/2.0/workspace/delete
+        matchers: *user_agent
+        body:
+          json:
+            path: /Shared/replay-environment
+      response:
+        status: 200
+        body:
+          json: {}

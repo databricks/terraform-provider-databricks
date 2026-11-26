@@ -22,6 +22,8 @@ reusable fixtures does not reset the current step or its failures.
 the previous step.
 `Verify` checks the current step for unexpected calls and unused fixtures.
 
+`SetHosts(hosts, defaultHost)` names hosts by the authority (`host` or `host:port`) that requests carry in their `Host` header. A call's `Request.Host` (`host` in YAML) names the host it must match; a call without one matches `defaultHost`, or requests to unnamed authorities when `defaultHost` is empty. Without hosts, every request is on the unnamed host, as before. Calls naming an unknown host fail when installed, so set hosts first. Unexpected and unused calls name their host in errors. The handler only reads the `Host` header; the client's transport decides which hosts reach the server.
+
 Matching includes the method, escaped path, query parameters, JSON body, and
 listed request headers. JSON object key order and whitespace are ignored;
 array order and values matter. An absent body differs from JSON `null`.
@@ -61,6 +63,10 @@ the corresponding sample if supplied; the sample may also be omitted.
 Unlisted headers remain ignored. Unmatched query keys/values remain exact,
 including multiplicity and value order; extra query keys fail.
 
+A pattern requires a present string that the Go regular expression matches in full, as if wrapped in `^(?:...)$`. Write `{pattern: <regular expression>}` as a header or query matcher, and `pattern: <regular expression>` in place of `type` in a JSON matcher. A matcher sets either a type or a pattern. Header and query patterns, like `any_string`, require exactly one value; JSON patterns require a string, not null.
+
+`absent` requires a header to be missing; a header with an empty value fails. It rejects a sample for the same header in `headers`. Query and JSON matchers reject `absent`, because unlisted query keys and JSON fields already fail to match. Header matchers reject `Host`, `Transfer-Encoding` and `Trailer`, which `net/http` keeps outside `Request.Header`; a call's `host` matches the host.
+
 JSON paths use literal string keys and zero-based integer array indices, for
 example `[items, 0, request_id]`. An explicit `path: []` selects a scalar JSON
 body. The target must exist as a string or null sample in `body.json`; null is
@@ -73,6 +79,7 @@ do not modify the original samples, so a future recorder can keep captured
 values alongside these annotations. Response payloads remain literal; there
 are no captures, substitutions, regexes, or magic payload strings/objects.
 `"any_string"` and `"****"` without annotations still match only those strings.
+`AnyString` and `Absent` go in a `Matcher`'s `Type`, as in `Matcher{Type: AnyString}`, and `Matcher{Pattern: ...}` sets a regular expression; patterns exist only in matchers, never in payloads.
 
 ## Consumption and ordering
 
@@ -88,6 +95,16 @@ clear consumption or failures. Reusable fallbacks remain outside ordering,
 but cannot bypass an out-of-order matching consumable call.
 Test-wide reusable exchanges are intended for invariant client initialization,
 such as host metadata; they are not required to be consumed.
+
+`Call.Times` expects a call more than once in a row: `Exactly(n)` with n of at least 1, or `Times{Min: 2, Max: 3}` for a count that depends on timing.
+In YAML it is `times: 3` or `times: {min: 2, max: 3}`.
+`Verify` requires `Min`; a request past `Max` falls through to later fixtures.
+A range is greedy, so an identical signature listed after it matches only once the range reaches `Max`.
+Under ordering, a call must reach `Min` before a later call matches, and closes once one does.
+`Call.MinGap` and `Call.MaxGap` are Go durations bounding the time since the previous matched step call's arrival or, with `Times`, since the call's previous repetition; the first repetition is not bounded.
+Arrival is taken when `ServeHTTP` starts, before the body is read.
+`Verify` checks gaps in arrival order, whatever order concurrent requests took the lock in, and reports an out-of-bounds gap with the observed gap; the call is still answered.
+Reusable fixtures reject these fields.
 
 ## Files and non-JSON bodies
 

@@ -1,0 +1,134 @@
+# This journey pins Azure MSI auth. Each Terraform command asks the instance metadata
+# service for a token for Azure Databricks and one for Azure management, with the
+# Metadata header and no credentials. Every volume call sends the first as a bearer
+# token, the second as X-Databricks-Azure-Sp-Management-Token, and the workspace's
+# resource ID. API responses are inferred from the Azure instance metadata service and
+# Unity Catalog API contracts, not recorded.
+# Credential headers use patterns, not samples, so that a repeated header fails.
+version: 1
+enforce_call_order: true
+provider_host: workspace
+hosts:
+  workspace:
+    url: https://adb-12345.6.azuredatabricks.net
+  imds:
+    url: http://169.254.169.254
+host_metadata:
+  host_type: workspace
+  cloud: Azure
+  workspace_id: "12345"
+auth:
+  type: azure-msi
+  azure_use_msi: true
+  azure_workspace_resource_id: /subscriptions/replay-subscription/resourceGroups/replay-group/providers/Microsoft.Databricks/workspaces/replay-workspace
+steps:
+  - name: create
+    config: &config |
+      resource "databricks_volume" "this" {
+        name         = "auth_volume"
+        catalog_name = "main"
+        schema_name  = "replay"
+        volume_type  = "MANAGED"
+      }
+    calls:
+      - &databricks_token
+        request:
+          method: GET
+          host: imds
+          path: /metadata/identity/oauth2/token
+          query:
+            api-version: ["2018-02-01"]
+            resource: ["2ff814a6-3304-4ab8-85cb-cd0e6f879c1d"]
+          matchers: &only_metadata
+            headers:
+              Authorization: absent
+              Metadata: {pattern: 'true'}
+              X-Databricks-Azure-Sp-Management-Token: absent
+              X-Databricks-Azure-Workspace-Resource-Id: absent
+              X-Databricks-Gcp-Sa-Access-Token: absent
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"access_token": "msi-token", "token_type": "Bearer",
+                   "expires_on": 4102444800}
+      - &management_token
+        request:
+          method: GET
+          host: imds
+          path: /metadata/identity/oauth2/token
+          query:
+            api-version: ["2018-02-01"]
+            resource: ["https://management.core.windows.net/"]
+          matchers: *only_metadata
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"access_token": "msi-management-token", "token_type": "Bearer",
+                   "expires_on": 4102444800}
+      - request:
+          method: POST
+          path: /api/2.1/unity-catalog/volumes
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          matchers: &azure_credentials
+            headers:
+              Authorization: {pattern: 'Bearer msi-token'}
+              Metadata: absent
+              X-Databricks-Azure-Sp-Management-Token: {pattern: 'msi-management-token'}
+              X-Databricks-Azure-Workspace-Resource-Id: {pattern: '/subscriptions/replay-subscription/resourceGroups/replay-group/providers/Microsoft\.Databricks/workspaces/replay-workspace'}
+              X-Databricks-Gcp-Sa-Access-Token: absent
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "auth_volume", "volume_type": "MANAGED"}
+        response: &volume
+          status: 200
+          body:
+            json: {"catalog_name": "main", "schema_name": "replay",
+                   "name": "auth_volume", "full_name": "main.replay.auth_volume",
+                   "volume_type": "MANAGED", "owner": "replay-admin@example.com",
+                   "storage_location": "s3://replay-metastore/volume-199",
+                   "metastore_id": "11111111-1111-1111-1111-111111111111",
+                   "volume_id": "00000000-0000-4000-8000-000000000199"}
+      - &read_volume
+        request:
+          method: GET
+          path: /api/2.1/unity-catalog/volumes/main.replay.auth_volume
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          matchers: *azure_credentials
+          body: null
+        response: *volume
+      # The post-apply plan configures a new provider, which fetches its own tokens.
+      - *databricks_token
+      - *management_token
+      - *read_volume
+    state:
+      resources:
+        databricks_volume.this:
+          attributes:
+            - path: [id]
+              equals: main.replay.auth_volume
+            - path: [provider_config, 0, workspace_id]
+              equals: "12345"
+destroy:
+  calls:
+    # The refresh, then the destroy.
+    - *databricks_token
+    - *management_token
+    - *read_volume
+    - *databricks_token
+    - *management_token
+    - request:
+        method: DELETE
+        path: /api/2.1/unity-catalog/volumes/main.replay.auth_volume
+        headers:
+          X-Databricks-Workspace-Id: "12345"
+        matchers: *azure_credentials
+        body: null
+      response:
+        status: 200
+        body:
+          json: {}

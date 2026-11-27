@@ -1,0 +1,148 @@
+# Pins adopting an existing account-level service principal on AWS with import, then
+# updating it. API responses are inferred from the SCIM API contract, not recorded. An
+# empty X-Databricks-Workspace-Id expectation matches only requests without that header.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: account
+  cloud: AWS
+  account_id: replay-account
+steps:
+  - name: import_existing_into_state
+    config: |
+      provider "databricks" {
+        account_id = "replay-account"
+      }
+
+      resource "databricks_service_principal" "this" {
+        display_name = "SPN existing"
+      }
+    import:
+      resource: databricks_service_principal.this
+      id: "201"
+      persist: true
+    calls:
+      - &read_existing
+        request: &read_request
+          method: GET
+          path: /api/2.0/accounts/replay-account/scim/v2/ServicePrincipals/201
+          query:
+            attributes: ["userName,displayName,active,externalId,entitlements"]
+          headers:
+            X-Databricks-Workspace-Id: ""
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "id": "201", "applicationId": "00000000-0000-4000-8000-000000000001",
+                   "displayName": "SPN existing", "active": true}
+      - *read_existing
+  - name: plan_after_import_is_empty
+    plan_only: true
+    config: |
+      provider "databricks" {
+        account_id = "replay-account"
+      }
+
+      resource "databricks_service_principal" "this" {
+        display_name = "SPN existing"
+      }
+    plan:
+      expect: empty
+      changes: {}
+    state:
+      resources:
+        databricks_service_principal.this:
+          attributes:
+            - path: [id]
+              equals: "201"
+            - path: [application_id]
+              equals: 00000000-0000-4000-8000-000000000001
+    calls:
+      - *read_existing
+  - name: update_imported_service_principal
+    config: &updated_config |
+      provider "databricks" {
+        account_id = "replay-account"
+      }
+
+      resource "databricks_service_principal" "this" {
+        display_name     = "SPN adopted"
+        workspace_access = true
+      }
+    plan:
+      expect: non_empty
+      changes:
+        databricks_service_principal.this:
+          actions: [update]
+    calls:
+      - *read_existing
+      - request:
+          method: GET
+          path: /api/2.0/accounts/replay-account/scim/v2/ServicePrincipals/201
+          query:
+            attributes: ["groups,roles"]
+          headers:
+            X-Databricks-Workspace-Id: ""
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "id": "201",
+                   "groups": [{"display": "data-engineers", "type": "direct",
+                               "value": "301", "$ref": "Groups/301"}]}
+      - request:
+          method: PUT
+          path: /api/2.0/accounts/replay-account/scim/v2/ServicePrincipals/201
+          headers:
+            Content-Type: application/scim+json; charset=utf-8
+            X-Databricks-Workspace-Id: ""
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "displayName": "SPN adopted", "active": true,
+                   "entitlements": [{"value": "workspace-access"}],
+                   "groups": [{"display": "data-engineers", "type": "direct",
+                               "value": "301", "$ref": "Groups/301"}]}
+        response:
+          status: 200
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "id": "201", "applicationId": "00000000-0000-4000-8000-000000000001",
+                   "displayName": "SPN adopted", "active": true,
+                   "entitlements": [{"value": "workspace-access"}]}
+      - &read_updated
+        request: *read_request
+        response:
+          status: 200
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "id": "201", "applicationId": "00000000-0000-4000-8000-000000000001",
+                   "displayName": "SPN adopted", "active": true,
+                   "entitlements": [{"value": "workspace-access"}]}
+      - *read_updated
+  - name: plan_after_update_is_empty
+    plan_only: true
+    config: *updated_config
+    plan:
+      expect: empty
+      changes: {}
+    calls:
+      - *read_updated
+destroy:
+  calls:
+    - *read_updated
+    - request:
+        method: PATCH
+        path: /api/2.0/accounts/replay-account/scim/v2/ServicePrincipals/201
+        headers:
+          Content-Type: application/scim+json; charset=utf-8
+          X-Databricks-Workspace-Id: ""
+        body:
+          json: {"schemas": ["urn:ietf:params:scim:api:messages:2.0:PatchOp"],
+                 "Operations": [{"op": "replace", "path": "active",
+                                 "value": [{"value": "false"}]}]}
+      response:
+        status: 200
+        body: null

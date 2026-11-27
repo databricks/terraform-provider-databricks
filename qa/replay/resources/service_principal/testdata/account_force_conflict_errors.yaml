@@ -1,0 +1,96 @@
+# Pins account-level force = true failures on AWS. The provider compares the whole error
+# message with its two known texts. The SDK prefixes a SCIM error's scimType to its
+# detail, so a known detail with a scimType no longer matches. API responses are
+# inferred from the SCIM API contract, not recorded. An empty X-Databricks-Workspace-Id
+# expectation matches only requests without that header.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: account
+  cloud: AWS
+  account_id: replay-account
+steps:
+  - name: force_fails_on_other_conflict_without_scim_type
+    config: &config |
+      provider "databricks" {
+        account_id = "replay-account"
+      }
+
+      resource "databricks_service_principal" "this" {
+        application_id = "00000000-0000-4000-8000-000000000001"
+        display_name   = "SPN forced"
+        force          = true
+      }
+    expect_error: 'Error: cannot create service principal: Service principal is locked by
+      another operation\.'
+    calls:
+      - request: &create_request
+          method: POST
+          path: /api/2.0/accounts/replay-account/scim/v2/ServicePrincipals
+          headers:
+            Content-Type: application/scim+json; charset=utf-8
+            X-Databricks-Workspace-Id: ""
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "applicationId": "00000000-0000-4000-8000-000000000001",
+                   "displayName": "SPN forced", "active": true, "entitlements": [{}]}
+        response:
+          status: 409
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:api:messages:2.0:Error"],
+                   "detail": "Service principal is locked by another operation.",
+                   "status": "409"}
+  - name: force_fails_on_other_conflict_with_scim_type
+    config: *config
+    expect_error: 'Error: cannot create service principal: mutability Service principal is
+      locked by another operation\.'
+    calls:
+      - request: *create_request
+        response:
+          status: 409
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:api:messages:2.0:Error"],
+                   "detail": "Service principal is locked by another operation.",
+                   "status": "409", "scimType": "mutability"}
+  - name: force_fails_on_known_conflict_with_scim_type
+    config: *config
+    expect_error: 'Error: cannot create service principal: uniqueness Service principal
+      with application ID 00000000-0000-4000-8000-000000000001 already exists\.'
+    calls:
+      - request: *create_request
+        response:
+          status: 409
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:api:messages:2.0:Error"],
+                   "detail": "Service principal with application ID
+                              00000000-0000-4000-8000-000000000001 already exists.",
+                   "status": "409", "scimType": "uniqueness"}
+  - name: force_fails_when_conflicting_service_principal_is_not_listed
+    config: *config
+    expect_error: 'Error: cannot create service principal: cannot find SP with ID
+      00000000-0000-4000-8000-000000000001 for force import'
+    calls:
+      - request: *create_request
+        response:
+          status: 409
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:api:messages:2.0:Error"],
+                   "detail": "Service principal with application ID
+                              00000000-0000-4000-8000-000000000001 already exists.",
+                   "status": "409"}
+      - request:
+          method: GET
+          path: /api/2.0/accounts/replay-account/scim/v2/ServicePrincipals
+          query:
+            filter: ['applicationId eq "00000000-0000-4000-8000-000000000001"']
+            excludedAttributes: [roles]
+          headers:
+            X-Databricks-Workspace-Id: ""
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:api:messages:2.0:ListResponse"],
+                   "totalResults": 0, "startIndex": 1, "itemsPerPage": 0}
+destroy:
+  calls: []

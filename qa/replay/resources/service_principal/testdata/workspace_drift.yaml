@@ -1,0 +1,158 @@
+# Pins workspace-level drift detection on AWS when the display name, entitlements and
+# active flag change outside Terraform. Read only sets entitlements present in the
+# response, so the remotely removed allow-cluster-create stays true in refreshed state
+# and the PUT does not need to restore it explicitly. API responses are inferred from
+# the SCIM API contract, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: create
+    config: &config |
+      resource "databricks_service_principal" "this" {
+        display_name         = "SPN drift"
+        allow_cluster_create = true
+      }
+    calls:
+      - request:
+          method: POST
+          path: /api/2.0/preview/scim/v2/ServicePrincipals
+          headers:
+            Content-Type: application/scim+json; charset=utf-8
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "displayName": "SPN drift", "active": true,
+                   "entitlements": [{"value": "allow-cluster-create"}]}
+        response:
+          status: 201
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "id": "201", "applicationId": "00000000-0000-4000-8000-000000000001",
+                   "displayName": "SPN drift", "active": true,
+                   "entitlements": [{"value": "allow-cluster-create"}]}
+      - &read_created
+        request: &read_request
+          method: GET
+          path: /api/2.0/preview/scim/v2/ServicePrincipals/201
+          query:
+            attributes: ["userName,displayName,active,externalId,entitlements"]
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "id": "201", "applicationId": "00000000-0000-4000-8000-000000000001",
+                   "displayName": "SPN drift", "active": true,
+                   "entitlements": [{"value": "allow-cluster-create"}]}
+      - *read_created
+  - name: plan_after_create_is_empty
+    plan_only: true
+    config: *config
+    plan:
+      expect: empty
+      changes: {}
+    calls:
+      - *read_created
+  - name: plan_shows_update_for_remote_drift
+    plan_only: true
+    config: *config
+    plan:
+      expect: non_empty
+      changes:
+        databricks_service_principal.this:
+          actions: [update]
+          before:
+            - path: [display_name]
+              equals: SPN changed remotely
+            - path: [active]
+              equals: false
+            - path: [allow_cluster_create]
+              equals: true
+            - path: [databricks_sql_access]
+              equals: true
+          after:
+            - path: [display_name]
+              equals: SPN drift
+            - path: [active]
+              equals: true
+            - path: [allow_cluster_create]
+              equals: true
+            - path: [databricks_sql_access]
+              equals: false
+    calls:
+      - &read_drifted
+        request: *read_request
+        response:
+          status: 200
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "id": "201", "applicationId": "00000000-0000-4000-8000-000000000001",
+                   "displayName": "SPN changed remotely", "active": false,
+                   "entitlements": [{"value": "databricks-sql-access"}]}
+  - name: apply_reverts_remote_drift
+    config: *config
+    plan:
+      expect: non_empty
+      changes:
+        databricks_service_principal.this:
+          actions: [update]
+    calls:
+      - *read_drifted
+      - request:
+          method: GET
+          path: /api/2.0/preview/scim/v2/ServicePrincipals/201
+          query:
+            attributes: ["groups,roles"]
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "id": "201"}
+      - request:
+          method: PUT
+          path: /api/2.0/preview/scim/v2/ServicePrincipals/201
+          headers:
+            Content-Type: application/scim+json; charset=utf-8
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "displayName": "SPN drift", "active": true,
+                   "entitlements": [{"value": "allow-cluster-create"}]}
+        response:
+          status: 200
+          body:
+            json: {"schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServicePrincipal"],
+                   "id": "201", "applicationId": "00000000-0000-4000-8000-000000000001",
+                   "displayName": "SPN drift", "active": true,
+                   "entitlements": [{"value": "allow-cluster-create"}]}
+      - *read_created
+      - *read_created
+  - name: plan_after_revert_is_empty
+    plan_only: true
+    config: *config
+    plan:
+      expect: empty
+      changes: {}
+    calls:
+      - *read_created
+destroy:
+  calls:
+    - *read_created
+    - request:
+        method: DELETE
+        path: /api/2.0/preview/scim/v2/ServicePrincipals/201
+        headers:
+          X-Databricks-Workspace-Id: "12345"
+        body: null
+      response:
+        status: 204
+        body: null

@@ -1,0 +1,10 @@
+{
+    "makefile.extensionOutputFolder": "./.vscode",
+    "editor.rulers": [
+        80,
+        125
+    ],
+    "[go]": {
+        "editor.formatOnSave": true
+    }
+}

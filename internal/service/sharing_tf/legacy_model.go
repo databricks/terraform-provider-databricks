@@ -389,7 +389,9 @@ type CreateShare_SdkV2 struct {
 	Comment types.String `tfsdk:"comment"`
 	// Name of the share.
 	Name types.String `tfsdk:"name"`
-	// Storage root URL for the share.
+	// Cloud storage path, within an external location, under which the share
+	// stores the notebook files added to it. When unset, notebook files are
+	// stored under the metastore root storage location.
 	StorageRoot types.String `tfsdk:"storage_root"`
 }
 
@@ -2190,7 +2192,8 @@ func (m *GetSharePermissionsResponse_SdkV2) SetPrivilegeAssignments(ctx context.
 }
 
 type GetShareRequest_SdkV2 struct {
-	// Query for data to include in the share.
+	// Whether to include the share's data objects in the response. When false
+	// or omitted, the response omits `objects`.
 	IncludeSharedData types.Bool `tfsdk:"-"`
 	// The name of the share.
 	Name types.String `tfsdk:"-"`
@@ -3997,7 +4000,9 @@ func (m *OidcFederationPolicy_SdkV2) SetAudiences(ctx context.Context, v []types
 }
 
 type Partition_SdkV2 struct {
-	// An array of partition values.
+	// An array of partition values. A row belongs to the partition when it
+	// matches every value in the array, and each `name` must appear at most
+	// once in the array.
 	Values types.List `tfsdk:"value"`
 }
 
@@ -4114,7 +4119,8 @@ func (m *Partition_SdkV2) SetValues(ctx context.Context, v []PartitionValue_SdkV
 type PartitionValue_SdkV2 struct {
 	// The name of the partition column.
 	Name types.String `tfsdk:"name"`
-	// The operator to apply for the value.
+	// The operator to apply for the value. **EQUAL** matches the partition
+	// value exactly; **LIKE** matches it against a SQL `LIKE` pattern.
 	Op types.String `tfsdk:"op"`
 	// The key of a Delta Sharing recipient's property. For example
 	// "databricks-account-id". When this field is set, field `value` can not be
@@ -4181,8 +4187,7 @@ func (m PartitionValue_SdkV2) Type(ctx context.Context) attr.Type {
 type PermissionsChange_SdkV2 struct {
 	// The set of privileges to add.
 	Add types.List `tfsdk:"add"`
-	// The principal whose privileges we are changing. Only one of principal or
-	// principal_id should be specified, never both at the same time.
+	// The principal whose privileges we are changing.
 	Principal types.String `tfsdk:"principal"`
 	// The set of privileges to remove.
 	Remove types.List `tfsdk:"remove"`
@@ -4321,8 +4326,7 @@ func (m *PermissionsChange_SdkV2) SetRemove(ctx context.Context, v []types.Strin
 }
 
 type PrivilegeAssignment_SdkV2 struct {
-	// The principal (user email address or group name). For deleted principals,
-	// `principal` is empty while `principal_id` is populated.
+	// The principal (user email address or group name).
 	Principal types.String `tfsdk:"principal"`
 	// The privileges assigned to the principal.
 	Privileges types.List `tfsdk:"privileges"`
@@ -5436,6 +5440,11 @@ func (m Share_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// A share is a named collection of data and AI assets from a single Unity
+// Catalog metastore that a provider makes available to recipients through Delta
+// Sharing. A share is created empty; tables, views, volumes, models, notebook
+// files, or whole schemas are added to it with **update**, and recipients are
+// granted access to it through share permissions.
 type ShareInfo_SdkV2 struct {
 	// User-provided free-form text description.
 	Comment types.String `tfsdk:"comment"`
@@ -5450,9 +5459,12 @@ type ShareInfo_SdkV2 struct {
 	// Username of current owner of share.
 	Owner          types.String `tfsdk:"owner"`
 	EffectiveOwner types.String `tfsdk:"effective_owner"`
-	// Storage Location URL (full path) for the share.
+	// Full storage path, derived from `storage_root`, where the share's
+	// notebook files are stored.
 	StorageLocation types.String `tfsdk:"storage_location"`
-	// Storage root URL for the share.
+	// Cloud storage path, within an external location, under which the share
+	// stores the notebook files added to it. When unset, notebook files are
+	// stored under the metastore root storage location.
 	StorageRoot types.String `tfsdk:"storage_root"`
 	// Time at which this share was updated, in epoch milliseconds.
 	UpdatedAt types.Int64 `tfsdk:"updated_at"`
@@ -5797,7 +5809,9 @@ type SharedDataObject_SdkV2 struct {
 	AddedAt types.Int64 `tfsdk:"added_at"`
 	// Username of the sharer.
 	AddedBy types.String `tfsdk:"added_by"`
-	// Whether to enable cdf or indicate if cdf is enabled on the shared object.
+	// Whether to share the table's change data feed (CDF) with recipients.
+	// Requires change data feed to be enabled on the source table, and
+	// implicitly enables history sharing. Only applies to tables.
 	CdfEnabled          types.Bool `tfsdk:"cdf_enabled"`
 	EffectiveCdfEnabled types.Bool `tfsdk:"effective_cdf_enabled"`
 	// A user-provided comment when adding the data object to the share.
@@ -5806,17 +5820,25 @@ type SharedDataObject_SdkV2 struct {
 	// NOTEBOOK_FILE. This should be base64 encoded. Required for adding a
 	// NOTEBOOK_FILE, optional for updating, ignored for other types.
 	Content types.String `tfsdk:"content"`
-	// The type of the data object.
+	// The type of the data object. One of **TABLE**, **VIEW**,
+	// **MATERIALIZED_VIEW**, **STREAMING_TABLE**, **FOREIGN_TABLE**,
+	// **SCHEMA**, **VOLUME**, **MODEL**, **FUNCTION**, **FEATURE_SPEC**, or
+	// **NOTEBOOK_FILE**. Defaults to **TABLE** when omitted.
 	DataObjectType types.String `tfsdk:"data_object_type"`
-	// Whether to enable or disable sharing of data history. If not specified,
-	// the default is **DISABLED**.
+	// Whether to share the table's history, which lets recipients run time
+	// travel queries and streaming reads against it. When a **TABLE** is added
+	// without this field or `cdf_enabled`, history sharing is **ENABLED** by
+	// default; otherwise the default is **DISABLED**.
 	HistoryDataSharingStatus          types.String `tfsdk:"history_data_sharing_status"`
 	EffectiveHistoryDataSharingStatus types.String `tfsdk:"effective_history_data_sharing_status"`
 	// A fully qualified name that uniquely identifies a data object. For
 	// example, a table's fully qualified name is in the format of
-	// `<catalog>.<schema>.<table>`,
+	// `<catalog>.<schema>.<table>`, a schema's is `<catalog>.<schema>`, a
+	// volume's, model's, or function's is `<catalog>.<schema>.<object_name>`,
+	// and a notebook file's is its workspace path.
 	Name types.String `tfsdk:"name"`
-	// Array of partitions for the shared data.
+	// Array of partitions for the shared data. Only rows that belong to at
+	// least one of the listed partitions are shared. Only applies to tables.
 	Partitions types.List `tfsdk:"partition"`
 	// A user-provided alias name for table-like data objects within the share.
 	//
@@ -5853,7 +5875,10 @@ type SharedDataObject_SdkV2 struct {
 	// NOTE: The start_version should be <= the `current` version of the object.
 	StartVersion          types.Int64 `tfsdk:"start_version"`
 	EffectiveStartVersion types.Int64 `tfsdk:"effective_start_version"`
-	// One of: **ACTIVE**, **PERMISSION_DENIED**.
+	// Sharing status of the data object. **ACTIVE** means the object is being
+	// shared with recipients without issues; **PERMISSION_DENIED** means the
+	// share owner has lost access to the object, so it is not being shared with
+	// recipients.
 	Status types.String `tfsdk:"status"`
 	// A user-provided alias name for non-table data objects within the share.
 	//
@@ -6078,10 +6103,11 @@ func (m *SharedDataObject_SdkV2) SetPartitions(ctx context.Context, v []Partitio
 }
 
 type SharedDataObjectUpdate_SdkV2 struct {
-	// One of: **ADD**, **REMOVE**, **UPDATE**.
+	// One of: **ADD**, **REMOVE**, **UPDATE**. **ADD** adds the data object to
+	// the share, **REMOVE** removes it, and **UPDATE** changes the properties
+	// of a data object that is already in the share.
 	Action types.String `tfsdk:"action"`
-	// The data object that is being added, removed, or updated. The maximum
-	// number update data objects allowed is a 100.
+	// The data object that is being added, removed, or updated.
 	DataObject types.List `tfsdk:"data_object"`
 }
 
@@ -6744,9 +6770,12 @@ type UpdateShare_SdkV2 struct {
 	// Username of current owner of share.
 	Owner          types.String `tfsdk:"owner"`
 	EffectiveOwner types.String `tfsdk:"effective_owner"`
-	// Storage root URL for the share.
+	// Cloud storage path, within an external location, under which the share
+	// stores the notebook files added to it. When unset, notebook files are
+	// stored under the metastore root storage location.
 	StorageRoot types.String `tfsdk:"storage_root"`
-	// Array of shared data object updates.
+	// Array of shared data object updates. The server limits how many updates a
+	// single request can contain.
 	Updates types.List `tfsdk:"updates"`
 }
 

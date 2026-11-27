@@ -237,7 +237,9 @@ func (m *DatabricksServiceExceptionWithDetailsProto) SetDetails(ctx context.Cont
 // A singleton resource representing the default workspace base environment
 // configuration. This resource contains the workspace base environments that
 // are used as defaults for serverless notebooks and jobs in the workspace, for
-// both CPU and GPU compute types.
+// both CPU and GPU compute types. Each default can reference a
+// Databricks-provided base environment or a base environment created in the
+// workspace.
 //
 // When cpu_workspace_base_environment or gpu_workspace_base_environment is
 // unset, new serverless notebooks for that compute type use the Databricks

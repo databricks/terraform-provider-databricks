@@ -4,9 +4,9 @@ subcategory: "AI/BI"
 # databricks_genie_agent Resource
 [![Private Preview](https://img.shields.io/badge/Release_Stage-Private_Preview-blueviolet)](https://docs.databricks.com/aws/en/release-notes/release-types)
 
-A Genie Agent is a no-code, AI/BI-powered analytics experience that lets business users ask questions of their data in natural language. Analysts configure a Genie Agent with a SQL warehouse and a `definition` attribute (the tables, instructions, and sample questions that ground the agent); business users then query it conversationally.
+A Genie Agent is a no-code, AI/BI-powered analytics experience that lets business users ask questions of their data in natural language. Analysts configure a Genie Agent with a SQL warehouse and a `definition` attribute (the resources, instructions, and sample questions that ground the agent); business users then query it conversationally.
 
-This resource manages the full lifecycle of a Genie Agent — create, update, and delete. The service returns `definition` exactly as it was applied, so the value never drifts; a definition the service would store differently is rejected with `INVALID_PARAMETER_VALUE`. In particular: write multi-line text (such as SQL or an instruction) as a single string, omit empty strings rather than setting them, list tables in `identifier` order, column configs in `column` order, volumes in `path` order, MCP connections in `mcp_connection` order, benchmark questions in descending `id` order, and every other list whose entries have an `id` (such as sample questions and text instructions) in `id` order, and give every entry that has an `id` a unique 32-character lowercase hexadecimal value. Each column config must name a column that exists in its table, and a column config may set `display_name` only where column display names are enabled for the workspace; otherwise the apply is rejected with `INVALID_PARAMETER_VALUE`.
+This resource manages the full lifecycle of a Genie Agent — create, update, and delete. The service returns `definition` exactly as it was applied, so the value never drifts; a definition the service would store differently is rejected with `INVALID_PARAMETER_VALUE`. In particular: write multi-line text (such as SQL or an instruction) as a single string, omit empty strings rather than setting them, list tables in `identifier` order, column configs in `column` order, volumes in `path` order, SQL functions in `id` then `identifier` order, MCP connections in `mcp_connection` order, benchmark questions in descending `id` order, and every other list whose entries have an `id` (such as sample questions and join specs) in `id` order, and give every entry that has an `id` a unique 32-character lowercase hexadecimal value. Each column config must name a column that exists in its table, and a column config may set `display_name` only where column display names are enabled for the workspace; otherwise the apply is rejected with `INVALID_PARAMETER_VALUE`.
 
 ### Requirements
 
@@ -36,7 +36,7 @@ resource "databricks_genie_agent" "this" {
         },
       ]
     }
-    data_sources = {
+    resources = {
       tables = [
         { identifier = "main.sales.customers" },
         {
@@ -53,15 +53,13 @@ resource "databricks_genie_agent" "this" {
       ]
     }
     instructions = {
-      text_instructions = [
-        {
-          id      = "01f0a1b2c3d4e5f60718293a4b5c6d7f"
-          content = <<-EOT
-            Report revenue as the sum of order_amount, rounded to 2 decimal places.
-            Use fiscal quarters for quarterly questions.
-          EOT
-        },
-      ]
+      text_instruction = {
+        id      = "01f0a1b2c3d4e5f60718293a4b5c6d7f"
+        content = <<-EOT
+          Report revenue as the sum of order_amount, rounded to 2 decimal places.
+          Use fiscal quarters for quarterly questions.
+        EOT
+      }
       join_specs = [
         {
           id                = "01f0a1b2c3d4e5f60718293a4b5c6d80"
@@ -80,10 +78,11 @@ resource "databricks_genie_agent" "this" {
 ## Arguments
 The following arguments are supported:
 * `definition` (GenieAgentDefinition, required) - The definition of the Genie Agent: its sample questions, data sources, instructions, and
-  benchmarks. Must set at least one field. Returned on get and on list with
-  `GENIE_AGENT_VIEW_FULL`. Create and update return a submitted definition unchanged; one the
-  service would store differently, or with a column config the workspace can't keep (unknown
-  column, or a display name while those are disabled), is rejected with INVALID_PARAMETER_VALUE
+  benchmarks. Create requires at least one table, volume, MCP connection, or sub-agent in
+  `data_sources`. Returned on get and on list with `GENIE_AGENT_VIEW_FULL`. Create and update
+  return a submitted definition unchanged; one the service would store differently, or with a
+  column config the workspace can't keep (unknown column, or a display name while those are
+  disabled), is rejected with INVALID_PARAMETER_VALUE
 * `display_name` (string, required) - Display name of the Genie Agent. Must be unique within its folder (effective_parent_path): a
   create, rename, or move that would collide with an existing Genie Agent's name in the target
   folder is rejected with ALREADY_EXISTS.
@@ -135,16 +134,11 @@ The following arguments are supported:
 ### GenieAgentConfig
 * `sample_questions` (list of GenieAgentSampleQuestion, optional) - Sample questions shown to users of the Genie Agent, sorted by `id`
 
-### GenieAgentDataSources
-* `mcp_connections` (list of GenieAgentMcpConnection, optional) - Unity Catalog MCP connections, sorted by `mcp_connection`
-* `tables` (list of GenieAgentTable, optional) - Unity Catalog tables, views, and metric views, sorted by `identifier`
-* `volumes` (list of GenieAgentVolume, optional) - Unity Catalog volumes, sorted by `path`
-
 ### GenieAgentDefinition
 * `benchmarks` (GenieAgentBenchmarks, optional) - Benchmarks for evaluating the quality of the Genie Agent's answers
 * `config` (GenieAgentConfig, optional) - General settings of the Genie Agent
-* `data_sources` (GenieAgentDataSources, optional) - The data the Genie Agent can access
 * `instructions` (GenieAgentInstructions, optional) - Instructions and SQL that guide how the Genie Agent answers questions
+* `resources` (GenieAgentResources, optional) - The resources the Genie Agent can use: data, SQL functions, connections, and sub-agents
 
 ### GenieAgentExampleQuestionSql
 * `id` (string, required) - Identifier of the example: 32 lowercase hexadecimal characters, unique within the Genie Agent
@@ -156,9 +150,8 @@ The following arguments are supported:
 ### GenieAgentInstructions
 * `example_question_sqls` (list of GenieAgentExampleQuestionSql, optional) - Example questions paired with the SQL that answers them
 * `join_specs` (list of GenieAgentJoinSpec, optional) - Predefined joins between tables or metric views
-* `sql_functions` (list of GenieAgentSqlFunction, optional) - Unity Catalog SQL functions the generated SQL may call
 * `sql_snippets` (GenieAgentSqlSnippets, optional) - Reusable SQL filters, expressions, and measures
-* `text_instructions` (list of GenieAgentTextInstruction, optional) - General text instructions. At most one text instruction is supported
+* `text_instruction` (GenieAgentTextInstruction, optional) - The general text instruction
 
 ### GenieAgentJoinSource
 * `identifier` (string, required) - The full three-level name of the table or metric view
@@ -175,6 +168,12 @@ The following arguments are supported:
 
 ### GenieAgentMcpConnection
 * `mcp_connection` (string, required) - The name of the Unity Catalog connection, for example `system.ai.google_calendar`
+
+### GenieAgentResources
+* `mcp_connections` (list of GenieAgentMcpConnection, optional) - Unity Catalog MCP connections, sorted by `mcp_connection`
+* `sql_functions` (list of GenieAgentSqlFunction, optional) - Unity Catalog SQL functions the generated SQL may call, sorted by `id`, then `identifier`
+* `tables` (list of GenieAgentTable, optional) - Unity Catalog tables, views, and metric views, sorted by `identifier`
+* `volumes` (list of GenieAgentVolume, optional) - Unity Catalog volumes, sorted by `path`
 
 ### GenieAgentSampleQuestion
 * `id` (string, required) - Identifier of the sample question: 32 lowercase hexadecimal characters, unique within the

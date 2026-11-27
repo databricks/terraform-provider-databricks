@@ -37,7 +37,7 @@ func WorkspaceClient(t *testing.T, path string) *databricks.WorkspaceClient {
 	client, err := databricks.NewWorkspaceClient(&databricks.Config{
 		Host: server.URL, Token: "fixture-token", AuthType: "pat",
 		Credentials: config.PatCredentials{}, Loaders: []config.Loader{fixtureLoader{}},
-		HTTPTransport: localTransport{host: server.URL, transport: server.Client().Transport},
+		HTTPTransport: localTransport{host: server.URL, transport: httpfixture.NewClientTransport()},
 	})
 	require.NoError(t, err)
 	return client

@@ -1,0 +1,176 @@
+# Pins an account-level provider with provider_config.workspace_id. Every Terraform
+# command that touches the model first looks up the workspace through the account API,
+# then sends each model call (create, get, update, delete) with that workspace's
+# X-Databricks-Workspace-Id header. Replay serves every host from one local server and
+# rejects calls to any other, so the SDK keeps the account host for the workspace
+# client; the workspace deployment host on a real account domain is not pinned here.
+# Fixtures are synthetic: API responses are inferred from the account and MLflow Model
+# Registry API contracts, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: account
+  cloud: AWS
+  account_id: replay-account
+steps:
+  - name: create_routes_through_workspace_lookup
+    config: |
+      provider "databricks" {
+        account_id = "replay-account"
+      }
+      resource "databricks_mlflow_model" "this" {
+        name = "routing_account_model"
+        provider_config {
+          workspace_id = "12345"
+        }
+      }
+    calls:
+      - &lookup_12345
+        request:
+          method: GET
+          path: /api/2.0/accounts/replay-account/workspaces/12345
+          headers:
+            # An empty expected value matches only a request without the header.
+            X-Databricks-Workspace-Id: ""
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"account_id": "replay-account", "workspace_id": 12345,
+                   "workspace_name": "replay-workspace-12345",
+                   "deployment_name": "replay-workspace-12345",
+                   "workspace_status": "RUNNING"}
+      - request:
+          method: POST
+          path: /api/2.0/mlflow/registered-models/create
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"name": "routing_account_model"}
+        response:
+          status: 200
+          body:
+            json: {"registered_model": {"name": "routing_account_model",
+                                        "creation_timestamp": 1700000000005,
+                                        "last_updated_timestamp": 1700000000005,
+                                        "user_id": "replay-admin@example.com"}}
+      - &read_model
+        request:
+          method: GET
+          path: /api/2.0/mlflow/databricks/registered-models/get
+          query:
+            name: [routing_account_model]
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"registered_model_databricks": {
+                     "name": "routing_account_model",
+                     "id": "00000000000000000000000000000905",
+                     "creation_timestamp": 1700000000005,
+                     "last_updated_timestamp": 1700000000005,
+                     "user_id": "replay-admin@example.com",
+                     "permission_level": "CAN_MANAGE"}}
+      # The post-apply refresh plan.
+      - *lookup_12345
+      - *read_model
+    state:
+      resources:
+        databricks_mlflow_model.this:
+          attributes:
+            - path: [provider_config, 0, workspace_id]
+              equals: "12345"
+  - name: update_routes_through_workspace_lookup
+    config: |
+      provider "databricks" {
+        account_id = "replay-account"
+      }
+      resource "databricks_mlflow_model" "this" {
+        name        = "routing_account_model"
+        description = "routed by provider_config"
+        provider_config {
+          workspace_id = "12345"
+        }
+      }
+    plan:
+      expect: non_empty
+      changes:
+        databricks_mlflow_model.this:
+          actions: [update]
+          after:
+            - path: [provider_config, 0, workspace_id]
+              equals: "12345"
+    calls:
+      # The plan's refresh.
+      - *lookup_12345
+      - *read_model
+      # The apply.
+      - *lookup_12345
+      - request:
+          method: PATCH
+          path: /api/2.0/mlflow/registered-models/update
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"name": "routing_account_model",
+                   "description": "routed by provider_config"}
+        response:
+          status: 200
+          body:
+            json: {"registered_model": {"name": "routing_account_model",
+                                        "description": "routed by provider_config",
+                                        "creation_timestamp": 1700000000005,
+                                        "last_updated_timestamp": 1700000000105,
+                                        "user_id": "replay-admin@example.com"}}
+      - &read_described
+        request:
+          method: GET
+          path: /api/2.0/mlflow/databricks/registered-models/get
+          query:
+            name: [routing_account_model]
+          headers:
+            X-Databricks-Workspace-Id: "12345"
+          body: null
+        response:
+          status: 200
+          body:
+            json: {"registered_model_databricks": {
+                     "name": "routing_account_model",
+                     "id": "00000000000000000000000000000905",
+                     "description": "routed by provider_config",
+                     "creation_timestamp": 1700000000005,
+                     "last_updated_timestamp": 1700000000105,
+                     "user_id": "replay-admin@example.com",
+                     "permission_level": "CAN_MANAGE"}}
+      # The post-apply refresh plan.
+      - *lookup_12345
+      - *read_described
+    state:
+      resources:
+        databricks_mlflow_model.this:
+          attributes:
+            - path: [provider_config, 0, workspace_id]
+              equals: "12345"
+destroy:
+  calls:
+    # The destroy plan's refresh.
+    - *lookup_12345
+    - *read_described
+    # The apply.
+    - *lookup_12345
+    - request:
+        method: DELETE
+        path: /api/2.0/mlflow/registered-models/delete
+        query:
+          name: [routing_account_model]
+        headers:
+          X-Databricks-Workspace-Id: "12345"
+        body: null
+      response:
+        status: 200
+        body:
+          json: {}

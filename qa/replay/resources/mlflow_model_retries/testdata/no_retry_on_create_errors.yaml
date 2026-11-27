@@ -1,0 +1,77 @@
+# This journey pins that the classic SDK client sends the create POST exactly once and
+# reports the API message for statuses it does not retry: 400, 403, 404 and 500. None of
+# the messages match a transient error pattern. A failed create stores no ID, so each
+# step sends the POST again without a refresh, and the plan after the last one still
+# creates the model. API responses are synthetic, inferred from the MLflow Model Registry
+# API, not recorded.
+version: 1
+enforce_call_order: true
+host_metadata:
+  host_type: workspace
+  cloud: AWS
+  workspace_id: "12345"
+steps:
+  - name: create_400_is_not_retried
+    config: &config |
+      resource "databricks_mlflow_model" "this" {
+        name        = "retry-model"
+        description = "first"
+      }
+    expect_error: 'Error: cannot create mlflow model: Invalid model name from fixture\n'
+    calls:
+      - request: &create
+          method: POST
+          path: /api/2.0/mlflow/registered-models/create
+          headers:
+            Content-Type: application/json
+            X-Databricks-Workspace-Id: "12345"
+          body:
+            json: {"name": "retry-model", "description": "first"}
+        response:
+          status: 400
+          body:
+            json: {"error_code": "INVALID_PARAMETER_VALUE",
+                   "message": "Invalid model name from fixture"}
+  - name: create_403_is_not_retried
+    config: *config
+    expect_error: 'Error: cannot create mlflow model: No create permission in fixture\n'
+    calls:
+      - request: *create
+        response:
+          status: 403
+          body:
+            json: {"error_code": "PERMISSION_DENIED",
+                   "message": "No create permission in fixture"}
+  - name: create_404_is_not_retried
+    config: *config
+    expect_error: 'Error: cannot create mlflow model: No API found for ''POST
+      /mlflow/registered-models/create''\n'
+    calls:
+      - request: *create
+        response:
+          status: 404
+          body:
+            json: {"error_code": "ENDPOINT_NOT_FOUND",
+                   "message": "No API found for 'POST /mlflow/registered-models/create'"}
+  - name: create_500_is_not_retried
+    config: *config
+    expect_error: 'Error: cannot create mlflow model: Internal error from fixture\n'
+    calls:
+      - request: *create
+        response:
+          status: 500
+          body:
+            json: {"error_code": "INTERNAL_ERROR",
+                   "message": "Internal error from fixture"}
+  # Nothing is in state, so the plan reads nothing and creates the model.
+  - name: plan_after_rejected_creates_creates_the_model
+    plan_only: true
+    config: *config
+    plan:
+      expect: non_empty
+      changes:
+        databricks_mlflow_model.this:
+          actions: [create]
+    calls: []
+destroy:
+  calls: []

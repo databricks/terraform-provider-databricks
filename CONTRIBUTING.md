@@ -1,394 +1,53 @@
-# Databricks Terraform Provider Development Guide
-
----
-
-- [Databricks Terraform Provider Development Guide](#databricks-terraform-provider-development-guide)
-  - [This repository is a mirror](#this-repository-is-a-mirror)
-  - [Installing from source](#installing-from-source)
-  - [Documentation](#documentation)
-  - [Developing provider](#developing-provider)
-  - [Developing Resources or Data Sources using Plugin Framework](#developing-resources-or-data-sources-using-plugin-framework)
-    - [Package organization for Providers](#package-organization-for-providers)
-    - [Adding a new resource](#adding-a-new-resource)
-    - [Adding a new data source](#adding-a-new-data-source)
-    - [Migrating resource to plugin framework](#migrating-resource-to-plugin-framework)
-    - [Code Organization](#code-organization)
-    - [Code Conventions](#code-conventions)
-  - [Debugging](#debugging)
-  - [Adding a new resource](#adding-a-new-resource-1)
-  - [Replay Testing](#replay-testing)
-  - [Code conventions](#code-conventions-1)
-  - [Linting](#linting)
-  - [Developing with Visual Studio Code Devcontainers](#developing-with-visual-studio-code-devcontainers)
-
-## This repository is a mirror
-
-This repository is a read-only mirror. The provider's source of truth lives in
-Databricks' internal repository, and its changes are published here with each
-release. This repository does not accept pull requests: only maintainer
-release-sync PRs carrying the `sync` label are merged, and other pull requests
-will not be merged.
-
-- **Bugs and feature requests:** open a
-  [GitHub Issue](https://github.com/databricks/terraform-provider-databricks/issues).
-  Describe the problem and include a minimal configuration that reproduces it.
-  Maintainers triage issues and make any changes in the internal repository.
-- **Databricks employees:** make provider changes in the internal repository.
-
-The rest of this guide describes how the provider is built, organized and
-tested. Use it to build the provider from source or to understand its behavior.
-
-## Installing from source
-
-For revisions that include `databricks-sdk-go/`, keep that directory in the full
-Git checkout. The provider's `go.mod` selects this SDK source with a local
-`replace` directive, so it can build without a separate SDK release. Run the
-build commands below from the provider checkout.
-
-These bundled revisions support Terraform Registry installation and builds
-from a full checkout. Using provider packages as a dependency of another Go
-module is unsupported: Go ignores dependency-local `replace` directives and
-omits nested modules from module downloads. `go install ...@version` also
-rejects the local replacement; use the checkout build instead.
-
-On MacOS X, you can install GoLang through `brew install go`, on Debian-based Linux, you can install it by `sudo apt-get install golang -y`.
-
-```bash
-git clone https://github.com/databricks/terraform-provider-databricks.git
-cd terraform-provider-databricks
-make install
-```
-
-Most likely, `terraform init -upgrade -verify-plugins=false -lock=false` would be a very great command to use.
-
-## Documentation
-
-Make sure you have [`terrafmt`](https://github.com/katbyte/terrafmt) installed to be able to run `make fmt-docs`
-
-```bash
-go install github.com/katbyte/terrafmt@latest
-```
-
-All documentation should be as detailed as possible and follow the [required format](https://www.terraform.io/registry/providers/docs). The following additional checks must also be valid:
-
-- `make fmt-docs` to make sure code examples are consistent
-- Correct rendering with Terraform Registry Doc Preview Tool - <https://registry.terraform.io/tools/doc-preview>
-- Cross-linking integrity between markdown files. Pay special attention, when resource doc refers to data doc or guide.
-
-## Developing provider
-
-In order to simplify development workflow, you should use [dev_overrides](https://www.terraform.io/cli/config/config-file#development-overrides-for-provider-developers) section in your `~/.terraformrc` file. Please run `make build` and replace "provider-binary" with the path to `terraform-provider-databricks` executable in your current working directory:
-
-```bash
-$ cat ~/.terraformrc
-provider_installation {
-   dev_overrides {
-     "databricks/databricks" = "provider-binary"
-   }
-   direct {}
-}
-```
-
-After installing the necessary software for building provider from sources, you should be able to run `make coverage` to run the tests and see the coverage.
-
-## Developing Resources or Data Sources using Plugin Framework
-
-**Update, June 2026**: new resources and data sources are now automatically generated from Databricks API specifcation, so this section isn't applicable.  The bug fixes and improvements to existing, non-generated resources and data sources are still accepted.
-
-### Package organization for Providers
-We are migrating the resource from SDKv2 to Plugin Framework provider and hence both of them exist in the codebase. For uniform code convention, readability and development, they are organized in the `internal/providers` directory under root as follows:
-- `providers`: Contains the changes that `depends` on both internal/providers/sdkv2 and internal/providers/pluginfw packages, eg: `GetProviderServer`.
-- `common`: Contains the changes `used by` both internal/providers/sdkv2 and internal/providers/pluginfw packages, eg: `ProviderName`.
-- `pluginfw`: Contains the changes specific to Plugin Framework. This package shouldn't depend on sdkv2 or common.
-- `sdkv2`: Contains the changes specific to SDKv2. This package shouldn't depend on pluginfw or common.
-
-### Adding a new resource
-1. Check if the directory for this particular resource exists under `internal/providers/pluginfw/products`, if not create the directory eg: `cluster`, `volume` etc... Please note: Resources and Data sources are organized under the same package for that service.
-2. Create a file with resource_resource-name.go and write the CRUD methods, schema for that resource. For reference, please take a look at existing resources eg: `resource_app.go`.
-  - Make sure to set the user agent in all the CRUD methods.
-  - In the `Metadata()`, use the method `GetDatabricksProductionName()`.
-  - In the `Schema()` method, import the appropriate struct from the `internal/service/{package}_tf` package and use the `ResourceStructToSchema` method to convert the struct to schema. Use the struct that does not have the `_SdkV2` suffix. The schema for the struct is automatically generated and maintained within the `ApplySchemaCustomizations` method of that struct. If you need to customize the schema further, pass in a `CustomizableSchema` to `ResourceStructToSchema` and customize the schema there. If you need to use a manually crafted struct in place of the auto-generated one, you must implement the `ApplySchemaCustomizations` method in a similar way.
-3. Add [YAML replay tests](#replay-testing) for the resource lifecycle in a dedicated fixture folder in the resource package.
-4. Create a file with `resource_resource-name_test.go` and add unit tests here. Note: Please make sure to abstract specific method of the resource so they are unit test friendly and not testing internal part of terraform plugin framework library. You can compare the diagnostics, for example: please take a look at: `data_cluster_test.go`
-5. Add the resource under `internal/providers/pluginfw/pluginfw.go` in `Resources()` method. Please update the list so that it stays in alphabetically sorted order.
-6. Create a PR and send it for review.
-
-### Adding a new data source
-1. Check if the directory for this particular datasource exists under `internal/providers/pluginfw/products`, if not create the directory eg: `cluster`, `volume` etc... Please note: Resources and Data sources are organized under the same package for that service.
-2. Create a file with `data_resource-name.go` and write the CRUD methods, schema for that data source. For reference, please take a look at existing data sources eg: `data_cluster.go`. Make sure to set the user agent in the READ method. In the `Metadata()`, if the resource is to be used as default, use the method `GetDatabricksProductionName()` else use `GetDatabricksStagingName()` which suffixes the name with `_pluginframework`.
-3. Add [YAML replay tests](#replay-testing) for the data source in a dedicated fixture folder in the data source package.
-4. Create a file with `data_resource-name_test.go` and add unit tests here. Note: Please make sure to abstract specific method of the resource so they are unit test friendly and not testing internal part of terraform plugin framework library. You can compare the diagnostics, for example: please take a look at: `data_cluster_test.go`
-5. Add the resource under `internal/providers/pluginfw/pluginfw.go` in `DataSources()` method. Please update the list so that it stays in alphabetically sorted order.
-6. Create a PR and send it for review.
-
-### Migrating resource to plugin framework
-There must not be any behaviour change or schema change when migrating a resource or data source to either Go SDK or Plugin Framework.
-- Please make sure there are no breaking differences due to changes in schema by running: `make diff-schema`.
-- Cover provider behavior with [replay tests](#replay-testing), including provider implementation switches where needed.
-
-By default, `ResourceStructToSchema` will convert a `types.List` field to a `ListAttribute` or `ListNestedAttribute`. For resources or data sources migrated from the SDKv2, `ListNestedBlock` must be used for such fields. To do this, use the `_SdkV2` variant from the `internal/service/{package}_tf` package when defining the resource schema and when interacting with the plan, config and state. Additionally, in the `Schema()` method, call `cs.ConfigureAsSdkV2Compatible()` in the `ResourceStructToSchema` callback:
-```go
-resp.Schema = tfschema.ResourceStructToSchema(ctx, Resource_SdkV2{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
-    cs.ConfigureAsSdkV2Compatible()
-    // Add any additional configuration here
-    return cs
-})
-```
-
-Make sure that migrated resources are compatible with both SDKv2 and Plugin Framework.
-- The schema struct should have a `types.String` ID field. Example:
-```go
-type ResourceInfoExtended struct {
-	package_tf.ResourceInfo_SdkV2
-	ID types.String `tfsdk:"id"` // Adding ID field to stay compatible with SDKv2
-}
-
-```
-
-- Add replay tests that switch between SDKv2 and Plugin Framework in both directions. Use [provider implementation selection](qa/terraformtest/README.md#provider-implementation-selection) to select the implementation per step; see the [provider migration examples](qa/replay/features/provider_migration).
-
-### Code Organization
-Each resource and data source should be defined in package `internal/providers/plugnifw/products/<resource>`, e.g.: `internal/providers/plugnifw/products/volume` package will contain both resource, data sources and other utils specific to volumes. Unit tests and new replay tests also belong in this package.
-
-Note: Only Docs will stay under root docs/ directory.
-
-
-### Code Conventions
-1. Make sure the resource or data source implemented is of the right type:
-    ```golang
-    var _ resource.ResourceWithConfigure = &QualityMonitorResource{}
-    var _ datasource.DataSourceWithConfigure = &VolumesDataSource{}
-    ```
-2. To get the databricks client, `func (*common.DatabricksClient).GetWorkspaceClient()` or `func (*common.DatabricksClient).GetAccountClient()` will be used instead of directly using the underlying `WorkspaceClient()`, `AccountClient()` functions respectively.
-3. Any method that returns only diagnostics should be called inline while appending diagnostics in response. Example:
-    ```golang
-    resp.Diagnostics.Append(req.Plan.Get(ctx, &monitorInfoTfSDK)...)
-    if resp.Diagnostics.HasError() {
-        return
-    }
-    ```
-    is preferred over the following:
-    ```golang
-    diags := req.Plan.Get(ctx, &monitorInfoTfSDK)
-    if diags.HasError() {
-        resp.Diagnostics.Append(diags...)
-        return
-    }
-    ```
-4. Any method returning an error should directly be followed by appending that to the diagnostics.
-    ```golang
-    err := method()
-    if err != nil {
-        resp.Diagnostics.AddError("message", err.Error())
-        return
-    }
-    ```
-5. Any method returning a value alongside Diagnostics should also directly be followed by appending that to the diagnostics.
-
-
-## Debugging
-
-**TF_LOG_PROVIDER=DEBUG terraform apply** allows you to see the internal logs from `terraform apply`.
-
-You can [run provider in a debug mode](https://www.terraform.io/plugin/sdkv2/debugging#running-terraform-with-a-provider-in-debug-mode) from VScode IDE by launching `Debug Provider` run configuration and invoking `terraform apply` with `TF_REATTACH_PROVIDERS` environment variable.
-
-## Adding a new resource
-
-Boilerplate for data sources could be generated via `go run provider/gen/main.go -name mws_workspaces -package mws -is-data -dry-run=false`.
-
-The general process for adding a new resource is:
-
-*Define the resource models.* The models for a resource are `struct`s defining the schemas of the objects in the Databricks REST API. Define structures used for multiple resources in a common `models.go` file; otherwise, you can define these directly in your resource file. An example model:
-
-```go
-type Field struct {
- A string `json:"a,omitempty"`
- AMoreComplicatedName int `json:"a_more_complicated_name,omitempty"`
-}
-
-type Example struct {
- ID string `json:"id"`
- TheField *Field `json:"the_field"`
- AnotherField bool `json:"another_field"`
- Filters []string `json:"filters" tf:"optional"`
-}
-```
-
-Some interesting points to note here:
-
-- Use the `json` tag to determine the serde properties of the field. The allowed tags are defined here: <https://go.googlesource.com/go/+/go1.16/src/encoding/json/encode.go#158>
-- Use the custom `tf` tag indicates properties to be annotated on the Terraform schema for this struct. Supported values are:
-  - `optional` for optional fields
-  - `computed` for computed fields
-  - `alias:X` to use a custom name in HCL for a field
-  - `default:X` to set a default value for a field
-  - `max_items:N` to set the maximum number of items for a multi-valued parameter
-  - `slice_set` to indicate that a the parameter should accept a set instead of a list
-  - `sensitive` to mark a field as sensitive and prevent Terraform from showing its value in the plan or apply output
-  - `force_new` to indicate a change in this value requires the replacement (destroy and create) of the resource
-  - `suppress_diff` to allow comparison based on something other than primitive, list or map equality, either via a `CustomizeDiffFunc`, or the default diff for the type of the schema
-- Do not use bare references to structs in the model; rather, use pointers to structs. Maps and slices are permitted, as well as the following primitive types: int, int32, int64, float64, bool, string.
-See `typeToSchema` in `common/reflect_resource.go` for the up-to-date list of all supported field types and values for the `tf` tag.
-
-*Define the Terraform schema.* This is made easy for you by the `StructToSchema` method in the `common` package, which converts your struct automatically to a Terraform schema, accepting also a function allowing the user to post-process the automatically generated schema, if needed.
-
-```go
-var exampleSchema = common.StructToSchema(Example{}, func(m map[string]*schema.Schema) map[string]*schema.Schema { return m })
-```
-
-*Define the API client for the resource.* You will need to implement create, read, update, and delete functions.
-
-```go
-type ExampleApi struct {
- client *common.DatabricksClient
- ctx    context.Context
-}
-
-func NewExampleApi(ctx context.Context, m interface{}) ExampleApi {
- return ExampleApi{m.(*common.DatabricksClient), ctx}
-}
-
-func (a ExampleApi) Create(e Example) (string, error) {
- var id string
- err := a.client.Post(a.ctx, "/example", e, &id)
- return id, err
-}
-
-func (a ExampleApi) Read(id string) (e Example, err error) {
- err = a.client.Get(a.ctx, "/example/"+id, nil, &e)
- return
-}
-
-func (a ExampleApi) Update(id string, e Example) error {
- return a.client.Put(a.ctx, "/example/"+string(id), e)
-}
-
-func (a ExampleApi) Delete(id string) error {
- return a.client.Delete(a.ctx, "/pipelines/"+id, nil)
-}
-```
-
-*Define the Resource object itself.* This is made quite simple by using the `toResource` function defined on the `Resource` type in the `common` package. A simple example:
-
-```go
-func ResourceExample() *schema.Resource {
- return common.Resource{
-  Schema: exampleSchema,
-  Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-   var e Example
-   common.DataToStructPointer(d, exampleSchema, &e)
-   id, err := NewExampleApi(ctx, c).Create(e)
-   if err != nil {
-    return err
-   }
-   d.SetId(string(id))
-   return nil
-  },
-  Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-   i, err := NewExampleApi(ctx, c).Read(d.Id())
-   if err != nil {
-    return err
-   }
-   return common.StructToData(i.Spec, exampleSchema, d)
-  },
-  Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-   var e Example
-   common.DataToStructPointer(d, exampleSchema, &e)
-   return NewExampleApi(ctx, c).Update(d.Id(), e)
-  },
-  Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-   return NewExampleApi(ctx, c).Delete(d.Id())
-  },
- }.ToResource()
-}
-```
-
-*Add the resource to the top-level provider.* Simply add the resource to the provider definition in `provider/provider.go`.
-
-*Write unit tests for your resource.* To write your unit tests, you can make use of `ResourceFixture` and `HTTPFixture` structs defined in the `qa` package. This starts a fake HTTP server, asserting that your resource provider generates the correct request for a given HCL template body for your resource. Update tests should have `InstanceState` field in order to test various corner-cases, like `ForceNew` schemas. It's possible to expect fixture to require new resource by specifying `RequiresNew` field. With the help of `qa.ResourceCornerCases` and `qa.ResourceFixture` one can achieve 100% code coverage for all of the new code.
-
-A simple example:
-
-```go
-func TestExampleCornerCases(t *testing.T) {
- qa.ResourceCornerCases(t, ResourceExample())
-}
-
-func TestExampleResourceCreate(t *testing.T) {
- qa.ResourceFixture{
-  Fixtures: []qa.HTTPFixture{
-   {
-    Method:          "POST",
-    Resource:        "/api/2.0/example",
-    ExpectedRequest: Example{
-     TheField: Field{
-      A: "test",
-     },
-    },
-    Response: map[string]interface{} {
-     "id": "abcd",
-     "the_field": map[string]interface{} {
-      "a": "test",
-     },
-    },
-   },
-   {
-    Method:   "GET",
-    Resource: "/api/2.0/example/abcd",
-    Response: map[string]interface{}{
-     "id":    "abcd",
-     "the_field": map[string]interface{} {
-      "a": "test",
-     },
-    },
-   },
-  },
-  Create:   true,
-  Resource: ResourceExample(),
-  HCL: `the_field {
-   a = "test"
-  }`,
- }.ApplyNoError(t)
-}
-```
-
-*Write replay tests.* Cover the Terraform lifecycle with HCL and HTTP fixtures, including updates and cleanup. See [Replay Testing](#replay-testing) and the [authoring guide](qa/terraformtest/AUTHORING.md).
-
-## Replay Testing
-
-Provider behavior changes should include YAML replay tests alongside unit tests. Replay runs real Terraform and the production provider against local HTTP fixtures, without Databricks credentials or live infrastructure. Cover the relevant create, read, update, import, or error behavior and include destroy fixtures for cleanup.
-
-Add fixtures in a dedicated folder in the resource or data source package, with one Go discovery wrapper using an external test package. Follow [Writing YAML replay tests](qa/terraformtest/AUTHORING.md) for a complete example, fixture guidance, assertions, and recording instructions. The [YAML reference](qa/terraformtest/README.md) documents the supported fields.
-
-Install Terraform on `PATH` (CI uses 1.13.5), or set `TF_ACC_TERRAFORM_PATH`. Run the affected package with `go test -short -v`; for example, to run an existing replay suite:
-
-```bash
-go test -short -v ./qa/replay/resources/pipeline
-```
-
-Unit and replay tests run on PRs. Existing live integration tests remain for nightly runs against AWS, Azure, and GCP workspaces and accounts.
-
-## Code conventions
-
-- Files should not be larger than 600 lines
-- Single function should fit to be seen on 13" screen: no more than 40 lines of code. Only exception to this rule is `*_test.go` files.
-- There should be no unnecessary package exports: no structs & types with leading capital letter, unless they are of value outside of the package.
-- `fmt.Sprintf` with more than 4 placeholders is considered too complex to maintain. Should be avoided at all cost. Use `qa.EnvironmentTemplate(t, "This is {env.DATABRICKS_HOST} with {var.RANDOM} name.")` instead
-- Import statements should all be first ordered by "GoLang internal", "Vendor packages" and then "current provider packages". Within those sections imports must follow alphabetical order.
-
-## Linting
-
-Please use makefile for linting. If you run `staticcheck` by itself it will fail due to different tags containing same functions.
-So please run `make lint` instead.
-
-## Developing with Visual Studio Code Devcontainers
-
-NOTE: This use of devcontainers for terraform-provider-databricks development is **experimental** and not officially supported by Databricks
-
-This project has configuration for working with [Visual Studio Code Devcontainers](https://code.visualstudio.com/docs/remote/containers) - this allows you to containerize your development prerequisites (e.g. golang, terraform). To use this you will need [Visual Studio Code](https://code.visualstudio.com/) and [Docker](https://www.docker.com/products/docker-desktop).
-
-To get started, clone this repo and open the folder with Visual Studio Code. If you don't have the [Remote Development extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.vscode-remote-extensionpack) then you should be prompted to install it.
-
-Once the folder is loaded and the extension is installed you should be prompted to re-open the folder in a devcontainer. This will built and run the container image with the correct tools (and versions) ready to start working on and building the code. The in-built terminal will launch a shell inside the container for running `make` commands etc.
-
-See the docs for more details on working with [devcontainers](https://code.visualstudio.com/docs/remote/containers).
+# Contributing to the Databricks Terraform Provider
+
+We welcome community contributions through the [issue tracker](https://github.com/databricks/terraform-provider-databricks/issues). Bug reports, root-cause analyses, feature requests, and documentation fixes help us understand what matters most and improve the provider.
+
+**We won't merge external pull requests.** The provider is developed in Databricks' internal repository and published here. Pull requests opened in this repository will not be merged.
+
+## Why we don't accept pull requests
+
+Thank you to everyone who has contributed PRs, reviews, and feedback over the years. Your work has helped shape this provider. Open source development has changed a lot in the last year, though. Writing a PR is now cheap, but reviewing one and making sure it fits the internal architecture of Databricks is not, and our small team can't keep up with the growing number of issues and PRs.
+
+Using issues as the entry point works better for everyone:
+
+- **Most of the provider is generated.** Resources and data sources are generated from the Databricks API specification, which lives in our internal repository. Changes to generated code were never possible in this repo.
+- **Handwritten code needs internal context.** PRs on the handwritten parts of the provider often depend on context that is only available inside Databricks. That leads to long, frustrating review cycles for contributors.
+- **Changes ship with the API.** Provider changes and the API changes they depend on can be built, tested, and released together.
+- **API teams own their resources.** APIs changing in ways that break declarative tools like Terraform has been a long-standing frustration. With the provider next to the APIs, these regressions can be caught before they roll out.
+
+Incoming issues are triaged and either fixed in the provider or routed to the owning product team when the problem is in the API itself rather than the resource.
+
+The best way to help is with detailed bug reports, reproduction steps, debug logs, root-cause analysis, and design discussion in issues. Understanding the problem and picking the right fix is usually the hard part. Once that is clear, the implementation is the easy bit.
+
+## Reporting bugs
+
+Before opening a new issue, check the [troubleshooting guide](https://registry.terraform.io/providers/databricks/databricks/latest/docs/guides/troubleshooting) and search the [existing issues](https://github.com/databricks/terraform-provider-databricks/issues). If someone already reported the problem, add your details to that issue instead of opening a new one.
+
+Open a [provider issue](https://github.com/databricks/terraform-provider-databricks/issues/new?template=provider-issue.md) and include as much of the following as you can:
+
+- The provider version and the output of `terraform version`. If you aren't on the [latest release](https://github.com/databricks/terraform-provider-databricks/releases), please try it first.
+- A minimal Terraform configuration that reproduces the problem.
+- The steps to reproduce, plus the expected and actual behavior.
+- The debug log from `TF_LOG_PROVIDER=DEBUG terraform apply` (or `plan`). **Remove tokens, passwords, workspace URLs, and other sensitive information first.**
+- Whether this is a regression, and if so, the last version where it worked.
+- Any root-cause analysis, technical observations, or ideas for a fix.
+
+## Requesting features or missing fields
+
+Open a [feature request](https://github.com/databricks/terraform-provider-databricks/issues/new?template=feature-request.md), or add a 👍 to an existing one that describes the same need. Explain your use case and the behavior you'd like. If the request is for a new resource, data source, or field, link to the relevant page in the [Databricks REST API reference](https://docs.databricks.com/api/).
+
+## Reporting documentation issues
+
+Open a [docs issue](https://github.com/databricks/terraform-provider-databricks/issues/new?template=docs-issue.md) with a link to the affected page (including the section anchor) and a description of what is wrong or missing.
+
+## Questions
+
+The issue tracker is for bug reports and feature requests. For other questions:
+
+- Databricks Terraform provider usage: [Databricks Community](https://community.databricks.com) or [Stack Overflow](https://stackoverflow.com/questions/tagged/terraform-provider-databricks) with the `terraform-provider-databricks` tag.
+- General Databricks questions: [Databricks Help Center](https://help.databricks.com/).
+- General Terraform questions: [Terraform community](https://www.terraform.io/community).
+
+## Security
+
+If you find a security vulnerability, don't open a public issue. Follow the [security policy](SECURITY.md) and report it to [security@databricks.com](mailto:security@databricks.com).

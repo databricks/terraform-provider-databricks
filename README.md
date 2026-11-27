@@ -13,7 +13,7 @@ requests. Please report bugs and request features in
 | [Authentication](docs/index.md)
 | [Troubleshooting Guide](docs/guides/troubleshooting.md)
 | [Changelog](CHANGELOG.md)
-| [Development Guidelines](CONTRIBUTING.md)
+| [Contributing](CONTRIBUTING.md)
 
 [![build](https://github.com/databricks/terraform-provider-databricks/workflows/build/badge.svg?branch=main)](https://github.com/databricks/terraform-provider-databricks/actions?query=workflow%3Abuild+branch%3Amain) [![codecov](https://codecov.io/gh/databricks/terraform-provider-databricks/branch/main/graph/badge.svg)](https://codecov.io/gh/databricks/terraform-provider-databricks) [![downloads](https://img.shields.io/github/downloads/databricks/terraform-provider-databricks/total.svg)](https://hanadigital.github.io/grev/?user=databricks&repo=terraform-provider-databricks)
 
@@ -29,7 +29,7 @@ terraform {
 }
 ```
 
-If you want to build it from sources, see [Installing from source](CONTRIBUTING.md#installing-from-source).
+If you want to build it from source, clone this repository and run `make install`.
 
 Then create a small sample file, named `main.tf` with approximately following contents. Replace `<your PAT token>` with newly created [PAT Token](https://docs.databricks.com/dev-tools/api/latest/authentication.html).
 

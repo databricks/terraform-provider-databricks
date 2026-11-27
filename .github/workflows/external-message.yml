@@ -50,5 +50,5 @@ jobs:
 
           To report a bug or request a feature, please open an issue: https://github.com/${{ github.repository }}/issues
 
-          See [CONTRIBUTING.md](https://github.com/${{ github.repository }}/blob/main/CONTRIBUTING.md#this-repository-is-a-mirror) for details.
+          See [CONTRIBUTING.md](https://github.com/${{ github.repository }}/blob/main/CONTRIBUTING.md#why-we-dont-accept-pull-requests) for details.
           "
